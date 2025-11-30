@@ -26,7 +26,21 @@ To address performance gaps, the following protocols are being implemented:
 4.  **Hyperparameter Evolution**: Genetic Algorithm search for LoRA-specific parameters (optional).
 
 ## Installation
-*(Instructions to be added)*
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/EfeErim/bitirmeprojesi.git
+   cd bitirmeprojesi
+   ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 ## Usage
-*(Instructions to be added)*
+### Google Colab
+To set up the environment in Colab (mount Drive and install requirements), run the following in a cell:
+```python
+from utils.colab_setup import setup_project
+setup_project()
+```
+
