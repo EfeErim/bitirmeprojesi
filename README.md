@@ -1,3 +1,8 @@
+# Bitirme Projesi
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EfeErim/bitirmeprojesi/blob/notebooks/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 # Phase T1: Strawberry Domain Adaptation
 
 ## Project Overview
@@ -34,19 +39,6 @@ To address performance gaps, the following protocols are being implemented:
 1.  **Extended Convergence Horizon**: Increasing training to 100 epochs.
 2.  **Targeted Geometric Augmentation**: Increased rotation, MixUp, and vertical flips.
 3.  **Statistical Oversampling**: Balancing minority classes like Anthracnose Fruit Rot.
-4.  **Hyperparameter Evolution**: Genetic Algorithm search for LoRA-specific parameters (optional).
-
-## Installation
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/EfeErim/bitirmeprojesi.git
-   cd bitirmeprojesi
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
 ## Usage
 ### Google Colab
 To set up the environment in Colab (mount Drive and install requirements), run the following in a cell:
