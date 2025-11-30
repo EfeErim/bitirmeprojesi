@@ -18,6 +18,17 @@ This project focuses on validating the "Universal Feature Extractor" hypothesis 
 - **High Accuracy**: Leaf Spot (98%), Powdery Mildew Fruit (97%).
 - **Areas for Improvement**: Anthracnose Fruit Rot (55%), Angular Leafspot (75%).
 
+## Project Timeline (7-Week Plan)
+| Week | Stage | Focus |
+| :--- | :--- | :--- |
+| **W1** | IM Development & PoC | Implement Iterative Merging Core, Train Strawberry Adapter (T1). |
+| **W2** | Sequential Expansion (T1/T2) | Validate T1, Train Apricot Adapter (T2), Merge T1+T2. |
+| **W3** | Sequential Expansion (T3) | Train Hazelnut Adapter (T3), Merge T3. |
+| **W4** | N=5 Stress Test (T4) | Train Grape Adapter (T4), Final Merge (Model v5). |
+| **W5** | Final Validation | Measure performance on all 5 domains. Constraint profiling (Size ≤6MB). |
+| **W6** | Reporting & Analysis | Draft quantitative results and conclusion. |
+| **W7** | Final Review | Final polish and thesis submission. |
+
 ## Optimization Strategy (V2)
 To address performance gaps, the following protocols are being implemented:
 1.  **Extended Convergence Horizon**: Increasing training to 100 epochs.
