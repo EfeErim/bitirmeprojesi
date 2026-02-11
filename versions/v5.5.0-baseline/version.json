@@ -1,0 +1,2080 @@
+{
+  "version": "v5.5.0-baseline",
+  "description": "Initial baseline before optimizations",
+  "timestamp": "2026-02-11T14:17:03.738884",
+  "source": ".",
+  "backup_path": "D:\\bitirme projesi\\backups\\v5.5.0-baseline",
+  "version_path": "D:\\bitirme projesi\\versions\\v5.5.0-baseline",
+  "files": {
+    ".gitattributes": {
+      "hash": "8cce4616b9e9f9a49c11769d20655620abdd0d8476e93358a4730ad71bec6454",
+      "size": 73,
+      "modified": "2026-02-11T13:03:35.284050"
+    },
+    ".gitignore": {
+      "hash": "58690892a28426f4388e2f5aa684b20e33d420ab5d666eb8699d1aa255cd8739",
+      "size": 1550,
+      "modified": "2026-02-11T13:03:34.304415"
+    },
+    "AADS-ULoRA_v5.5_Implementation_Plan.md": {
+      "hash": "44d3e98d06f73577e10d33fe091df7e2b869a5840b5d5821d9b16689b8aa5e66",
+      "size": 37168,
+      "modified": "2026-02-09T12:25:36.528164"
+    },
+    "backup.log": {
+      "hash": "bb89c5a113082ca0d6013e5ff78da619b10874c76d22fad6ad9516e3363ccb99",
+      "size": 230575,
+      "modified": "2026-02-11T14:17:01.668053"
+    },
+    "GITHUB_SETUP.md": {
+      "hash": "f08c643de90a5533ef5fa4f8952338d07e74e34df2a81a0284a000a24f3df8c4",
+      "size": 4708,
+      "modified": "2026-02-09T14:18:29.112689"
+    },
+    "PROJECT_FIX_SUMMARY.md": {
+      "hash": "83e65db251b7d1f159e223e780b04ca9b531e599d56f11226a36b81115302531",
+      "size": 13101,
+      "modified": "2026-02-09T13:33:29.028866"
+    },
+    "README.md": {
+      "hash": "edadccd7e7fcd1e1dc151edac2ad4d4e339207b774e581505e6a9a5e7339f3c4",
+      "size": 9950,
+      "modified": "2026-02-09T13:29:47.639709"
+    },
+    "requirements.txt": {
+      "hash": "9a8faac8e7a0a17df30018c27c7098c6d2ec93a9c04decd89ea6bfb2765f6a66",
+      "size": 937,
+      "modified": "2026-02-11T11:34:23.841490"
+    },
+    "requirements_optimized.txt": {
+      "hash": "8c9ecc4a1af8fd22fd9249184069cab05a182e57db4a69a40552205ea6a04a9c",
+      "size": 1013,
+      "modified": "2026-02-11T13:31:06.761762"
+    },
+    "setup.py": {
+      "hash": "4d4c9b65dd67e9e3fcb2f919ed69aa9039a03150b8775e3fc4ed0babd1c912fb",
+      "size": 3142,
+      "modified": "2026-02-09T13:29:25.410109"
+    },
+    "setup_git.sh": {
+      "hash": "352202e7a5080b692dab117f019854a13a4e0c93bd0ec72bf7e4ed7870785609",
+      "size": 1723,
+      "modified": "2026-02-09T15:46:53.041012"
+    },
+    "setup_optimized.py": {
+      "hash": "feefa22dd23f15374ce39f9126df6c0d7b81d97982c336ace1a7da2b4e6de1f9",
+      "size": 3654,
+      "modified": "2026-02-11T13:30:35.619438"
+    },
+    ".tmp.driveupload\\140614": {
+      "hash": "7b4f885d9c5ef2dc2580ebf3d9370780a20eadb8e26aae047ee0bf93c1ad051b",
+      "size": 64,
+      "modified": "2025-11-30T18:03:08.613196"
+    },
+    ".tmp.driveupload\\140616": {
+      "hash": "726653a41c09a9349321bd2b873a2c6b22b2f67b9157d4f9f60badbe2646547f",
+      "size": 1156,
+      "modified": "2025-11-30T18:03:08.610077"
+    },
+    ".tmp.driveupload\\140618": {
+      "hash": "c9c02b12d46a2a3dcffb33e070100ef204bcb995a491a2a0bccd6f091515832f",
+      "size": 889,
+      "modified": "2025-11-30T18:03:08.609072"
+    },
+    ".tmp.driveupload\\140694": {
+      "hash": "ab3353607c10226a405d7ab675f324acca166f0b478b0fde9a85a6bad78b7bee",
+      "size": 158,
+      "modified": "2025-11-30T18:14:01.416718"
+    },
+    ".tmp.driveupload\\140698": {
+      "hash": "fa0db6fad447b29698de4f3f9ba5933616158d4c1611c196fa0e067feeea2139",
+      "size": 1238,
+      "modified": "2025-11-30T18:14:01.424102"
+    },
+    ".tmp.driveupload\\140702": {
+      "hash": "8cc7f94e3a8f2d0d557febb9ea89446ad437e49cddd33465c9871813adbcd8d6",
+      "size": 190,
+      "modified": "2025-11-30T18:14:02.528983"
+    },
+    ".tmp.driveupload\\140706": {
+      "hash": "895b25af99709fa7be8b2a1b240669d164810853bc37050064c09a3efd25fbc8",
+      "size": 88,
+      "modified": "2025-11-30T18:14:02.518099"
+    },
+    ".tmp.driveupload\\140719": {
+      "hash": "5b327fb20754701d11dd8e2cef4e74b21e4dbd24a11b275386a8f5dc9a272c85",
+      "size": 182,
+      "modified": "2025-11-30T18:17:35.533283"
+    },
+    ".tmp.driveupload\\140723": {
+      "hash": "d50df0c76910aaeafa0844fa5f254a0430f390d8a7593f28d270eb584664565b",
+      "size": 88,
+      "modified": "2025-11-30T18:17:35.524333"
+    },
+    ".tmp.driveupload\\140727": {
+      "hash": "b0d6619e0ae1864bce5dff3168c0dcb4d34253b64dbaf21fb3f80f278f5fd68b",
+      "size": 900,
+      "modified": "2025-11-30T18:17:34.641123"
+    },
+    ".tmp.driveupload\\140755": {
+      "hash": "7d36d139219b56940688a52d1f1d7c785f6cc2504e0f5941994fc96bf4feeacd",
+      "size": 218123,
+      "modified": "2025-11-30T18:38:45.918300"
+    },
+    ".tmp.driveupload\\140759": {
+      "hash": "1c934bf438aa6350a37a1ae73345b22ff97940a19a14016595971149740becc0",
+      "size": 53,
+      "modified": "2025-11-30T19:26:14.663069"
+    },
+    ".tmp.driveupload\\140763": {
+      "hash": "164c5fa8067facf1a43f09ce3d0e35ebf53a7f5723ecbf15a8667cfc53c26f6c",
+      "size": 15,
+      "modified": "2025-11-30T19:26:11.448842"
+    },
+    ".tmp.driveupload\\140767": {
+      "hash": "f64d3b9d9839e10568ff305fe2439fdd4e33ebc99e0c4804f3f21cdb6043bd6a",
+      "size": 50,
+      "modified": "2025-11-30T18:38:45.905591"
+    },
+    ".tmp.driveupload\\140771": {
+      "hash": "e5649c33e00964c92775f3aefb56ee8ad343222f99793734d4e20acf31f5fe0b",
+      "size": 236,
+      "modified": "2025-11-30T18:38:45.994352"
+    },
+    ".tmp.driveupload\\140775": {
+      "hash": "f4c5850722781aa2d756bf393b8538cd1f5c5393badd3b185c9c02e5ce57a2ca",
+      "size": 96,
+      "modified": "2025-11-30T18:38:45.929570"
+    },
+    ".tmp.driveupload\\140779": {
+      "hash": "9af8f498a24928fb8a1e5e5b34d78e35818a26c476c6e30c6f8c147683dfa23e",
+      "size": 194,
+      "modified": "2025-11-30T18:39:13.282224"
+    },
+    ".tmp.driveupload\\140795": {
+      "hash": "083496e7793aba5146504901cfa9d038035fbb78e7b5a24972f52c423c93123b",
+      "size": 194,
+      "modified": "2025-11-30T18:40:14.256266"
+    },
+    ".tmp.driveupload\\140803": {
+      "hash": "52854b5ec162fc989b9e7151874feb986ce195a5fb8dfcc213e625dc620e22a1",
+      "size": 1076,
+      "modified": "2025-11-30T18:42:37.271099"
+    },
+    ".tmp.driveupload\\140807": {
+      "hash": "047842679aa6da7926b8fcb6ee276ac8a26f74c2074cfcc756e1b1d741d75f41",
+      "size": 486,
+      "modified": "2025-11-30T18:42:37.274282"
+    },
+    ".tmp.driveupload\\140811": {
+      "hash": "668436615e7f0356b43e47cf0d953c63ae7cd7d56265629c761641f3945fe9cc",
+      "size": 188,
+      "modified": "2025-11-30T18:42:41.093508"
+    },
+    ".tmp.driveupload\\140815": {
+      "hash": "b54fb5252fc968264372f937ca844953ef9c8cf0d60761a77ae9796d91509d3b",
+      "size": 265,
+      "modified": "2025-11-30T18:42:41.085028"
+    },
+    ".tmp.driveupload\\140819": {
+      "hash": "6804e9dac7354a358c7ecb45a545ad7adb61ec86d03000d4ab66af6d67bf74ef",
+      "size": 59,
+      "modified": "2025-11-30T18:42:41.079122"
+    },
+    ".tmp.driveupload\\140827": {
+      "hash": "e2dbc5710f82ecb5e2c2475864594e10464afa361c236a1f73b3a199e65d5d1c",
+      "size": 196,
+      "modified": "2025-11-30T18:50:33.357508"
+    },
+    ".tmp.driveupload\\140831": {
+      "hash": "e85e407a48c353a0912f1ca6c62d2274470dd17333658c415783ea3b5c9c6a30",
+      "size": 301,
+      "modified": "2025-11-30T18:50:33.365414"
+    },
+    ".tmp.driveupload\\140835": {
+      "hash": "2da77ba62731cc9b4f83752621f302e6d8445dfb23186ebffc504acd5daac3bf",
+      "size": 244793,
+      "modified": "2025-11-30T19:31:00.695599"
+    },
+    ".tmp.driveupload\\140857": {
+      "hash": "f340c6acf9bde3272b2b1e528f5c2c81c8da63936b05ba3f773b9b6afa050c6e",
+      "size": 193,
+      "modified": "2025-11-30T18:57:34.202625"
+    },
+    ".tmp.driveupload\\140861": {
+      "hash": "9f35171b33d3637185d68d0e1e9fe8507f0d3a795cca04d7d72465dbb5822e2c",
+      "size": 289,
+      "modified": "2025-11-30T18:57:34.193674"
+    },
+    ".tmp.driveupload\\140873": {
+      "hash": "4d8b20bec801e03bd4d1ea88a4a025c6e06d27dc0d29eb2432a772f50339db43",
+      "size": 180,
+      "modified": "2025-11-30T19:06:18.452726"
+    },
+    ".tmp.driveupload\\140875": {
+      "hash": "1022ea8185c523a164483b10993cb9ff27c94ad0bf380e1113796d37132f6507",
+      "size": 291,
+      "modified": "2025-11-30T19:06:18.443840"
+    },
+    ".tmp.driveupload\\140879": {
+      "hash": "c6810b85ccf973987ff4f3dcc3e450a825cad2f8686c21f4693cee59a1b01330",
+      "size": 1289511,
+      "modified": "2025-11-30T19:06:17.504967"
+    },
+    ".tmp.driveupload\\140883": {
+      "hash": "c57d2c22cc91b475a54b9a74dbb0698e2983f758b94336025fb47864b1236374",
+      "size": 146,
+      "modified": "2025-11-30T19:06:18.438047"
+    },
+    ".tmp.driveupload\\140887": {
+      "hash": "7e837863e94307f09611a14013d0bb663655b12b43e9b790d0b22dd359fe5f60",
+      "size": 218124,
+      "modified": "2025-11-30T19:06:17.517370"
+    },
+    ".tmp.driveupload\\140891": {
+      "hash": "44429fb22efbe02560cd5af4d843d4abc35107b13899737a8b8ae15efbcd9681",
+      "size": 1426,
+      "modified": "2025-11-30T19:06:17.467163"
+    },
+    ".tmp.driveupload\\140909": {
+      "hash": "66d99d257e85967723a9153e974aac04590e9443ea362ab26b4ff3d46c0237c3",
+      "size": 1416,
+      "modified": "2025-11-30T19:08:25.477491"
+    },
+    ".tmp.driveupload\\140913": {
+      "hash": "041c735c8ac7e3dc2bfd125d2affc8fb7de0b94b695a1ffc5360aa37dbd30965",
+      "size": 420,
+      "modified": "2025-11-30T19:08:25.496553"
+    },
+    ".tmp.driveupload\\140917": {
+      "hash": "1ac123385c44701d43d4e912de7bffdfaf0e852f94fc473d7fd8e72b5c85b7aa",
+      "size": 652,
+      "modified": "2025-11-30T19:08:25.503866"
+    },
+    ".tmp.driveupload\\140921": {
+      "hash": "9e81f2b0a64b217a0fb16df34129e59b8276a4800a589a149bd47fa8043e10f3",
+      "size": 400,
+      "modified": "2025-11-30T19:08:25.481721"
+    },
+    ".tmp.driveupload\\140925": {
+      "hash": "efa2c09d3003bf5a6914f501750bd476d9413bef4a487c244ac34d0a0b125c11",
+      "size": 326,
+      "modified": "2025-11-30T19:08:25.489084"
+    },
+    ".tmp.driveupload\\140929": {
+      "hash": "25a20b7d24d66428a55b177561e60d3e4f321258f96c8389264f513d94e7eee7",
+      "size": 90,
+      "modified": "2025-11-30T19:08:27.195951"
+    },
+    ".tmp.driveupload\\140933": {
+      "hash": "fb7fbd94553ccddab732f9d184b292c2aeb5a045c57d4eeac79835ec788da9cb",
+      "size": 200,
+      "modified": "2025-11-30T19:08:27.210363"
+    },
+    ".tmp.driveupload\\140935": {
+      "hash": "48034639f403c4d9d7d7f5baf581392b666de9604c1c19f8ce2e258147d052b1",
+      "size": 351,
+      "modified": "2025-11-30T19:08:27.201987"
+    },
+    ".tmp.driveupload\\140939": {
+      "hash": "d7826ec1211555d00c5f42908f0243c3390390c36969e8c467819f84ba444b71",
+      "size": 96,
+      "modified": "2025-11-30T19:08:27.183341"
+    },
+    ".tmp.driveupload\\140943": {
+      "hash": "8ef02d76e109acef2113480a0d7fc7c788f1da2f6ee8f2fca71f6f5e92e810fa",
+      "size": 53,
+      "modified": "2025-11-30T19:08:27.189597"
+    },
+    ".tmp.driveupload\\140947": {
+      "hash": "a6dd5b1d127c2d8cca94f1f314728df229f4a42b41bab740c8fda5ff05d9dafe",
+      "size": 302,
+      "modified": "2025-11-30T19:11:40.139933"
+    },
+    ".tmp.driveupload\\140951": {
+      "hash": "affe480fe720acbaa1fbd601608c8e6a4f6bf37684c5922811229148ca4daccb",
+      "size": 244803,
+      "modified": "2025-11-30T19:11:40.158654"
+    },
+    ".tmp.driveupload\\140955": {
+      "hash": "c9ce65f5394c4c71be3df12f0e569345c73217a9fc3e8bd74a5e622e344e72c9",
+      "size": 196,
+      "modified": "2025-11-30T19:11:40.133126"
+    },
+    ".tmp.driveupload\\140959": {
+      "hash": "3bb648ada783d8575f50a276874a6f64f2c774898d6c5fc6cc7f499d49f9df4b",
+      "size": 315,
+      "modified": "2025-11-30T19:13:25.695427"
+    },
+    ".tmp.driveupload\\141007": {
+      "hash": "7a5981105966afb1d036d098ef3fe4cc6fc7e2bd447a61511faf1103391e4fd9",
+      "size": 179,
+      "modified": "2025-11-30T19:26:14.672436"
+    },
+    ".tmp.driveupload\\141011": {
+      "hash": "9af0cc4e8af5dcb0bc2d6bde605c66859e557fb9b0d111928161ddc088dad898",
+      "size": 363,
+      "modified": "2025-11-30T19:26:14.663587"
+    },
+    ".tmp.driveupload\\141015": {
+      "hash": "99be33afc0031fe79c256b227490ab4cc1bb967ca74087ad5785bd0cbda04161",
+      "size": 53,
+      "modified": "2025-11-30T19:29:17.679977"
+    },
+    ".tmp.driveupload\\141019": {
+      "hash": "aa20e3d323383d8a1403a71bc2c4f7eaf7b0727472f3d987024bd8778b136a7a",
+      "size": 160,
+      "modified": "2025-11-30T19:29:17.695119"
+    },
+    ".tmp.driveupload\\141023": {
+      "hash": "d641a184ab006856bb4debba5815705afb6429f5ff6c02badb17071f2c000a2a",
+      "size": 17,
+      "modified": "2025-11-30T19:29:17.503695"
+    },
+    ".tmp.driveupload\\141027": {
+      "hash": "572d16e5b79f20d6e681d059234b51454353f4ab9222b3f72618f173d6275b37",
+      "size": 384,
+      "modified": "2025-11-30T19:29:17.686344"
+    },
+    ".tmp.driveupload\\141033": {
+      "hash": "12123844595db018c2e9c22d58b77ff0d28ebf11ed4c008c1ee9d89481bdb717",
+      "size": 425,
+      "modified": "2025-11-30T19:30:24.497872"
+    },
+    ".tmp.driveupload\\141037": {
+      "hash": "eb7f67341b88848ab7dd0a867c4c0709cc2e314779dbae1d2519285f53c58d5d",
+      "size": 194,
+      "modified": "2025-11-30T19:30:24.491293"
+    },
+    ".tmp.driveupload\\141041": {
+      "hash": "0d4993050e304325b18ac74de729ac9dde4d0150b261164cd3ac652c19d0974f",
+      "size": 14961,
+      "modified": "2025-11-30T19:31:00.696642"
+    },
+    ".tmp.driveupload\\141047": {
+      "hash": "d29c103bb2c1f5c5f7c2b37810924902c1ba792e57164b3c1a0712e036a50034",
+      "size": 186,
+      "modified": "2025-11-30T19:31:00.761730"
+    },
+    ".tmp.driveupload\\141051": {
+      "hash": "77bba6803991326d3c89e608489a1ada7948f7c4d1e14ab77c624cb7198f8a22",
+      "size": 348,
+      "modified": "2025-11-30T19:31:00.752806"
+    },
+    ".tmp.driveupload\\141055": {
+      "hash": "3403081f4d94d9966da5bd16a428d57280e31da686b8238621bab7e45923c4be",
+      "size": 133,
+      "modified": "2025-11-30T19:31:00.745434"
+    },
+    ".tmp.driveupload\\143412": {
+      "hash": "352202e7a5080b692dab117f019854a13a4e0c93bd0ec72bf7e4ed7870785609",
+      "size": 1723,
+      "modified": "2026-02-09T15:46:53.041012"
+    },
+    ".tmp.driveupload\\145916": {
+      "hash": "ebe6ea7b67a6b1b4fb30c1567c5fec7616d89a51284b62a247503d4b6f0b82d9",
+      "size": 21415,
+      "modified": "2026-02-09T15:46:53.264187"
+    },
+    ".tmp.driveupload\\145920": {
+      "hash": "c36b3b66173b4964c6525e2c2ee1d2d931f87779a413d2ccfbc56bfdb2e51872",
+      "size": 685,
+      "modified": "2026-02-09T15:05:57.198629"
+    },
+    ".tmp.driveupload\\145924": {
+      "hash": "b08ab639662841182970fffe00d8d4724e6482d6aa75aa393bbfc7fde4218e27",
+      "size": 4967,
+      "modified": "2026-02-09T15:05:57.177353"
+    },
+    ".tmp.driveupload\\145928": {
+      "hash": "d9f6e20747f14c072da6fbeef59ebe6571c57b861b7e8a467010f2e62584224b",
+      "size": 622,
+      "modified": "2026-02-09T15:05:57.186513"
+    },
+    ".tmp.driveupload\\145932": {
+      "hash": "d23d4e41693868e28fbd7278b2c1a27843a2365c1b0eb35e138f390ab45b083e",
+      "size": 2877,
+      "modified": "2026-02-09T15:05:57.206432"
+    },
+    ".tmp.driveupload\\145936": {
+      "hash": "7ccee4490304e288818d80e0d2383946cada7e2b706ae8cb38071de8ea4efca5",
+      "size": 1107,
+      "modified": "2026-02-09T15:05:57.211025"
+    },
+    ".tmp.driveupload\\145940": {
+      "hash": "f53949c75bd8708c31143b958a7bd2501b343d052db9935701c11bf008bd892b",
+      "size": 1063,
+      "modified": "2026-02-09T15:05:57.194241"
+    },
+    ".tmp.driveupload\\145944": {
+      "hash": "e5fbaaf59e91e274919a21bb1a4170ed46de9c8e1c7f65fc885656f85937e924",
+      "size": 3705,
+      "modified": "2026-02-09T15:05:57.182097"
+    },
+    ".tmp.driveupload\\145948": {
+      "hash": "aa9f9533f0d50966103e72e29e4fb24d1642deb798386652a3fea8325954649f",
+      "size": 688,
+      "modified": "2026-02-09T15:05:57.158604"
+    },
+    ".tmp.driveupload\\145952": {
+      "hash": "418af99733965af06078dbdbaa3abd0b18407f2d96bff4d34b23658b04b20ae7",
+      "size": 2145,
+      "modified": "2026-02-09T15:05:57.172571"
+    },
+    ".tmp.driveupload\\145956": {
+      "hash": "b24ce7b96629bb243f1d6b14f5db63e4b55c5c826b1a0a1262904557bb51d764",
+      "size": 13482,
+      "modified": "2026-02-09T15:05:57.167184"
+    },
+    ".tmp.driveupload\\145960": {
+      "hash": "3b3c9552df95a07563f4b7137ae60f4c65b5bedbc77ea53766b2a5453db40511",
+      "size": 329489698,
+      "modified": "2026-02-09T15:06:09.160838"
+    },
+    ".tmp.driveupload\\145962": {
+      "hash": "00705b44e6b16879858afbb99b3a7e3649b84e7f084d4b5167bd70cdce4b1c34",
+      "size": 258143,
+      "modified": "2026-02-09T15:06:09.724168"
+    },
+    ".tmp.driveupload\\145966": {
+      "hash": "b917c88131fd630947339c71687e1eeddc0c7baca38a69332895c5bbfb8bdfa8",
+      "size": 234348,
+      "modified": "2026-02-09T15:06:10.206578"
+    },
+    ".tmp.driveupload\\145968": {
+      "hash": "749ed0a202398a4796d55ff36c428f00ef24f50f1e994d8f3387db865bdb4d74",
+      "size": 461397,
+      "modified": "2026-02-09T15:06:10.014540"
+    },
+    ".tmp.driveupload\\145972": {
+      "hash": "d7af12501d7631ea2ea48d50a92a6bd1740e81580b9ba751233ca546a20c9425",
+      "size": 9108,
+      "modified": "2026-02-09T15:06:09.526701"
+    },
+    ".tmp.driveupload\\145976": {
+      "hash": "db4fcc3ab52495aa9a04442d548caab843fb31212fe57bb12429bf7fd3423826",
+      "size": 3475,
+      "modified": "2026-02-09T15:06:09.455533"
+    },
+    ".tmp.driveupload\\145980": {
+      "hash": "03ae76a5ea2bf5cb5f64157b692f0cdb08e450ab742e5a85efb0a198d9c52ded",
+      "size": 243277,
+      "modified": "2026-02-09T15:06:10.067398"
+    },
+    ".tmp.driveupload\\145984": {
+      "hash": "8770731f6c6bd5ccdaff38b95387de8211103f7a99908fac4d52a1674e068ebf",
+      "size": 181821,
+      "modified": "2026-02-09T15:06:09.652701"
+    },
+    ".tmp.driveupload\\145988": {
+      "hash": "1ba739153f85e34898f23ed3296ca182dce41dcc6cec7f8705b2969735f7aa4d",
+      "size": 13062,
+      "modified": "2026-02-09T15:06:10.340422"
+    },
+    ".tmp.driveupload\\145992": {
+      "hash": "f05d50be3e8c1af6a063bcd5f0ec387b7b0b0826d4b256d7b336865f2aa20059",
+      "size": 11379,
+      "modified": "2026-02-09T15:06:10.381953"
+    },
+    ".tmp.driveupload\\145996": {
+      "hash": "a49ff459d1172aea65cb9337f4479dab115d4a9bd936801abd38334ce771f388",
+      "size": 13606,
+      "modified": "2026-02-09T15:06:09.572403"
+    },
+    ".tmp.driveupload\\146000": {
+      "hash": "d6bb5b9940a32525a0f2921464ad67c5a18dd3027d21ee651f27ab9f0e092592",
+      "size": 8521,
+      "modified": "2026-02-09T15:06:09.504422"
+    },
+    ".tmp.driveupload\\146004": {
+      "hash": "f41d5766e3d675582c54d08a91f9fb24bf17719dbf0e0d5cf0b09cfb2ddaed57",
+      "size": 4156,
+      "modified": "2026-02-09T15:06:09.460858"
+    },
+    ".tmp.driveupload\\146008": {
+      "hash": "55179fe2a249a0567f16cf645cb9c99e4d1c0270e209b45c2a4b83fa1d21290b",
+      "size": 242997,
+      "modified": "2026-02-09T15:06:09.683506"
+    },
+    ".tmp.driveupload\\146012": {
+      "hash": "2b411e2d1ace3ef9dcbf28e0da3917e8218a312fc3c2d57f8c6d1aaad0fe46f1",
+      "size": 217769,
+      "modified": "2026-02-09T15:06:09.823421"
+    },
+    ".tmp.driveupload\\146014": {
+      "hash": "70a689246325d9812764518cbbd1fb3be2c4dadbf9be03c569ba8dfc7ada85a0",
+      "size": 313087,
+      "modified": "2026-02-09T15:06:09.475670"
+    },
+    ".tmp.driveupload\\146018": {
+      "hash": "2613fedfe30bca9ae51c876f32e1a720a73a86cce3316f296d5f660c3fca572d",
+      "size": 185466,
+      "modified": "2026-02-09T15:06:09.809547"
+    },
+    ".tmp.driveupload\\146022": {
+      "hash": "83d474dbf4e817227f99ff108b4a51cbb5096d06fc3ba0179961979797f933aa",
+      "size": 345407,
+      "modified": "2026-02-09T15:06:10.225909"
+    },
+    ".tmp.driveupload\\146026": {
+      "hash": "bbbbf98edc31b201e20c986f91d13b486b2c855b2f36d51954e326d173b2cf83",
+      "size": 343427,
+      "modified": "2026-02-09T15:06:09.917698"
+    },
+    ".tmp.driveupload\\146030": {
+      "hash": "484b6c943b671760ca0d143c015f22792d3bbbe314be687dd0fa920c5a1689d5",
+      "size": 319830,
+      "modified": "2026-02-09T15:06:10.085889"
+    },
+    ".tmp.driveupload\\146032": {
+      "hash": "2341a3588295f9362e23fd5391b398a999fb5aa931dd89dd73be0c360fa51fee",
+      "size": 376906,
+      "modified": "2026-02-09T15:06:10.109193"
+    },
+    ".tmp.driveupload\\146036": {
+      "hash": "dff58bac0eda640de236fe27a238fdd27b427f61a456512b4dc995d3580a59ce",
+      "size": 308069,
+      "modified": "2026-02-09T15:06:09.520062"
+    },
+    ".tmp.driveupload\\146040": {
+      "hash": "9d9585f14a3e006fac0f26f2f1c489456d9ec7222b0abbc0e51ba4e9b3d05b1b",
+      "size": 21535,
+      "modified": "2026-02-09T15:06:10.366037"
+    },
+    ".tmp.driveupload\\146044": {
+      "hash": "84a22d602f8d334589ada43803479b0e23b97fc0da124f37534b009bd608af4b",
+      "size": 7885,
+      "modified": "2026-02-09T15:06:10.376771"
+    },
+    ".tmp.driveupload\\146046": {
+      "hash": "daf6c7ae8b14d0e7d715d31923b87303f44191a62a0c8aedca0e1489de3739f1",
+      "size": 315150,
+      "modified": "2026-02-09T15:06:10.268122"
+    },
+    ".tmp.driveupload\\146050": {
+      "hash": "cad71223c1744540a7b236d9a0493255751b5ed3919f5226aadb5a09d2ba325a",
+      "size": 369058,
+      "modified": "2026-02-09T15:06:10.163556"
+    },
+    ".tmp.driveupload\\146052": {
+      "hash": "7df4583d41dbd5461c968258c3ccf1b93663c84b0ec5e598385c8b62bcd77895",
+      "size": 7314,
+      "modified": "2026-02-09T15:06:10.289440"
+    },
+    ".tmp.driveupload\\146056": {
+      "hash": "fe585ed71e0157d51de206c0a1820169350131283adf9469c0a298bcf511ebfb",
+      "size": 8903,
+      "modified": "2026-02-09T15:06:10.388246"
+    },
+    ".tmp.driveupload\\146060": {
+      "hash": "0eba920e9d27d8a559e364b1090bb20a157dfaa6ad2b8bdd2a97bdc9704df9f2",
+      "size": 5523,
+      "modified": "2026-02-09T15:06:09.481571"
+    },
+    ".tmp.driveupload\\146064": {
+      "hash": "65f2966063190919580b40278e84cc3cef324d7a0edea8868a149cc8652006f8",
+      "size": 6573,
+      "modified": "2026-02-09T15:06:10.371492"
+    },
+    ".tmp.driveupload\\146066": {
+      "hash": "ca165ddaffb9b6d72f1290c2f1797698b03a61364f48ab5ed9ff4e311ab097a0",
+      "size": 255832,
+      "modified": "2026-02-09T15:06:10.192374"
+    },
+    ".tmp.driveupload\\146070": {
+      "hash": "d8df61d6defcd2f71d92aa1798988b7f9c6066a63efce53c36141fec6455c2d1",
+      "size": 24680,
+      "modified": "2026-02-09T15:06:10.315187"
+    },
+    ".tmp.driveupload\\146074": {
+      "hash": "65ccff60dd5032259ce1728fc80f4aceb91a4deb01726306603aa4c4ce52f97d",
+      "size": 151084,
+      "modified": "2026-02-09T15:06:09.617437"
+    },
+    ".tmp.driveupload\\146078": {
+      "hash": "bf98c82a8cae32c921e0031f10976bd234f04ac5aa5b52ef0d069d789bfbb4aa",
+      "size": 375372,
+      "modified": "2026-02-09T15:06:09.545250"
+    },
+    ".tmp.driveupload\\146082": {
+      "hash": "9505745d97aaf32f62c5e3d02d50472f9481405c12b8f3fdec49b0d79ec343c7",
+      "size": 353227,
+      "modified": "2026-02-09T15:06:09.857384"
+    },
+    ".tmp.driveupload\\146086": {
+      "hash": "6c1b3d9efcfa9dc4411a02834dbade98304dd180970d85eac7fb1b53f2cd7e6b",
+      "size": 255183,
+      "modified": "2026-02-09T15:06:09.498460"
+    },
+    ".tmp.driveupload\\146088": {
+      "hash": "7ec5ba1d0f19e041a21b715da8fcc0d18be15457be1d02d5a3311f64c5e13b26",
+      "size": 411652,
+      "modified": "2026-02-09T15:06:09.901500"
+    },
+    ".tmp.driveupload\\146090": {
+      "hash": "b53a499e8b2cc431f854d749042763730c3084ad97f106605846598ee714e1e5",
+      "size": 260073,
+      "modified": "2026-02-09T15:06:09.630307"
+    },
+    ".tmp.driveupload\\146092": {
+      "hash": "a43680afd03f53cd99d38f1d1d89d1fad324b82b2b98f2adefdd096744ec6ba2",
+      "size": 13293,
+      "modified": "2026-02-09T15:06:10.320809"
+    },
+    ".tmp.driveupload\\146094": {
+      "hash": "a4e788c5b8cc7180aba9ddc2952e66dda3e1f3390626e1cdfc919359b2d9e243",
+      "size": 292391,
+      "modified": "2026-02-09T15:06:09.762134"
+    },
+    ".tmp.driveupload\\146098": {
+      "hash": "56641d635c7f744ab62a3ef8ddf30c8cf066d639289a52be2decdc12cb0c9e23",
+      "size": 2495,
+      "modified": "2026-02-09T15:06:09.450252"
+    },
+    ".tmp.driveupload\\146102": {
+      "hash": "ce4895708f7243dd3185eb8dd2f48525f8e3f0a4228afa979b79f79223755ba6",
+      "size": 172511,
+      "modified": "2026-02-09T15:06:10.027978"
+    },
+    ".tmp.driveupload\\146106": {
+      "hash": "0f6d5289f8fedd9927772e2da6e57d8ec5e3aa46f956a40bbdfceaaee41f36e7",
+      "size": 384767,
+      "modified": "2026-02-09T15:06:10.307770"
+    },
+    ".tmp.driveupload\\146110": {
+      "hash": "bab06950cc851479ad4e47bf96fefb0a031c5ef12efa3b2f07d97d6f9a3879af",
+      "size": 5764,
+      "modified": "2026-02-09T15:06:10.251676"
+    },
+    ".tmp.driveupload\\146112": {
+      "hash": "f4aaea6ba059d6974abb00615592d0629da48940f4dbd709aa2a3c7dd4df4ec0",
+      "size": 192204,
+      "modified": "2026-02-09T15:06:09.836158"
+    },
+    ".tmp.driveupload\\146116": {
+      "hash": "4ef4872f21c9f4091e5abc6c4982b9114ba5497a49f41d8fa1cabf85a2626720",
+      "size": 9911,
+      "modified": "2026-02-09T15:06:10.334601"
+    },
+    ".tmp.driveupload\\146120": {
+      "hash": "4215375e151013c136684c466b85362c9c4ddf3837685afb8b4fc9fd0b70b5ca",
+      "size": 338885,
+      "modified": "2026-02-09T15:06:10.124805"
+    },
+    ".tmp.driveupload\\146124": {
+      "hash": "112137aa59d0d6043ff147e70eebe743eb4263173bffe055d4eb60cc051a9ae4",
+      "size": 312471,
+      "modified": "2026-02-09T15:06:10.241243"
+    },
+    ".tmp.driveupload\\146128": {
+      "hash": "db339b6c071aca7d2bb220b223be31ccddb137535e894c7a305ea95dc9d6e5a4",
+      "size": 164480,
+      "modified": "2026-02-09T15:06:10.054157"
+    },
+    ".tmp.driveupload\\146132": {
+      "hash": "c9bc097390d169ec4491c363e3b1a5f846c997740d183351017114b10e8fc2a4",
+      "size": 16168,
+      "modified": "2026-02-09T15:06:10.358510"
+    },
+    ".tmp.driveupload\\146136": {
+      "hash": "c1e03cc9d485f2d18f48f72111a4e610619f8d22f1d2bc1507a4016907cc9374",
+      "size": 255778,
+      "modified": "2026-02-09T15:06:09.711559"
+    },
+    ".tmp.driveupload\\146140": {
+      "hash": "212fd099c9edf03a38ea50761e2f37633e8084892ad998f9c36cfba5383fa6a5",
+      "size": 355244,
+      "modified": "2026-02-09T15:06:09.669657"
+    },
+    ".tmp.driveupload\\146144": {
+      "hash": "77b3975266d6149420967d9d7fb59e9c49f18d84f5de35269bc39fb05ec86044",
+      "size": 497721,
+      "modified": "2026-02-09T15:06:09.593450"
+    },
+    ".tmp.driveupload\\146146": {
+      "hash": "57e35fd59a6085596ee420c64fa647c5ed11580eb023d33c52cfeb86fcbdefa1",
+      "size": 281245,
+      "modified": "2026-02-09T15:06:10.284399"
+    },
+    ".tmp.driveupload\\146150": {
+      "hash": "d33c3e549ab5c2e9b4853d53e63386b6c346a86dbe4021f5b4b1aa2238cbd26f",
+      "size": 6108,
+      "modified": "2026-02-09T15:06:09.550865"
+    },
+    ".tmp.driveupload\\146154": {
+      "hash": "974375cac80f1a0572b67817b4fb9f03c8a4f2926b3b6635feb60603f4431789",
+      "size": 341964,
+      "modified": "2026-02-09T15:06:09.567015"
+    },
+    ".tmp.driveupload\\146156": {
+      "hash": "e17849d01760475b4e95b6f40dd3001c1ba53a6ffbc27479332db63509375199",
+      "size": 11235,
+      "modified": "2026-02-09T15:06:10.351794"
+    },
+    ".tmp.driveupload\\146160": {
+      "hash": "946d0d72fc55c7c1fd4234299758ea24534164ffa44e582e6217f8c6431909b6",
+      "size": 433069,
+      "modified": "2026-02-09T15:06:10.142866"
+    },
+    ".tmp.driveupload\\146162": {
+      "hash": "aa2f4af8a4e2f441f1544c987231b5f0aaee56373658627203a761f4ef663807",
+      "size": 344722,
+      "modified": "2026-02-09T15:06:09.777802"
+    },
+    ".tmp.driveupload\\146166": {
+      "hash": "2ce795120b32d4fa05e7553bad30a7f4411db2bb5df27a3ab6f89d63648a9688",
+      "size": 375623,
+      "modified": "2026-02-09T15:06:09.797627"
+    },
+    ".tmp.driveupload\\146170": {
+      "hash": "f1534c29d6997539b8ffeff0f5888f13f63561f9c6572a84599b86327af72e26",
+      "size": 252171,
+      "modified": "2026-02-09T15:06:10.177015"
+    },
+    ".tmp.driveupload\\146174": {
+      "hash": "d818a433d9316af964eb8c7fd26ff71d3f41dd585a16d30805bbed768df9b9ab",
+      "size": 167081,
+      "modified": "2026-02-09T15:06:10.041571"
+    },
+    ".tmp.driveupload\\146178": {
+      "hash": "32da2f8c2449952399f90a7fe5d87514b4c6d5c5798c419d61069c54c7e3ce7a",
+      "size": 313497,
+      "modified": "2026-02-09T15:06:09.882479"
+    },
+    ".tmp.driveupload\\146182": {
+      "hash": "c9c7a948cd6e2488d0628c36798f7c654c205d6866657574d528363c37edf895",
+      "size": 152672,
+      "modified": "2026-02-09T15:06:09.641227"
+    },
+    ".tmp.driveupload\\146186": {
+      "hash": "28533a2ce5117704277f8967dea842535f7b81cd0f6953f78dd10221baf36630",
+      "size": 9458,
+      "modified": "2026-02-09T15:06:10.346164"
+    },
+    ".tmp.driveupload\\146190": {
+      "hash": "2a3ea3000055be692d8573cbc9c332b0c767b8442829e96f6608a51666f6cf39",
+      "size": 208721,
+      "modified": "2026-02-09T15:06:09.605857"
+    },
+    ".tmp.driveupload\\146194": {
+      "hash": "a7cd91d7f713fa2bb667f935902f9425e998d37fd30b735519dc12b5d835600b",
+      "size": 344155,
+      "modified": "2026-02-09T15:06:09.934686"
+    },
+    ".tmp.driveupload\\146196": {
+      "hash": "8bbdd3321f863c119a477a53a759e86eac4bd800f1dd50b1a60e24e2c4052046",
+      "size": 263831,
+      "modified": "2026-02-09T15:06:10.425975"
+    },
+    ".tmp.driveupload\\146198": {
+      "hash": "1749777dbee4e2e4aa9c5e8af233d11908937346679c2d24e2ff285578ea73af",
+      "size": 141188,
+      "modified": "2026-02-09T15:06:09.944679"
+    },
+    ".tmp.driveupload\\146202": {
+      "hash": "e89caf7d29ef174d09d58f7a2ebcb7c72745c376e1e18b86298ea4128d01abff",
+      "size": 402999,
+      "modified": "2026-02-09T15:06:09.744283"
+    },
+    ".tmp.driveupload\\146206": {
+      "hash": "da8cc389b5597047ad02a9015b6a85e335788eb60177ec32496a3c01ed051786",
+      "size": 310012,
+      "modified": "2026-02-09T15:06:09.960416"
+    },
+    ".tmp.driveupload\\146210": {
+      "hash": "9d175b2031cad2b596a420411e8eb4406db674667eb178df196e1ed11dd0d647",
+      "size": 362001,
+      "modified": "2026-02-09T15:06:09.977496"
+    },
+    ".tmp.driveupload\\146212": {
+      "hash": "03c6c401bc7a60b6b594c7b2ce0cea22df461397525122cb3f71bf1beaf4a8ec",
+      "size": 272579,
+      "modified": "2026-02-09T15:06:09.993381"
+    },
+    ".tmp.driveupload\\146216": {
+      "hash": "57de2a2cd0c2d106135670064c74466ccf9026e812a1647c7c80c6f8c5d32e3a",
+      "size": 308117,
+      "modified": "2026-02-09T15:06:09.698630"
+    },
+    ".tmp.driveupload\\146220": {
+      "hash": "8f70598b8d00bd0a34ff5f173d3fac8246a7ce11d43fa32b81f7138910c65201",
+      "size": 9828,
+      "modified": "2026-02-09T15:06:10.247473"
+    },
+    ".tmp.driveupload\\146224": {
+      "hash": "200ce24e0930a348a52f7b260e999e61f7fd2b2211399a8027987e1a6a5be7ff",
+      "size": 18004,
+      "modified": "2026-02-09T15:06:10.328803"
+    },
+    ".tmp.driveupload\\146228": {
+      "hash": "d01750f651856f9475646a0d5a9ea568fc0bfb1d51f3dda3679ab4da2ed1c377",
+      "size": 191169,
+      "modified": "2026-02-09T15:06:10.639981"
+    },
+    ".tmp.driveupload\\146232": {
+      "hash": "3bad5ceaff17603f8ed7cac623cb618172fd3fb244cf1944e89b6a1ad0350a74",
+      "size": 259233,
+      "modified": "2026-02-09T15:06:10.803065"
+    },
+    ".tmp.driveupload\\146234": {
+      "hash": "a0d19888e74b5d4f128b2db214c6b4d9456221e4449cdae3805cb603b1755df2",
+      "size": 266117,
+      "modified": "2026-02-09T15:06:10.866483"
+    },
+    ".tmp.driveupload\\146238": {
+      "hash": "3558fb7a3922a68f6fef2010fca74cf6cbc6e2bd2c900bebd1c0d34cc8fd0907",
+      "size": 8960,
+      "modified": "2026-02-09T15:06:10.787994"
+    },
+    ".tmp.driveupload\\146242": {
+      "hash": "20d5b3068bb15ba3b9b8628dff2c5f34e0a8e41b998892a57c7c276a04ec4a5b",
+      "size": 7904,
+      "modified": "2026-02-09T15:06:10.406948"
+    },
+    ".tmp.driveupload\\146246": {
+      "hash": "f93238fd5c3d4530ee5bd3b346b613b995d864bd80316ae3dd8ce70e342d083a",
+      "size": 1949,
+      "modified": "2026-02-09T15:06:11.349379"
+    },
+    ".tmp.driveupload\\146250": {
+      "hash": "9ce4467dc818a7f5b6c0bfe4ec7a1a4327ac706656d0163129aab099a4525325",
+      "size": 244167,
+      "modified": "2026-02-09T15:06:10.815942"
+    },
+    ".tmp.driveupload\\146254": {
+      "hash": "4f0389a35bc5bcd44ccefc2ba5da28dd4e2400aa6809f47a40dc2c221377bc2a",
+      "size": 15003,
+      "modified": "2026-02-09T15:06:10.746042"
+    },
+    ".tmp.driveupload\\146258": {
+      "hash": "09a3c7a48501e4659a8c4291c863cf5bd922c54d72cbbc4fc4560ddf9e033ae0",
+      "size": 20023,
+      "modified": "2026-02-09T15:06:10.402525"
+    },
+    ".tmp.driveupload\\146262": {
+      "hash": "b69d8767f5e55c53de5bc0d383112bb1dcaddeef29801aa1ff998f1829ab959a",
+      "size": 210570,
+      "modified": "2026-02-09T15:06:11.054519"
+    },
+    ".tmp.driveupload\\146266": {
+      "hash": "2660a79cf3cb646c6ecfa6a278ff7619b3a425e39c11d4954b698e96732dbc9b",
+      "size": 7258,
+      "modified": "2026-02-09T15:06:11.186146"
+    },
+    ".tmp.driveupload\\146270": {
+      "hash": "d446556fbe6eeb2eedd2b5ef467b7a3e351ba0262de031181ddc2d0891ce1772",
+      "size": 4843,
+      "modified": "2026-02-09T15:06:11.317973"
+    },
+    ".tmp.driveupload\\146274": {
+      "hash": "754b0b74f20fb7d439afb6e8218ecc36b936ec3d63250c0dd02a08bc5dd19cd2",
+      "size": 1725,
+      "modified": "2026-02-09T15:06:11.344148"
+    },
+    ".tmp.driveupload\\146276": {
+      "hash": "574703c399c5b18b12544f7af49a99f7a6bc50194fb52ef81ca1bf074ced84c0",
+      "size": 3091,
+      "modified": "2026-02-09T15:06:11.339724"
+    },
+    ".tmp.driveupload\\146280": {
+      "hash": "5d080c95dc7c781140e52ec9367d9dbf8a21f6a660949536c8425fec820f7ae3",
+      "size": 337274,
+      "modified": "2026-02-09T15:06:10.443573"
+    },
+    ".tmp.driveupload\\146282": {
+      "hash": "4aec23d119fd308c9551e2584bbb16aca0a0327f6a953194a5542688f7149bbc",
+      "size": 2341,
+      "modified": "2026-02-09T15:06:11.330565"
+    },
+    ".tmp.driveupload\\146284": {
+      "hash": "eebb54caf28126e0a4768970daddcb80a3c7e89f63a22be2de4536b869cd8924",
+      "size": 364445,
+      "modified": "2026-02-09T15:06:10.495319"
+    },
+    ".tmp.driveupload\\146286": {
+      "hash": "9d53b0a8ebc26befff3590da2c2c767627748cd7adfcd439632efa35f642a703",
+      "size": 1231,
+      "modified": "2026-02-09T15:06:11.367647"
+    },
+    ".tmp.driveupload\\146290": {
+      "hash": "164c5fa8067facf1a43f09ce3d0e35ebf53a7f5723ecbf15a8667cfc53c26f6c",
+      "size": 15,
+      "modified": "2026-02-09T15:06:11.248442"
+    },
+    ".tmp.driveupload\\146294": {
+      "hash": "0c3b71f995dccd11adfd3e1e06f4032da33676bf379b757be2c674161d3cc6f1",
+      "size": 7951,
+      "modified": "2026-02-09T15:06:11.007177"
+    },
+    ".tmp.driveupload\\146296": {
+      "hash": "4e1a75a8168ff6fe87c4a0c6d327e1dab4e473ca4a249ea8c298f3ce4b84d09f",
+      "size": 356444,
+      "modified": "2026-02-09T15:06:10.612877"
+    },
+    ".tmp.driveupload\\146300": {
+      "hash": "ecc9f901fb66cc3f351d0a55ae2ef1f783427adce067687d9b31c7e53c6fdd8e",
+      "size": 12195,
+      "modified": "2026-02-09T15:06:10.392640"
+    },
+    ".tmp.driveupload\\146304": {
+      "hash": "268161f5a272c677c613fbb94b34931a07b5bf569fe92532bdd2faaedce22e80",
+      "size": 6373,
+      "modified": "2026-02-09T15:06:10.840579"
+    },
+    ".tmp.driveupload\\146308": {
+      "hash": "73a29d7dc3d62f9de2e17cd5ac8dece57b97fb947b8fd9acff32aed1de6f3282",
+      "size": 489,
+      "modified": "2026-02-09T15:06:11.221404"
+    },
+    ".tmp.driveupload\\146312": {
+      "hash": "3b1f98b509d72240a9563073524e83dca71c0b83f6e763c3c75ae7543022f321",
+      "size": 9398,
+      "modified": "2026-02-09T15:06:10.687328"
+    },
+    ".tmp.driveupload\\146316": {
+      "hash": "a42be58a6a407a2bee1b4753202c051a44bfe7ca4c401ae70918ddef0bffaa91",
+      "size": 299160,
+      "modified": "2026-02-09T15:06:10.461233"
+    },
+    ".tmp.driveupload\\146318": {
+      "hash": "63de53db8172ab0b1b8b3fdb25e1cd181ff8593c626ada2d4288608f6448bc33",
+      "size": 2896,
+      "modified": "2026-02-09T15:06:11.300065"
+    },
+    ".tmp.driveupload\\146320": {
+      "hash": "611eab4aea007a2af6648149cd94506326ea58ea84bd00781390760b012d9bec",
+      "size": 274781,
+      "modified": "2026-02-09T15:06:10.880652"
+    },
+    ".tmp.driveupload\\146324": {
+      "hash": "9338650964df4ef73dc6083f52948c77912b1b9989df77885e38917e9c81352f",
+      "size": 163677,
+      "modified": "2026-02-09T15:06:11.034832"
+    },
+    ".tmp.driveupload\\146326": {
+      "hash": "6039583b8804c95bc48acb885c37275af6cadb0923a5ea205fb4bc2b0acbd945",
+      "size": 9003,
+      "modified": "2026-02-09T15:06:10.823230"
+    },
+    ".tmp.driveupload\\146328": {
+      "hash": "36abac87d0315ca47029f73f3aa646c9eecde990d8c9d17432d5937ebd462f6e",
+      "size": 4086,
+      "modified": "2026-02-09T15:06:11.267847"
+    },
+    ".tmp.driveupload\\146332": {
+      "hash": "e6f5a6ba04b85f02f32ff8eee79b525368d69089489db962e25518be93ea817f",
+      "size": 11712,
+      "modified": "2026-02-09T15:06:10.704541"
+    },
+    ".tmp.driveupload\\146336": {
+      "hash": "624bfec87f49588367ed408bb89be6e49e3ed608dff1af33a5aa1c129076d528",
+      "size": 215273,
+      "modified": "2026-02-09T15:06:10.834127"
+    },
+    ".tmp.driveupload\\146338": {
+      "hash": "b48827a02269ad46038c27dbcaa582d2cd76085359cc19b196f0676f948179ae",
+      "size": 255,
+      "modified": "2026-02-09T15:06:11.209332"
+    },
+    ".tmp.driveupload\\146342": {
+      "hash": "9c93adbb1e3325b5d44c9f2ba8bc8fed29f2c8744b35a3ff70148114fed24794",
+      "size": 248872,
+      "modified": "2026-02-09T15:06:11.073198"
+    },
+    ".tmp.driveupload\\146344": {
+      "hash": "5e5cf9f6133484889f76bdecf33c871040ec1677c5c95c87a800f81651d91272",
+      "size": 329305,
+      "modified": "2026-02-09T15:06:10.674805"
+    },
+    ".tmp.driveupload\\146348": {
+      "hash": "30f143232c9a1682dc0e2aa7c4a646b5c48199f513c968f7aabc529ce4b71cbb",
+      "size": 744,
+      "modified": "2026-02-09T15:06:11.195176"
+    },
+    ".tmp.driveupload\\146352": {
+      "hash": "614bd5417c5497c9aa16fa231dc26a72508bfe724fb9400e680e77e8f8b90a01",
+      "size": 234671,
+      "modified": "2026-02-09T15:06:10.958015"
+    },
+    ".tmp.driveupload\\146354": {
+      "hash": "dfa23e9e2c1cffe51ddfadae26a386cef816cb00641d8f1b93ddcf29efbe8793",
+      "size": 418755,
+      "modified": "2026-02-09T15:06:10.517575"
+    },
+    ".tmp.driveupload\\146358": {
+      "hash": "d93331f972d29e6288259fdf42501f13d2397b8a74e64087aae44772ba32c63f",
+      "size": 3095,
+      "modified": "2026-02-09T15:06:11.310911"
+    },
+    ".tmp.driveupload\\146360": {
+      "hash": "118d847b1d24500db2debdad7aac1575503207558f9bda997bb2323a73823f9b",
+      "size": 541,
+      "modified": "2026-02-11T11:35:07.172824"
+    },
+    ".tmp.driveupload\\146362": {
+      "hash": "16e544b9fa6b87c92162b7e1defe1a943dccd38d85392266357938a09fd04ae1",
+      "size": 4199,
+      "modified": "2026-02-09T15:06:11.285866"
+    },
+    ".tmp.driveupload\\146366": {
+      "hash": "1a5c85bcf98b85a9f0c17738a20212ce98cde6d428e0fe223475572afc1375c5",
+      "size": 893,
+      "modified": "2026-02-09T15:06:11.228656"
+    },
+    ".tmp.driveupload\\146370": {
+      "hash": "9666c3bb16c0e2654326d984eead8d0f68b6631429303e3fc3755184a9c31a42",
+      "size": 3719,
+      "modified": "2026-02-09T15:06:11.177372"
+    },
+    ".tmp.driveupload\\146374": {
+      "hash": "a16f324925a759dfc372622918073bc6dde1feed6868b9287302425362524830",
+      "size": 228202,
+      "modified": "2026-02-09T15:06:10.627050"
+    },
+    ".tmp.driveupload\\146376": {
+      "hash": "b296ca41db10497e061ae44b0fa801857f0abea2b3b88142b972aa539a64eac3",
+      "size": 1250,
+      "modified": "2026-02-09T15:06:11.244234"
+    },
+    ".tmp.driveupload\\146380": {
+      "hash": "b497e4ddc633abbd5ac1adb38efb4c92a688b3821d601f02213e8c796aba7a14",
+      "size": 248613,
+      "modified": "2026-02-09T15:06:10.974488"
+    },
+    ".tmp.driveupload\\146382": {
+      "hash": "7eeeaec914e9ccf0a2aa4b9877a365ce07d010631118460c475d98cf3a6903f0",
+      "size": 292770,
+      "modified": "2026-02-09T15:06:10.553616"
+    },
+    ".tmp.driveupload\\146386": {
+      "hash": "86b7217b24f615438795f23bbb11c55b1d5a739864dae0da02eba3ab12e374a9",
+      "size": 265863,
+      "modified": "2026-02-09T15:06:10.655165"
+    },
+    ".tmp.driveupload\\146388": {
+      "hash": "e53334167c4ebda286a55b100f69adc7924e440c89a5093e32c00b076d02b27a",
+      "size": 7831,
+      "modified": "2026-02-09T15:06:10.838578"
+    },
+    ".tmp.driveupload\\146392": {
+      "hash": "f3799fded3dae19303c25cf02883eade8a0ab9937ef817c418bfe2ff26bd013e",
+      "size": 263295,
+      "modified": "2026-02-09T15:06:11.127111"
+    },
+    ".tmp.driveupload\\146394": {
+      "hash": "78621a09ea639720db39a42c1cc43ca71bec252b4d6d5cf9fcf9a554d6f13685",
+      "size": 330191,
+      "modified": "2026-02-09T15:06:11.164212"
+    },
+    ".tmp.driveupload\\146396": {
+      "hash": "f13c3e43d69c1f6bcc94cea5635bd86101a475df37b4a87cd1d1aa70c4ded354",
+      "size": 6141,
+      "modified": "2026-02-09T15:06:10.850406"
+    },
+    ".tmp.driveupload\\146400": {
+      "hash": "aa68cb756aea3397a9f87a95fd959a6fc1e5c6f23546ad05062889aaa92840c4",
+      "size": 7764,
+      "modified": "2026-02-09T15:06:11.262422"
+    },
+    ".tmp.driveupload\\146402": {
+      "hash": "38ecd705e2c57dbec72d6c73ab2eeee1158a6ce69f5cd104d9a9e856e5dd571d",
+      "size": 294128,
+      "modified": "2026-02-09T15:06:10.572131"
+    },
+    ".tmp.driveupload\\146404": {
+      "hash": "20a503b4c0ce3c68aa4f4362204b168a0a0b87bae7ff596bb08f76d09c429ec3",
+      "size": 4506,
+      "modified": "2026-02-09T15:06:11.278824"
+    },
+    ".tmp.driveupload\\146408": {
+      "hash": "f510407ae7430aaae465cf293b1cc2011831350d0bc8159d076e68ba40918543",
+      "size": 298135,
+      "modified": "2026-02-09T15:06:10.477050"
+    },
+    ".tmp.driveupload\\146412": {
+      "hash": "722b17589ef884956cd0f51f133b909f64e8120b454c990fc267ed42800c2198",
+      "size": 1715,
+      "modified": "2026-02-09T15:06:11.355237"
+    },
+    ".tmp.driveupload\\146414": {
+      "hash": "0ffd459f8465e3c3ae06a95661229c4841991c28b7d1a40b4bb88e48793edb51",
+      "size": 9483,
+      "modified": "2026-02-09T15:06:10.697628"
+    },
+    ".tmp.driveupload\\146418": {
+      "hash": "e02ec3faad39a01d5cda3ad7a74fc26f34a790b769426c11950a56e4d1df7650",
+      "size": 2870,
+      "modified": "2026-02-09T15:06:11.272735"
+    },
+    ".tmp.driveupload\\146422": {
+      "hash": "83407e5c7c42483321b6e822663726fc1ca36c4a841b47b0cfd51b3d3f2740be",
+      "size": 366442,
+      "modified": "2026-02-09T15:06:10.919070"
+    },
+    ".tmp.driveupload\\146426": {
+      "hash": "64fb2438add1815c100a6b885f4f26f2b3241dbe3c0bc69aef70dae5b86f3f74",
+      "size": 8235,
+      "modified": "2026-02-09T15:06:11.189998"
+    },
+    ".tmp.driveupload\\146428": {
+      "hash": "ff9a1d14c3dbb9fb681f429f0d5a292e72ad80dad85099924bb395b40f68bd99",
+      "size": 6090,
+      "modified": "2026-02-09T15:06:10.681433"
+    },
+    ".tmp.driveupload\\146432": {
+      "hash": "20bc918e3e8b2f82e73eb3c965f3e3fb37b2116ae1541c33e6ac31e5adc075dd",
+      "size": 296639,
+      "modified": "2026-02-09T15:06:10.897074"
+    },
+    ".tmp.driveupload\\146434": {
+      "hash": "0d8e42215e22d9269eaa77b513360170a8385c2136ac6c267e074ab187b43bf8",
+      "size": 204733,
+      "modified": "2026-02-09T15:06:11.024254"
+    },
+    ".tmp.driveupload\\146438": {
+      "hash": "1d3e45895b15c3fd8d3b37da5ebcd8d4869cf4f087c29f179b5ff820b1d9ac95",
+      "size": 190677,
+      "modified": "2026-02-09T15:06:10.992641"
+    },
+    ".tmp.driveupload\\146442": {
+      "hash": "e10166bbb97ebce035e24c0032770cacbbc5b1541839c861949d42a89a6c2cfe",
+      "size": 4163,
+      "modified": "2026-02-09T15:06:11.305823"
+    },
+    ".tmp.driveupload\\146444": {
+      "hash": "fe43a8c581e103da14cecf047db72d6dec0f0bbc3d4ba1c4d0267d072ac4011c",
+      "size": 268444,
+      "modified": "2026-02-09T15:06:11.143073"
+    },
+    ".tmp.driveupload\\146448": {
+      "hash": "250f7a877486168dc2e43d004fb43aa2352fb14e32a24aa1cc1f8c8987eb5db6",
+      "size": 968,
+      "modified": "2026-02-09T15:06:11.361650"
+    },
+    ".tmp.driveupload\\146452": {
+      "hash": "ba35742f996593185602e584c7eb2da69fbf79818f669ca04cf8d461945ee021",
+      "size": 365603,
+      "modified": "2026-02-09T15:06:10.590762"
+    },
+    ".tmp.driveupload\\146454": {
+      "hash": "861152c1abbbd9b4cf781f79bbe3925dc6b1b9a25dc8b4cf0f175eeb80d659a0",
+      "size": 340236,
+      "modified": "2026-02-09T15:06:10.536010"
+    },
+    ".tmp.driveupload\\146458": {
+      "hash": "51e997d377ee92b935d86875da66ab1701f127d498beb85d2249790b46a9613a",
+      "size": 219672,
+      "modified": "2026-02-09T15:06:10.932780"
+    },
+    ".tmp.driveupload\\146462": {
+      "hash": "4646d9701c6bc4376fd417760e2d85e344647e33896063368d39db1f037a6f62",
+      "size": 339,
+      "modified": "2026-02-09T15:06:11.201492"
+    },
+    ".tmp.driveupload\\146464": {
+      "hash": "19b2745a1afebe82668863974dc909fa98fb65c4ccc87f77e9c025195242c98f",
+      "size": 6439,
+      "modified": "2026-02-09T15:06:11.000335"
+    },
+    ".tmp.driveupload\\146466": {
+      "hash": "3783e1499a18f191e9d4c1c0fc1dd51176c4776850628f522d3a526e96d9f36f",
+      "size": 5657,
+      "modified": "2026-02-09T15:06:11.041919"
+    },
+    ".tmp.driveupload\\146470": {
+      "hash": "a3abe1688cc20a95f8933129dcc76d6e1a48e2fd54435ae2e8fc61b20357596c",
+      "size": 3647,
+      "modified": "2026-02-09T15:06:11.324478"
+    },
+    ".tmp.driveupload\\146474": {
+      "hash": "e201cd4469dacd44c13bf7c5ba5235bdc2b5b2fadaced477f37fb1f2be2df130",
+      "size": 6202,
+      "modified": "2026-02-09T15:06:10.692655"
+    },
+    ".tmp.driveupload\\146476": {
+      "hash": "91f373efee4fb74ad4c2c0e7f7406b478a900666af539b1e5b50f8d5d1067a3f",
+      "size": 4374,
+      "modified": "2026-02-09T15:06:10.980283"
+    },
+    ".tmp.driveupload\\146478": {
+      "hash": "1ba5833b63b4b792a3171a3c678e2c37e372649f28cefa95c9d6e6a0b8905d13",
+      "size": 865218,
+      "modified": "2026-02-09T15:06:11.114459"
+    },
+    ".tmp.driveupload\\146480": {
+      "hash": "8ad64f02bb2e0ef92f3e3d88b30b9d5ce5b1e86bf0ff24974c72d6b7219655ea",
+      "size": 186568,
+      "modified": "2026-02-09T15:06:10.779436"
+    },
+    ".tmp.driveupload\\146484": {
+      "hash": "eeb485fcdfae7b14112aa1e97aa411c7b1ef1245705cadaacdac7c4d61ecf94a",
+      "size": 2004,
+      "modified": "2026-02-09T15:06:11.290951"
+    },
+    ".tmp.driveupload\\146488": {
+      "hash": "81d70eabda926245a8cc05ddd6de8e7e6765da6186cf712818c266f1df283a26",
+      "size": 6997,
+      "modified": "2026-02-09T15:06:10.846292"
+    },
+    ".tmp.driveupload\\146492": {
+      "hash": "bad0415badda74c4420aa7b78f013353006647faae5a67469bee917cfa91a5dd",
+      "size": 777,
+      "modified": "2026-02-09T15:06:11.374478"
+    },
+    ".tmp.driveupload\\146496": {
+      "hash": "019215bffafe320a21c92b00f9b9c9b777015853b1c73418f2f88b5a35cb3249",
+      "size": 246914,
+      "modified": "2026-02-09T15:06:11.175301"
+    },
+    ".tmp.driveupload\\146500": {
+      "hash": "aa99f0fa261e27f4a4c611297e2afa149e0061bc0c7e77f601b01fe816d0947e",
+      "size": 204191,
+      "modified": "2026-02-09T15:06:10.945053"
+    },
+    ".tmp.driveupload\\146502": {
+      "hash": "b265f2b11b491b73f4ed8284944d492a729133aecdea710f9ee27d0011915a82",
+      "size": 4617,
+      "modified": "2026-02-09T15:06:10.785994"
+    },
+    ".tmp.driveupload\\146506": {
+      "hash": "9fb45bef034e637d5e6bfd538d02f2d181d4102b7a5749f81c96ccfffeb894dc",
+      "size": 3347,
+      "modified": "2026-02-09T15:06:11.380815"
+    },
+    ".tmp.driveupload\\146508": {
+      "hash": "d332551a4476e1f44ae808a8857a123d6d056758e5c6c3d2d07de76341fa5fec",
+      "size": 31,
+      "modified": "2026-02-11T12:44:03.919063"
+    },
+    ".tmp.driveupload\\146510": {
+      "hash": "315e890e20096300d1d4294aae78d09509591ac4288764e144bb103a77c23219",
+      "size": 87,
+      "modified": "2026-02-09T15:06:17.419812"
+    },
+    ".tmp.driveupload\\146512": {
+      "hash": "e04232f375c14b6d03fe96a17125859293b4b2d4614b20f8a427a04dec8aab3e",
+      "size": 612,
+      "modified": "2026-02-09T15:06:17.335660"
+    },
+    ".tmp.driveupload\\146516": {
+      "hash": "6ba948f4b71a70bed2b1fb29702a41af8a350ac6667dceebf4b772065c8e3be1",
+      "size": 70,
+      "modified": "2026-02-09T15:06:17.432021"
+    },
+    ".tmp.driveupload\\146520": {
+      "hash": "a7364042025d9d2e151c81d6730c0802349cffdfe545f3db8e1683d1399ac0cd",
+      "size": 46,
+      "modified": "2026-02-09T15:06:17.373114"
+    },
+    ".tmp.driveupload\\146524": {
+      "hash": "2768eff028c792bdf543f18e3e5933f4fdb609fbc0fbda5c8c0850ea87b3e7cb",
+      "size": 59,
+      "modified": "2026-02-09T15:06:17.481288"
+    },
+    ".tmp.driveupload\\146526": {
+      "hash": "87d9fa88430846e1d9bed7fcadebe0fde6080ade85e11b4aa58a3a93bb2f764c",
+      "size": 289,
+      "modified": "2026-02-09T15:06:17.322917"
+    },
+    ".tmp.driveupload\\146530": {
+      "hash": "6c5875af5f5a760d8cce7befd6fd60ccc4f6558a97230b07c8a8c734e414880f",
+      "size": 215,
+      "modified": "2026-02-09T15:06:17.232406"
+    },
+    ".tmp.driveupload\\146532": {
+      "hash": "4f37c6ce2940f9ae895c6f705088824e6aa97613b8dd485da94f5efcb38b3b48",
+      "size": 244,
+      "modified": "2026-02-09T15:06:17.290197"
+    },
+    ".tmp.driveupload\\146536": {
+      "hash": "34f8363b63487e6987a7a1cf70dda8e4400db217ceaf3c27721effe96d10fcc1",
+      "size": 190,
+      "modified": "2026-02-09T15:06:17.160121"
+    },
+    ".tmp.driveupload\\146538": {
+      "hash": "ee9302c7fbf0d9d1138b4237fe889584fad308729928e2b4564e0b2c8906cc34",
+      "size": 155,
+      "modified": "2026-02-09T15:06:17.178475"
+    },
+    ".tmp.driveupload\\146540": {
+      "hash": "479b82e7dd91fa1108ec8cd98cef427246fe9d580b450a0486389f6dca3761ff",
+      "size": 61,
+      "modified": "2026-02-09T15:06:17.531611"
+    },
+    ".tmp.driveupload\\146544": {
+      "hash": "57f39871b83a727b5a108e4d3fa764fca730d9323bf51fa97e54f0e06823e782",
+      "size": 88,
+      "modified": "2026-02-09T15:06:17.123785"
+    },
+    ".tmp.driveupload\\146546": {
+      "hash": "4cc3051c3de42ebe2fbd0062e6baf6932347ea823ea014bc201772b26b19747d",
+      "size": 93,
+      "modified": "2026-02-09T15:06:17.367735"
+    },
+    ".tmp.driveupload\\146548": {
+      "hash": "746bc5c6cf4172827060ba772544741a95d0cbb500da798847f6d17a317f963f",
+      "size": 46,
+      "modified": "2026-02-09T15:06:17.395479"
+    },
+    ".tmp.driveupload\\146550": {
+      "hash": "92b57ed028518d94a312c4c2a3b7ebef08ac7a6134796e075ee812c1cedef940",
+      "size": 50,
+      "modified": "2026-02-09T15:06:17.389151"
+    },
+    ".tmp.driveupload\\146552": {
+      "hash": "b4610bf4dd493c2a42d25dbf629b5f5a5fb8598e05ff4e17d6255db3cf78d751",
+      "size": 358,
+      "modified": "2026-02-09T15:06:17.257482"
+    },
+    ".tmp.driveupload\\146556": {
+      "hash": "8f079b8b39acfc971ba5343e74086e38fbf77485d67d3aa19cd7a1de7c562311",
+      "size": 65,
+      "modified": "2026-02-09T15:06:17.348442"
+    },
+    ".tmp.driveupload\\146558": {
+      "hash": "ef61c53a83fd39c45b2d6c14dcc51251ba0be8012f079fd4e4d01b368e481f9a",
+      "size": 77,
+      "modified": "2026-02-09T15:06:17.462967"
+    },
+    ".tmp.driveupload\\146560": {
+      "hash": "ce39b327fea7bc44a671657402399e6c8515016722e68744730acc3b54d8a3ad",
+      "size": 150,
+      "modified": "2026-02-09T15:06:17.183571"
+    },
+    ".tmp.driveupload\\146562": {
+      "hash": "855601df5a410fe68609d2bc90eef70fabcd120b4caeab1c8a22d21e4afd0203",
+      "size": 408,
+      "modified": "2026-02-09T15:06:17.295593"
+    },
+    ".tmp.driveupload\\146564": {
+      "hash": "0bc39674c21ce48167bc5f6553b99f22a13e571f6eb0e1e9819f276c4522cb8e",
+      "size": 53,
+      "modified": "2026-02-09T15:06:17.381439"
+    },
+    ".tmp.driveupload\\146568": {
+      "hash": "306f76011b9f1e245dcaf5c8e3d88bfd4e5c35c058dc1c1c7115cd0bacde65d0",
+      "size": 328,
+      "modified": "2026-02-09T15:06:17.497440"
+    },
+    ".tmp.driveupload\\146572": {
+      "hash": "ea885baa90d5909875d6ae767fd4f567494faf3af07c0c9d6a71927b9f17fc96",
+      "size": 50,
+      "modified": "2026-02-09T15:06:17.426706"
+    },
+    ".tmp.driveupload\\146574": {
+      "hash": "1f96125e6b669d73fcc8e1e49a06b01fc75d537cf92fbb4b4349401d559fdc43",
+      "size": 136,
+      "modified": "2026-02-09T15:06:17.456545"
+    },
+    ".tmp.driveupload\\146578": {
+      "hash": "b2b5f7be7ff825c4e09fded84ad808a209f2dd54d0744109dca6bd404a124625",
+      "size": 162,
+      "modified": "2026-02-09T15:06:17.308701"
+    },
+    ".tmp.driveupload\\146580": {
+      "hash": "f649f0a7d88caa05b1588fdda9620ffc77531242086875fda36abe00c4c554c6",
+      "size": 694,
+      "modified": "2026-02-09T15:06:17.537659"
+    },
+    ".tmp.driveupload\\146582": {
+      "hash": "0210441c5381e33c5b651fec6240747b044c35268388cb96d1761b0c4f927b39",
+      "size": 216,
+      "modified": "2026-02-09T15:06:17.276193"
+    },
+    ".tmp.driveupload\\146584": {
+      "hash": "b7ea587eb5d11b408572d94836ff94b035ae07c87e13fedc3761aa2c1de6b6f9",
+      "size": 562,
+      "modified": "2026-02-09T15:06:17.329569"
+    },
+    ".tmp.driveupload\\146588": {
+      "hash": "a3efaa67fb9448fcd4d2419b4f5474e67a3368886c272d12e5831c0ca26eb95a",
+      "size": 66,
+      "modified": "2026-02-09T15:06:17.129520"
+    },
+    ".tmp.driveupload\\146590": {
+      "hash": "7776469e990f2517771e309a0d10a06b3d4ec5a6b803b47f73ff1ac35480f937",
+      "size": 143,
+      "modified": "2026-02-09T15:06:17.547728"
+    },
+    ".tmp.driveupload\\146594": {
+      "hash": "cdf62795fde3c4030177cb5ae54774de11f19fc80edd4d38388fb64ae1a7843a",
+      "size": 64,
+      "modified": "2026-02-09T15:06:17.341905"
+    },
+    ".tmp.driveupload\\146596": {
+      "hash": "9b3bbece55559e15f11ff2ceb0f846d0aa051f5731c405efb5a47d869d5d30a9",
+      "size": 66,
+      "modified": "2026-02-09T15:06:17.513403"
+    },
+    ".tmp.driveupload\\146600": {
+      "hash": "713ab1395b40a6333c22be1c82e25960dc46671715871dd627ebd882aba76740",
+      "size": 187,
+      "modified": "2026-02-09T15:06:17.222953"
+    },
+    ".tmp.driveupload\\146604": {
+      "hash": "52d7affc51645c8068855e185e0814497ffcb8879ed5abc96cce3a7674c23266",
+      "size": 59,
+      "modified": "2026-02-09T15:06:17.438546"
+    },
+    ".tmp.driveupload\\146606": {
+      "hash": "d07a30f24cf3af9368b76ebba20d731643ce2b50167fc40d590cef07e84f328f",
+      "size": 96,
+      "modified": "2026-02-09T15:06:17.147624"
+    },
+    ".tmp.driveupload\\146610": {
+      "hash": "5eeb321bee12c5e627b4c19e626aacb8d550f2936ca44a4ac7ae7dd1306ed3bb",
+      "size": 120,
+      "modified": "2026-02-09T15:06:17.117440"
+    },
+    ".tmp.driveupload\\146614": {
+      "hash": "60d28e60f296f3aa8e6133928bfb7142edf8f6cc3e33ed8ca5260dd5e6a17111",
+      "size": 47,
+      "modified": "2026-02-09T15:06:17.408579"
+    },
+    ".tmp.driveupload\\146616": {
+      "hash": "02af2fcf7976093efa5976471e19ffbf52bb786535a58491cb4de3b59fee54ae",
+      "size": 124,
+      "modified": "2026-02-09T15:06:17.355385"
+    },
+    ".tmp.driveupload\\146620": {
+      "hash": "fc33ed6def22c3e7f6da297ce3ccdc83a07cdd08980c6412da788809bfb67b79",
+      "size": 131,
+      "modified": "2026-02-09T15:06:17.475570"
+    },
+    ".tmp.driveupload\\146622": {
+      "hash": "2e8948d445e3ff63be671e2da0574aefeb3f6c60fe363f3549143e6c22aeef38",
+      "size": 46,
+      "modified": "2026-02-09T15:06:17.401614"
+    },
+    ".tmp.driveupload\\146626": {
+      "hash": "819d90aa09caf2db2cc90c46854057c509cc2b93cf5dda35ab5d3eb0103d10ce",
+      "size": 61,
+      "modified": "2026-02-09T15:06:17.486653"
+    },
+    ".tmp.driveupload\\146630": {
+      "hash": "cb7adfb8116aa4e50afbd7d072d7c645823fcbc12e4a5b877b67a950e6c31361",
+      "size": 48,
+      "modified": "2026-02-09T15:06:17.361518"
+    },
+    ".tmp.driveupload\\146632": {
+      "hash": "066dae30d580c9866ca9c4a6159dda88d4a43c0bafdc3bf509051b2e4050b964",
+      "size": 59,
+      "modified": "2026-02-09T15:06:17.507202"
+    },
+    ".tmp.driveupload\\146636": {
+      "hash": "505ea39b9588722353ce3364b20f81312ee31e2b8cd7933f44e3ab6c5f36e4fd",
+      "size": 384,
+      "modified": "2026-02-09T15:06:17.302577"
+    },
+    ".tmp.driveupload\\146638": {
+      "hash": "c5c58770de34e768139c9f1f96f64e272a2d3c497e45d5d2494e9a4f73de3c37",
+      "size": 51,
+      "modified": "2026-02-09T15:06:17.142000"
+    },
+    ".tmp.driveupload\\146642": {
+      "hash": "4ba86e6b9842a56406564aa08c190059d70f5abf42462562ff889a864da5a222",
+      "size": 167,
+      "modified": "2026-02-09T15:06:17.316031"
+    },
+    ".tmp.driveupload\\146646": {
+      "hash": "82395408bf8c626527016534521671690d00a3d141a0ec31ec832a702d3f3537",
+      "size": 281,
+      "modified": "2026-02-09T15:06:17.270555"
+    },
+    ".tmp.driveupload\\146648": {
+      "hash": "96ad94d2b98facf01056c398083488aced183b0eb26f2b0c3caa2ac01f4135d0",
+      "size": 230,
+      "modified": "2026-02-09T15:06:17.264221"
+    },
+    ".tmp.driveupload\\146650": {
+      "hash": "eb7bd9a0f68e9c7247c20d0c873ad94e81be9f001b829ae15e7c87acc56dfef3",
+      "size": 151,
+      "modified": "2026-02-09T15:06:17.171950"
+    },
+    ".tmp.driveupload\\146654": {
+      "hash": "befff6cea10625eaea6d4d933bfb28bace80f15fb4a8b406e43ae68e280a47d3",
+      "size": 117,
+      "modified": "2026-02-09T15:06:17.519106"
+    },
+    ".tmp.driveupload\\146656": {
+      "hash": "af7f7a0548e0db6b55df68d5cd9ae99155efea2163f74d7d4088e8aa085d1814",
+      "size": 240,
+      "modified": "2026-02-09T15:06:17.241520"
+    },
+    ".tmp.driveupload\\146660": {
+      "hash": "6f6484058cbfba1c24eeaadbf4064e27fb0e3b6be161147cfd709c8a032e65f7",
+      "size": 240,
+      "modified": "2026-02-09T15:06:17.195635"
+    },
+    ".tmp.driveupload\\146662": {
+      "hash": "73e99e52d3330a749048b711bb4d54f2c025e62f0d23f3ac9e62424baded8c09",
+      "size": 91,
+      "modified": "2026-02-09T15:06:17.136097"
+    },
+    ".tmp.driveupload\\146666": {
+      "hash": "f53f0b3c4b4b8c1c255911563ba6299060343f78d860c37d01c6c93a62a4644d",
+      "size": 291,
+      "modified": "2026-02-09T15:06:17.251234"
+    },
+    ".tmp.driveupload\\146670": {
+      "hash": "1810f951fd92bdc605a72c47a9f80703eb5d931f21ce1188b1f1ce5436f69239",
+      "size": 57,
+      "modified": "2026-02-09T15:06:17.444754"
+    },
+    ".tmp.driveupload\\146674": {
+      "hash": "635ee18529cbded6f602c82019b4d65a2a5834de9fb13977ab5d67f70e8902d3",
+      "size": 66,
+      "modified": "2026-02-09T15:06:17.468553"
+    },
+    ".tmp.driveupload\\146678": {
+      "hash": "421a33cb19a25efbe02dfdba6cc997b02f5c7b9e72fe143c9a3b480a9f5b2f9c",
+      "size": 55,
+      "modified": "2026-02-09T15:06:17.451183"
+    },
+    ".tmp.driveupload\\146682": {
+      "hash": "b76997336776141e8073e11241bdf753b72ba01fe73e6b6e05ceaabd94bfd571",
+      "size": 332,
+      "modified": "2026-02-09T15:06:17.154451"
+    },
+    ".tmp.driveupload\\146684": {
+      "hash": "4af929d360bb75a69ec4d6263f3461461eaa28ea7dd28f82ca6671448635124f",
+      "size": 45,
+      "modified": "2026-02-09T15:06:17.414334"
+    },
+    ".tmp.driveupload\\146686": {
+      "hash": "0e2cbe4fe20f49bc092f94c5f6da4c71cd6ca2e8da3a7ff51a23178c17ba41df",
+      "size": 150,
+      "modified": "2026-02-09T15:06:17.166378"
+    },
+    ".tmp.driveupload\\146690": {
+      "hash": "cbe4f5b418a46ab1fa0992362029d56f86f1c6b112daa68b99fbf3665f2bda16",
+      "size": 215,
+      "modified": "2026-02-09T15:06:17.202751"
+    },
+    ".tmp.driveupload\\146692": {
+      "hash": "a8c7ead09d1f2c719aa8a8a83dedfa672ff5ba95460f60d34e5d61c7807d2c40",
+      "size": 216,
+      "modified": "2026-02-09T15:06:17.190177"
+    },
+    ".tmp.driveupload\\146696": {
+      "hash": "e44584023f04a667e3754809f0d3257749fbcbf2c737764d97335c4567870958",
+      "size": 114,
+      "modified": "2026-02-09T15:06:17.526380"
+    },
+    ".tmp.driveupload\\146700": {
+      "hash": "526e4ad7fb5b9c412d87cd12cf611dde56cde14f5c41611d6987d1bf6c31a68e",
+      "size": 188,
+      "modified": "2026-02-09T15:06:17.283613"
+    },
+    ".tmp.driveupload\\146732": {
+      "hash": "81785966d580c3dcc9413850d9001a4d61281b23ff4edbdf53ebc4fc3b04df3d",
+      "size": 804,
+      "modified": "2026-02-09T16:32:56.805895"
+    },
+    ".tmp.driveupload\\146734": {
+      "hash": "af194c4e329d00950a4aab38e610f49191701fcf5b44ed9154d89250ad9ea785",
+      "size": 667,
+      "modified": "2026-02-09T15:46:53.257838"
+    },
+    "api\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.151804"
+    },
+    "api\\main.py": {
+      "hash": "f01061994f0f7fc955e238a1fea4fe4339bae0d0403835cef7bbde7cbcd8bff3",
+      "size": 7767,
+      "modified": "2026-02-09T13:30:07.442086"
+    },
+    "colab_notebooks\\AADS-ULoRA_v5.5_Colab.ipynb": {
+      "hash": "ad0946967f4d0fb4575e0239ede2c5f7721d8bd81e532013e73058b506760dc3",
+      "size": 28280,
+      "modified": "2026-02-09T17:03:00.014398"
+    },
+    "colab_notebooks\\download_tomato_dataset.py": {
+      "hash": "a12888cf7f37a692bc5f721fd503ba73aef930eedd3f962c72bcf5b8cbf6d582",
+      "size": 12523,
+      "modified": "2026-02-09T16:42:59.741687"
+    },
+    "colab_notebooks\\README.md": {
+      "hash": "5c3bff3aa6a7f9822a4401676db8052befefdb8c4a7555926505eb0c41f7c0fe",
+      "size": 4026,
+      "modified": "2026-02-09T16:35:27.853262"
+    },
+    "config\\adapter_spec_v55.json": {
+      "hash": "daa2dcf912d08915242598adc8b11d2c42537181ed8fffe0a5241d420d1ff9f7",
+      "size": 2698,
+      "modified": "2026-02-09T13:29:46.000368"
+    },
+    "config\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.139275"
+    },
+    "demo\\app.py": {
+      "hash": "1f224be4fd351adf1ca8c4c5c076ec438f3572da1a267405a0760d83a083dc1b",
+      "size": 6951,
+      "modified": "2026-02-09T13:28:56.116340"
+    },
+    "demo\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.165442"
+    },
+    "docs\\api_reference.md": {
+      "hash": "1bbf6ef6f16f29b4abefe99ba9f7fdd7afe3634f3ce2b107430b8ac9c30379ef",
+      "size": 8435,
+      "modified": "2026-02-09T13:35:15.614747"
+    },
+    "docs\\architecture.md": {
+      "hash": "8219259fa7c946ee5708346d90dafb20e014867747e55864d24713f7bcd80816",
+      "size": 10484,
+      "modified": "2026-02-09T13:35:13.684896"
+    },
+    "docs\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.180775"
+    },
+    "documents\\adapterguide.tex": {
+      "hash": "8488d81b773b362bf761a8d4d31787ad8251125fd60e2a3802158da9438b725a",
+      "size": 14682,
+      "modified": "2026-02-09T14:05:18.364533"
+    },
+    "documents\\adapter_guide.pdf": {
+      "hash": "c91ea37a0c20649acc80b39b5e79fe54456771be173cb947bec14494afce1035",
+      "size": 320004,
+      "modified": "2026-02-08T18:30:34.551392"
+    },
+    "documents\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.125480"
+    },
+    "documents\\implementation.pdf": {
+      "hash": "6897ae07638e99f8a8b7d61fedffad32694283b2d4f2e78ead49bb1a0de3fcb6",
+      "size": 265469,
+      "modified": "2026-02-08T18:27:30.758876"
+    },
+    "documents\\implementation.tex": {
+      "hash": "2da4bbfe169adf204fc42158c567cba6acca5b854ebc8395c6fcb4447356624d",
+      "size": 25327,
+      "modified": "2026-02-09T14:05:26.923440"
+    },
+    "documents\\implementationpart2.tex": {
+      "hash": "db40fe741689cb2385ade51666f8d4ae6f3469aecfd5d4fd9726fba2597c48de",
+      "size": 27888,
+      "modified": "2026-02-09T14:05:49.194000"
+    },
+    "documents\\implementation_part_2.pdf": {
+      "hash": "037a728b0491fc2b7591b6e4566fa8e1d4653f6b76809a4e2704535866c8ac96",
+      "size": 319393,
+      "modified": "2026-02-08T18:28:53.134650"
+    },
+    "documents\\main.pdf": {
+      "hash": "33036bbc3d4a6549037880d030a53d0abbce9bc266a975b16e2900d78ec9ebe5",
+      "size": 382656,
+      "modified": "2026-02-08T18:26:57.326278"
+    },
+    "documents\\main.tex": {
+      "hash": "28090c0988a45820ab3e0712e0d930e8419352b55352144986ba93e0389a01cf",
+      "size": 15274,
+      "modified": "2026-02-09T14:05:53.201506"
+    },
+    "documents\\mobile (1).pdf": {
+      "hash": "046c04a8721dabfa8c5d7060058267760401ac46a3a8e90635b32901b8ab967c",
+      "size": 355030,
+      "modified": "2026-02-09T11:37:49.375548"
+    },
+    "documents\\mobile.tex": {
+      "hash": "91fce7f5930aca926fc48f0e20da2fb8df8d48fbe32b981a9a002844ce838d96",
+      "size": 37107,
+      "modified": "2026-02-09T14:04:15.024193"
+    },
+    "lit_review\\Advanced Out-of-Distribution Detection Frameworks for Fine-Grained Plant Disease Diagnosis_ A Synthesis of Vision Transformers, Foundation Models, and Parameter-Efficient Adaptation.pdf": {
+      "hash": "624866a5e9e3d4409e4dc319fb53f2f67409ac352933b8f0d1a628d4985e0289",
+      "size": 316105,
+      "modified": "2026-02-03T01:20:22.946715"
+    },
+    "lit_review\\alternative_tta_analysis.md": {
+      "hash": "05da3154259ad1c62ffcab89188cd2544c178e03ef783e718f7557993909a622",
+      "size": 8108,
+      "modified": "2026-02-07T22:37:40.858640"
+    },
+    "lit_review\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:42.670779"
+    },
+    "lit_review\\IE4197_EOZTEMEL_F\u0130NALRAPOR_B.OZ_150321033;D.SENER_150321014;E.ERIM_150321054.pdf": {
+      "hash": "7d33398661effba2f045d5d12ca81ff929a0735bd2545576f9dea1befd276119",
+      "size": 1027226,
+      "modified": "2026-02-03T00:55:06.928538"
+    },
+    "lit_review\\Incremental Adapter Updates Literature Review.pdf": {
+      "hash": "9a08b31603c63701806f9cfbc508556b890a3214089dbfe2b6c41c154e4b1465",
+      "size": 365617,
+      "modified": "2026-02-08T14:19:25.569925"
+    },
+    "lit_review\\literature_review_2026.md": {
+      "hash": "ed9def4919d6b1cfce3d138277985508dc0249dc081c57b258a855788f92a74d",
+      "size": 15875,
+      "modified": "2026-02-07T21:54:50.744150"
+    },
+    "lit_review\\literature_review_findings.md": {
+      "hash": "5f4ccd11987ef843a5de14742c0f8f96845d51e8e64d1cf9293b5d3e31338d35",
+      "size": 19900,
+      "modified": "2026-02-07T22:37:40.906881"
+    },
+    "lit_review\\OOD Detection and ViT Research.pdf": {
+      "hash": "70c62d653a8903e41e3cd6fe8a824a480a51dbcd11841d20daf29e435477f44d",
+      "size": 446595,
+      "modified": "2026-02-03T01:20:29.082127"
+    },
+    "lit_review\\OOD Detection Research For Agriculture.pdf": {
+      "hash": "f767456b891f8a493cd063eb899e610f941882aa2ce6aada0b18b3006da03941",
+      "size": 358906,
+      "modified": "2026-02-04T13:38:30.386303"
+    },
+    "lit_review\\Project Evaluation and Literature Review.pdf": {
+      "hash": "84f6243255595d5dbbbd8227534fb647a0136e8962e333142222dbc7633f8db4",
+      "size": 321079,
+      "modified": "2026-02-08T14:20:08.219641"
+    },
+    "mobile\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.224585"
+    },
+    "src\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.210778"
+    },
+    "tests\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.197410"
+    },
+    "version_management\\backup.py": {
+      "hash": "376b13b694a31440176dc48b5f45bf9a5f5ffb7e2800bdefb9e6de41260580e5",
+      "size": 18938,
+      "modified": "2026-02-11T14:16:48.455159"
+    },
+    "version_management\\backup.sh": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-11T13:49:19.180825"
+    },
+    "version_management\\backup_implementation.md": {
+      "hash": "8978f9ebdd508575f8a6d161f57140ee8f125f509e4d85e4697d129c96c0b68b",
+      "size": 21135,
+      "modified": "2026-02-11T13:57:07.403855"
+    },
+    "version_management\\IMPLEMENTATION_GUIDE.md": {
+      "hash": "319cdf5124219407cc005d459b9a06fa4130acaff66db7a777ec957cec655cf2",
+      "size": 17982,
+      "modified": "2026-02-11T14:04:58.567279"
+    },
+    "version_management\\README.md": {
+      "hash": "8b310860e279fa4a33921f7057848e3d9c949c316fc69af530a441af8ccd0360",
+      "size": 5082,
+      "modified": "2026-02-11T13:46:50.100364"
+    },
+    "version_management\\rollback_mechanisms.md": {
+      "hash": "ee4df48ccc8235bd0ae558c2356c2f989024c0b0bb884f7b8e7aef00ec2568e3",
+      "size": 20531,
+      "modified": "2026-02-11T13:58:35.435921"
+    },
+    "version_management\\staged_implementation.md": {
+      "hash": "b004bbbb68fb8294b60353fe753632b79f4acd7a19037ea636cc59f3b9dd5c3a",
+      "size": 20726,
+      "modified": "2026-02-11T13:59:55.496548"
+    },
+    "version_management\\testing_validation.md": {
+      "hash": "3d19378c10837299d97ce484ad266385ecdbe7b0093a5f7c0d18fa6664101d65",
+      "size": 28190,
+      "modified": "2026-02-11T14:02:01.933951"
+    },
+    "visualization\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.238441"
+    },
+    "visualization\\visualization.py": {
+      "hash": "219ff6c7b81d6f8c01a4ff88ebbcebe0f7390a8b2124eb2f291b2f985ca8c98c",
+      "size": 11160,
+      "modified": "2026-02-09T13:32:50.519076"
+    },
+    "tests\\fixtures\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.373391"
+    },
+    "tests\\fixtures\\sample_data.py": {
+      "hash": "e41e7d7cb02d0973708b360ceba45dded6dc577289eb099fee9c3c9e6ab21804",
+      "size": 5456,
+      "modified": "2026-02-09T13:34:46.485975"
+    },
+    "tests\\integration\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.399430"
+    },
+    "tests\\integration\\test_full_pipeline.py": {
+      "hash": "bad890acbf273544cba4a36d91d45ecf59080e7654e7f964a63b72c77083a9d9",
+      "size": 5372,
+      "modified": "2026-02-09T13:34:44.802730"
+    },
+    "tests\\unit\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.460722"
+    },
+    "tests\\unit\\test_adapter.py": {
+      "hash": "c923033adc0efd16d366b0e6da632eb26383f3fa36a4a2a4ed9d6a6a663d3246",
+      "size": 2833,
+      "modified": "2026-02-09T13:30:26.421125"
+    },
+    "tests\\unit\\test_ood.py": {
+      "hash": "0e99e7621bf5718680e0503df7c96f6c2733550d4602d8f19ce2fd0393eefa4f",
+      "size": 4838,
+      "modified": "2026-02-09T13:30:27.985852"
+    },
+    "tests\\unit\\test_router.py": {
+      "hash": "5bd2d0e863d5e3974d00d0c8e932b0f0d264d770071730ebda262db99d93ba7b",
+      "size": 2037,
+      "modified": "2026-02-09T13:30:24.811386"
+    },
+    "src\\adapter\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.329238"
+    },
+    "src\\adapter\\independent_crop_adapter.py": {
+      "hash": "45eebad64907f1ea35ae7ec742c997111d692e3117cdf569dcaa85baddd7f9a0",
+      "size": 31439,
+      "modified": "2026-02-09T13:25:57.829263"
+    },
+    "src\\dataset\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.341695"
+    },
+    "src\\dataset\\preparation.py": {
+      "hash": "2e6ca4eef5e10c237e7ee1f9213cf266bbb35754adad0ad8ccde2c004fd7bd4d",
+      "size": 13050,
+      "modified": "2026-02-09T13:32:24.840565"
+    },
+    "src\\debugging\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.514559"
+    },
+    "src\\debugging\\monitoring.py": {
+      "hash": "68c7748bdb5960b259c2e2a6a288d61ab9ba2963ecde1529b5d86cae0c3c3001",
+      "size": 8617,
+      "modified": "2026-02-09T13:10:23.689950"
+    },
+    "src\\evaluation\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.305646"
+    },
+    "src\\evaluation\\metrics.py": {
+      "hash": "cc949113ab4a1583a427ba48ffab3723b0abf2ea617659c9163912b131e8ae7c",
+      "size": 15583,
+      "modified": "2026-02-09T12:59:10.831773"
+    },
+    "src\\ood\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.540300"
+    },
+    "src\\ood\\dynamic_thresholds.py": {
+      "hash": "f5873e1f07b82a6debcfaa413dd38d86cffb53d3ede3d79b01064fe11d5cdd97",
+      "size": 16076,
+      "modified": "2026-02-09T13:28:29.638051"
+    },
+    "src\\ood\\mahalanobis.py": {
+      "hash": "65ad119733d10f15049c009d003f1305872fd6754e80f0bc803f54b4d90c1c4e",
+      "size": 8131,
+      "modified": "2026-02-09T13:27:02.716161"
+    },
+    "src\\ood\\prototypes.py": {
+      "hash": "17cecd5fc7ff95f788ac3aaf691bd0741c9c5af4239b48cf6154f597c5238322",
+      "size": 11179,
+      "modified": "2026-02-09T13:28:08.876151"
+    },
+    "src\\pipeline\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.386125"
+    },
+    "src\\pipeline\\independent_multi_crop_pipeline.py": {
+      "hash": "01e7d258b9fc78d6a430405941f82b08ef5b5306e9dd5c8619c26f89f94522a5",
+      "size": 13790,
+      "modified": "2026-02-09T13:28:45.411003"
+    },
+    "src\\router\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.497020"
+    },
+    "src\\router\\simple_crop_router.py": {
+      "hash": "09900f352a217b45a0dbe42327240d2efdbcaefec37e30d69030c9f4141b1961",
+      "size": 10692,
+      "modified": "2026-02-09T13:25:25.084759"
+    },
+    "src\\training\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.355632"
+    },
+    "src\\training\\phase1_training.py": {
+      "hash": "386ba16d21a276c561ee6b70b4ea563450389a3d2ab9ab96013a935859db1df7",
+      "size": 16482,
+      "modified": "2026-02-09T12:50:14.986501"
+    },
+    "src\\training\\phase2_sd_lora.py": {
+      "hash": "0f9a711343c0199114895a5d85f3351366e0939e2c5426b356f5db92f58bd60e",
+      "size": 12468,
+      "modified": "2026-02-09T12:52:18.569843"
+    },
+    "src\\training\\phase3_conec_lora.py": {
+      "hash": "738716aed6d9620b0179cc0572d3f54698d3d293bcf32f57969e41e19bbd2a8a",
+      "size": 6894,
+      "modified": "2026-02-09T12:56:04.077526"
+    },
+    "src\\utils\\data_loader.py": {
+      "hash": "1a25150268176aa1a65c87c9bfefd2dd1d983b400925adeebd75012f6aede52d",
+      "size": 10745,
+      "modified": "2026-02-09T13:24:24.409408"
+    },
+    "src\\utils\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.447851"
+    },
+    "src\\visualization\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.431515"
+    },
+    "src\\visualization\\visualization.py": {
+      "hash": "e7c8f4efafa9bafcfd0ffa7c684b6ae4abae88f8bbd73f62363c2bc0092a84b9",
+      "size": 5132,
+      "modified": "2026-02-09T13:02:32.734756"
+    },
+    "mobile\\android\\build.gradle": {
+      "hash": "f18f222fa649dddf56a5e6b529714472b0bb89ad703c9f49007f3d4cb7fcd602",
+      "size": 2310,
+      "modified": "2026-02-09T13:31:00.507372"
+    },
+    "mobile\\android\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.525165"
+    },
+    "mobile\\android\\app\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.287309"
+    },
+    "mobile\\android\\app\\src\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:58.984646"
+    },
+    "mobile\\android\\app\\src\\main\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:58.957044"
+    },
+    "mobile\\android\\app\\src\\main\\java\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:58.835002"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:37:28.622748"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:37:28.649989"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:37:28.635802"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\AADSApplication.kt": {
+      "hash": "0b7cdef0e26557d086dc767a2b9ddb98288f89fc7f7fb20f325d6458657b9218",
+      "size": 2139,
+      "modified": "2026-02-09T13:31:02.036831"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:39:53.763852"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:39:53.788779"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\AADSService.kt": {
+      "hash": "5273bb170fe74d5faec2b35c087da1cfb78e9799470bf094ad6ce8a03f153828",
+      "size": 770,
+      "modified": "2026-02-09T13:31:31.234879"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:37:29.011020"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\request\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:40:41.798836"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\request\\DiagnosisRequest.kt": {
+      "hash": "32722afd65c1e848efbbcac6f07e323e4f93bdd2caed5049c944e88d608244e5",
+      "size": 517,
+      "modified": "2026-02-09T13:31:33.130658"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\response\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:40:41.996521"
+    },
+    "mobile\\android\\app\\src\\main\\java\\com\\uyumsoft\\ziraitakip\\aads\\data\\remote\\response\\DiagnosisResponse.kt": {
+      "hash": "bb94a22fc2a8fe01191a319b29e1d762bf5c771684d0f8ab936b50b8ddc22904",
+      "size": 1438,
+      "modified": "2026-02-09T13:31:34.662628"
+    },
+    "api\\endpoints\\crops.py": {
+      "hash": "e97861705ea13d884c963f8ea6857e1bbb7cb52fe245f70e2fbf541f555a5dd3",
+      "size": 1502,
+      "modified": "2026-02-09T13:31:55.572669"
+    },
+    "api\\endpoints\\desktop.ini": {
+      "hash": "f94afad9186492ab61995ea8f220171b98cde13c9e83fef7a7ce51c31dce729a",
+      "size": 106,
+      "modified": "2026-02-09T13:35:44.479227"
+    },
+    "api\\endpoints\\diagnose.py": {
+      "hash": "8a8d1830c1479e5b7d3da22f3f6fd6a45b53d1aaec96f5420654679512e521ff",
+      "size": 2848,
+      "modified": "2026-02-09T13:31:53.892025"
+    },
+    "api\\endpoints\\feedback.py": {
+      "hash": "cefed1b8f6c2cd2577736e6a73b5f0763b339be0fb09e81d760b1a428d27fb9b",
+      "size": 1572,
+      "modified": "2026-02-09T13:31:57.192791"
+    }
+  }
+}

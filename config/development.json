@@ -1,0 +1,59 @@
+{
+  "version": "5.5.3-performance",
+  "description": "Development settings with optimizations disabled",
+  
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 1,
+    "reload": true,
+    "log_level": "debug",
+    "timeout_keep_alive": 30,
+    "timeout_graceful_shutdown": 10
+  },
+  
+  "security": {
+    "api_key_required": false,
+    "api_keys": [],
+    "rate_limit_requests": 1000,
+    "rate_limit_window": 60,
+    "max_request_size_mb": 20,
+    "allowed_origins": ["*"],
+    "https_enforced": false
+  },
+  
+  "caching": {
+    "enabled": false,
+    "redis_url": "redis://localhost:6379",
+    "default_ttl": 3600,
+    "diagnosis_ttl": 1800,
+    "max_cache_size": 1000
+  },
+  
+  "compression": {
+    "enabled": false,
+    "minimum_size": 1024,
+    "compression_level": 6
+  },
+  
+  "monitoring": {
+    "enabled": true,
+    "metrics_port": 9090,
+    "log_requests": true,
+    "audit_logging": true,
+    "track_performance": true
+  },
+  
+  "database": {
+    "pool_size": 10,
+    "max_overflow": 20,
+    "pool_recycle": 3600,
+    "pool_pre_ping": true
+  },
+  
+  "health": {
+    "detailed": true,
+    "include_memory": true,
+    "include_cuda": true
+  }
+}
