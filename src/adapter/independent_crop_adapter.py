@@ -29,14 +29,14 @@ class IndependentCropAdapter:
     
     Args:
         crop_name: Name of the crop (e.g., 'tomato')
-        model_name: Pretrained model name (default: 'facebook/dinov2-giant')
+        model_name: Pretrained model name (default: 'facebook/dinov3-giant')
         device: Device for training/inference
     """
     
     def __init__(
         self,
         crop_name: str,
-        model_name: str = 'facebook/dinov2-giant',
+        model_name: str = 'facebook/dinov3-giant',
         device: str = 'cuda'
     ):
         self.crop_name = crop_name
@@ -600,7 +600,7 @@ class IndependentCropAdapter:
             r=lora_r,
             alpha=lora_alpha,
             target_modules=['query', 'value'],
-            layers_to_transform=list(range(num_shared_blocks, 12))
+            layers_to_transform=list(range(num_shared_blocks, self.config.num_hidden_layers))
         )
         
         self.model = get_peft_model(self.base_model, lora_config)

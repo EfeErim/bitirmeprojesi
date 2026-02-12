@@ -150,60 +150,232 @@ safe_push() {
     return 1
 }
 
+# Function to list all versions
+list_versions() {
+    echo "Available versions:"
+    if [ -d "$VERSION_DIR" ]; then
+        for version_path in "$VERSION_DIR"/*/; do
+            if [ -d "$version_path" ]; then
+                version=$(basename "$version_path")
+                manifest_file="$version_path/version.json"
+                if [ -f "$manifest_file" ]; then
+                    description=$(grep -o '"description": "[^"]*"' "$manifest_file" | cut -d'"' -f4)
+                    file_count=$(find "$version_path" -type f | wc -l)
+                    echo "  $version | $description | $file_count files"
+                else
+                    echo "  $version | (no manifest) | $(find "$version_path" -type f | wc -l) files"
+                fi
+            fi
+        done
+    else
+        echo "  No versions directory found"
+    fi
+}
+
+# Function to get current version
+get_current_version() {
+    if [ -f "$CURRENT_DIR/version.json" ]; then
+        grep -o '"version": "[^"]*"' "$CURRENT_DIR/version.json" | cut -d'"' -f4
+    else
+        # Fallback: compare directory contents
+        for version_path in "$VERSION_DIR"/*/; do
+            if [ -d "$version_path" ]; then
+                version=$(basename "$version_path")
+                # Compare file counts as a simple heuristic
+                current_files=$(find "$CURRENT_DIR" -type f 2>/dev/null | wc -l)
+                version_files=$(find "$version_path" -type f | wc -l)
+                if [ "$current_files" -gt 10 ] && [ "$current_files" -eq "$version_files" ]; then
+                    echo "$version"
+                    return
+                fi
+            fi
+        done
+        echo "unknown"
+    fi
+}
+
+# Function to switch active version
+switch_version() {
+    local version=$1
+    
+    if [ -z "$version" ]; then
+        echo "Usage: $0 switch <version>"
+        return 1
+    fi
+    
+    local version_path="$VERSION_DIR/$version"
+    if [ ! -d "$version_path" ]; then
+        echo "Error: Version $version not found in $VERSION_DIR"
+        return 1
+    fi
+    
+    log "Switching to version: $version"
+    
+    # Verify version integrity (check for critical files)
+    local critical_files=("src/adapter/independent_crop_adapter.py" "src/pipeline/independent_multi_crop_pipeline.py" "config/adapter_spec_v55.json" "requirements.txt" "setup.py")
+    local missing_files=()
+    for file in "${critical_files[@]}"; do
+        if [ ! -f "$version_path/$file" ]; then
+            missing_files+=("$file")
+        fi
+    done
+    
+    if [ ${#missing_files[@]} -gt 0 ]; then
+        log "${RED}ERROR: Missing critical files in version $version: ${missing_files[*]}${NC}"
+        return 1
+    fi
+    
+    log "${GREEN}Version $version verified${NC}"
+    
+    # Clear current directory (preserve version management files)
+    local exclude_patterns=(".git" "backups" "versions" "__pycache__" ".pytest_cache" ".vscode" "backup.log")
+    for item in "$CURRENT_DIR"/*; do
+        if [ -e "$item" ]; then
+            item_name=$(basename "$item")
+            skip=false
+            for pattern in "${exclude_patterns[@]}"; do
+                if [ "$item_name" = "$pattern" ]; then
+                    skip=true
+                    break
+                fi
+            done
+            if [ "$skip" = false ]; then
+                if [ -f "$item" ]; then
+                    rm "$item"
+                else
+                    rm -rf "$item"
+                fi
+            fi
+        fi
+    done
+    
+    # Copy files from version to current
+    for src in "$version_path"/*; do
+        if [ -e "$src" ]; then
+            src_name=$(basename "$src")
+            skip=false
+            for pattern in "${exclude_patterns[@]}"; do
+                if [ "$src_name" = "$pattern" ]; then
+                    skip=true
+                    break
+                fi
+            done
+            if [ "$skip" = false ]; then
+                cp -r "$src" "$CURRENT_DIR/"
+            fi
+        fi
+    done
+    
+    log "${GREEN}Successfully switched to version: $version${NC}"
+    echo "Active version is now: $version"
+}
+
 # Main execution
 main() {
-    log "${BLUE}AADS-ULoRA Backup System Starting${NC}"
-    log "Timestamp: $TIMESTAMP"
+    local command=${1:-}
     
-    # Check if we're in a git repository
-    if ! git rev-parse --git-dir > /dev/null 2>&1; then
-        log "${RED}ERROR: Not in a git repository${NC}"
-        exit 1
-    fi
-    
-    # Get current git status
-    local git_status=$(git status --porcelain)
-    
-    if [ -n "$git_status" ]; then
-        log "${YELLOW}Uncommitted changes detected${NC}"
-        log "Stashing changes..."
-        git stash push -m "backup-stash-$TIMESTAMP"
-    fi
-    
-    # Create backup
-    local version="v$(date +"%Y%m%d_%H%M%S")-auto-backup"
-    local description="Automated backup before synchronization"
-    
-    create_backup "$version" "$description"
-    
-    # Verify backup
-    if verify_backup "$BACKUP_DIR/$version"; then
-        log "${GREEN}Backup verification successful${NC}"
-    else
-        log "${RED}Backup verification failed${NC}"
-        exit 1
-    fi
-    
-    # Restore stashed changes if any
-    if [ -n "$git_status" ]; then
-        log "Restoring stashed changes..."
-        git stash pop 2>/dev/null || true
-    fi
-    
-    log "${GREEN}Backup completed successfully${NC}"
-    log "Backup branch: $BACKUP_BRANCH"
-    log "Backup path: $BACKUP_DIR/$version"
-    
-    # Show summary
-    echo ""
-    echo "${BLUE}=== BACKUP SUMMARY ===${NC}"
-    echo "Version: $version"
-    echo "Description: $description"
-    echo "Timestamp: $TIMESTAMP"
-    echo "Backup Path: $BACKUP_DIR/$version"
-    echo "Git Branch: $BACKUP_BRANCH"
-    echo "Files Backed Up: $(find "$BACKUP_DIR/$version" -type f | wc -l)"
-    echo "${BLUE}======================${NC}"
+    case "$command" in
+        "create")
+            if [ -z "$2" ] || [ -z "$3" ]; then
+                echo "Usage: $0 create <version> <description>"
+                exit 1
+            fi
+            create_backup "$2" "$3"
+            ;;
+        "list")
+            list_backups
+            ;;
+        "list-versions")
+            list_versions
+            ;;
+        "verify")
+            if [ -z "$2" ]; then
+                echo "Usage: $0 verify <version>"
+                exit 1
+            fi
+            verify_backup "$BACKUP_DIR/$2"
+            ;;
+        "restore")
+            if [ -z "$2" ]; then
+                echo "Usage: $0 restore <version>"
+                exit 1
+            fi
+            restore_backup "$BACKUP_DIR/$2"
+            ;;
+        "switch")
+            if [ -z "$2" ]; then
+                echo "Usage: $0 switch <version>"
+                exit 1
+            fi
+            switch_version "$2"
+            ;;
+        "current")
+            get_current_version
+            ;;
+        "rollback-script")
+            if [ -z "$2" ]; then
+                echo "Usage: $0 rollback-script <version> [script_name]"
+                exit 1
+            fi
+            # This would call the Python version manager for script generation
+            python -m version_management.backup rollback-script --version "$2" ${3:+--name "$3"}
+            ;;
+        *)
+            # Default behavior: create automatic backup
+            log "${BLUE}AADS-ULoRA Backup System Starting${NC}"
+            log "Timestamp: $TIMESTAMP"
+            
+            # Check if we're in a git repository
+            if ! git rev-parse --git-dir > /dev/null 2>&1; then
+                log "${RED}ERROR: Not in a git repository${NC}"
+                exit 1
+            fi
+            
+            # Get current git status
+            local git_status=$(git status --porcelain)
+            
+            if [ -n "$git_status" ]; then
+                log "${YELLOW}Uncommitted changes detected${NC}"
+                log "Stashing changes..."
+                git stash push -m "backup-stash-$TIMESTAMP"
+            fi
+            
+            # Create backup
+            local version="v$(date +"%Y%m%d_%H%M%S")-auto-backup"
+            local description="Automated backup before synchronization"
+            
+            create_backup "$version" "$description"
+            
+            # Verify backup
+            if verify_backup "$BACKUP_DIR/$version"; then
+                log "${GREEN}Backup verification successful${NC}"
+            else
+                log "${RED}Backup verification failed${NC}"
+                exit 1
+            fi
+            
+            # Restore stashed changes if any
+            if [ -n "$git_status" ]; then
+                log "Restoring stashed changes..."
+                git stash pop 2>/dev/null || true
+            fi
+            
+            log "${GREEN}Backup completed successfully${NC}"
+            log "Backup branch: $BACKUP_BRANCH"
+            log "Backup path: $BACKUP_DIR/$version"
+            
+            # Show summary
+            echo ""
+            echo "${BLUE}=== BACKUP SUMMARY ===${NC}"
+            echo "Version: $version"
+            echo "Description: $description"
+            echo "Timestamp: $TIMESTAMP"
+            echo "Backup Path: $BACKUP_DIR/$version"
+            echo "Git Branch: $BACKUP_BRANCH"
+            echo "Files Backed Up: $(find "$BACKUP_DIR/$version" -type f | wc -l)"
+            echo "${BLUE}======================${NC}"
+            ;;
+    esac
 }
 
 # Execute main function

@@ -1,0 +1,405 @@
+
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\title{\textbf{AADS-ULoRA v5.5--Independent Multi-Crop Continual Learning Architecture}\\Quick Start Adapter Guide\\Continuous Learning for Multi-Crop Agricultural Disease Detection\\With Independent Adapters, DoRA, SD-LoRA, CONEC-LoRA, and Dynamic OOD Detection}
+\author{Agricultural AI Development Team}
+\date{March 2026--Version}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Quick start guide for AADS-ULoRA v5.5 Independent Multi-Crop Continual Learning Architecture. This guide provides a streamlined 12-week timeline for implementing practical agricultural diagnostic capabilities: Simple Crop Router $\rightarrow$ Independent Crop Adapters $\rightarrow$ Per-Crop Continual Learning with Dynamic OOD Detection. Building on v5.4's independent adapters, v5.5 introduces dynamic per-class Mahalanobis thresholds for enhanced novelty detection. Each crop maintains its own lifecycle (Base $\rightarrow$ CIL $\rightarrow$ DIL) without requiring coordination with other crops, while automatically adapting OOD detection to each disease class's variability.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{When to Use Independent Multi-Crop Architecture}
+
+\subsection{Use v5.5 If:}
+
+\begin{itemize}[leftmargin=*]
+    \item[$\checkmark$] You need multiple crops with independent update schedules
+    \item[$\checkmark$] You want to add new diseases to one crop without affecting others
+    \item[$\checkmark$] You cannot store all historical training data (rehearsal-free)
+    \item[$\checkmark$] You want simple, practical deployment over theoretical complexity
+    \item[$\checkmark$] You need proven, literature-backed continual learning methods
+    \item[$\checkmark$] You want automatic OOD threshold adaptation (no manual tuning)
+    \item[$\checkmark$] You need per-class OOD sensitivity (different thresholds per disease)
+\end{itemize}
+
+\subsection{Use v5.4 If:}
+
+\begin{itemize}[leftmargin=*]
+    \item[$\times$] You prefer fixed, manually-tuned OOD thresholds
+    \item[$\times$] You have very limited validation data for threshold computation
+\end{itemize}
+
+\subsection{Use v5.3 If:}
+
+\begin{itemize}[leftmargin=*]
+    \item[$\times$] You need cross-crop knowledge transfer (e.g., tomato $\rightarrow$ pepper)
+    \item[$\times$] You have strong ML background and want cutting-edge research
+    \item[$\times$] You can invest 6+ months in complex global orchestration
+\end{itemize}
+
+\section{12-Week Implementation Timeline}
+
+\begin{table}[H]
+\centering
+\caption{v5.5 Independent Multi-Crop 12-Week Timeline}
+\begin{tabular}{clp{8cm}}
+\toprule
+\textbf{Week} & \textbf{Phase} & \textbf{Activities} \\
+\midrule
+1-2 & Setup & Environment, DINOv3 access, crop router training \\
+3-4 & First Crop (Tomato) & Phase 1 base training with DoRA, compute prototypes and dynamic OOD thresholds, validate $\geq$95\% accuracy \\
+5 & Phase 2 (CIL) & Add new disease to tomato via SD-LoRA, validate retention $\geq$90\%, update OOD thresholds \\
+6 & Phase 3 (DIL) & Fortify tomato with domain-shifted data via CONEC-LoRA, update OOD thresholds \\
+7-8 & Second Crop (Pepper) & Independent Phase 1 initialization, validate standalone \\
+9-10 & Third Crop (Corn) & Add third independent crop, verify no interference \\
+11 & Integration & Full pipeline with routing, dynamic OOD, all crops working independently \\
+12 & Demo \& Docs & Deploy Gradio demo, document system architecture and OOD statistics \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Adapter Specification}
+
+\begin{lstlisting}[language=Python, caption={v5.5 Adapter Configuration}]
+adapter_spec_v55 = {
+    # Identity
+    'adapter_id': 'aads_multicrop_independent_v55',
+    'architecture': 'independent_multicrop_dynamic_ood',
+    
+    # Crop Router Configuration (Simple)
+    'crop_router': {
+        'type': 'resnet50_classifier',  # Or DINOv3 linear probe
+        'training_data': 'plantclef_crops',
+        'target_accuracy': 0.98
+    },
+    
+    # Per-Crop Adapter Configuration
+    'per_crop': {
+        'model_name': 'facebook/dinov2-giant',
+        'use_dora': True,
+        'lora_r': 32,
+        'lora_alpha': 32,
+        'loraplus_lr_ratio': 16,
+        'phase1_epochs': 50,
+        'phase2_epochs': 20,
+        'phase3_epochs': 15
+    },
+    
+    # OOD Detection (Dynamic Mahalanobis)
+    'ood_detection': {
+        'method': 'dynamic_mahalanobis',
+        'threshold_factor': 2.0,  # k sigma (95% confidence)
+        'min_val_samples_per_class': 10,  # Minimum for statistics
+        'fallback_threshold': 25.0  # If insufficient validation data
+    },
+    
+    # Performance Targets
+    'targets': {
+        'crop_routing_accuracy': 0.98,
+        'phase1_accuracy': 0.95,
+        'phase2_retention': 0.90,
+        'phase3_retention': 0.85,
+        'ood_auroc': 0.92,
+        'ood_false_positive_rate': 0.05
+    }
+}
+\end{lstlisting}
+
+\section{Phase-by-Phase Quick Start}
+
+\subsection{Phase 0: Crop Router Setup (Weeks 1-2)}
+
+\begin{lstlisting}[language=bash, caption={Train Simple Crop Classifier}]
+# Train simple crop classifier
+python train_crop_router.py \
+    --data_dir ./data/plantclef_crops/ \
+    --crops tomato,pepper,corn \
+    --output_dir ./models/crop_router/
+
+# Validation: Crop classification accuracy >= 98%
+python evaluate_router.py \
+    --router ./models/crop_router/ \
+    --test_data ./data/crops_test/
+\end{lstlisting}
+
+\subsection{Phase 1: First Crop Initialization (Weeks 3-4)}
+
+\begin{lstlisting}[language=bash, caption={Initialize Tomato Adapter with Dynamic OOD}]
+# Initialize tomato adapter with Phase 1 DoRA training
+# IMPORTANT: Include validation data for OOD threshold computation
+python train_phase1_crop.py \
+    --crop_name tomato \
+    --data_dir ./data/tomato/phase1/ \
+    --val_dir ./data/tomato/val/ \
+    --classes healthy,early_blight,late_blight,leaf_mold \
+    --output_dir ./adapters/tomato/
+
+# Validation: Clean accuracy >= 95%
+python evaluate_crop.py \
+    --adapter ./adapters/tomato/phase1/ \
+    --test_data ./data/tomato/test
+
+# Check computed OOD thresholds
+python inspect_ood_stats.py \
+    --adapter ./adapters/tomato/phase1/
+# Output shows per-class thresholds:
+#   healthy: mean=5.2, std=1.1, threshold=7.4
+#   early_blight: mean=8.5, std=2.3, threshold=13.1
+#   ...
+\end{lstlisting}
+
+\subsection{Phase 2: Add New Disease (Week 5)}
+
+\begin{lstlisting}[language=bash, caption={SD-LoRA Class Increment with OOD Update}]
+# Add new disease to tomato via SD-LoRA
+python train_phase2_cil.py \
+    --crop_name tomato \
+    --phase1_checkpoint ./adapters/tomato/phase1/ \
+    --new_class_data ./data/tomato/septoria_leaf_spot/ \
+    --new_class_name septoria_leaf_spot \
+    --output_dir ./adapters/tomato/phase2/
+
+# Validation: Old class retention >= 90%
+python evaluate_retention.py \
+    --adapter ./adapters/tomato/phase2/ \
+    --test_data ./data/tomato/test_all_classes
+
+# Verify OOD thresholds updated for new class
+python inspect_ood_stats.py \
+    --adapter ./adapters/tomato/phase2/
+# Should show new class with computed threshold
+\end{lstlisting}
+
+\subsection{Phase 3: Fortify Existing Classes (Week 6)}
+
+\begin{lstlisting}[language=bash, caption={CONEC-LoRA Fortification with OOD Update}]
+# Fortify tomato with domain-shifted data
+python train_phase3_dil.py \
+    --crop_name tomato \
+    --phase2_checkpoint ./adapters/tomato/phase2/ \
+    --fortification_data ./data/tomato/domain_shift/ \
+    --target_classes early_blight,late_blight \
+    --output_dir ./adapters/tomato/phase3/
+
+# OOD thresholds automatically updated for fortified classes
+python inspect_ood_stats.py \
+    --adapter ./adapters/tomato/phase3/
+\end{lstlisting}
+
+\subsection{Add Second Crop Independently (Weeks 7-8)}
+
+\begin{lstlisting}[language=bash, caption={Independent Pepper Adapter}]
+# Pepper adapter - completely independent from tomato
+python train_phase1_crop.py \
+    --crop_name pepper \
+    --data_dir ./data/pepper/phase1/ \
+    --val_dir ./data/pepper/val/ \
+    --classes healthy,bacterial_spot,powdery_mildew \
+    --output_dir ./adapters/pepper/
+
+# Note: No LEBA transfer, no ELLA coordination
+# Each crop is self-contained with its own OOD statistics
+\end{lstlisting}
+
+\section{Production Deployment}
+
+\begin{lstlisting}[language=Python, caption={Production Pipeline with Dynamic OOD}]
+from aads_v55 import IndependentMultiCropPipeline
+
+# Initialize pipeline
+pipeline = IndependentMultiCropPipeline(config)
+
+# Register crops independently
+# OOD statistics loaded automatically
+pipeline.register_crop('tomato', './adapters/tomato/')
+pipeline.register_crop('pepper', './adapters/pepper/')
+pipeline.register_crop('corn', './adapters/corn/')
+
+# Production inference
+while True:
+    image, metadata = receive_from_sensors()
+    
+    # Simple routing -> adapter prediction with dynamic OOD
+    result = pipeline.process_image(image, metadata)
+    
+    if result['action'] == 'INFERENCE':
+        # Standard diagnosis with confidence and OOD info
+        display_result(result)
+        # result includes:
+        # - disease prediction
+        # - confidence score
+        # - mahalanobis_distance
+        # - dynamic_threshold
+        # - ood_score (distance / threshold)
+        
+    elif result['action'] == 'TRIGGER_PHASE2':
+        # New disease detected in specific crop
+        send_alert(f"New disease in {result['crop']}")
+        send_alert(f"OOD score: {result['ood_score']:.2f}")
+        accumulate_samples(result['crop'], image)
+        
+    elif result['action'] == 'PHASE2_COMPLETE':
+        # Crop adapter updated with new OOD thresholds
+        send_alert(f"Adapter updated: {result['crop']}")
+        send_alert(f"New OOD stats computed for added class")
+\end{lstlisting}
+
+\section{Success Criteria}
+
+\begin{table}[H]
+\centering
+\caption{v5.5 Success Criteria}
+\begin{tabular}{llc}
+\toprule
+\textbf{Phase} & \textbf{Metric} & \textbf{Target} \\
+\midrule
+Crop Router & Crop classification accuracy & $\geq$ 98\% \\
+Per-Crop Phase 1 & Clean accuracy & $\geq$ 95\% \\
+Per-Crop Phase 2 & Old class retention & $\geq$ 90\% \\
+Per-Crop Phase 3 & Protected class retention & $\geq$ 85\% \\
+OOD Detection & AUROC & $\geq$ 0.92 \\
+OOD Detection & False positive rate & $\leq$ 5\% \\
+System-wide & Independence & Zero interference \\
+Dynamic OOD & Per-class threshold validity & All classes have stats \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Comparison: v5.2 vs v5.3 vs v5.4 vs v5.5}
+
+\begin{table}[H]
+\centering
+\caption{Architectural Comparison Across Versions}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Feature} & \textbf{v5.2} & \textbf{v5.3} & \textbf{v5.4} & \textbf{v5.5} \\
+\midrule
+Crops & Single & Multi (coupled) & Multi (independent) & Multi (independent) \\
+Cross-crop transfer & N/A & LEBA + ELLA & None & None \\
+OOD Detection & Fixed & Meta-OOD adaptive & Fixed Mahalanobis & \textbf{Dynamic Mahalanobis} \\
+Threshold type & Global & Adaptive global & Global fixed & \textbf{Per-class dynamic} \\
+Manual tuning & Required & Less & Required & \textbf{Minimal} \\
+Complexity & Medium & Very High & Medium & Medium \\
+Implementation time & 8 weeks & 20+ weeks & 12 weeks & 12 weeks \\
+Best for & Single crop & Research & Production & \textbf{Production + Robust OOD} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Troubleshooting}
+
+\subsection{Crop Router: Low Accuracy}
+
+\textbf{Symptom:} Crop classification $<$ 95\%
+
+\textbf{Solution:}
+\begin{itemize}[leftmargin=*]
+    \item Use pre-trained PlantCLEF model or increase training data
+    \item Ensure images contain clear leaf morphology
+    \item Check for class imbalance in training data
+\end{itemize}
+
+\subsection{Phase 2 SD-LoRA: High Forgetting}
+
+\textbf{Symptom:} Old class retention $<$ 85\%
+
+\textbf{Solution:}
+\begin{itemize}[leftmargin=*]
+    \item Verify lora\_A and lora\_B are frozen
+    \item Reduce learning rate for Phase 2 (try 5e-5 instead of 1e-4)
+    \item Increase number of Phase 2 epochs
+    \item Check that old class data loader is properly configured
+\end{itemize}
+
+\subsection{OOD Detection: Poor Calibration}
+
+\textbf{Symptom:} Too many false positives or missed detections
+
+\textbf{Solution:}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{High false positives:} Increase threshold\_factor (try 2.5 for 99\% confidence)
+    \item \textbf{Missed detections:} Decrease threshold\_factor (try 1.5 for 87\% confidence)
+    \item Ensure sufficient validation samples per class ($\geq$ 10)
+    \item Check that validation data represents true in-distribution variation
+\end{itemize}
+
+\subsection{Dynamic OOD: Missing Class Statistics}
+
+\textbf{Symptom:} OOD stats show 0.0 for some classes
+
+\textbf{Solution:}
+\begin{itemize}[leftmargin=*]
+    \item Ensure validation data has examples of all classes
+    \item Check class indexing matches between training and validation
+    \item Use fallback threshold (25.0) if insufficient data
+\end{itemize}
+
+\begin{thebibliography}{9}
+
+\bibitem{liu2024}
+Liu, S., et al. (2024). DoRA: Weight-Decomposed Low-Rank Adaptation. \textit{ICML 2024}.
+
+\bibitem{wu2025}
+Wu, Y., et al. (2025). SD-LoRA: Scalable Decoupled Low-Rank Adaptation for Class Incremental Learning. \textit{ICLR 2025}.
+
+\bibitem{paeedeh2025}
+Paeedeh, N., et al. (2025). Continual Knowledge Consolidation LoRA for Domain Incremental Learning. \textit{arXiv:2510.16077}.
+
+\bibitem{lee2018}
+Lee, K., et al. (2018). A Simple Unified Framework for Detecting Out-of-Distribution Samples. \textit{NeurIPS 2018}.
+
+\bibitem{gong2024}
+Gong, D., et al. (2024). Self-Expansion of Pre-trained Models with Mixture of Adapters for Continual Learning. \textit{arXiv:2403.18886}.
+
+\end{thebibliography}
+
+\end{document}

@@ -11,6 +11,7 @@ from peft import LoraConfig, get_peft_model
 import logging
 from pathlib import Path
 from typing import Dict, Optional
+from transformers import AutoModel, AutoConfig
 
 from src.utils.data_loader import DomainShiftDataset
 from src.utils.metrics import compute_protected_retention
@@ -53,6 +54,7 @@ class Phase3Trainer:
         # Load existing adapter
         logger.info(f"Loading adapter from: {adapter_path}")
         self.base_model = AutoModel.from_pretrained(adapter_path)
+        self.config = AutoConfig.from_pretrained(adapter_path)
         self.classifier = nn.Linear(self.base_model.config.hidden_size,
                                   self.base_model.classifier.out_features)
         
@@ -61,11 +63,12 @@ class Phase3Trainer:
         
         # Configure CONEC-LoRA
         logger.info("Configuring CONEC-LoRA adapter...")
+        num_hidden_layers = self.config.num_hidden_layers
         lora_config = LoraConfig(
             r=lora_r,
             lora_alpha=lora_alpha,
             target_modules=['query', 'value'],
-            layers_to_transform=list(range(num_shared_blocks, 12))  # Adapt only late blocks
+            layers_to_transform=list(range(num_shared_blocks, num_hidden_layers))
         )
         
         self.model = get_peft_model(self.base_model, lora_config)

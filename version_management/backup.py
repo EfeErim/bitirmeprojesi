@@ -410,6 +410,108 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"Failed to create rollback script: {e}")
             return False, f"Failed to create rollback script: {str(e)}"
+    
+    def list_versions(self) -> Dict:
+        """List all available versions with their status."""
+        versions = {}
+        for version_path in self.versions_dir.iterdir():
+            if version_path.is_dir():
+                version = version_path.name
+                manifest_file = version_path / "version.json"
+                
+                versions[version] = {
+                    "path": str(version_path),
+                    "exists": True,
+                    "manifest": manifest_file.exists(),
+                    "file_count": len(list(version_path.rglob("*")))
+                }
+        
+        return versions
+    
+    def get_current_version(self) -> Optional[str]:
+        """Get the currently active version by checking current directory."""
+        if not self.current_dir.exists():
+            return None
+        
+        # Check if current_dir is a symlink or contains version info
+        version_file = self.current_dir / "version.json"
+        if version_file.exists():
+            try:
+                with open(version_file) as f:
+                    manifest = json.load(f)
+                    return manifest.get("version", "unknown")
+            except:
+                pass
+        
+        # Fallback: check if current_dir points to a version directory
+        for version_path in self.versions_dir.iterdir():
+            if version_path.is_dir():
+                # Compare directory contents
+                current_files = set(f.name for f in self.current_dir.iterdir() if f.is_file())
+                version_files = set(f.name for f in version_path.iterdir() if f.is_file())
+                if current_files == version_files and len(current_files) > 10:
+                    return version_path.name
+        
+        return None
+    
+    def switch_active_version(self, version: str) -> Tuple[bool, str]:
+        """
+        Switch the active version by copying files from version to current directory.
+        
+        Args:
+            version: Version to switch to
+            
+        Returns:
+            (success, message) tuple
+        """
+        version_sanitized = version.replace("/", "_").replace("\\", "_")
+        version_path = self.versions_dir / version_sanitized
+        
+        logger.info(f"Switching active version to: {version}")
+        
+        if not version_path.exists():
+            return False, f"Version directory not found: {version_path}"
+        
+        # Verify version integrity first
+        success, verify_msg = self.verify_backup(version)
+        if not success:
+            return False, f"Version verification failed: {verify_msg}"
+        
+        try:
+            # Clear current directory (preserve version management files)
+            exclude_from_clear = {'.git', 'backups', 'versions', '__pycache__', '.pytest_cache', '.vscode', 'backup.log'}
+            for item in self.current_dir.iterdir():
+                if item.name in exclude_from_clear:
+                    continue
+                if item.is_file():
+                    item.unlink()
+                else:
+                    shutil.rmtree(item)
+            
+            # Copy files from version to current
+            exclude_from_copy = {'.git', 'backups', 'versions', '__pycache__', '.pytest_cache', '.vscode'}
+            for src in version_path.rglob("*"):
+                if src.name in exclude_from_copy:
+                    continue
+                if src.is_file():
+                    rel_path = src.relative_to(version_path)
+                    dest = self.current_dir / rel_path
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, dest)
+            
+            logger.info(f"Successfully switched to version: {version}")
+            return True, f"Active version switched to {version}"
+            
+        except Exception as e:
+            logger.error(f"Version switch failed: {e}")
+            return False, f"Version switch failed: {str(e)}"
+    
+    def create_version_directory(self, version: str) -> Path:
+        """Create a new version directory with proper structure."""
+        version_sanitized = version.replace("/", "_").replace("\\", "_")
+        version_path = self.versions_dir / version_sanitized
+        version_path.mkdir(parents=True, exist_ok=True)
+        return version_path
 
 # Main execution for command-line usage
 def main():
@@ -441,6 +543,16 @@ def main():
     rollback_parser = subparsers.add_parser('rollback-script', help='Create standalone rollback script')
     rollback_parser.add_argument('--version', required=True, help='Version to create script for')
     rollback_parser.add_argument('--name', help='Custom script name')
+    
+    # List versions command
+    list_versions_parser = subparsers.add_parser('list-versions', help='List all available versions')
+    
+    # Switch version command
+    switch_parser = subparsers.add_parser('switch', help='Switch active version')
+    switch_parser.add_argument('--version', required=True, help='Version to switch to')
+    
+    # Get current version command
+    current_parser = subparsers.add_parser('current', help='Show current active version')
     
     args = parser.parse_args()
     
@@ -482,6 +594,30 @@ def main():
         )
         print(message)
         sys.exit(0 if success else 1)
-
-if __name__ == '__main__':
-    main()
+    
+    elif args.command == 'list-versions':
+        versions = manager.list_versions()
+        print(f"Available versions: {len(versions)}")
+        for version, info in sorted(versions.items()):
+            manifest_status = "✓" if info['manifest'] else "✗"
+            print(f"{version:20} | {manifest_status} | {info['file_count']:5} files")
+    
+    elif args.command == 'switch':
+        success, message = manager.switch_active_version(args.version)
+        print(message)
+        sys.exit(0 if success else 1)
+    
+    elif args.command == 'current':
+        current = manager.get_current_version()
+        if current:
+            print(f"Current active version: {current}")
+        else:
+            print("No active version detected")
+            # Fallback: check if current directory has files
+            if manager.current_dir.exists() and any(manager.current_dir.iterdir()):
+                print("Current directory has files but version cannot be determined")
+            else:
+                print("Current directory is empty")
+    
+    if __name__ == '__main__':
+        main()
