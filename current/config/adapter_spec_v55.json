@@ -1,0 +1,109 @@
+{
+  "adapter_id": "aads_multicrop_independent_v55",
+  "architecture": "independent_multicrop_dynamic_ood",
+  "version": "5.5.0",
+  
+  "crop_router": {
+    "type": "resnet50_classifier",
+    "training_data": "plantclef_crops",
+    "target_accuracy": 0.98,
+    "model_name": "facebook/dinov3-base",
+    "training_epochs": 10,
+    "batch_size": 32,
+    "learning_rate": 1e-3
+  },
+  
+  "per_crop": {
+    "model_name": "facebook/dinov3-giant",
+    "use_dora": true,
+    "lora_r": 32,
+    "lora_alpha": 32,
+    "loraplus_lr_ratio": 16,
+    "phase1_epochs": 50,
+    "phase2_epochs": 20,
+    "phase3_epochs": 15,
+    "batch_size": 32,
+    "early_stopping_patience": 10
+  },
+  
+  "ood_detection": {
+    "method": "dynamic_mahalanobis",
+    "threshold_factor": 2.0,
+    "min_val_samples_per_class": 10,
+    "fallback_threshold": 25.0,
+    "target_fpr": 0.05
+  },
+  
+  "targets": {
+    "crop_routing_accuracy": 0.98,
+    "phase1_accuracy": 0.95,
+    "phase2_retention": 0.90,
+    "phase3_retention": 0.85,
+    "ood_auroc": 0.92,
+    "ood_false_positive_rate": 0.05,
+    "average_multi_crop_accuracy": 0.93,
+    "inference_latency_ms": 200,
+    "memory_per_adapter_mb": 25
+  },
+  
+  "data": {
+    "crops": ["tomato", "pepper", "corn"],
+    "tomato_classes": ["healthy", "early_blight", "late_blight", "septoria_leaf_spot", "bacterial_spot"],
+    "pepper_classes": ["healthy", "bell_pepper_bacterial_spot"],
+    "corn_classes": ["healthy", "common_rust", "northern_leaf_blight"],
+    "image_size": 224,
+    "normalization": {
+      "mean": [0.485, 0.456, 0.406],
+      "std": [0.229, 0.224, 0.225]
+    }
+  },
+  
+  "training": {
+    "phase1": {
+      "optimizer": "AdamW",
+      "weight_decay": 0.01,
+      "learning_rate": 1e-4,
+      "lora_dropout": 0.1
+    },
+    "phase2": {
+      "optimizer": "AdamW",
+      "learning_rate": 5e-5,
+      "weight_decay": 0.01,
+      "freeze_lora_directions": true
+    },
+    "phase3": {
+      "optimizer": "AdamW",
+      "learning_rate": 1e-4,
+      "num_shared_blocks": 6,
+      "lora_r": 16,
+      "lora_alpha": 16
+    }
+  },
+  
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 4,
+    "timeout": 30,
+    "max_request_size_mb": 10
+  },
+  
+  "mobile": {
+    "offline_queue_enabled": true,
+    "sync_interval_minutes": 15,
+    "image_compression_quality": 85,
+    "max_image_size_pixels": 1024
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "logs/aads.log"
+  },
+  
+  "monitoring": {
+    "prometheus_enabled": false,
+    "metrics_port": 9090,
+    "alert_email": null
+  }
+}
