@@ -279,7 +279,7 @@ Return results with OOD analysis and natural language report
 
 ## Configuration
 
-See `config/adapter_spec_v55.json` for all configurable parameters:
+See `config/adapter-spec.json` for all configurable parameters:
 
 ### Routing Configuration
 
@@ -348,7 +348,7 @@ According to research, Scenario B is optimal for disease diagnosis and phenotypi
 
 ### Step 1: Add Crop and Part Definitions
 
-Update `config/adapter_spec_v55.json`:
+Update `config/adapter-spec.json`:
 ```json
 {
   "data": {

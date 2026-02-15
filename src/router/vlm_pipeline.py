@@ -404,7 +404,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='config/adapter_spec_v55.json', help='Config file path')
+    parser.add_argument('--config', type=str, default='config/adapter-spec.json', help='Config file path')
     parser.add_argument('--image', type=str, help='Test image path')
     parser.add_argument('--crop', type=str, default='tomato', help='Crop type')
     parser.add_argument('--device', type=str, default='cuda', help='Device')

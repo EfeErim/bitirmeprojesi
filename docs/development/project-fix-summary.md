@@ -154,7 +154,7 @@ This document summarizes the comprehensive fixes applied to the AADS-ULoRA v5.5 
 
 **Created:**
 
-#### ✅ `config/adapter_spec_v55.json`
+#### ✅ `config/adapter-spec.json`
 - Complete configuration for all components
 - Crop router settings
 - Per-crop adapter parameters
@@ -266,7 +266,7 @@ AADS_ULoRA_v5.5/
 │               │   └── response/
 │               │       └── DiagnosisResponse.kt ✅ NEW
 ├── config/
-│   └── adapter_spec_v55.json              ✅ NEW
+│   └── adapter-spec.json              ✅ NEW
 ├── tests/
 │   └── unit/
 │       ├── test_router.py                 ✅ NEW
@@ -279,7 +279,7 @@ AADS_ULoRA_v5.5/
 ├── requirements.txt                       ✅ NEW
 ├── setup.py                               ✅ NEW
 ├── README.md                              ✅ NEW
-└── PROJECT_FIX_SUMMARY.md                ✅ THIS FILE
+└── project-fix-summary.md                ✅ THIS FILE
 ```
 
 ---

@@ -629,7 +629,7 @@ AADS_ULoRA_v5.5/
 │   ├── 02_phase1_training.ipynb
 │   └── 03_ood_analysis.ipynb
 ├── config/
-│   ├── adapter_spec_v55.json
+│   ├── adapter-spec.json
 │   ├── training_config.yaml
 │   └── api_config.yaml
 ├── data/

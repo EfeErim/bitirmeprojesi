@@ -237,7 +237,7 @@ python -m version_management.backup restore --version v5.5.3-performance --dry-r
 
 1. **Check configuration:**
    ```bash
-   cat config/adapter_spec_v55.json | grep -i dinov3
+   cat config/adapter-spec.json | grep -i dinov3
    ```
    Should show `facebook/dinov3-base` and `facebook/dinov3-giant`
 

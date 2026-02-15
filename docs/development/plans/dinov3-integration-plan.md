@@ -26,7 +26,7 @@ This document outlines the comprehensive plan for integrating Dinov3 as the back
 ### Phase 1: Core Model Updates (Week 1)
 
 #### 1.1 Configuration Updates
-**Files**: `config/adapter_spec_v55.json`, `setup_optimized.py`, `requirements.txt`
+**Files**: `config/adapter-spec.json`, `setup_optimized.py`, `requirements.txt`
 
 **Changes**:
 - Update model names: `facebook/dinov2-base` → `facebook/dinov3-base`

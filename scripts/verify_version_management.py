@@ -68,7 +68,7 @@ def test_version_management():
     # Test 6: Check critical configuration files
     print("\n6. Checking critical configuration files...")
     critical_files = [
-        "config/adapter_spec_v55.json",
+        "config/adapter-spec.json",
         "src/adapter/independent_crop_adapter.py",
         "src/pipeline/independent_multi_crop_pipeline.py",
         "requirements.txt",
@@ -84,7 +84,7 @@ def test_version_management():
     
     # Test 7: Verify Dinov3 integration in config
     print("\n7. Verifying Dinov3 integration...")
-    config_path = vm.current_dir / "config/adapter_spec_v55.json"
+    config_path = vm.current_dir / "config/adapter-spec.json"
     if config_path.exists():
         try:
             import json

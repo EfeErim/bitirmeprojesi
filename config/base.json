@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AADS-ULoRA Base Configuration",
+  "description": "Base configuration for Agricultural AI Development System - ULoRA v5.5",
+  "version": "5.5.0",
+  "last_updated": "2026-02-15",
+
+  "application": {
+    "name": "AADS-ULoRA",
+    "environment": "development",
+    "debug": false,
+    "log_level": "INFO",
+    "timezone": "Europe/Istanbul"
+  },
+
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "reload": false,
+    "workers": 4,
+    "cors_origins": ["*"],
+    "title": "AADS-ULoRA API",
+    "description": "Agricultural AI Development System - Disease Detection API",
+    "version": "v1",
+    "contact": {
+      "name": "AADS-ULoRA Team",
+      "email": "api@aadsulora.com",
+      "url": "https://github.com/uyumsoft/aads-ulora"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+
+  "database": {
+    "type": "postgresql",
+    "host": "localhost",
+    "port": 5432,
+    "name": "aads_ulora",
+    "username": "aads_user",
+    "password": "",
+    "pool_size": 20,
+    "max_overflow": 30,
+    "echo": false
+  },
+
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "db": 0,
+    "password": null,
+    "socket_timeout": 5,
+    "socket_connect_timeout": 5
+  },
+
+  "storage": {
+    "type": "local",
+    "local": {
+      "base_path": "./data",
+      "upload_dir": "uploads",
+      "model_dir": "models",
+      "results_dir": "results"
+    },
+    "s3": {
+      "bucket_name": "aads-ulora",
+      "region": "eu-central-1",
+      "endpoint_url": null,
+      "access_key": null,
+      "secret_key": null
+    }
+  },
+
+  "ml": {
+    "device": "cuda",
+    "model": {
+      "backbone": "dinov2_vits14",
+      "pretrained": true,
+      "num_classes": 10,
+      "adapter": {
+        "type": "lora",
+        "r": 8,
+        "lora_alpha": 16,
+        "lora_dropout": 0.1,
+        "target_modules": ["qkv", "proj", "mlp"]
+      }
+    },
+    "inference": {
+      "batch_size": 32,
+      "num_workers": 4,
+      "pin_memory": true,
+      "prefetch_factor": 2
+    },
+    "training": {
+      "epochs": 100,
+      "batch_size": 32,
+      "learning_rate": 1e-4,
+      "weight_decay": 1e-4,
+      "warmup_steps": 100,
+      "gradient_accumulation_steps": 1,
+      "mixed_precision": true
+    }
+  },
+
+  "ood": {
+    "enabled": true,
+    "method": "mahalanobis",
+    "threshold": 0.95,
+    "confidence_level": 0.99,
+    "prototype": {
+      "update_rate": 0.1,
+      "min_samples": 10
+    },
+    "mahalanobis": {
+      "eps": 1e-6,
+      "batch_size": 64
+    }
+  },
+
+  "router": {
+    "enabled": true,
+    "type": "enhanced",
+    "crop_mapping": {
+      "tomato": {
+        "parts": ["leaf", "fruit", "stem", "whole"],
+        "model_path": "models/tomato_adapter"
+      },
+      "potato": {
+        "parts": ["leaf", "tuber", "stem", "whole"],
+        "model_path": "models/potato_adapter"
+      },
+      "wheat": {
+        "parts": ["leaf", "ear", "stem", "whole"],
+        "model_path": "models/wheat_adapter"
+      }
+    },
+    "fallback_strategy": "best_available",
+    "confidence_threshold": 0.7
+  },
+
+  "monitoring": {
+    "enabled": true,
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "logging": {
+      "format": "json",
+      "rotate": true,
+      "max_size_mb": 100,
+      "backup_count": 5
+    }
+  },
+
+  "security": {
+    "rate_limit": {
+      "enabled": true,
+      "requests_per_minute": 100,
+      "burst": 200
+    },
+    "auth": {
+      "enabled": false,
+      "jwt_secret": "CHANGE_IN_PRODUCTION",
+      "jwt_algorithm": "HS256",
+      "token_expire_minutes": 1440
+    },
+    "cors": {
+      "allow_origins": ["*"],
+      "allow_credentials": true,
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    }
+  },
+
+  "cache": {
+    "enabled": true,
+    "backend": "redis",
+    "ttl": 3600,
+    "max_size": 1000
+  },
+
+  "feedback": {
+    "enabled": true,
+    "storage": "database",
+    "retention_days": 365
+  },
+
+  "paths": {
+    "data": "./data",
+    "logs": "./logs",
+    "models": "./models",
+    "temp": "./temp",
+    "exports": "./exports"
+  },
+
+  "development": {
+    "reload": true,
+    "debug": true,
+    "log_level": "DEBUG",
+    "cors_origins": ["http://localhost:3000", "http://localhost:8080"]
+  },
+
+  "production": {
+    "reload": false,
+    "debug": false,
+    "log_level": "WARNING",
+    "workers": 8,
+    "cors_origins": ["https://uyumsoft.com", "https://ziraitakip.com"]
+  }
+}

@@ -64,7 +64,7 @@ Successfully synchronized the AADS-ULoRA project repository to GitHub with compr
 ### 2. Fresh Repository Creation
 ```bash
 git init
-git add .gitignore .gitattributes README.md setup.py setup_optimized.py requirements.txt requirements_optimized.txt setup_git.sh GITHUB_SETUP.md SYNCHRONIZATION_REPORT.md
+git add .gitignore .gitattributes README.md setup.py setup_optimized.py requirements.txt requirements_optimized.txt setup_git.sh github-setup.md synchronization-report.md
 git commit -m "feat: initialize clean repository with all project files and backup system implementation"
 ```
 
@@ -76,7 +76,7 @@ git commit -m "Add complete project structure with all modules"
 
 ### 4. Add Remaining Documentation
 ```bash
-git add AADS-ULoRA_v5.5_Implementation_Plan.md PROJECT_FIX_SUMMARY.md README_STAGE3.md test_imports.py verify_optimizations.py verify_optimizations_simple.py
+git add implementation-plan.md project-fix-summary.md README_STAGE3.md test_imports.py verify_optimizations.py verify_optimizations_simple.py
 git commit -m "Add additional documentation and verification scripts"
 ```
 

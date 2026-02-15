@@ -848,7 +848,7 @@ But no guidance on:
 
 ### Files Involved
 ```
-config/adapter_spec_v55.json      (109 lines)
+config/adapter-spec.json      (109 lines)
 config/development.json            (Template)
 config/production.json             (Template)
 ```

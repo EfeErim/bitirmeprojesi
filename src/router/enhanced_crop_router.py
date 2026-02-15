@@ -376,7 +376,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='config/adapter_spec_v55.json')
+    parser.add_argument('--config', type=str, default='config/adapter-spec.json')
     parser.add_argument('--device', type=str, default='cuda')
     parser.add_argument('--test_image', type=str)
     args = parser.parse_args()

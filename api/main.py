@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Load configuration
 try:
-    CONFIG_PATH = Path(__file__).parent.parent / 'config' / 'adapter_spec_v55.json'
+    CONFIG_PATH = Path(__file__).parent.parent / 'config' / 'adapter-spec.json'
     with open(CONFIG_PATH, 'r') as f:
         CONFIG = json.load(f)
     
@@ -59,7 +59,50 @@ app = FastAPI(
     description="Agricultural Disease Detection with Dynamic OOD - Production Optimized",
     version="5.5.3-performance",
     docs_url="/docs" if CONFIG.get('api', {}).get('reload', False) else None,
-    redoc_url="/redoc" if CONFIG.get('api', {}).get('reload', False) else None
+    redoc_url="/redoc" if CONFIG.get('api', {}).get('reload', False) else None,
+    openapi_url="/openapi.json",
+    openapi_tags=[
+        {
+            "name": "Health & System",
+            "description": "Health checks and system information endpoints",
+            "externalDocs": {
+                "description": "Health endpoints",
+                "url": "https://fastapi.tiangolo.com/tutorial/path-operation-configuration/"
+            }
+        },
+        {
+            "name": "Crops",
+            "description": "Crop management and information endpoints",
+            "externalDocs": {
+                "description": "Crop endpoints",
+                "url": "https://fastapi.tiangolo.com/tutorial/path-operation-configuration/"
+            }
+        },
+        {
+            "name": "Diagnosis",
+            "description": "Disease diagnosis and analysis endpoints",
+            "externalDocs": {
+                "description": "Diagnosis endpoints",
+                "url": "https://fastapi.tiangolo.com/tutorial/path-operation-configuration/"
+            }
+        },
+        {
+            "name": "Feedback",
+            "description": "Expert feedback and label submission endpoints",
+            "externalDocs": {
+                "description": "Feedback endpoints",
+                "url": "https://fastapi.tiangolo.com/tutorial/path-operation-configuration/"
+            }
+        },
+        {
+            "name": "Monitoring",
+            "description": "System monitoring and metrics endpoints",
+            "externalDocs": {
+                "description": "Monitoring endpoints",
+                "url": "https://fastapi.tiangolo.com/tutorial/path-operation-configuration/"
+            }
+        }
+    ]
 )
 
 # Import and setup middleware

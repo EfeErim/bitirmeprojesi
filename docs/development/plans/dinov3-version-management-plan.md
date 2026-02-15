@@ -78,7 +78,7 @@ versions/
   },
   "files_added": [],
   "files_modified": [
-    "config/adapter_spec_v55.json",
+    "config/adapter-spec.json",
     "src/adapter/independent_crop_adapter.py",
     "src/training/phase1_training.py",
     "src/training/phase2_sd_lora.py",
@@ -103,7 +103,7 @@ versions/
 ```
 
 #### 2.2 Configuration File Updates
-**config/adapter_spec_v55.json**:
+**config/adapter-spec.json**:
 - Update model names: `facebook/dinov2-base` → `facebook/dinov3-base`
 - Update model names: `facebook/dinov2-giant` → `facebook/dinov3-giant`
 - Add Dinov3-specific parameters
@@ -273,7 +273,7 @@ AADS-ULoRA-v5.5/
 5. **Create Tags**: `git tag -a v5.5.4-dinov3 -m "Dinov3 backbone integration" && git push origin v5.5.4-dinov3`
 
 #### 5.3 Documentation Updates
-**GITHUB_SETUP.md**:
+**github-setup.md**:
 - Add version management instructions
 - Document version switching procedures
 - Include rollback mechanisms
