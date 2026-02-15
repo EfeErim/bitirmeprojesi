@@ -15,8 +15,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 import torch
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
 from src.utils.data_loader import preprocess_image

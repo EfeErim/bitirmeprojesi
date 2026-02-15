@@ -133,7 +133,7 @@ class EnhancedCropRouter:
         adapter_key = (crop, part)
         
         try:
-            from src.adapter.independent_crop_adapter import IndependentCropAdapter
+            from adapter.independent_crop_adapter import IndependentCropAdapter
             
             adapter = IndependentCropAdapter(
                 crop_name=f"{crop}_{part}",
