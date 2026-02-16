@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AADS-ULoRA Monitoring Configuration",
+  "description": "Configuration for system monitoring, metrics, and logging",
+  "version": "5.5.0",
+  "last_updated": "2026-02-15",
+
+  "monitoring": {
+    "enabled": true,
+    
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "path": "/metrics",
+      "multiprocess_dir": null,
+      "max_metrics_age": 10000
+    },
+    
+    "logging": {
+      "format": "json",
+      "rotate": true,
+      "max_size_mb": 100,
+      "backup_count": 5,
+      "level": "INFO",
+      "include_timestamp": true,
+      "include_hostname": true,
+      "structured": true
+    },
+    
+    "metrics": {
+      "enabled": true,
+      "track_requests": true,
+      "track_latency": true,
+      "track_errors": true,
+      "track_cache": true,
+      "track_ood": true,
+      "track_gpu": true,
+      "track_memory": true,
+      "custom_labels": {}
+    },
+    
+    "health": {
+      "enabled": true,
+      "detailed": true,
+      "include_memory": true,
+      "include_cuda": true,
+      "include_disk": true,
+      "check_interval": 30
+    },
+    
+    "alerting": {
+      "enabled": false,
+      "channels": [],
+      "rules": {
+        "high_error_rate": {
+          "enabled": true,
+          "threshold": 0.05,
+          "window": 60,
+          "cooldown": 300
+        },
+        "high_latency": {
+          "enabled": true,
+          "threshold_ms": 1000,
+          "percentile": 95,
+          "window": 60
+        },
+        "low_accuracy": {
+          "enabled": false,
+          "threshold": 0.90,
+          "window": 100
+        }
+      }
+    },
+    
+    "dashboard": {
+      "enabled": false,
+      "refresh_interval": 5,
+      "retention_days": 7
+    }
+  }
+}

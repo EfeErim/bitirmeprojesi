@@ -144,8 +144,8 @@ Production-ready for Uyumsoft ZiraiTakip integration. Version 5.5.0. Last update
 
 ## Documentation
 
-- [API Reference](docs/api_reference.md)
-- [Architecture Overview](docs/architecture.md)
-- [Crop Router Technical Guide](CROP_ROUTER_TECHNICAL_GUIDE.md)
-- [Rollback Guide](ROLLBACK_GUIDE.md)
-- [Comprehensive Codebase Evaluation](COMPREHENSIVE_CODEBASE_EVALUATION.md)
+- [API Reference](docs/api/api-reference.md)
+- [Architecture Overview](docs/architecture/overview.md)
+- [Crop Router Technical Guide](docs/architecture/crop-router-technical-guide.md)
+- [Rollback Guide](docs/development/rollback-guide.md)
+- [Comprehensive Codebase Evaluation](docs/architecture/comprehensive-codebase-evaluation.md)

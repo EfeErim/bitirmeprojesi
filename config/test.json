@@ -1,0 +1,59 @@
+{
+  "version": "5.5.3-performance",
+  "description": "Test environment with comprehensive validation",
+  
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 1,
+    "reload": true,
+    "log_level": "debug",
+    "timeout_keep_alive": 30,
+    "timeout_graceful_shutdown": 10
+  },
+  
+  "security": {
+    "api_key_required": false,
+    "api_keys": [],
+    "rate_limit_requests": 500,
+    "rate_limit_window": 60,
+    "max_request_size_mb": 15,
+    "allowed_origins": ["http://localhost:3000", "http://localhost:8080"],
+    "https_enforced": false
+  },
+  
+  "caching": {
+    "enabled": true,
+    "redis_url": "redis://localhost:6379",
+    "default_ttl": 1800,
+    "diagnosis_ttl": 900,
+    "max_cache_size": 500
+  },
+  
+  "compression": {
+    "enabled": true,
+    "minimum_size": 512,
+    "compression_level": 6
+  },
+  
+  "monitoring": {
+    "enabled": true,
+    "metrics_port": 9090,
+    "log_requests": true,
+    "audit_logging": true,
+    "track_performance": true
+  },
+  
+  "database": {
+    "pool_size": 5,
+    "max_overflow": 10,
+    "pool_recycle": 1800,
+    "pool_pre_ping": true
+  },
+  
+  "health": {
+    "detailed": true,
+    "include_memory": true,
+    "include_cuda": true
+  }
+}

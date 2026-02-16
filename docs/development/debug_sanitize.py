@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-from api.validation import sanitize_input
+from src.core.validation import sanitize_input
 
 dangerous = "<script>alert('xss')</script>"
 sanitized = sanitize_input(dangerous)
@@ -12,5 +12,5 @@ print("Has <:", '<' in sanitized)
 print("Has >:", '>' in sanitized)
 print("Has <:", '<' in sanitized)
 print("Has >:", '>' in sanitized)
-print("Has ":", '"' in sanitized)
+print("Has \":", '"' in sanitized)
 print("Has &#x27;:", '&#x27;' in sanitized)

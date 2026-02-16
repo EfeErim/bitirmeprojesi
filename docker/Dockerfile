@@ -1,4 +1,4 @@
-# AADS-ULoRA v5.5.3-performance Production Docker Image
+# AADS-ULoRA v5.5 Consolidated Production Docker Image
 FROM python:3.11-slim
 
 # Set working directory
@@ -13,16 +13,16 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements_optimized.txt .
+COPY requirements.txt .
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements_optimized.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p logs adapters router config
+RUN mkdir -p logs
 
 # Set environment variables
 ENV PYTHONPATH=/app/src

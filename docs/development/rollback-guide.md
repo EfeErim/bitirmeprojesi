@@ -72,7 +72,7 @@ git push origin main
 ```
 
 #### Step 3: Restore Deleted Files (If Needed)
-If the revert doesn't fully restore deleted files from version directories:
+If the revert doesn't fully restore deleted files:
 
 ```bash
 # Check if any files are still missing
@@ -80,13 +80,11 @@ git status
 
 # If files are missing, restore from backup branches:
 # First, find the backup branch with the files
-git checkout backup/reorganization-<timestamp> -- versions/v5.5.0-baseline/
-git checkout backup/reorganization-<timestamp> -- versions/v5.5.1-ood/
-git checkout backup/reorganization-<timestamp> -- versions/v5.5.4-dinov3/
+git checkout backup/reorganization-<timestamp> -- .
 
 # Commit the restored files
-git add versions/
-git commit -m "Restore version directories after rollback"
+git add .
+git commit -m "Restore files from backup"
 git push origin main
 ```
 
@@ -157,18 +155,18 @@ git revert --continue
 git push origin main
 ```
 
-## Restoring Version Directories
+## Restoring Project Structure
 
-If you need to restore the `versions/` directory structure:
+If you need to restore the project structure:
 
 ### Option A: From Backup Branch
 ```bash
 # If you created a backup before rollback:
-git checkout backup/reorganization-<timestamp> -- versions/
+git checkout backup/reorganization-<timestamp> -- .
 
 # Commit the restoration
-git add versions/
-git commit -m "Restore version directories from backup"
+git add .
+git commit -m "Restore project structure from backup"
 ```
 
 ### Option B: From Git History
@@ -176,12 +174,12 @@ git commit -m "Restore version directories from backup"
 # Find the commit before reorganization
 git log --oneline --all
 
-# Checkout the versions directory from that commit
-git checkout <commit-before-reorg> -- versions/
+# Checkout all files from that commit
+git checkout <commit-before-reorg> -- .
 
 # Commit the restoration
-git add versions/
-git commit -m "Restore versions directory from commit <hash>"
+git add .
+git commit -m "Restore project structure from commit <hash>"
 ```
 
 ## Verification After Rollback
@@ -190,7 +188,6 @@ git commit -m "Restore versions directory from commit <hash>"
 ```bash
 # List directories to verify restoration
 ls -la
-ls -la versions/ 2>/dev/null || echo "versions directory not present"
 
 # Check git status
 git status
@@ -256,113 +253,80 @@ git checkout -b recovery-branch
 ## Contact
 If you encounter issues during rollback, contact the project maintainer or consult the Git documentation.
 
-## Final Cleanup Rollback (2026-02-13)
+## Project Structure Changes
 
-### Scenario 4: Rollback Final Cleanup Actions
-If you need to restore the directories and files removed during the final cleanup:
+The project has been consolidated from multiple version directories into a unified structure. Key changes:
 
-#### Step 1: Create a Backup Branch (Safety First)
+- **Removed**: `versions/`, `backups/`, `current/`, `version_management/`, `visualization/` directories
+- **Consolidated**: All active code is now in the root project structure
+- **Simplified**: No version switching - the current codebase is the single source of truth
+
+### If You Need to Restore Previous Versions
+
+If you need to access previous versions of the project:
+
+1. **Use Git History**: The complete project history is preserved in Git
+2. **Checkout Specific Commits**: Use `git checkout <commit-hash>` to view previous states
+3. **Create Branches**: Create branches from historical commits if needed
+
 ```bash
-git branch backup/final-cleanup-$(date +%Y%m%d-%H%M%S)
-git push origin backup/final-cleanup-$(date +%Y%m%d-%H%M%S)
+# View commit history
+git log --oneline --all
+
+# Checkout a specific commit (detached HEAD)
+git checkout <commit-hash>
+
+# Create a branch from a historical commit
+git checkout -b historical-version <commit-hash>
 ```
 
-#### Step 2: Restore Deleted Directories
+### Emergency Recovery
+
+If something goes wrong during rollback:
+
+#### Option 1: Use Git Reflog
 ```bash
-# Restore the current/ directory
-mkdir current
-cd current
-git checkout HEAD~1 -- .
-cd ..
-
-# Restore the version_management/ directory
-mkdir version_management
-git checkout HEAD~1 -- version_management/
-
-# Restore the visualization/ directory
-mkdir visualization
-git checkout HEAD~1 -- visualization/
-```
-
-#### Step 3: Restore Deleted Documentation Files
-```bash
-# Restore .tex files from documents/ directory
-cd documents
-git checkout HEAD~1 -- adapterguide.tex implementation.tex implementationpart2.tex main.tex mobile.tex
-cd ..
-```
-
-#### Step 4: Commit the Restoration
-```bash
-git add .
-git commit -m "Restore final cleanup directories and documentation files"
-git push origin main
-```
-
-### Alternative: Use Git Reflog for Emergency Recovery
-If the above steps don't work, use Git reflog:
-
-```bash
-# View recent actions
+# View all recent actions
 git reflog
 
-# Find the commit before the final cleanup
+# Find the commit before the problematic operation
 # Reset to that state
 git reset --hard <reflog-entry-hash>
-
-# Verify restoration
-git status
 ```
 
-### Verification After Final Cleanup Rollback
-
-#### Check Directory Structure
+#### Option 2: Restore from Remote Backup
 ```bash
-# List directories to verify restoration
-ls -la
-ls -la current/ 2>/dev/null || echo "current directory not present"
-ls -la version_management/ 2>/dev/null || echo "version_management directory not present"
-ls -la visualization/ 2>/dev/null || echo "visualization directory not present"
+# If you pushed a backup branch:
+git checkout backup/reorganization-<timestamp>
 
-# Check documents directory
-ls -la documents/
+# Create a new branch from the backup
+git checkout -b recovery-branch
+
+# Merge or cherry-pick as needed
 ```
 
-#### Verify Documentation Files
-```bash
-# Check if .tex files are restored
-ls -la documents/ | grep .tex
-```
+## Rollback Checklist
 
-#### Test the Application
-```bash
-# Run tests to ensure functionality
-pytest tests/unit/ -v
-
-# Or run specific tests
-python -m pytest tests/unit/test_adapter_comprehensive.py -v
-```
-
-## Final Cleanup Rollback Checklist
-
-- [ ] Create backup branch before rollback
-- [ ] Restore current/ directory with all contents
-- [ ] Restore version_management/ directory
-- [ ] Restore visualization/ directory
-- [ ] Restore deleted .tex files in documents/
-- [ ] Commit and push the restoration
-- [ ] Verify directory structure is restored
-- [ ] Verify documentation files are restored
+- [ ] Identify the reorganization commit hash
+- [ ] Create backup branch (if changes were pushed)
+- [ ] Choose appropriate rollback method (reset vs revert)
+- [ ] Execute rollback command
+- [ ] Resolve any merge conflicts
+- [ ] Verify file structure is restored
 - [ ] Run tests to ensure functionality
+- [ ] Push rollback changes (if applicable)
 - [ ] Document the rollback in a new file or issue
 
-## Important Notes for Final Cleanup Rollback
+## Important Notes
 
-1. **Directory Structure**: The current/ directory contains a complete duplicate snapshot of the project, so restoring it will bring back all the redundant files
-2. **Documentation**: Restoring .tex files will recreate the duplicate documentation pairs (.tex and .pdf)
-3. **System Files**: The desktop.ini files will be restored as part of the directory restoration
-4. **Impact**: Rolling back the final cleanup will significantly increase project size and complexity
-5. **Communication**: If working in a team, communicate rollback plans before executing
+1. **Communication**: If working in a team, communicate rollback plans before executing
+2. **Backup**: Always create a backup branch before rollback
+3. **Testing**: Test thoroughly after rollback
+4. **Documentation**: Update documentation if rollback process differs
+5. **History**: Git revert preserves history; git reset rewrites it. Use revert for shared branches.
+
+## Contact
+If you encounter issues during rollback, contact the project maintainer or consult the Git documentation.
 
 ## Contact
 If you encounter issues during rollback, contact the project maintainer or consult the Git documentation.

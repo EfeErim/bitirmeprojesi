@@ -535,8 +535,8 @@ class IndependentMultiCropPipeline:
 
 3. **Documentation**
    - `README.md` (project overview, quick start)
-   - `docs/architecture.md` (detailed architecture)
-   - `docs/api_reference.md` (API endpoints)
+   - `docs/architecture/overview.md` (detailed architecture)
+   - `docs/api/api-reference.md` (API endpoints)
    - `docs/mobile_integration.md` (mobile SDK guide)
    - `docs/deployment.md` (infrastructure setup)
    - `docs/troubleshooting.md` (common issues)

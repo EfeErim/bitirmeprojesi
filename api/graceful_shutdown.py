@@ -45,7 +45,7 @@ class GracefulShutdown:
         
         # Close Redis connections
         try:
-            from api.middleware.caching import cache
+            from src.middleware.caching import cache
             if cache and cache._client:
                 await cache._client.close()
                 logger.info("Redis connections closed")

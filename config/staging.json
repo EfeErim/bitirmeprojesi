@@ -1,0 +1,59 @@
+{
+  "version": "5.5.3-performance",
+  "description": "Staging environment with production-like settings",
+  
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "workers": 2,
+    "reload": false,
+    "log_level": "info",
+    "timeout_keep_alive": 30,
+    "timeout_graceful_shutdown": 10
+  },
+  
+  "security": {
+    "api_key_required": true,
+    "api_keys": ["staging_key_secure_token_67890"],
+    "rate_limit_requests": 200,
+    "rate_limit_window": 60,
+    "max_request_size_mb": 15,
+    "allowed_origins": ["https://staging.yourdomain.com"],
+    "https_enforced": true
+  },
+  
+  "caching": {
+    "enabled": true,
+    "redis_url": "redis://localhost:6379",
+    "default_ttl": 1800,
+    "diagnosis_ttl": 900,
+    "max_cache_size": 500
+  },
+  
+  "compression": {
+    "enabled": true,
+    "minimum_size": 512,
+    "compression_level": 6
+  },
+  
+  "monitoring": {
+    "enabled": true,
+    "metrics_port": 9090,
+    "log_requests": true,
+    "audit_logging": true,
+    "track_performance": true
+  },
+  
+  "database": {
+    "pool_size": 10,
+    "max_overflow": 15,
+    "pool_recycle": 1800,
+    "pool_pre_ping": true
+  },
+  
+  "health": {
+    "detailed": true,
+    "include_memory": true,
+    "include_cuda": true
+  }
+}

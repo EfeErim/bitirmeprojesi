@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AADS-ULoRA Out-of-Distribution Configuration",
+  "description": "Configuration for OOD detection and uncertainty estimation",
+  "version": "5.5.0",
+  "last_updated": "2026-02-15",
+
+  "ood": {
+    "enabled": true,
+    "method": "mahalanobis",
+    "threshold": 0.95,
+    "confidence_level": 0.99,
+    
+    "prototype": {
+      "enabled": true,
+      "update_rate": 0.1,
+      "min_samples": 10,
+      "max_prototypes": 1000,
+      "distance_metric": "euclidean",
+      "adaptive_threshold": true
+    },
+    
+    "mahalanobis": {
+      "enabled": true,
+      "eps": 1e-6,
+      "batch_size": 64,
+      "use_shared_covariance": false,
+      "regularization": 1e-5,
+      "num_samples": 10000
+    },
+    
+    "thresholding": {
+      "method": "dynamic",
+      "factor": 2.0,
+      "min_val_samples_per_class": 10,
+      "fallback_threshold": 25.0,
+      "target_fpr": 0.05,
+      "calibration_enabled": true,
+      "quantile_method": "empirical"
+    },
+    
+    "fallback": {
+      "enabled": true,
+      "strategy": "conservative",
+      "default_confidence": 0.5,
+      "reject_uncertain": true,
+      "min_confidence_for_prediction": 0.3
+    },
+    
+    "monitoring": {
+      "enabled": true,
+      "track_ood_scores": true,
+      "track_thresholds": true,
+      "alert_on_shift": true,
+      "window_size": 1000
+    }
+  }
+}

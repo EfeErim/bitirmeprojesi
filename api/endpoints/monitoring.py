@@ -9,7 +9,7 @@ import logging
 import time
 from typing import Dict, Any
 
-from api.metrics import metrics_collector
+from src.monitoring.metrics import metrics_collector
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/v1", tags=["monitoring"])

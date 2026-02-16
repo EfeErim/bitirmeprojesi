@@ -81,7 +81,7 @@ This document summarizes the comprehensive repository organization improvements 
 - **Benefits**: Self-documenting API, interactive Swagger UI, better developer experience
 
 #### ✅ API Reference Documentation
-- **File**: `docs/api_reference.md`
+- **File**: `docs/api/api-reference.md`
 - **Content**: Complete API endpoint documentation with examples
 - **Coverage**: All endpoints, request/response schemas, error codes, best practices
 - **Benefits**: Developer-friendly API documentation, integration examples
@@ -114,7 +114,7 @@ SYNCHRONIZATION_REPORT.md → synchronization-report.md
 ### 6. Test Documentation and Coverage
 
 #### ✅ Comprehensive Test Documentation
-- **File**: `docs/test_documentation.md`
+- **File**: `docs/development/test-documentation.md`
 - **Content**: 
   - Test structure and organization
   - Running tests with coverage
@@ -172,7 +172,7 @@ SYNCHRONIZATION_REPORT.md → synchronization-report.md
 5. `.github/ISSUE_TEMPLATE.md` - Issue templates
 6. `.github/workflows/ci.yml` - CI/CD pipeline
 7. `config/adapter-spec.json` - Renamed and standardized config
-8. `docs/test_documentation.md` - Test documentation
+8. `docs/development/test-documentation.md` - Test documentation
 9. `.coveragerc` - Coverage configuration
 10. `scripts/run_coverage.py` - Coverage runner
 11. `scripts/generate_coverage_badge.py` - Badge generator

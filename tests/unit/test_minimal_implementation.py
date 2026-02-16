@@ -90,5 +90,4 @@ print("\n" + "=" * 60)
 print("Implementation is ready for integration!")
 print("=" * 60)
 
-# Exit with success code
-exit(0)
+# Test completed successfully

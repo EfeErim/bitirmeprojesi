@@ -13,7 +13,7 @@ from PIL import Image
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from api.validation import validate_base64_image, validate_image_file, validate_uuid, sanitize_input
+from src.core.validation import validate_base64_image, validate_image_file, validate_uuid, sanitize_input
 
 def create_test_image(size_mb=1, format='JPEG'):
     """Create a test image of specified size."""

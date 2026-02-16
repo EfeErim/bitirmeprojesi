@@ -310,7 +310,7 @@ jobs:
 
 - Check `version_management/README.md` for detailed documentation
 - Review `version_management/rollback_mechanisms.md` for rollback procedures
-- See `plans/dinov3-version-management-plan.md` for implementation details
+- See `archive/development-plans/dinov3-version-management-plan.md` for implementation details
 
 ## Success Criteria
 
