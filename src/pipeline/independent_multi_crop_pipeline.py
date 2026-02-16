@@ -12,32 +12,26 @@ from pathlib import Path
 from functools import lru_cache
 import hashlib
 
-from src.router.simple_crop_router import SimpleCropRouter
-from src.adapter.independent_crop_adapter import IndependentCropAdapter
+from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
 from src.utils.data_loader import preprocess_image
 
 logger = logging.getLogger(__name__)
 
 class IndependentMultiCropPipeline:
     """
-    Main pipeline orchestrating router and independent adapters.
+    Main pipeline orchestrating VLM-based router and independent adapters.
     Key: No cross-adapter communication - fully independent.
     
-    Args:
-        config: Configuration dictionary
-        device: Device for inference
+    Now uses VLM Pipeline (Grounding DINO + SAM-2 + BioCLIP 2) as the definitive router.
     """
-    
-    def __init__(
-        self,
-        config: Dict,
-        device: str = 'cuda'
-    ):
+
+    def __init__(self, config: Dict, device: str = 'cuda'):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.config = config
         
         # Initialize components
         self.router = None
+        self.router_analyzer = None  # DiagnosticScoutingAnalyzer for VLM
         self.adapters = {}  # crop_name -> IndependentCropAdapter
         self.ood_buffers = {}  # Phase 2/3 triggering
         
@@ -51,15 +45,16 @@ class IndependentMultiCropPipeline:
         self.adapter_cache = {}  # Cache for adapter predictions
         self.cache_hits = 0
         self.cache_misses = 0
-        
+
         logger.info(f"IndependentMultiCropPipeline initialized on {self.device}")
-    
+        logger.info("Using VLM Pipeline as definitive router")
+
     def _generate_cache_key(self, image_tensor: torch.Tensor) -> str:
         """Generate a cache key for an image tensor."""
         # Convert tensor to bytes for hashing
         tensor_bytes = image_tensor.cpu().numpy().tobytes()
         return hashlib.md5(tensor_bytes).hexdigest()
-    
+
     def _clear_caches(self):
         """Clear all caches."""
         self.router_cache.clear()
@@ -67,7 +62,7 @@ class IndependentMultiCropPipeline:
         self.cache_hits = 0
         self.cache_misses = 0
         logger.info("Caches cleared")
-    
+
     def initialize_router(
         self,
         router_path: Optional[str] = None,
@@ -75,57 +70,35 @@ class IndependentMultiCropPipeline:
         val_datasets: Optional[Dict[str, 'CropDataset']] = None
     ) -> bool:
         """
-        Initialize or load crop router.
+        Initialize VLM-based router.
         
         Args:
-            router_path: Path to pre-trained router (if None, will train)
-            train_datasets: Training datasets per crop (for training)
-            val_datasets: Validation datasets per crop (for training)
+            router_path: Path to pre-trained router (ignored for VLM - loads models from config)
+            train_datasets: Not used for VLM (models are pre-trained)
+            val_datasets: Not used for VLM
             
         Returns:
             True if successful
         """
-        logger.info("Initializing crop router...")
+        logger.info("Initializing VLM-based crop router...")
         
-        # Create router
-        self.router = SimpleCropRouter(
-            crops=self.crops,
-            model_name='facebook/dinov3-base',
-            device=self.device
-        )
-        
-        # Load or train
-        if router_path and Path(router_path).exists():
-            logger.info(f"Loading router from {router_path}")
-            self.router.load_model(router_path)
-        else:
-            if train_datasets is None or val_datasets is None:
-                raise ValueError("Cannot train router without datasets")
+        try:
+            # Create VLM pipeline
+            self.router = VLMPipeline(config=self.config, device=self.device)
             
-            # Combine datasets from all crops for router training
-            # Router needs to see all crop types
-            logger.info("Training crop router...")
+            # Load VLM models
+            self.router.load_models()
             
-            # For simplicity, we'll use tomato dataset as placeholder
-            # In practice, you'd create a combined dataset with all crops
-            train_dataset = train_datasets.get('tomato')
-            val_dataset = val_datasets.get('tomato')
+            # Create diagnostic analyzer for easier crop classification
+            self.router_analyzer = DiagnosticScoutingAnalyzer(config=self.config, device=self.device)
             
-            if train_dataset is None or val_dataset is None:
-                raise ValueError("Missing datasets for router training")
+            logger.info("VLM router initialized successfully")
+            return True
             
-            self.router.train(
-                train_dataset=train_dataset,
-                val_dataset=val_dataset,
-                epochs=10,
-                batch_size=32,
-                learning_rate=1e-3,
-                save_path=router_path
-            )
-        
-        logger.info("Crop router initialized successfully")
-        return True
-    
+        except Exception as e:
+            logger.error(f"Failed to initialize VLM router: {e}")
+            return False
+
     def register_crop(
         self,
         crop_name: str,
@@ -150,6 +123,7 @@ class IndependentMultiCropPipeline:
             return False
         
         # Create adapter
+        from src.adapter.independent_crop_adapter import IndependentCropAdapter
         adapter = IndependentCropAdapter(crop_name=crop_name, device=self.device)
         
         # Load adapter
@@ -161,7 +135,7 @@ class IndependentMultiCropPipeline:
         except Exception as e:
             logger.error(f"Failed to load adapter for {crop_name}: {e}")
             return False
-    
+
     def process_image(
         self,
         image: torch.Tensor,
@@ -169,7 +143,7 @@ class IndependentMultiCropPipeline:
     ) -> Dict:
         """
         Main inference flow:
-        1. Router determines crop
+        1. VLM router performs diagnostic scouting to identify crop
         2. Crop adapter predicts disease with dynamic OOD
         3. OOD detection triggers updates if needed
         
@@ -189,9 +163,9 @@ class IndependentMultiCropPipeline:
                 return self.adapter_cache[cache_key]
             self.cache_misses += 1
         
-        # Step 1: Route to correct crop adapter
-        if self.router is None:
-            raise RuntimeError("Router not initialized")
+        # Step 1: Use VLM pipeline to identify crop
+        if self.router_analyzer is None:
+            raise RuntimeError("VLM router not initialized")
         
         # Check router cache
         if self.cache_enabled:
@@ -199,12 +173,42 @@ class IndependentMultiCropPipeline:
             if router_cache_key in self.router_cache:
                 predicted_crop, crop_confidence = self.router_cache[router_cache_key]
             else:
-                predicted_crop, crop_confidence = self.router.route(image)
+                # Run VLM analysis
+                vlm_result = self.router_analyzer.analyze(image, detailed=False)
+                
+                # Extract crop prediction from VLM output
+                if vlm_result.get('status') == 'success':
+                    # Use the most common classification as crop prediction
+                    classifications = vlm_result.get('classifications', [])
+                    if classifications:
+                        # Get species from first classification as crop
+                        predicted_crop = classifications[0].get('species', 'unknown')
+                        crop_confidence = classifications[0].get('confidence', 0.0)
+                    else:
+                        predicted_crop = 'unknown'
+                        crop_confidence = 0.0
+                else:
+                    predicted_crop = 'unknown'
+                    crop_confidence = 0.0
+                
                 self.router_cache[router_cache_key] = (predicted_crop, crop_confidence)
         else:
-            predicted_crop, crop_confidence = self.router.route(image)
+            # Direct VLM routing
+            vlm_result = self.router_analyzer.analyze(image, detailed=False)
+            
+            if vlm_result.get('status') == 'success':
+                classifications = vlm_result.get('classifications', [])
+                if classifications:
+                    predicted_crop = classifications[0].get('species', 'unknown')
+                    crop_confidence = classifications[0].get('confidence', 0.0)
+                else:
+                    predicted_crop = 'unknown'
+                    crop_confidence = 0.0
+            else:
+                predicted_crop = 'unknown'
+                crop_confidence = 0.0
         
-        logger.debug(f"Routed to crop: {predicted_crop} (confidence: {crop_confidence:.4f})")
+        logger.debug(f"VLM router identified crop: {predicted_crop} (confidence: {crop_confidence:.4f})")
         
         # Step 2: Get appropriate adapter
         if predicted_crop not in self.adapters:
@@ -212,7 +216,8 @@ class IndependentMultiCropPipeline:
                 'status': 'error',
                 'message': f'No adapter available for crop: {predicted_crop}',
                 'crop': predicted_crop,
-                'crop_confidence': crop_confidence
+                'crop_confidence': crop_confidence,
+                'vlm_analysis': vlm_result if 'vlm_result' in locals() else None
             }
             if self.cache_enabled:
                 self.adapter_cache[cache_key] = result
@@ -223,8 +228,6 @@ class IndependentMultiCropPipeline:
         # Step 3: Disease prediction with OOD detection
         try:
             result = adapter.predict_with_ood(image)
-            
-            # Add crop info
             result['crop'] = predicted_crop
             result['crop_confidence'] = crop_confidence
             
@@ -254,7 +257,7 @@ class IndependentMultiCropPipeline:
             if self.cache_enabled:
                 self.adapter_cache[cache_key] = error_result
             return error_result
-    
+
     def batch_process(
         self,
         images: List[torch.Tensor],
@@ -270,77 +273,16 @@ class IndependentMultiCropPipeline:
         Returns:
             List of prediction results
         """
-        # Stack images into batch for router
-        image_batch = torch.stack(images)
-        
-        # Batch routing
-        if self.router is None:
-            raise RuntimeError("Router not initialized")
-        
-        predicted_crops, crop_confidences = self.router.route_batch(image_batch)
-        
         results = []
         
-        # Process each image with its corresponding crop
-        for i, (image, predicted_crop, crop_confidence) in enumerate(zip(images, predicted_crops, crop_confidences)):
+        # Process each image individually (VLM doesn't support batch routing yet)
+        for i, image in enumerate(images):
             metadata = metadata_list[i] if metadata_list else None
-            
-            # Check cache
-            if self.cache_enabled:
-                cache_key = self._generate_cache_key(image)
-                if cache_key in self.adapter_cache:
-                    self.cache_hits += 1
-                    result = self.adapter_cache[cache_key]
-                    results.append(result)
-                    continue
-            self.cache_misses += 1
-            
-            # Get adapter
-            if predicted_crop not in self.adapters:
-                result = {
-                    'status': 'error',
-                    'message': f'No adapter available for crop: {predicted_crop}',
-                    'crop': predicted_crop,
-                    'crop_confidence': crop_confidence
-                }
-                if self.cache_enabled:
-                    self.adapter_cache[cache_key] = result
-                results.append(result)
-                continue
-            
-            adapter = self.adapters[predicted_crop]
-            
-            # Predict
-            try:
-                result = adapter.predict_with_ood(image)
-                result['crop'] = predicted_crop
-                result['crop_confidence'] = crop_confidence
-                
-                if result['ood_analysis']['is_ood']:
-                    self._handle_ood_detection(result, metadata)
-                
-                # Cache result
-                if self.cache_enabled:
-                    self.adapter_cache[cache_key] = result
-                    if len(self.adapter_cache) > self.cache_size:
-                        oldest_key = next(iter(self.adapter_cache))
-                        del self.adapter_cache[oldest_key]
-                
-                results.append(result)
-            except Exception as e:
-                logger.error(f"Error during prediction for image {i}: {e}")
-                error_result = {
-                    'status': 'error',
-                    'message': str(e),
-                    'crop': predicted_crop,
-                    'crop_confidence': crop_confidence
-                }
-                if self.cache_enabled:
-                    self.adapter_cache[cache_key] = error_result
-                results.append(error_result)
+            result = self.process_image(image, metadata)
+            results.append(result)
         
         return results
-    
+
     def get_crop_status(self) -> Dict[str, Dict]:
         """
         Get status of all registered crop adapters.
@@ -359,7 +301,7 @@ class IndependentMultiCropPipeline:
             }
         
         return status
-    
+
     def update_adapter(
         self,
         crop_name: str,
@@ -388,7 +330,7 @@ class IndependentMultiCropPipeline:
         except Exception as e:
             logger.error(f"Failed to update {crop_name} adapter: {e}")
             return False
-    
+
     def save_pipeline_state(self, save_dir: str):
         """
         Save entire pipeline state.
@@ -399,9 +341,12 @@ class IndependentMultiCropPipeline:
         save_path = Path(save_dir)
         save_path.mkdir(parents=True, exist_ok=True)
         
-        # Save router
-        if self.router:
-            self.router.save_model(str(save_path / 'router'))
+        # Save VLM router (if it has save capability)
+        if self.router and hasattr(self.router, 'save_pipeline_info'):
+            router_dir = save_path / 'router'
+            router_dir.mkdir(exist_ok=True)
+            # Save VLM pipeline info
+            self.router.save_pipeline_info(str(router_dir))
         
         # Save adapters
         adapters_dir = save_path / 'adapters'
@@ -412,7 +357,7 @@ class IndependentMultiCropPipeline:
             adapter.save_adapter(str(adapter_dir))
         
         logger.info(f"Pipeline state saved to {save_dir}")
-    
+
     def load_pipeline_state(
         self,
         base_dir: str,
@@ -430,12 +375,14 @@ class IndependentMultiCropPipeline:
         """
         base_path = Path(base_dir)
         
-        # Load router
+        # Load VLM router
         router_path = router_path or base_path / 'router'
-        if (router_path).exists():
-            self.router = SimpleCropRouter(self.crops, device=self.device)
-            self.router.load_model(str(router_path))
-            logger.info("Loaded router")
+        if router_path.exists():
+            self.router = VLMPipeline(config=self.config, device=self.device)
+            if hasattr(self.router, 'load_pipeline_info'):
+                self.router.load_pipeline_info(str(router_path))
+            self.router_analyzer = DiagnosticScoutingAnalyzer(config=self.config, device=self.device)
+            logger.info("Loaded VLM router")
         
         # Load adapters
         adapters_dir = base_path / 'adapters'
@@ -443,13 +390,14 @@ class IndependentMultiCropPipeline:
             for crop_name in self.crops:
                 adapter_dir = adapters_dir / crop_name
                 if adapter_dir.exists():
+                    from src.adapter.independent_crop_adapter import IndependentCropAdapter
                     adapter = IndependentCropAdapter(crop_name=crop_name, device=self.device)
                     adapter.load_adapter(str(adapter_dir))
                     self.adapters[crop_name] = adapter
                     logger.info(f"Loaded {crop_name} adapter")
         
         return True
-    
+
     def get_cache_stats(self) -> Dict[str, Any]:
         """
         Get cache statistics.
@@ -468,7 +416,7 @@ class IndependentMultiCropPipeline:
             'adapter_cache_size': len(self.adapter_cache),
             'cache_enabled': self.cache_enabled
         }
-    
+
     def clear_cache(self):
         """Clear all caches."""
         self._clear_caches()
@@ -512,7 +460,7 @@ if __name__ == "__main__":
     # Create pipeline
     pipeline = create_pipeline_from_config(args.config)
     
-    # Initialize router
+    # Initialize VLM router
     pipeline.initialize_router(router_path=args.router_path)
     
     # Register adapters

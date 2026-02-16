@@ -20,6 +20,7 @@ sys.modules['src.ood.prototypes'] = MagicMock()
 sys.modules['src.ood.prototypes'].compute_class_prototypes = MagicMock(return_value=(torch.zeros(10, 768), {}))
 
 from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
+from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
 
 
 class TestIndependentMultiCropPipelineInitialization:
@@ -69,9 +70,16 @@ class TestIndependentMultiCropPipelineCache:
         with patch('torch.cuda.is_available', return_value=False):
             pipeline = IndependentMultiCropPipeline(config, device='cpu')
             
-            # Mock router
+            # Mock VLM router
             pipeline.router = MagicMock()
-            pipeline.router.route.return_value = ('tomato', 0.95)
+            pipeline.router_analyzer = MagicMock()
+            pipeline.router_analyzer.analyze.return_value = {
+                'status': 'success',
+                'classifications': [{
+                    'species': 'tomato',
+                    'confidence': 0.95
+                }]
+            }
             
             # Mock adapter
             mock_adapter = MagicMock()

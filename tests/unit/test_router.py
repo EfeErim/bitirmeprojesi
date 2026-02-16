@@ -1,58 +1,65 @@
 #!/usr/bin/env python3
 """
-Unit tests for SimpleCropRouter
+Unit tests for VLM Pipeline (replacing SimpleCropRouter)
 """
 
 import pytest
 import torch
-from src.router.simple_crop_router import SimpleCropRouter
+from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
 from src.utils.data_loader import CropDataset
 
-class TestSimpleCropRouter:
-    """Test cases for SimpleCropRouter."""
+class TestVLMPipeline:
+    """Test cases for VLM Pipeline."""
     
     def test_initialization(self):
-        """Test router initialization."""
-        crops = ['tomato', 'pepper', 'corn']
-        router = SimpleCropRouter(crops, model_name='facebook/dinov3-base', device='cpu')
+        """Test VLM pipeline initialization."""
+        config = {
+            'vlm_enabled': True,
+            'vlm_confidence_threshold': 0.8,
+            'vlm_max_detections': 10
+        }
+        pipeline = VLMPipeline(config, device='cpu')
         
-        assert router.crops == crops
-        assert router.classifier.out_features == len(crops)
-        assert router.device.type == 'cpu'
+        assert pipeline.device.type == 'cpu'
+        assert pipeline.enabled == True
+        assert pipeline.confidence_threshold == 0.8
+        assert pipeline.max_detections == 10
     
-    def test_route_shape(self):
-        """Test that route returns correct output format."""
-        crops = ['tomato', 'pepper', 'corn']
-        router = SimpleCropRouter(crops, device='cpu')
+    def test_process_image_returns_correct_format(self):
+        """Test that process_image returns expected output structure."""
+        config = {'vlm_enabled': True}
+        pipeline = VLMPipeline(config, device='cpu')
+        pipeline.load_models()
         
         # Create dummy input
         dummy_input = torch.randn(1, 3, 224, 224)
         
-        # This will fail without trained weights but should return correct format
-        try:
-            crop, confidence = router.route(dummy_input)
-            assert crop in crops
-            assert 0 <= confidence <= 1
-        except Exception as e:
-            # Expected if model not trained
-            pytest.skip(f"Router not trained: {e}")
+        result = pipeline.process_image(dummy_input)
+        
+        # Check result structure
+        assert 'status' in result
+        assert 'scenario' in result
+        assert result['scenario'] == 'diagnostic_scouting'
     
-    def test_save_load(self, tmp_path):
-        """Test model save and load."""
-        crops = ['tomato', 'pepper', 'corn']
-        router = SimpleCropRouter(crops, device='cpu')
+    def test_analyzer_initialization(self):
+        """Test DiagnosticScoutingAnalyzer initialization."""
+        config = {'vlm_enabled': True}
+        analyzer = DiagnosticScoutingAnalyzer(config, device='cpu')
         
-        # Save
-        save_path = tmp_path / "router_test"
-        router.save_model(str(save_path))
+        assert analyzer.vlm_pipeline is not None
+        assert analyzer.device.type == 'cpu'
+    
+    def test_analyzer_quick_assessment(self):
+        """Test quick assessment method."""
+        config = {'vlm_enabled': True}
+        analyzer = DiagnosticScoutingAnalyzer(config, device='cpu')
+        analyzer.vlm_pipeline.enabled = False  # Disable for testing
         
-        # Load into new router
-        new_router = SimpleCropRouter(crops, device='cpu')
-        new_router.load_model(str(save_path))
+        dummy_input = torch.randn(1, 3, 224, 224)
+        result = analyzer.quick_assessment(dummy_input)
         
-        # Check that classifier weights are loaded
-        for p1, p2 in zip(router.classifier.parameters(), new_router.classifier.parameters()):
-            assert torch.allclose(p1, p2)
+        assert 'status' in result
+        assert 'explanation' in result
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

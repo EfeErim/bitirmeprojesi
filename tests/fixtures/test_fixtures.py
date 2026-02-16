@@ -11,7 +11,12 @@ from unittest.mock import MagicMock, patch
 # Mock data for router tests
 @pytest.fixture
 def mock_router_data():
-    """Mock data for SimpleCropRouter tests."""
+    """Mock data for VLM Pipeline tests."""
+    config = {
+        'vlm_enabled': True,
+        'vlm_confidence_threshold': 0.8,
+        'vlm_max_detections': 10
+    }
     crops = ['tomato', 'pepper', 'corn']
     
     # Mock image tensor (batch size 1)

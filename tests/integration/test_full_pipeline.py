@@ -14,7 +14,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
 from src.utils.data_loader import CropDataset, preprocess_image
-from src.router.simple_crop_router import SimpleCropRouter
+from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 
 class TestFullPipeline:

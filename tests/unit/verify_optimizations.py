@@ -21,11 +21,15 @@ def verify_batch_processing():
     print("=" * 60)
     
     try:
-        from src.router.simple_crop_router import SimpleCropRouter
+        from src.router.vlm_pipeline import VLMPipeline
         
         # Initialize router
-        crops = ['tomato', 'pepper', 'corn']
-        router = SimpleCropRouter(crops, model_name='facebook/dinov3-base', device='cpu')
+        config = {
+            'vlm_enabled': True,
+            'vlm_confidence_threshold': 0.8,
+            'vlm_max_detections': 10
+        }
+        pipeline = VLMPipeline(config=config, device='cpu')
         
         # Create test images
         num_test = 5

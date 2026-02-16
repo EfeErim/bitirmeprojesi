@@ -19,8 +19,8 @@ except Exception as e:
 
 # Test imports
 try:
-    from router.simple_crop_router import SimpleCropRouter
-    print("✓ router.simple_crop_router imported successfully")
+    from router.vlm_pipeline import VLMPipeline
+    print("✓ router.vlm_pipeline imported successfully")
 except Exception as e:
     print(f"✗ router.simple_crop_router import failed: {e}")
 

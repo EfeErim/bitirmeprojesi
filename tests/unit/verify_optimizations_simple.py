@@ -15,9 +15,13 @@ def test_batch_processing():
     """Test that batch processing method exists and works."""
     print("Testing batch processing...")
     try:
-        from src.router.simple_crop_router import SimpleCropRouter
-        crops = ['tomato', 'pepper', 'corn']
-        router = SimpleCropRouter(crops, model_name='facebook/dinov3-base', device='cpu')
+        from src.router.vlm_pipeline import VLMPipeline
+        config = {
+            'vlm_enabled': True,
+            'vlm_confidence_threshold': 0.8,
+            'vlm_max_detections': 10
+        }
+        pipeline = VLMPipeline(config=config, device='cpu')
         
         # Check method exists
         assert hasattr(router, 'route_batch'), "route_batch method missing"

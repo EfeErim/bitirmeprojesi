@@ -17,7 +17,7 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
-from src.router.simple_crop_router import SimpleCropRouter
+from src.router.vlm_pipeline import DiagnosticScoutingAnalyzer
 from src.ood.dynamic_thresholds import DynamicOODThreshold
 from src.utils.data_loader import preprocess_image
 
@@ -43,11 +43,12 @@ class AADSDemo:
         
         logger.info("Demo initialized successfully!")
     
-    def _load_router(self, router_path: str) -> SimpleCropRouter:
-        """Load trained crop router"""
-        # Implementation depends on router training
-        # For now, return a placeholder
-        return SimpleCropRouter(crops=['tomato', 'pepper', 'corn'])
+    def _load_router(self, router_path: str):
+        """Load VLM-based diagnostic analyzer"""
+        # For VLM pipeline, we create a DiagnosticScoutingAnalyzer
+        # The router_path parameter is kept for compatibility but not used
+        from src.router.vlm_pipeline import DiagnosticScoutingAnalyzer
+        return DiagnosticScoutingAnalyzer(config={}, device=self.device)
     
     def _load_adapters(self, adapter_dir: str) -> Dict[str, IndependentCropAdapter]:
         """Load all trained crop adapters"""
@@ -69,8 +70,8 @@ class AADSDemo:
         return preprocess_image(image, target_size=224)
     
     def predict(
-        self, 
-        image: Image.Image, 
+        self,
+        image: Image.Image,
         crop_hint: Optional[str] = None
     ) -> Dict:
         """
@@ -86,18 +87,34 @@ class AADSDemo:
         # Preprocess
         img_tensor = self.preprocess_image(image).unsqueeze(0).to(self.device)
         
-        # Step 1: Crop routing
+        # Step 1: VLM-based diagnostic analysis
         if crop_hint and crop_hint in self.adapters:
             predicted_crop = crop_hint
             crop_confidence = 1.0
         else:
-            predicted_crop, crop_confidence = self.router.route(img_tensor)
+            # Use VLM analyzer to identify crop and get diagnostic info
+            vlm_result = self.router.analyze(img_tensor, detailed=False)
+            
+            if vlm_result.get('status') == 'success':
+                # Extract crop from classifications
+                classifications = vlm_result.get('classifications', [])
+                if classifications:
+                    predicted_crop = classifications[0].get('species', 'unknown')
+                    crop_confidence = classifications[0].get('confidence', 0.0)
+                else:
+                    predicted_crop = 'unknown'
+                    crop_confidence = 0.0
+            else:
+                predicted_crop = 'unknown'
+                crop_confidence = 0.0
         
         # Step 2: Get appropriate adapter
         if predicted_crop not in self.adapters:
             return {
                 'status': 'error',
-                'message': f'No adapter available for crop: {predicted_crop}'
+                'message': f'No adapter available for crop: {predicted_crop}',
+                'crop': predicted_crop,
+                'crop_confidence': crop_confidence
             }
         
         adapter = self.adapters[predicted_crop]
