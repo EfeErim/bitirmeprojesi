@@ -13,7 +13,7 @@ from functools import lru_cache
 import hashlib
 
 from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
-from src.utils.data_loader import preprocess_image
+from src.utils.data_loader import preprocess_image, LRUCache
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,8 @@ class IndependentMultiCropPipeline:
         # Caching system
         self.cache_enabled = config.get('router', {}).get('caching', {}).get('enabled', True)
         self.cache_size = config.get('router', {}).get('caching', {}).get('max_size', 1000)
-        self.router_cache = {}  # Cache for router predictions
-        self.adapter_cache = {}  # Cache for adapter predictions
+        self.router_cache = LRUCache(capacity=self.cache_size)  # LRU cache for router predictions
+        self.adapter_cache = LRUCache(capacity=self.cache_size)  # LRU cache for adapter predictions
         self.cache_hits = 0
         self.cache_misses = 0
 
@@ -51,9 +51,11 @@ class IndependentMultiCropPipeline:
 
     def _generate_cache_key(self, image_tensor: torch.Tensor) -> str:
         """Generate a cache key for an image tensor."""
-        # Convert tensor to bytes for hashing
+        # Use tensor shape and hash of tensor data for cache key
+        # This ensures consistent cache keys for identical images
         tensor_bytes = image_tensor.cpu().numpy().tobytes()
-        return hashlib.md5(tensor_bytes).hexdigest()
+        tensor_hash = hashlib.sha256(tensor_bytes).hexdigest()
+        return f"{image_tensor.shape}_{tensor_hash}"
 
     def _clear_caches(self):
         """Clear all caches."""
@@ -153,9 +155,11 @@ class IndependentMultiCropPipeline:
         # Check cache first
         if self.cache_enabled:
             cache_key = self._generate_cache_key(image_tensor)
-            if cache_key in self.router_cache:
+            cached = self.router_cache.get(cache_key)
+            if cached is not None:
                 self.cache_hits += 1
-                return self.router_cache[cache_key]
+                cached['cache_hit'] = True
+                return cached
             self.cache_misses += 1
         
         # Router step (unless crop is specified)
@@ -187,12 +191,8 @@ class IndependentMultiCropPipeline:
         
         # Cache result
         if self.cache_enabled:
-            result['cache_hit'] = True
-            self.router_cache[cache_key] = result
-            
-            # Maintain cache size
-            if len(self.router_cache) > self.cache_size:
-                self._evict_cache()
+            result['cache_hit'] = False
+            self.router_cache.put(cache_key, result)
         
         return result
 
@@ -300,13 +300,8 @@ class IndependentMultiCropPipeline:
 
     def _evict_cache(self):
         """Evict least recently used items from cache."""
-        if len(self.router_cache) > self.cache_size * 1.5:  # Only evict if significantly over limit
-            # Simple LRU eviction (remove oldest items)
-            sorted_items = sorted(self.router_cache.items(), key=lambda x: x[1].get('timestamp', 0))
-            items_to_remove = len(self.router_cache) - self.cache_size
-            for i in range(items_to_remove):
-                self.router_cache.pop(sorted_items[i][0], None)
-            logger.info(f"Cache evicted {items_to_remove} items")
+        # This method is no longer needed as LRUCache handles eviction automatically
+        pass
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get pipeline metrics."""

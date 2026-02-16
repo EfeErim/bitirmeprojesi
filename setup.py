@@ -21,7 +21,23 @@ setup(
     url="https://github.com/yourorg/aads-ulora-v5.5",
     
     # Packages
-    packages=find_packages(where="src"),
+    packages=[
+        'src',
+        'src.adapter',
+        'src.core',
+        'src.dataset',
+        'src.debugging',
+        'src.evaluation',
+        'src.middleware',
+        'src.monitoring',
+        'src.ood',
+        'src.pipeline',
+        'src.router',
+        'src.security',
+        'src.training',
+        'src.utils',
+        'src.visualization'
+    ],
     package_dir={"": "src"},
     
     # Python version

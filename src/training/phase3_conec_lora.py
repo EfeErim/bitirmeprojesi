@@ -109,19 +109,27 @@ class Phase3Trainer:
                 loss = self.criterion(logits, labels)
             
             # Backward pass with gradient accumulation
-            self.optimizer.zero_grad()
             self.scaler.scale(loss).backward()
             
             self.current_step += 1
             if self.current_step % self.gradient_accumulation_steps == 0:
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
-                self.current_step = 0
+                self.optimizer.zero_grad()
             
             total_loss += loss.item()
             
             if batch_idx % 50 == 0:
                 logger.info(f"Epoch {epoch}, Batch {batch_idx}: Loss = {loss.item():.4f}")
+        
+        # Handle remaining gradients if accumulation steps not evenly divisible
+        if self.current_step % self.gradient_accumulation_steps != 0:
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            self.optimizer.zero_grad()
+        
+        # Reset step counter for next epoch
+        self.current_step %= self.gradient_accumulation_steps
         
         return {'loss': total_loss / len(train_loader)}
 

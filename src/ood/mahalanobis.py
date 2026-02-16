@@ -20,10 +20,16 @@ class MahalanobisDistance:
     def __init__(
         self,
         prototypes: torch.Tensor,
-        class_stds: Dict[int, torch.Tensor]
+        class_stds: Dict[int, torch.Tensor],
+        device: str = 'cpu'
     ):
-        self.prototypes = prototypes
-        self.class_stds = class_stds
+        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+        
+        if device == 'cuda' and not torch.cuda.is_available():
+            raise RuntimeError("CUDA requested but not available")
+        
+        self.prototypes = prototypes.to(self.device)
+        self.class_stds = {k: v.to(self.device) for k, v in class_stds.items()}
         self.num_classes = prototypes.shape[0]
         self.feature_dim = prototypes.shape[1]
         
@@ -74,10 +80,10 @@ class MahalanobisDistance:
         # Compute (x - μ)
         diff = features - prototype
         
-        # Compute (x - μ)^T * inv_cov * (x - μ)
-        # For efficiency, we compute: diff @ inv_cov @ diff^T
-        # This gives a (batch_size, batch_size) matrix, we take the diagonal
-        distances = torch.diagonal(diff @ inv_cov @ diff.transpose(0, 1))
+        # Compute (x - μ)^T * inv_cov * (x - μ) per sample
+        # Correct formula: (diff @ inv_cov * diff).sum(dim=1)
+        # This computes the squared Mahalanobis distance for each sample in the batch
+        distances = (diff @ inv_cov * diff).sum(dim=1)
         
         return distances
     
@@ -187,8 +193,9 @@ class MahalanobisDistanceBatch:
                 # Compute (x - μ)
                 diff = features - prototype
                 
-                # Compute (x - μ)^T * inv_cov * (x - μ)
-                distances[:, i] = torch.diagonal(diff @ inv_cov @ diff.transpose(0, 1))
+                # Compute (x - μ)^T * inv_cov * (x - μ) per sample
+                # Correct: element-wise multiplication and sum over feature dimension
+                distances[:, i] = (diff @ inv_cov * diff).sum(dim=1)
         
         return distances
 

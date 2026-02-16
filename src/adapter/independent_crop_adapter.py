@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import AutoModel, AutoConfig
-from peft import LoraConfig, get_peft_model, SDLoRAConfig
+from peft import LoraConfig, get_peft_model
 from typing import List, Dict, Tuple, Optional
 import logging
 from pathlib import Path
@@ -259,7 +259,6 @@ class IndependentCropAdapter:
             loss = criterion(logits, labels)
             
             # Backward pass with gradient accumulation
-            optimizer.zero_grad()
             loss.backward()
             
             self.current_step += 1
@@ -267,11 +266,24 @@ class IndependentCropAdapter:
                 optimizer.step()
                 optimizer.zero_grad()
             
+            # Handle remaining gradients if accumulation steps not evenly divisible
+            if self.current_step % self.gradient_accumulation_steps != 0:
+                optimizer.step()
+                optimizer.zero_grad()
+            
+            # Reset current step for next epoch
+            self.current_step %= self.gradient_accumulation_steps
+            
             # Statistics
             total_loss += loss.item()
             predictions = torch.argmax(logits, dim=1)
             correct += (predictions == labels).sum().item()
             total += labels.size(0)
+        
+        # Handle remaining gradients if accumulation steps not evenly divisible
+        if self.current_step % self.gradient_accumulation_steps != 0:
+            optimizer.step()
+            optimizer.zero_grad()
         
         return {
             'loss': total_loss / len(train_loader),
@@ -332,11 +344,17 @@ class IndependentCropAdapter:
         # Add classifier parameters
         other_params.extend(self.classifier.parameters())
         
-        param_groups = [
-            {'params': lora_a_params, 'lr': base_lr},
-            {'params': lora_b_params, 'lr': base_lr * loraplus_lr_ratio},
-            {'params': other_params, 'lr': base_lr}
-        ]
+        # Filter out empty parameter groups
+        param_groups = []
+        if lora_a_params:
+            param_groups.append({'params': lora_a_params, 'lr': base_lr})
+        if lora_b_params:
+            param_groups.append({'params': lora_b_params, 'lr': base_lr * loraplus_lr_ratio})
+        if other_params:
+            param_groups.append({'params': other_params, 'lr': base_lr})
+        
+        if not param_groups:
+            raise ValueError("No trainable parameters found in optimizer")
         
         return torch.optim.AdamW(param_groups, weight_decay=0.01)
     
@@ -388,20 +406,25 @@ class IndependentCropAdapter:
                 self.class_to_idx[class_name] = new_idx
                 self.idx_to_class[new_idx] = class_name
         
+        # Save old classifier weights before creating new classifier
+        old_classifier_weight = self.classifier.weight.data
+        old_classifier_bias = self.classifier.bias.data
+        
         # Reinitialize classifier with expanded output
         self.classifier = nn.Linear(self.hidden_size, new_num_classes).to(self.device)
         
-        # Copy old classifier weights
+        # Copy old classifier weights to the new classifier
         with torch.no_grad():
-            self.classifier.weight[:old_num_classes] = self.model.classifier.weight.data
-            self.classifier.bias[:old_num_classes] = self.model.classifier.bias.data
+            self.classifier.weight[:old_num_classes] = old_classifier_weight
+            self.classifier.bias[:old_num_classes] = old_classifier_bias
         
-        # Configure SD-LoRA
+        # Configure SD-LoRA (using standard LoraConfig)
         logger.info("Configuring SD-LoRA...")
-        lora_config = SDLoRAConfig(
+        lora_config = LoraConfig(
             r=lora_r,
             alpha=lora_alpha,
-            target_modules=['query', 'value']
+            target_modules=['query', 'value'],
+            lora_dropout=0.1
         )
         
         # Re-apply PEFT model
@@ -450,9 +473,8 @@ class IndependentCropAdapter:
                 images = images.to(self.device)
                 labels = labels.to(self.device)
                 
-                # Forward pass
-                outputs = self.base_model(images)
-                pooled_output = outputs.last_hidden_state[:, 0, :]
+                # Forward pass - use consistent feature extraction
+                pooled_output = self._extract_features(images)
                 logits = self.classifier(pooled_output)
                 
                 loss = criterion(logits, labels)
@@ -508,8 +530,7 @@ class IndependentCropAdapter:
                 images = images.to(self.device)
                 labels = labels.to(self.device)
                 
-                outputs = self.base_model(images)
-                pooled_output = outputs.last_hidden_state[:, 0, :]
+                pooled_output = self._extract_features(images)
                 logits = self.classifier(pooled_output)
                 
                 predictions = torch.argmax(logits, dim=1)

@@ -12,6 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 import cv2
 import numpy as np
 from torchvision import transforms
+from PIL import Image
 import logging
 from functools import lru_cache
 
@@ -363,7 +364,7 @@ class DomainShiftDataset(Dataset):
         return {'cache_size': 0, 'cache_capacity': 0}
 
 def preprocess_image(
-    image: Union[np.ndarray, 'PIL.Image.Image'],
+    image: Union[np.ndarray, Image.Image],
     target_size: int = 224
 ) -> torch.Tensor:
     """
@@ -375,18 +376,59 @@ def preprocess_image(
         
     Returns:
         Preprocessed tensor
+        
+    Raises:
+        ValueError: If image format is invalid
     """
-    # Convert to RGB if needed
+    """
+    Preprocess a single image for model inference.
+    
+    Args:
+        image: Input image (OpenCV numpy array or PIL Image)
+        target_size: Target size for resizing
+        
+    Returns:
+        Preprocessed tensor
+        
+    Raises:
+        ValueError: If image format is invalid
+    """
+    # Validate and convert input
     if isinstance(image, np.ndarray):
-        # OpenCV image (BGR) -> RGB
-        if len(image.shape) == 3 and image.shape[2] == 3:
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Validate numpy array dimensions
+        if image.ndim not in [2, 3]:
+            raise ValueError(f"Image must be 2D or 3D, got {image.ndim}D")
+        
+        # Handle grayscale (2D) images
+        if image.ndim == 2:
+            # Convert grayscale to RGB
+            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+        elif image.ndim == 3:
+            # Handle different channel configurations
+            if image.shape[2] == 3:
+                # BGR to RGB (OpenCV default)
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            elif image.shape[2] == 4:
+                # BGRA to RGB (with alpha channel)
+                image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+            elif image.shape[2] == 1:
+                # Single channel grayscale
+                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            else:
+                raise ValueError(f"Invalid number of channels: {image.shape[2]}, expected 1, 3, or 4")
+        
         # Convert numpy to PIL
         image = transforms.ToPILImage()(image)
     
+    # Ensure PIL Image
+    if not isinstance(image, Image.Image):
+        raise ValueError(f"Unsupported image type: {type(image)}")
+    
+    # Convert to RGB if needed
     if image.mode != 'RGB':
         image = image.convert('RGB')
     
+    # Apply transformations
     transform = transforms.Compose([
         transforms.Resize((target_size, target_size)),
         transforms.ToTensor(),

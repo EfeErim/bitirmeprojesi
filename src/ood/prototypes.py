@@ -285,6 +285,49 @@ class PrototypeComputer:
         self.cache_hits = 0
         self.cache_misses = 0
 
+
+def compute_class_prototypes(
+    model: torch.nn.Module,
+    data_loader: DataLoader,
+    feature_dim: int,
+    device: str = 'cuda'
+) -> Tuple[torch.Tensor, Dict[int, torch.Tensor]]:
+    """
+    Compute class prototypes from training data.
+    
+    Args:
+        model: Model to extract features from
+        data_loader: Data loader for training data
+        feature_dim: Feature dimension
+        device: Device for computation
+        
+    Returns:
+        Tuple of (prototypes, class_stds)
+    """
+    logger.info("Computing class prototypes using PrototypeComputer...")
+    
+    # Get class mapping from data loader
+    # Try to get class_to_idx from dataset
+    if hasattr(data_loader.dataset, 'class_to_idx'):
+        class_to_idx = data_loader.dataset.class_to_idx
+    else:
+        # Infer from labels
+        logger.warning("Dataset has no class_to_idx, inferring from labels")
+        all_labels = []
+        for _, labels in data_loader:
+            all_labels.extend(labels.cpu().numpy())
+        unique_classes = sorted(set(all_labels))
+        class_to_idx = {str(idx): idx for idx in unique_classes}
+    
+    # Create prototype computer
+    computer = PrototypeComputer(feature_dim=feature_dim, device=device)
+    
+    # Compute prototypes
+    prototypes, class_stds = computer.compute_prototypes(model, data_loader, class_to_idx)
+    
+    return prototypes, class_stds
+
+
 if __name__ == "__main__":
     """Example usage of PrototypeComputer."""
     import argparse

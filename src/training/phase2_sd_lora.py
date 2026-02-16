@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from transformers import AutoModel, AutoConfig
-from peft import LoraConfig, get_peft_model, SDLoRAConfig
+from peft import LoraConfig, get_peft_model
 import numpy as np
 from typing import Tuple, Dict, Optional
 import logging
@@ -69,12 +69,13 @@ class Phase2Trainer:
         self.classifier = nn.Linear(self.hidden_size, len(self.new_classes) + len(self.base_model.classifier.weight.data))
         self.classifier.to(self.device)
         
-        # Configure SD-LoRA
+        # Configure SD-LoRA (using standard LoraConfig)
         logger.info("Configuring SD-LoRA adapter...")
-        lora_config = SDLoRAConfig(
+        lora_config = LoraConfig(
             r=lora_r,
             alpha=lora_alpha,
-            target_modules=['query', 'value']  # Target attention mechanisms
+            target_modules=['query', 'value'],
+            lora_dropout=0.1
         )
         
         # Apply PEFT model
@@ -141,14 +142,13 @@ class Phase2Trainer:
                 loss = self.criterion(logits, labels)
             
             # Backward pass with gradient accumulation
-            self.optimizer.zero_grad()
             self.scaler.scale(loss).backward()
             
             self.current_step += 1
             if self.current_step % self.gradient_accumulation_steps == 0:
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
-                self.current_step = 0
+                self.optimizer.zero_grad()
             
             # Statistics
             total_loss += loss.item()
@@ -158,6 +158,15 @@ class Phase2Trainer:
             
             if batch_idx % 50 == 0:
                 logger.info(f"Epoch {epoch}, Batch {batch_idx}: Loss = {loss.item():.4f}")
+        
+        # Handle remaining gradients if accumulation steps not evenly divisible
+        if self.current_step % self.gradient_accumulation_steps != 0:
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
+            self.optimizer.zero_grad()
+        
+        # Reset step counter for next epoch
+        self.current_step %= self.gradient_accumulation_steps
         
         metrics = {
             'loss': total_loss / len(train_loader),

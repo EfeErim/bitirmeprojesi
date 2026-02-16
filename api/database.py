@@ -90,4 +90,7 @@ def get_db():
     try:
         yield session
     finally:
-        session.close()
+        try:
+            session.close()
+        except Exception as e:
+            logger.error(f"Error closing database session: {e}")
