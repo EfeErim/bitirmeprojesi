@@ -2,13 +2,12 @@
 Compression middleware for reducing bandwidth.
 Provides 50% less bandwidth for compressible responses.
 """
+
 import gzip
 import brotli
-from typing import Callable
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 import logging
-
 logger = logging.getLogger(__name__)
 
 

@@ -4,9 +4,9 @@ Data Loading Utilities for AADS-ULoRA v5.5
 Provides dataset classes for crop images, domain shift data, and preprocessing.
 """
 
-import os
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union
+from collections import OrderedDict
 import torch
 from torch.utils.data import Dataset, DataLoader
 import cv2
@@ -14,48 +14,79 @@ import numpy as np
 from torchvision import transforms
 from PIL import Image
 import logging
-from functools import lru_cache
+import time
 
 logger = logging.getLogger(__name__)
 
 class LRUCache:
-    """Simple LRU cache implementation for image caching."""
-    
-    def __init__(self, capacity: int = 1000):
-        self.capacity = capacity
-        self.cache = {}
-        self.access_order = []
-    
+    """Efficient LRU cache implementation using OrderedDict for O(1) operations."""
+
+    def __init__(self, capacity: int = 1000) -> None:
+        self.capacity: int = capacity
+        self.cache: OrderedDict[str, torch.Tensor] = OrderedDict()  # Maintains insertion order, O(1) move_to_end
+        self.timestamps: Dict[str, float] = {}
+        self.ttl_seconds: Optional[float] = None
+
     def get(self, key: str) -> Optional[torch.Tensor]:
+        """Get value from cache with O(1) access and TTL checking."""
+        if key not in self.cache:
+            return None
+
+        # Check TTL
+        if self.ttl_seconds is not None:
+            ts = self.timestamps.get(key, 0)
+            if time.time() - ts > self.ttl_seconds:
+                # Expired - remove it
+                del self.cache[key]
+                if key in self.timestamps:
+                    del self.timestamps[key]
+                return None
+
+        # Move to end (most recently used) - O(1) with OrderedDict
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put(self, key: str, value: torch.Tensor) -> None:
+        """Put value in cache with O(1) eviction if needed."""
         if key in self.cache:
-            # Move to end (most recently used)
-            self.access_order.remove(key)
-            self.access_order.append(key)
-            return self.cache[key]
-        return None
-    
-    def put(self, key: str, value: torch.Tensor):
-        if key in self.cache:
-            # Update existing
+            # Update existing and move to end
             self.cache[key] = value
-            self.access_order.remove(key)
-            self.access_order.append(key)
+            self.cache.move_to_end(key)
+            self.timestamps[key] = time.time()
         else:
-            # Add new
+            # Add new entry
             if len(self.cache) >= self.capacity:
-                # Remove least recently used
-                lru_key = self.access_order.pop(0)
-                del self.cache[lru_key]
+                # Remove least recently used (first item in OrderedDict)
+                lru_key, _ = self.cache.popitem(last=False)
+                if lru_key in self.timestamps:
+                    del self.timestamps[lru_key]
+
             self.cache[key] = value
-            self.access_order.append(key)
-    
-    def clear(self):
+            self.timestamps[key] = time.time()
+
+    def clear(self) -> None:
         """Clear the cache."""
         self.cache.clear()
-        self.access_order.clear()
-    
+        self.timestamps.clear()
+
     def __len__(self) -> int:
         return len(self.cache)
+
+    # Mapping-style access used by unit tests
+    def __setitem__(self, key: str, value: torch.Tensor) -> None:
+        return self.put(key, value)
+
+    def __getitem__(self, key: str) -> Optional[torch.Tensor]:
+        return self.get(key)
+
+    def __delitem__(self, key: str) -> None:
+        if key in self.cache:
+            del self.cache[key]
+        if key in self.timestamps:
+            del self.timestamps[key]
+
+    def set_ttl(self, seconds: Optional[float]) -> None:
+        self.ttl_seconds = seconds
 
 class CropDataset(Dataset):
     """
@@ -80,7 +111,7 @@ class CropDataset(Dataset):
         target_size: int = 224,
         use_cache: bool = True,
         cache_size: int = 1000
-    ):
+    ) -> None:
         """
         Initialize crop dataset.
         
@@ -199,28 +230,28 @@ class CropDataset(Dataset):
         """Get image and label."""
         img_path = self.image_paths[idx]
         label = self.labels[idx]
-        
-        # Check cache first
-        if self.use_cache:
-            cache_key = str(img_path)
-            cached = self.cache.get(cache_key)
-            if cached is not None:
-                return cached, label
-        
+
         try:
-            # Load with OpenCV
-            image = self._load_image_cv2(img_path)
-            
+            # Check cache first (for raw images only, to preserve augmentation diversity)
+            if self.use_cache and self.split != 'train':
+                cache_key = str(img_path)
+                cached = self.cache.get(cache_key)
+                if cached is not None:
+                    image = cached
+                else:
+                    # Load and cache raw image (for val/test only)
+                    image = self._load_image_cv2(img_path)
+                    self.cache.put(cache_key, image)
+            else:
+                # For training, always load raw without caching to maintain augmentation diversity
+                image = self._load_image_cv2(img_path)
+
             # Convert to PIL for torchvision transforms
             image = transforms.ToPILImage()(image)
-            
-            # Apply transforms
+
+            # Apply transforms (always fresh for training)
             image = self.transform(image)
-            
-            # Cache result
-            if self.use_cache:
-                self.cache.put(cache_key, image)
-            
+
             return image, label
         except Exception as e:
             logger.error(f"Error loading image {img_path}: {e}")
@@ -250,7 +281,7 @@ class DomainShiftDataset(Dataset):
         target_size: int = 224,
         use_cache: bool = True,
         cache_size: int = 1000
-    ):
+    ) -> None:
         self.data_dir = Path(data_dir)
         self.split = split
         self.target_size = target_size
@@ -327,28 +358,28 @@ class DomainShiftDataset(Dataset):
         """Get image and label."""
         img_path = self.image_paths[idx]
         label = self.labels[idx]
-        
-        # Check cache first
-        if self.use_cache:
-            cache_key = str(img_path)
-            cached = self.cache.get(cache_key)
-            if cached is not None:
-                return cached, label
-        
+
         try:
-            # Load with OpenCV
-            image = self._load_image_cv2(img_path)
-            
+            # Check cache first (for raw images only, to preserve augmentation diversity)
+            if self.use_cache and self.split != 'train':
+                cache_key = str(img_path)
+                cached = self.cache.get(cache_key)
+                if cached is not None:
+                    image = cached
+                else:
+                    # Load and cache raw image (for val/test only)
+                    image = self._load_image_cv2(img_path)
+                    self.cache.put(cache_key, image)
+            else:
+                # For training, always load raw without caching to maintain augmentation diversity
+                image = self._load_image_cv2(img_path)
+
             # Convert to PIL for torchvision transforms
             image = transforms.ToPILImage()(image)
-            
-            # Apply transforms
+
+            # Apply transforms (always fresh for training)
             image = self.transform(image)
-            
-            # Cache result
-            if self.use_cache:
-                self.cache.put(cache_key, image)
-            
+
             return image, label
         except Exception as e:
             logger.error(f"Error loading image {img_path}: {e}")

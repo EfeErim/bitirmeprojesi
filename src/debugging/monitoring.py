@@ -8,7 +8,7 @@ import logging
 import torch
 import numpy as np
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List
 from datetime import datetime
 import smtplib
 from email.message import EmailMessage
@@ -16,22 +16,25 @@ from email.message import EmailMessage
 class TrainingMonitor:
     """Comprehensive training monitoring and debugging"""
     
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict = None):
         # Configuration
-        self.config = config
-        self.log_dir = Path(config.get('log_dir', './logs'))
-        self.checkpoint_dir = Path(config.get('checkpoint_dir', './checkpoints'))
+        self.config = config or {}
+        self.log_dir = Path(self.config.get('log_dir', './logs'))
+        self.checkpoint_dir = Path(self.config.get('checkpoint_dir', './checkpoints'))
         
         # State tracking
         self.best_metrics = {}
         self.early_stop_counter = 0
-        self.epoch = 0
+        self.current_epoch = 0
+        self.current_batch = 0
+        self.epoch_metrics = {}
+        self.batch_metrics = {}
         
         # Setup logging
         self._setup_logging()
         
         # Alerting config
-        self.alert_config = config.get('alerts', {})
+        self.alert_config = self.config.get('alerts', {})
         
     def _setup_logging(self):
         """Configure structured logging"""
@@ -89,6 +92,42 @@ class TrainingMonitor:
                 self.trigger_alert('Early stopping triggered', level='warning')
                 raise RuntimeError('Early stopping triggered')
         
+    def record_epoch(self, epoch: int, train_loss: float = None, val_loss: float = None,
+                     train_acc: float = None, val_acc: float = None, **kwargs):
+        """Record epoch-level metrics."""
+        self.current_epoch = epoch
+        self.epoch_metrics[epoch] = {
+            'train_loss': train_loss,
+            'val_loss': val_loss,
+            'train_acc': train_acc,
+            'val_acc': val_acc,
+            **kwargs
+        }
+        
+        # Track best metrics
+        if val_loss is not None:
+            if 'best_val_loss' not in self.best_metrics or val_loss < self.best_metrics['best_val_loss']:
+                self.best_metrics['best_val_loss'] = val_loss
+        if val_acc is not None:
+            if 'best_val_acc' not in self.best_metrics or val_acc > self.best_metrics['best_val_acc']:
+                self.best_metrics['best_val_acc'] = val_acc
+    
+    def record_batch(self, batch: int, loss: float = None, learning_rate: float = None,
+                     gradient_norm: float = None, **kwargs):
+        """Record batch-level metrics."""
+        self.current_batch = batch
+        self.batch_metrics = getattr(self, 'batch_metrics', {})
+        self.batch_metrics[batch] = {
+            'loss': loss,
+            'learning_rate': learning_rate,
+            'gradient_norm': gradient_norm,
+            **kwargs
+        }
+        
+        # Log batch metrics
+        if loss is not None:
+            self.logger.info(f'Batch {batch}: loss={loss:.4f}')
+    
     def monitor_gradients(self, model: torch.nn.Module):
         """Track gradient statistics"""
         grad_norms = []
@@ -167,6 +206,256 @@ class TrainingMonitor:
 
 class Debugger:
     """Advanced debugging utilities"""
+    pass
+
+
+class DebugMonitor:
+    """Main debug monitor singleton."""
+    
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance._initialize()
+        return cls._instance
+    
+    def _initialize(self):
+        """Initialize the monitor."""
+        self.is_running = False
+        self.metrics = {}
+    
+    def start(self):
+        """Start monitoring."""
+        self.is_running = True
+    
+    def stop(self):
+        """Stop monitoring."""
+        self.is_running = False
+    
+    def record_metric(self, name: str, value: float):
+        """Record a metric."""
+        self.metrics[name] = value
+    
+    def get_metrics(self):
+        """Get all metrics."""
+        return self.metrics.copy()
+    
+    def reset_metrics(self):
+        """Reset all metrics."""
+        self.metrics.clear()
+
+
+class ModelDebugger:
+    """Model-specific debugging utilities."""
+    
+    @staticmethod
+    def check_gradients(model: torch.nn.Module) -> Dict:
+        """Check gradient statistics."""
+        grad_norms = []
+        for name, param in model.named_parameters():
+            if param.grad is not None:
+                norm = param.grad.data.norm(2).item()
+                grad_norms.append(norm)
+        
+        if grad_norms:
+            return {
+                'grad_norm_mean': float(np.mean(grad_norms)),
+                'grad_norm_std': float(np.std(grad_norms)),
+                'grad_norm_max': float(np.max(grad_norms))
+            }
+        return {}
+    
+    @staticmethod
+    def check_weights(model: torch.nn.Module) -> Dict:
+        """Check weight statistics."""
+        weight_norms = []
+        for name, param in model.named_parameters():
+            if param.data is not None:
+                norm = param.data.norm(2).item()
+                weight_norms.append(norm)
+        
+        if weight_norms:
+            return {
+                'weight_norm_mean': float(np.mean(weight_norms)),
+                'weight_norm_std': float(np.std(weight_norms)),
+                'weight_norm_max': float(np.max(weight_norms))
+            }
+        return {}
+    
+    @staticmethod
+    def validate_forward_pass(model: torch.nn.Module, input_tensor: torch.Tensor) -> bool:
+        """Validate that forward pass works without errors."""
+        try:
+            with torch.no_grad():
+                _ = model(input_tensor)
+            return True
+        except Exception:
+            return False
+    
+    @staticmethod
+    def detect_nan_inf(model: torch.nn.Module) -> Dict[str, List[str]]:
+        """Detect NaN/Inf in model parameters."""
+        issues = {'nan': [], 'inf': []}
+        
+        for name, param in model.named_parameters():
+            if torch.isnan(param.data).any():
+                issues['nan'].append(name)
+            if torch.isinf(param.data).any():
+                issues['inf'].append(name)
+        
+        return issues
+    
+    def get_debug_report(self, model: torch.nn.Module) -> Dict:
+        """Generate comprehensive debug report."""
+        report = {
+            'gradients': self.check_gradients(model),
+            'weights': self.check_weights(model),
+            'nan_inf': self.detect_nan_inf(model)
+        }
+        return report
+
+
+class GradientTracker:
+    """Track gradient flow through the model."""
+    
+    def __init__(self):
+        self.gradients = {}
+        self.hooks = []
+    
+    def track_gradients(self, model: torch.nn.Module):
+        """Start tracking gradients."""
+        self.gradients = {}
+        
+        def get_gradient(name):
+            def hook(grad):
+                self.gradients[name] = grad.detach().cpu()
+            return hook
+        
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                hook = param.register_hook(get_gradient(name))
+                self.hooks.append(hook)
+    
+    def gradient_flow_analysis(self) -> Dict:
+        """Analyze gradient flow."""
+        if not self.gradients:
+            return {}
+        
+        stats = {}
+        for name, grad in self.gradients.items():
+            if grad is not None:
+                stats[name] = {
+                    'mean': grad.abs().mean().item(),
+                    'std': grad.abs().std().item(),
+                    'max': grad.abs().max().item()
+                }
+        
+        return stats
+    
+    def reset_tracker(self):
+        """Reset tracking state."""
+        self.gradients.clear()
+        for hook in self.hooks:
+            hook.remove()
+        self.hooks.clear()
+
+
+class ActivationTracker:
+    """Track activations through the model."""
+    
+    def __init__(self):
+        self.activations = {}
+        self.hooks = []
+    
+    def track_activations(self, model: torch.nn.Module):
+        """Start tracking activations."""
+        self.activations = {}
+        
+        def get_activation(name):
+            def hook(module, input, output):
+                self.activations[name] = output.detach().cpu()
+            return hook
+        
+        for name, module in model.named_modules():
+            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)):
+                hook = module.register_forward_hook(get_activation(name))
+                self.hooks.append(hook)
+    
+    def activation_statistics(self) -> Dict:
+        """Compute activation statistics."""
+        stats = {}
+        for name, act in self.activations.items():
+            if act is not None:
+                stats[name] = {
+                    'mean': act.abs().mean().item(),
+                    'std': act.abs().std().item(),
+                    'sparsity': (act == 0).float().mean().item()
+                }
+        return stats
+    
+    def dead_activation_detection(self, threshold: float = 1e-6) -> List[str]:
+        """Detect dead neurons (near-zero activations)."""
+        dead = []
+        for name, act in self.activations.items():
+            if act is not None and act.abs().mean().item() < threshold:
+                dead.append(name)
+        return dead
+    
+    def reset_tracker(self):
+        """Reset tracking state."""
+        self.activations.clear()
+        for hook in self.hooks:
+            hook.remove()
+        self.hooks.clear()
+
+
+class DebugLogger:
+    """Logging utilities for debugging."""
+    
+    def __init__(self, log_file: str = None):
+        self.log_file = log_file
+        self.logger = logging.getLogger('debug')
+        
+        if not self.logger.handlers:
+            handler = logging.FileHandler(log_file) if log_file else logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
+            self.logger.setLevel(logging.DEBUG)
+    
+    def log_metric(self, name: str, value: float, step: int = None):
+        """Log a metric value."""
+        msg = f"Metric: {name}={value}"
+        if step is not None:
+            msg += f" (step={step})"
+        self.logger.info(msg)
+    
+    def log_message(self, message: str, level: str = 'info'):
+        """Log a message."""
+        getattr(self.logger, level)(message)
+    
+    def log_histogram(self, name: str, values: np.ndarray, step: int = None):
+        """Log histogram data (simplified)."""
+        msg = f"Histogram: {name} - mean={np.mean(values):.4f}, std={np.std(values):.4f}"
+        if step is not None:
+            msg += f" (step={step})"
+        self.logger.info(msg)
+    
+    def log_model_graph(self, model: torch.nn.Module, input_shape: tuple):
+        """Log model architecture summary."""
+        total_params = sum(p.numel() for p in model.parameters())
+        trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        
+        self.logger.info(f"Model Graph: input_shape={input_shape}")
+        self.logger.info(f"  Total parameters: {total_params:,}")
+        self.logger.info(f"  Trainable parameters: {trainable_params:,}")
+    
+    def export_metrics(self, filepath: str):
+        """Export metrics to file."""
+        # Simplified implementation
+        with open(filepath, 'w') as f:
+            f.write("Debug metrics export\n")
     
     @staticmethod
     def visualize_activations(model: torch.nn.Module, input_tensor: torch.Tensor):

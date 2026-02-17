@@ -1,5 +1,5 @@
 {
-  "version": "5.5.3-performance",
+  "version": "5.5.3",
   "description": "Staging environment with production-like settings",
   
   "api": {
@@ -7,27 +7,32 @@
     "port": 8000,
     "workers": 2,
     "reload": false,
-    "log_level": "info",
-    "timeout_keep_alive": 30,
-    "timeout_graceful_shutdown": 10
+    "log_level": "info"
   },
   
   "security": {
     "api_key_required": true,
     "api_keys": ["staging_key_secure_token_67890"],
-    "rate_limit_requests": 200,
-    "rate_limit_window": 60,
+    "rate_limit": {
+      "requests_per_minute": 200,
+      "burst": 400
+    },
     "max_request_size_mb": 15,
-    "allowed_origins": ["https://staging.yourdomain.com"],
+    "cors": {
+      "allow_origins": ["https://staging.yourdomain.com"],
+      "allow_credentials": true,
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    },
     "https_enforced": true
   },
   
-  "caching": {
+  "cache": {
     "enabled": true,
+    "backend": "redis",
     "redis_url": "redis://localhost:6379",
-    "default_ttl": 1800,
-    "diagnosis_ttl": 900,
-    "max_cache_size": 500
+    "ttl": 1800,
+    "max_size": 500
   },
   
   "compression": {
@@ -38,10 +43,33 @@
   
   "monitoring": {
     "enabled": true,
-    "metrics_port": 9090,
-    "log_requests": true,
-    "audit_logging": true,
-    "track_performance": true
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "logging": {
+      "format": "json",
+      "rotate": true,
+      "max_size_mb": 100,
+      "backup_count": 5
+    },
+    "metrics": {
+      "enabled": true,
+      "track_requests": true,
+      "track_latency": true,
+      "track_errors": true,
+      "track_cache": true,
+      "track_ood": true,
+      "track_gpu": true,
+      "track_memory": true
+    },
+    "health": {
+      "enabled": true,
+      "detailed": true,
+      "include_memory": true,
+      "include_cuda": true
+    }
   },
   
   "database": {
@@ -49,11 +77,5 @@
     "max_overflow": 15,
     "pool_recycle": 1800,
     "pool_pre_ping": true
-  },
-  
-  "health": {
-    "detailed": true,
-    "include_memory": true,
-    "include_cuda": true
   }
 }

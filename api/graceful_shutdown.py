@@ -3,7 +3,6 @@ Graceful shutdown handling for production deployment.
 """
 import asyncio
 import signal
-import sys
 import logging
 from typing import List
 

@@ -5,7 +5,7 @@ Shared validation utilities for AADS-ULoRA API endpoints.
 import base64
 import re
 from io import BytesIO
-from typing import Tuple, Optional
+from typing import Tuple
 from PIL import Image
 import logging
 
@@ -55,6 +55,8 @@ def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
         
     except base64.binascii.Error as e:
         raise ValueError(f"Invalid base64 encoding: {str(e)}")
+    except ValueError:
+        raise
     except Exception as e:
         raise ValueError(f"Image validation failed: {str(e)}")
 

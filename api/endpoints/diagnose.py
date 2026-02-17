@@ -1,19 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
-import sys
-import os
-from pathlib import Path
+from typing import Dict, Any
 import base64
 from io import BytesIO
 from PIL import Image
-import torch
 import logging
 
 logger = logging.getLogger(__name__)
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 from src.utils.data_loader import preprocess_image
 
 router = APIRouter(prefix="/v1", tags=["diagnosis"])

@@ -1,61 +1,27 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "AADS-ULoRA Router Configuration",
+  "version": "5.5.3",
   "description": "Configuration for the crop routing system",
-  "version": "5.5.0",
-  "last_updated": "2026-02-15",
-
+  
   "router": {
     "enabled": true,
     "type": "enhanced",
-    "strategy": "vlm_based",
-    
     "crop_mapping": {
       "tomato": {
         "parts": ["leaf", "fruit", "stem", "whole"],
-        "model_path": "models/tomato_adapter",
-        "priority": 1,
-        "timeout_ms": 100
+        "model_path": "models/tomato_adapter"
       },
       "potato": {
         "parts": ["leaf", "tuber", "stem", "whole"],
-        "model_path": "models/potato_adapter",
-        "priority": 2,
-        "timeout_ms": 100
+        "model_path": "models/potato_adapter"
       },
       "wheat": {
         "parts": ["leaf", "ear", "stem", "whole"],
-        "model_path": "models/wheat_adapter",
-        "priority": 3,
-        "timeout_ms": 100
+        "model_path": "models/wheat_adapter"
       }
     },
-    
     "fallback_strategy": "best_available",
     "confidence_threshold": 0.7,
     "max_retries": 3,
-    "timeout_ms": 5000,
-    
-    "vlm": {
-      "enabled": true,
-      "use_diagnostic_scouting": true,
-      "confidence_threshold": 0.8,
-      "max_detections": 10,
-      "min_crop_confidence": 0.6
-    },
-    
-    "caching": {
-      "enabled": true,
-      "ttl_seconds": 3600,
-      "max_size": 1000,
-      "key_prefix": "router"
-    },
-    
-    "metrics": {
-      "enabled": true,
-      "track_latency": true,
-      "track_accuracy": true,
-      "track_cache_hits": true
-    }
+    "timeout_ms": 5000
   }
 }

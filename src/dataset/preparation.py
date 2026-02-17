@@ -4,18 +4,124 @@ Dataset Preparation Script for AADS-ULoRA v5.5
 Creates standardized directory structure and processes data from archives.
 """
 
-import os
-import shutil
 import random
 import zipfile
 import json
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 import logging
-from PIL import Image
-import numpy as np
 
 logger = logging.getLogger(__name__)
+
+
+class DatasetConfig:
+    """Configuration for dataset preparation."""
+    
+    def __init__(
+        self,
+        name: str,
+        classes: List[str],
+        image_size: Tuple[int, int] = (224, 224),
+        train_split: float = 0.7,
+        val_split: float = 0.15,
+        test_split: float = 0.15
+    ):
+        self.name = name
+        self.classes = classes
+        self.image_size = image_size
+        self.train_split = train_split
+        self.val_split = val_split
+        self.test_split = test_split
+
+
+class DatasetPreparer:
+    """Class for preparing datasets with train/val/test splits."""
+    
+    def __init__(self, config: DatasetConfig, output_dir: Optional[Path] = None):
+        self.config = config
+        self.output_dir = output_dir or Path(f"./data/{config.name}")
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+    
+    def prepare_dataset(self):
+        """Create directory structure for dataset."""
+        # Create split directories
+        for split in ["train", "val", "test"]:
+            split_dir = self.output_dir / split
+            split_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Create class subdirectories
+        for split in ["train", "val", "test"]:
+            split_dir = self.output_dir / split
+            for class_name in self.config.classes:
+                class_dir = split_dir / class_name
+                class_dir.mkdir(parents=True, exist_ok=True)
+    
+    def split_dataset(self, image_list: List[Path]) -> Dict[str, List[Path]]:
+        """Split images into train/val/test sets."""
+        train_ratio = self.config.train_split
+        val_ratio = self.config.val_split
+
+        # Shuffle images
+        random.shuffle(image_list)
+
+        # Calculate split indices properly to avoid rounding loss
+        total = len(image_list)
+        train_count = int(total * train_ratio)
+        val_count = int(total * val_ratio)
+        test_count = total - train_count - val_count  # Remainder goes to test
+
+        splits = {
+            "train": image_list[:train_count],
+            "val": image_list[train_count:train_count + val_count],
+            "test": image_list[train_count + val_count:]
+        }
+
+        return splits
+
+
+def split_dataset(image_list: List[Path], train_split: float = 0.7, val_split: float = 0.15) -> Dict[str, List[Path]]:
+    """Standalone function to split images into train/val/test sets."""
+    random.shuffle(image_list)
+    total = len(image_list)
+    train_count = int(total * train_split)
+    val_count = int(total * val_split)
+    test_count = total - train_count - val_count
+
+    return {
+        "train": image_list[:train_count],
+        "val": image_list[train_count:train_count + val_count],
+        "test": image_list[train_count + val_count:]
+    }
+
+
+def balance_dataset(dataset: List[Path], target_per_class: int) -> List[Path]:
+    """Balance dataset by oversampling/undersampling to target count per class."""
+    # Simple implementation: duplicate samples if needed
+    balanced = []
+    for item in dataset:
+        balanced.append(item)
+    
+    # If we need more samples, duplicate existing ones
+    while len(balanced) < target_per_class:
+        idx = random.randint(0, len(dataset) - 1)
+        balanced.append(dataset[idx])
+    
+    # If we have too many, truncate
+    if len(balanced) > target_per_class:
+        balanced = balanced[:target_per_class]
+    
+    return balanced
+
+
+def augment_dataset(images: List[Path], augmentations: List[str]) -> List[Path]:
+    """Apply augmentations to a list of images."""
+    # This is a stub implementation - in reality would apply transformations
+    augmented = []
+    for img_path in images:
+        augmented.append(img_path)
+        # Could create augmented versions here
+    return augmented
+
 
 def create_directory_structure(base_dir: str) -> Dict[str, Path]:
     """
@@ -148,42 +254,120 @@ def organize_images_from_archive(
         
         logger.info(f"Extracted and organized {renamed_count} images for {crop}/{class_name}")
         return renamed_count
-        
+
     except Exception as e:
         logger.error(f"Error extracting {archive_path}: {e}")
         return 0
 
-def split_dataset(
-    image_list: List[Path],
-    train_ratio: float = 0.7,
-    val_ratio: float = 0.15,
-    test_ratio: float = 0.15
-) -> Tuple[List[Path], List[Path], List[Path]]:
+
+def balance_dataset(
+    class_counts: Dict[str, int],
+    strategy: str = "oversample"
+) -> Dict[str, int]:
     """
-    Split images into train/val/test sets.
+    Balance dataset by oversampling or undersampling.
     
     Args:
-        image_list: List of image paths
-        train_ratio: Ratio for training set
-        val_ratio: Ratio for validation set
-        test_ratio: Ratio for test set
+        class_counts: Dictionary mapping class names to counts
+        strategy: 'oversample' or 'undersample'
         
     Returns:
-        Tuple of (train_list, val_list, test_list)
+        Dictionary with balanced counts
     """
-    # Shuffle images
-    random.shuffle(image_list)
+    if not class_counts:
+        return {}
     
-    # Calculate split indices
-    total = len(image_list)
-    train_end = int(total * train_ratio)
-    val_end = train_end + int(total * val_ratio)
+    max_count = max(class_counts.values())
+    min_count = min(class_counts.values())
     
-    train_set = image_list[:train_end]
-    val_set = image_list[train_end:val_end]
-    test_set = image_list[val_end:]
+    balanced = {}
     
-    return train_set, val_set, test_set
+    if strategy == "oversample":
+        # Oversample minority classes to match majority
+        for class_name, count in class_counts.items():
+            balanced[class_name] = max_count
+    elif strategy == "undersample":
+        # Undersample majority classes to match minority
+        for class_name, count in class_counts.items():
+            balanced[class_name] = min_count
+    else:
+        raise ValueError(f"Unknown balancing strategy: {strategy}")
+    
+    return balanced
+
+
+def augment_dataset(
+    image_paths: List[Path],
+    augmentation_factor: int = 2
+) -> List[Path]:
+    """
+    Augment dataset by creating transformed copies.
+    
+    Args:
+        image_paths: List of original image paths
+        augmentation_factor: How many augmented versions per image
+        
+    Returns:
+        List of augmented image paths
+    """
+    augmented_paths = []
+    
+    try:
+        from PIL import Image, ImageEnhance, ImageOps
+        
+        for img_path in image_paths:
+            try:
+                img = Image.open(img_path)
+                
+                for i in range(augmentation_factor):
+                    # Apply simple augmentations
+                    aug_img = img.copy()
+                    
+                    # Random brightness
+                    enhancer = ImageEnhance.Brightness(aug_img)
+                    aug_img = enhancer.enhance(random.uniform(0.8, 1.2))
+                    
+                    # Random contrast
+                    enhancer = ImageEnhance.Contrast(aug_img)
+                    aug_img = enhancer.enhance(random.uniform(0.8, 1.2))
+                    
+                    # Random horizontal flip
+                    if random.random() > 0.5:
+                        aug_img = ImageOps.mirror(aug_img)
+                    
+                    # Save augmented image
+                    aug_name = f"{img_path.stem}_aug{i}{img_path.suffix}"
+                    aug_path = img_path.parent / aug_name
+                    aug_img.save(aug_path)
+                    augmented_paths.append(aug_path)
+                    
+            except Exception as e:
+                logger.warning(f"Failed to augment {img_path}: {e}")
+                continue
+                
+    except ImportError:
+        logger.warning("PIL not available, skipping augmentation")
+    
+    return augmented_paths
+
+
+def prepare_dataset(
+    config: DatasetConfig,
+    output_dir: Optional[Path] = None
+) -> DatasetPreparer:
+    """
+    Convenience function to create and initialize a DatasetPreparer.
+    
+    Args:
+        config: Dataset configuration
+        output_dir: Optional output directory
+        
+    Returns:
+        Initialized DatasetPreparer instance
+    """
+    preparer = DatasetPreparer(config=config, output_dir=output_dir)
+    preparer.prepare_dataset()
+    return preparer
 
 def create_metadata(
     structure: Dict[str, Path],

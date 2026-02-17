@@ -45,14 +45,14 @@ class TestConfigurationFinal:
             "application": {
                 "name": "AADS-ULoRA",
                 "environment": "test",
-                "debug": false,
+                "debug": False,
                 "log_level": "INFO"
             },
             "api": {
                 "host": "0.0.0.0",
                 "port": 8000,
                 "workers": 4,
-                "reload": false
+                "reload": False
             },
             "database": {
                 "type": "postgresql",
@@ -88,13 +88,13 @@ class TestConfigurationFinal:
                 }
             },
             "cache": {
-                "enabled": true,
+                "enabled": True,
                 "backend": "redis",
                 "ttl": 3600,
                 "max_size": 1000
             },
             "feedback": {
-                "enabled": true,
+                "enabled": True,
                 "storage": "database",
                 "retention_days": 365
             },
@@ -114,7 +114,7 @@ class TestConfigurationFinal:
         """Create router configuration."""
         router_config = {
             "router": {
-                "enabled": true,
+                "enabled": True,
                 "type": "enhanced",
                 "strategy": "vlm_based",
                 "crop_mapping": {
@@ -142,23 +142,23 @@ class TestConfigurationFinal:
                 "max_retries": 3,
                 "timeout_ms": 5000,
                 "vlm": {
-                    "enabled": true,
-                    "use_diagnostic_scouting": true,
+                    "enabled": True,
+                    "use_diagnostic_scouting": True,
                     "confidence_threshold": 0.8,
                     "max_detections": 10,
                     "min_crop_confidence": 0.6
                 },
                 "caching": {
-                    "enabled": true,
+                    "enabled": True,
                     "ttl_seconds": 3600,
                     "max_size": 1000,
                     "key_prefix": "router"
                 },
                 "metrics": {
-                    "enabled": true,
-                    "track_latency": true,
-                    "track_accuracy": true,
-                    "track_cache_hits": true
+                    "enabled": True,
+                    "track_latency": True,
+                    "track_accuracy": True,
+                    "track_cache_hits": True
                 }
             }
         }
@@ -170,23 +170,23 @@ class TestConfigurationFinal:
         """Create OOD configuration."""
         ood_config = {
             "ood": {
-                "enabled": true,
+                "enabled": True,
                 "method": "mahalanobis",
                 "threshold": 0.95,
                 "confidence_level": 0.99,
                 "prototype": {
-                    "enabled": true,
+                    "enabled": True,
                     "update_rate": 0.1,
                     "min_samples": 10,
                     "max_prototypes": 1000,
                     "distance_metric": "euclidean",
-                    "adaptive_threshold": true
+                    "adaptive_threshold": True
                 },
                 "mahalanobis": {
-                    "enabled": true,
+                    "enabled": True,
                     "eps": 1e-6,
                     "batch_size": 64,
-                    "use_shared_covariance": false,
+                    "use_shared_covariance": False,
                     "regularization": 1e-5,
                     "num_samples": 10000
                 },
@@ -196,21 +196,21 @@ class TestConfigurationFinal:
                     "min_val_samples_per_class": 10,
                     "fallback_threshold": 25.0,
                     "target_fpr": 0.05,
-                    "calibration_enabled": true,
+                    "calibration_enabled": True,
                     "quantile_method": "empirical"
                 },
                 "fallback": {
-                    "enabled": true,
+                    "enabled": True,
                     "strategy": "conservative",
                     "default_confidence": 0.5,
-                    "reject_uncertain": true,
+                    "reject_uncertain": True,
                     "min_confidence_for_prediction": 0.3
                 },
                 "monitoring": {
-                    "enabled": true,
-                    "track_ood_scores": true,
-                    "track_thresholds": true,
-                    "alert_on_shift": true,
+                    "enabled": True,
+                    "track_ood_scores": True,
+                    "track_thresholds": True,
+                    "alert_on_shift": True,
                     "window_size": 1000
                 }
             }
@@ -223,72 +223,72 @@ class TestConfigurationFinal:
         """Create monitoring configuration."""
         monitoring_config = {
             "monitoring": {
-                "enabled": true,
+                "enabled": True,
                 "prometheus": {
-                    "enabled": true,
+                    "enabled": True,
                     "port": 9090,
                     "path": "/metrics",
-                    "multiprocess_dir": null,
+                    "multiprocess_dir": None,
                     "max_metrics_age": 10000
                 },
                 "logging": {
                     "format": "json",
-                    "rotate": true,
+                    "rotate": True,
                     "max_size_mb": 100,
                     "backup_count": 5,
                     "level": "INFO",
-                    "include_timestamp": true,
-                    "include_hostname": true,
-                    "structured": true
+                    "include_timestamp": True,
+                    "include_hostname": True,
+                    "structured": True
                 },
                 "metrics": {
-                    "enabled": true,
-                    "track_requests": true,
-                    "track_latency": true,
-                    "track_errors": true,
-                    "track_cache": true,
-                    "track_ood": true,
-                    "track_gpu": true,
-                    "track_memory": true,
+                    "enabled": True,
+                    "track_requests": True,
+                    "track_latency": True,
+                    "track_errors": True,
+                    "track_cache": True,
+                    "track_ood": True,
+                    "track_gpu": True,
+                    "track_memory": True,
                     "custom_labels": {}
                 },
                 "health": {
-                    "enabled": true,
-                    "detailed": true,
-                    "include_memory": true,
-                    "include_cuda": true,
-                    "include_disk": true,
+                    "enabled": True,
+                    "detailed": True,
+                    "include_memory": True,
+                    "include_cuda": True,
+                    "include_disk": True,
                     "check_interval": 30
                 },
                 "alerting": {
-                    "enabled": false,
+                    "enabled": False,
                     "channels": [],
                     "rules": {
                         "high_error_rate": {
-                            "enabled": true,
+                            "enabled": True,
                             "threshold": 0.05,
                             "window": 60,
                             "cooldown": 300
                         },
                         "high_latency": {
-                            "enabled": true,
+                            "enabled": True,
                             "threshold_ms": 1000,
                             "percentile": 95,
                             "window": 60
                         },
                         "low_accuracy": {
-                            "enabled": false,
+                            "enabled": False,
                             "threshold": 0.90,
                             "window": 100
                         }
                     }
                 },
                 "dashboard": {
-                    "enabled": false,
+                    "enabled": False,
                     "refresh_interval": 5,
                     "retention_days": 7
                 }
-            }
+            },
         }
         
         with open(self.config_dir / "monitoring-config.json", 'w') as f:
@@ -298,28 +298,28 @@ class TestConfigurationFinal:
         """Create security configuration."""
         security_config = {
             "security": {
-                "api_key_required": false,
+                "api_key_required": False,
                 "api_keys": [],
                 "rate_limit": {
-                    "enabled": true,
+                    "enabled": True,
                     "requests_per_minute": 100,
                     "burst": 200,
-                    "by_ip": true,
-                    "by_endpoint": false
+                    "by_ip": True,
+                    "by_endpoint": False
                 },
                 "auth": {
-                    "enabled": false,
+                    "enabled": False,
                     "jwt_secret": "CHANGE_IN_PRODUCTION",
                     "jwt_algorithm": "HS256",
                     "token_expire_minutes": 1440,
-                    "refresh_token_enabled": true,
+                    "refresh_token_enabled": True,
                     "refresh_token_expire_days": 30,
                     "password_min_length": 8,
-                    "require_special_chars": false
+                    "require_special_chars": False
                 },
                 "cors": {
                     "allow_origins": ["*"],
-                    "allow_credentials": true,
+                    "allow_credentials": True,
                     "allow_methods": ["*"],
                     "allow_headers": ["*"],
                     "expose_headers": ["X-Process-Time"],
@@ -330,29 +330,29 @@ class TestConfigurationFinal:
                     "max_image_size_mb": 20,
                     "max_image_dimensions": [4096, 4096],
                     "allowed_image_formats": ["jpg", "jpeg", "png", "webp"],
-                    "sanitize_inputs": true,
-                    "validate_json_schema": true
+                    "sanitize_inputs": True,
+                    "validate_json_schema": True
                 },
                 "headers": {
-                    "strict_transport_security": true,
+                    "strict_transport_security": True,
                     "content_security_policy": "default-src 'self'",
                     "x_frame_options": "DENY",
                     "x_content_type_options": "nosniff",
-                    "server_header": false
+                    "server_header": False
                 },
                 "logging": {
-                    "enabled": true,
-                    "log_auth_events": true,
-                    "log_security_events": true,
-                    "log_request_headers": false,
-                    "log_response_headers": false,
+                    "enabled": True,
+                    "log_auth_events": True,
+                    "log_security_events": True,
+                    "log_request_headers": False,
+                    "log_response_headers": False,
                     "redact_sensitive_fields": ["password", "token", "secret", "authorization"]
                 },
                 "encryption": {
-                    "enabled": true,
+                    "enabled": True,
                     "algorithm": "AES-256-GCM",
                     "key_rotation_days": 90,
-                    "use_hsm": false
+                    "use_hsm": False
                 }
             }
         }
@@ -370,49 +370,49 @@ class TestConfigurationFinal:
                 "host": "0.0.0.0",
                 "port": 8000,
                 "workers": 1,
-                "reload": true,
+                "reload": True,
                 "log_level": "debug",
                 "timeout_keep_alive": 30,
                 "timeout_graceful_shutdown": 10
             },
             "security": {
-                "api_key_required": false,
+                "api_key_required": False,
                 "api_keys": [],
                 "rate_limit_requests": 1000,
                 "rate_limit_window": 60,
                 "max_request_size_mb": 20,
                 "allowed_origins": ["*"],
-                "https_enforced": false
+                "https_enforced": False
             },
             "caching": {
-                "enabled": false,
+                "enabled": False,
                 "redis_url": "redis://localhost:6379",
                 "default_ttl": 3600,
                 "diagnosis_ttl": 1800,
                 "max_cache_size": 1000
             },
             "compression": {
-                "enabled": false,
+                "enabled": False,
                 "minimum_size": 1024,
                 "compression_level": 6
             },
             "monitoring": {
-                "enabled": true,
+                "enabled": True,
                 "metrics_port": 9090,
-                "log_requests": true,
-                "audit_logging": true,
-                "track_performance": true
+                "log_requests": True,
+                "audit_logging": True,
+                "track_performance": True
             },
             "database": {
                 "pool_size": 10,
                 "max_overflow": 20,
                 "pool_recycle": 3600,
-                "pool_pre_ping": true
+                "pool_pre_ping": True
             },
             "health": {
-                "detailed": true,
-                "include_memory": true,
-                "include_cuda": true
+                "detailed": True,
+                "include_memory": True,
+                "include_cuda": True
             }
         }
         
@@ -427,49 +427,49 @@ class TestConfigurationFinal:
                 "host": "0.0.0.0",
                 "port": 8000,
                 "workers": 4,
-                "reload": false,
+                "reload": False,
                 "log_level": "info",
                 "timeout_keep_alive": 30,
                 "timeout_graceful_shutdown": 10
             },
             "security": {
-                "api_key_required": true,
+                "api_key_required": True,
                 "api_keys": ["prod_key_secure_token_12345"],
                 "rate_limit_requests": 100,
                 "rate_limit_window": 60,
                 "max_request_size_mb": 10,
                 "allowed_origins": ["https://yourdomain.com"],
-                "https_enforced": true
+                "https_enforced": True
             },
             "caching": {
-                "enabled": true,
+                "enabled": True,
                 "redis_url": "redis://localhost:6379",
                 "default_ttl": 3600,
                 "diagnosis_ttl": 1800,
                 "max_cache_size": 1000
             },
             "compression": {
-                "enabled": true,
+                "enabled": True,
                 "minimum_size": 1024,
                 "compression_level": 6
             },
             "monitoring": {
-                "enabled": true,
+                "enabled": True,
                 "metrics_port": 9090,
-                "log_requests": true,
-                "audit_logging": true,
-                "track_performance": true
+                "log_requests": True,
+                "audit_logging": True,
+                "track_performance": True
             },
             "database": {
                 "pool_size": 20,
                 "max_overflow": 30,
                 "pool_recycle": 3600,
-                "pool_pre_ping": true
+                "pool_pre_ping": True
             },
             "health": {
-                "detailed": true,
-                "include_memory": true,
-                "include_cuda": true
+                "detailed": True,
+                "include_memory": True,
+                "include_cuda": True
             }
         }
         
@@ -551,7 +551,7 @@ class TestConfigurationFinal:
         """Test configuration validation error handling."""
         manager = ConfigurationManager(config_dir=str(self.config_dir))
         
-        # Test invalid configuration
+        # Test invalid configuration - create a file with invalid content
         invalid_config = {
             "router": {
                 "enabled": "invalid_type",  # Should be boolean
@@ -559,7 +559,12 @@ class TestConfigurationFinal:
             }
         }
         
-        # This would fail validation - testing error handling
+        # Write invalid config to file
+        invalid_file = self.config_dir / "invalid.json"
+        with open(invalid_file, 'w') as f:
+            json.dump(invalid_config, f)
+        
+        # This should fail validation - testing error handling
         with pytest.raises(ConfigurationError):
             manager.load_config_file("invalid.json", "router")
 

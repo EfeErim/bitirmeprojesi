@@ -7,7 +7,6 @@ import psutil
 import torch
 import logging
 import time
-from typing import Dict, Any
 
 from src.monitoring.metrics import metrics_collector
 

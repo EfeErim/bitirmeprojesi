@@ -6,6 +6,12 @@ import pytest
 import torch
 import numpy as np
 from pathlib import Path
+import warnings
+
+# Fix for Python 3.13 warnings filter issue
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=PendingDeprecationWarning)
 
 
 # Import fixtures from test_fixtures module

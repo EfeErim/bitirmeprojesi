@@ -1,12 +1,8 @@
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field, validator
-from typing import Dict, List, Optional
-import sys
-import os
+from pydantic import BaseModel, Field
+from typing import Dict, List
 import re
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
 
 router = APIRouter(prefix="/v1", tags=["crops"])
 

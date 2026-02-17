@@ -5,14 +5,11 @@ Main API entry point for crop disease diagnosis with production optimizations.
 """
 
 import logging
-import sys
 import os
-from pathlib import Path
-import json
-import asyncio
+from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 import torch
 
 # Setup logging
@@ -26,7 +23,7 @@ logger = logging.getLogger(__name__)
 from src.core.config_manager import config_manager, get_config, reload_configuration
 from src.core.configuration_validator import ConfigurationError
 
-# Load configuration
+# Load configuration at module level
 logger.info("Loading configuration...")
 try:
     # Load all configurations
@@ -127,10 +124,11 @@ app.add_middleware(
 )
 
 # Apply input size limit middleware
+from src.security.security import InputSizeLimitMiddleware
 max_size_mb = CONFIG.get('security', {}).get('input_validation', {}).get('max_request_size_mb', 10)
 app.add_middleware(InputSizeLimitMiddleware, max_size_mb=max_size_mb)
 
-# Initialize pipeline
+# Initialize pipeline variable
 pipeline = None
 
 @app.on_event("startup")
@@ -142,6 +140,7 @@ async def startup_event():
     
     # Initialize pipeline
     try:
+        from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
         pipeline = IndependentMultiCropPipeline(CONFIG, device=CONFIG.get('ml', {}).get('device', 'cuda'))
         
         # Initialize router
@@ -193,12 +192,12 @@ async def health_check():
 @app.post("/admin/reload-config")
 async def reload_config():
     """Reload configuration (development only)."""
+    global CONFIG
     if not CONFIG.get('api', {}).get('reload', False):
         raise HTTPException(status_code=403, detail="Configuration reload disabled in production")
     
     try:
         reload_configuration()
-        global CONFIG
         CONFIG = get_config()
         return {"status": "success", "message": "Configuration reloaded"}
     except Exception as e:

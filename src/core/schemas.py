@@ -8,7 +8,7 @@ from typing import Dict, Any
 
 def router_schema() -> Dict[str, Any]:
     """Schema for router configuration."""
-    return {
+    inner = {
         "title": "Router Configuration",
         "type": "object",
         "properties": {
@@ -65,10 +65,20 @@ def router_schema() -> Dict[str, Any]:
         },
         "required": ["enabled", "type"]
     }
+    
+    # Wrap in outer schema with "router" property
+    return {
+        "title": "Router Configuration Schema",
+        "type": "object",
+        "properties": {
+            "router": inner
+        },
+        "required": ["router"]
+    }
 
 def ood_schema() -> Dict[str, Any]:
     """Schema for OOD configuration."""
-    return {
+    inner = {
         "title": "Out-of-Distribution Configuration",
         "type": "object",
         "properties": {
@@ -133,10 +143,20 @@ def ood_schema() -> Dict[str, Any]:
         },
         "required": ["enabled", "method"]
     }
+    
+    # Wrap in outer schema with "ood" property
+    return {
+        "title": "OOD Configuration Schema",
+        "type": "object",
+        "properties": {
+            "ood": inner
+        },
+        "required": ["ood"]
+    }
 
 def monitoring_schema() -> Dict[str, Any]:
     """Schema for monitoring configuration."""
-    return {
+    inner = {
         "title": "Monitoring Configuration",
         "type": "object",
         "properties": {
@@ -238,10 +258,20 @@ def monitoring_schema() -> Dict[str, Any]:
         },
         "required": ["enabled"]
     }
+    
+    # Wrap in outer schema with "monitoring" property
+    return {
+        "title": "Monitoring Configuration Schema",
+        "type": "object",
+        "properties": {
+            "monitoring": inner
+        },
+        "required": ["monitoring"]
+    }
 
 def security_schema() -> Dict[str, Any]:
     """Schema for security configuration."""
-    return {
+    inner = {
         "title": "Security Configuration",
         "type": "object",
         "properties": {
@@ -332,4 +362,14 @@ def security_schema() -> Dict[str, Any]:
             }
         },
         "required": ["api_key_required"]
+    }
+    
+    # Wrap in outer schema with "security" property
+    return {
+        "title": "Security Configuration Schema",
+        "type": "object",
+        "properties": {
+            "security": inner
+        },
+        "required": ["security"]
     }

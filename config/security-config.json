@@ -1,10 +1,7 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "AADS-ULoRA Security Configuration",
+  "version": "5.5.3",
   "description": "Configuration for security, authentication, and authorization",
-  "version": "5.5.0",
-  "last_updated": "2026-02-15",
-
+  
   "security": {
     "api_key_required": false,
     "api_keys": [],

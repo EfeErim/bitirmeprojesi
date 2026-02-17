@@ -5,8 +5,10 @@ Computes Mahalanobis distance between features and class prototypes.
 """
 
 import torch
-import numpy as np
+import logging
 from typing import Dict, Optional, Tuple, List
+
+logger = logging.getLogger(__name__)
 
 class MahalanobisDistance:
     """
@@ -37,23 +39,45 @@ class MahalanobisDistance:
         self.inv_covariances = self._compute_inv_covariances()
     
     def _compute_inv_covariances(self) -> Dict[int, torch.Tensor]:
-        """Compute inverse covariance matrices for each class."""
+        """Compute inverse covariance matrices for each class with numerical stability."""
         inv_covariances = {}
-        
+
         for class_idx in range(self.num_classes):
             if class_idx in self.class_stds:
                 std = self.class_stds[class_idx]
-                # Create diagonal covariance matrix
+                # Create diagonal covariance matrix from std
                 cov = torch.diag(std ** 2)
-                # Add regularization to ensure invertibility
-                cov += torch.eye(self.feature_dim, device=cov.device) * 1e-4
-                # Compute inverse
-                inv_cov = torch.inverse(cov)
+
+                # Adaptive regularization based on covariance trace
+                # Ensures stability even for near-zero variance features
+                trace = torch.trace(cov)
+                reg_param = max(1e-6, (trace / self.feature_dim) * 1e-4)
+                cov += torch.eye(self.feature_dim, device=cov.device) * reg_param
+
+                # Robust matrix inversion with error handling
+                try:
+                    # Check condition number before inversion
+                    cond_num = torch.cond(cov)
+                    if cond_num > 1e10:
+                        logger.warning(f"Class {class_idx}: Ill-conditioned covariance (cond={cond_num:.2e}), using pseudo-inverse")
+                        inv_cov = torch.linalg.pinv(cov)
+                    else:
+                        inv_cov = torch.linalg.inv(cov)
+
+                    # Check for NaN/Inf in result
+                    if torch.isnan(inv_cov).any() or torch.isinf(inv_cov).any():
+                        logger.warning(f"Class {class_idx}: NaN/Inf detected in inverse, using pseudo-inverse")
+                        inv_cov = torch.linalg.pinv(cov)
+
+                except RuntimeError as e:
+                    logger.warning(f"Class {class_idx}: Matrix inversion failed ({str(e)}), using pseudo-inverse")
+                    inv_cov = torch.linalg.pinv(cov)
+
                 inv_covariances[class_idx] = inv_cov
             else:
                 # Use identity matrix if no std available
                 inv_covariances[class_idx] = torch.eye(self.feature_dim, device=self.prototypes.device)
-        
+
         return inv_covariances
     
     def compute_distance(
@@ -62,29 +86,28 @@ class MahalanobisDistance:
         class_idx: int
     ) -> torch.Tensor:
         """
-        Compute Mahalanobis distance between features and class prototype.
-        
+        Compute Mahalanobis distance between features and class prototype (device-safe).
+
         Args:
             features: Tensor of shape (batch_size, feature_dim)
             class_idx: Class index to compute distance to
-            
+
         Returns:
             Tensor of shape (batch_size,) with Mahalanobis distances
         """
         if class_idx >= self.num_classes or class_idx not in self.inv_covariances:
             raise ValueError(f"Invalid class index: {class_idx}")
-        
-        prototype = self.prototypes[class_idx]
-        inv_cov = self.inv_covariances[class_idx]
-        
+
+        # Ensure device consistency
+        prototype = self.prototypes[class_idx].to(features.device)
+        inv_cov = self.inv_covariances[class_idx].to(features.device)
+
         # Compute (x - μ)
         diff = features - prototype
-        
+
         # Compute (x - μ)^T * inv_cov * (x - μ) per sample
-        # Correct formula: (diff @ inv_cov * diff).sum(dim=1)
-        # This computes the squared Mahalanobis distance for each sample in the batch
         distances = (diff @ inv_cov * diff).sum(dim=1)
-        
+
         return distances
     
     def compute_all_distances(
@@ -147,19 +170,40 @@ class MahalanobisDistanceBatch:
         self.inv_covariances = self._compute_inv_covariances()
     
     def _compute_inv_covariances(self) -> Dict[int, torch.Tensor]:
-        """Compute inverse covariance matrices for each class."""
+        """Compute inverse covariance matrices for each class with numerical stability."""
         inv_covariances = {}
-        
+
         for class_idx in range(self.num_classes):
             if class_idx in self.class_stds:
                 std = self.class_stds[class_idx]
                 cov = torch.diag(std ** 2)
-                cov += torch.eye(self.feature_dim, device=cov.device) * 1e-4
-                inv_cov = torch.inverse(cov)
+
+                # Adaptive regularization based on covariance trace
+                trace = torch.trace(cov)
+                reg_param = max(1e-6, (trace / self.feature_dim) * 1e-4)
+                cov += torch.eye(self.feature_dim, device=cov.device) * reg_param
+
+                # Robust matrix inversion with error handling
+                try:
+                    cond_num = torch.cond(cov)
+                    if cond_num > 1e10:
+                        logger.warning(f"Class {class_idx}: Ill-conditioned covariance (cond={cond_num:.2e}), using pseudo-inverse")
+                        inv_cov = torch.linalg.pinv(cov)
+                    else:
+                        inv_cov = torch.linalg.inv(cov)
+
+                    if torch.isnan(inv_cov).any() or torch.isinf(inv_cov).any():
+                        logger.warning(f"Class {class_idx}: NaN/Inf detected in inverse, using pseudo-inverse")
+                        inv_cov = torch.linalg.pinv(cov)
+
+                except RuntimeError as e:
+                    logger.warning(f"Class {class_idx}: Matrix inversion failed ({str(e)}), using pseudo-inverse")
+                    inv_cov = torch.linalg.pinv(cov)
+
                 inv_covariances[class_idx] = inv_cov
             else:
                 inv_covariances[class_idx] = torch.eye(self.feature_dim, device=self.device)
-        
+
         return inv_covariances
     
     def compute_batch_distances(

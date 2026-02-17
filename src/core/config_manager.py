@@ -6,8 +6,9 @@ Provides centralized loading, validation, and management of all configuration fi
 
 import json
 import logging
+import threading
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from .configuration_validator import config_validator, ConfigurationError
 
 logger = logging.getLogger(__name__)
@@ -18,17 +19,42 @@ class ConfigurationManager:
     Centralized configuration management system.
     Handles loading, validation, and merging of configuration files.
     """
-    
-    def __init__(self, config_dir: str = "config"):
+
+    # Class-level variable to track if schemas have been registered (singleton pattern)
+    _schemas_registered: bool = False
+    _schema_registration_lock = threading.RLock()
+
+    def __init__(self, config_dir: str = "config", environment: str = None):
         self.config_dir = Path(config_dir)
         self._configs: Dict[str, Dict[str, Any]] = {}
         self._validated_configs: Dict[str, Dict[str, Any]] = {}
         self._base_config: Optional[Dict[str, Any]] = None
-        
-        # Register all schemas
-        self._register_schemas()
-    
-    def _register_schemas(self):
+        self._environment = environment
+
+        # Register all schemas (only once, regardless of instance count)
+        self._register_schemas_once()
+
+    @classmethod
+    def _register_schemas_once(cls):
+        """
+        Register all configuration schemas with the validator.
+        Uses class-level lock to ensure schemas are registered only once,
+        regardless of how many ConfigurationManager instances are created.
+        """
+        if cls._schemas_registered:
+            return  # Already registered, skip
+
+        with cls._schema_registration_lock:
+            # Double-check after acquiring lock (prevents race condition)
+            if cls._schemas_registered:
+                return
+
+            cls._register_schemas()
+            cls._schemas_registered = True
+            logger.info("Configuration schemas registered (singleton)")
+
+    @classmethod
+    def _register_schemas(cls):
         """Register all configuration schemas with the validator."""
         from .schemas import (
             router_schema,
@@ -186,10 +212,65 @@ class ConfigurationManager:
                 else:
                     merged_config[key] = value
         
+        # Apply environment-specific overrides if environment is set
+        if self._environment:
+            env_config = self.get_environment_config(self._environment)
+            if env_config:
+                merged_config = self._apply_env_overrides(merged_config, env_config)
+                logger.info(f"Applied environment overrides for '{self._environment}'")
+        
         self._validated_configs["merged"] = merged_config
         logger.info("Configuration merge completed")
         
         return merged_config
+    
+    def _apply_env_overrides(self, base_config: Dict[str, Any], env_config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Apply environment-specific overrides to base configuration.
+        
+        Args:
+            base_config: Base merged configuration
+            env_config: Environment-specific configuration
+            
+        Returns:
+            Configuration with environment overrides applied
+        """
+        result = base_config.copy()
+        
+        for key, value in env_config.items():
+            if key == "version" or key == "description":
+                # Skip metadata fields
+                continue
+            
+            if key not in result:
+                result[key] = value
+            elif isinstance(value, dict) and isinstance(result[key], dict):
+                # Deep merge for nested dictionaries
+                result[key] = self._deep_merge_dicts(result[key], value)
+            else:
+                # Override with environment value
+                result[key] = value
+        
+        return result
+    
+    def _deep_merge_dicts(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Deep merge two dictionaries.
+        
+        Args:
+            base: Base dictionary
+            override: Override dictionary
+            
+        Returns:
+            Merged dictionary
+        """
+        result = base.copy()
+        for key, value in override.items():
+            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                result[key] = self._deep_merge_dicts(result[key], value)
+            else:
+                result[key] = value
+        return result
     
     def get_config(self, key: str, default: Any = None) -> Any:
         """Get a configuration value by key (dot notation supported)."""
@@ -255,17 +336,66 @@ class ConfigurationManager:
             return {}
 
 
-# Global configuration manager instance
-config_manager = ConfigurationManager()
+# Thread-safe global configuration manager with RLock
+_config_lock = threading.RLock()
+_config_manager: Optional[ConfigurationManager] = None
 
 
-def get_config() -> Dict[str, Any]:
-    """Get the complete merged configuration."""
-    if "merged" not in config_manager._validated_configs:
-        return config_manager.load_all_configs()
-    return config_manager._validated_configs["merged"]
+def _get_config_manager(environment: str = None) -> ConfigurationManager:
+    """
+    Get thread-safe configuration manager instance (lazy initialization).
+
+    Args:
+        environment: Optional environment name
+
+    Returns:
+        Thread-safe ConfigurationManager instance
+    """
+    global _config_manager, _config_lock
+
+    with _config_lock:
+        if _config_manager is None:
+            _config_manager = ConfigurationManager(environment=environment)
+        elif environment and environment != _config_manager._environment:
+            # Reinitialize with new environment (only if environment actually changed)
+            _config_manager = ConfigurationManager(environment=environment)
+
+        return _config_manager
 
 
-def reload_configuration():
-    """Reload configuration (useful for hot-reloading)."""
-    return config_manager.reload_config()
+def get_config(environment: str = None) -> Dict[str, Any]:
+    """
+    Get the complete merged configuration (thread-safe).
+
+    Args:
+        environment: Optional environment name to apply overrides
+
+    Returns:
+        Complete merged configuration
+    """
+    config_mgr = _get_config_manager(environment)
+
+    if "merged" not in config_mgr._validated_configs:
+        return config_mgr.load_all_configs()
+    return config_mgr._validated_configs["merged"]
+
+
+def reload_configuration(environment: str = None):
+    """
+    Reload configuration (useful for hot-reloading, thread-safe).
+
+    Args:
+        environment: Optional environment name to reload with
+    """
+    config_mgr = _get_config_manager(environment)
+    return config_mgr.reload_config()
+
+
+# For backward compatibility, keep global reference but access through function
+def _get_backward_compat_manager():
+    """Get config manager for backward compatibility."""
+    return _get_config_manager()
+
+
+# Deprecated: use get_config() instead for thread-safe access
+config_manager = property(lambda self: _get_backward_compat_manager())

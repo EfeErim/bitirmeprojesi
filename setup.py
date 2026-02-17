@@ -22,23 +22,23 @@ setup(
     
     # Packages
     packages=[
-        'src',
-        'src.adapter',
-        'src.core',
-        'src.dataset',
-        'src.debugging',
-        'src.evaluation',
-        'src.middleware',
-        'src.monitoring',
-        'src.ood',
-        'src.pipeline',
-        'src.router',
-        'src.security',
-        'src.training',
-        'src.utils',
-        'src.visualization'
+        'aads_ulora_v55',
+        'aads_ulora_v55.adapter',
+        'aads_ulora_v55.core',
+        'aads_ulora_v55.dataset',
+        'aads_ulora_v55.debugging',
+        'aads_ulora_v55.evaluation',
+        'aads_ulora_v55.middleware',
+        'aads_ulora_v55.monitoring',
+        'aads_ulora_v55.ood',
+        'aads_ulora_v55.pipeline',
+        'aads_ulora_v55.router',
+        'aads_ulora_v55.security',
+        'aads_ulora_v55.training',
+        'aads_ulora_v55.utils',
+        'aads_ulora_v55.visualization'
     ],
-    package_dir={"": "src"},
+    package_dir={"aads_ulora_v55": "src"},
     
     # Python version
     python_requires=">=3.9",

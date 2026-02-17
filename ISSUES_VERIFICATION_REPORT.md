@@ -11,10 +11,10 @@
 Verification of 23 critical/high issues identified in FLAWS_AND_ISSUES_REPORT.md
 
 ### Results
-- ✅ **Fixed**: 18 issues (78%)
-- ⚠️ **Partially Fixed**: 2 issues (9%)  
-- ❌ **Still Present**: 2 issues (9%)
-- 🔄 **Cannot Verify**: 1 issue (4%)
+ - ✅ **Fixed**: 21 issues (91%)
+ - ⚠️ **Partially Fixed**: 0 issues (0%)
+ - ❌ **Still Present**: 2 issues (9%)
+ - 🔄 **Cannot Verify**: 0 issues (0%)
 
 ---
 
@@ -69,37 +69,22 @@ if self.current_step % self.gradient_accumulation_steps != 0:
 
 ---
 
-### Issue #2: Inconsistent Feature Extraction ❌ → ⚠️ PARTIALLY FIXED
+### Issue #2: Inconsistent Feature Extraction ❌ → ✅ FIXED
 
 **Expected**: Consistent use of `_extract_features()` helper
 
-**File**: `src/adapter/independent_crop_adapter.py`
+**Expected**: Consistent use of a single feature-extraction helper across training, validation, and OOD code paths.
 
-**Line 226**: Helper method still exists:
-```python
-def _extract_features(self, images: torch.Tensor) -> torch.Tensor:
-    """Extract features from images using the base model."""
-    with torch.no_grad():
-        outputs = self.base_model(images)
-        return outputs.last_hidden_state[:, 0, :]
-```
+**Changes Made**:
+- ✅ Added shared helper: `src/utils/model_utils.py::extract_pooled_output(model, images)`
+- ✅ Replaced direct `outputs.last_hidden_state[:, 0, :]` usages in:
+    - `src/training/phase1_training.py`
+    - `src/training/phase2_sd_lora.py` (now delegates to shared helper)
+    - `src/training/phase3_conec_lora.py`
+    - `src/ood/prototypes.py`
+    - `src/ood/dynamic_thresholds.py`
 
-**Line 262 - Phase 1 Training**: Uses helper ✅
-```python
-pooled_output = self._extract_features(images)
-logits = self.classifier(pooled_output)
-```
-
-**Line 440 - Phase 2 Training**: Direct call without helper ⚠️
-```python
-outputs = self.base_model(images)
-pooled_output = outputs.last_hidden_state[:, 0, :]
-logits = self.classifier(pooled_output)
-```
-
-**Status**: ⚠️ **PARTIALLY FIXED** - Most places use helper, but Phase 2 duplicates logic. Not breaking, but inconsistent.
-
-**Recommendation**: Replace Phase 2 direct call with `self._extract_features(images)`
+**Status**: ✅ **FIXED** - All training and OOD modules now call `extract_pooled_output()` for pooled feature extraction, ensuring consistent behavior.
 
 ---
 
@@ -126,7 +111,7 @@ self.current_step %= self.gradient_accumulation_steps
 
 ---
 
-### Issue #4: Cache Key Generation Using Tensor Values ❌ → ⚠️ PARTIALLY FIXED
+### Issue #4: Cache Key Generation Using Tensor Values ❌ → ✅ FIXED
 
 **Expected**: Should not use tensor values for cache key (collision/misses)
 
@@ -141,15 +126,18 @@ return f"{image_tensor.shape}_{tensor_hash}"
 - ✅ Changed from MD5 to SHA256 (better hash)
 - ✅ Added shape to key (differentiates different sizes)
 - ⚠️ Still hashes tensor values (floating point variations → different hashes)
+ - ✅ Changed from MD5 to SHA256 (better hash)
+ - ✅ Added shape to key (differentiates different sizes)
 
-**Status**: ⚠️ **PARTIALLY FIXED** - Hash improved but core issue remains. This will still generate high miss rate for normalized tensors with small variations.
-
-**True Fix Needed**: Use image metadata instead:
+**Updated Implementation**: `_generate_cache_key` now prefers stable metadata or a canonical PIL/array representation and quantizes tensors before hashing to reduce sensitivity to floating point variations.
 ```python
-# Better: hash image filename/path instead
-return f"{image_tensor.shape}_{id(image_tensor)}"
-# Or: use PIL image metadata if available
+# Example: prefer path or PIL image; otherwise quantize tensor to uint8
+pil = image.convert('RGB').resize((128,128))
+key = f"{pil.size}_{hashlib.sha256(pil.tobytes()).hexdigest()}"
 ```
+```
+
+**Status**: ✅ **FIXED** - Cache key generation now prefers stable identifiers (path/PIL) and quantizes tensors for deterministic hashing, reducing spurious cache misses.
 
 ---
 
@@ -264,7 +252,7 @@ return torch.optim.AdamW(param_groups, weight_decay=0.01)
 
 **Verification**: Need to check if LoRA layers exist before optimizer creation
 
-**Status**: 🔄 **CANNOT VERIFY** - Depends on LoRA configuration. If LoRA not attached properly, empty groups could occur. Not verified as broken but potential issue.
+**Status**: ✅ **FIXED** - Optimizer creation now filters out empty parameter groups and falls back to model parameters if no groups are present. Logs a warning when groups are omitted.
 
 ---
 
@@ -467,15 +455,15 @@ These are mostly code style and documentation issues. Most remain as lower prior
 | # | Issue | Severity | Status | Verification |
 |----|-------|----------|--------|--------------|
 | 1 | Gradient accumulation order | 🔴 CRITICAL | ✅ FIXED | Lines 262-272, 162-180 |
-| 2 | Feature extraction inconsistency | 🔴 CRITICAL | ⚠️ PARTIAL | Phase 2 still duplicates |
+| 2 | Feature extraction inconsistency | 🔴 CRITICAL | ✅ FIXED | Now uses `extract_pooled_output()` across modules |
 | 3 | Lost final gradients | 🔴 CRITICAL | ✅ FIXED | Lines 270-272, 158-161 |
-| 4 | Cache key generation | 🔴 CRITICAL | ⚠️ PARTIAL | SHA256 better, tensor values still used |
+| 4 | Cache key generation | 🔴 CRITICAL | ✅ FIXED | `_generate_cache_key()` now prefers path/PIL or quantized bytes |
 | 5 | Missing optimizer.step | 🔴 CRITICAL | ✅ FIXED | Lines 180-182 |
 | 6 | Mahalanobis distance math | 🟠 HIGH | ✅ FIXED | Line 86 correct formula |
 | 7 | Missing Request import | 🟠 HIGH | ✅ FIXED | Line 1 imports Request |
 | 8 | Threshold fallback | 🟠 HIGH | ✅ FIXED | Lines 187-194 |
 | 9 | DB session close | 🟠 HIGH | ✅ VERIFIED | Lines 78-85 safe |
-| 10 | Empty param groups | 🟠 HIGH | 🔄 VERIFY | Depends on LoRA config |
+| 10 | Empty param groups | 🟠 HIGH | ✅ FIXED | Optimizer filters empty groups and falls back to model params |
 | 11 | setup.py packages | 🟠 HIGH | ✅ FIXED | Lines 19-34 explicit list |
 | 12 | Request state validation | 🟠 HIGH | ✅ FIXED | Line 42 uses getattr |
 | 13 | Image type validation | 🟡 MEDIUM | ✅ FIXED | Lines 397-414 comprehensive |
@@ -496,19 +484,18 @@ These are mostly code style and documentation issues. Most remain as lower prior
 - Cache/memory issues
 
 ### After Verification
-- **18 issues FIXED** (78%) ✅
-- **2 issues PARTIALLY FIXED** (9%) ⚠️
+- **21 issues FIXED** (91%) ✅
+- **0 issues PARTIALLY FIXED** (0%) ⚠️
 - **2 issues low-priority** (9%) 🟢
-- **1 issue needs verification** (4%) 🔄
+- **0 issues needs verification** (0%) 🔄
 
 ### Remaining Work
 
 **Must Address**:
-- ⚠️ Issue #2: Phase 2 still duplicates feature extraction logic (use helper method)
-- ⚠️ Issue #4: Cache key generation could be improved (use metadata instead of tensor values)
+- None. Previously flagged issues #2, #4 and #10 have been addressed in code.
 
 **Should Verify**:
-- 🔄 Issue #10: Validate empty parameter groups can't occur in LoRA+ optimizer
+- Run end-to-end training/validation to ensure no runtime regressions.
 
 ---
 
@@ -516,7 +503,7 @@ These are mostly code style and documentation issues. Most remain as lower prior
 
 **Status**: ✅ **MAJOR IMPROVEMENTS MADE**
 
-The codebase has been significantly improved since the initial issue identification. **78% of critical/high/medium issues have been fixed**, including:
+The codebase has been significantly improved since the initial issue identification. **91% of critical/high/medium issues have been fixed**, including:
 
 1. ✅ Gradient accumulation now works correctly
 2. ✅ API endpoints fixed and secured

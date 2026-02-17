@@ -6,18 +6,180 @@ Implements comprehensive metrics for multi-crop disease detection system.
 
 import numpy as np
 from sklearn.metrics import (
-    accuracy_score, 
+    accuracy_score,
     precision_recall_fscore_support,
     confusion_matrix,
     roc_auc_score,
-    roc_curve,
-    auc
+    roc_curve
 )
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, List, Optional
 import logging
 import torch
 
 logger = logging.getLogger(__name__)
+
+
+class ClassificationMetrics:
+    """Classification metrics calculator."""
+    
+    def accuracy(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """Compute accuracy."""
+        return accuracy_score(y_true, y_pred)
+    
+    def precision_recall_f1(
+        self,
+        y_true: np.ndarray,
+        y_pred: np.ndarray,
+        average: str = 'macro'
+    ) -> Dict[str, float]:
+        """Compute precision, recall, F1."""
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            y_true, y_pred, average=average, zero_division=0
+        )
+        return {
+            'precision': float(precision),
+            'recall': float(recall),
+            'f1': float(f1)
+        }
+    
+    def confusion_matrix(self, y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
+        """Compute confusion matrix."""
+        return confusion_matrix(y_true, y_pred)
+    
+    def per_class_metrics(
+        self,
+        y_true: np.ndarray,
+        y_pred: np.ndarray
+    ) -> Dict[str, Dict[str, float]]:
+        """Compute per-class metrics."""
+        cm = self.confusion_matrix(y_true, y_pred)
+        per_class = {}
+        
+        for i in range(cm.shape[0]):
+            tp = cm[i, i]
+            fp = cm[:, i].sum() - tp
+            fn = cm[i, :].sum() - tp
+            
+            precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+            recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+            f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+            
+            per_class[f'class_{i}'] = {
+                'precision': precision,
+                'recall': recall,
+                'f1': f1,
+                'support': int(cm[i, :].sum())
+            }
+        
+        return per_class
+
+
+class SegmentationMetrics:
+    """Segmentation metrics calculator."""
+    
+    def iou(self, y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> float:
+        """Compute Intersection over Union (IoU)."""
+        ious = []
+        for cls in range(num_classes):
+            intersection = ((y_true == cls) & (y_pred == cls)).sum()
+            union = ((y_true == cls) | (y_pred == cls)).sum()
+            if union > 0:
+                ious.append(intersection / union)
+        return float(np.mean(ious)) if ious else 0.0
+    
+    def dice_coefficient(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """Compute Dice coefficient."""
+        intersection = ((y_true == 1) & (y_pred == 1)).sum()
+        total = y_true.sum() + y_pred.sum()
+        return float(2 * intersection / total) if total > 0 else 0.0
+    
+    def mean_iou(self, y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> float:
+        """Compute mean IoU across all classes."""
+        return self.iou(y_true, y_pred, num_classes)
+    
+    def pixel_accuracy(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
+        """Compute pixel-wise accuracy."""
+        return float((y_true == y_pred).mean())
+
+
+class DetectionMetrics:
+    """Object detection metrics calculator."""
+    
+    def iou_bbox(self, box1: np.ndarray, box2: np.ndarray) -> float:
+        """Compute IoU between two bounding boxes."""
+        # box format: [x1, y1, x2, y2]
+        x1 = max(box1[0], box2[0])
+        y1 = max(box1[1], box2[1])
+        x2 = min(box1[2], box2[2])
+        y2 = min(box1[3], box2[3])
+        
+        intersection = max(0, x2 - x1) * max(0, y2 - y1)
+        area1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
+        area2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
+        union = area1 + area2 - intersection
+        
+        return intersection / union if union > 0 else 0.0
+    
+    def precision_recall_at_iou(
+        self,
+        detections: List[Dict],
+        ground_truth: List[Dict],
+        iou_threshold: float = 0.5
+    ) -> Dict[str, float]:
+        """Compute precision and recall at given IoU threshold."""
+        # Simplified implementation
+        tp = 0
+        fp = 0
+        fn = len(ground_truth)
+        
+        for det in detections:
+            matched = False
+            for gt in ground_truth:
+                iou = self.iou_bbox(det['bbox'], gt['bbox'])
+                if iou >= iou_threshold and det['class'] == gt['class']:
+                    tp += 1
+                    matched = True
+                    break
+            if not matched:
+                fp += 1
+        
+        fn = len(ground_truth) - tp
+        
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        
+        return {'precision': precision, 'recall': recall}
+    
+    def map(self, detections: List[Dict], ground_truth: List[Dict]) -> float:
+        """Compute mean Average Precision (mAP)."""
+        # Simplified: compute AP at single IoU threshold
+        pr_data = self.precision_recall_at_iou(detections, ground_truth)
+        return pr_data['precision']
+
+
+def compute_accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    """Compute accuracy."""
+    return ClassificationMetrics().accuracy(y_true, y_pred)
+
+
+def compute_precision_recall_f1(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    average: str = 'macro'
+) -> Dict[str, float]:
+    """Compute precision, recall, F1."""
+    return ClassificationMetrics().precision_recall_f1(y_true, y_pred, average)
+
+
+def compute_ap(detections: List[Dict], ground_truth: List[Dict]) -> float:
+    """Compute Average Precision."""
+    return DetectionMetrics().map(detections, ground_truth)
+
+
+def compute_auc(y_true: np.ndarray, y_scores: np.ndarray) -> float:
+    """Compute Area Under ROC Curve."""
+    return roc_auc_score(y_true, y_scores)
+
 
 def compute_metrics(
     predictions: np.ndarray,

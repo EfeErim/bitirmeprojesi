@@ -3,12 +3,11 @@ Schema validation for configuration files and runtime parameters.
 Provides centralized validation for all configuration inputs.
 """
 
-import jsonschema
-from typing import Dict, Any, List, Optional, Union, Callable
-import logging
-from pathlib import Path
-import json
 import os
+import json
+import jsonschema
+from typing import Dict, Any, List, Union, Callable
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -51,22 +50,35 @@ class ConfigurationValidator:
             raise ConfigurationError(f"Schema {schema_name} not registered")
         
         schema = self._schemas[schema_name]
-        
+        # If the registered schema expects a top-level wrapper (e.g., a 'router'
+        # property) but the provided config is the inner object, wrap it so the
+        # JSON schema validation matches the schema shape. This keeps tests and
+        # real config files compatible.
+        properties = schema.get('properties', {})
+        if schema_name in properties and schema_name not in config:
+            config_to_validate = {schema_name: config}
+        else:
+            config_to_validate = config
+
         # Apply default values
-        validated_config = self._apply_defaults(schema_name, config)
+        validated_config = self._apply_defaults(schema_name, config_to_validate)
         
         # Validate against JSON schema
         try:
             jsonschema.validate(instance=validated_config, schema=schema)
         except jsonschema.ValidationError as e:
-            raise ConfigurationError(f"Schema validation failed: {e.message}") from e
-        
+            raise ConfigurationError(
+                f"Schema validation failed for '{schema_name}': {e.message}"
+            ) from e
+
         # Run custom validation rules
         for rule in self._validation_rules[schema_name]:
             try:
                 rule(validated_config)
             except Exception as e:
-                raise ConfigurationError(f"Custom validation failed: {str(e)}") from e
+                raise ConfigurationError(
+                    f"Custom validation failed for '{schema_name}': {str(e)}"
+                ) from e
         
         # Check for extra fields if not allowed
         if not allow_extra_fields:
@@ -109,13 +121,15 @@ class ConfigurationValidator:
         """Load configuration from file and validate it."""
         if not os.path.exists(file_path):
             raise ConfigurationError(f"Configuration file not found: {file_path}")
-        
+
         try:
             with open(file_path, 'r') as f:
                 config = json.load(f)
         except json.JSONDecodeError as e:
-            raise ConfigurationError(f"Invalid JSON in configuration file: {e}") from e
-        
+            raise ConfigurationError(
+                f"Invalid JSON in configuration file '{file_path}': {e}"
+            ) from e
+
         return self.validate(schema_name, config, allow_extra_fields)
     
     def create_schema(

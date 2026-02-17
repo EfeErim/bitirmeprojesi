@@ -9,26 +9,36 @@ import numpy as np
 from typing import Dict, Tuple, Optional
 from torch.utils.data import DataLoader
 import logging
-from functools import lru_cache
+from src.utils.model_utils import extract_pooled_output
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class PrototypeConfig:
+    """Configuration for prototype computation."""
+    feature_dim: int
+    device: str = 'cuda'
+    use_moving_average: bool = False
+    update_rate: float = 0.1
+    min_samples: int = 5
+    max_prototypes: int = 1000
+    cache_size: int = 100
+
 
 class PrototypeComputer:
     """
     Compute class prototypes and statistics for OOD detection.
     
     Args:
-        feature_dim: Dimensionality of feature vectors
-        device: Device for computation
+        config: PrototypeConfig object
     """
     
-    def __init__(
-        self,
-        feature_dim: int,
-        device: str = 'cuda'
-    ):
-        self.feature_dim = feature_dim
-        self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
+    def __init__(self, config: PrototypeConfig):
+        self.config = config
+        self.device = torch.device(config.device if torch.cuda.is_available() else 'cpu')
+        self.feature_dim = config.feature_dim
         self.prototypes = None
         self.class_stds = {}
         self.class_counts = {}
@@ -70,8 +80,7 @@ class PrototypeComputer:
                 labels = labels.to(self.device)
                 
                 # Extract features
-                outputs = model(images)
-                pooled_output = outputs.last_hidden_state[:, 0, :]
+                pooled_output = extract_pooled_output(model, images)
                 features = pooled_output
                 
                 # Store features by class
@@ -120,6 +129,7 @@ class PrototypeComputer:
     ) -> Tuple[torch.Tensor, Dict[int, torch.Tensor]]:
         """
         Compute prototypes from pre-extracted features using vectorized operations.
+        Implements caching to avoid recomputing for the same (features, labels) combination.
         
         Args:
             features: Tensor of shape (num_samples, feature_dim)
@@ -129,6 +139,16 @@ class PrototypeComputer:
             Tuple of (prototypes, class_stds)
         """
         logger.info("Computing prototypes from pre-extracted features with vectorized operations...")
+        
+        # Generate cache key based on features and labels
+        cache_key = self._generate_cache_key(features, labels)
+        
+        # Check cache
+        if cache_key in self.prototype_cache:
+            self.cache_hits += 1
+            return self.prototype_cache[cache_key]
+        
+        self.cache_misses += 1
         
         features_per_class = {}
         
@@ -171,10 +191,26 @@ class PrototypeComputer:
         
         logger.info(f"Computed prototypes for {len(class_stds)} classes")
         
+        result = (prototypes, class_stds)
+        
+        # Cache the result
+        self.prototype_cache[cache_key] = result
+        if len(self.prototype_cache) > self.config.cache_size:
+            # Remove oldest entry (simple FIFO)
+            oldest_key = next(iter(self.prototype_cache))
+            del self.prototype_cache[oldest_key]
+        
         self.prototypes = prototypes
         self.class_stds = class_stds
         
-        return prototypes, class_stds
+        return result
+    
+    def _generate_cache_key(self, features: torch.Tensor, labels: torch.Tensor) -> str:
+        """Generate a cache key from features and labels."""
+        # Use hash of features and labels as key
+        features_hash = hash(features.cpu().numpy().tobytes())
+        labels_hash = hash(labels.cpu().numpy().tobytes())
+        return f"{features_hash}_{labels_hash}"
     
     def get_prototype_quality(
         self,
@@ -205,8 +241,7 @@ class PrototypeComputer:
                 images = images.to(self.device)
                 labels = labels.to(self.device)
                 
-                outputs = model(images)
-                pooled_output = outputs.last_hidden_state[:, 0, :]
+                pooled_output = extract_pooled_output(model, images)
                 features = pooled_output
                 
                 for feat, label in zip(features, labels):
@@ -256,7 +291,7 @@ class PrototypeComputer:
         self.prototype_cache[class_idx] = prototype
         
         # Limit cache size
-        if len(self.prototype_cache) > 100:  # Limit to 100 most recent
+        if len(self.prototype_cache) > self.config.cache_size:
             oldest_key = next(iter(self.prototype_cache))
             del self.prototype_cache[oldest_key]
         
@@ -286,7 +321,7 @@ class PrototypeComputer:
         self.cache_misses = 0
 
 
-def compute_class_prototypes(
+def compute_prototypes(
     model: torch.nn.Module,
     data_loader: DataLoader,
     feature_dim: int,
@@ -320,12 +355,80 @@ def compute_class_prototypes(
         class_to_idx = {str(idx): idx for idx in unique_classes}
     
     # Create prototype computer
-    computer = PrototypeComputer(feature_dim=feature_dim, device=device)
+    config = PrototypeConfig(feature_dim=feature_dim, device=device)
+    computer = PrototypeComputer(config=config)
     
     # Compute prototypes
     prototypes, class_stds = computer.compute_prototypes(model, data_loader, class_to_idx)
     
     return prototypes, class_stds
+
+
+def update_prototypes_moving_average(
+    old_prototype: torch.Tensor,
+    new_sample: torch.Tensor,
+    update_rate: float = 0.1
+) -> torch.Tensor:
+    """
+    Update prototype using moving average.
+    
+    Args:
+        old_prototype: Existing prototype
+        new_sample: New sample to incorporate
+        update_rate: Rate of update (0-1)
+        
+    Returns:
+        Updated prototype
+    """
+    return old_prototype * (1 - update_rate) + new_sample * update_rate
+
+
+def find_nearest_prototype(
+    feature: torch.Tensor,
+    prototypes: torch.Tensor
+) -> Tuple[int, float]:
+    """
+    Find nearest prototype to a feature vector.
+    
+    Args:
+        feature: Feature vector
+        prototypes: Prototype tensor
+        
+    Returns:
+        Tuple of (class_idx, distance)
+    """
+    distances = torch.cdist(feature.unsqueeze(0), prototypes)
+    nearest_idx = distances.argmin().item()
+    nearest_distance = distances.min().item()
+    
+    return nearest_idx, nearest_distance
+
+
+def compute_prototype_accuracy(
+    features: torch.Tensor,
+    labels: torch.Tensor,
+    prototypes: torch.Tensor
+) -> float:
+    """
+    Compute classification accuracy using prototypes.
+    
+    Args:
+        features: Feature vectors
+        labels: True labels
+        prototypes: Prototype tensor
+        
+    Returns:
+        Accuracy score
+    """
+    correct = 0
+    total = len(features)
+    
+    for feat, label in zip(features, labels):
+        nearest_idx, _ = find_nearest_prototype(feat, prototypes)
+        if nearest_idx == label.item():
+            correct += 1
+    
+    return correct / total if total > 0 else 0.0
 
 
 if __name__ == "__main__":

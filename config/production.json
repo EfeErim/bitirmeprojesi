@@ -1,5 +1,5 @@
 {
-  "version": "5.5.3-performance",
+  "version": "5.5.3",
   "description": "Production optimizations with caching, rate limiting, and security",
   
   "api": {
@@ -7,27 +7,32 @@
     "port": 8000,
     "workers": 4,
     "reload": false,
-    "log_level": "info",
-    "timeout_keep_alive": 30,
-    "timeout_graceful_shutdown": 10
+    "log_level": "info"
   },
   
   "security": {
     "api_key_required": true,
     "api_keys": ["prod_key_secure_token_12345"],
-    "rate_limit_requests": 100,
-    "rate_limit_window": 60,
+    "rate_limit": {
+      "requests_per_minute": 100,
+      "burst": 200
+    },
     "max_request_size_mb": 10,
-    "allowed_origins": ["https://yourdomain.com"],
+    "cors": {
+      "allow_origins": ["https://yourdomain.com"],
+      "allow_credentials": true,
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    },
     "https_enforced": true
   },
   
-  "caching": {
+  "cache": {
     "enabled": true,
+    "backend": "redis",
     "redis_url": "redis://localhost:6379",
-    "default_ttl": 3600,
-    "diagnosis_ttl": 1800,
-    "max_cache_size": 1000
+    "ttl": 3600,
+    "max_size": 1000
   },
   
   "compression": {
@@ -38,10 +43,26 @@
   
   "monitoring": {
     "enabled": true,
-    "metrics_port": 9090,
-    "log_requests": true,
-    "audit_logging": true,
-    "track_performance": true
+    "prometheus": {
+      "enabled": true,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "logging": {
+      "format": "json",
+      "rotate": true,
+      "max_size_mb": 100,
+      "backup_count": 5
+    },
+    "metrics": {
+      "enabled": true
+    },
+    "health": {
+      "enabled": true,
+      "detailed": true,
+      "include_memory": true,
+      "include_cuda": true
+    }
   },
   
   "database": {
@@ -49,11 +70,5 @@
     "max_overflow": 30,
     "pool_recycle": 3600,
     "pool_pre_ping": true
-  },
-  
-  "health": {
-    "detailed": true,
-    "include_memory": true,
-    "include_cuda": true
   }
 }

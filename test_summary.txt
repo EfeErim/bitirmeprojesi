@@ -1,0 +1,309 @@
+........FFFFFFFFFFFFF.FF.F.FFFFFFFFFFFFFFFFFFFFFE..F.FFFFEE....FEEEEEFFF [ 18%]
+FFFFFFFFF.FFFFF...FFF..FFFF..FFEEEEsEEFFFFFFFFFFFFsssss..EEsEEEEssssFsEE [ 36%]
+EFs..............................................F........F.FFF......E.E [ 54%]
+EE...F.....F........F....F..FFFFFFFFFF.F.FFFFFFF.FFFFFFFF..F.F...FF..FFF [ 72%]
+FFFFF..F....FF......FF.......................F....F.............FF...... [ 90%]
+...F...F...EEEEEEEEEEEEEEEEEEEEE..FF                                     [100%]
+============================== warnings summary ===============================
+C:\Users\MONSTER\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\utils\_pytree.py:1355
+  C:\Users\MONSTER\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\utils\_pytree.py:1355: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use `isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+    _LEAF_SPEC = LeafSpec()
+
+tests\unit\middleware\test_audit.py:50
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:50: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:77
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:77: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:98
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:98: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:127
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:127: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:163
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:163: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:195
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:195: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_audit.py:221
+  d:\bitirme projesi\tests\unit\middleware\test_audit.py:221: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_auth.py:46
+  d:\bitirme projesi\tests\unit\middleware\test_auth.py:46: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_auth.py:62
+  d:\bitirme projesi\tests\unit\middleware\test_auth.py:62: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_auth.py:78
+  d:\bitirme projesi\tests\unit\middleware\test_auth.py:78: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_auth.py:94
+  d:\bitirme projesi\tests\unit\middleware\test_auth.py:94: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_auth.py:108
+  d:\bitirme projesi\tests\unit\middleware\test_auth.py:108: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_caching.py:49
+  d:\bitirme projesi\tests\unit\middleware\test_caching.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_caching.py:61
+  d:\bitirme projesi\tests\unit\middleware\test_caching.py:61: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_caching.py:77
+  d:\bitirme projesi\tests\unit\middleware\test_caching.py:77: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_caching.py:130
+  d:\bitirme projesi\tests\unit\middleware\test_caching.py:130: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_compression.py:51
+  d:\bitirme projesi\tests\unit\middleware\test_compression.py:51: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_compression.py:81
+  d:\bitirme projesi\tests\unit\middleware\test_compression.py:81: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_compression.py:94
+  d:\bitirme projesi\tests\unit\middleware\test_compression.py:94: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_compression.py:112
+  d:\bitirme projesi\tests\unit\middleware\test_compression.py:112: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_compression.py:138
+  d:\bitirme projesi\tests\unit\middleware\test_compression.py:138: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_rate_limit.py:49
+  d:\bitirme projesi\tests\unit\middleware\test_rate_limit.py:49: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_rate_limit.py:63
+  d:\bitirme projesi\tests\unit\middleware\test_rate_limit.py:63: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_rate_limit.py:78
+  d:\bitirme projesi\tests\unit\middleware\test_rate_limit.py:78: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests\unit\middleware\test_rate_limit.py:128
+  d:\bitirme projesi\tests\unit\middleware\test_rate_limit.py:128: PytestUnknownMarkWarning: Unknown pytest.mark.asyncio - is this a typo?  You can register custom marks to avoid this warning - for details, see https://docs.pytest.org/en/stable/how-to/mark.html
+    @pytest.mark.asyncio
+
+tests/unit/evaluation/test_evaluation_metrics.py::TestUtilityFunctions::test_compute_ap
+  d:\bitirme projesi\src\evaluation\metrics.py:138: UserWarning: Using a non-tuple sequence for multidimensional indexing is deprecated and will be changed in pytorch 2.9; use x[tuple(seq)] instead of x[seq]. In pytorch 2.9 this will be interpreted as tensor index, x[torch.tensor(seq)], which will result either in an error or a different result (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\pytorch\torch\csrc\autograd\python_variable_indexing.cpp:353.)
+    iou = self.iou_bbox(det['bbox'], gt['bbox'])
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPhase3::test_phase3_fortify_success
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPhase3::test_phase3_freeze_shared_blocks
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPhase3::test_phase3_protected_retention_evaluation
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_predict_with_ood_success
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_predict_with_ood_detected
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_predict_with_ood_not_trained
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_detect_ood_basic
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_detect_ood_threshold_exceeded
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_detect_ood_no_components
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPrediction::test_detect_ood_missing_threshold
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPersistence::test_save_adapter_complete
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPersistence::test_load_adapter_complete
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterPersistence::test_save_adapter_without_ood
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterErrorHandling::test_phase2_with_insufficient_new_classes
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterErrorHandling::test_phase3_fortify_without_base_model
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterMemoryManagement::test_large_model_handling
+FAILED tests/unit/adapters/test_adapter_comprehensive.py::TestIndependentCropAdapterEdgeCases::test_empty_dataset_handling
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_computer_initialization
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_compute_prototypes_from_features
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_caching
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_get_prototype_for_class
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_clear_prototype_cache
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_update_prototype
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_accuracy
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_find_nearest_prototype
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_consistency
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_with_insufficient_samples
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_std_computation
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_moving_average_update
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_normalization
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_distance_computation
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeComputer::test_prototype_save_and_load
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_compute_prototypes_function
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_update_prototypes_moving_average_function
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_find_nearest_prototype_function
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_compute_prototype_accuracy_function
+FAILED tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_prototype_config_validation
+FAILED tests/unit/dataset/test_dataset_preparation.py::TestDatasetPreparer::test_split_dataset_proportions
+FAILED tests/unit/dataset/test_dataset_preparation.py::TestDatasetPreparer::test_augment_dataset
+FAILED tests/unit/dataset/test_dataset_preparation.py::TestDatasetPreparer::test_dataset_config_validation
+FAILED tests/unit/dataset/test_dataset_preparation.py::TestDatasetPreparer::test_prepare_dataset_function
+FAILED tests/unit/dataset/test_dataset_preparation.py::TestDatasetUtils::test_calculate_class_weights
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugMonitor::test_reset_metrics
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestModelDebugger::test_check_gradients
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestModelDebugger::test_check_weights
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestModelDebugger::test_validate_forward_pass
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestModelDebugger::test_detect_nan_inf
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestModelDebugger::test_get_debug_report
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestGradientTracker::test_track_gradients
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestGradientTracker::test_gradient_flow_analysis
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestGradientTracker::test_reset_tracker
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestActivationTracker::test_track_activations
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestActivationTracker::test_activation_statistics
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestActivationTracker::test_dead_activation_detection
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestActivationTracker::test_reset_tracker
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugLogger::test_log_metric
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugLogger::test_log_message
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugLogger::test_log_histogram
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugLogger::test_log_model_graph
+FAILED tests/unit/debugging/test_debugging_monitoring.py::TestDebugLogger::test_export_metrics
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestClassificationMetrics::test_confusion_matrix
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestClassificationMetrics::test_per_class_metrics
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestSegmentationMetrics::test_iou
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestSegmentationMetrics::test_pixel_accuracy
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestDetectionMetrics::test_iou_bbox
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestDetectionMetrics::test_precision_recall_at_iou
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestDetectionMetrics::test_map
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestUtilityFunctions::test_compute_ap
+FAILED tests/unit/evaluation/test_evaluation_metrics.py::TestUtilityFunctions::test_compute_auc
+FAILED tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_log_rotation
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_request
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_with_metadata
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_json_format
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_rotation_by_size
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_with_user_context
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_sensitive_data_filtering
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_structured_format
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_with_exception
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_batch_operations
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_with_correlation_id
+FAILED tests/unit/middleware/test_audit.py::TestAuditLogger::test_log_compressed_archiving
+FAILED tests/unit/middleware/test_compression.py::TestCompressionMiddleware::test_should_compress_decision
+FAILED tests/unit/middleware/test_rate_limit.py::TestRateLimitMiddleware::test_different_ips_separate_limits
+FAILED tests/unit/ood/test_ood_comprehensive.py::TestDynamicOODThresholdValidation::test_validate_thresholds_with_ood_detection
+FAILED tests/unit/ood/test_ood_comprehensive.py::TestAdaptiveThresholdManager::test_threshold_history_tracking
+FAILED tests/unit/ood/test_ood_comprehensive.py::TestCalibrateThresholdsUsingValidation::test_calibrate_thresholds_basic
+FAILED tests/unit/ood/test_ood_comprehensive.py::TestCalibrateThresholdsUsingValidation::test_calibrate_thresholds_target_fpr
+FAILED tests/unit/ood/test_ood_comprehensive.py::TestCalibrateThresholdsUsingValidation::test_calibrate_thresholds_insufficient_samples
+FAILED tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineErrorHandling::test_router_confidence_rejection
+FAILED tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineOODHandling::test_ood_detection_triggers_handler
+FAILED tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineThreadSafety::test_concurrent_batch_processing
+FAILED tests/unit/security/test_security.py::TestAPIKeyValidator::test_no_api_keys_configured
+FAILED tests/unit/security/test_security.py::TestPasswordHasher::test_hash_password
+FAILED tests/unit/security/test_security.py::TestPasswordHasher::test_verify_password
+FAILED tests/unit/security/test_security.py::TestPasswordHasher::test_different_passwords_different_hashes
+FAILED tests/unit/security/test_security.py::TestPasswordHasher::test_same_password_different_hashes
+FAILED tests/unit/security/test_security.py::TestTokenManager::test_generate_token
+FAILED tests/unit/security/test_security.py::TestTokenManager::test_validate_token
+FAILED tests/unit/security/test_security.py::TestTokenManager::test_invalid_token
+FAILED tests/unit/security/test_security.py::TestTokenManager::test_token_expiration
+FAILED tests/unit/security/test_security.py::TestTokenManager::test_refresh_token
+FAILED tests/unit/security/test_security.py::TestInputValidator::test_sanitize_string
+FAILED tests/unit/security/test_security.py::TestInputValidator::test_validate_url
+FAILED tests/unit/security/test_security.py::TestInputValidator::test_validate_file_size
+FAILED tests/unit/security/test_security.py::TestInputValidator::test_validate_image_dimensions
+FAILED tests/unit/security/test_security.py::TestSecurityHeaders::test_hsts_header
+FAILED tests/unit/security/test_security.py::TestSecurityHeaders::test_csp_header
+FAILED tests/unit/security/test_security.py::TestSecurityHeaders::test_x_frame_options
+FAILED tests/unit/security/test_security.py::TestSecurityHeaders::test_x_content_type_options
+FAILED tests/unit/security/test_security.py::TestSecurityHeaders::test_custom_headers
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_prepare_lora_layers
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_compute_sd_loss
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_training_step
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_validation_step
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_save_and_load_checkpoint
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_lora_parameter_count
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_gradient_flow
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRATrainer::test_lr_scheduler
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestSDLoRAConfig::test_config_validation
+FAILED tests/unit/training/test_phase2_sd_lora.py::TestUtilityFunctions::test_prepare_lora_layers_function
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_prepare_conec_adapter
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_compute_conec_loss
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_training_step_with_conec
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_validation_step
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_prototype_update
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_save_and_load_checkpoint
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_prototype_consistency
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_gradient_flow_through_conec
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_lr_scheduler_step
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCTrainer::test_orthogonal_constraint
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestCoNeCConfig::test_config_validation
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestUtilityFunctions::test_prototype_initialization
+FAILED tests/unit/training/test_phase3_conec_lora.py::TestUtilityFunctions::test_prototype_update_strategy
+FAILED tests/unit/utils/test_bug_fixes_simple.py::TestMahalanobisMath::test_compute_distance_returns_correct_shape
+FAILED tests/unit/utils/test_bug_fixes_simple.py::TestMahalanobisMath::test_compute_distance_non_negative
+FAILED tests/unit/utils/test_model_utils.py::TestModelInspector::test_get_model_summary
+FAILED tests/unit/utils/test_model_utils.py::TestLayerFreezing::test_freeze_by_pattern
+FAILED tests/unit/utils/test_optimizations.py::TestPrototypeOptimization::test_compute_prototypes_from_features
+FAILED tests/unit/utils/test_optimizations.py::TestPrototypeOptimization::test_prototype_caching
+FAILED tests/unit/validation/test_validation_comprehensive.py::test_validate_base64_image_invalid_format
+FAILED tests/unit/validation/test_validation_comprehensive.py::test_sanitize_input
+FAILED tests/unit/visualization/test_visualization.py::TestUtilityFunctions::test_color_palette
+FAILED tests/unit/visualization/test_visualization.py::TestUtilityFunctions::test_colormap_generation
+ERROR tests/unit/adapters/test_prototypes.py::TestPrototypeUtilityFunctions::test_prototype_with_different_metrics
+ERROR tests/unit/dataset/test_dataset_preparation.py::TestDatasetUtils::test_validate_image_files
+ERROR tests/unit/dataset/test_dataset_preparation.py::TestDatasetUtils::test_get_dataset_stats
+ERROR tests/unit/debugging/test_debugging_monitoring.py::TestTrainingMonitor::test_record_epoch_metrics
+ERROR tests/unit/debugging/test_debugging_monitoring.py::TestTrainingMonitor::test_record_batch_metrics
+ERROR tests/unit/debugging/test_debugging_monitoring.py::TestTrainingMonitor::test_early_stopping_check
+ERROR tests/unit/debugging/test_debugging_monitoring.py::TestTrainingMonitor::test_learning_rate_suggestions
+ERROR tests/unit/debugging/test_debugging_monitoring.py::TestTrainingMonitor::test_get_training_summary
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_request_logged
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_response_status_logged
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_request_body_logged
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_response_body_logged
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_exempt_paths_not_logged
+ERROR tests/unit/middleware/test_audit.py::TestAuditMiddleware::test_error_logging
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_cache_miss_returns_fresh_response
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_cache_hit_returns_cached_response
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_cache_key_generation
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_different_methods_different_keys
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_cache_size_limit
+ERROR tests/unit/middleware/test_caching.py::TestCacheMiddleware::test_cache_headers_present
+ERROR tests/unit/middleware/test_rate_limit.py::TestRateLimitMiddleware::test_initial_request_allowed
+ERROR tests/unit/middleware/test_rate_limit.py::TestRateLimitMiddleware::test_rate_limit_headers_present
+ERROR tests/unit/middleware/test_rate_limit.py::TestRateLimitMiddleware::test_rate_limit_exceeded_returns_429
+ERROR tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineCache::test_cache_hit_and_miss
+ERROR tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineCache::test_cache_size_limit
+ERROR tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineCache::test_cache_key_generation
+ERROR tests/unit/pipeline/test_pipeline_comprehensive.py::TestIndependentMultiCropPipelineCache::test_clear_cache
+ERROR tests/unit/visualization/test_visualization.py::TestPlotGenerator::test_initialization
+ERROR tests/unit/visualization/test_visualization.py::TestPlotGenerator::test_set_style
+ERROR tests/unit/visualization/test_visualization.py::TestPlotGenerator::test_create_figure
+ERROR tests/unit/visualization/test_visualization.py::TestPlotGenerator::test_save_plot
+ERROR tests/unit/visualization/test_visualization.py::TestPlotGenerator::test_save_plot_without_extension
+ERROR tests/unit/visualization/test_visualization.py::TestConfusionMatrixPlotter::test_plot_confusion_matrix[cm0-class_names0-Test Confusion Matrix-False]
+ERROR tests/unit/visualization/test_visualization.py::TestConfusionMatrixPlotter::test_plot_confusion_matrix[cm1-class_names1-Normalized CM-True]
+ERROR tests/unit/visualization/test_visualization.py::TestConfusionMatrixPlotter::test_plot_confusion_matrix[cm2-None-Identity Matrix-False]
+ERROR tests/unit/visualization/test_visualization.py::TestROCPlotter::test_plot_roc_curve
+ERROR tests/unit/visualization/test_visualization.py::TestROCPlotter::test_plot_multiclass_roc
+ERROR tests/unit/visualization/test_visualization.py::TestROCPlotter::test_roc_auc_display
+ERROR tests/unit/visualization/test_visualization.py::TestPrecisionRecallPlotter::test_plot_pr_curve
+ERROR tests/unit/visualization/test_visualization.py::TestTrainingCurvePlotter::test_plot_loss_curves
+ERROR tests/unit/visualization/test_visualization.py::TestTrainingCurvePlotter::test_plot_accuracy_curves
+ERROR tests/unit/visualization/test_visualization.py::TestTrainingCurvePlotter::test_plot_metrics_comparison
+ERROR tests/unit/visualization/test_visualization.py::TestAttentionVisualizer::test_plot_attention_heatmap
+ERROR tests/unit/visualization/test_visualization.py::TestAttentionVisualizer::test_plot_multihead_attention
+ERROR tests/unit/visualization/test_visualization.py::TestAttentionVisualizer::test_plot_attention_rollout
+ERROR tests/unit/visualization/test_visualization.py::TestGradCAMVisualizer::test_generate_gradcam
+ERROR tests/unit/visualization/test_visualization.py::TestGradCAMVisualizer::test_overlay_heatmap
+ERROR tests/unit/visualization/test_visualization.py::TestGradCAMVisualizer::test_plot_gradcam_comparison
+143 failed, 192 passed, 13 skipped, 27 warnings, 48 errors in 8.68s
