@@ -141,11 +141,16 @@ Production-ready for Uyumsoft ZiraiTakip integration. Version 5.5.0. Last update
 2. Configure environment: Copy `config/development.json` to `config/local.json`
 3. Run API: `python -m api.main`
 4. Access docs: `http://localhost:8000/docs`
+5. Check markdown links: `python scripts/check_markdown_links.py --root .`
 
 ## Documentation
 
 - [API Reference](docs/api/api-reference.md)
+- [Documentation Index](docs/README.md)
 - [Architecture Overview](docs/architecture/overview.md)
 - [Crop Router Technical Guide](docs/architecture/crop-router-technical-guide.md)
+- [Development Setup](docs/development/development-setup.md)
 - [Rollback Guide](docs/development/rollback-guide.md)
-- [Comprehensive Codebase Evaluation](docs/architecture/comprehensive-codebase-evaluation.md)
+- [Colab Migration Guide](docs/colab_migration_guide.md)
+- [Colab Training Manual](docs/user_guide/colab_training_manual.md)
+- [Colab Cheatsheet](docs/user_guide/cheatsheet_colab.md)
