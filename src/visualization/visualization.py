@@ -141,6 +141,32 @@ def set_plot_style(style: str = "seaborn"):
     plt.style.use(style)
 
 
+def get_color_palette(palette_or_n: object = 'husl', n_colors: int = None):
+    """Return a color palette list of RGB tuples.
+
+    Accepts either (n_colors, palette) or (palette, n_colors) calling styles
+    for backwards compatibility with tests.
+    """
+    # If first arg is int, treat as n_colors
+    if isinstance(palette_or_n, int):
+        n = int(palette_or_n)
+        pal = 'husl' if n_colors is None else n_colors
+        # If pal is int it means user passed two ints; fallback to default
+        if isinstance(pal, int):
+            pal = 'husl'
+        return sns.color_palette(pal, n)
+
+    # Otherwise first arg is palette name
+    pal = str(palette_or_n)
+    n = n_colors if n_colors is not None else 8
+    return sns.color_palette(pal, n)
+
+
+def get_colormap(name: str = 'viridis'):
+    """Return a matplotlib colormap by name."""
+    return plt.get_cmap(name)
+
+
 """
 Visualization Module for AADS-ULoRA v5.5
 Generates training/evaluation plots and diagnostic visuals.

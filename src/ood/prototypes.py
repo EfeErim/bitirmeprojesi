@@ -25,23 +25,62 @@ class PrototypeConfig:
     min_samples: int = 5
     max_prototypes: int = 1000
     cache_size: int = 100
+    
+    def __post_init__(self):
+        """Validate configuration parameters."""
+        if self.update_rate <= 0 or self.update_rate > 1:
+            raise ValueError(f"update_rate must be in (0, 1], got {self.update_rate}")
+        if self.min_samples <= 0:
+            raise ValueError(f"min_samples must be > 0, got {self.min_samples}")
+        if self.feature_dim <= 0:
+            raise ValueError(f"feature_dim must be > 0, got {self.feature_dim}")
+        if self.cache_size <= 0:
+            raise ValueError(f"cache_size must be > 0, got {self.cache_size}")
 
 
 class PrototypeComputer:
     """
     Compute class prototypes and statistics for OOD detection.
-    
-    Args:
-        config: PrototypeConfig object
+
+    Backwards-compatible constructor: accepts either a `PrototypeConfig` via
+    the `config` parameter, or legacy keyword args `feature_dim` and `device`.
     """
-    
-    def __init__(self, config: PrototypeConfig):
+
+    def __init__(self, config: PrototypeConfig = None, feature_dim: int = None, device: str = 'cuda',
+                 min_samples: int = None, use_moving_average: bool = None, update_rate: float = None):
+        # Support either config object or legacy kwargs
+        if config is None:
+            if feature_dim is None:
+                raise TypeError("PrototypeComputer requires either `config` or `feature_dim`")
+            # Build config from kwargs if provided
+            config_kwargs = {
+                'feature_dim': feature_dim,
+                'device': device
+            }
+            if min_samples is not None:
+                config_kwargs['min_samples'] = min_samples
+            if use_moving_average is not None:
+                config_kwargs['use_moving_average'] = use_moving_average
+            if update_rate is not None:
+                config_kwargs['update_rate'] = update_rate
+            config = PrototypeConfig(**config_kwargs)
+        else:
+            # Update config with kwargs if provided
+            if min_samples is not None:
+                config.min_samples = min_samples
+            if use_moving_average is not None:
+                config.use_moving_average = use_moving_average
+            if update_rate is not None:
+                config.update_rate = update_rate
+
         self.config = config
         self.device = torch.device(config.device if torch.cuda.is_available() else 'cpu')
         self.feature_dim = config.feature_dim
-        self.prototypes = None
+        
+        # Initialize prototypes as dictionary for sparse class indices
+        self.prototypes = {}
+        self.prototype_counts = {}
         self.class_stds = {}
-        self.class_counts = {}
         self.class_means = {}
         
         # Cache for frequently accessed prototypes
@@ -136,7 +175,7 @@ class PrototypeComputer:
             labels: Tensor of shape (num_samples,) with class indices
             
         Returns:
-            Tuple of (prototypes, class_stds)
+            Tuple of (prototypes tensor, class_stds dict)
         """
         logger.info("Computing prototypes from pre-extracted features with vectorized operations...")
         
@@ -150,58 +189,59 @@ class PrototypeComputer:
         
         self.cache_misses += 1
         
-        features_per_class = {}
-        
+        # Handle empty input
+        if labels.numel() == 0 or features.numel() == 0:
+            logger.warning("Empty features or labels provided to compute_prototypes_from_features")
+            return torch.zeros(0, self.feature_dim, device=self.device), {}
+
         # Vectorized grouping by class
         unique_classes = torch.unique(labels)
-        
+
+        # Ensure prototype tensor can index by class index even if labels are non-contiguous
+        max_class_idx = int(unique_classes.max().item())
+        num_classes = max_class_idx + 1
+
+        # Create prototypes tensor and stats dicts
+        prototypes = torch.zeros(num_classes, self.feature_dim, device=self.device)
+        class_stds = {}
+
         for class_idx in unique_classes:
             mask = labels == class_idx
             class_features = features[mask]
-            
-            if class_features.size(0) >= 2:
+            idx = int(class_idx.item())
+
+            if class_features.size(0) >= self.config.min_samples:
                 mean = class_features.mean(dim=0)
                 std = class_features.std(dim=0)
+
+                prototypes[idx] = mean.to(self.device)
+                class_stds[idx] = std.to(self.device)
                 
-                features_per_class[class_idx.item()] = {
-                    'mean': mean,
-                    'std': std,
-                    'count': class_features.size(0)
-                }
+                # Store for later use
+                self.class_means[idx] = mean.to(self.device)
+                self.prototype_counts[idx] = class_features.size(0)
+                self.prototypes[idx] = mean.to(self.device)
             else:
-                logger.warning(f"Insufficient samples for class {class_idx.item()}")
-                features_per_class[class_idx.item()] = {
-                    'mean': torch.zeros(self.feature_dim, device=self.device),
-                    'std': torch.ones(self.feature_dim, device=self.device) * 1e-6,
-                    'count': class_features.size(0)
-                }
-        
-        # Create prototypes tensor
-        num_classes = len(features_per_class)
-        prototypes = torch.zeros(num_classes, self.feature_dim, device=self.device)
-        class_stds = {}
-        
-        for class_idx, stats in features_per_class.items():
-            prototypes[class_idx] = stats['mean']
-            class_stds[class_idx] = stats['std']
-            
-            # Store for later use
-            self.class_means[class_idx] = stats['mean']
-            self.class_counts[class_idx] = stats['count']
+                logger.warning(f"Insufficient samples ({class_features.size(0)}) for class {idx} (min: {self.config.min_samples})")
+                prototypes[idx] = torch.zeros(self.feature_dim, device=self.device)
+                class_stds[idx] = torch.ones(self.feature_dim, device=self.device) * 1e-6
+                
+                self.class_means[idx] = torch.zeros(self.feature_dim, device=self.device)
+                self.prototype_counts[idx] = class_features.size(0)
+                self.prototypes[idx] = torch.zeros(self.feature_dim, device=self.device)
         
         logger.info(f"Computed prototypes for {len(class_stds)} classes")
         
+        self.class_stds = class_stds
         result = (prototypes, class_stds)
         
         # Cache the result
         self.prototype_cache[cache_key] = result
+        
         if len(self.prototype_cache) > self.config.cache_size:
             # Remove oldest entry (simple FIFO)
             oldest_key = next(iter(self.prototype_cache))
             del self.prototype_cache[oldest_key]
-        
-        self.prototypes = prototypes
-        self.class_stds = class_stds
         
         return result
     
@@ -276,26 +316,10 @@ class PrototypeComputer:
         Returns:
             Prototype tensor
         """
-        if self.prototypes is None:
-            raise ValueError("Prototypes not computed yet")
+        if class_idx not in self.prototypes:
+            raise ValueError(f"No prototype computed for class {class_idx}")
         
-        # Check cache first
-        if class_idx in self.prototype_cache:
-            self.cache_hits += 1
-            return self.prototype_cache[class_idx]
-        
-        self.cache_misses += 1
-        prototype = self.prototypes[class_idx]
-        
-        # Cache the result
-        self.prototype_cache[class_idx] = prototype
-        
-        # Limit cache size
-        if len(self.prototype_cache) > self.config.cache_size:
-            oldest_key = next(iter(self.prototype_cache))
-            del self.prototype_cache[oldest_key]
-        
-        return prototype
+        return self.prototypes[class_idx]
     
     def get_prototype_cache_stats(self) -> Dict[str, int]:
         """
@@ -307,80 +331,252 @@ class PrototypeComputer:
         total_requests = self.cache_hits + self.cache_misses
         hit_rate = self.cache_hits / total_requests if total_requests > 0 else 0.0
         
-        return {
+        # Provide both modern and legacy key names to preserve API compatibility
+        stats = {
             'cache_hits': self.cache_hits,
             'cache_misses': self.cache_misses,
             'hit_rate': hit_rate,
-            'cache_size': len(self.prototype_cache)
+            'cache_size': len(self.prototype_cache),
+            # legacy keys expected by tests/older callers
+            'hits': self.cache_hits,
+            'misses': self.cache_misses,
         }
+
+        return stats
     
     def clear_prototype_cache(self):
         """Clear prototype cache."""
         self.prototype_cache.clear()
         self.cache_hits = 0
         self.cache_misses = 0
+    
+    def update_prototype(self, class_idx: int, new_features: torch.Tensor) -> torch.Tensor:
+        """
+        Update a prototype using moving average with new features.
+        
+        Args:
+            class_idx: Class index
+            new_features: New feature vectors of shape (num_samples, feature_dim)
+            
+        Returns:
+            Updated prototype tensor
+        """
+        if new_features.numel() == 0:
+            raise ValueError("No features provided for prototype update")
+        
+        # Compute mean of new features
+        new_mean = new_features.mean(dim=0)
+        
+        # Get current prototype (or initialize if doesn't exist)
+        if class_idx in self.prototypes:
+            old_proto = self.prototypes[class_idx]
+            old_count = self.prototype_counts.get(class_idx, 1)
+        else:
+            old_proto = torch.zeros(self.feature_dim, device=self.device)
+            old_count = 0
+        
+        # Compute moving average update
+        update_rate = self.config.update_rate
+        updated = old_proto * (1 - update_rate) + new_mean.to(self.device) * update_rate
+        
+        # Update stored prototype
+        self.prototypes[class_idx] = updated
+        self.prototype_counts[class_idx] = old_count + new_features.size(0)
+        
+        return updated
+    
+    def compute_distances(self, features: torch.Tensor, prototypes: torch.Tensor) -> torch.Tensor:
+        """
+        Compute distances from features to prototypes.
+        
+        Args:
+            features: Feature tensor of shape (num_samples, feature_dim)
+            prototypes: Prototype tensor of shape (num_classes, feature_dim)
+            
+        Returns:
+            Distance tensor of shape (num_samples, num_classes)
+        """
+        if features.numel() == 0 or prototypes.numel() == 0:
+            return torch.zeros(features.size(0), prototypes.size(0), device=self.device)
+        
+        # Use Euclidean distance via cdist
+        distances = torch.cdist(features, prototypes)
+        return distances
+    
+    def save_prototypes(self, path: str) -> None:
+        """
+        Save prototypes and related data to file.
+        
+        Args:
+            path: Path to save file
+        """
+        import os
+        os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
+        
+        state = {
+            'prototypes': self.prototypes,
+            'prototypes_dict': {k: v.cpu() if torch.is_tensor(v) else v 
+                                 for k, v in self.prototypes.items()},
+            'prototype_counts': self.prototype_counts,
+            'class_stds': {k: v.cpu() if torch.is_tensor(v) else v 
+                          for k, v in self.class_stds.items()},
+            'class_means': {k: v.cpu() if torch.is_tensor(v) else v 
+                           for k, v in self.class_means.items()},
+            'config': {
+                'feature_dim': self.config.feature_dim,
+                'device': str(self.device),
+                'use_moving_average': self.config.use_moving_average,
+                'update_rate': self.config.update_rate,
+                'min_samples': self.config.min_samples,
+            }
+        }
+        torch.save(state, path)
+        logger.info(f"Saved prototypes to {path}")
+    
+    def load_prototypes(self, path: str) -> None:
+        """
+        Load prototypes and related data from file.
+        
+        Args:
+            path: Path to load file from
+        """
+        state = torch.load(path, weights_only=False)
+        
+        # Restore prototypes - handle both dict and tensor formats
+        proto_dict = state.get('prototypes_dict', {})
+        if proto_dict:
+            self.prototypes = {k: v.to(self.device) for k, v in proto_dict.items()}
+        
+        self.prototype_counts = state.get('prototype_counts', {})
+        
+        class_stds = state.get('class_stds', {})
+        self.class_stds = {k: v.to(self.device) if torch.is_tensor(v) else v 
+                          for k, v in class_stds.items()}
+        
+        class_means = state.get('class_means', {})
+        self.class_means = {k: v.to(self.device) if torch.is_tensor(v) else v 
+                           for k, v in class_means.items()}
+        
+        logger.info(f"Loaded prototypes from {path}")
 
 
 def compute_prototypes(
-    model: torch.nn.Module,
-    data_loader: DataLoader,
-    feature_dim: int,
+    features_or_model,
+    labels_or_data_loader=None,
+    feature_dim: int = None,
     device: str = 'cuda'
 ) -> Tuple[torch.Tensor, Dict[int, torch.Tensor]]:
     """
     Compute class prototypes from training data.
+    Supports two signatures:
+    1. compute_prototypes(features, labels) - direct feature computation
+    2. compute_prototypes(model, data_loader, feature_dim, device) - legacy API
     
     Args:
-        model: Model to extract features from
-        data_loader: Data loader for training data
-        feature_dim: Feature dimension
+        features_or_model: Either feature tensor or model
+        labels_or_data_loader: Either label tensor or data_loader
+        feature_dim: Feature dimension (only used with model API)
         device: Device for computation
         
     Returns:
         Tuple of (prototypes, class_stds)
     """
-    logger.info("Computing class prototypes using PrototypeComputer...")
-    
-    # Get class mapping from data loader
-    # Try to get class_to_idx from dataset
-    if hasattr(data_loader.dataset, 'class_to_idx'):
-        class_to_idx = data_loader.dataset.class_to_idx
+    # Check if this is the new API (features, labels) or old API (model, data_loader, feature_dim)
+    if torch.is_tensor(features_or_model):
+        # New API: compute_prototypes(features, labels)
+        features = features_or_model
+        labels = labels_or_data_loader
+        
+        logger.info("Computing class prototypes from features...")
+        
+        # Create prototype computer with default feature_dim from features
+        config = PrototypeConfig(feature_dim=features.shape[1], device=device)
+        computer = PrototypeComputer(config=config)
+        
+        # Compute prototypes
+        prototypes, class_stds = computer.compute_prototypes_from_features(features, labels)
+        
+        return prototypes, class_stds
     else:
-        # Infer from labels
-        logger.warning("Dataset has no class_to_idx, inferring from labels")
-        all_labels = []
-        for _, labels in data_loader:
-            all_labels.extend(labels.cpu().numpy())
-        unique_classes = sorted(set(all_labels))
-        class_to_idx = {str(idx): idx for idx in unique_classes}
-    
-    # Create prototype computer
-    config = PrototypeConfig(feature_dim=feature_dim, device=device)
-    computer = PrototypeComputer(config=config)
-    
-    # Compute prototypes
-    prototypes, class_stds = computer.compute_prototypes(model, data_loader, class_to_idx)
-    
-    return prototypes, class_stds
+        # Old API: compute_prototypes(model, data_loader, feature_dim, device)
+        model = features_or_model
+        data_loader = labels_or_data_loader
+        
+        logger.info("Computing class prototypes using PrototypeComputer...")
+        
+        # Get class mapping from data loader
+        # Try to get class_to_idx from dataset
+        if hasattr(data_loader.dataset, 'class_to_idx'):
+            class_to_idx = data_loader.dataset.class_to_idx
+        else:
+            # Infer from labels
+            logger.warning("Dataset has no class_to_idx, inferring from labels")
+            all_labels = []
+            for _, labels in data_loader:
+                all_labels.extend(labels.cpu().numpy())
+            unique_classes = sorted(set(all_labels))
+            class_to_idx = {str(idx): idx for idx in unique_classes}
+        
+        # Create prototype computer
+        config = PrototypeConfig(feature_dim=feature_dim, device=device)
+        computer = PrototypeComputer(config=config)
+        
+        # Compute prototypes
+        prototypes, class_stds = computer.compute_prototypes(model, data_loader, class_to_idx)
+        
+        return prototypes, class_stds
 
 
 def update_prototypes_moving_average(
-    old_prototype: torch.Tensor,
-    new_sample: torch.Tensor,
-    update_rate: float = 0.1
+    old_prototypes: torch.Tensor,
+    new_features: torch.Tensor = None,
+    new_labels: torch.Tensor = None,
+    update_rate: float = 0.1,
+    new_sample: torch.Tensor = None
 ) -> torch.Tensor:
     """
-    Update prototype using moving average.
+    Update prototypes using moving average.
+    Supports two signatures:
+    1. update_prototypes_moving_average(old_proto, new_sample, update_rate) - single sample
+    2. update_prototypes_moving_average(old_prototypes, new_features, new_labels, update_rate) - batch by class
     
     Args:
-        old_prototype: Existing prototype
-        new_sample: New sample to incorporate
+        old_prototypes: Existing prototypes tensor or single prototype
+        new_features: New feature vectors (for batch mode) or single sample (for legacy mode)
+        new_labels: Labels for new features (batch mode) or None (legacy)
         update_rate: Rate of update (0-1)
+        new_sample: (legacy) new sample tensor
         
     Returns:
-        Updated prototype
+        Updated prototype(s) tensor
     """
-    return old_prototype * (1 - update_rate) + new_sample * update_rate
+    # Handle legacy single sample case: update_prototypes_moving_average(old, new, rate)
+    if new_labels is None and isinstance(update_rate, (int, float)):
+        # Legacy API: (old_proto, new_sample, update_rate)
+        # In this case, new_features is actually the new_sample
+        return old_prototypes * (1 - update_rate) + new_features * update_rate
+    
+    # Batch update by class
+    if new_labels is not None:
+        updated = old_prototypes.clone()
+        
+        # Group features by class
+        unique_classes = torch.unique(new_labels)
+        for class_idx in unique_classes:
+            mask = new_labels == class_idx
+            class_features = new_features[mask]
+            class_idx = int(class_idx.item())
+            
+            if class_features.numel() > 0 and class_idx < len(old_prototypes):
+                # Compute mean of new features for this class
+                new_mean = class_features.mean(dim=0)
+                # Update prototype using moving average
+                updated[class_idx] = old_prototypes[class_idx] * (1 - update_rate) + new_mean * update_rate
+        
+        return updated
+    
+    # Default: treat new_features as single sample (backwards compatibility)
+    return old_prototypes * (1 - update_rate) + new_features * update_rate
 
 
 def find_nearest_prototype(

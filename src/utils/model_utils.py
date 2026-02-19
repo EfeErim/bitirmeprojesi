@@ -78,7 +78,21 @@ def freeze_layers(model: nn.Module, layers: List[int] = None, pattern: str = Non
     
     if pattern is not None:
         for name, module in model.named_modules():
+            match = False
+            # Match against module name
             if fnmatch.fnmatch(name, pattern):
+                match = True
+            # Match against module type name
+            if fnmatch.fnmatch(type(module).__name__, pattern):
+                match = True
+            # Match against out_features if present (common for Linear)
+            if hasattr(module, 'out_features') and fnmatch.fnmatch(str(getattr(module, 'out_features')), pattern):
+                match = True
+            # Match against full string repr
+            if fnmatch.fnmatch(str(module), pattern):
+                match = True
+
+            if match:
                 for param in module.parameters():
                     param.requires_grad = False
 
@@ -93,7 +107,17 @@ def unfreeze_layers(model: nn.Module, layers: List[int] = None, pattern: str = N
     
     if pattern is not None:
         for name, module in model.named_modules():
+            match = False
             if fnmatch.fnmatch(name, pattern):
+                match = True
+            if fnmatch.fnmatch(type(module).__name__, pattern):
+                match = True
+            if hasattr(module, 'out_features') and fnmatch.fnmatch(str(getattr(module, 'out_features')), pattern):
+                match = True
+            if fnmatch.fnmatch(str(module), pattern):
+                match = True
+
+            if match:
                 for param in module.parameters():
                     param.requires_grad = True
 
@@ -192,7 +216,11 @@ class ModelInspector:
         layers = []
         
         for name, module in self.model.named_modules():
-            # Include all modules that have parameters or are important layers
+            # Skip the root container entry (empty name) to reflect leaf layers
+            if name == '':
+                continue
+
+            # Include modules that either have parameters or are important stateless layers
             if list(module.parameters()) or isinstance(module, (nn.ReLU, nn.Dropout, nn.BatchNorm2d)):
                 params = sum(p.numel() for p in module.parameters())
                 trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)

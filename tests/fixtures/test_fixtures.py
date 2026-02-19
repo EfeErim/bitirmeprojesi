@@ -71,6 +71,8 @@ def mock_pipeline_data():
     }
     
     return {
+        'crops': ['tomato', 'pepper', 'corn'],
+        'mock_probabilities': torch.tensor([[0.95, 0.03, 0.02]]),
         'mock_image': mock_image,
         'mock_image_batch': mock_image_batch,
         'mock_metadata': mock_metadata,

@@ -94,33 +94,37 @@ def split_dataset(image_list: List[Path], train_split: float = 0.7, val_split: f
     }
 
 
-def balance_dataset(dataset: List[Path], target_per_class: int) -> List[Path]:
-    """Balance dataset by oversampling/undersampling to target count per class."""
-    # Simple implementation: duplicate samples if needed
-    balanced = []
-    for item in dataset:
-        balanced.append(item)
-    
+def _balance_samples_to_target(dataset: List[Path], target_per_class: int) -> List[Path]:
+    """Helper: balance a single-class sample list to a target size by oversampling or truncation.
+
+    This preserves the original simple behavior but is kept as an internal helper
+    so the public `balance_dataset` can expose a stable API that supports
+    both per-class sample balancing and class-count balancing.
+    """
+    if not dataset:
+        return []
+
+    balanced = list(dataset)
+
     # If we need more samples, duplicate existing ones
     while len(balanced) < target_per_class:
         idx = random.randint(0, len(dataset) - 1)
         balanced.append(dataset[idx])
-    
+
     # If we have too many, truncate
     if len(balanced) > target_per_class:
         balanced = balanced[:target_per_class]
-    
+
     return balanced
 
 
-def augment_dataset(images: List[Path], augmentations: List[str]) -> List[Path]:
-    """Apply augmentations to a list of images."""
-    # This is a stub implementation - in reality would apply transformations
-    augmented = []
-    for img_path in images:
-        augmented.append(img_path)
-        # Could create augmented versions here
-    return augmented
+def _augment_images_simple(images: List[Path], augmentations: List[str]) -> List[Path]:
+    """Simple stub augmenter kept for compatibility/testing.
+
+    It doesn't create new files, but returns the original list so callers
+    expecting a list won't break. The fuller augmenter is implemented below.
+    """
+    return list(images)
 
 
 def create_directory_structure(base_dir: str) -> Dict[str, Path]:
@@ -260,7 +264,7 @@ def organize_images_from_archive(
         return 0
 
 
-def balance_dataset(
+def _balance_class_counts(
     class_counts: Dict[str, int],
     strategy: str = "oversample"
 ) -> Dict[str, int]:
@@ -296,7 +300,7 @@ def balance_dataset(
     return balanced
 
 
-def augment_dataset(
+def _augment_images_full(
     image_paths: List[Path],
     augmentation_factor: int = 2
 ) -> List[Path]:
@@ -349,6 +353,64 @@ def augment_dataset(
         logger.warning("PIL not available, skipping augmentation")
     
     return augmented_paths
+
+
+# Public compatibility wrappers -------------------------------------------------
+def balance_dataset(*args, **kwargs):
+    """Public wrapper that supports two call styles:
+
+    - balance_dataset(class_counts: Dict[str, int], strategy=...)
+      -> returns Dict[str, int]
+    - balance_dataset(dataset: List[Path], target_per_class: int)
+      -> returns List[Path]
+    """
+    if not args:
+        raise TypeError("balance_dataset requires at least one positional argument")
+
+    first = args[0]
+    # class_counts style
+    if isinstance(first, dict):
+        return _balance_class_counts(first, **kwargs)
+    # per-class sample list style
+    if isinstance(first, (list, tuple)):
+        # Expect second arg target_per_class
+        if len(args) < 2 and 'target_per_class' not in kwargs:
+            raise TypeError("Missing target_per_class for per-class balancing")
+        target = args[1] if len(args) >= 2 else kwargs.get('target_per_class')
+        return _balance_samples_to_target(list(first), int(target))
+
+    raise TypeError("Unsupported first argument type for balance_dataset")
+
+
+def augment_dataset(*args, **kwargs):
+    """Public wrapper that supports multiple call styles:
+
+    - augment_dataset(image_paths: List[Path], augmentation_factor=int)
+    - augment_dataset(base_dir: str|Path, augmentation_factor=int, augmentations=[...])
+    - augment_dataset(images: List[Path], augmentations=[...]) (simple stub)
+    """
+    if not args:
+        raise TypeError("augment_dataset requires at least one positional argument")
+
+    first = args[0]
+    # If first arg is a path/string, treat it as a base dir and find images
+    if isinstance(first, (str, Path)):
+        base = Path(first)
+        augmentation_factor = kwargs.get('augmentation_factor', 2)
+        # Discover images under base directory
+        image_extensions = ('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff')
+        image_paths = [p for p in base.rglob('*') if p.suffix.lower() in image_extensions]
+        return _augment_images_full(image_paths, augmentation_factor=augmentation_factor)
+
+    # If list/tuple of image paths provided
+    if isinstance(first, (list, tuple)):
+        # If augmentations list provided, call simple stub
+        if 'augmentations' in kwargs and kwargs.get('augmentations'):
+            return _augment_images_simple(list(first), kwargs.get('augmentations'))
+        augmentation_factor = kwargs.get('augmentation_factor', 2)
+        return _augment_images_full(list(first), augmentation_factor=augmentation_factor)
+
+    raise TypeError("Unsupported first argument type for augment_dataset")
 
 
 def prepare_dataset(

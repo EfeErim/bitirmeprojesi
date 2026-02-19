@@ -56,8 +56,17 @@ class MahalanobisDistance:
 
                 # Robust matrix inversion with error handling
                 try:
-                    # Check condition number before inversion
-                    cond_num = torch.cond(cov)
+                    # Compute condition number; prefer torch.linalg.cond where available
+                    try:
+                        cond_num = float(torch.linalg.cond(cov))
+                    except Exception:
+                        # Fallback estimate using norm * norm(pinv)
+                        try:
+                            inv_est = torch.linalg.pinv(cov)
+                            cond_num = float(torch.norm(cov) * torch.norm(inv_est))
+                        except Exception:
+                            cond_num = 1.0
+
                     if cond_num > 1e10:
                         logger.warning(f"Class {class_idx}: Ill-conditioned covariance (cond={cond_num:.2e}), using pseudo-inverse")
                         inv_cov = torch.linalg.pinv(cov)

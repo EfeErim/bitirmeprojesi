@@ -90,8 +90,9 @@ def test_sanitize_input():
     sanitized = sanitize_input(dangerous)
     assert '<' not in sanitized
     assert '>' not in sanitized
-    assert '<' in sanitized
-    assert '>' in sanitized
+    # Expect HTML-escaped entities for angle brackets
+    assert '&lt;' in sanitized
+    assert '&gt;' in sanitized
     assert "" in sanitized
     assert "&#x27;" in sanitized
 

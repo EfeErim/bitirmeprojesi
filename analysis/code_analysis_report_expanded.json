@@ -1,0 +1,329 @@
+{
+  "num_py_files": 110,
+  "unused_imports_detailed": [
+    {
+      "file": "setup.py",
+      "name": "find_packages",
+      "lines": [
+        6
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "colab_notebooks\\download_tomato_dataset.py",
+      "name": "google",
+      "lines": [
+        297
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "scripts\\run_coverage.py",
+      "name": "pytest_xdist",
+      "lines": [
+        55
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "scripts\\run_tests_directly.py",
+      "name": "aads_ulora_v55",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "scripts\\run_tests_without_pytest.py",
+      "name": "aads_ulora_v55",
+      "lines": [
+        51,
+        88
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_adapter_data",
+      "lines": [
+        18
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_validation_data",
+      "lines": [
+        18
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_router_data",
+      "lines": [
+        18
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_ood_data",
+      "lines": [
+        18
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        18
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "feedback_router",
+      "lines": [
+        20
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "Mock",
+      "lines": [
+        11
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "crops_router",
+      "lines": [
+        19
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "feedback_router",
+      "lines": [
+        20
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "monitoring_router",
+      "lines": [
+        21
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "Mock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "crops_router",
+      "lines": [
+        19
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "AsyncMock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "AsyncMock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "Mock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "Mock",
+      "lines": [
+        8
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        24
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        16
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        14
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "mock_open",
+      "lines": [
+        11
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "AsyncMock",
+      "lines": [
+        11
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "AsyncMock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "AsyncMock",
+      "lines": [
+        11
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "AsyncMock",
+      "lines": [
+        12
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "AsyncMock",
+      "lines": [
+        10
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        13
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "Mock",
+      "lines": [
+        7
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        15
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        14
+      ],
+      "suggestion": "remove import"
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "mock_tensor_factory",
+      "lines": [
+        16
+      ],
+      "suggestion": "remove import"
+    }
+  ],
+  "unused_defs_count": 1118,
+  "duplicate_groups_count": 39,
+  "notes": "Lines indicate import statement line numbers for suggested removal."
+}

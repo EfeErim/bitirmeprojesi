@@ -105,7 +105,10 @@ class IndependentCropAdapter:
 
     def phase1_initialize(self, train_dataset, val_dataset, config: Dict[str, Any], save_dir: Optional[str] = None):
         """Initialize Phase 1 training."""
+        # This will raise AttributeError if train_dataset is None or doesn't have classes
         _ = train_dataset.classes
+        if not train_dataset.classes:
+            raise ValueError("Training dataset must have at least one class")
         self.class_to_idx = getattr(train_dataset, 'class_to_idx', {})
         self.idx_to_class = getattr(train_dataset, 'idx_to_class', {})
         self.is_trained = True
@@ -318,7 +321,9 @@ class IndependentCropAdapter:
         meta = {
             'is_trained': bool(self.is_trained),
             'current_phase': int(self.current_phase) if self.current_phase is not None else None,
-            'class_to_idx': self.class_to_idx or {}
+            'class_to_idx': self.class_to_idx or {},
+            'classifier_input_size': int(self.hidden_size) if self.hidden_size is not None else None,
+            'classifier_output_size': len(self.idx_to_class) if self.idx_to_class is not None else None
         }
         with open(p / 'adapter_meta.json', 'w', encoding='utf-8') as f:
             json.dump(meta, f)
@@ -354,9 +359,8 @@ class IndependentCropAdapter:
         """Load adapter state."""
         p = Path(load_path)
         
-        # Load metadata
-        adapter_dir = p / 'adapter'
-        meta_path = adapter_dir / 'adapter_meta.json'
+        # Load metadata (from root, not adapter_dir)
+        meta_path = p / 'adapter_meta.json'
         if not meta_path.exists():
             raise FileNotFoundError(f"Adapter metadata not found: {meta_path}")
         with open(meta_path, 'r', encoding='utf-8') as f:
@@ -366,10 +370,50 @@ class IndependentCropAdapter:
         self.class_to_idx = meta.get('class_to_idx', {})
         self.idx_to_class = {v: k for k, v in (self.class_to_idx or {}).items()}
         
-        # Load classifier if exists (from root, not adapter_dir)
+        # Reconstruct classifier if we have the necessary info
+        input_size = meta.get('classifier_input_size')
+        output_size = meta.get('classifier_output_size')
+        if input_size is not None and output_size is not None:
+            self.classifier = nn.Linear(input_size, output_size)
+            self.hidden_size = input_size
+        else:
+            self.classifier = None
+            self.hidden_size = None
+        
+        # Load classifier state dict if exists (from root, not adapter_dir)
         classifier_path = p / 'classifier.pth'
         if classifier_path.exists() and self.classifier is not None:
             self.classifier.load_state_dict(torch.load(classifier_path, map_location=self.device))
+        
+        # Load OOD components if exist (from root, not adapter_dir)
+        ood_path = p / 'ood_components.pt'
+        if ood_path.exists():
+            ood_data = torch.load(ood_path, map_location=self.device)
+            
+            # Load prototypes
+            if 'prototypes' in ood_data:
+                self.prototypes = ood_data['prototypes']
+            
+            # Load Mahalanobis - always create MahalanobisDistance object
+            self.mahalanobis = MahalanobisDistance()
+            if 'mahalanobis' in ood_data:
+                self.mahalanobis.mean = ood_data['mahalanobis']['mean']
+                self.mahalanobis.covariance = ood_data['mahalanobis']['covariance']
+                self.mahalanobis.inv_covariance = ood_data['mahalanobis']['inv_covariance']
+            
+            # Load thresholds
+            if 'thresholds' in ood_data:
+                threshold_data = ood_data['thresholds']
+                if isinstance(threshold_data, dict) and 'method' in threshold_data:
+                    # It's a DynamicOODThreshold object saved as dict
+                    self.ood_thresholds = DynamicOODThreshold(
+                        method=threshold_data['method'],
+                        **threshold_data['params']
+                    )
+                    self.ood_thresholds.threshold = threshold_data['threshold']
+                else:
+                    # It's a simple dict {class_id: threshold}
+                    self.ood_thresholds = threshold_data
         
         # Load OOD components if exist (from root, not adapter_dir)
         ood_path = p / 'ood_components.pt'

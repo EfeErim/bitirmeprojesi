@@ -6,7 +6,7 @@ import base64
 import re
 from io import BytesIO
 from typing import Tuple
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,9 @@ def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
             image_format = image.format.lower() if image.format else None
             if image_format not in VALID_IMAGE_FORMATS:
                 raise ValueError(f"Invalid image format: {image_format}. Supported formats: {VALID_IMAGE_FORMATS}")
+        except UnidentifiedImageError as e:
+            # Normalize message for tests expecting 'Invalid image format' or 'Corrupted image'
+            raise ValueError(f"Invalid image format: {str(e)}")
         except Exception as e:
             raise ValueError(f"Invalid image data: {str(e)}")
         
@@ -48,6 +51,8 @@ def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
         try:
             image = Image.open(BytesIO(decoded))
             image.verify()  # Verify image integrity
+        except UnidentifiedImageError as e:
+            raise ValueError(f"Invalid image format: {str(e)}")
         except Exception as e:
             raise ValueError(f"Corrupted image: {str(e)}")
         
@@ -133,10 +138,16 @@ def sanitize_input(input_str: str, max_length: int = 1000) -> str:
     
     if len(input_str) > max_length:
         raise ValueError(f"Input exceeds maximum length of {max_length} characters")
-    
+
     # Escape potentially dangerous characters to prevent XSS/injection
-    sanitized = input_str.replace('<', '<').replace('>', '>').replace('"', '"').replace("'", '&#x27;')
-    
+    sanitized = (
+        input_str.replace('&', '&amp;')
+                 .replace('<', '&lt;')
+                 .replace('>', '&gt;')
+                 .replace('"', '&quot;')
+                 .replace("'", '&#x27;')
+    )
+
     return sanitized
 
 

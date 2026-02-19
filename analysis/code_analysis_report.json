@@ -1,0 +1,6412 @@
+{
+  "num_py_files": 110,
+  "unused_imports": [
+    {
+      "file": "setup.py",
+      "name": "find_packages"
+    },
+    {
+      "file": "colab_notebooks\\download_tomato_dataset.py",
+      "name": "google"
+    },
+    {
+      "file": "scripts\\run_coverage.py",
+      "name": "pytest_xdist"
+    },
+    {
+      "file": "scripts\\run_tests_directly.py",
+      "name": "aads_ulora_v55"
+    },
+    {
+      "file": "scripts\\run_tests_without_pytest.py",
+      "name": "aads_ulora_v55"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_adapter_data"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_validation_data"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_router_data"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_ood_data"
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "feedback_router"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "Mock"
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "crops_router"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "feedback_router"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "monitoring_router"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "Mock"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "crops_router"
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "Mock"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "Mock"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "mock_open"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "AsyncMock"
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "Mock"
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "mock_tensor_factory"
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "mock_tensor_factory"
+    }
+  ],
+  "unused_defs": [
+    {
+      "file": "original_main.py",
+      "name": "startup_event",
+      "lineno": 137
+    },
+    {
+      "file": "api\\main.py",
+      "name": "startup_event",
+      "lineno": 135
+    },
+    {
+      "file": "original_main.py",
+      "name": "shutdown_event",
+      "lineno": 163
+    },
+    {
+      "file": "api\\graceful_shutdown.py",
+      "name": "shutdown_event",
+      "lineno": 71
+    },
+    {
+      "file": "api\\main.py",
+      "name": "shutdown_event",
+      "lineno": 162
+    },
+    {
+      "file": "original_main.py",
+      "name": "health_check",
+      "lineno": 170
+    },
+    {
+      "file": "api\\main.py",
+      "name": "health_check",
+      "lineno": 169
+    },
+    {
+      "file": "original_main.py",
+      "name": "reload_config",
+      "lineno": 194
+    },
+    {
+      "file": "api\\main.py",
+      "name": "reload_config",
+      "lineno": 193
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "reload_config",
+      "lineno": 311
+    },
+    {
+      "file": "original_main.py",
+      "name": "configuration_error_handler",
+      "lineno": 209
+    },
+    {
+      "file": "api\\main.py",
+      "name": "configuration_error_handler",
+      "lineno": 208
+    },
+    {
+      "file": "sitecustomize.py",
+      "name": "get_current_filters",
+      "lineno": 70
+    },
+    {
+      "file": "sitecustomize.py",
+      "name": "__init__",
+      "lineno": 14
+    },
+    {
+      "file": "api\\database.py",
+      "name": "__init__",
+      "lineno": 17
+    },
+    {
+      "file": "api\\graceful_shutdown.py",
+      "name": "__init__",
+      "lineno": 15
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "__init__",
+      "lineno": 24
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "__init__",
+      "lineno": 29
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "__init__",
+      "lineno": 24
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__init__",
+      "lineno": 135
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__init__",
+      "lineno": 236
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__init__",
+      "lineno": 230
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__init__",
+      "lineno": 691
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__init__",
+      "lineno": 731
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__init__",
+      "lineno": 811
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__init__",
+      "lineno": 850
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "__init__",
+      "lineno": 175
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "__init__",
+      "lineno": 35
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "__init__",
+      "lineno": 86
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "__init__",
+      "lineno": 48
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "__init__",
+      "lineno": 54
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "__init__",
+      "lineno": 295
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "__init__",
+      "lineno": 31
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "__init__",
+      "lineno": 456
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "__init__",
+      "lineno": 482
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "__init__",
+      "lineno": 23
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "__init__",
+      "lineno": 27
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "__init__",
+      "lineno": 47
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "__init__",
+      "lineno": 52
+    },
+    {
+      "file": "src\\dataset\\preparation.py",
+      "name": "__init__",
+      "lineno": 20
+    },
+    {
+      "file": "src\\dataset\\preparation.py",
+      "name": "__init__",
+      "lineno": 40
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "__init__",
+      "lineno": 19
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "__init__",
+      "lineno": 322
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "__init__",
+      "lineno": 367
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "__init__",
+      "lineno": 416
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "__init__",
+      "lineno": 603
+    },
+    {
+      "file": "src\\middleware\\audit.py",
+      "name": "__init__",
+      "lineno": 18
+    },
+    {
+      "file": "src\\middleware\\audit.py",
+      "name": "__init__",
+      "lineno": 80
+    },
+    {
+      "file": "src\\middleware\\auth.py",
+      "name": "__init__",
+      "lineno": 14
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "__init__",
+      "lineno": 21
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "__init__",
+      "lineno": 94
+    },
+    {
+      "file": "src\\middleware\\compression.py",
+      "name": "__init__",
+      "lineno": 17
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "__init__",
+      "lineno": 18
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "__init__",
+      "lineno": 67
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 171
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 215
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 247
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 287
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 317
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 354
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__init__",
+      "lineno": 383
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "__init__",
+      "lineno": 28
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "__init__",
+      "lineno": 488
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "__init__",
+      "lineno": 688
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "__init__",
+      "lineno": 22
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "__init__",
+      "lineno": 157
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "__init__",
+      "lineno": 38
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "__init__",
+      "lineno": 28
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "__init__",
+      "lineno": 22
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "__init__",
+      "lineno": 155
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 28
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 58
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 76
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 101
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 130
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "__init__",
+      "lineno": 166
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "__init__",
+      "lineno": 57
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "__init__",
+      "lineno": 27
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "__init__",
+      "lineno": 32
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "__init__",
+      "lineno": 167
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "__init__",
+      "lineno": 140
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "__init__",
+      "lineno": 38
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "__init__",
+      "lineno": 210
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "__init__",
+      "lineno": 171
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__init__",
+      "lineno": 24
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__init__",
+      "lineno": 105
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__init__",
+      "lineno": 276
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "__init__",
+      "lineno": 144
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "__init__",
+      "lineno": 166
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "__init__",
+      "lineno": 185
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "__init__",
+      "lineno": 13
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "__init__",
+      "lineno": 158
+    },
+    {
+      "file": "sitecustomize.py",
+      "name": "add_filter",
+      "lineno": 17
+    },
+    {
+      "file": "sitecustomize.py",
+      "name": "get_filters",
+      "lineno": 31
+    },
+    {
+      "file": "api\\database.py",
+      "name": "init_database",
+      "lineno": 68
+    },
+    {
+      "file": "api\\database.py",
+      "name": "get_db",
+      "lineno": 85
+    },
+    {
+      "file": "api\\database.py",
+      "name": "initialize",
+      "lineno": 24
+    },
+    {
+      "file": "api\\database.py",
+      "name": "get_session",
+      "lineno": 51
+    },
+    {
+      "file": "api\\database.py",
+      "name": "create_tables",
+      "lineno": 57
+    },
+    {
+      "file": "api\\graceful_shutdown.py",
+      "name": "setup_shutdown_handlers",
+      "lineno": 66
+    },
+    {
+      "file": "api\\graceful_shutdown.py",
+      "name": "handle_signal",
+      "lineno": 24
+    },
+    {
+      "file": "api\\graceful_shutdown.py",
+      "name": "add_task",
+      "lineno": 61
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "run_benchmark",
+      "lineno": 28
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "_test_endpoint",
+      "lineno": 51
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "_test_batch_endpoint",
+      "lineno": 78
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "_test_caching",
+      "lineno": 105
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "_generate_report",
+      "lineno": 131
+    },
+    {
+      "file": "benchmarks\\benchmark_stage3.py",
+      "name": "print_report",
+      "lineno": 165
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "_load_router",
+      "lineno": 46
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "_load_adapters",
+      "lineno": 53
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "predict",
+      "lineno": 72
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "predict",
+      "lineno": 166
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "create_ui",
+      "lineno": 131
+    },
+    {
+      "file": "demo\\app.py",
+      "name": "launch",
+      "lineno": 182
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "collect_python_files",
+      "lineno": 35
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "check_missing_init",
+      "lineno": 44
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "parse_file",
+      "lineno": 55
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "analyze_imports",
+      "lineno": 68
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "build_reverse_graph",
+      "lineno": 106
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "find_circular_dependencies",
+      "lineno": 112
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "find_unused_imports",
+      "lineno": 131
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "detect_inconsistent_patterns",
+      "lineno": 150
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "run_analysis",
+      "lineno": 172
+    },
+    {
+      "file": "scripts\\analyze_imports.py",
+      "name": "generate_report",
+      "lineno": 219
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "test_device",
+      "lineno": 30
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "test_seed",
+      "lineno": 36
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "pytest_configure",
+      "lineno": 53
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "pytest_addoption",
+      "lineno": 67
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "pytest_collection_modifyitems",
+      "lineno": 83
+    },
+    {
+      "file": "tests\\conftest.py",
+      "name": "setup_logging",
+      "lineno": 100
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestPydanticValidation",
+      "lineno": 25
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestBatchEndpoint",
+      "lineno": 66
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestFeedbackValidation",
+      "lineno": 100
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestRateLimiting",
+      "lineno": 146
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestCaching",
+      "lineno": 167
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestCompression",
+      "lineno": 179
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestHealthEndpoints",
+      "lineno": 195
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestHealthEndpoints",
+      "lineno": 306
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestCors",
+      "lineno": 234
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "TestInputSizeLimits",
+      "lineno": 245
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_valid_diagnosis_request",
+      "lineno": 28
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_valid_diagnosis_request",
+      "lineno": 42
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_missing_image_field",
+      "lineno": 39
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_invalid_base64_image",
+      "lineno": 45
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_invalid_base64_image",
+      "lineno": 67
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_oversized_image",
+      "lineno": 51
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_oversized_image",
+      "lineno": 76
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_invalid_crop_hint",
+      "lineno": 58
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_invalid_crop_hint",
+      "lineno": 86
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_batch_request_single_image",
+      "lineno": 69
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_batch_request_multiple_images",
+      "lineno": 76
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_batch_request_too_many_images",
+      "lineno": 86
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_batch_empty_images",
+      "lineno": 93
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_empty_images",
+      "lineno": 191
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_valid_expert_label",
+      "lineno": 103
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_invalid_uuid",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_invalid_uuid",
+      "lineno": 242
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_invalid_confidence_range",
+      "lineno": 123
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_invalid_confidence_range",
+      "lineno": 252
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_batch_feedback",
+      "lineno": 133
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_rate_limit_headers",
+      "lineno": 149
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_rate_limit_headers",
+      "lineno": 358
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_rate_limit_exceeded",
+      "lineno": 159
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_cache_headers",
+      "lineno": 170
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_compression_accept_header",
+      "lineno": 182
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_health_check",
+      "lineno": 198
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_health_check",
+      "lineno": 313
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_system_info",
+      "lineno": 205
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_system_info",
+      "lineno": 321
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_health_detailed",
+      "lineno": 213
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_health_detailed",
+      "lineno": 329
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_readiness_probe",
+      "lineno": 221
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_readiness_probe",
+      "lineno": 338
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_liveness_probe",
+      "lineno": 226
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_liveness_probe",
+      "lineno": 343
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_cors_headers",
+      "lineno": 237
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_cors_headers",
+      "lineno": 383
+    },
+    {
+      "file": "tests\\stage3_optimizations.py",
+      "name": "test_large_request_body",
+      "lineno": 248
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_large_request_body",
+      "lineno": 412
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestDiagnosisEndpoint",
+      "lineno": 24
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestBatchDiagnosisEndpoint",
+      "lineno": 144
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestFeedbackEndpoint",
+      "lineno": 225
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestMiddlewareBehavior",
+      "lineno": 351
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestInputValidation",
+      "lineno": 405
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestIntegrationScenarios",
+      "lineno": 453
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestAuthenticationAndAuthorization",
+      "lineno": 555
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestPerformanceAndLoad",
+      "lineno": 591
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestMonitoringEndpoints",
+      "lineno": 641
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "TestValidationPatterns",
+      "lineno": 682
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_missing_required_fields",
+      "lineno": 56
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_optional_parameters",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_response_schema",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_malformed_json",
+      "lineno": 134
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_malformed_json",
+      "lineno": 423
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_single_image",
+      "lineno": 163
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_multiple_images",
+      "lineno": 172
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_too_many_images",
+      "lineno": 181
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_mixed_valid_invalid",
+      "lineno": 197
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_response_structure",
+      "lineno": 210
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_expert_label_submission",
+      "lineno": 232
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_negative_confidence",
+      "lineno": 262
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_feedback_submission",
+      "lineno": 272
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_feedback_with_metadata",
+      "lineno": 289
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_caching_headers",
+      "lineno": 365
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_compression_accept_encoding",
+      "lineno": 371
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_security_headers",
+      "lineno": 390
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_sql_injection_attempt",
+      "lineno": 432
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_xss_attempt",
+      "lineno": 442
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_full_diagnosis_flow",
+      "lineno": 460
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_batch_processing_flow",
+      "lineno": 490
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_health_after_requests",
+      "lineno": 507
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_concurrent_requests_simulation",
+      "lineno": 520
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_error_recovery",
+      "lineno": 540
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_without_api_key",
+      "lineno": 565
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_with_invalid_api_key",
+      "lineno": 571
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_with_valid_api_key",
+      "lineno": 580
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_response_time_acceptable",
+      "lineno": 598
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_concurrent_requests_handling",
+      "lineno": 617
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_metrics_endpoint",
+      "lineno": 648
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_metrics_content_type",
+      "lineno": 665
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_metrics_labels",
+      "lineno": 672
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_valid_crop_hints",
+      "lineno": 696
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_invalid_crop_hints",
+      "lineno": 712
+    },
+    {
+      "file": "tests\\api\\test_endpoints.py",
+      "name": "test_response_codes_handled",
+      "lineno": 723
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareIntegration",
+      "lineno": 28
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareConfiguration",
+      "lineno": 166
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareErrorHandling",
+      "lineno": 199
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewarePerformance",
+      "lineno": 255
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareSecurity",
+      "lineno": 305
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareObservability",
+      "lineno": 379
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "TestMiddlewareConfigurationEdgeCases",
+      "lineno": 432
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_rate_limit_behavior",
+      "lineno": 44
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_caching_behavior",
+      "lineno": 56
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_compression_behavior",
+      "lineno": 74
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_audit_logging",
+      "lineno": 88
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_api_key_auth",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_cors_behavior",
+      "lineno": 115
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_request_size_limit",
+      "lineno": 130
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_middleware_order",
+      "lineno": 139
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_rate_limit_configuration",
+      "lineno": 169
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_cache_configuration",
+      "lineno": 178
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_compression_configuration",
+      "lineno": 183
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_audit_configuration",
+      "lineno": 188
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_auth_configuration",
+      "lineno": 193
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_rate_limit_error_handling",
+      "lineno": 206
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_auth_error_handling",
+      "lineno": 219
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_validation_error_handling",
+      "lineno": 226
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_server_error_handling",
+      "lineno": 238
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_middleware_overhead",
+      "lineno": 262
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_concurrent_middleware_handling",
+      "lineno": 286
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_sql_injection_prevention",
+      "lineno": 312
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_xss_prevention",
+      "lineno": 325
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_path_traversal_prevention",
+      "lineno": 338
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_request_smuggling_prevention",
+      "lineno": 352
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_ssrf_prevention",
+      "lineno": 365
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_metrics_collection",
+      "lineno": 386
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_logging_integration",
+      "lineno": 409
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_tracing_headers",
+      "lineno": 416
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_disabled_middleware",
+      "lineno": 435
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_middleware_with_custom_config",
+      "lineno": 450
+    },
+    {
+      "file": "tests\\api\\test_middleware.py",
+      "name": "test_middleware_dependency_checks",
+      "lineno": 474
+    },
+    {
+      "file": "tests\\fixtures\\sample_data.py",
+      "name": "get_test_image_tensor",
+      "lineno": 122
+    },
+    {
+      "file": "tests\\fixtures\\sample_data.py",
+      "name": "create_test_config",
+      "lineno": 131
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "mock_router_data",
+      "lineno": 13
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "mock_ood_data",
+      "lineno": 87
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "mock_adapter_data",
+      "lineno": 131
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "mock_validation_data",
+      "lineno": 184
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "mock_tensor_factory",
+      "lineno": 224
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__len__",
+      "lineno": 140
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__len__",
+      "lineno": 242
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__len__",
+      "lineno": 235
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__len__",
+      "lineno": 695
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__len__",
+      "lineno": 735
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__len__",
+      "lineno": 815
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__len__",
+      "lineno": 854
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__len__",
+      "lineno": 72
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__len__",
+      "lineno": 226
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__len__",
+      "lineno": 354
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__getitem__",
+      "lineno": 143
+    },
+    {
+      "file": "tests\\fixtures\\test_fixtures.py",
+      "name": "__getitem__",
+      "lineno": 245
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__getitem__",
+      "lineno": 238
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__getitem__",
+      "lineno": 697
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__getitem__",
+      "lineno": 737
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__getitem__",
+      "lineno": 817
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "__getitem__",
+      "lineno": 856
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__getitem__",
+      "lineno": 79
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__getitem__",
+      "lineno": 229
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__getitem__",
+      "lineno": 357
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "TestConfigurationFinal",
+      "lineno": 13
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "setup_method",
+      "lineno": 16
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "setup_method",
+      "lineno": 16
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "teardown_method",
+      "lineno": 25
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "teardown_method",
+      "lineno": 25
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_complete_config",
+      "lineno": 30
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_base_config",
+      "lineno": 40
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_router_config",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_ood_config",
+      "lineno": 169
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_monitoring_config",
+      "lineno": 222
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_security_config",
+      "lineno": 297
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "_create_environment_configs",
+      "lineno": 363
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "test_complete_configuration_system",
+      "lineno": 479
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "test_configuration_access_patterns",
+      "lineno": 532
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "test_configuration_validation_errors",
+      "lineno": 550
+    },
+    {
+      "file": "tests\\integration\\test_configuration_final.py",
+      "name": "test_configuration_reload",
+      "lineno": 571
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_configuration_reload",
+      "lineno": 284
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "TestConfigurationIntegration",
+      "lineno": 13
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "_create_test_configs",
+      "lineno": 30
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_full_configuration_loading",
+      "lineno": 185
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_environment_override",
+      "lineno": 218
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_configuration_get_with_dot_notation",
+      "lineno": 233
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_configuration_validation",
+      "lineno": 251
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_configuration_used_by_pipeline",
+      "lineno": 259
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_missing_base_config_error",
+      "lineno": 298
+    },
+    {
+      "file": "tests\\integration\\test_configuration_integration.py",
+      "name": "test_invalid_json_handling",
+      "lineno": 308
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "TestFullPipeline",
+      "lineno": 20
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "TestDataFlow",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_pipeline_initialization",
+      "lineno": 23
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_router_initialization_without_data",
+      "lineno": 52
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_adapter_registration",
+      "lineno": 64
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_process_image_without_router",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_get_crop_status",
+      "lineno": 101
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_get_crop_status",
+      "lineno": 547
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_preprocess_image",
+      "lineno": 116
+    },
+    {
+      "file": "tests\\integration\\test_full_pipeline.py",
+      "name": "test_dataset_loading",
+      "lineno": 127
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterInitialization",
+      "lineno": 28
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterPhase1",
+      "lineno": 84
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterPhase2",
+      "lineno": 205
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterPhase3",
+      "lineno": 355
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterPrediction",
+      "lineno": 455
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterPersistence",
+      "lineno": 605
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterErrorHandling",
+      "lineno": 682
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterMemoryManagement",
+      "lineno": 764
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "TestIndependentCropAdapterEdgeCases",
+      "lineno": 803
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_init_basic",
+      "lineno": 31
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_init_basic",
+      "lineno": 29
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_init_device_selection",
+      "lineno": 59
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase1_initialize_success",
+      "lineno": 112
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase1_initialize_without_datasets",
+      "lineno": 177
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase1_classifier_initialization",
+      "lineno": 184
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase2_add_disease_success",
+      "lineno": 259
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase2_classifier_expansion",
+      "lineno": 314
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase2_old_classifier_weights_preserved",
+      "lineno": 330
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase3_fortify_success",
+      "lineno": 394
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase3_freeze_shared_blocks",
+      "lineno": 420
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase3_protected_retention_evaluation",
+      "lineno": 445
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_predict_with_ood_success",
+      "lineno": 477
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_predict_with_ood_detected",
+      "lineno": 508
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_predict_with_ood_not_trained",
+      "lineno": 534
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_detect_ood_basic",
+      "lineno": 544
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_detect_ood_threshold_exceeded",
+      "lineno": 562
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_detect_ood_no_components",
+      "lineno": 578
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_detect_ood_missing_threshold",
+      "lineno": 591
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_save_adapter_complete",
+      "lineno": 627
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_load_adapter_complete",
+      "lineno": 640
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_save_adapter_without_ood",
+      "lineno": 662
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase1_initialize_with_invalid_config",
+      "lineno": 685
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase2_with_insufficient_new_classes",
+      "lineno": 721
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_phase3_fortify_without_base_model",
+      "lineno": 752
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_adapter_components_cleanup_on_reinit",
+      "lineno": 767
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_large_model_handling",
+      "lineno": 794
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_single_class_dataset",
+      "lineno": 806
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+      "name": "test_empty_dataset_handling",
+      "lineno": 845
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "TestPrototypeComputer",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "TestPrototypeUtilityFunctions",
+      "lineno": 313
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_computer_initialization",
+      "lineno": 51
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_compute_prototypes_from_features",
+      "lineno": 58
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_compute_prototypes_from_features",
+      "lineno": 129
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_caching",
+      "lineno": 72
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_prototype_caching",
+      "lineno": 147
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_get_prototype_for_class",
+      "lineno": 93
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_clear_prototype_cache",
+      "lineno": 110
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_update_prototype",
+      "lineno": 126
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_accuracy",
+      "lineno": 146
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_find_nearest_prototype",
+      "lineno": 162
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_consistency",
+      "lineno": 183
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_prototype_consistency",
+      "lineno": 191
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_with_insufficient_samples",
+      "lineno": 198
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_std_computation",
+      "lineno": 213
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_moving_average_update",
+      "lineno": 229
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_normalization",
+      "lineno": 250
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_distance_computation",
+      "lineno": 265
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_save_and_load",
+      "lineno": 289
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_compute_prototypes_function",
+      "lineno": 316
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_update_prototypes_moving_average_function",
+      "lineno": 328
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_find_nearest_prototype_function",
+      "lineno": 343
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_compute_prototype_accuracy_function",
+      "lineno": 354
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_config_validation",
+      "lineno": 384
+    },
+    {
+      "file": "tests\\unit\\adapters\\test_prototypes.py",
+      "name": "test_prototype_with_different_metrics",
+      "lineno": 404
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "TestDatasetPreparer",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "TestDatasetUtils",
+      "lineno": 166
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_dataset_preparer_initialization",
+      "lineno": 48
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_prepare_dataset_creates_structure",
+      "lineno": 55
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_split_dataset_proportions",
+      "lineno": 71
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_balance_dataset",
+      "lineno": 88
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_augment_dataset",
+      "lineno": 98
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_dataset_config_validation",
+      "lineno": 121
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_prepare_dataset_function",
+      "lineno": 145
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_calculate_class_weights",
+      "lineno": 169
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_validate_image_files",
+      "lineno": 180
+    },
+    {
+      "file": "tests\\unit\\dataset\\test_dataset_preparation.py",
+      "name": "test_get_dataset_stats",
+      "lineno": 202
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestDebugMonitor",
+      "lineno": 27
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestTrainingMonitor",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestModelDebugger",
+      "lineno": 166
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestGradientTracker",
+      "lineno": 241
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestActivationTracker",
+      "lineno": 283
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "TestDebugLogger",
+      "lineno": 333
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_singleton_instance",
+      "lineno": 30
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_singleton_instance",
+      "lineno": 29
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_start_stop_monitoring",
+      "lineno": 36
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_record_metric",
+      "lineno": 44
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_get_metrics",
+      "lineno": 54
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_get_metrics",
+      "lineno": 49
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_reset_metrics",
+      "lineno": 66
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_reset_metrics",
+      "lineno": 55
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_record_epoch_metrics",
+      "lineno": 86
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_record_batch_metrics",
+      "lineno": 99
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_early_stopping_check",
+      "lineno": 111
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_learning_rate_suggestions",
+      "lineno": 135
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_get_training_summary",
+      "lineno": 148
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_check_gradients",
+      "lineno": 187
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_check_weights",
+      "lineno": 202
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_validate_forward_pass",
+      "lineno": 211
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_detect_nan_inf",
+      "lineno": 220
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_get_debug_report",
+      "lineno": 231
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_track_gradients",
+      "lineno": 244
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_gradient_flow_analysis",
+      "lineno": 267
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_reset_tracker",
+      "lineno": 276
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_reset_tracker",
+      "lineno": 326
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_track_activations",
+      "lineno": 286
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_activation_statistics",
+      "lineno": 308
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_dead_activation_detection",
+      "lineno": 318
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_logger_initialization",
+      "lineno": 336
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_log_metric",
+      "lineno": 341
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_log_message",
+      "lineno": 350
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_log_histogram",
+      "lineno": 359
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_log_model_graph",
+      "lineno": 369
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "test_export_metrics",
+      "lineno": 381
+    },
+    {
+      "file": "tests\\unit\\debugging\\test_debugging_monitoring.py",
+      "name": "forward",
+      "lineno": 180
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "forward",
+      "lineno": 25
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "forward",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "forward",
+      "lineno": 59
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "forward",
+      "lineno": 300
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "forward",
+      "lineno": 680
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "TestClassificationMetrics",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "TestSegmentationMetrics",
+      "lineno": 77
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "TestDetectionMetrics",
+      "lineno": 124
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "TestUtilityFunctions",
+      "lineno": 182
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "TestUtilityFunctions",
+      "lineno": 224
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "TestUtilityFunctions",
+      "lineno": 311
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestUtilityFunctions",
+      "lineno": 342
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_accuracy",
+      "lineno": 33
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_precision_recall_f1",
+      "lineno": 39
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_confusion_matrix",
+      "lineno": 53
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_per_class_metrics",
+      "lineno": 63
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_iou",
+      "lineno": 80
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_dice_coefficient",
+      "lineno": 92
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_mean_iou",
+      "lineno": 103
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_pixel_accuracy",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_iou_bbox",
+      "lineno": 127
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_precision_recall_at_iou",
+      "lineno": 142
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_map",
+      "lineno": 158
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_compute_accuracy",
+      "lineno": 185
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_compute_precision_recall_f1",
+      "lineno": 192
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_compute_ap",
+      "lineno": 202
+    },
+    {
+      "file": "tests\\unit\\evaluation\\test_evaluation_metrics.py",
+      "name": "test_compute_auc",
+      "lineno": 209
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "TestAuditMiddleware",
+      "lineno": 22
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "TestAuditLogger",
+      "lineno": 265
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_request_logged",
+      "lineno": 51
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_response_status_logged",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_request_body_logged",
+      "lineno": 99
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_response_body_logged",
+      "lineno": 128
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_audit_disabled",
+      "lineno": 164
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_exempt_paths_not_logged",
+      "lineno": 196
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_error_logging",
+      "lineno": 222
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_rotation",
+      "lineno": 241
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_request",
+      "lineno": 274
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_with_metadata",
+      "lineno": 295
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_json_format",
+      "lineno": 315
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_rotation_by_size",
+      "lineno": 334
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_with_user_context",
+      "lineno": 359
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_sensitive_data_filtering",
+      "lineno": 374
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_structured_format",
+      "lineno": 403
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_with_exception",
+      "lineno": 428
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_batch_operations",
+      "lineno": 444
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_with_correlation_id",
+      "lineno": 461
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_audit.py",
+      "name": "test_log_compressed_archiving",
+      "lineno": 476
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "TestAPIKeyMiddleware",
+      "lineno": 19
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_exempt_path_skips_auth",
+      "lineno": 47
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_missing_api_key_raises_exception",
+      "lineno": 63
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_invalid_api_key_raises_exception",
+      "lineno": 79
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_valid_api_key_passes",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_no_api_keys_configured_allows_all",
+      "lineno": 109
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_default_exempt_paths",
+      "lineno": 124
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_auth.py",
+      "name": "test_custom_exempt_paths",
+      "lineno": 130
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "TestCacheMiddleware",
+      "lineno": 21
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_miss_returns_fresh_response",
+      "lineno": 50
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_hit_returns_cached_response",
+      "lineno": 62
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_disabled",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_cache_disabled",
+      "lineno": 112
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_key_generation",
+      "lineno": 91
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_cache_key_generation",
+      "lineno": 154
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_different_methods_different_keys",
+      "lineno": 108
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_size_limit",
+      "lineno": 125
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_cache_size_limit",
+      "lineno": 139
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_caching.py",
+      "name": "test_cache_headers_present",
+      "lineno": 131
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "TestCompressionMiddleware",
+      "lineno": 21
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_small_response_not_compressed",
+      "lineno": 52
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_gzip_compression",
+      "lineno": 82
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_brotli_compression",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_compression_disabled",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_should_compress_decision",
+      "lineno": 125
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_compression.py",
+      "name": "test_compression_with_no_encoding_header",
+      "lineno": 139
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "TestRateLimitMiddleware",
+      "lineno": 20
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "test_initial_request_allowed",
+      "lineno": 50
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "test_rate_limit_headers_present",
+      "lineno": 64
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "test_rate_limit_exceeded_returns_429",
+      "lineno": 79
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "test_different_ips_separate_limits",
+      "lineno": 104
+    },
+    {
+      "file": "tests\\unit\\middleware\\test_rate_limit.py",
+      "name": "test_rate_limit_disabled",
+      "lineno": 129
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestMetricsCollector",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestRequestMetrics",
+      "lineno": 65
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestLatencyMetrics",
+      "lineno": 98
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestErrorMetrics",
+      "lineno": 135
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestCacheMetrics",
+      "lineno": 174
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestOODMetrics",
+      "lineno": 211
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestGPUMetrics",
+      "lineno": 250
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "TestMemoryMetrics",
+      "lineno": 293
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_request",
+      "lineno": 36
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_and_get_metrics",
+      "lineno": 68
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_requests_by_endpoint",
+      "lineno": 77
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_requests_by_status",
+      "lineno": 87
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_latency",
+      "lineno": 101
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_average_latency",
+      "lineno": 111
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_p99_latency",
+      "lineno": 123
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_error",
+      "lineno": 138
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_error_rate",
+      "lineno": 149
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_errors_by_type",
+      "lineno": 163
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_cache_hit",
+      "lineno": 177
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_cache_miss",
+      "lineno": 183
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_hit_rate",
+      "lineno": 189
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_cache_size",
+      "lineno": 201
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_ood_detection",
+      "lineno": 214
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_ood_rate",
+      "lineno": 225
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_threshold_tracking",
+      "lineno": 239
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_gpu_utilization",
+      "lineno": 253
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_gpu_memory_usage",
+      "lineno": 265
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_average_gpu_utilization",
+      "lineno": 278
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_record_memory_usage",
+      "lineno": 296
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_memory_percentage",
+      "lineno": 308
+    },
+    {
+      "file": "tests\\unit\\monitoring\\test_monitoring_metrics.py",
+      "name": "test_swap_usage",
+      "lineno": 321
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "compute_distance",
+      "lineno": 38
+    },
+    {
+      "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+      "name": "compute_distance",
+      "lineno": 89
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "compute_distance",
+      "lineno": 470
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "compute_distance",
+      "lineno": 691
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "compute_distance",
+      "lineno": 83
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdInitialization",
+      "lineno": 14
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdConfidenceIntervals",
+      "lineno": 71
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdInsufficientSamples",
+      "lineno": 136
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdComputeThresholds",
+      "lineno": 192
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdValidation",
+      "lineno": 316
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdStatistics",
+      "lineno": 386
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestAdaptiveThresholdManager",
+      "lineno": 454
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestCalibrateThresholdsUsingValidation",
+      "lineno": 541
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "TestDynamicOODThresholdEdgeCases",
+      "lineno": 697
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_init_default_parameters",
+      "lineno": 17
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_init_custom_parameters",
+      "lineno": 32
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_configuration_validation_warnings",
+      "lineno": 52
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_confidence_interval_normal",
+      "lineno": 74
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_confidence_interval_t_distribution",
+      "lineno": 97
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_confidence_interval_single_sample",
+      "lineno": 113
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_confidence_interval_two_samples",
+      "lineno": 124
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_handle_insufficient_samples_zero",
+      "lineno": 139
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_handle_insufficient_samples_few",
+      "lineno": 147
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_handle_insufficient_samples_moderate",
+      "lineno": 159
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_handle_insufficient_samples_borderline",
+      "lineno": 171
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_handle_insufficient_samples_bounds",
+      "lineno": 179
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_thresholds_with_sufficient_samples",
+      "lineno": 231
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_thresholds_with_insufficient_samples",
+      "lineno": 267
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_compute_thresholds_confidence_interval_usage",
+      "lineno": 288
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_validate_thresholds_basic",
+      "lineno": 319
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_validate_thresholds_with_ood_detection",
+      "lineno": 346
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_get_threshold_statistics_empty",
+      "lineno": 389
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_get_threshold_statistics_with_data",
+      "lineno": 402
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_get_class_stats",
+      "lineno": 417
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_get_all_class_stats",
+      "lineno": 438
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_manager_initialization",
+      "lineno": 469
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_update_thresholds_new_class",
+      "lineno": 479
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_update_thresholds_adaptation",
+      "lineno": 490
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_update_thresholds_bounds",
+      "lineno": 507
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_threshold_history_tracking",
+      "lineno": 519
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_get_threshold_for_class_missing",
+      "lineno": 535
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_calibrate_thresholds_basic",
+      "lineno": 598
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_calibrate_thresholds_target_fpr",
+      "lineno": 617
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_calibrate_thresholds_insufficient_samples",
+      "lineno": 664
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_threshold_computation_empty_distances",
+      "lineno": 700
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_threshold_factor_impact",
+      "lineno": 709
+    },
+    {
+      "file": "tests\\unit\\ood\\test_ood_comprehensive.py",
+      "name": "test_confidence_level_impact",
+      "lineno": 722
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineInitialization",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineCache",
+      "lineno": 63
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineErrorHandling",
+      "lineno": 189
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineBatchProcessing",
+      "lineno": 276
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineOODHandling",
+      "lineno": 393
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineRegistration",
+      "lineno": 456
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineStatus",
+      "lineno": 521
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineThreadSafety",
+      "lineno": 579
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "TestIndependentMultiCropPipelineTTL",
+      "lineno": 666
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_init_custom_cache_settings",
+      "lineno": 42
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_init_empty_crops",
+      "lineno": 55
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_cache_hit_and_miss",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_clear_cache",
+      "lineno": 171
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_adapter_error_handling",
+      "lineno": 210
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_missing_adapter_error",
+      "lineno": 222
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_router_not_initialized_error",
+      "lineno": 240
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_router_confidence_rejection",
+      "lineno": 252
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_batch_process_success",
+      "lineno": 308
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_batch_process_with_metadata",
+      "lineno": 319
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_batch_process_empty_list",
+      "lineno": 334
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_batch_process_router_error",
+      "lineno": 341
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_batch_process_mixed_success_and_failure",
+      "lineno": 354
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_ood_detection_triggers_handler",
+      "lineno": 424
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_handle_ood_detection",
+      "lineno": 435
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_register_valid_crop",
+      "lineno": 467
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_register_invalid_crop",
+      "lineno": 482
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_register_load_failure",
+      "lineno": 491
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_register_clears_cache",
+      "lineno": 505
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_get_cache_stats",
+      "lineno": 561
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_concurrent_cache_access",
+      "lineno": 603
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_concurrent_batch_processing",
+      "lineno": 632
+    },
+    {
+      "file": "tests\\unit\\pipeline\\test_pipeline_comprehensive.py",
+      "name": "test_cache_ttl_expiration",
+      "lineno": 694
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "TestAPIKeyValidator",
+      "lineno": 25
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "TestPasswordHasher",
+      "lineno": 58
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "TestTokenManager",
+      "lineno": 102
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "TestInputValidator",
+      "lineno": 163
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "TestSecurityHeaders",
+      "lineno": 223
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_valid_api_key",
+      "lineno": 32
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_invalid_api_key",
+      "lineno": 37
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_no_api_keys_configured",
+      "lineno": 42
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_empty_api_key",
+      "lineno": 52
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_hash_password",
+      "lineno": 61
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_verify_password",
+      "lineno": 74
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_different_passwords_different_hashes",
+      "lineno": 83
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_same_password_different_hashes",
+      "lineno": 91
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_generate_token",
+      "lineno": 105
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_token",
+      "lineno": 114
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_invalid_token",
+      "lineno": 123
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_token_expiration",
+      "lineno": 130
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_refresh_token",
+      "lineno": 150
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_sanitize_string",
+      "lineno": 166
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_email",
+      "lineno": 175
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_url",
+      "lineno": 183
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_uuid",
+      "lineno": 191
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_file_size",
+      "lineno": 201
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_validate_image_dimensions",
+      "lineno": 211
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_hsts_header",
+      "lineno": 226
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_csp_header",
+      "lineno": 233
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_x_frame_options",
+      "lineno": 240
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_x_content_type_options",
+      "lineno": 247
+    },
+    {
+      "file": "tests\\unit\\security\\test_security.py",
+      "name": "test_custom_headers",
+      "lineno": 254
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "TestSDLoRATrainer",
+      "lineno": 26
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "TestSDLoRAConfig",
+      "lineno": 189
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_trainer_initialization",
+      "lineno": 58
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_trainer_initialization",
+      "lineno": 64
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_prepare_lora_layers",
+      "lineno": 65
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_compute_sd_loss",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_training_step",
+      "lineno": 90
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_validation_step",
+      "lineno": 104
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_validation_step",
+      "lineno": 137
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_save_and_load_checkpoint",
+      "lineno": 116
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_save_and_load_checkpoint",
+      "lineno": 167
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_lora_parameter_count",
+      "lineno": 138
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_gradient_flow",
+      "lineno": 156
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_lr_scheduler",
+      "lineno": 173
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_default_config",
+      "lineno": 192
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_default_config",
+      "lineno": 263
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_custom_config",
+      "lineno": 200
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_custom_config",
+      "lineno": 273
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_config_validation",
+      "lineno": 213
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_config_validation",
+      "lineno": 290
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_load_pretrained_sd",
+      "lineno": 227
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_prepare_lora_layers_function",
+      "lineno": 234
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_compute_sd_loss_function",
+      "lineno": 242
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "test_train_sd_lora_function",
+      "lineno": 252
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase2_sd_lora.py",
+      "name": "__call__",
+      "lineno": 53
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "TestCoNeCTrainer",
+      "lineno": 28
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "TestCoNeCConfig",
+      "lineno": 260
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_prepare_conec_adapter",
+      "lineno": 72
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_compute_conec_loss",
+      "lineno": 82
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_compute_prototype_contrastive_loss",
+      "lineno": 94
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_compute_orthogonal_loss",
+      "lineno": 109
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_training_step_with_conec",
+      "lineno": 123
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_prototype_update",
+      "lineno": 149
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_gradient_flow_through_conec",
+      "lineno": 213
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_lr_scheduler_step",
+      "lineno": 230
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_orthogonal_constraint",
+      "lineno": 242
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_load_base_model_function",
+      "lineno": 314
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_apply_conec_adapter_function",
+      "lineno": 320
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_compute_conec_loss_function",
+      "lineno": 325
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_train_conec_lora_function",
+      "lineno": 336
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_prototype_initialization",
+      "lineno": 341
+    },
+    {
+      "file": "tests\\unit\\training\\test_phase3_conec_lora.py",
+      "name": "test_prototype_update_strategy",
+      "lineno": 352
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestGradientAccumulation",
+      "lineno": 20
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestFeatureExtractionConsistency",
+      "lineno": 49
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestCacheKeyGeneration",
+      "lineno": 71
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestMahalanobisMath",
+      "lineno": 105
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestImageValidation",
+      "lineno": 147
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestLRUCache",
+      "lineno": 181
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestClassifierWeightPreservation",
+      "lineno": 212
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestEmptyParameterGroupHandling",
+      "lineno": 247
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestDynamicThresholdsFallback",
+      "lineno": 268
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestDatabaseSessionSafety",
+      "lineno": 290
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "TestDeviceValidation",
+      "lineno": 325
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_gradient_accumulation_with_zero_grad_after_step",
+      "lineno": 23
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_gradient_accumulation_final_step_handling",
+      "lineno": 36
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_uses_extract_features_in_train_epoch",
+      "lineno": 52
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_uses_extract_features_in_validate",
+      "lineno": 61
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_cache_key_uses_tensor_hash",
+      "lineno": 74
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_cache_key_includes_shape",
+      "lineno": 91
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_compute_distance_returns_correct_shape",
+      "lineno": 108
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_compute_distance_non_negative",
+      "lineno": 124
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_compute_distance_uses_correct_formula",
+      "lineno": 136
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_grayscale_image_converted",
+      "lineno": 150
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_bgr_image_converted",
+      "lineno": 156
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_rgba_image_converted",
+      "lineno": 162
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_invalid_channels_raises",
+      "lineno": 168
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_pil_image_processed",
+      "lineno": 174
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_cache_respects_capacity",
+      "lineno": 184
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_lru_eviction_order",
+      "lineno": 193
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_cache_get_returns_none_for_missing",
+      "lineno": 206
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_old_weights_preserved_after_classifier_expansion",
+      "lineno": 215
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_optimizer_param_groups_filtered",
+      "lineno": 250
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_fallback_for_insufficient_samples",
+      "lineno": 271
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_session_close_error_handled",
+      "lineno": 293
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "test_mahalanobis_validates_cuda_request",
+      "lineno": 328
+    },
+    {
+      "file": "tests\\unit\\utils\\test_bug_fixes_simple.py",
+      "name": "close",
+      "lineno": 306
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "TestModelLoader",
+      "lineno": 29
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "TestModelSaver",
+      "lineno": 69
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "TestModelInspector",
+      "lineno": 123
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "TestLayerFreezing",
+      "lineno": 211
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "TestCheckpointFunctions",
+      "lineno": 269
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_load_pretrained_model",
+      "lineno": 32
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_load_checkpoint",
+      "lineno": 43
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_load_with_mapping",
+      "lineno": 62
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_save_model",
+      "lineno": 82
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_save_checkpoint",
+      "lineno": 90
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_save_with_compression",
+      "lineno": 110
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_count_parameters",
+      "lineno": 126
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_count_parameters_frozen",
+      "lineno": 137
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_get_model_size",
+      "lineno": 152
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_get_model_summary",
+      "lineno": 162
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_find_dead_neurons",
+      "lineno": 180
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_check_gradient_flow",
+      "lineno": 194
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_freeze_layers",
+      "lineno": 214
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_unfreeze_layers",
+      "lineno": 231
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_freeze_by_pattern",
+      "lineno": 249
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_save_checkpoint_function",
+      "lineno": 272
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_load_checkpoint_function",
+      "lineno": 289
+    },
+    {
+      "file": "tests\\unit\\utils\\test_model_utils.py",
+      "name": "test_checkpoint_with_metadata",
+      "lineno": 318
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "TestBatchProcessing",
+      "lineno": 21
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "TestCachingMechanism",
+      "lineno": 53
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "TestOpenCVIntegration",
+      "lineno": 90
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "TestPrototypeOptimization",
+      "lineno": 114
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_route_batch_exists",
+      "lineno": 24
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_route_batch_returns_correct_shape",
+      "lineno": 34
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_pipeline_has_cache_attributes",
+      "lineno": 56
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_pipeline_has_cache_methods",
+      "lineno": 65
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_lru_cache_functionality",
+      "lineno": 71
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_cache_eviction",
+      "lineno": 80
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_opencv_import_available",
+      "lineno": 93
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_data_loader_uses_opencv",
+      "lineno": 100
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_prototype_computer_exists",
+      "lineno": 117
+    },
+    {
+      "file": "tests\\unit\\utils\\test_optimizations.py",
+      "name": "test_prototype_methods_exist",
+      "lineno": 122
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "TestSchemas",
+      "lineno": 15
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_router_schema_structure",
+      "lineno": 18
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_ood_schema_structure",
+      "lineno": 27
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_monitoring_schema_structure",
+      "lineno": 36
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_security_schema_structure",
+      "lineno": 45
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_schema_registration",
+      "lineno": 54
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_valid_router_config",
+      "lineno": 71
+    },
+    {
+      "file": "tests\\unit\\validation\\test_schemas.py",
+      "name": "test_invalid_router_config",
+      "lineno": 95
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestPlotGenerator",
+      "lineno": 30
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestConfusionMatrixPlotter",
+      "lineno": 78
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestROCPlotter",
+      "lineno": 110
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestPrecisionRecallPlotter",
+      "lineno": 156
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestTrainingCurvePlotter",
+      "lineno": 185
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestAttentionVisualizer",
+      "lineno": 233
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "TestGradCAMVisualizer",
+      "lineno": 279
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_initialization",
+      "lineno": 38
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_set_style",
+      "lineno": 44
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_create_figure",
+      "lineno": 49
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_save_plot",
+      "lineno": 55
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_save_plot_without_extension",
+      "lineno": 66
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_confusion_matrix",
+      "lineno": 91
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_roc_curve",
+      "lineno": 118
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_multiclass_roc",
+      "lineno": 131
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_roc_auc_display",
+      "lineno": 147
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_pr_curve",
+      "lineno": 164
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "plot_average_precision",
+      "lineno": 176
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_loss_curves",
+      "lineno": 193
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_accuracy_curves",
+      "lineno": 209
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_metrics_comparison",
+      "lineno": 221
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_attention_heatmap",
+      "lineno": 241
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_multihead_attention",
+      "lineno": 258
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_attention_rollout",
+      "lineno": 270
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_generate_gradcam",
+      "lineno": 287
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_overlay_heatmap",
+      "lineno": 318
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_plot_gradcam_comparison",
+      "lineno": 329
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_save_plot_function",
+      "lineno": 345
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_set_plot_style_function",
+      "lineno": 357
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_color_palette",
+      "lineno": 363
+    },
+    {
+      "file": "tests\\unit\\visualization\\test_visualization.py",
+      "name": "test_colormap_generation",
+      "lineno": 370
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_extract_features",
+      "lineno": 60
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "_extract_features",
+      "lineno": 475
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_train_epoch",
+      "lineno": 69
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_validate",
+      "lineno": 84
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_create_loraplus_optimizer",
+      "lineno": 100
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "_create_loraplus_optimizer",
+      "lineno": 119
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "phase1_initialize",
+      "lineno": 106
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "phase2_add_disease",
+      "lineno": 121
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "phase3_fortify",
+      "lineno": 145
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_freeze_shared_blocks",
+      "lineno": 152
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "_freeze_shared_blocks",
+      "lineno": 271
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_evaluate_protected_retention",
+      "lineno": 162
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "detect_ood",
+      "lineno": 177
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "compute_ood_scores",
+      "lineno": 187
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_detect_ood",
+      "lineno": 194
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "predict_with_ood",
+      "lineno": 228
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "update_prototypes",
+      "lineno": 285
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_compute_prototypes",
+      "lineno": 291
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_compute_mahalanobis",
+      "lineno": 297
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_setup_ood_thresholds",
+      "lineno": 302
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "_validate_new_classes",
+      "lineno": 307
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "save_adapter",
+      "lineno": 311
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "save_adapter",
+      "lineno": 439
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "save_adapter",
+      "lineno": 459
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "save_adapter",
+      "lineno": 389
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "load_adapter",
+      "lineno": 358
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "load_adapter",
+      "lineno": 455
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "load_adapter",
+      "lineno": 485
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "save",
+      "lineno": 448
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "fit",
+      "lineno": 463
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "fit",
+      "lineno": 488
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "get_threshold",
+      "lineno": 508
+    },
+    {
+      "file": "src\\adapter\\independent_crop_adapter.py",
+      "name": "compute_thresholds",
+      "lineno": 512
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "compute_thresholds",
+      "lineno": 94
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "register_schema",
+      "lineno": 28
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "validate",
+      "lineno": 42
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "validate",
+      "lineno": 66
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "validate",
+      "lineno": 248
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "validate",
+      "lineno": 48
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "validate",
+      "lineno": 338
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "validate",
+      "lineno": 75
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "validate",
+      "lineno": 334
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "_apply_defaults",
+      "lineno": 89
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "_check_extra_fields",
+      "lineno": 100
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "load_and_validate_file",
+      "lineno": 115
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "create_schema",
+      "lineno": 135
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "create_property_schema",
+      "lineno": 154
+    },
+    {
+      "file": "src\\core\\configuration_validator.py",
+      "name": "add_validation_rule",
+      "lineno": 176
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "_register_schemas_once",
+      "lineno": 38
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "_register_schemas",
+      "lineno": 57
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "load_base_config",
+      "lineno": 117
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "load_config_file",
+      "lineno": 129
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "load_all_configs",
+      "lineno": 176
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "_apply_env_overrides",
+      "lineno": 227
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "_deep_merge_dicts",
+      "lineno": 256
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "validate_merged_config",
+      "lineno": 292
+    },
+    {
+      "file": "src\\core\\config_manager.py",
+      "name": "get_environment_config",
+      "lineno": 319
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_load_models",
+      "lineno": 70
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_save_models",
+      "lineno": 87
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "register_model",
+      "lineno": 104
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "get_model",
+      "lineno": 146
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_find_model",
+      "lineno": 174
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_load_model_from_disk",
+      "lineno": 193
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_add_to_cache",
+      "lineno": 206
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_evict_cache",
+      "lineno": 220
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_evict_cache",
+      "lineno": 569
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_calculate_checksum",
+      "lineno": 235
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "list_models",
+      "lineno": 245
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "get_model_versions",
+      "lineno": 255
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "get_latest_version",
+      "lineno": 263
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "remove_model",
+      "lineno": 276
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_start_cache_cleanup",
+      "lineno": 294
+    },
+    {
+      "file": "src\\core\\model_registry.py",
+      "name": "_cleanup_cache",
+      "lineno": 303
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "create_pipeline",
+      "lineno": 58
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "start_pipeline",
+      "lineno": 84
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "_execute_pipeline",
+      "lineno": 110
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "cancel_pipeline",
+      "lineno": 162
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "get_pipeline_status",
+      "lineno": 187
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "get_pipeline_result",
+      "lineno": 195
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "list_pipelines",
+      "lineno": 203
+    },
+    {
+      "file": "src\\core\\pipeline_manager.py",
+      "name": "cleanup_pipelines",
+      "lineno": 213
+    },
+    {
+      "file": "src\\core\\validation.py",
+      "name": "validate_location_data",
+      "lineno": 143
+    },
+    {
+      "file": "src\\core\\validation.py",
+      "name": "validate_crop_hint",
+      "lineno": 184
+    },
+    {
+      "file": "src\\core\\validation.py",
+      "name": "validate_metadata",
+      "lineno": 207
+    },
+    {
+      "file": "src\\core\\validation.py",
+      "name": "validate_batch_images",
+      "lineno": 249
+    },
+    {
+      "file": "src\\dataset\\preparation.py",
+      "name": "process_excel_metadata",
+      "lineno": 193
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "Debugger",
+      "lineno": 207
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "_setup_logging",
+      "lineno": 39
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "track_metrics",
+      "lineno": 61
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "track_metrics",
+      "lineno": 152
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "_check_early_stopping",
+      "lineno": 83
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "record_epoch",
+      "lineno": 95
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "record_batch",
+      "lineno": 115
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "monitor_gradients",
+      "lineno": 131
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "trigger_alert",
+      "lineno": 157
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "_send_email_alert",
+      "lineno": 166
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "log_hardware_stats",
+      "lineno": 191
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "start_epoch",
+      "lineno": 197
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "end_epoch",
+      "lineno": 202
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "__new__",
+      "lineno": 217
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "__new__",
+      "lineno": 73
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "_initialize",
+      "lineno": 223
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "stop",
+      "lineno": 232
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "record_metric",
+      "lineno": 236
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "get_metrics",
+      "lineno": 240
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "get_metrics",
+      "lineno": 128
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "get_metrics",
+      "lineno": 191
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "get_metrics",
+      "lineno": 574
+    },
+    {
+      "file": "api\\endpoints\\monitoring.py",
+      "name": "get_metrics",
+      "lineno": 18
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "reset_metrics",
+      "lineno": 244
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "reset_metrics",
+      "lineno": 585
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "check_gradients",
+      "lineno": 253
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "check_weights",
+      "lineno": 270
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "validate_forward_pass",
+      "lineno": 287
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "detect_nan_inf",
+      "lineno": 297
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "get_debug_report",
+      "lineno": 309
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "track_gradients",
+      "lineno": 326
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "gradient_flow_analysis",
+      "lineno": 340
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "reset_tracker",
+      "lineno": 356
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "reset_tracker",
+      "lineno": 405
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "track_activations",
+      "lineno": 371
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "activation_statistics",
+      "lineno": 385
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "dead_activation_detection",
+      "lineno": 397
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "log_metric",
+      "lineno": 427
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "log_message",
+      "lineno": 434
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "log_histogram",
+      "lineno": 438
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "log_model_graph",
+      "lineno": 445
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "export_metrics",
+      "lineno": 454
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "visualize_activations",
+      "lineno": 461
+    },
+    {
+      "file": "src\\debugging\\monitoring.py",
+      "name": "gradient_analysis",
+      "lineno": 487
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "compute_ood_metrics",
+      "lineno": 303
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "compute_dynamic_threshold_quality",
+      "lineno": 363
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "compute_roc_curve_data",
+      "lineno": 434
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "compute_multi_crop_metrics",
+      "lineno": 451
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "evaluate_phase1",
+      "lineno": 482
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "evaluate_phase2",
+      "lineno": 519
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "evaluate_phase3",
+      "lineno": 564
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "MetricsTracker",
+      "lineno": 598
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "precision_recall_f1",
+      "lineno": 29
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "per_class_metrics",
+      "lineno": 49
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "dice_coefficient",
+      "lineno": 90
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "mean_iou",
+      "lineno": 96
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "pixel_accuracy",
+      "lineno": 100
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "iou_bbox",
+      "lineno": 108
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "precision_recall_at_iou",
+      "lineno": 123
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "map",
+      "lineno": 153
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "update",
+      "lineno": 609
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "get_best_epoch",
+      "lineno": 619
+    },
+    {
+      "file": "src\\evaluation\\metrics.py",
+      "name": "get_best_value",
+      "lineno": 634
+    },
+    {
+      "file": "src\\middleware\\audit.py",
+      "name": "log_request",
+      "lineno": 34
+    },
+    {
+      "file": "src\\middleware\\audit.py",
+      "name": "dispatch",
+      "lineno": 85
+    },
+    {
+      "file": "src\\middleware\\auth.py",
+      "name": "dispatch",
+      "lineno": 29
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "dispatch",
+      "lineno": 108
+    },
+    {
+      "file": "src\\middleware\\compression.py",
+      "name": "dispatch",
+      "lineno": 29
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "dispatch",
+      "lineno": 79
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "dispatch",
+      "lineno": 32
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "connect",
+      "lineno": 28
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "get",
+      "lineno": 46
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "get",
+      "lineno": 30
+    },
+    {
+      "file": "src\\middleware\\caching.py",
+      "name": "generate_key",
+      "lineno": 79
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "is_allowed",
+      "lineno": 24
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "cleanup_old_entries",
+      "lineno": 50
+    },
+    {
+      "file": "src\\middleware\\rate_limit.py",
+      "name": "_get_client_id",
+      "lineno": 109
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "add",
+      "lineno": 24
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "avg_time",
+      "lineno": 35
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "p95_time",
+      "lineno": 40
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "to_dict",
+      "lineno": 49
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "start_request",
+      "lineno": 84
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "end_request",
+      "lineno": 89
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_request",
+      "lineno": 103
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_request",
+      "lineno": 176
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_request",
+      "lineno": 261
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "reset",
+      "lineno": 112
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "_normalize_endpoint",
+      "lineno": 121
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "requests_by_endpoint",
+      "lineno": 195
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "requests_by_status",
+      "lineno": 203
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_latency",
+      "lineno": 218
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "average_latency",
+      "lineno": 223
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "p99_latency",
+      "lineno": 236
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_error",
+      "lineno": 251
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "error_rate",
+      "lineno": 266
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "errors_by_type",
+      "lineno": 275
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_hit",
+      "lineno": 292
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_miss",
+      "lineno": 296
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "set_cache_size",
+      "lineno": 309
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_ood_detection",
+      "lineno": 321
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_threshold",
+      "lineno": 329
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "ood_rate",
+      "lineno": 333
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "threshold_tracking",
+      "lineno": 340
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_gpu_utilization",
+      "lineno": 359
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "gpu_memory_usage",
+      "lineno": 365
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "average_gpu_utilization",
+      "lineno": 373
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "record_memory_usage",
+      "lineno": 389
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "memory_percentage",
+      "lineno": 396
+    },
+    {
+      "file": "src\\monitoring\\metrics.py",
+      "name": "swap_usage",
+      "lineno": 400
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "_validate_configuration",
+      "lineno": 66
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "_compute_confidence_interval",
+      "lineno": 208
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "_handle_insufficient_samples",
+      "lineno": 247
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "compute_thresholds_from_distances",
+      "lineno": 301
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "validate_thresholds",
+      "lineno": 346
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_threshold_statistics",
+      "lineno": 444
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_class_stats",
+      "lineno": 475
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_all_class_stats",
+      "lineno": 479
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "update_thresholds",
+      "lineno": 516
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_threshold_for_class",
+      "lineno": 568
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_threshold_history",
+      "lineno": 572
+    },
+    {
+      "file": "src\\ood\\dynamic_thresholds.py",
+      "name": "get_update_count",
+      "lineno": 576
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "MahalanobisDistanceBatch",
+      "lineno": 152
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "_compute_inv_covariances",
+      "lineno": 41
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "_compute_inv_covariances",
+      "lineno": 172
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "compute_all_distances",
+      "lineno": 113
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "get_nearest_class",
+      "lineno": 133
+    },
+    {
+      "file": "src\\ood\\mahalanobis.py",
+      "name": "compute_batch_distances",
+      "lineno": 209
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "compute_prototypes_from_features",
+      "lineno": 125
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "_generate_cache_key",
+      "lineno": 208
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_generate_cache_key",
+      "lineno": 64
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "get_prototype_quality",
+      "lineno": 215
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "get_prototype_for_class",
+      "lineno": 266
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "get_prototype_cache_stats",
+      "lineno": 300
+    },
+    {
+      "file": "src\\ood\\prototypes.py",
+      "name": "clear_prototype_cache",
+      "lineno": 317
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_clear_caches",
+      "lineno": 123
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "clear_cache",
+      "lineno": 132
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "initialize_router",
+      "lineno": 135
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "initialize_adapters",
+      "lineno": 171
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "process_image",
+      "lineno": 200
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "process_image",
+      "lineno": 56
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "batch_process",
+      "lineno": 298
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_route_image",
+      "lineno": 360
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_process_with_adapter",
+      "lineno": 414
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_handle_unknown_crop",
+      "lineno": 466
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_perform_ood_detection",
+      "lineno": 482
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "_handle_ood_detection",
+      "lineno": 493
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "register_crop",
+      "lineno": 512
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "get_crop_status",
+      "lineno": 538
+    },
+    {
+      "file": "src\\pipeline\\independent_multi_crop_pipeline.py",
+      "name": "get_cache_stats",
+      "lineno": 556
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "get_cache_stats",
+      "lineno": 261
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "get_cache_stats",
+      "lineno": 388
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "load_models",
+      "lineno": 44
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "analyze_image",
+      "lineno": 75
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "analyze_image",
+      "lineno": 194
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "route_batch",
+      "lineno": 114
+    },
+    {
+      "file": "src\\router\\vlm_pipeline.py",
+      "name": "quick_assessment",
+      "lineno": 172
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "setup_security_middleware",
+      "lineno": 189
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "_hash_key",
+      "lineno": 62
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "hash_password",
+      "lineno": 80
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "verify_password",
+      "lineno": 87
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "create_token",
+      "lineno": 106
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "verify_token",
+      "lineno": 117
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "validate_email",
+      "lineno": 144
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "validate_json",
+      "lineno": 154
+    },
+    {
+      "file": "src\\security\\security.py",
+      "name": "add_headers",
+      "lineno": 178
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "create_scheduler",
+      "lineno": 161
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "train_epoch",
+      "lineno": 171
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "train_epoch",
+      "lineno": 261
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "train_epoch",
+      "lineno": 55
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "train_epoch",
+      "lineno": 278
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "from_pretrained",
+      "lineno": 15
+    },
+    {
+      "file": "src\\training\\phase1_training.py",
+      "name": "from_pretrained",
+      "lineno": 20
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "from_pretrained",
+      "lineno": 128
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "from_pretrained",
+      "lineno": 133
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "from_pretrained",
+      "lineno": 184
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "from_pretrained",
+      "lineno": 189
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "__post_init__",
+      "lineno": 24
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "__post_init__",
+      "lineno": 30
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "setup_optimizer",
+      "lineno": 41
+    },
+    {
+      "file": "src\\training\\phase3_conec_lora.py",
+      "name": "setup_optimizer",
+      "lineno": 48
+    },
+    {
+      "file": "src\\training\\phase2_sd_lora.py",
+      "name": "_initialize_new_classifier",
+      "lineno": 237
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "put",
+      "lineno": 49
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "clear",
+      "lineno": 67
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__setitem__",
+      "lineno": 76
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "__delitem__",
+      "lineno": 82
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "set_ttl",
+      "lineno": 88
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_get_crop_classes",
+      "lineno": 152
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_load_data",
+      "lineno": 161
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_load_image_cv2",
+      "lineno": 196
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_load_image_cv2",
+      "lineno": 327
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_get_transforms",
+      "lineno": 207
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_get_transforms",
+      "lineno": 335
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_get_val_transforms",
+      "lineno": 218
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_get_val_transforms",
+      "lineno": 346
+    },
+    {
+      "file": "src\\utils\\data_loader.py",
+      "name": "_load_domain_shift_data",
+      "lineno": 302
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "load_model",
+      "lineno": 147
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "save_model",
+      "lineno": 169
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "get_summary",
+      "lineno": 188
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "find_dead_neurons",
+      "lineno": 213
+    },
+    {
+      "file": "src\\utils\\model_utils.py",
+      "name": "check_gradient_flow",
+      "lineno": 230
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "set_style",
+      "lineno": 19
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "create_figure",
+      "lineno": 24
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot",
+      "lineno": 38
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot",
+      "lineno": 56
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot",
+      "lineno": 74
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot",
+      "lineno": 89
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_attention",
+      "lineno": 107
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_heatmap",
+      "lineno": 119
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_training_curves",
+      "lineno": 173
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_confusion_matrix",
+      "lineno": 197
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_roc_curve",
+      "lineno": 208
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_retention_comparison",
+      "lineno": 221
+    },
+    {
+      "file": "src\\visualization\\visualization.py",
+      "name": "plot_ood_detection",
+      "lineno": 232
+    },
+    {
+      "file": "api\\endpoints\\crops.py",
+      "name": "list_crops",
+      "lineno": 24
+    },
+    {
+      "file": "api\\endpoints\\crops.py",
+      "name": "get_adapter_status",
+      "lineno": 37
+    },
+    {
+      "file": "api\\endpoints\\diagnose.py",
+      "name": "diagnose",
+      "lineno": 33
+    },
+    {
+      "file": "api\\endpoints\\feedback.py",
+      "name": "BatchFeedbackRequest",
+      "lineno": 25
+    },
+    {
+      "file": "api\\endpoints\\feedback.py",
+      "name": "submit_expert_label",
+      "lineno": 42
+    },
+    {
+      "file": "api\\endpoints\\feedback.py",
+      "name": "submit_batch_feedback",
+      "lineno": 69
+    },
+    {
+      "file": "api\\endpoints\\feedback.py",
+      "name": "validate_sample_id",
+      "lineno": 19
+    },
+    {
+      "file": "api\\endpoints\\monitoring.py",
+      "name": "detailed_health_check",
+      "lineno": 61
+    },
+    {
+      "file": "api\\endpoints\\monitoring.py",
+      "name": "readiness_check",
+      "lineno": 137
+    },
+    {
+      "file": "api\\endpoints\\monitoring.py",
+      "name": "liveness_check",
+      "lineno": 156
+    }
+  ],
+  "duplicate_groups": {
+    "979a0d749b5c84a77da38edd45e1417e562716aa": [
+      {
+        "file": "original_main.py",
+        "name": "shutdown_event",
+        "lineno": 163
+      },
+      {
+        "file": "api\\main.py",
+        "name": "shutdown_event",
+        "lineno": 162
+      }
+    ],
+    "bd682ad255ce67aa0a7b5c709a2fa5c457acae40": [
+      {
+        "file": "original_main.py",
+        "name": "health_check",
+        "lineno": 170
+      },
+      {
+        "file": "api\\main.py",
+        "name": "health_check",
+        "lineno": 169
+      }
+    ],
+    "6a322f58e35adaeb68a5eb4738d34262fb37b33f": [
+      {
+        "file": "original_main.py",
+        "name": "configuration_error_handler",
+        "lineno": 209
+      },
+      {
+        "file": "api\\main.py",
+        "name": "configuration_error_handler",
+        "lineno": 208
+      }
+    ],
+    "0dbc43177e4a8cc6db10dc74b183f675e2f996c4": [
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "__init__",
+        "lineno": 35
+      },
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "__init__",
+        "lineno": 86
+      },
+      {
+        "file": "src\\ood\\dynamic_thresholds.py",
+        "name": "__init__",
+        "lineno": 688
+      }
+    ],
+    "9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "__init__",
+        "lineno": 27
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "__init__",
+        "lineno": 140
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "__init__",
+        "lineno": 171
+      },
+      {
+        "file": "src\\utils\\model_utils.py",
+        "name": "__init__",
+        "lineno": 144
+      },
+      {
+        "file": "src\\utils\\model_utils.py",
+        "name": "__init__",
+        "lineno": 166
+      },
+      {
+        "file": "scripts\\run_tests_without_pytest.py",
+        "name": "_noop_showwarning",
+        "lineno": 22
+      },
+      {
+        "file": "scripts\\run_tests_without_pytest.py",
+        "name": "_noop_warn",
+        "lineno": 25
+      },
+      {
+        "file": "scripts\\run_tests_without_pytest.py",
+        "name": "_noop_filterwarnings",
+        "lineno": 28
+      },
+      {
+        "file": "scripts\\run_tests_without_pytest.py",
+        "name": "_noop_simplefilter",
+        "lineno": 31
+      },
+      {
+        "file": "scripts\\run_tests_without_pytest.py",
+        "name": "_noop_add_filter",
+        "lineno": 43
+      }
+    ],
+    "43be24f8f064aeeded6458abea33ef44f0f232f7": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_oversized_image",
+        "lineno": 51
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_oversized_image",
+        "lineno": 76
+      }
+    ],
+    "3917a571a32afeda56ae30161b4d9966bd069a69": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_batch_empty_images",
+        "lineno": 93
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_batch_empty_images",
+        "lineno": 191
+      }
+    ],
+    "2014d8031bf7e73b3b24307d1b732b4416343cad": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_invalid_uuid",
+        "lineno": 113
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_invalid_uuid",
+        "lineno": 242
+      }
+    ],
+    "d2cdda1ac13c8b3fac1c0e27461b5eb9311293ab": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_invalid_confidence_range",
+        "lineno": 123
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_invalid_confidence_range",
+        "lineno": 252
+      }
+    ],
+    "a5eb4b84c9d74476413174dd9274738725800a5f": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_system_info",
+        "lineno": 205
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_system_info",
+        "lineno": 321
+      }
+    ],
+    "eb556998075c464ac79e5db953ff25087aeb1728": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_readiness_probe",
+        "lineno": 221
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_readiness_probe",
+        "lineno": 338
+      }
+    ],
+    "b356562d3350c8c0eca39279a39fe0c871e0fa10": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_liveness_probe",
+        "lineno": 226
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_liveness_probe",
+        "lineno": 343
+      }
+    ],
+    "351ae49990f4be18d4b7f3d05287edee46a54943": [
+      {
+        "file": "tests\\stage3_optimizations.py",
+        "name": "test_cors_headers",
+        "lineno": 237
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "test_cors_headers",
+        "lineno": 383
+      }
+    ],
+    "b6c8b23b1517dd3cbb38689683a81a829c63bff9": [
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 148
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 229
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 310
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 355
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 409
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 457
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 595
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 645
+      },
+      {
+        "file": "tests\\api\\test_endpoints.py",
+        "name": "client",
+        "lineno": 686
+      },
+      {
+        "file": "tests\\api\\test_middleware.py",
+        "name": "client",
+        "lineno": 203
+      },
+      {
+        "file": "tests\\api\\test_middleware.py",
+        "name": "client",
+        "lineno": 259
+      },
+      {
+        "file": "tests\\api\\test_middleware.py",
+        "name": "client",
+        "lineno": 309
+      },
+      {
+        "file": "tests\\api\\test_middleware.py",
+        "name": "client",
+        "lineno": 383
+      }
+    ],
+    "080c414e64bca1184bc4f6220a19c4d495ac896d": [
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__len__",
+        "lineno": 695
+      },
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__len__",
+        "lineno": 735
+      },
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__len__",
+        "lineno": 815
+      }
+    ],
+    "96fc9efc944cf264f653f0124804463683899433": [
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "__len__",
+        "lineno": 226
+      },
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "__len__",
+        "lineno": 354
+      }
+    ],
+    "6bd3bce920a98295ce32eb7faa9fd2ecdcb982cd": [
+      {
+        "file": "tests\\fixtures\\test_fixtures.py",
+        "name": "__getitem__",
+        "lineno": 143
+      },
+      {
+        "file": "tests\\fixtures\\test_fixtures.py",
+        "name": "__getitem__",
+        "lineno": 245
+      }
+    ],
+    "c5f54ec90c0a2d3f84e5f9d9f64fee10d6064e2a": [
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__getitem__",
+        "lineno": 697
+      },
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__getitem__",
+        "lineno": 737
+      },
+      {
+        "file": "tests\\unit\\adapters\\test_adapter_comprehensive.py",
+        "name": "__getitem__",
+        "lineno": 817
+      }
+    ],
+    "7d34ae589b31c80732e1a6a5ff779abb633460c0": [
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "__getitem__",
+        "lineno": 229
+      },
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "__getitem__",
+        "lineno": 357
+      }
+    ],
+    "1225cde616730b4c83e42d303ebe34e6e9a5f545": [
+      {
+        "file": "tests\\integration\\test_configuration_final.py",
+        "name": "teardown_method",
+        "lineno": 25
+      },
+      {
+        "file": "tests\\integration\\test_configuration_integration.py",
+        "name": "teardown_method",
+        "lineno": 25
+      }
+    ],
+    "58a28884d8511e7801421cb47d7d5564619ffa77": [
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "forward",
+        "lineno": 25
+      },
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "forward",
+        "lineno": 78
+      }
+    ],
+    "2c78da0d930a3f40b8c4516e2ab524f09068c776": [
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "mock_app",
+        "lineno": 26
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_caching.py",
+        "name": "mock_app",
+        "lineno": 25
+      }
+    ],
+    "c2f5ba9bdc59345fb3f0d9b7748b7a8b752c9ee8": [
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "mock_app",
+        "lineno": 23
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "mock_app",
+        "lineno": 24
+      }
+    ],
+    "481f3df3541090a7a6d78edef6f7eeb27a60084f": [
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "app",
+        "lineno": 28
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_caching.py",
+        "name": "app",
+        "lineno": 27
+      }
+    ],
+    "63deb0a51dce3eb7834da7568f1d567f474bc9a7": [
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "app",
+        "lineno": 25
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "app",
+        "lineno": 26
+      }
+    ],
+    "ccbf33f71b119f0079b471888e662b4f78ee5343": [
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "call_next",
+        "lineno": 60
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "call_next",
+        "lineno": 116
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "call_next",
+        "lineno": 179
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_audit.py",
+        "name": "call_next",
+        "lineno": 207
+      }
+    ],
+    "f7b36bc5037b3bb32a114e7596f5a39b8dbd5d71": [
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "call_next",
+        "lineno": 55
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "call_next",
+        "lineno": 69
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "call_next",
+        "lineno": 85
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "call_next",
+        "lineno": 101
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_auth.py",
+        "name": "call_next",
+        "lineno": 117
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "call_next",
+        "lineno": 57
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "call_next",
+        "lineno": 71
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "call_next",
+        "lineno": 87
+      },
+      {
+        "file": "tests\\unit\\middleware\\test_rate_limit.py",
+        "name": "call_next",
+        "lineno": 138
+      }
+    ],
+    "63681a27a3fbf18d917a9978ddc6f629b569100d": [
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "DummyModel",
+        "lineno": 24
+      },
+      {
+        "file": "tests\\unit\\ood\\test_dynamic_thresholds_improved.py",
+        "name": "DummyModel",
+        "lineno": 77
+      }
+    ],
+    "5a30e47d823b7450b39520a46176e4c8c9c481d6": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "save_adapter",
+        "lineno": 439
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "save_adapter",
+        "lineno": 459
+      }
+    ],
+    "54df3f364e02d838cc0a66ad7ae86c756f2b0a82": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "load_adapter",
+        "lineno": 455
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "load_adapter",
+        "lineno": 485
+      }
+    ],
+    "cd9ad9485a5f1d79576e272dab3d17874c87aa6d": [
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "validate",
+        "lineno": 48
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "validate",
+        "lineno": 75
+      }
+    ],
+    "f48f42989d9d60ef07ae6d9f569c2383ac787108": [
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "get_cache_stats",
+        "lineno": 261
+      },
+      {
+        "file": "src\\utils\\data_loader.py",
+        "name": "get_cache_stats",
+        "lineno": 388
+      }
+    ],
+    "f7c3c71380f00d43d6af719079b74e90be26755b": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "AutoModel",
+        "lineno": 13
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "AutoModel",
+        "lineno": 126
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "AutoModel",
+        "lineno": 182
+      }
+    ],
+    "ac478c8f47fd77de9a7b00890755067b36afa37d": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "AutoConfig",
+        "lineno": 18
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "AutoConfig",
+        "lineno": 131
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "AutoConfig",
+        "lineno": 187
+      }
+    ],
+    "d231a8b33b2da92eaaad6a0c3ffbcea6a2133076": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "LoraConfig",
+        "lineno": 26
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "LoraConfig",
+        "lineno": 139
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "LoraConfig",
+        "lineno": 170
+      }
+    ],
+    "10d8fe787e7e50b195d5696af952dc9ffa4c8bda": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "get_peft_model",
+        "lineno": 30
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "get_peft_model",
+        "lineno": 143
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "get_peft_model",
+        "lineno": 174
+      }
+    ],
+    "6b056bb6caf857505d442d413d2157429a1a111a": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "from_pretrained",
+        "lineno": 15
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "from_pretrained",
+        "lineno": 128
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "from_pretrained",
+        "lineno": 184
+      }
+    ],
+    "b66f014d98f96247b6a47a9989be6719814d2e88": [
+      {
+        "file": "src\\training\\phase1_training.py",
+        "name": "from_pretrained",
+        "lineno": 20
+      },
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "from_pretrained",
+        "lineno": 133
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "from_pretrained",
+        "lineno": 189
+      }
+    ],
+    "ab283f4955377dc5f390a7378e8441fc7bd2ed28": [
+      {
+        "file": "src\\training\\phase2_sd_lora.py",
+        "name": "__post_init__",
+        "lineno": 24
+      },
+      {
+        "file": "src\\training\\phase3_conec_lora.py",
+        "name": "__post_init__",
+        "lineno": 30
+      }
+    ]
+  }
+}
