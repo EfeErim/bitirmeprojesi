@@ -13,8 +13,8 @@ import shutil
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from tests.fixtures.test_fixtures import mock_dataset_factory, mock_tensor_factory
-from src.training.phase3_conec_lora import (
-    CoNeCTrainer,
+from src.training.colab_phase3_conec_lora import (
+    ColabPhase3Trainer,
     CoNeCConfig,
     train_conec_lora,
     load_base_model,
@@ -313,18 +313,18 @@ class TestUtilityFunctions:
 
     def test_load_base_model_function(self):
         """Test load_base_model function."""
-        from src.training.phase3_conec_lora import load_base_model
+        from src.training.colab_phase3_conec_lora import load_base_model
         # Should be callable
         assert callable(load_base_model)
 
     def test_apply_conec_adapter_function(self):
         """Test apply_conec_adapter function."""
-        from src.training.phase3_conec_lora import apply_conec_adapter
+        from src.training.colab_phase3_conec_lora import apply_conec_adapter
         assert callable(apply_conec_adapter)
 
     def test_compute_conec_loss_function(self):
         """Test compute_conec_loss function."""
-        from src.training.phase3_conec_lora import compute_conec_loss
+        from src.training.colab_phase3_conec_lora import compute_conec_loss
 
         features = torch.randn(8, 128)
         labels = torch.randint(0, 3, (8,))
@@ -335,12 +335,12 @@ class TestUtilityFunctions:
 
     def test_train_conec_lora_function(self):
         """Test train_conec_lora convenience function."""
-        from src.training.phase3_conec_lora import train_conec_lora
+        from src.training.colab_phase3_conec_lora import train_conec_lora
         assert callable(train_conec_lora)
 
     def test_prototype_initialization(self):
         """Test prototype initialization strategies."""
-        from src.training.phase3_conec_lora import initialize_prototypes
+        from src.training.colab_phase3_conec_lora import initialize_prototypes
 
         features = torch.randn(100, 128)
         labels = torch.randint(0, 5, (100,))
@@ -351,7 +351,7 @@ class TestUtilityFunctions:
 
     def test_prototype_update_strategy(self):
         """Test prototype update strategy (moving average)."""
-        from src.training.phase3_conec_lora import update_prototype_moving_average
+        from src.training.colab_phase3_conec_lora import update_prototype_moving_average
 
         old_proto = torch.ones(128) * 0.5
         new_features = torch.randn(10, 128)

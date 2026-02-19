@@ -13,8 +13,8 @@ import shutil
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from tests.fixtures.test_fixtures import mock_dataset_factory, mock_tensor_factory
-from src.training.phase2_sd_lora import (
-    SDLoRATrainer,
+from src.training.colab_phase2_sd_lora import (
+    ColabPhase2Trainer,
     SDLoRAConfig,
     train_sd_lora,
     load_pretrained_sd,
@@ -228,12 +228,12 @@ class TestUtilityFunctions:
         """Test loading pretrained Stable Diffusion."""
         # This would need actual model files
         # For now, test that function exists
-        from src.training.phase2_sd_lora import load_pretrained_sd
+        from src.training.colab_phase2_sd_lora import load_pretrained_sd
         assert callable(load_pretrained_sd)
 
     def test_prepare_lora_layers_function(self):
         """Test prepare_lora_layers function."""
-        from src.training.phase2_sd_lora import prepare_lora_layers
+        from src.training.colab_phase2_sd_lora import prepare_lora_layers
 
         model = torch.nn.Linear(10, 10)
         lora_model = prepare_lora_layers(model, r=8, alpha=16)
@@ -241,7 +241,7 @@ class TestUtilityFunctions:
 
     def test_compute_sd_loss_function(self):
         """Test compute_sd_loss function."""
-        from src.training.phase2_sd_lora import compute_sd_loss
+        from src.training.colab_phase2_sd_lora import compute_sd_loss
 
         predictions = {"loss": torch.tensor(1.0)}
         targets = torch.randn(2, 3, 64, 64)
@@ -251,7 +251,7 @@ class TestUtilityFunctions:
 
     def test_train_sd_lora_function(self):
         """Test train_sd_lora convenience function."""
-        from src.training.phase2_sd_lora import train_sd_lora
+        from src.training.colab_phase2_sd_lora import train_sd_lora
 
         # This would need actual data
         # Just verify it's callable

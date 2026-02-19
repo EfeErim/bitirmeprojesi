@@ -23,7 +23,7 @@ class TestGradientAccumulation:
     def test_gradient_accumulation_with_zero_grad_after_step(self):
         """Test that zero_grad is called after optimizer.step, not before."""
         # Read source file directly to avoid import dependencies
-        with open('src/training/phase1_training.py', 'r') as f:
+        with open('src/training/colab_phase1_training.py', 'r') as f:
             source = f.read()
         
         # Should have: backward -> step -> zero_grad
@@ -35,7 +35,7 @@ class TestGradientAccumulation:
     
     def test_gradient_accumulation_final_step_handling(self):
         """Test that remaining gradients are processed after the loop."""
-        with open('src/training/phase1_training.py', 'r') as f:
+        with open('src/training/colab_phase1_training.py', 'r') as f:
             source = f.read()
         
         # Should have code to handle remaining gradients after loop

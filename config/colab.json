@@ -1,81 +1,277 @@
 {
-  "title": "Google Colab Optimized Configuration for AADS-ULoRA",
-  "description": "Optimized hyperparameters for training on Google Colab with 24GB GPU memory",
-  "training": {
-    "phase1": {
-      "batch_size": 16,
-      "gradient_accumulation_steps": 4,
-      "learning_rate": 1e-4,
-      "lora_r": 16,
-      "lora_alpha": 16,
-      "lora_dropout": 0.1,
-      "loraplus_lr_ratio": 8,
-      "num_epochs": 20,
-      "early_stopping_patience": 5,
-      "gradient_clip_norm": 1.0,
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AADS-ULoRA Colab Configuration",
+  "description": "Google Colab-optimized configuration for Agricultural AI Development System - ULoRA v5.5.3",
+  "version": "5.5.3-colab",
+  "last_updated": "2026-02-19",
+
+  "colab": {
+    "enabled": true,
+    "environment": "google_colab",
+    "gpu_type": "auto",
+    "drive_mount_path": "/content/drive/MyDrive/aads_ulora",
+    "workspace_path": "/content/aads_ulora",
+    "cache_dir": "/content/cache",
+    
+    "memory_optimization": {
+      "gradient_checkpointing": true,
       "mixed_precision": true,
-      "checkpoint_interval": 5,
-      "warmup_steps": 500
+      "memory_efficient_attention": true,
+      "clear_cache_frequency": 10,
+      "max_batch_size_gb4": 8,
+      "max_batch_size_gb8": 16,
+      "max_batch_size_gb16": 32,
+      "max_batch_size_gb24": 64,
+      "max_batch_size_gb32": 128
     },
-    "phase2": {
-      "batch_size": 16,
-      "gradient_accumulation_steps": 4,
-      "learning_rate": 5e-5,
-      "lora_r": 8,
-      "lora_alpha": 8,
-      "num_epochs": 15,
-      "gradient_clip_norm": 1.0,
-      "mixed_precision": true,
-      "checkpoint_interval": 5
-    },
-    "phase3": {
-      "batch_size": 16,
-      "gradient_accumulation_steps": 4,
-      "learning_rate": 5e-5,
-      "lora_r": 8,
-      "lora_alpha": 8,
-      "num_epochs": 10,
-      "gradient_clip_norm": 1.0,
-      "mixed_precision": true,
+    
+    "training": {
+      "gradient_accumulation_steps": 2,
+      "use_amp": true,
+      "pin_memory": true,
+      "num_workers": 2,
+      "prefetch_factor": 2,
+      "persistent_workers": false,
       "checkpoint_interval": 5,
-      "conec_temperature": 0.07,
-      "conec_prototype_dim": 128,
-      "conec_num_prototypes": 5
+      "early_stopping_patience": 10
+    },
+    
+    "paths": {
+      "data_dir": "./data",
+      "models_dir": "./models",
+      "checkpoints_dir": "./checkpoints",
+      "logs_dir": "./logs",
+      "outputs_dir": "./outputs"
+    },
+    
+    "monitoring": {
+      "enabled": true,
+      "track_gpu_memory": true,
+      "track_disk_usage": true,
+      "progress_bar": true,
+      "log_interval": 10,
+      "tensorboard": false
     }
   },
-  "data_loading": {
-    "num_workers": 2,
-    "pin_memory": true,
-    "prefetch_factor": 2,
-    "cache_size": 500,
-    "target_image_size": 224
+
+  "api": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "reload": false,
+    "workers": 2,
+    "title": "AADS-ULoRA Colab API",
+    "description": "Agricultural AI Development System - Disease Detection API (Colab)",
+    "version": "v1",
+    "contact": {
+      "name": "AADS-ULoRA Team",
+      "email": "api@aadsulora.com",
+      "url": "https://github.com/uyumsoft/aads-ulora"
+    },
+    "license": {
+      "name": "MIT License",
+      "url": "https://opensource.org/licenses/MIT"
+    }
   },
-  "device": {
-    "device": "cuda",
-    "enable_amp": true,
-    "cudnn_benchmark": true,
-    "cudnn_deterministic": false
+
+  "database": {
+    "type": "sqlite",
+    "path": "./data/colab.db",
+    "pool_size": 5,
+    "max_overflow": 10,
+    "echo": false
   },
+
+  "router": {
+    "enabled": true,
+    "type": "enhanced",
+    "crop_mapping": {
+      "tomato": {
+        "parts": ["leaf", "fruit", "stem", "whole"],
+        "model_path": "models/tomato_adapter"
+      },
+      "potato": {
+        "parts": ["leaf", "tuber", "stem", "whole"],
+        "model_path": "models/potato_adapter"
+      },
+      "wheat": {
+        "parts": ["leaf", "ear", "stem", "whole"],
+        "model_path": "models/wheat_adapter"
+      }
+    },
+    "fallback_strategy": "best_available",
+    "confidence_threshold": 0.7
+  },
+
   "ood": {
     "enabled": true,
     "method": "mahalanobis",
     "threshold": 0.95,
     "confidence_level": 0.99,
+    "prototype": {
+      "update_rate": 0.1,
+      "min_samples": 10,
+      "save_path": "./models/prototypes"
+    },
     "mahalanobis": {
       "eps": 1e-6,
       "batch_size": 32
     }
   },
+
   "monitoring": {
     "enabled": true,
-    "log_interval": 50,
-    "checkpoint_dir": "./checkpoints",
-    "save_best_only": true,
-    "save_last": true
+    "prometheus": {
+      "enabled": false,
+      "port": 9090,
+      "path": "/metrics"
+    },
+    "logging": {
+      "format": "json",
+      "rotate": true,
+      "max_size_mb": 50,
+      "backup_count": 3,
+      "colab_notebook_output": true
+    },
+    "health": {
+      "enabled": true,
+      "detailed": true,
+      "include_memory": true,
+      "include_cuda": true,
+      "include_disk": true
+    }
   },
-  "debugging": {
-    "verbose": true,
-    "log_gradients": false,
-    "profile_memory": false
+
+  "security": {
+    "rate_limit": {
+      "enabled": false,
+      "requests_per_minute": 100,
+      "burst": 200
+    },
+    "auth": {
+      "enabled": false,
+      "jwt_secret": "CHANGE_IN_PRODUCTION",
+      "jwt_algorithm": "HS256",
+      "token_expire_minutes": 1440
+    },
+    "cors": {
+      "allow_origins": ["*"],
+      "allow_credentials": true,
+      "allow_methods": ["*"],
+      "allow_headers": ["*"]
+    }
+  },
+
+  "cache": {
+    "enabled": true,
+    "backend": "memory",
+    "ttl": 3600,
+    "max_size": 500,
+    "colab_optimized": true
+  },
+
+  "training": {
+    "phase1": {
+      "model_name": "facebook/dinov3-giant",
+      "num_classes": 5,
+      "lora_r": 32,
+      "lora_alpha": 32,
+      "lora_dropout": 0.1,
+      "loraplus_lr_ratio": 16,
+      "learning_rate": 1e-4,
+      "num_epochs": 10,
+      "batch_size": 8,
+      "weight_decay": 0.01,
+      "warmup_steps": 100,
+      "save_steps": 500,
+      "eval_steps": 100
+    },
+    
+    "phase2": {
+      "model_name": "stabilityai/stable-diffusion-2-1",
+      "lora_r": 16,
+      "lora_alpha": 16,
+      "lora_dropout": 0.1,
+      "learning_rate": 1e-4,
+      "num_epochs": 5,
+      "batch_size": 4,
+      "guidance_scale": 7.5,
+      "num_inference_steps": 50,
+      "save_steps": 200,
+      "eval_steps": 50
+    },
+    
+    "phase3": {
+      "model_name": "facebook/dinov3-giant",
+      "num_classes": 5,
+      "lora_r": 8,
+      "lora_alpha": 16,
+      "lora_dropout": 0.1,
+      "learning_rate": 5e-5,
+      "num_epochs": 10,
+      "batch_size": 16,
+      
+      "conec": {
+        "temperature": 0.07,
+        "prototype_dim": 128,
+        "num_prototypes": 10,
+        "contrastive_weight": 0.1,
+        "orthogonal_weight": 0.01,
+        "update_rate": 0.1,
+        "min_samples": 10
+      },
+      
+      "ood_detection": {
+        "enabled": true,
+        "method": "prototype",
+        "threshold": 0.95,
+        "confidence_level": 0.99
+      },
+      
+      "save_steps": 200,
+      "eval_steps": 50,
+      "checkpoint_interval": 5
+    }
+  },
+
+  "data": {
+    "dataset_name": "plantvillage",
+    "image_size": 224,
+    "num_channels": 3,
+    "normalize_mean": [0.485, 0.456, 0.406],
+    "normalize_std": [0.229, 0.224, 0.225],
+    "augmentation": {
+      "enabled": true,
+      "random_crop": true,
+      "random_hflip": true,
+      "random_vflip": true,
+      "color_jitter": true,
+      "rotation": 15,
+      "scale": [0.8, 1.0]
+    },
+    "dataloader": {
+      "shuffle": true,
+      "drop_last": true,
+      "pin_memory": true,
+      "num_workers": 2,
+      "prefetch_factor": 2
+    }
+  },
+
+  "paths": {
+    "data_dir": "./data",
+    "models_dir": "./models",
+    "checkpoints_dir": "./checkpoints",
+    "logs_dir": "./logs",
+    "outputs_dir": "./outputs",
+    "cache_dir": "./cache",
+    "tensorboard_dir": "./logs/tensorboard"
+  },
+
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "./logs/colab_training.log",
+    "max_bytes": 10485760,
+    "backup_count": 5
   }
 }
