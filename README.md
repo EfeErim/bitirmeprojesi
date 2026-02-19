@@ -230,40 +230,92 @@ After training completes (Colab):
 
 ```
 Google Drive/aads_ulora/
+├── data/
+│   ├── dataset_metadata.json           # Dataset normalization, augmentation, class counts
+│   └── plantvillage/                   # Training/val/test splits
 ├── models/
-│   ├── phase1_dora_adapter/       # DoRA trained model
-│   ├── phase2_sd_lora_adapter/    # SD-LoRA trained model
-│   └── phase3_conec_lora_adapter/ # CoNeC-LoRA trained model
-├── model_checkpoints/             # Model weights and optimizer states
+│   ├── phase1_dora_adapter/
+│   │   ├── adapter/                    # PEFT LoRA weights
+│   │   │   ├── adapter_config.json
+│   │   │   └── pytorch_model.bin
+│   │   ├── classifier.pth              # Classifier head weights
+│   │   ├── adapter_meta.json           # Class indices, input/output dims
+│   │   ├── ood_components.pt           # OOD detection model (prototypes, mahalanobis, thresholds)
+│   │   └── manifest.json               # Artifact metadata and paths
+│   ├── phase2_sd_lora_adapter/
+│   │   ├── adapter/
+│   │   ├── classifier.pth
+│   │   ├── adapter_meta.json
+│   │   ├── ood_components.pt
+│   │   └── manifest.json
+│   └── phase3_conec_lora_adapter/
+│       ├── adapter/
+│       ├── classifier.pth
+│       ├── adapter_meta.json
+│       ├── ood_components.pt          # FINAL OOD detection model for inference
+│       └── manifest.json
+├── model_checkpoints/                  # Model weights and optimizer states for resuming
 │   ├── phase1/
+│   │   └── checkpoint-{epoch}.pt
 │   ├── phase2/
 │   └── phase3/
-├── .checkpoints/                  # Training progress tracking
-│   └── checkpoint_log.json        # Progress log with timestamps
+├── .checkpoints/                       # Training pipeline progress tracking
+│   └── checkpoint_log.json             # Progress log with timestamps per stage
 ├── logs/
-│   ├── phase1_history.json
+│   ├── phase1_history.json             # Training losses, accuracies
 │   ├── phase2_history.json
-│   └── phase3_history.json
+│   ├── phase3_history.json
+│   ├── ood_metrics.json                # OOD detection evaluation results
+│   └── training.log                    # Full training logs
 └── outputs/
-    ├── validation_results.json
-    ├── performance_metrics.csv
-    ├── training_summary.html
-    └── training_config.json       # Configuration used for this run
+    ├── training_config.json            # Configuration used for this run
+    ├── validation_results.json         # Per-class metrics (accuracy, precision, recall, F1)
+    ├── confusion_matrices.json         # Confusion matrices per phase
+    ├── performance_metrics.csv         # Aggregate metrics summary
+    ├── performance_summary.json        # Best metrics per phase
+    └── training_summary.html           # HTML report of all results
+```
+
+### OOD Components Metadata (in `ood_components.pt`)
+Contains PyTorch tensors and objects:
+```python
+{
+    'prototypes': torch.Tensor,                    # Class prototypes [num_classes, feature_dim]
+    'mahalanobis': {
+        'mean': torch.Tensor,                      # Feature space mean
+        'covariance': torch.Tensor,                # Covariance matrix
+        'inv_covariance': torch.Tensor             # Pre-computed inverse for efficiency
+    },
+    'thresholds': Dict[int, float],                # Per-class OOD thresholds
+    'class_std': Dict[int, torch.Tensor]           # Per-class feature standard deviations
+}
+```
+
+### Adapter Metadata (in `adapter_meta.json`)
+```json
+{
+    "is_trained": true,
+    "current_phase": 1,
+    "class_to_idx": {"tomato_early_blight": 0, "tomato_late_blight": 1, ...},
+    "classifier_input_size": 768,
+    "classifier_output_size": 10
+}
 ```
 
 **Checkpoint Log Example:**
 ```json
 {
-  "setup": {"timestamp": "2025-02-20T10:15:23", "completed": true},
-  "data_prep": {"timestamp": "2025-02-20T10:16:45", "completed": true},
-  "phase1": {"timestamp": "2025-02-20T10:45:23", "completed": true, "details": {...}},
+  "setup": {"timestamp": "2025-02-20T10:15:23", "completed": true, "details": {...}},
+  "data_prep": {"timestamp": "2025-02-20T10:16:45", "completed": true, "details": {...}},
+  "phase1": {"timestamp": "2025-02-20T10:45:23", "completed": true, "details": {"status": "Completed", "epochs": 3, "crops": ["tomato"]}},
   "phase2": {"timestamp": "2025-02-20T11:30:15", "completed": true, "details": {...}},
-  "phase3": null,
-  "validation": null,
-  "monitoring": null
+  "phase3": {"timestamp": "2025-02-20T12:20:10", "completed": true, "details": {...}},
+  "validation": {"timestamp": "2025-02-20T12:35:45", "completed": true, "details": {...}},
+  "monitoring": {"timestamp": "2025-02-20T12:50:30", "completed": true, "details": {...}}
 }
 ```
-The checkpoint log allows you to resume training exactly where it left off.
+
+The checkpoint log allows you to resume training exactly where it left off. OOD components are essential for inference - without them, the adapters cannot detect out-of-distribution samples during deployment.
 
 ## 📚 Documentation
 
