@@ -15,6 +15,7 @@ import psutil
 import gc
 from typing import Tuple, Dict, Optional, Any
 import json
+import os
 
 try:
     from transformers import AutoModel, AutoConfig
@@ -43,6 +44,7 @@ import numpy as np
 from src.utils.data_loader import CropDataset
 from src.evaluation.metrics import compute_metrics
 from src.utils.model_utils import extract_pooled_output
+from src.core.artifact_manifest import write_output_manifest
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +78,7 @@ class ColabPhase1Trainer:
         learning_rate: float = 1e-4,
         batch_size: Optional[int] = None,
         num_epochs: Optional[int] = None,
+        strict_model_loading: Optional[bool] = None,
         **kwargs
     ):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
@@ -87,6 +90,8 @@ class ColabPhase1Trainer:
         self.batch_size = batch_size
         self.num_epochs = num_epochs
         self.extra_config = kwargs
+        env_strict = os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+        self.strict_model_loading = env_strict if strict_model_loading is None else strict_model_loading
         self.current_epoch = 0  # Track current epoch for checkpoint resume
 
         # Mixed precision training
@@ -115,6 +120,10 @@ class ColabPhase1Trainer:
             self.base_model = AutoModel.from_pretrained(model_name)
             self.config = AutoConfig.from_pretrained(model_name)
         except Exception as e:
+            if self.strict_model_loading:
+                raise RuntimeError(
+                    f"MODEL_LOAD_STRICT failed: could not load pretrained model '{model_name}'."
+                ) from e
             logger.warning(f"Failed to load model '{model_name}': {e}. Falling back to lightweight local stub.")
             self.base_model = nn.Sequential(
                 nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1),
@@ -151,6 +160,8 @@ class ColabPhase1Trainer:
             self.model = get_peft_model(self.base_model, lora_config)
             self.model = self.model.to(self.device)
         except Exception as e:
+            if self.strict_model_loading:
+                raise RuntimeError("MODEL_LOAD_STRICT failed: could not apply DoRA PEFT adapter.") from e
             logger.warning(f"Failed to apply PEFT model: {e}. Proceeding with base model parameters.")
             self.model = self.base_model.to(self.device)
 
@@ -237,7 +248,15 @@ class ColabPhase1Trainer:
     def _get_gpu_memory_usage(self) -> Dict[str, float]:
         """Get current GPU memory usage in MB."""
         if not torch.cuda.is_available():
-            return {'allocated_mb': 0, 'reserved_mb': 0, 'total_mb': 0, 'utilization_pct': 0}
+            return {
+                'allocated_mb': 0,
+                'reserved_mb': 0,
+                'total_mb': 0,
+                'allocated_gb': 0,
+                'reserved_gb': 0,
+                'total_gb': 0,
+                'utilization_pct': 0
+            }
 
         allocated = torch.cuda.memory_allocated(self.device) / 1024**2
         reserved = torch.cuda.memory_reserved(self.device) / 1024**2
@@ -247,6 +266,9 @@ class ColabPhase1Trainer:
             'allocated_mb': round(allocated, 2),
             'reserved_mb': round(reserved, 2),
             'total_mb': round(total, 2),
+            'allocated_gb': round(allocated / 1024, 3),
+            'reserved_gb': round(reserved / 1024, 3),
+            'total_gb': round(total / 1024, 3),
             'utilization_pct': round(allocated / total * 100, 2)
         }
 
@@ -549,15 +571,31 @@ class ColabPhase1Trainer:
         save_path.mkdir(parents=True, exist_ok=True)
 
         # Save PEFT model
-        self.model.save_pretrained(save_path / 'adapter')
+        adapter_path = save_path / 'adapter'
+        self.model.save_pretrained(adapter_path)
 
         # Save classifier
+        classifier_path = save_path / 'classifier.pth'
         torch.save(
             self.classifier.state_dict(),
-            save_path / 'classifier.pth'
+            classifier_path
+        )
+
+        manifest_path = write_output_manifest(
+            output_dir=save_path,
+            phase='phase1',
+            artifacts={
+                'adapter_dir': adapter_path,
+                'classifier': classifier_path,
+            },
+            metadata={
+                'num_classes': self.num_classes,
+                'strict_model_loading': self.strict_model_loading,
+            },
         )
 
         logger.info(f"Adapter saved to {save_path}")
+        logger.info(f"Manifest saved to {manifest_path}")
 
     def load_adapter(self, load_path: str):
         """Load a trained adapter and classifier."""

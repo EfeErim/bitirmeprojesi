@@ -9,8 +9,12 @@ import sys
 import subprocess
 import json
 import logging
+import importlib
 from pathlib import Path
 from typing import Dict, Tuple, Optional
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from src.core.colab_contract import COLAB_WORKSPACE_PATH, required_workspace_paths, StepGate
 
 # Setup logging
 logging.basicConfig(
@@ -27,8 +31,15 @@ class ColabInstaller:
         self.gpu_info = None
         self.cuda_version = None
         self.pytorch_version = None
-        self.workspace_dir = Path('/content/aads_ulora')
+        self.workspace_dir = COLAB_WORKSPACE_PATH
         self.config_dir = self.workspace_dir / 'config'
+
+    def _emit_gate(self, gate: StepGate) -> bool:
+        if gate.passed:
+            logger.info(gate.as_log_line())
+            return True
+        logger.error(gate.as_log_line())
+        return False
         
     def detect_gpu(self) -> Dict:
         """Detect GPU type, memory, and CUDA version."""
@@ -372,6 +383,81 @@ google-colab>=1.0.0
         except Exception as e:
             logger.error(f"❌ Failed to create requirements file: {e}")
             return False
+
+    def verify_bootstrap_ready(self) -> bool:
+        """Run BOOTSTRAP_READY gate checks before training notebooks."""
+        logger.info("🔎 Running BOOTSTRAP_READY preflight checks...")
+
+        gates = [
+            StepGate(
+                step_id="BOOTSTRAP_READY",
+                check_name="workspace_root_exists",
+                passed=self.workspace_dir.exists(),
+                expected=f"existing path: {self.workspace_dir}",
+                actual=f"exists={self.workspace_dir.exists()}"
+            ),
+            StepGate(
+                step_id="BOOTSTRAP_READY",
+                check_name="config_file_exists",
+                passed=(self.config_dir / 'colab.json').exists(),
+                expected=f"file: {self.config_dir / 'colab.json'}",
+                actual=f"exists={(self.config_dir / 'colab.json').exists()}"
+            )
+        ]
+
+        for expected_path in required_workspace_paths(self.workspace_dir):
+            gates.append(
+                StepGate(
+                    step_id="BOOTSTRAP_READY",
+                    check_name=f"dir_{expected_path.name}",
+                    passed=expected_path.exists() and expected_path.is_dir(),
+                    expected=f"directory: {expected_path}",
+                    actual=f"exists={expected_path.exists()} is_dir={expected_path.is_dir()}"
+                )
+            )
+
+        # REPO_SYNC gate checks for critical imports
+        modules_to_check = (
+            'src.training.colab_phase1_training',
+            'src.training.colab_phase2_sd_lora',
+            'src.training.colab_phase3_conec_lora',
+            'src.dataset.colab_datasets',
+            'src.dataset.colab_dataloader',
+        )
+        for module_name in modules_to_check:
+            try:
+                module = importlib.import_module(module_name)
+                module_path = Path(getattr(module, '__file__', '')).resolve() if getattr(module, '__file__', None) else None
+                in_workspace = bool(module_path) and str(module_path).startswith(str(Path.cwd().resolve()))
+                gates.append(
+                    StepGate(
+                        step_id='REPO_SYNC_OK',
+                        check_name=f'import_{module_name}',
+                        passed=module_path is not None and in_workspace,
+                        expected=f'imported from workspace root {Path.cwd().resolve()}',
+                        actual=str(module_path) if module_path else 'module has no __file__'
+                    )
+                )
+            except Exception as import_error:
+                gates.append(
+                    StepGate(
+                        step_id='REPO_SYNC_OK',
+                        check_name=f'import_{module_name}',
+                        passed=False,
+                        expected='importable module',
+                        actual=f'import error: {import_error}'
+                    )
+                )
+
+        all_passed = True
+        for gate in gates:
+            all_passed = self._emit_gate(gate) and all_passed
+
+        if all_passed:
+            logger.info("✅ BOOTSTRAP_READY gate passed")
+        else:
+            logger.error("❌ BOOTSTRAP_READY gate failed")
+        return all_passed
     
     def run(self) -> bool:
         """Run complete installation process."""
@@ -384,7 +470,8 @@ google-colab>=1.0.0
             ("Dependency Installation", self.install_dependencies),
             ("Workspace Setup", self.setup_workspace),
             ("Colab Config Creation", self.create_colab_config),
-            ("Requirements File", self.create_requirements_file)
+            ("Requirements File", self.create_requirements_file),
+            ("Bootstrap Preflight Gate", self.verify_bootstrap_ready)
         ]
         
         success = True

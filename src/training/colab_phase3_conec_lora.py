@@ -17,6 +17,8 @@ from typing import Tuple, Dict, Optional, Any, List, Callable, Union
 import json
 import numpy as np
 from dataclasses import dataclass, asdict
+import os
+from src.core.artifact_manifest import write_output_manifest
 
 # Try to import dependencies, fallback to mock classes for testing
 class AutoModel:
@@ -214,11 +216,14 @@ class ColabPhase3Trainer:
         config: CoNeCConfig,
         model: Optional[nn.Module] = None,
         checkpoint_dir: Optional[str] = None,
-        colab_mode: bool = True
+        colab_mode: bool = True,
+        strict_model_loading: Optional[bool] = None
     ):
         self.config = config
         self.device = torch.device(config.device if torch.cuda.is_available() else 'cpu')
         self.colab_mode = colab_mode
+        env_strict = os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '').strip().lower() in {'1', 'true', 'yes', 'on'}
+        self.strict_model_loading = env_strict if strict_model_loading is None else strict_model_loading
         self.checkpoint_dir = Path(checkpoint_dir) if checkpoint_dir else None
         
         # Memory optimization
@@ -285,6 +290,10 @@ class ColabPhase3Trainer:
             base_model = AutoModel.from_pretrained(self.config.model_name)
             config = AutoConfig.from_pretrained(self.config.model_name)
         except Exception as e:
+            if self.strict_model_loading:
+                raise RuntimeError(
+                    f"MODEL_LOAD_STRICT failed: could not load pretrained model '{self.config.model_name}'."
+                ) from e
             logger.warning(f"Could not load pretrained model: {e}. Using dummy model.")
             base_model = nn.Linear(10, 10)
             config = type('C', (), {'hidden_size': 10})()
@@ -315,6 +324,8 @@ class ColabPhase3Trainer:
             model = get_peft_model(base_model, lora_config)
             model = model.to(self.device)
         except Exception as e:
+            if self.strict_model_loading:
+                raise RuntimeError("MODEL_LOAD_STRICT failed: could not apply CoNeC-LoRA adapter.") from e
             logger.warning(f"Failed to apply CoNeC-LoRA adapter: {e}. Proceeding with base model.")
             model = base_model.to(self.device)
         
@@ -747,6 +758,40 @@ class ColabPhase3Trainer:
         checkpoint_path = save_path / filename
         torch.save(checkpoint, checkpoint_path)
         logger.info(f"Checkpoint saved: {checkpoint_path}")
+
+    def save_output_suite(self, save_path: str) -> Path:
+        """Save phase3 adapter bundle and emit an output manifest."""
+        output_dir = Path(save_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        adapter_dir = output_dir / 'adapter'
+        classifier_path = output_dir / 'classifier.pth'
+        prototypes_path = output_dir / 'prototype_embeddings.pt'
+        final_checkpoint_path = output_dir / 'phase3_final.pth'
+
+        self.model.save_pretrained(adapter_dir)
+        torch.save(self.classifier.state_dict(), classifier_path)
+        torch.save(self.prototype_manager.get_prototypes(), prototypes_path)
+        self.save_checkpoint(str(final_checkpoint_path), self.current_epoch, self.best_val_loss)
+
+        manifest_path = write_output_manifest(
+            output_dir=output_dir,
+            phase='phase3',
+            artifacts={
+                'adapter_dir': adapter_dir,
+                'classifier': classifier_path,
+                'prototypes': prototypes_path,
+                'final_checkpoint': final_checkpoint_path,
+            },
+            metadata={
+                'strict_model_loading': self.strict_model_loading,
+                'current_epoch': self.current_epoch,
+                'best_val_loss': self.best_val_loss,
+            },
+        )
+        logger.info(f"Output suite saved to: {output_dir}")
+        logger.info(f"Manifest saved to: {manifest_path}")
+        return manifest_path
     
     def load_checkpoint(self, path: str):
         """Load training checkpoint."""

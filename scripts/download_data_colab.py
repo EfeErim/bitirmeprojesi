@@ -17,6 +17,9 @@ import gdown
 
 # Add src to path for error handling imports
 sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from src.core.colab_contract import is_placeholder_drive_id, StepGate
 
 from src.dataset.error_handling import (
     DownloadError,
@@ -55,6 +58,13 @@ class DriveDownloader:
     
     def __init__(self, config: DownloadConfig):
         self.config = config
+
+    def _emit_gate(self, gate: StepGate) -> bool:
+        if gate.passed:
+            logger.info(gate.as_log_line())
+            return True
+        logger.error(gate.as_log_line())
+        return False
         
     def download_file(
         self,
@@ -64,6 +74,21 @@ class DriveDownloader:
         description: str = "Unknown file"
     ) -> Path:
         """Download a file from Google Drive with resumable capability."""
+        valid_id_gate = StepGate(
+            step_id="DATA_IDS_VALID",
+            check_name="google_drive_file_id",
+            passed=not is_placeholder_drive_id(file_id),
+            expected="non-placeholder Google Drive file id",
+            actual=file_id if file_id else "<empty>"
+        )
+        if not self._emit_gate(valid_id_gate):
+            raise DownloadError(
+                message="Invalid Google Drive file ID. Replace placeholder IDs before running data preparation.",
+                file_id=file_id,
+                destination=destination,
+                cause=ValueError("placeholder or empty file id")
+            )
+
         destination_path = self.config.download_dir / destination
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -131,11 +156,10 @@ class DriveDownloader:
                     pbar.update(len(response.content))
                 
                 gdown.download(
-                    url,
-                    str(destination_path),
+                    url=url,
+                    output=str(destination_path),
                     quiet=False,
                     proxy=None,
-                    output=str(destination_path),
                     fuzzy=False,
                     cookiefile=None,
                     no_cookies=False,
@@ -365,7 +389,7 @@ if __name__ == "__main__":
     downloader = get_colab_downloader()
     
     # Example: Download a test file from Google Drive
-    test_file_id = "1O2s1YvG8Z3x4C5d6E7f8G9h0I1j2K3l4M"  # Replace with actual file ID
+    test_file_id = "YOUR_FILE_ID_HERE"
     test_destination = "test_dataset/test_file.zip"
     
     try:

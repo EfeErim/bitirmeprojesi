@@ -74,6 +74,8 @@ htmlcov/
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+!colab_bootstrap.ipynb
+!colab_notebooks/*.ipynb
 
 # Node (if any)
 node_modules/
