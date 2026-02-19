@@ -134,7 +134,7 @@ Four comprehensive LaTeX documents:
 
 2. **02-implementation-part1.tex** (761 lines)
    - Environment setup for v5.5
-   - SimpleCropRouter implementation (crop classification)
+   - VLM pipeline (primary router for crop routing)
    - IndependentCropAdapter architecture
    - Phase 1 DoRA training (LoRA+ optimizer)
    - Mahalanobis prototype computation
@@ -164,7 +164,7 @@ Four comprehensive LaTeX documents:
 
 | Component | File | Lines | Status | Notes |
 |-----------|------|-------|--------|-------|
-| SimpleCropRouter | `src/router/simple_crop_router.py` | 200 | ✅ | Frozen backbone + linear classifier |
+| VLM Pipeline | `src/router/vlm_pipeline.py` | 223 | ✅ | Grounding DINO + SAM-2 + BioCLIP 2 |
 | IndependentCropAdapter | `src/adapter/independent_crop_adapter.py` | 400 | ✅ | Full v5.5 lifecycle + dynamic OOD |
 | Phase 1 DoRA Trainer | `src/training/colab_phase1_training.py` | 715 | ✅ | use_dora=True, LoRA+ optimizer |
 | Phase 2 SD-LoRA Trainer | `src/training/colab_phase2_sd_lora.py` | 718 | ✅ | Freezes A,B; trains magnitudes |
@@ -198,7 +198,7 @@ The following components exist and appear complete but should be verified agains
    - [ ] Validate proper handling of task-specific LoRA
 
 4. **Pipeline Integration**
-   - [ ] Update to use SimpleCropRouter instead of VLM pipeline
+   - [x] Confirmed VLM pipeline is primary router (user preference)
    - [ ] Verify proper OOD triggering for Phase 2/3
    - [ ] Check independence between crop adapters
    - [ ] Validate complete multi-crop workflow
@@ -225,9 +225,9 @@ The following components exist and appear complete but should be verified agains
 ## Architecture Overview
 
 ```
-Layer 1: SimpleCropRouter (98%+ accuracy)
-         [Frozen DINOv2-giant backbone] → [Linear classifier]
-         Routes images to appropriate crop adapter
+Layer 1: VLM Pipeline (Primary Router)
+         [Grounding DINO] → [SAM-2] → [BioCLIP 2]
+         Routes images to appropriate crop adapter with crop + disease confidence
               ↓
 Layer 2: Independent Crop Adapters (per-crop lifecycle)
          Tomato Adapter:          Pepper Adapter:          Corn Adapter:
@@ -238,8 +238,11 @@ Layer 2: Independent Crop Adapters (per-crop lifecycle)
     Dynamic OOD Detection     Dynamic OOD Detection   Dynamic OOD Detection
     (per-class thresholds)    (per-class thresholds)  (per-class thresholds)
 
-CRITICAL: Zero cross-adapter communication (independence constraint)
+CRITICAL: VLM pipeline provides crop routing (vision-language integration)
+CRITICAL: Independent adapters per crop (no cross-adapter communication)
 CRITICAL: Per-class OOD thresholds (v5.5 differentiator from v5.4)
+
+Optional: SimpleCropRouter (lightweight alternative if VLM unavailable)
 ```
 
 ---
@@ -334,7 +337,7 @@ Improves sensitivity on homogeneous classes
    - Validate threshold updates
 
 4. **Update Pipeline** (1 hour)
-   - Replace VLM router with SimpleCropRouter
+   - Confirmed VLM router is primary (SimpleCropRouter available as alternative)
    - Validate multi-crop independence
 
 ### Short Term (Next Session)

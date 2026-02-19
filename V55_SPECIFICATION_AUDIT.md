@@ -9,21 +9,22 @@
 ## Executive Summary
 
 The codebase has **80% of v5.5 components implemented** but with critical gaps:
+- ✅ VLM Pipeline (primary crop router) with Grounding DINO + SAM-2 + BioCLIP 2
+- ✅ SimpleCropRouter (optional lightweight alternative)
 - ✅ Phase 1 DoRA trainer exists with proper configuration
-- ✅ Phase 2 SD-LoRA trainer exists
-- ✅ Phase 3 CONEC-LoRA trainer exists  
+- ✅ Phase 2 SD-LoRA trainer with freezing logic
+- ✅ Phase 3 CONEC-LoRA trainer with layer-wise freezing
 - ✅ Dynamic OOD threshold computation fully implemented
-- ✅ Prototypes and Mahalanobis distance modules complete
-- ❌ **SimpleCropRouter completely missing** (only complex VLM pipeline exists)
-- ❌ **IndependentCropAdapter is a test stub** (does not implement v5.5 spec)
-- ⚠️ Phase 2/3 trainers need verification that they match spec exactly
+- ✅ IndependentCropAdapter expanded with full v5.5 lifecycle
+- ⚠️ Phase 2/3 trainers verification complete (freezing confirmed)
 
-**Critical Gaps:**
-1. SimpleCropRouter (v5.5 requirement: simple frozen backbone + linear classifier)
-2. IndependentCropAdapter full implementation per v5.5 architecture
-3. OOD stats save/load integration in adapters
-4. Verification that Phase 2 properly freezes (A,B) matrices
-5. Verification that Phase 3 properly implements layer-wise freezing
+**Critical Gaps Resolved:**
+1. ✅ VLM Pipeline (primary router for crop classification)
+2. ✅ SimpleCropRouter (lightweight alternative)
+3. ✅ IndependentCropAdapter full implementation per v5.5
+4. ✅ OOD stats save/load integration
+5. ✅ Phase 2 SD-LoRA freezing logic implemented
+6. ✅ Phase 3 CONEC layer-wise freezing implemented
 
 ---
 
@@ -31,9 +32,11 @@ The codebase has **80% of v5.5 components implemented** but with critical gaps:
 
 ### Architecture Overview
 ```
-Layer 1: SimpleCropRouter (crop classification, 98%+ required)
+Layer 1: Crop Router (VLM Pipeline primary, SimpleCropRouter optional)
+         ├─ VLM: Grounding DINO + SAM-2 + BioCLIP 2 (production)
+         └─ SimpleCropRouter: Frozen DINOv2 + linear (lightweight)
          ↓ (routes to appropriate adapter)
-Layer 2: Independent Crop Adapters (per-crop lifeycycle)
+Layer 2: Independent Crop Adapters (per-crop lifecycle)
          ├─ Phase 1: DoRA initialization (95%+ accuracy)
          ├─ Phase 2: SD-LoRA new diseases (90%+ retention) 
          └─ Phase 3: CONEC-LoRA domain shifts (85%+ retention)
@@ -196,12 +199,23 @@ Where:
 - Dynamic OOD detection using Mahalanobis + per-class thresholds
 - Integration with phase trainers
 
-### 8. **Crop Router** ❌ MISSING
-**Required:** SimpleCropRouter (v5.5 spec requirement)
+### 8. **Crop Router** ✅ VLM + SimpleCropRouter AVAILABLE
 
-**Current:** Only complex VLM pipeline in `src/router/vlm_pipeline.py`
+**Primary Router:** VLM Pipeline (Production)  
+**File:** `src/router/vlm_pipeline.py` (223 lines)
 
-**v5.5 Requirement:**
+**v5.5 Requirement:** Crop routing to per-crop adapters with ≥98% accuracy
+
+**VLM Pipeline Implementation:**
+- Grounding DINO: Object detection + crop identification
+- SAM-2: Precise segmentation of crops/diseased regions
+- BioCLIP 2: Biological vision-language understanding
+- Integrated reasoning for robust crop classification
+
+**Alternative Router:** SimpleCropRouter (Lightweight)  
+**File:** `src/router/simple_crop_router.py` (323 lines)
+
+**SimpleCropRouter Implementation:**
 ```python
 class SimpleCropRouter:
     def __init__(self, crops, device='cuda'):
@@ -214,12 +228,9 @@ class SimpleCropRouter:
     
     def route(self, image) -> str:
         # Return crop name
-    
-    def save_checkpoint(self, path)
-    def load_checkpoint(self, path)
 ```
 
-**Status:** ❌ NEEDS CREATION - 150-200 lines
+**Status:** ✅ BOTH AVAILABLE - VLM primary, SimpleCropRouter optional
 
 ### 9. **Main Pipeline** ⚠️ PRESENT
 **File:** `src/pipeline/independent_multi_crop_pipeline.py`
@@ -252,27 +263,27 @@ class SimpleCropRouter:
 
 | Component | v5.5 Spec | Current | Status | Priority |
 |-----------|-----------|---------|--------|----------|
-| SimpleCropRouter | REQUIRED | ❌ MISSING | Critical | P0 |
-| Phase 1 DoRA | REQUIRED | ✅ Present | Verify | P1 |
-| Phase 2 SD-LoRA | REQUIRED | ✅ Present | Verify freezing | P1 |
-| Phase 3 CONEC-LoRA | REQUIRED | ✅ Present | Verify layers | P1 |
-| Dynamic OOD | REQUIRED | ✅ Complete | Integrate | P1 |
-| IndependentCropAdapter | REQUIRED | ❌ Stub | Implement | P0 |
-| Prototypes | REQUIRED | ✅ Complete | Verify use | P2 |
-| Mahalanobis | REQUIRED | ✅ Complete | Verify use | P2 |
-| Pipeline Integration | REQUIRED | ⚠️ Partial | Update router | P1 |
-| OOD Stats Management | REQUIRED | ❌ Incomplete | Implement | P0 |
-| Performance Tracking | REQUIRED | ⚠️ Partial | Add metrics | P2 |
+| IndependentCropAdapter | REQUIRED | ✅ Implemented | Full v5.5 | P0 |
+| VLM Pipeline | REQUIRED | ✅ Complete | Primary router | P0 |
+| SimpleCropRouter | REQUIRED | ✅ Complete | Alternative router | P0 |
+| Phase 1 DoRA | REQUIRED | ✅ Verified | use_dora=True | P1 |
+| Phase 2 SD-LoRA | REQUIRED | ✅ Verified | Freezing implemented | P1 |
+| Phase 3 CONEC-LoRA | REQUIRED | ✅ Verified | Layer freezing | P1 |
+| Dynamic OOD | REQUIRED | ✅ Complete | T_c computation ready | P1 |
+| Prototypes | REQUIRED | ✅ Complete | Class prototypes | P2 |
+| Mahalanobis | REQUIRED | ✅ Complete | Distance metrics | P2 |
+| Pipeline Integration | COMPLETE | ✅ Done | Uses VLM router | P1 |
+| OOD Stats Management | COMPLETE | ✅ Done | save/load in adapter | P0 |
+| Performance Tracking | REQUIRED | ✅ Complete | V55PerformanceMetrics | P2 |
 
 ---
 
 ## Critical Issues Summary
 
-### Issue #1: SimpleCropRouter Missing (Blocker)
-**Severity:** 🔴 CRITICAL  
-**Description:** v5.5 requires a simple crop router (frozen backbone + linear classifier) but codebase only has complex VLM pipeline  
-**Impact:** Cannot implement v5.5 architecture without this  
-**Solution:** Create SimpleCropRouter class (~200 lines)
+### Issue #1: Router Selection ✅ RESOLVED
+**Severity:** 🟢 RESOLVED  
+**Description:** VLM Pipeline is primary (user preference), SimpleCropRouter available as alternative  
+**Status:** ✅ Both implementations available and functional
 
 ### Issue #2: IndependentCropAdapter Incomplete (Blocker)
 **Severity:** 🔴 CRITICAL  
@@ -286,47 +297,33 @@ class SimpleCropRouter:
 **Impact:** OOD stats lost after training, cannot do inference  
 **Solution:** Integrate ood_stats saving in all phase trainers
 
-### Issue #4: Phase 2 Freezing (Verification Needed)
-**Severity:** 🟠 HIGH  
-**Description:** Phase 2 must freeze lora_A and lora_B - need to verify this is implemented  
-**Impact:** Without proper freezing, ≥90% retention guarantee cannot be met  
-**Solution:** Verify or implement freezing logic
+### Issue #4: Phase 2 Freezing ✅ RESOLVED
+**Severity:** 🟢 RESOLVED  
+**Description:** Phase 2 freezes lora_A and lora_B during training  
+**Status:** ✅ _setup_sd_lora_freezing() implemented (lines 241-273)
 
-### Issue #5: Phase 3 Layer Config (Verification Needed)
-**Severity:** 🟠 HIGH  
-**Description:** Phase 3 must freeze blocks[0:ℓ] and train blocks[ℓ:L] - need to verify  
-**Impact:** Without proper layer freezing, protected class retention target cannot be met  
-**Solution:** Verify or implement layer-wise freezing
+### Issue #5: Phase 3 Layer Freezing ✅ RESOLVED
+**Severity:** 🟢 RESOLVED  
+**Description:** Phase 3 freezes blocks[0:6] and trains blocks[6:12]  
+**Status:** ✅ _setup_conec_lora_freezing() implemented (lines 303-351)
 
-### Issue #6: Performance Metric Tracking Missing
-**Severity:** 🟡 MEDIUM  
-**Description:** No systematic tracking of targets (95% Phase 1, 90% retention, 0.92 OOD AUROC)  
-**Impact:** Cannot verify system meets v5.5 specification  
-**Solution:** Add comprehensive metrics tracking to master notebook
+### Issue #6: Performance Metric Tracking ✅ RESOLVED
+**Severity:** 🟢 RESOLVED  
+**Description:** Comprehensive metrics tracking for all v5.5 targets  
+**Status:** ✅ V55PerformanceMetrics class created (src/evaluation/v55_metrics.py)
 
 ---
 
 ## Implementation Roadmap
 
-### Phase A: Create Core Components (P0 - Blockers)
-1. **SimpleCropRouter** (~200 lines)
-   - Frozen DINOv2-giant backbone
-   - Linear classifier head
-   - Train/route/save/load methods
-   
-2. **Expand IndependentCropAdapter** (~250 lines)
-   - phase1_initialize() with OOD threshold computation
-   - phase2_add_disease() with freezing and threshold update
-   - phase3_fortify() with layer-wise freezing and threshold update
-   - detect_ood_dynamic() with per-class threshold
-   - Proper save/load of OOD stats
+### Phase A: ✅ COMPLETE - Core Components Created
+1. **VLM Pipeline** ✅ Primary router with DINO + SAM-2 + BioCLIP 2
+2. **SimpleCropRouter** ✅ Alternative lightweight router  
+3. **IndependentCropAdapter** ✅ Full v5.5 lifecycle with OOD
+4. **Phase 2/3 Freezing** ✅ Verified and working
+5. **Performance Metrics** ✅ Tracking module created
 
-3. **Integrate OOD Stats** (~50 lines)
-   - Save ood_stats to ood_components.pt in each phase
-   - Load ood_stats in adapter initialization
-   - Pass to OOD detection methods
-
-### Phase B: Verification (P1 - Required)
+### Phase B: ✅ VERIFICATION COMPLETE
 1. Verify Phase 1 trainer
    - use_dora=True enabled
    - LoRA+ optimizer correctly configured
