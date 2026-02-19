@@ -75,8 +75,9 @@ Freezing Strategy:
 
 ## v5.5 Specification Compliance
 
-### Phase 1: DoRA (≥95% accuracy)
+### Phase 1: DoRA - Weight-Decomposed Low-Rank Adaptation (≥95% accuracy)
 - ✅ Implementation: `ColabPhase1Trainer` with `use_dora=True`
+- DoRA decomposes weight matrices into magnitude and direction components for efficient adaptation
 - ✅ LoRA+ optimizer with 16x learning rate for lora_B
 - ✅ Prototype computation for OOD baseline
 - ✅ verify: Use `compute_ood_thresholds()` after training

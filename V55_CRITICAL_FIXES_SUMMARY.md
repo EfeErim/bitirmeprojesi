@@ -173,7 +173,7 @@ def compute_ood_thresholds(self, data_loader, k=2.0):
 
 ## 5. v5.5 Specification Compliance
 
-### Phase 1 (DoRA) - ✅ VERIFIED COMPLETE
+### Phase 1 (DoRA: Weight-Decomposed Low-Rank Adaptation) - ✅ VERIFIED COMPLETE
 - LoRA config: `use_dora=True` ✓
 - LoRA+ optimizer: 16x ratio for lora_B ✓
 - Prototype computation: Available ✓

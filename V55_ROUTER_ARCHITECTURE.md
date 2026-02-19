@@ -39,7 +39,7 @@ The v5.5 architecture uses a **two-layer design** for crop-specific training:
     │
     └─ Layer 2: Per-Crop Lifecycle
        │
-       ├─ Phase 1: DoRA (≥95% accuracy)
+       ├─ Phase 1: DoRA/Weight-Decomposed Low-Rank Adaptation (≥95% accuracy)
        ├─ Phase 2: SD-LoRA (≥90% retention)
        ├─ Phase 3: CONEC-LoRA (≥85% protected retention)
        └─ Dynamic OOD Detection (≥92% AUROC)
