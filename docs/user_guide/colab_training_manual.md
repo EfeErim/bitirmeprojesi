@@ -492,8 +492,8 @@ writer = SummaryWriter('./logs/tensorboard')
 After training, deploy the API:
 
 ```python
-# Start FastAPI server
-!uvicorn api.main:app --host 0.0.0.0 --port 8000
+# For inference, use the pipeline directly in your code
+# See the Colab Cheatsheet for example inference code
 ```
 
 Expose with ngrok:

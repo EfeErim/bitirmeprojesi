@@ -23,22 +23,26 @@ pytest -c config/pytest.ini tests/import_test.py
 python scripts/check_markdown_links.py --root .
 ```
 
-## Run API Locally
+## Run Local Tests
 
 ```powershell
-$env:APP_ENV="development"
-python -m api.main
+# Run all tests
+pytest tests/ -v
+
+# Run specific test module
+pytest tests/unit/ -v
+pytest tests/integration/ -v
+
+# Run with coverage
+pytest tests/ --cov=src --cov-report=html
 ```
-
-Expected endpoint base:
-
-- `http://localhost:8000/health`
 
 ## Configuration Model
 
 - Base config: `config/base.json`
-- Environment overrides: `config/development.json`, `config/production.json`, `config/colab.json`
-- Loader: `src/core/config_manager.py`
+- Training config (Colab): `config/colab.json`
+- Environment overrides: `config/development.json`, `config/production.json`
+- Config loader: `src/core/config_manager.py`
 
 ## Colab Workflow (Primary Training Path)
 

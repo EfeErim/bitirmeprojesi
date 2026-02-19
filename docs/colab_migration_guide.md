@@ -272,7 +272,7 @@ After training, you can deploy the API in Colab:
 
 ```python
 # Start API server
-!uvicorn api.main:app --host 0.0.0.0 --port 8000
+# For inference, use the training pipeline's inference functions
 ```
 
 Use ngrok to expose the API publicly:

@@ -2,155 +2,165 @@
 
 **Agricultural AI Development System - ULoRA v5.5**
 
-A production-ready, multi-crop disease detection system using independent crop adapters with dynamic OOD (Out-of-Distribution) detection and **crop+part routing** for precise disease identification.
+A production-ready, multi-crop disease detection system using independent crop adapters with dynamic OOD (Out-of-Distribution) detection and crop-specific routing for precise disease identification.
 
-## Project Restructuring
+## Overview
 
-### Overview
-The project has undergone significant reorganization to improve maintainability, reduce complexity, and establish a cleaner foundation for future development. This restructuring consolidates multiple version directories and eliminates redundant files.
+AADS-ULoRA is focused on the **core ML training and inference engine** for multi-crop disease detection. This project provides:
 
-### Key Changes
+- Multi-phase training pipeline (DoRA → SD-LoRA → CoNeC-LoRA)
+- Crop-specific adapters for specialized inference
+- Out-of-Distribution (OOD) detection with Mahalanobis distance
+- Colab-first training workflow with complete notebooks
+- Comprehensive test suites for reliability
 
-#### 1. Desktop.ini Removal
-- Eliminated all system-generated desktop.ini placeholder files across project directories
-- Removed from: `api/`, `config/`, `mobile/`, `src/`, `tests/`, `docs/`, `documents/`, `lit_review/`, and subdirectories
-- This reduces clutter and prevents confusion with actual project files
+## Project Focus
 
-#### 2. Configuration Consolidation
-- Merged multiple `.gitattributes` and `.gitignore` files into unified `config/` directory
-- Consolidated environment configuration files:
-  - `config/base.json` - Base configuration
-  - `config/development.json` - Development overrides
-  - `config/production.json` - Production settings
-- Created `config/adapter_spec_v55.json` for adapter specifications
-- Standardized `config/pytest.ini` for test configuration
+This project focuses on the **research and training components** of the agricultural AI system. Mobile application deployment, API servers, and web service integrations have been removed to maintain focus on the core product development pipeline.
 
-#### 3. Code Refactoring
-- **API Structure**: Updated endpoints to match unified codebase
-  - `api/endpoints/crops.py` - Crop management
-  - `api/endpoints/diagnose.py` - Disease diagnosis
-  - `api/endpoints/feedback.py` - User feedback collection
-  - `api/endpoints/monitoring.py` - System monitoring
-- **Middleware**: Consolidated security, caching, rate limiting, and compression middleware
-- **Core Components**: Refactored adapter, pipeline, router, and OOD detection modules
-- **Utility Extraction**: Moved common functions to `src/utils/` for reusability
+### Removed Components (February 2026)
+- Mobile application code (`mobile/android/`)
+- FastAPI server and REST endpoints (`api/`)
+- Demo application (`demo/`)
+- Docker containerization (`docker/`)
+- Monitoring infrastructure (`monitoring/`)
 
-#### 4. Test Suite Updates
-- Updated comprehensive test files for unified structure
-- Added new test cases for consolidated configuration
-- Maintained coverage for: adapters, OOD detection, pipelines, routers, and validation
 
-### File Deletions (Consolidation)
-
-#### Version Directories Removed
-- `versions/v5.5.0-baseline/` - Baseline version
-- `versions/v5.5.1-ood/` - OOD detection version
-- `versions/v5.5.4-dinov3/` - Dinov3 integration version
-
-#### Configuration Files Removed
-- Multiple `.gitattributes` files (now unified)
-- Multiple `.gitignore` files (now unified)
-- `README_STAGE3.md` files (duplicate documentation)
-
-#### Documentation Files Removed
-- `colab_notebooks/README.md` (duplicate)
-- `current/README.md` (duplicate)
-- Multiple `.tex` files (consolidated into compiled PDFs)
-
-#### Implementation Files Removed
-- `requirements_optimized.txt` (multiple locations)
-- `setup_optimized.py` (multiple locations)
-
-#### Mobile Application Files Removed
-- `versions/v5.5.0-baseline/mobile/android/` (complete Android project)
-- Consolidated mobile code references
-
-#### Literature Review Files Removed
-- `versions/v5.5.0-baseline/lit_review/` (complete directory)
-- Centralized literature review in root `lit_review/` directory
-
-### Directory Structure
+## Directory Structure
 
 ```
 d:/bitirme projesi/
-├── api/                    # FastAPI backend
-│   ├── endpoints/         # REST API endpoints
-│   ├── middleware/        # Request middleware
-│   ├── database.py
-│   ├── graceful_shutdown.py
-│   ├── main.py
-│   ├── metrics.py
-│   └── validation.py
-├── config/                # Configuration files
-│   ├── base.json
-│   ├── development.json
-│   ├── production.json
-│   ├── adapter_spec_v55.json
-│   └── pytest.ini
-├── src/                   # Core source code
-│   ├── adapter/          # Crop adapters
-│   ├── dataset/          # Data preparation
-│   ├── debugging/        # Debug utilities
+├── colab_notebooks/       # Jupyter training notebooks
+│   ├── 1_data_preparation.ipynb
+│   ├── 2_phase1_training.ipynb
+│   ├── 3_phase2_training.ipynb
+│   ├── 4_phase3_training.ipynb
+│   ├── 5_testing_validation.ipynb
+│   └── 6_performance_monitoring.ipynb
+├── src/                   # Core training and inference code
+│   ├── adapter/          # Crop-specific adapters
+│   ├── core/             # Configuration and contracts
+│   ├── dataset/          # Data preparation and loading
+│   ├── debugging/        # Performance monitoring
 │   ├── evaluation/       # Metrics and evaluation
-│   ├── ood/              # OOD detection
-│   ├── pipeline/         # Processing pipelines
+│   ├── ood/              # OOD detection components
+│   ├── pipeline/         # Multi-crop inference pipeline
 │   ├── router/           # Crop routing logic
-│   ├── training/         # Training scripts
+│   ├── training/         # Phase trainers (Phase 1-3)
 │   ├── utils/            # Shared utilities
 │   └── visualization/    # Visualization tools
-├── tests/                 # Test suites
-│   ├── unit/
-│   ├── integration/
-│   ├── fixtures/
-│   └── conftest.py
+├── tests/                 # Comprehensive test suites
+│   ├── colab/            # Colab environment smoke tests
+│   ├── integration/       # End-to-end pipeline tests
+│   ├── unit/             # Unit tests for components
+│   └── fixtures/         # Test data and fixtures
+├── config/                # Configuration files
+│   ├── base.json         # Base configuration
+│   ├── colab.json        # Colab environment config
+│   ├── development.json  # Development overrides
+│   ├── production.json   # Production settings
+│   ├── adapter_spec_v55.json
+│   └── pytest.ini
 ├── docs/                  # Documentation
-├── docker/                # Containerization
-├── monitoring/            # Prometheus/Grafana
-├── colab_notebooks/       # Jupyter notebooks
-├── lit_review/            # Literature review
-├── plans/                 # Implementation plans
-├── benchmarks/            # Performance benchmarks
-├── demo/                  # Demo application
-└── [configuration files] # Root-level configs
+│   ├── README.md
+│   ├── architecture/
+│   ├── development/
+│   ├── contributing/
+│   ├── deployment/
+│   ├── security/
+│   ├── user_guide/
+│   ├── api/
+│   └── colab_migration_guide.md
+├── scripts/               # Utility scripts
+│   ├── check_markdown_links.py
+│   ├── download_data_colab.py
+│   └── install_colab.py
+├── data/                  # Data storage
+│   └── test_dataset/
+├── logs/                  # Training logs
+├── colab_bootstrap.ipynb  # Colab setup notebook
+├── requirements.txt       # Python dependencies
+├── setup.py               # Package setup
+└── validate_notebook_imports.py
 ```
+
+
 
 ## Benefits
 
-- **Simplified Maintenance**: Single codebase eliminates version confusion
-- **Clean Structure**: Removed system files and duplicates
-- **Standardized Configuration**: Centralized config management
-- **Improved Testing**: Unified test structure with comprehensive coverage
-- **Better Documentation**: Consolidated and up-to-date docs
+- **Focused Development**: Pure ML training and inference, no deployment overhead
+- **Comprehensive Training Pipeline**: Full 3-phase adapter training workflow
+- **Production-Grade Tests**: Extensive Colab and integration test coverage
+- **Clear Code Structure**: Well-organized source modules with clean boundaries
+- **Colab-First Design**: Optimized for cloud-based training
 
 ## Technical Specifications
 
-- **Framework**: FastAPI with async support
-- **ML Backend**: PyTorch with Vision Transformers
+- **Framework**: PyTorch with Vision Transformers (DINOv3)
 - **Adaptation**: ULoRA (Unified Low-Rank Adaptation)
+  - Phase 1: DoRA (Difference of Rectified Activations)
+  - Phase 2: SD-LoRA (Stable Diffusion LoRA)
+  - Phase 3: CoNeC-LoRA (Congruent Enhancement LoRA)
 - **OOD Detection**: Mahalanobis distance + prototype-based methods
-- **Routing**: Dynamic crop+part routing for specialized diagnosis
+- **Routing**: Crop-specific adapter dispatch
+- **Training Environment**: Colab-optimized with GPU/TPU support
 - **Configuration**: JSON-based with environment overrides
 
 ## Status
 
-Production-ready for Uyumsoft ZiraiTakip integration. Version 5.5.0. Last updated: February 2026.
+Training and inference engine for AADS-ULoRA. Version 5.5.0. Last updated: February 2026.
 
 ## Quick Start
 
-1. Install dependencies: `pip install -r requirements.txt`
-2. Configure environment: Copy `config/development.json` to `config/local.json`
-3. Run API: `python -m api.main`
-4. Access docs: `http://localhost:8000/docs`
-5. Check markdown links: `python scripts/check_markdown_links.py --root .`
+### Installation
+
+```bash
+# Clone repository
+git clone <repository>
+cd "d:\bitirme projesi"
+
+# Create virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Local Validation
+
+```bash
+# Verify imports
+python validate_notebook_imports.py
+
+# Run tests
+pytest -c config/pytest.ini tests/import_test.py
+
+# Check documentation links
+python scripts/check_markdown_links.py --root .
+```
+
+### Colab Training
+
+1. Open [colab_bootstrap.ipynb](colab_bootstrap.ipynb) in Google Colab
+2. Follow the sequential notebooks in `colab_notebooks/`:
+   - `1_data_preparation.ipynb` - Prepare training data
+   - `2_phase1_training.ipynb` - Train Phase 1 (DoRA)
+   - `3_phase2_training.ipynb` - Train Phase 2 (SD-LoRA)
+   - `4_phase3_training.ipynb` - Train Phase 3 (CoNeC-LoRA)
+   - `5_testing_validation.ipynb` - Validate models
+   - `6_performance_monitoring.ipynb` - Monitor training metrics
 
 ## Documentation
 
-- [API Reference](docs/api/api-reference.md)
 - [Documentation Index](docs/README.md)
 - [Architecture Overview](docs/architecture/overview.md)
 - [Crop Router Technical Guide](docs/architecture/crop-router-technical-guide.md)
+- [VLM Pipeline Guide](docs/architecture/vlm-pipeline-guide.md)
+- [Comprehensive Codebase Evaluation](docs/architecture/comprehensive-codebase-evaluation.md)
 - [Development Setup](docs/development/development-setup.md)
-- [Rollback Guide](docs/development/rollback-guide.md)
+- [Implementation Plan](docs/development/implementation-plan.md)
 - [Colab Migration Guide](docs/colab_migration_guide.md)
 - [Colab Training Manual](docs/user_guide/colab_training_manual.md)
 - [Colab Cheatsheet](docs/user_guide/cheatsheet_colab.md)
+- [Tomato Crop Adapter Manual](docs/user_guide/tomato_crop_adapter_manual.md)

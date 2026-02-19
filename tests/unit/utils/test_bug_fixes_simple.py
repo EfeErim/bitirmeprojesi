@@ -306,10 +306,10 @@ class TestDatabaseSessionSafety:
             def close(self):
                 raise RuntimeError("Close failed")
         
-        # Simulate the pattern from api/database.py get_db
+        # Simulate a resource cleanup pattern with error handling
         session = MockSession()
         try:
-            # Instead of yield, we just simulate the finally block
+            # Resource usage
             pass
         finally:
             try:

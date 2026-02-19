@@ -486,63 +486,60 @@ export AADS_OOD_ENABLED=true
 
 ## Integration
 
-### API Integration
+### Training Pipeline Integration
 
 ```python
-from fastapi import FastAPI, File, UploadFile
-from src.api.endpoints.diagnose import diagnose_image
+from src.adapter.independent_crop_adapter import IndependentCropAdapter
+from src.dataset.colab_datasets import TomatoDataset
+from src.training.colab_phase1_training import ColabPhase1Trainer
 
-app = FastAPI()
+# Initialize dataset
+dataset = TomatoDataset(root_dir='data/tomato', split='train')
 
-@app.post("/diagnose/tomato")
-def diagnose_tomato(file: UploadFile = File(...)):
-    """Diagnose tomato disease from uploaded image."""
-    try:
-        # Read image
-        image = Image.open(file.file)
-        
-        # Preprocess
-        image_tensor = preprocess_image(image)
-        
-        # Initialize adapter
-        adapter = IndependentCropAdapter(crop_name='tomato', device='cuda')
-        adapter.load_adapter('models/tomato_phase3')
-        
-        # Predict
-        result = adapter.predict_with_ood(image_tensor)
-        
-        return {
-            "status": "success",
-            "result": result
-        }
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e)
-        }
+# Initialize adapter
+adapter = IndependentCropAdapter(crop_name='tomato', device='cuda')
+
+# Phase 1: Initialize with DoRA
+config = {
+    'learning_rate': 1e-4,
+    'num_epochs': 3,
+    'batch_size': 32
+}
+result = adapter.phase1_initialize(dataset, dataset, config=config)
+
+# Phase 2: Fine-tune with SD-LoRA
+trainer = ColabPhase1Trainer(config)
+trainer.train(adapter, dataset)
+
+# Save checkpoint
+adapter.save_checkpoint('models/tomato_phase1')
 ```
 
-### Docker Integration
+### Inference Pipeline Integration
 
-```dockerfile
-# Dockerfile for tomato adapter service
-FROM python:3.9-slim
+```python
+from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
+from PIL import Image
 
-WORKDIR /app
+# Initialize pipeline
+pipeline = IndependentMultiCropPipeline(
+    adapters_dir='models/',
+    ood_enabled=True
+)
 
-# Install dependencies
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Load image
+image = Image.open('test_image.jpg')
 
-# Copy source code
-COPY src/ ./src/
-COPY config/ ./config/
+# Perform inference
+result = pipeline.analyze_image(
+    image=image,
+    target_crop='tomato',
+    return_ood_analysis=True
+)
 
-# Expose port
-EXPOSE 8000
-
-# Run API
-CMD ["python", "-m", "api.main"]
+print(f"Diagnosis: {result['diagnosis']}")
+print(f"Confidence: {result['confidence']}")
+print(f"OOD Score: {result.get('ood_score', 'N/A')}")
 ```
 
 ---

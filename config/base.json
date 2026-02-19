@@ -1,39 +1,15 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "AADS-ULoRA Base Configuration",
-  "description": "Base configuration for Agricultural AI Development System - ULoRA v5.5.3",
-  "version": "5.5.3",
-  "last_updated": "2026-02-17",
+  "description": "Base configuration for Agricultural AI Development System - ULoRA v5.5",
+  "version": "5.5.0",
+  "last_updated": "2026-02-19",
 
-  "api": {
-    "host": "0.0.0.0",
-    "port": 8000,
-    "reload": false,
-    "workers": 4,
-    "title": "AADS-ULoRA API",
-    "description": "Agricultural AI Development System - Disease Detection API",
-    "version": "v1",
-    "contact": {
-      "name": "AADS-ULoRA Team",
-      "email": "api@aadsulora.com",
-      "url": "https://github.com/uyumsoft/aads-ulora"
-    },
-    "license": {
-      "name": "MIT License",
-      "url": "https://opensource.org/licenses/MIT"
-    }
-  },
-
-  "database": {
-    "type": "postgresql",
-    "host": "localhost",
-    "port": 5432,
-    "name": "aads_ulora",
-    "username": "aads_user",
-    "password": "",
-    "pool_size": 20,
-    "max_overflow": 30,
-    "echo": false
+  "training": {
+    "enabled": true,
+    "default_device": "cuda",
+    "mixed_precision": true,
+    "gradient_accumulation_steps": 4
   },
 
   "router": {
@@ -72,51 +48,10 @@
     }
   },
 
-  "monitoring": {
-    "enabled": true,
-    "prometheus": {
-      "enabled": true,
-      "port": 9090,
-      "path": "/metrics"
-    },
-    "logging": {
-      "format": "json",
-      "rotate": true,
-      "max_size_mb": 100,
-      "backup_count": 5
-    },
-    "health": {
-      "enabled": true,
-      "detailed": false,
-      "include_memory": false,
-      "include_cuda": false
-    }
-  },
-
-  "security": {
-    "rate_limit": {
-      "enabled": true,
-      "requests_per_minute": 100,
-      "burst": 200
-    },
-    "auth": {
-      "enabled": false,
-      "jwt_secret": "CHANGE_IN_PRODUCTION",
-      "jwt_algorithm": "HS256",
-      "token_expire_minutes": 1440
-    },
-    "cors": {
-      "allow_origins": ["*"],
-      "allow_credentials": true,
-      "allow_methods": ["*"],
-      "allow_headers": ["*"]
-    }
-  },
-
-  "cache": {
-    "enabled": true,
-    "backend": "redis",
-    "ttl": 3600,
-    "max_size": 1000
+  "logging": {
+    "format": "json",
+    "rotate": true,
+    "max_size_mb": 100,
+    "backup_count": 5
   }
 }

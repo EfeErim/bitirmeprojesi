@@ -13,7 +13,7 @@ This document reflects the current implementation in the repository.
 
 ## High-Level Flow
 
-1. **Request ingress** via FastAPI in `api/main.py`.
+1. **Request ingress** via Python function calls in inference scripts.
 2. **Image decoding + preprocessing** in API endpoint handlers.
 3. **Pipeline orchestration** in `src/pipeline/independent_multi_crop_pipeline.py`.
 4. **Router analysis** through `src/router/vlm_pipeline.py` (`VLMPipeline` + `DiagnosticScoutingAnalyzer`).

@@ -22,7 +22,7 @@ os.environ['AADS_WORKSPACE'] = '/content/drive/MyDrive/aads_ulora'
 !pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 !pip install transformers peft accelerate datasets evaluate
 !pip install numpy pandas pillow scikit-learn tqdm psutil
-!pip install fastapi uvicorn pydantic python-multipart
+!pip install python-multipart
 ```
 
 ### GPU Info

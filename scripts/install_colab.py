@@ -149,12 +149,7 @@ class ColabInstaller:
             'tqdm',
             'psutil',
             'gdown',
-            'fastapi',
-            'uvicorn[standard]',
             'python-multipart',
-            'pydantic>=2.0.0',
-            'redis',
-            'sqlalchemy',
             'requests',
             'tensorboard',
             'matplotlib',
@@ -355,9 +350,7 @@ matplotlib>=3.7.0
 seaborn>=0.12.0
 
 # API & web
-fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
-pydantic>=2.0.0
+python-multipart>=0.0.5
 python-multipart>=0.0.6
 
 # Database

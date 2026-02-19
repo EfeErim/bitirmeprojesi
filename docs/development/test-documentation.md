@@ -9,7 +9,7 @@
 
 - `tests/colab/`: Colab environment, data pipeline, smoke training
 - `tests/integration/`: end-to-end colab integration
-- `tests/api/`: FastAPI endpoint behavior
+
 - `tests/unit/`: unit-level component coverage
 
 ## Core Validation Commands
