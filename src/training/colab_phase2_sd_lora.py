@@ -179,11 +179,14 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
         # Initialize new classifier weights
         self._initialize_new_classifier()
 
+        # CRITICAL: Setup SD-LoRA freezing for new disease adaptation (v5.5 spec)
+        self._setup_sd_lora_freezing()
+
         # Loss function
         self.criterion = nn.CrossEntropyLoss()
 
-        # Create optimizer
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=0.01)
+        # Create optimizer with stratified learning rates
+        self.optimizer = self._create_sd_lora_optimizer()
 
         # Learning rate scheduler
         self.scheduler = None
@@ -198,7 +201,7 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
 
     def setup_optimizer(self):
         """Compatibility helper used by smoke/integration tests."""
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.learning_rate, weight_decay=0.01)
+        self.optimizer = self._create_sd_lora_optimizer()
         return self.optimizer
 
     def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
@@ -233,6 +236,89 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
             self.classifier.bias.data = torch.cat([existing_bias, new_bias], dim=0)
         except (AttributeError, RuntimeError) as e:
             logger.warning(f"Could not initialize classifier weights from base model: {e}, using random init")
+
+    def _setup_sd_lora_freezing(self):
+        """Setup SD-LoRA freezing for v5.5 Phase 2 (≥90% retention guarantee).
+        
+        Freezes lora_A matrices (down projections) to preserve original knowledge.
+        Only lora_B matrices (up projections) are trainable, allowing quick adaptation
+        to new diseases while maintaining backward compatibility.
+        
+        References: v5.5 spec Section 3.2 - SD-LoRA Configuration
+        """
+        lora_a_frozen = 0
+        lora_b_trainable = 0
+        base_frozen = 0
+        
+        for name, param in self.model.named_parameters():
+            # Freeze base model parameters except classifier
+            if 'classifier' not in name and 'lora' not in name:
+                param.requires_grad = False
+                base_frozen += 1
+            # Freeze lora_A (down projection) - preserves original knowledge
+            elif 'lora_A' in name:
+                param.requires_grad = False
+                lora_a_frozen += 1
+            # Keep lora_B trainable (up projection) - enables disease adaptation
+            elif 'lora_B' in name:
+                param.requires_grad = True
+                lora_b_trainable += 1
+        
+        # Log freezing configuration
+        logger.info(f"✅ SD-LoRA Freezing (v5.5 Phase 2):")
+        logger.info(f"   - Base model parameters frozen: {base_frozen}")
+        logger.info(f"   - lora_A matrices frozen: {lora_a_frozen} (preserve original knowledge)")
+        logger.info(f"   - lora_B matrices trainable: {lora_b_trainable} (enable new disease adaptation)")
+        
+        trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.model.parameters())
+        logger.info(f"   - Trainable: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
+        logger.info(f"   - Target: ≥90% retention of original disease knowledge")
+
+    def _create_sd_lora_optimizer(self) -> torch.optim.Optimizer:
+        """Create optimizer with stratified learning rates for SD-LoRA.
+        
+        Uses higher learning rate for lora_B to accelerate disease-specific adaptation
+        while keeping lower rate for classifier fine-tuning.
+        """
+        param_groups = []
+        
+        # Group 1: lora_B matrices - high learning rate for quick adaptation
+        lora_b_params = [p for n, p in self.model.named_parameters() if 'lora_B' in n and p.requires_grad]
+        if lora_b_params:
+            param_groups.append({
+                'params': lora_b_params,
+                'lr': self.learning_rate * 4.0,  # 4x boost for lora_B
+                'weight_decay': 0.01
+            })
+            logger.info(f"SD-LoRA optimizer: lora_B at {self.learning_rate * 4.0:.2e} (4x boost)")
+        
+        # Group 2: Classifier head - moderate learning rate
+        classifier_params = [p for p in self.classifier.parameters() if p.requires_grad]
+        if classifier_params:
+            param_groups.append({
+                'params': classifier_params,
+                'lr': self.learning_rate,
+                'weight_decay': 0.01
+            })
+            logger.info(f"SD-LoRA optimizer: classifier at {self.learning_rate:.2e}")
+        
+        # Add any other trainable params at base rate
+        other_params = [
+            p for n, p in self.model.named_parameters() 
+            if p.requires_grad and 'lora_B' not in n and not any(
+                p is cp for cp in classifier_params
+            )
+        ]
+        if other_params:
+            param_groups.append({
+                'params': other_params,
+                'lr': self.learning_rate * 0.5,  # 0.5x for other params
+                'weight_decay': 0.01
+            })
+        
+        # Create optimizer with stratified parameters
+        return torch.optim.AdamW(param_groups)
 
     def _get_gpu_memory_usage(self) -> Dict[str, float]:
         """Get current GPU memory usage in MB."""

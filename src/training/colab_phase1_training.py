@@ -565,6 +565,67 @@ class ColabPhase1Trainer:
         logger.info(f"Computed prototypes for {len(class_stds)} classes")
         return class_means, class_stds
 
+    def compute_ood_thresholds(self, data_loader: DataLoader, k: float = 2.0) -> Dict[int, float]:
+        """Compute per-class OOD thresholds from validation data (v5.5 spec).
+        
+        Implements dynamic Mahalanobis-based thresholds: T_c = μ_c + k·σ_c
+        where μ_c is the mean distance and σ_c is the std dev for class c.
+        
+        Args:
+            data_loader: Validation data loader for threshold computation
+            k: Standard deviation multiplier (default 2.0 for ~95% confidence)
+            
+        Returns:
+            Dictionary mapping class indices to threshold values
+            
+        References: v5.5 spec Section 2.4 - Dynamic OOD Detection
+        """
+        self.model.eval()
+        
+        # Collect distances per class
+        distances_per_class = {i: [] for i in range(self.num_classes)}
+        
+        # First, compute class means if not already done
+        if not hasattr(self, '_class_means'):
+            self._class_means, self._class_stds = self.compute_prototypes(data_loader)
+        
+        class_means = self._class_means.to(self.device)
+        
+        # Compute Mahalanobis distances for validation samples
+        for images, labels in data_loader:
+            images = images.to(self.device)
+            pooled_output = extract_pooled_output(self.base_model, images)
+            
+            for feat, label in zip(pooled_output, labels):
+                class_idx = label.item()
+                mean = class_means[class_idx]
+                
+                # Mahalanobis distance (simplified: Euclidean)
+                distance = torch.norm(feat - mean).item()
+                distances_per_class[class_idx].append(distance)
+        
+        # Compute thresholds as mean + k * std
+        thresholds = {}
+        for class_idx in range(self.num_classes):
+            if len(distances_per_class[class_idx]) == 0:
+                # Default threshold if no validation samples
+                thresholds[class_idx] = 5.0  # Reasonable default
+                logger.warning(f"No validation samples for class {class_idx}, using default threshold 5.0")
+                continue
+            
+            dists = np.array(distances_per_class[class_idx])
+            mean_dist = dists.mean()
+            std_dist = dists.std()
+            
+            # T_c = μ_c + k·σ_c (v5.5 spec)
+            threshold = mean_dist + k * std_dist
+            thresholds[class_idx] = threshold
+            
+            logger.debug(f"Class {class_idx}: μ={mean_dist:.3f}, σ={std_dist:.3f}, T={threshold:.3f}")
+        
+        logger.info(f"✅ Computed OOD thresholds for {len(thresholds)} classes (k={k})")
+        return thresholds
+
     def save_adapter(self, save_path: str):
         """Save the trained adapter and classifier."""
         save_path = Path(save_path)

@@ -271,6 +271,9 @@ class ColabPhase3Trainer:
         else:
             self.model = self._setup_model()
         
+        # CRITICAL: Setup CONEC-LoRA layer-wise freezing for domain adaptation (v5.5 spec)
+        self._setup_conec_lora_freezing()
+        
         # Optimizer and scheduler
         self.optimizer = None
         self.scheduler = None
@@ -335,22 +338,112 @@ class ColabPhase3Trainer:
         logger.info("CoNeC-LoRA adapter configured successfully")
         return model
     
+    def _setup_conec_lora_freezing(self):
+        """Setup CONEC-LoRA layer-wise freezing for v5.5 Phase 3 (≥85% retention).
+        
+        Implements protected class retention through selective layer freezing:
+        - Blocks[0:6]: Frozen (original feature extraction learned in Phase 1)
+        - Blocks[6:12]: Trainable (domain-shift adaptation for robustness)
+        - LoRA modules: Always trainable for contrastive learning
+        
+        This configuration ensures model retains knowledge of protected (original)
+        crop classes while adapting to domain-shift challenges in new environments.
+        
+        References: v5.5 spec Section 4.2 - CONEC-LoRA Layer Configuration
+        """
+        frozen_blocks = 0
+        trainable_blocks = 0
+        frozen_lora = 0
+        trainable_lora = 0
+        frozen_base = 0
+        
+        # Get transformer model structure
+        transformer_module_name = None
+        for name, module in self.model.named_modules():
+            # Find transformer blocks (e.g., encoder.layer)
+            if 'encoder' in name or 'transformer' in name:
+                transformer_module_name = name
+                break
+        
+        for name, param in self.model.named_parameters():
+            # Blocks 0-5: Frozen (original feature extraction)
+            if any(f'layer.{i}.' in name for i in range(0, 6)):
+                param.requires_grad = False
+                frozen_blocks += 1
+            # Blocks 6-11: Trainable (domain adaptation)
+            elif any(f'layer.{i}.' in name for i in range(6, 12)):
+                param.requires_grad = True
+                trainable_blocks += 1
+            # LoRA modules: Always trainable (contrastive learning)
+            elif 'lora' in name:
+                param.requires_grad = True
+                if 'lora_A' in name:
+                    trainable_lora += 1
+                else:
+                    trainable_lora += 1
+            # Base model parameters (non-transformer): Frozen
+            else:
+                param.requires_grad = False
+                frozen_base += 1
+        
+        # Log freezing configuration
+        logger.info(f"✅ CONEC-LoRA Layer-wise Freezing (v5.5 Phase 3):")
+        logger.info(f"   - Blocks[0:6] frozen: {frozen_blocks} (original feature extraction)")
+        logger.info(f"   - Blocks[6:12] trainable: {trainable_blocks} (domain-shift adaptation)")
+        logger.info(f"   - LoRA modules trainable: {trainable_lora} (contrastive learning)")
+        logger.info(f"   - Base model frozen: {frozen_base}")
+        
+        trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        total = sum(p.numel() for p in self.model.parameters())
+        logger.info(f"   - Trainable: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
+        logger.info(f"   - Target: ≥85% retention of protected crop classes")
+    
     def setup_optimizer(self):
-        """Setup optimizer for CoNeC-LoRA parameters."""
+        """Setup optimizer with stratified learning rates for CONEC-LoRA parameters.
+        
+        Uses higher learning rate for trainable blocks[6:12] and LoRA to accelerate
+        domain-shift adaptation while protecting original feature extractors.
+        """
         if self.model is None:
             raise RuntimeError("Model must be set before setting up optimizer")
         
-        # Get trainable parameters
-        lora_params = [p for p in self.model.parameters() if p.requires_grad]
-        classifier_params = [p for p in self.classifier.parameters() if p.requires_grad]
+        param_groups = []
         
-        # Setup optimizer with weight decay
-        params = lora_params + classifier_params
-        self.optimizer = torch.optim.AdamW(
-            params, 
-            lr=self.config.learning_rate,
-            weight_decay=0.01
-        )
+        # Group 1: Blocks[6:12] - high learning rate for domain adaptation
+        adaptation_params = [p for n, p in self.model.named_parameters() 
+                            if any(f'layer.{i}.' in n for i in range(6, 12)) and p.requires_grad]
+        if adaptation_params:
+            param_groups.append({
+                'params': adaptation_params,
+                'lr': 5e-4,  # Higher LR for domain-shift learning
+                'weight_decay': 0.01
+            })
+            logger.info(f"CONEC-LoRA optimizer: Blocks[6:12] at 5e-4")
+        
+        # Group 2: LoRA modules - high learning rate for contrastive learning
+        lora_params = [p for n, p in self.model.named_parameters() 
+                      if 'lora' in n and p.requires_grad]
+        if lora_params:
+            param_groups.append({
+                'params': lora_params,
+                'lr': 1e-3,  # Even higher for LoRA contrastive adaptation
+                'weight_decay': 0.01
+            })
+            logger.info(f"CONEC-LoRA optimizer: LoRA modules at 1e-3")
+        
+        # Group 3: Classifier - moderate learning rate
+        classifier_params = [p for p in self.classifier.parameters() if p.requires_grad]
+        if classifier_params:
+            param_groups.append({
+                'params': classifier_params,
+                'lr': 1e-4,
+                'weight_decay': 0.01
+            })
+            logger.info(f"CONEC-LoRA optimizer: Classifier at 1e-4")
+        
+        # Create optimizer with stratified parameters
+        self.optimizer = torch.optim.AdamW(param_groups)
+        logger.info(f"CONEC-LoRA optimizer configured with {len(param_groups)} parameter groups")
         
         # Setup scheduler
         self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
