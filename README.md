@@ -119,7 +119,16 @@ Training and inference engine for AADS-ULoRA. Version 5.5.0. Last updated: Febru
 1. **Open in Google Colab:**  
    [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/EfeErim/bitirmeprojesi/blob/master/colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb)
 
-2. **Run All Cells** (Shift+Enter repeatedly or Runtime → Run all)
+2. **Configure Training (Interactive UI)**
+   - The first cell will display an interactive configuration interface:
+     - Select crops (tomato, potato, wheat, custom)
+     - Set dataset path on Google Drive
+     - Choose training parameters (batch size, learning rate, epochs)
+     - Select which phases to train
+     - Enable/disable validation
+     - Set output directory
+
+3. **Run All Cells** (Shift+Enter repeatedly or Runtime → Run all)
    - The notebook will automatically handle:
      - ✅ GPU detection and setup
      - ✅ Google Drive mounting
@@ -132,9 +141,56 @@ Training and inference engine for AADS-ULoRA. Version 5.5.0. Last updated: Febru
      - ✅ Model validation
      - ✅ Performance reporting
 
-3. **Wait for completion** (~8-12 hours total)
+4. **Wait for completion** (~8-12 hours total)
    - All results saved to Google Drive automatically
    - No interruptions or manual steps needed
+   - **Checkpoints created at each stage** - can resume from any point if interrupted
+
+### ⚡ Checkpoint System: Never Lose Training Progress
+
+The auto-training notebook includes an **automatic checkpoint system** that:
+
+- **🔄 Recovers from Failures** - If Colab times out during Phase 3, resume automatically from Phase 3 without re-running Phases 1-2
+- **⏭️ Skips Completed Phases** - Second runs skip finished phases entirely (saves 8+ hours of compute time)
+- **🔍 Clear Progress Visibility** - See exactly which phases completed with timestamps
+- **📝 Configuration Logging** - Every checkpoint stores training parameters for reproducibility
+
+**How it works in practice:**
+```
+First run: Setup → Data Prep → Phase 1 → Phase 2 → Phase 3 → Validation → Done
+           ✅     ✅          ✅        ✅        ✅        ✅
+
+Second run (if interrupted): Phase 3 resumes from checkpoint
+                             ⊘      ⊘          ⊘        ✅        ✅  
+
+Third run (modified config): Phases 1-2 skipped (cached), Phase 3 re-runs with new learning rate
+                             ⊘      ⊘          ⊘        ✅(skip)  ✅(rerun) ✅ Done!
+```
+
+**Manage checkpoints programmatically:**
+```python
+# Check which phases are complete
+checkpoint_manager.display_checkpoint_status()
+
+# Clear a phase to re-run it
+checkpoint_manager.clear_checkpoints(['phase2'])
+
+# Start completely fresh
+checkpoint_manager.clear_checkpoints()
+```
+
+See [Checkpoint System Guide](CHECKPOINT_SYSTEM_GUIDE.md) for detailed usage.
+
+### 🎯 Interactive Configuration
+
+Before training starts, the notebook displays an interactive UI where you can:
+- **🌾 Select Crops** - Choose from tomato, potato, wheat, or provide custom crop names
+- **📂 Dataset Path** - Specify the Google Drive path to your PlantVillage dataset
+- **⚙️ Training Parameters** - Set batch size (8-128), learning rate (1e-6 to 1e-2), epochs per phase (1-10)
+- **🔀 Phase Selection** - Run only the phases you need (Phase 1, 2, 3 independently or together)
+- **🖥️ Advanced Options** - Enable mixed precision, validation, device selection, checkpoint resume, etc.
+
+No more manual script editing - just set parameters once and train!
 
 ### Option 2: Local Development Setup
 
@@ -178,10 +234,12 @@ Google Drive/aads_ulora/
 │   ├── phase1_dora_adapter/       # DoRA trained model
 │   ├── phase2_sd_lora_adapter/    # SD-LoRA trained model
 │   └── phase3_conec_lora_adapter/ # CoNeC-LoRA trained model
-├── checkpoints/
+├── model_checkpoints/             # Model weights and optimizer states
 │   ├── phase1/
 │   ├── phase2/
 │   └── phase3/
+├── .checkpoints/                  # Training progress tracking
+│   └── checkpoint_log.json        # Progress log with timestamps
 ├── logs/
 │   ├── phase1_history.json
 │   ├── phase2_history.json
@@ -189,11 +247,31 @@ Google Drive/aads_ulora/
 └── outputs/
     ├── validation_results.json
     ├── performance_metrics.csv
-    └── training_summary.html
+    ├── training_summary.html
+    └── training_config.json       # Configuration used for this run
 ```
+
+**Checkpoint Log Example:**
+```json
+{
+  "setup": {"timestamp": "2025-02-20T10:15:23", "completed": true},
+  "data_prep": {"timestamp": "2025-02-20T10:16:45", "completed": true},
+  "phase1": {"timestamp": "2025-02-20T10:45:23", "completed": true, "details": {...}},
+  "phase2": {"timestamp": "2025-02-20T11:30:15", "completed": true, "details": {...}},
+  "phase3": null,
+  "validation": null,
+  "monitoring": null
+}
+```
+The checkpoint log allows you to resume training exactly where it left off.
 
 ## 📚 Documentation
 
+### Getting Started
+- [Seamless Auto-Train Guide](SEAMLESS_AUTOTRAIN_GUIDE.md) - Complete end-to-end Colab training walkthrough
+- **[Checkpoint System Guide](CHECKPOINT_SYSTEM_GUIDE.md)** - Recovery, resuming, and managing training checkpoints
+
+### Technical Documentation
 - [Documentation Index](docs/README.md)
 - [Architecture Overview](docs/architecture/overview.md)
 - [Crop Router Technical Guide](docs/architecture/crop-router-technical-guide.md)
