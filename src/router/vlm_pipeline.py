@@ -39,7 +39,7 @@ class VLMPipeline:
         defaults = {
             'grounding_dino': 'IDEA-Research/grounding-dino-base',
             'sam': 'sam2_b.pt',
-            'bioclip': 'openai/clip-vit-base-patch32'
+            'bioclip': 'imageomics/bioclip-2'
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
         self.model_ids = {
@@ -65,6 +65,7 @@ class VLMPipeline:
         self.sam_processor = None
         self.bioclip_processor = None
         self.sam_backend = None
+        self.bioclip_backend = None
         self.models_loaded = False
         
         logger.info(f"VLMPipeline initialized on {self.device}")
@@ -174,13 +175,28 @@ class VLMPipeline:
 
     def _load_clip_like_model(self, model_id: str):
         """Load CLIP/BioCLIP-like model and processor."""
-        from transformers import AutoProcessor, AutoModel
+        try:
+            from transformers import AutoProcessor, AutoModel
 
-        processor = AutoProcessor.from_pretrained(model_id)
-        model = AutoModel.from_pretrained(model_id)
-        model = model.to(self.device)
-        model.eval()
-        return processor, model
+            processor = AutoProcessor.from_pretrained(model_id)
+            model = AutoModel.from_pretrained(model_id)
+            model = model.to(self.device)
+            model.eval()
+            self.bioclip_backend = 'transformers'
+            return processor, model
+        except Exception:
+            import open_clip
+
+            model, _, preprocess = open_clip.create_model_and_transforms(f'hf-hub:{model_id}')
+            tokenizer = open_clip.get_tokenizer(f'hf-hub:{model_id}')
+            model = model.to(self.device)
+            model.eval()
+            self.bioclip_backend = 'open_clip'
+            processor = {
+                'preprocess': preprocess,
+                'tokenizer': tokenizer,
+            }
+            return processor, model
 
     @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
@@ -220,29 +236,45 @@ class VLMPipeline:
             return 'unknown', 0.0
 
         text_prompts = [f"a photo of {label}" for label in labels]
-        model_inputs = self.bioclip_processor(
-            text=text_prompts,
-            images=image,
-            return_tensors='pt',
-            padding=True
-        )
-        model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
+        if self.bioclip_backend == 'open_clip':
+            preprocess = self.bioclip_processor['preprocess']
+            tokenizer = self.bioclip_processor['tokenizer']
 
-        with torch.no_grad():
-            outputs = self.bioclip(**model_inputs)
-            if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
-                logits = outputs.logits_per_image
-            elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
-                image_embeds = outputs.image_embeds
-                text_embeds = outputs.text_embeds
+            image_tensor = preprocess(image).unsqueeze(0).to(self.device)
+            text_tokens = tokenizer(text_prompts).to(self.device)
+
+            with torch.no_grad():
+                image_embeds = self.bioclip.encode_image(image_tensor)
+                text_embeds = self.bioclip.encode_text(text_tokens)
                 image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
                 text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
                 logits = image_embeds @ text_embeds.T
-            else:
-                raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
+                probabilities = torch.softmax(logits, dim=-1)
+                best_confidence, best_index = torch.max(probabilities, dim=-1)
+        else:
+            model_inputs = self.bioclip_processor(
+                text=text_prompts,
+                images=image,
+                return_tensors='pt',
+                padding=True
+            )
+            model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
 
-            probabilities = torch.softmax(logits, dim=-1)
-            best_confidence, best_index = torch.max(probabilities, dim=-1)
+            with torch.no_grad():
+                outputs = self.bioclip(**model_inputs)
+                if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
+                    logits = outputs.logits_per_image
+                elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
+                    image_embeds = outputs.image_embeds
+                    text_embeds = outputs.text_embeds
+                    image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+                    logits = image_embeds @ text_embeds.T
+                else:
+                    raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
+
+                probabilities = torch.softmax(logits, dim=-1)
+                best_confidence, best_index = torch.max(probabilities, dim=-1)
 
         class_index = int(best_index.item())
         confidence = float(best_confidence.item())
@@ -529,18 +561,59 @@ class DiagnosticScoutingAnalyzer:
         Returns:
             Dictionary with analysis results
         """
-        # Placeholder implementation
-        # In a real implementation, this would use the VLM models
-        
-        return {
-            'crop': 'tomato',
-            'part': 'leaf',
-            'confidence': 0.95,
-            'detections': [
-                {
-                    'crop': 'tomato',
-                    'part': 'leaf',
-                    'confidence': 0.95
+        if self.vlm_pipeline is None:
+            return {
+                'status': 'error',
+                'crop': 'unknown',
+                'part': 'unknown',
+                'confidence': 0.0,
+                'detections': [],
+                'message': 'vlm_pipeline_unavailable'
+            }
+
+        try:
+            analysis = self.vlm_pipeline.analyze_image(
+                image_tensor,
+                confidence_threshold=self.confidence_threshold,
+                max_detections=self.max_detections,
+            )
+
+            detections = analysis.get('detections', []) or []
+            normalized_detections = []
+            best = None
+            best_confidence = -1.0
+
+            for det in detections:
+                crop_conf = float(det.get('crop_confidence', det.get('confidence', 0.0)))
+                normalized = {
+                    'crop': det.get('crop', 'unknown'),
+                    'part': det.get('part', 'unknown'),
+                    'confidence': crop_conf,
+                    'bbox': det.get('bbox'),
+                    'mask': det.get('mask'),
                 }
-            ]
-        }
+                normalized_detections.append(normalized)
+                if crop_conf > best_confidence:
+                    best_confidence = crop_conf
+                    best = normalized
+
+            if best is None:
+                best = {'crop': 'unknown', 'part': 'unknown', 'confidence': 0.0}
+
+            return {
+                'status': 'ok',
+                'crop': best.get('crop', 'unknown'),
+                'part': best.get('part', 'unknown'),
+                'confidence': float(best.get('confidence', 0.0)),
+                'detections': normalized_detections,
+                'processing_time_ms': analysis.get('processing_time_ms', 0.0),
+            }
+        except Exception as e:
+            return {
+                'status': 'error',
+                'crop': 'unknown',
+                'part': 'unknown',
+                'confidence': 0.0,
+                'detections': [],
+                'message': str(e)
+            }

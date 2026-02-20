@@ -93,7 +93,7 @@
       "model_ids": {
         "grounding_dino": "IDEA-Research/grounding-dino-base",
         "sam": "sam2_b.pt",
-        "bioclip": "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
+        "bioclip": "imageomics/bioclip-2"
       },
       "crop_labels": ["tomato", "potato", "wheat"],
       "part_labels": ["leaf", "fruit", "stem", "whole", "tuber", "ear"]
