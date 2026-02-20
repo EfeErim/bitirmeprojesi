@@ -43,38 +43,53 @@ print(f"✅ BioCLIP-2 loaded on {device}\n")
 
 # STEP 3: Download test image
 print("Downloading test image...")
-url = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fragaria_x_ananassa_Foto_by_CF_Weise.jpg/800px-Fragaria_x_ananassa_Foto_by_CF_Weise.jpg"
-try:
-    # Use different method for Python 3.10+
-    import urllib.request
-    req = urllib.request.Request(url)
-    req.add_header('User-Agent', 'Mozilla/5.0')
-    with urllib.request.urlopen(req) as response:
-        image_data = response.read()
-    import io
-    image = Image.open(io.BytesIO(image_data)).convert('RGB')
-    print(f"✅ Image downloaded: {image.size}\n")
-except Exception as e:
-    print(f"Download failed ({e}), using fallback...")
-    # Try alternative URL
+print("\nTrying multiple image sources...")
+
+image = None
+urls = [
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fragaria_x_ananassa_Foto_by_CF_Weise.jpg/800px-Fragaria_x_ananassa_Foto_by_CF_Weise.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Solanum_lycopersicum_var._cerasiforme_29.jpg/640px-Solanum_lycopersicum_var._cerasiforme_29.jpg",
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Solanum_tuberosum_L_-_potato.jpg/1024px-Solanum_tuberosum_L_-_potato.jpg"
+]
+
+for url in urls:
     try:
-        url2 = "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Solanum_lycopersicum_var._cerasiforme_29.jpg/640px-Solanum_lycopersicum_var._cerasiforme_29.jpg"
-        req = urllib.request.Request(url2)
-        req.add_header('User-Agent', 'Mozilla/5.0')
-        with urllib.request.urlopen(req) as response:
+        print(f"  Trying: {url[:60]}...")
+        import urllib.request, io
+        req = urllib.request.Request(url)
+        req.add_header('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)')
+        with urllib.request.urlopen(req, timeout=5) as response:
             image_data = response.read()
-        import io
         image = Image.open(io.BytesIO(image_data)).convert('RGB')
-        print(f"✅ Tomato image downloaded: {image.size}\n")
-    except:
-        print(f"All downloads failed, using synthetic test image...")
-        # Create a more interesting test image (gradient)
-        import numpy as np
-        arr = np.zeros((224, 224, 3), dtype=np.uint8)
-        arr[:112, :, 0] = 200  # Red top half
-        arr[112:, :, 1] = 200  # Green bottom half
-        image = Image.fromarray(arr)
-        print(f"Using gradient test image: {image.size}\n")
+        print(f"✅ Image downloaded: {image.size}\n")
+        break
+    except Exception as e:
+        print(f"  Failed: {e}")
+        continue
+
+if image is None:
+    print(f"\nAll downloads failed!")
+    print(f"⚠️ Creating REAL test image with actual features...")
+    # Create a DETAILED synthetic image (not just a solid color!)
+    import numpy as np
+    from PIL import ImageDraw
+    
+    image = Image.new('RGB', (224, 224), color='white')
+    draw = ImageDraw.Draw(image)
+    
+    # Draw strawberry-like features
+    draw.ellipse([50, 50, 150, 150], fill='red')  # Main body
+    draw.polygon([(100, 40), (110, 30), (90, 30)], fill='green')  # Green top left
+    draw.polygon([(130, 35), (145, 20), (125, 25)], fill='green')  # Green top right
+    draw.ellipse([60, 60, 80, 80], fill=(255, 100, 100))  # Highlight
+    
+    # Seed texture
+    for i in range(0, 180, 15):
+        for j in range(0, 180, 15):
+            if (i-90)**2 + (j-90)**2 < 40**2:  # Within circle
+                draw.point((50+i, 50+j), fill=(200, 50, 50))
+    
+    print(f"✅ Synthetic strawberry image created: {image.size}\n")
 
 # STEP 4: Encode text labels
 prompts = ["a photo of grape", "a photo of potato", "a photo of tomato", "a photo of strawberry"]
