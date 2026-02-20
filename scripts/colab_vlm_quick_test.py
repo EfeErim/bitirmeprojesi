@@ -46,7 +46,7 @@ def main():
                 'model_ids': {
                     'grounding_dino': 'IDEA-Research/grounding-dino-base',
                     'sam': 'sam2_b.pt',
-                    'bioclip': 'imageomics/bioclip-2'
+                    'bioclip': 'imageomics/bioclip'  # Correct model name
                 },
                 'confidence_threshold': 0.3,
                 'max_detections': 5

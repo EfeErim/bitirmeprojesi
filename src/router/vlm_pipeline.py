@@ -72,7 +72,11 @@ class VLMPipeline:
         self.crop_text_embeds = None
         self.part_text_embeds = None
         
+        # Log GPU availability for debugging
         logger.info(f"VLMPipeline initialized on {self.device}")
+        logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
+        if torch.cuda.is_available():
+            logger.info(f"GPU device: {torch.cuda.get_device_name(0)}, Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
         # Make torch available in builtins for tests that omit an explicit import
         try:
             builtins.torch = torch
@@ -198,7 +202,8 @@ class VLMPipeline:
                 self.bioclip_backend = 'open_clip'
                 
                 processor = {
-                    'preprocess': preprocess_train,  # Use training preprocess for inference
+                    'preprocess': preprocess_val,  # Use validation preprocess for inference (no augmentation)
+                    'preprocess_train': preprocess_train,  # Keep for reference
                     'tokenizer': tokenizer,
                 }
                 return processor, model
@@ -233,16 +238,21 @@ class VLMPipeline:
         if self.bioclip_backend == 'open_clip':
             tokenizer = self.bioclip_processor['tokenizer']
             
-            crop_tokens = tokenizer(crop_prompts).to(self.device)
-            part_tokens = tokenizer(part_prompts).to(self.device)
-            
-            with torch.no_grad():
-                self.crop_text_embeds = self.bioclip.encode_text(crop_tokens)
-                self.part_text_embeds = self.bioclip.encode_text(part_tokens)
-                self.crop_text_embeds = self.crop_text_embeds / self.crop_text_embeds.norm(dim=-1, keepdim=True)
-                self.part_text_embeds = self.part_text_embeds / self.part_text_embeds.norm(dim=-1, keepdim=True)
+            try:
+                crop_tokens = tokenizer(crop_prompts).to(self.device)
+                part_tokens = tokenizer(part_prompts).to(self.device)
                 
-            logger.info(f"Pre-encoded {len(self.crop_labels)} crop labels and {len(self.part_labels)} part labels using open_clip")
+                with torch.no_grad():
+                    self.crop_text_embeds = self.bioclip.encode_text(crop_tokens)
+                    self.part_text_embeds = self.bioclip.encode_text(part_tokens)
+                    self.crop_text_embeds = self.crop_text_embeds / self.crop_text_embeds.norm(dim=-1, keepdim=True)
+                    self.part_text_embeds = self.part_text_embeds / self.part_text_embeds.norm(dim=-1, keepdim=True)
+                    
+                logger.info(f"Pre-encoded {len(self.crop_labels)} crop labels and {len(self.part_labels)} part labels using open_clip")
+            except Exception as e:
+                logger.error(f"Failed to pre-encode text labels: {e}")
+                self.crop_text_embeds = None
+                self.part_text_embeds = None
         else:
             # For transformers backend, we'll encode on-the-fly as batching is more complex
             logger.info(f"Using transformers backend - text encoding will be done per-image")
@@ -296,33 +306,15 @@ class VLMPipeline:
         else:
             raise ValueError(f"label_type must be 'crop' or 'part', got {label_type}")
             
-        if not labels or text_embeds is None:
-            # Fall back to on-the-fly encoding
-            return self._clip_score_labels(
-                image, 
-                labels,
-                label_type=label_type
-            )
-        
-        # Use pre-encoded embeddings (much faster!)
-        if self.bioclip_backend == 'open_clip':
-            preprocess = self.bioclip_processor['preprocess']
-            image_tensor = preprocess(image).unsqueeze(0).to(self.device)
+        # Always use on-the-fly encoding for now - pre-encoded has issues
+        if not labels:
+            return 'unknown', 0.0
             
-            with torch.no_grad():
-                image_embeds = self.bioclip.encode_image(image_tensor)
-                image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                logits = image_embeds @ text_embeds.T
-                probabilities = torch.softmax(logits, dim=-1)
-                best_confidence, best_index = torch.max(probabilities, dim=-1)
-                
-            class_index = int(best_index.item())
-            confidence = float(best_confidence.item())
-            label = labels[class_index] if class_index < len(labels) else 'unknown'
-            return label, confidence
-        else:
-            # Transformers backend - fall back to standard method
-            return self._clip_score_labels(image, labels, label_type=label_type)
+        return self._clip_score_labels(
+            image, 
+            labels,
+            label_type=label_type
+        )
 
     def _clip_score_labels(
         self, 
