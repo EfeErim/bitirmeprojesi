@@ -84,6 +84,19 @@
   "router": {
     "enabled": true,
     "type": "enhanced",
+    "vlm": {
+      "enabled": true,
+      "strict_model_loading": true,
+      "model_source": "huggingface",
+      "confidence_threshold": 0.7,
+      "max_detections": 10,
+      "model_ids": {
+        "crop": "",
+        "part": ""
+      },
+      "crop_labels": ["tomato", "potato", "wheat"],
+      "part_labels": ["leaf", "fruit", "stem", "whole", "tuber", "ear"]
+    },
     "crop_mapping": {
       "tomato": {
         "parts": ["leaf", "fruit", "stem", "whole"],

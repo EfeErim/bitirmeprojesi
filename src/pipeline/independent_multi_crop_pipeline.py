@@ -7,6 +7,7 @@ Key principle: No cross-adapter communication - fully independent.
 
 import torch
 import logging
+import os
 from typing import Dict, List, Optional, Tuple, Any
 from pathlib import Path
 import hashlib
@@ -28,6 +29,9 @@ class IndependentMultiCropPipeline:
     def __init__(self, config: Dict, device: str = 'cuda'):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.config = config
+        strict_from_env = str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
+        vlm_cfg = config.get('router', {}).get('vlm', {}) if isinstance(config.get('router'), dict) else {}
+        self.strict_model_loading = config.get('vlm_strict_model_loading', vlm_cfg.get('strict_model_loading', strict_from_env))
         
         # Initialize components
         self.router = None
@@ -157,6 +161,12 @@ class IndependentMultiCropPipeline:
             
             # Load VLM models
             self.router.load_models()
+
+            if self.strict_model_loading and hasattr(self.router, 'is_ready') and not self.router.is_ready():
+                raise RuntimeError(
+                    "Strict model loading is enabled but VLM router is not ready. "
+                    "Verify router.vlm.model_ids and model accessibility."
+                )
             
             # Create diagnostic analyzer for easier crop classification
             self.router_analyzer = DiagnosticScoutingAnalyzer(config=self.config, device=self.device)
@@ -166,6 +176,8 @@ class IndependentMultiCropPipeline:
             
         except Exception as e:
             logger.error(f"Failed to initialize VLM router: {e}")
+            if self.strict_model_loading:
+                raise
             return False
 
     def initialize_adapters(self) -> bool:
