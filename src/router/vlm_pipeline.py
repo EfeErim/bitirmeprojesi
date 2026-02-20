@@ -139,10 +139,15 @@ class VLMPipeline:
                 processor = Sam2Processor.from_pretrained(model_id)
                 model = Sam2Model.from_pretrained(model_id)
             except Exception as e:
-                raise RuntimeError(
-                    "SAM-2 model requested but Sam2Model/Sam2Processor is unavailable. "
-                    "Use transformers>=4.46,<5.0 in Colab and verify the SAM-2 model id."
-                ) from e
+                try:
+                    from transformers import AutoProcessor, AutoModel
+                    processor = AutoProcessor.from_pretrained(model_id)
+                    model = AutoModel.from_pretrained(model_id)
+                except Exception as e2:
+                    raise RuntimeError(
+                        "SAM-2 model requested but could not load via Sam2* or Auto* APIs. "
+                        "Use transformers>=4.46,<5.0 in Colab and verify the SAM-2 model id."
+                    ) from e2
         else:
             from transformers import SamProcessor, SamModel
             processor = SamProcessor.from_pretrained(model_id)
