@@ -399,24 +399,42 @@ class VLMPipeline:
         if input_ids is None:
             raise RuntimeError('GroundingDINO processor did not return input_ids needed for post-processing')
 
-        results = self.grounding_dino_processor.post_process_grounded_object_detection(
-            outputs,
-            input_ids,
-            box_threshold=float(self.confidence_threshold),
-            text_threshold=float(self.confidence_threshold),
-            target_sizes=target_sizes,
-        )
+        # Try new API first (transformers >= 4.50), fallback to old API
+        try:
+            # New API: no threshold parameters in post_process
+            results = self.grounding_dino_processor.post_process_grounded_object_detection(
+                outputs,
+                input_ids,
+                target_sizes=target_sizes,
+            )
+        except TypeError:
+            # Old API: threshold parameters accepted
+            results = self.grounding_dino_processor.post_process_grounded_object_detection(
+                outputs,
+                input_ids,
+                box_threshold=float(self.confidence_threshold),
+                text_threshold=float(self.confidence_threshold),
+                target_sizes=target_sizes,
+            )
 
         result = results[0] if results else {'boxes': [], 'scores': [], 'labels': []}
         detections = []
+        
+        # Apply threshold filtering manually for new API
         for box, score, label in zip(result.get('boxes', []), result.get('scores', []), result.get('labels', [])):
+            score_val = float(score) if torch.is_tensor(score) else float(score)
+            
+            # Filter by confidence threshold
+            if score_val < self.confidence_threshold:
+                continue
+                
             box_xyxy = [float(x) for x in box.tolist()]
             label_text = str(label).lower()
             crop_guess = next((c for c in self.crop_labels if c.lower() in label_text), None)
             part_guess = next((p for p in self.part_labels if p.lower() in label_text), None)
             detections.append({
                 'label': str(label),
-                'score': float(score),
+                'score': score_val,
                 'bbox': box_xyxy,
                 'crop_guess': crop_guess,
                 'part_guess': part_guess,
