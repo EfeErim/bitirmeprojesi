@@ -132,20 +132,31 @@ class VLMPipeline:
 
     def _load_sam(self, model_id: str):
         """Load SAM model and processor."""
-        from transformers import SamProcessor, SamModel
-
-        processor = SamProcessor.from_pretrained(model_id)
-        model = SamModel.from_pretrained(model_id)
+        sam2_requested = 'sam2' in model_id.lower() or 'hiera' in model_id.lower()
+        if sam2_requested:
+            try:
+                from transformers import Sam2Processor, Sam2Model
+                processor = Sam2Processor.from_pretrained(model_id)
+                model = Sam2Model.from_pretrained(model_id)
+            except Exception as e:
+                raise RuntimeError(
+                    "SAM-2 model requested but Sam2Model/Sam2Processor is unavailable. "
+                    "Use transformers>=4.46,<5.0 in Colab and verify the SAM-2 model id."
+                ) from e
+        else:
+            from transformers import SamProcessor, SamModel
+            processor = SamProcessor.from_pretrained(model_id)
+            model = SamModel.from_pretrained(model_id)
         model = model.to(self.device)
         model.eval()
         return processor, model
 
     def _load_clip_like_model(self, model_id: str):
         """Load CLIP/BioCLIP-like model and processor."""
-        from transformers import CLIPProcessor, CLIPModel
+        from transformers import AutoProcessor, AutoModel
 
-        processor = CLIPProcessor.from_pretrained(model_id)
-        model = CLIPModel.from_pretrained(model_id)
+        processor = AutoProcessor.from_pretrained(model_id)
+        model = AutoModel.from_pretrained(model_id)
         model = model.to(self.device)
         model.eval()
         return processor, model
@@ -198,7 +209,18 @@ class VLMPipeline:
 
         with torch.no_grad():
             outputs = self.bioclip(**model_inputs)
-            probabilities = torch.softmax(outputs.logits_per_image, dim=-1)
+            if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
+                logits = outputs.logits_per_image
+            elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
+                image_embeds = outputs.image_embeds
+                text_embeds = outputs.text_embeds
+                image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+                text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+                logits = image_embeds @ text_embeds.T
+            else:
+                raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
+
+            probabilities = torch.softmax(logits, dim=-1)
             best_confidence, best_index = torch.max(probabilities, dim=-1)
 
         class_index = int(best_index.item())
@@ -220,9 +242,13 @@ class VLMPipeline:
             outputs = self.grounding_dino(**inputs)
 
         target_sizes = [image.size[::-1]]
+        input_ids = inputs.get('input_ids')
+        if input_ids is None:
+            raise RuntimeError('GroundingDINO processor did not return input_ids needed for post-processing')
+
         results = self.grounding_dino_processor.post_process_grounded_object_detection(
             outputs,
-            inputs['input_ids'],
+            input_ids,
             box_threshold=float(self.confidence_threshold),
             text_threshold=float(self.confidence_threshold),
             target_sizes=target_sizes,

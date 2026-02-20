@@ -92,8 +92,8 @@
       "max_detections": 10,
       "model_ids": {
         "grounding_dino": "IDEA-Research/grounding-dino-base",
-        "sam": "facebook/sam-vit-base",
-        "bioclip": "openai/clip-vit-base-patch32"
+        "sam": "facebook/sam2-hiera-base-plus",
+        "bioclip": "microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224"
       },
       "crop_labels": ["tomato", "potato", "wheat"],
       "part_labels": ["leaf", "fruit", "stem", "whole", "tuber", "ear"]
