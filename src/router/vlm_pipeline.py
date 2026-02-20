@@ -11,6 +11,7 @@ import os
 import time
 from typing import Dict, Optional, Any, List, Tuple
 from PIL import Image
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,18 @@ class VLMPipeline:
         strict_from_env = str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
         self.strict_model_loading = config.get('vlm_strict_model_loading', self.vlm_config.get('strict_model_loading', strict_from_env))
         self.model_source = config.get('vlm_model_source', self.vlm_config.get('model_source', 'huggingface'))
-        self.model_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
-        self.model_paths = self.vlm_config.get('model_paths', {}) if isinstance(self.vlm_config.get('model_paths', {}), dict) else {}
+
+        defaults = {
+            'grounding_dino': 'IDEA-Research/grounding-dino-base',
+            'sam': 'facebook/sam-vit-base',
+            'bioclip': 'openai/clip-vit-base-patch32'
+        }
+        configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
+        self.model_ids = {
+            'grounding_dino': configured_ids.get('grounding_dino', defaults['grounding_dino']),
+            'sam': configured_ids.get('sam', defaults['sam']),
+            'bioclip': configured_ids.get('bioclip', defaults['bioclip'])
+        }
 
         crop_mapping = router_config.get('crop_mapping', {}) if isinstance(router_config, dict) else {}
         self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
@@ -50,10 +61,9 @@ class VLMPipeline:
         self.grounding_dino = None
         self.sam2 = None
         self.bioclip = None
-        self.crop_processor = None
-        self.crop_model = None
-        self.part_processor = None
-        self.part_model = None
+        self.grounding_dino_processor = None
+        self.sam_processor = None
+        self.bioclip_processor = None
         self.models_loaded = False
         
         logger.info(f"VLMPipeline initialized on {self.device}")
@@ -76,21 +86,11 @@ class VLMPipeline:
             if self.model_source != 'huggingface':
                 raise ValueError(f"Unsupported VLM model_source '{self.model_source}'. Currently supported: 'huggingface'")
 
-            crop_model_id = self.model_ids.get('crop') or self.model_paths.get('crop')
-            part_model_id = self.model_ids.get('part') or self.model_paths.get('part')
-
-            if not crop_model_id or not part_model_id:
-                raise ValueError(
-                    "Missing model identifiers for VLM strict loading. "
-                    "Provide router.vlm.model_ids.crop and router.vlm.model_ids.part in config."
-                )
-
-            self.crop_processor, self.crop_model = self._load_hf_classifier(crop_model_id)
-            self.part_processor, self.part_model = self._load_hf_classifier(part_model_id)
-
-            self.grounding_dino = self.crop_model
-            self.sam2 = self.part_model
-            self.bioclip = "hf_image_classification"
+            self.grounding_dino_processor, self.grounding_dino = self._load_grounding_dino(
+                self.model_ids['grounding_dino']
+            )
+            self.sam_processor, self.sam2 = self._load_sam(self.model_ids['sam'])
+            self.bioclip_processor, self.bioclip = self._load_clip_like_model(self.model_ids['bioclip'])
             self.models_loaded = True
 
             logger.info("VLM models loaded successfully")
@@ -102,19 +102,50 @@ class VLMPipeline:
             self.grounding_dino = "GroundingDINO model"
             self.sam2 = "SAM-2 model"
             self.bioclip = "BioCLIP 2 model"
+            self.grounding_dino_processor = None
+            self.sam_processor = None
+            self.bioclip_processor = None
 
     def is_ready(self) -> bool:
         """Return whether the pipeline is ready for real inference."""
         if not self.enabled:
             return False
-        return bool(self.models_loaded and self.crop_model is not None and self.part_model is not None)
+        return bool(
+            self.models_loaded
+            and self.grounding_dino is not None
+            and self.sam2 is not None
+            and self.bioclip is not None
+            and self.grounding_dino_processor is not None
+            and self.sam_processor is not None
+            and self.bioclip_processor is not None
+        )
 
-    def _load_hf_classifier(self, model_id: str):
-        """Load a Hugging Face image classification model and processor."""
-        from transformers import AutoImageProcessor, AutoModelForImageClassification
+    def _load_grounding_dino(self, model_id: str):
+        """Load GroundingDINO model and processor."""
+        from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 
-        processor = AutoImageProcessor.from_pretrained(model_id)
-        model = AutoModelForImageClassification.from_pretrained(model_id)
+        processor = AutoProcessor.from_pretrained(model_id)
+        model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
+        model = model.to(self.device)
+        model.eval()
+        return processor, model
+
+    def _load_sam(self, model_id: str):
+        """Load SAM model and processor."""
+        from transformers import SamProcessor, SamModel
+
+        processor = SamProcessor.from_pretrained(model_id)
+        model = SamModel.from_pretrained(model_id)
+        model = model.to(self.device)
+        model.eval()
+        return processor, model
+
+    def _load_clip_like_model(self, model_id: str):
+        """Load CLIP/BioCLIP-like model and processor."""
+        from transformers import CLIPProcessor, CLIPModel
+
+        processor = CLIPProcessor.from_pretrained(model_id)
+        model = CLIPModel.from_pretrained(model_id)
         model = model.to(self.device)
         model.eval()
         return processor, model
@@ -151,26 +182,90 @@ class VLMPipeline:
         uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
         return Image.fromarray(uint8_img)
 
-    def _classify(self, image_tensor: torch.Tensor, processor, model, explicit_labels: Optional[List[str]] = None) -> Tuple[str, float]:
-        """Run single-image classification and return (label, confidence)."""
-        pil_image = self._tensor_to_pil(image_tensor)
-        model_inputs = processor(images=pil_image, return_tensors='pt')
+    def _clip_score_labels(self, image: Image.Image, labels: List[str]) -> Tuple[str, float]:
+        """Score text labels against image using CLIP/BioCLIP."""
+        if not labels:
+            return 'unknown', 0.0
+
+        text_prompts = [f"a photo of {label}" for label in labels]
+        model_inputs = self.bioclip_processor(
+            text=text_prompts,
+            images=image,
+            return_tensors='pt',
+            padding=True
+        )
         model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
 
         with torch.no_grad():
-            logits = model(**model_inputs).logits
-            probabilities = torch.softmax(logits, dim=-1)
+            outputs = self.bioclip(**model_inputs)
+            probabilities = torch.softmax(outputs.logits_per_image, dim=-1)
             best_confidence, best_index = torch.max(probabilities, dim=-1)
 
         class_index = int(best_index.item())
         confidence = float(best_confidence.item())
-
-        if explicit_labels and len(explicit_labels) > class_index:
-            label = str(explicit_labels[class_index])
-        else:
-            label = str(getattr(model.config, 'id2label', {}).get(class_index, f'class_{class_index}'))
-
+        label = labels[class_index] if class_index < len(labels) else 'unknown'
         return label, confidence
+
+    def _run_grounding_dino(self, image: Image.Image) -> Dict[str, Any]:
+        """Run GroundingDINO detection for crop/part prompts."""
+        prompt_labels = self.crop_labels + self.part_labels
+        if not prompt_labels:
+            return {'detections': []}
+
+        text_prompt = '. '.join(prompt_labels) + '.'
+        inputs = self.grounding_dino_processor(images=image, text=text_prompt, return_tensors='pt')
+        inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in inputs.items()}
+
+        with torch.no_grad():
+            outputs = self.grounding_dino(**inputs)
+
+        target_sizes = [image.size[::-1]]
+        results = self.grounding_dino_processor.post_process_grounded_object_detection(
+            outputs,
+            inputs['input_ids'],
+            box_threshold=float(self.confidence_threshold),
+            text_threshold=float(self.confidence_threshold),
+            target_sizes=target_sizes,
+        )
+
+        result = results[0] if results else {'boxes': [], 'scores': [], 'labels': []}
+        detections = []
+        for box, score, label in zip(result.get('boxes', []), result.get('scores', []), result.get('labels', [])):
+            box_xyxy = [float(x) for x in box.tolist()]
+            label_text = str(label).lower()
+            crop_guess = next((c for c in self.crop_labels if c.lower() in label_text), None)
+            part_guess = next((p for p in self.part_labels if p.lower() in label_text), None)
+            detections.append({
+                'label': str(label),
+                'score': float(score),
+                'bbox': box_xyxy,
+                'crop_guess': crop_guess,
+                'part_guess': part_guess,
+            })
+        return {'detections': detections}
+
+    def _run_sam_mask(self, image: Image.Image, bbox: Optional[List[float]]) -> Optional[List[List[float]]]:
+        """Run SAM segmentation on the best box; returns small mask preview."""
+        if bbox is None:
+            return None
+        try:
+            input_boxes = [[[bbox]]]
+            sam_inputs = self.sam_processor(images=image, input_boxes=input_boxes, return_tensors='pt')
+            sam_inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in sam_inputs.items()}
+            with torch.no_grad():
+                sam_outputs = self.sam2(**sam_inputs)
+            masks = self.sam_processor.image_processor.post_process_masks(
+                sam_outputs.pred_masks.cpu(),
+                sam_inputs['original_sizes'].cpu(),
+                sam_inputs['reshaped_input_sizes'].cpu(),
+            )
+            if not masks:
+                return None
+            mask_np = masks[0][0][0].numpy().astype(np.float32)
+            reduced = mask_np[::8, ::8]
+            return reduced.tolist()
+        except Exception:
+            return None
 
     def process_image(self, image_tensor: torch.Tensor) -> Dict[str, Any]:
         """High-level processing entrypoint expected by tests.
@@ -210,18 +305,24 @@ class VLMPipeline:
         """
         if self.enabled and self.models_loaded:
             start_time = time.perf_counter()
-            crop_label, crop_conf = self._classify(
-                image_tensor,
-                self.crop_processor,
-                self.crop_model,
-                explicit_labels=self.crop_labels
-            )
-            part_label, part_conf = self._classify(
-                image_tensor,
-                self.part_processor,
-                self.part_model,
-                explicit_labels=self.part_labels
-            )
+            pil_image = self._tensor_to_pil(image_tensor)
+
+            dino_out = self._run_grounding_dino(pil_image)
+            detections = dino_out.get('detections', [])
+            best_det = detections[0] if detections else None
+
+            crop_label, crop_conf = self._clip_score_labels(pil_image, self.crop_labels)
+            part_label, part_conf = self._clip_score_labels(pil_image, self.part_labels)
+
+            if best_det and best_det.get('crop_guess'):
+                crop_label = best_det.get('crop_guess')
+                crop_conf = max(crop_conf, float(best_det.get('score', 0.0)))
+            if best_det and best_det.get('part_guess'):
+                part_label = best_det.get('part_guess')
+                part_conf = max(part_conf, float(best_det.get('score', 0.0)))
+
+            best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
+            best_mask = self._run_sam_mask(pil_image, best_bbox)
 
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
             return {
@@ -232,18 +333,21 @@ class VLMPipeline:
                         'crop_confidence': crop_conf,
                         'disease': None,
                         'disease_confidence': 0.0,
-                        'bbox': [0, 0, 100, 100],
-                        'mask': None
+                        'bbox': best_bbox,
+                        'mask': best_mask,
+                        'part_confidence': part_conf,
+                        'grounding_label': best_det.get('label') if best_det else None
                     }
                 ],
                 'image_size': tuple(image_tensor.shape),
-                'processing_time_ms': elapsed_ms
+                'processing_time_ms': elapsed_ms,
+                'raw_detections': detections[:self.max_detections]
             }
 
         if self.enabled and self.strict_model_loading:
             raise RuntimeError(
                 "VLM pipeline strict mode is enabled, but models are not loaded. "
-                "Call load_models() with valid router.vlm.model_ids before inference."
+                "Check internet/model access for GroundingDINO, SAM, and BioCLIP models."
             )
         
         return {

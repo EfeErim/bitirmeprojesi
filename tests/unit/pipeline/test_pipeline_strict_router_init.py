@@ -12,7 +12,11 @@ def test_initialize_router_raises_in_strict_mode_when_models_missing():
                 'enabled': True,
                 'strict_model_loading': True,
                 'model_source': 'huggingface',
-                'model_ids': {}
+                'model_ids': {
+                    'grounding_dino': 'invalid/grounding-dino',
+                    'sam': 'invalid/sam',
+                    'bioclip': 'invalid/bioclip'
+                }
             }
         }
     }

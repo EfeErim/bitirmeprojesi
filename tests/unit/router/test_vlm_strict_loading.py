@@ -39,13 +39,19 @@ def test_strict_loading_requires_model_ids():
                 'enabled': True,
                 'strict_model_loading': True,
                 'model_source': 'huggingface',
-                'model_ids': {}
+                'model_ids': {
+                    'grounding_dino': 'invalid/grounding-dino',
+                    'sam': 'invalid/sam',
+                    'bioclip': 'invalid/bioclip'
+                }
             }
         }
     }
 
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
+
+    pipeline._load_grounding_dino = lambda model_id: (_ for _ in ()).throw(ValueError('bad grounding dino id'))
 
     with pytest.raises(RuntimeError, match='Strict VLM model loading failed'):
         pipeline.load_models()
@@ -60,13 +66,19 @@ def test_non_strict_loading_falls_back_to_placeholder():
                 'enabled': True,
                 'strict_model_loading': False,
                 'model_source': 'huggingface',
-                'model_ids': {}
+                'model_ids': {
+                    'grounding_dino': 'invalid/grounding-dino',
+                    'sam': 'invalid/sam',
+                    'bioclip': 'invalid/bioclip'
+                }
             }
         }
     }
 
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
+
+    pipeline._load_grounding_dino = lambda model_id: (_ for _ in ()).throw(ValueError('bad grounding dino id'))
 
     pipeline.load_models()
 
@@ -88,8 +100,9 @@ def test_strict_loading_with_models_runs_inference():
                 'strict_model_loading': True,
                 'model_source': 'huggingface',
                 'model_ids': {
-                    'crop': 'fake-crop-model',
-                    'part': 'fake-part-model'
+                    'grounding_dino': 'fake-grounding-dino',
+                    'sam': 'fake-sam',
+                    'bioclip': 'fake-bioclip'
                 },
                 'crop_labels': ['tomato', 'potato'],
                 'part_labels': ['leaf', 'whole']
@@ -97,21 +110,24 @@ def test_strict_loading_with_models_runs_inference():
         }
     }
 
-    crop_model = _FakeModel(torch.tensor([[5.0, 1.0]]), id2label={0: 'tomato', 1: 'potato'})
-    part_model = _FakeModel(torch.tensor([[3.0, 0.5]]), id2label={0: 'leaf', 1: 'whole'})
+    fake_model = _FakeModel(torch.tensor([[5.0, 1.0]]), id2label={0: 'tomato', 1: 'potato'})
+    fake_processor = _FakeProcessor()
 
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
 
-    def _mock_load(model_id):
-        if model_id == 'fake-crop-model':
-            return _FakeProcessor(), crop_model
-        if model_id == 'fake-part-model':
-            return _FakeProcessor(), part_model
-        raise ValueError('unexpected model id')
-
-    pipeline._load_hf_classifier = _mock_load
+    pipeline._load_grounding_dino = lambda model_id: (fake_processor, fake_model)
+    pipeline._load_sam = lambda model_id: (fake_processor, fake_model)
+    pipeline._load_clip_like_model = lambda model_id: (fake_processor, fake_model)
     pipeline.load_models()
+
+    pipeline._run_grounding_dino = lambda image: {
+        'detections': [
+            {'label': 'tomato leaf', 'score': 0.97, 'bbox': [0.0, 0.0, 100.0, 100.0], 'crop_guess': 'tomato', 'part_guess': 'leaf'}
+        ]
+    }
+    pipeline._clip_score_labels = lambda image, labels: (labels[0], 0.95)
+    pipeline._run_sam_mask = lambda image, bbox: None
 
     result = pipeline.analyze_image(torch.rand(3, 224, 224))
     detection = result['detections'][0]
