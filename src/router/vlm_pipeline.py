@@ -186,15 +186,19 @@ class VLMPipeline:
             try:
                 import open_clip
 
-                # Use hf-hub: prefix as in reference implementation
+                # BioCLIP-2: use hf-hub: prefix for Hugging Face model
                 hub_model_id = f'hf-hub:{model_id}' if not model_id.startswith('hf-hub:') else model_id
-                model, _, preprocess = open_clip.create_model_and_transforms(hub_model_id)
+                
+                # open_clip returns (model, preprocess_train, preprocess_val)
+                model, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
                 tokenizer = open_clip.get_tokenizer(hub_model_id)
+                
                 model = model.to(self.device)
                 model.eval()
                 self.bioclip_backend = 'open_clip'
+                
                 processor = {
-                    'preprocess': preprocess,
+                    'preprocess': preprocess_train,  # Use training preprocess for inference
                     'tokenizer': tokenizer,
                 }
                 return processor, model
