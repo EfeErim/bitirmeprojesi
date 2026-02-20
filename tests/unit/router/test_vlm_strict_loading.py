@@ -58,6 +58,7 @@ def test_strict_loading_requires_model_ids():
 
 
 def test_non_strict_loading_falls_back_to_placeholder():
+    """Test that non-strict mode leaves models as None instead of using placeholder strings."""
     config = {
         'vlm_enabled': True,
         'vlm_strict_model_loading': False,
@@ -82,8 +83,11 @@ def test_non_strict_loading_falls_back_to_placeholder():
 
     pipeline.load_models()
 
+    # Models should remain None (not placeholder strings) - inspired by reference implementation
     assert pipeline.models_loaded is False
-    assert pipeline.grounding_dino == 'GroundingDINO model'
+    assert pipeline.grounding_dino is None
+    assert pipeline.sam2 is None
+    assert pipeline.bioclip is None
 
 
 def test_strict_loading_with_models_runs_inference():
@@ -126,7 +130,7 @@ def test_strict_loading_with_models_runs_inference():
             {'label': 'tomato leaf', 'score': 0.97, 'bbox': [0.0, 0.0, 100.0, 100.0], 'crop_guess': 'tomato', 'part_guess': 'leaf'}
         ]
     }
-    pipeline._clip_score_labels = lambda image, labels: (labels[0], 0.95)
+    pipeline._clip_score_labels = lambda image, labels, label_type='generic': (labels[0], 0.95)
     pipeline._run_sam_mask = lambda image, bbox: None
 
     result = pipeline.analyze_image(torch.rand(3, 224, 224))

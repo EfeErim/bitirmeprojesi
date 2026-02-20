@@ -68,6 +68,10 @@ class VLMPipeline:
         self.bioclip_backend = None
         self.models_loaded = False
         
+        # Pre-encoded text embeddings (populated after models load)
+        self.crop_text_embeds = None
+        self.part_text_embeds = None
+        
         logger.info(f"VLMPipeline initialized on {self.device}")
         # Make torch available in builtins for tests that omit an explicit import
         try:
@@ -94,19 +98,17 @@ class VLMPipeline:
             self.sam_processor, self.sam2 = self._load_sam(self.model_ids['sam'])
             self.bioclip_processor, self.bioclip = self._load_clip_like_model(self.model_ids['bioclip'])
             self.models_loaded = True
+            
+            # Pre-encode text labels for efficient inference (inspired by reference implementation)
+            self._encode_text_labels()
 
-            logger.info("VLM models loaded successfully")
+            logger.info("VLM models loaded successfully with pre-encoded text embeddings")
         except Exception as e:
             self.models_loaded = False
             if self.strict_model_loading:
                 raise RuntimeError(f"Strict VLM model loading failed: {e}") from e
-            logger.warning(f"VLM model loading failed, falling back to placeholder behavior: {e}")
-            self.grounding_dino = "GroundingDINO model"
-            self.sam2 = "SAM-2 model"
-            self.bioclip = "BioCLIP 2 model"
-            self.grounding_dino_processor = None
-            self.sam_processor = None
-            self.bioclip_processor = None
+            # In non-strict mode, leave models as None - no placeholder strings
+            logger.warning(f"VLM model loading failed. Models remain unloaded: {e}")
 
     def is_ready(self) -> bool:
         """Return whether the pipeline is ready for real inference."""
@@ -174,7 +176,32 @@ class VLMPipeline:
         return processor, model
 
     def _load_clip_like_model(self, model_id: str):
-        """Load CLIP/BioCLIP-like model and processor."""
+        """Load CLIP/BioCLIP-like model and processor.
+        
+        Prioritizes open_clip for BioCLIP models (reference implementation pattern),
+        falls back to transformers for standard CLIP models.
+        """
+        # For BioCLIP models, use open_clip directly (reference implementation approach)
+        if 'bioclip' in model_id.lower() or 'imageomics' in model_id.lower():
+            try:
+                import open_clip
+
+                # Use hf-hub: prefix as in reference implementation
+                hub_model_id = f'hf-hub:{model_id}' if not model_id.startswith('hf-hub:') else model_id
+                model, _, preprocess = open_clip.create_model_and_transforms(hub_model_id)
+                tokenizer = open_clip.get_tokenizer(hub_model_id)
+                model = model.to(self.device)
+                model.eval()
+                self.bioclip_backend = 'open_clip'
+                processor = {
+                    'preprocess': preprocess,
+                    'tokenizer': tokenizer,
+                }
+                return processor, model
+            except Exception as e:
+                logger.warning(f"open_clip loading failed for {model_id}, trying transformers: {e}")
+        
+        # For standard CLIP or other models, try transformers
         try:
             from transformers import AutoProcessor, AutoModel
 
@@ -184,19 +211,39 @@ class VLMPipeline:
             model.eval()
             self.bioclip_backend = 'transformers'
             return processor, model
-        except Exception:
-            import open_clip
+        except Exception as e:
+            raise RuntimeError(
+                f"Failed to load CLIP/BioCLIP model '{model_id}' via both open_clip and transformers. "
+                f"For BioCLIP models, ensure open_clip_torch is installed."
+            ) from e
 
-            model, _, preprocess = open_clip.create_model_and_transforms(f'hf-hub:{model_id}')
-            tokenizer = open_clip.get_tokenizer(f'hf-hub:{model_id}')
-            model = model.to(self.device)
-            model.eval()
-            self.bioclip_backend = 'open_clip'
-            processor = {
-                'preprocess': preprocess,
-                'tokenizer': tokenizer,
-            }
-            return processor, model
+    def _encode_text_labels(self):
+        """Pre-encode text labels for efficient inference (inspired by reference implementation)."""
+        if not self.crop_labels or not self.part_labels:
+            logger.warning("No crop or part labels configured - skipping text embedding pre-encoding")
+            return
+            
+        crop_prompts = [f"a photo of {label}" for label in self.crop_labels]
+        part_prompts = [f"a photo of a plant {label}" for label in self.part_labels]
+        
+        if self.bioclip_backend == 'open_clip':
+            tokenizer = self.bioclip_processor['tokenizer']
+            
+            crop_tokens = tokenizer(crop_prompts).to(self.device)
+            part_tokens = tokenizer(part_prompts).to(self.device)
+            
+            with torch.no_grad():
+                self.crop_text_embeds = self.bioclip.encode_text(crop_tokens)
+                self.part_text_embeds = self.bioclip.encode_text(part_tokens)
+                self.crop_text_embeds = self.crop_text_embeds / self.crop_text_embeds.norm(dim=-1, keepdim=True)
+                self.part_text_embeds = self.part_text_embeds / self.part_text_embeds.norm(dim=-1, keepdim=True)
+                
+            logger.info(f"Pre-encoded {len(self.crop_labels)} crop labels and {len(self.part_labels)} part labels using open_clip")
+        else:
+            # For transformers backend, we'll encode on-the-fly as batching is more complex
+            logger.info(f"Using transformers backend - text encoding will be done per-image")
+            self.crop_text_embeds = None
+            self.part_text_embeds = None
 
     @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
@@ -230,12 +277,65 @@ class VLMPipeline:
         uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
         return Image.fromarray(uint8_img)
 
-    def _clip_score_labels(self, image: Image.Image, labels: List[str]) -> Tuple[str, float]:
-        """Score text labels against image using CLIP/BioCLIP."""
+    def _classify_with_preencoded(
+        self, 
+        image: Image.Image, 
+        label_type: str  # 'crop' or 'part'
+    ) -> Tuple[str, float]:
+        """Classify image using pre-encoded text embeddings for efficiency (reference-inspired)."""
+        if label_type == 'crop':
+            labels = self.crop_labels
+            text_embeds = self.crop_text_embeds
+        elif label_type == 'part':
+            labels = self.part_labels
+            text_embeds = self.part_text_embeds
+        else:
+            raise ValueError(f"label_type must be 'crop' or 'part', got {label_type}")
+            
+        if not labels or text_embeds is None:
+            # Fall back to on-the-fly encoding
+            return self._clip_score_labels(
+                image, 
+                labels,
+                label_type=label_type
+            )
+        
+        # Use pre-encoded embeddings (much faster!)
+        if self.bioclip_backend == 'open_clip':
+            preprocess = self.bioclip_processor['preprocess']
+            image_tensor = preprocess(image).unsqueeze(0).to(self.device)
+            
+            with torch.no_grad():
+                image_embeds = self.bioclip.encode_image(image_tensor)
+                image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+                logits = image_embeds @ text_embeds.T
+                probabilities = torch.softmax(logits, dim=-1)
+                best_confidence, best_index = torch.max(probabilities, dim=-1)
+                
+            class_index = int(best_index.item())
+            confidence = float(best_confidence.item())
+            label = labels[class_index] if class_index < len(labels) else 'unknown'
+            return label, confidence
+        else:
+            # Transformers backend - fall back to standard method
+            return self._clip_score_labels(image, labels, label_type=label_type)
+
+    def _clip_score_labels(
+        self, 
+        image: Image.Image, 
+        labels: List[str],
+        label_type: str = 'generic'
+    ) -> Tuple[str, float]:
+        """Score text labels against image using CLIP/BioCLIP (on-the-fly encoding)."""
         if not labels:
             return 'unknown', 0.0
 
-        text_prompts = [f"a photo of {label}" for label in labels]
+        # Format prompts based on label type (inspired by reference implementation)
+        if label_type == 'part':
+            text_prompts = [f"a photo of a plant {label}" for label in labels]
+        else:
+            text_prompts = [f"a photo of {label}" for label in labels]
+            
         if self.bioclip_backend == 'open_clip':
             preprocess = self.bioclip_processor['preprocess']
             tokenizer = self.bioclip_processor['tokenizer']
@@ -411,8 +511,9 @@ class VLMPipeline:
             detections = dino_out.get('detections', [])
             best_det = detections[0] if detections else None
 
-            crop_label, crop_conf = self._clip_score_labels(pil_image, self.crop_labels)
-            part_label, part_conf = self._clip_score_labels(pil_image, self.part_labels)
+            # Use pre-encoded text embeddings for efficiency (reference-inspired)
+            crop_label, crop_conf = self._classify_with_preencoded(pil_image, 'crop')
+            part_label, part_conf = self._classify_with_preencoded(pil_image, 'part')
 
             if best_det and best_det.get('crop_guess'):
                 crop_label = best_det.get('crop_guess')
@@ -444,26 +545,11 @@ class VLMPipeline:
                 'raw_detections': detections[:self.max_detections]
             }
 
-        if self.enabled and self.strict_model_loading:
-            raise RuntimeError(
-                "VLM pipeline strict mode is enabled, but models are not loaded. "
-                "Check internet/model access for GroundingDINO, SAM, and BioCLIP models."
-            )
-        
+        # No fallback to placeholder data - return empty result when models not loaded
         return {
-            'detections': [
-                {
-                    'crop': 'tomato',
-                    'part': 'leaf',
-                    'crop_confidence': 0.95,
-                    'disease': 'healthy',
-                    'disease_confidence': 0.87,
-                    'bbox': [0, 0, 100, 100],
-                    'mask': None
-                }
-            ],
-            'image_size': image_tensor.shape,
-            'processing_time_ms': 150.0
+            'detections': [],
+            'image_size': tuple(image_tensor.shape),
+            'processing_time_ms': 0.0
         }
 
     def route_batch(self, batch: torch.Tensor) -> Tuple[List[Dict], List[float]]:
