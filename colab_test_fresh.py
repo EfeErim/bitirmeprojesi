@@ -33,31 +33,49 @@ print(f"✅ Loaded on {device}")
 
 # Create HIGH-QUALITY synthetic strawberry image (not solid color!)
 print("\n4. Creating test image...")
-image = Image.new('RGB', (224, 224), color=(240, 240, 240))
-draw = ImageDraw.Draw(image)
 
-# Strawberry body (red circle)
-draw.ellipse([40, 50, 160, 170], fill=(220, 30, 60), outline=(180, 20, 40))
+# FIRST: Try to download real image
+real_image = None
+try:
+    print("  Attempting to download real strawberry image...")
+    import urllib.request
+    url = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Fragaria_x_ananassa_Foto_by_CF_Weise.jpg/800px-Fragaria_x_ananassa_Foto_by_CF_Weise.jpg"
+    with urllib.request.urlopen(url) as response:
+        import io
+        image_data = response.read()
+    real_image = Image.open(io.BytesIO(image_data)).convert('RGB')
+    image = real_image
+    print(f"✅ Downloaded real strawberry image: {image.size}")
+except Exception as e:
+    print(f"  Download failed: {e}")
+    print("  Creating synthetic strawberry instead...")
+    
+    # Fallback: Create synthetic image
+    image = Image.new('RGB', (224, 224), color=(240, 240, 240))
+    draw = ImageDraw.Draw(image)
 
-# Green leafy crown (multiple leaves)
-leaves = [
-    (80, 40, 70, 20),
-    (110, 35, 120, 15),
-    (140, 45, 150, 25),
-    (100, 35, 110, 10),
-]
-for x1, y1, x2, y2 in leaves:
-    draw.line([(x1, y1), (x2, y2)], fill=(34, 139, 34), width=3)
+    # Strawberry body (red circle)
+    draw.ellipse([40, 50, 160, 170], fill=(220, 30, 60), outline=(180, 20, 40))
 
-# Seed texture (small yellow dots)
-for i in range(45, 155, 12):
-    for j in range(60, 165, 12):
-        draw.ellipse([i, j, i+4, j+4], fill=(255, 200, 50))
+    # Green leafy crown (multiple leaves)
+    leaves = [
+        (80, 40, 70, 20),
+        (110, 35, 120, 15),
+        (140, 45, 150, 25),
+        (100, 35, 110, 10),
+    ]
+    for x1, y1, x2, y2 in leaves:
+        draw.line([(x1, y1), (x2, y2)], fill=(34, 139, 34), width=3)
 
-# Highlight (make it 3D-looking)
-draw.ellipse([60, 65, 90, 95], fill=(255, 100, 100))
+    # Seed texture (small yellow dots)
+    for i in range(45, 155, 12):
+        for j in range(60, 165, 12):
+            draw.ellipse([i, j, i+4, j+4], fill=(255, 200, 50))
 
-print(f"✅ Created strawberry image: {image.size}")
+    # Highlight (make it 3D-looking)
+    draw.ellipse([60, 65, 90, 95], fill=(255, 100, 100))
+    
+    print(f"✅ Created synthetic strawberry image: {image.size}")
 
 # DEBUG output
 print("\n" + "="*70)
@@ -126,13 +144,37 @@ print(f"\nTensors identical: {torch.allclose(img_tensor_train, img_tensor_val)}"
 print(f"\npreprocess_TRAIN: {label_train} ({conf_train:.1%})")
 print(f"preprocess_VAL:   {label_val} ({conf_val:.1%})")
 
+# Analyze the logits
+print(f"\nLogits difference:")
+logits_diff = (logits_train - logits_val).abs().squeeze()
+print(f"  Max difference: {logits_diff.max():.4f}")
+print(f"  Mean difference: {logits_diff.mean():.4f}")
+
+# Check if logits are flat (all same - indicates no meaningful features)
+print(f"\nLogits variance:")
+print(f"  TRAIN variance: {logits_train.squeeze().var():.4f}")
+print(f"  VAL variance: {logits_val.squeeze().var():.4f}")
+
+# Check embedding norms
+img_norm_train = img_embeds_train.norm(dim=-1).item()
+img_norm_val = img_embeds_val.norm(dim=-1).item()
+print(f"\nImage embedding norms (before normalization):")
+print(f"  TRAIN: {img_norm_train:.4f}")
+print(f"  VAL: {img_norm_val:.4f}")
+
+print(f"\n" + "-"*70)
+
 if conf_train < 0.3 and conf_val > 0.4:
-    print("\n✅✅✅ FIX CONFIRMED! ✅✅✅")
+    print("✅✅✅ FIX CONFIRMED! ✅✅✅")
     print(f"preprocess_train shows random {conf_train:.1%}")
     print(f"preprocess_val shows correct {conf_val:.1%}")
 elif conf_val > conf_train:
-    print(f"\n✅ preprocess_val better: {conf_val:.1%} vs {conf_train:.1%}")
+    print(f"✅ preprocess_val better: {conf_val:.1%} vs {conf_train:.1%}")
+elif logits_train.squeeze().var() < 0.01 and logits_val.squeeze().var() < 0.01:
+    print(f"\n⚠️ BOTH show flat logits - features not being captured!")
+    print(f"  This suggests the image isn't recognized as a crop by BioCLIP")
+    print(f"  Try with a real photo instead of synthetic image")
 else:
-    print(f"\n⚠️ Results unclear - diff: {conf_val - conf_train:.1%}")
+    print(f"⚠️ Results unclear - diff: {conf_val - conf_train:.1%}")
 
 print("\n" + "="*70)
