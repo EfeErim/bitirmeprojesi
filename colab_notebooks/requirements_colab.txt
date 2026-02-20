@@ -11,6 +11,7 @@ peft>=0.6.0
 accelerate>=0.24.0
 datasets>=2.14.0
 evaluate>=0.4.0
+ultralytics>=8.3.0
 
 # Data processing
 numpy>=1.24.0

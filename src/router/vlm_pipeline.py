@@ -38,7 +38,7 @@ class VLMPipeline:
 
         defaults = {
             'grounding_dino': 'IDEA-Research/grounding-dino-base',
-            'sam': 'facebook/sam-vit-base',
+            'sam': 'sam2_b.pt',
             'bioclip': 'openai/clip-vit-base-patch32'
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
@@ -64,6 +64,7 @@ class VLMPipeline:
         self.grounding_dino_processor = None
         self.sam_processor = None
         self.bioclip_processor = None
+        self.sam_backend = None
         self.models_loaded = False
         
         logger.info(f"VLMPipeline initialized on {self.device}")
@@ -132,32 +133,41 @@ class VLMPipeline:
 
     def _load_sam(self, model_id: str):
         """Load SAM model and processor."""
-        sam2_requested = 'sam2' in model_id.lower() or 'hiera' in model_id.lower()
+        sam2_requested = 'sam2' in model_id.lower() or 'hiera' in model_id.lower() or model_id.lower().endswith('.pt')
         if sam2_requested:
             try:
-                from transformers import Sam2Processor, Sam2Model
-                processor = Sam2Processor.from_pretrained(model_id)
-                model = Sam2Model.from_pretrained(model_id)
-            except Exception as e:
+                from ultralytics import SAM
+
+                checkpoint = model_id
+                if '/' in checkpoint and checkpoint.startswith('facebook/sam2'):
+                    checkpoint = self.vlm_config.get('sam2_checkpoint', 'sam2_b.pt')
+
+                model = SAM(checkpoint)
+                self.sam_backend = 'ultralytics'
+                return {'backend': 'ultralytics', 'checkpoint': checkpoint}, model
+            except Exception:
                 try:
-                    from transformers.models.sam2.processing_sam2 import Sam2Processor
-                    from transformers.models.sam2.modeling_sam2 import Sam2Model
+                    from transformers import Sam2Processor, Sam2Model
                     processor = Sam2Processor.from_pretrained(model_id)
                     model = Sam2Model.from_pretrained(model_id)
-                except Exception as e_sub:
+                    self.sam_backend = 'transformers_sam2'
+                except Exception:
                     try:
-                        from transformers import AutoProcessor, AutoModel
-                        processor = AutoProcessor.from_pretrained(model_id)
-                        model = AutoModel.from_pretrained(model_id)
+                        from transformers.models.sam2.processing_sam2 import Sam2Processor
+                        from transformers.models.sam2.modeling_sam2 import Sam2Model
+                        processor = Sam2Processor.from_pretrained(model_id)
+                        model = Sam2Model.from_pretrained(model_id)
+                        self.sam_backend = 'transformers_sam2_submodule'
                     except Exception as e2:
                         raise RuntimeError(
-                            "SAM-2 model requested but could not load via Sam2 top-level, Sam2 submodule, or Auto* APIs. "
-                            "Install a transformers build with SAM-2 support and verify the SAM-2 model id."
+                            "SAM-2 model requested but could not load via ultralytics or transformers SAM-2 APIs. "
+                            "Install ultralytics with SAM-2 weights availability or a transformers build with SAM-2 support."
                         ) from e2
         else:
             from transformers import SamProcessor, SamModel
             processor = SamProcessor.from_pretrained(model_id)
             model = SamModel.from_pretrained(model_id)
+            self.sam_backend = 'transformers_sam'
         model = model.to(self.device)
         model.eval()
         return processor, model
@@ -286,6 +296,27 @@ class VLMPipeline:
         if bbox is None:
             return None
         try:
+            if self.sam_backend == 'ultralytics':
+                image_np = np.array(image.convert('RGB'))
+                xyxy = [float(v) for v in bbox]
+                try:
+                    results = self.sam2(image_np, bboxes=[xyxy], verbose=False)
+                except Exception:
+                    results = self.sam2.predict(image_np, bboxes=[xyxy], verbose=False)
+
+                if not results:
+                    return None
+                first = results[0]
+                masks = getattr(first, 'masks', None)
+                if masks is None:
+                    return None
+                mask_data = getattr(masks, 'data', None)
+                if mask_data is None or len(mask_data) == 0:
+                    return None
+                mask_np = mask_data[0].detach().cpu().numpy().astype(np.float32)
+                reduced = mask_np[::8, ::8]
+                return reduced.tolist()
+
             input_boxes = [[[bbox]]]
             sam_inputs = self.sam_processor(images=image, input_boxes=input_boxes, return_tensors='pt')
             sam_inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in sam_inputs.items()}
