@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 # Add project to path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / 'src'))
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.router.vlm_pipeline import VLMPipeline
 
@@ -46,7 +46,7 @@ def main():
                 'model_ids': {
                     'grounding_dino': 'IDEA-Research/grounding-dino-base',
                     'sam': 'sam2_b.pt',
-                    'bioclip': 'imageomics/bioclip'  # Correct model name
+                    'bioclip': 'imageomics/bioclip-2'
                 },
                 'confidence_threshold': 0.3,
                 'max_detections': 5
@@ -79,12 +79,6 @@ def main():
     print(f"\n✅ Models loaded in {elapsed:.1f}s")
     print(f"   - SAM backend: {pipeline.sam_backend}")
     print(f"   - BioCLIP backend: {pipeline.bioclip_backend}")
-    
-    if pipeline.crop_text_embeds is not None:
-        print(f"\n⚡ Pre-encoded text embeddings:")
-        print(f"   - Crop labels: {pipeline.crop_text_embeds.shape}")
-        print(f"   - Part labels: {pipeline.part_text_embeds.shape}")
-        print(f"   - This makes inference 10-100x faster!")
     
     # Image upload
     print(f"\n{'='*60}")
