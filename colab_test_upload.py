@@ -49,8 +49,18 @@ except Exception as e:
 
 # Test labels
 print("\n5. Setting up test labels...")
-prompts = ["a photo of grape", "a photo of potato", "a photo of tomato", "a photo of strawberry"]
+known_prompts = ["a photo of grape", "a photo of potato", "a photo of tomato", "a photo of strawberry"]
+unknown_prompts = [
+    "a photo of an unknown plant",
+    "a photo of a non-crop plant",
+    "a photo of random foliage",
+    "an unclear plant image",
+]
+prompts = known_prompts + unknown_prompts
 print(f"Testing labels: {prompts}")
+
+open_set_min_confidence = 0.55
+open_set_margin = 0.10
 
 # Encode text
 print("\n6. Encoding text labels...")
@@ -81,7 +91,18 @@ print(f"Probs:  {probs_train.squeeze()}")
 
 idx_train = torch.argmax(probs_train).item()
 conf_train = probs_train[0, idx_train].item()
-label_train = prompts[idx_train].replace("a photo of ", "")
+known_probs_train = probs_train[:, :len(known_prompts)]
+unknown_prob_train = probs_train[:, len(known_prompts):].max(dim=-1).values
+top_conf_train, top_idx_train = torch.max(known_probs_train, dim=-1)
+second_conf_train = torch.topk(known_probs_train, k=2, dim=-1).values[:, 1]
+margin_train = (top_conf_train - second_conf_train).item()
+
+label_train = known_prompts[top_idx_train.item()].replace("a photo of ", "")
+if unknown_prob_train.item() >= top_conf_train.item() or top_conf_train.item() < open_set_min_confidence or margin_train < open_set_margin:
+    label_train = "unknown"
+    conf_train = max(unknown_prob_train.item(), top_conf_train.item())
+else:
+    conf_train = top_conf_train.item()
 print(f"🎯 Prediction: {label_train} ({conf_train:.1%})")
 
 # Test VAL preprocessing
@@ -105,7 +126,18 @@ print(f"Probs:  {probs_val.squeeze()}")
 
 idx_val = torch.argmax(probs_val).item()
 conf_val = probs_val[0, idx_val].item()
-label_val = prompts[idx_val].replace("a photo of ", "")
+known_probs_val = probs_val[:, :len(known_prompts)]
+unknown_prob_val = probs_val[:, len(known_prompts):].max(dim=-1).values
+top_conf_val, top_idx_val = torch.max(known_probs_val, dim=-1)
+second_conf_val = torch.topk(known_probs_val, k=2, dim=-1).values[:, 1]
+margin_val = (top_conf_val - second_conf_val).item()
+
+label_val = known_prompts[top_idx_val.item()].replace("a photo of ", "")
+if unknown_prob_val.item() >= top_conf_val.item() or top_conf_val.item() < open_set_min_confidence or margin_val < open_set_margin:
+    label_val = "unknown"
+    conf_val = max(unknown_prob_val.item(), top_conf_val.item())
+else:
+    conf_val = top_conf_val.item()
 print(f"🎯 Prediction: {label_val} ({conf_val:.1%})")
 
 # Analysis
@@ -135,6 +167,10 @@ print(f"\nPredictions:")
 print(f"  preprocess_TRAIN: {label_train} ({conf_train:.1%})")
 print(f"  preprocess_VAL:   {label_val} ({conf_val:.1%})")
 print(f"  Confidence diff: {abs(conf_train - conf_val):.1%}")
+print(f"\nOpen-set thresholds:")
+print(f"  min_confidence: {open_set_min_confidence:.2f}")
+print(f"  min_margin: {open_set_margin:.2f}")
+print(f"  unknown_prob TRAIN/VAL: {unknown_prob_train.item():.1%} / {unknown_prob_val.item():.1%}")
 
 print("\n" + "="*70)
 print("INTERPRETATION")

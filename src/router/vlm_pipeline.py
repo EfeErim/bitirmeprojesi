@@ -32,6 +32,13 @@ class VLMPipeline:
         self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
         self.confidence_threshold = config.get('vlm_confidence_threshold', self.vlm_config.get('confidence_threshold', 0.8))
         self.max_detections = config.get('vlm_max_detections', self.vlm_config.get('max_detections', 10))
+        self.open_set_enabled = config.get('vlm_open_set_enabled', self.vlm_config.get('open_set_enabled', True))
+        self.open_set_min_confidence = float(
+            config.get('vlm_open_set_min_confidence', self.vlm_config.get('open_set_min_confidence', 0.55))
+        )
+        self.open_set_margin = float(
+            config.get('vlm_open_set_margin', self.vlm_config.get('open_set_margin', 0.10))
+        )
         strict_from_env = str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
         self.strict_model_loading = config.get('vlm_strict_model_loading', self.vlm_config.get('strict_model_loading', strict_from_env))
         self.model_source = config.get('vlm_model_source', self.vlm_config.get('model_source', 'huggingface'))
@@ -279,6 +286,24 @@ class VLMPipeline:
         return prompt_texts, prompt_to_class
 
     @staticmethod
+    def _open_set_unknown_prompts(label_type: str) -> List[str]:
+        """Prompt set for unknown/out-of-scope rejection."""
+        if label_type == 'part':
+            return [
+                "a photo of an unknown plant part",
+                "a photo of a non-plant object",
+                "an unclear close-up image",
+            ]
+
+        return [
+            "a photo of an unknown plant",
+            "a photo of a non-crop plant",
+            "a photo of random foliage",
+            "an unclear plant image",
+            "a photo of something other than tomato potato grape strawberry",
+        ]
+
+    @staticmethod
     def _aggregate_prompt_logits(logits: torch.Tensor, prompt_to_class: List[int], num_classes: int) -> torch.Tensor:
         """Aggregate prompt-level logits into class-level logits using max pooling."""
         if logits.ndim == 2:
@@ -381,6 +406,17 @@ class VLMPipeline:
         text_prompts, prompt_to_class = self._build_prompt_batch(labels, label_type=label_type)
         if not text_prompts:
             return 'unknown', 0.0
+
+        known_class_count = len(labels)
+        use_open_set = bool(self.open_set_enabled and label_type == 'crop')
+        unknown_class_index = known_class_count
+        if use_open_set:
+            unknown_prompts = self._open_set_unknown_prompts(label_type=label_type)
+            text_prompts.extend(unknown_prompts)
+            prompt_to_class.extend([unknown_class_index] * len(unknown_prompts))
+            class_count = known_class_count + 1
+        else:
+            class_count = known_class_count
             
         if self.bioclip_backend == 'open_clip':
             preprocess = self.bioclip_processor['preprocess']
@@ -396,9 +432,8 @@ class VLMPipeline:
                 image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
                 text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
                 prompt_logits = (image_embeds @ text_embeds.T) * logit_scale
-                logits = self._aggregate_prompt_logits(prompt_logits, prompt_to_class, len(labels))
+                logits = self._aggregate_prompt_logits(prompt_logits, prompt_to_class, class_count)
                 probabilities = torch.softmax(logits, dim=-1)
-                best_confidence, best_index = torch.max(probabilities, dim=-1)
         else:
             model_inputs = self.bioclip_processor(
                 text=text_prompts,
@@ -422,10 +457,36 @@ class VLMPipeline:
                 else:
                     raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
 
-                logits = self._aggregate_prompt_logits(logits, prompt_to_class, len(labels))
+                logits = self._aggregate_prompt_logits(logits, prompt_to_class, class_count)
                 probabilities = torch.softmax(logits, dim=-1)
-                best_confidence, best_index = torch.max(probabilities, dim=-1)
 
+        if use_open_set:
+            known_probs = probabilities[:, :known_class_count]
+            unknown_prob = probabilities[:, unknown_class_index]
+            best_confidence, best_index = torch.max(known_probs, dim=-1)
+
+            if known_class_count > 1:
+                topk_conf, _ = torch.topk(known_probs, k=2, dim=-1)
+                second_confidence = topk_conf[:, 1]
+            else:
+                second_confidence = torch.zeros_like(best_confidence)
+
+            class_index = int(best_index.item())
+            confidence = float(best_confidence.item())
+            unknown_confidence = float(unknown_prob.item())
+            margin = confidence - float(second_confidence.item())
+
+            if (
+                unknown_confidence >= confidence
+                or confidence < self.open_set_min_confidence
+                or margin < self.open_set_margin
+            ):
+                return 'unknown', max(unknown_confidence, confidence)
+
+            label = labels[class_index] if class_index < len(labels) else 'unknown'
+            return label, confidence
+
+        best_confidence, best_index = torch.max(probabilities, dim=-1)
         class_index = int(best_index.item())
         confidence = float(best_confidence.item())
         label = labels[class_index] if class_index < len(labels) else 'unknown'

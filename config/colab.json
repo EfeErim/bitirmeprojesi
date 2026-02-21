@@ -89,6 +89,9 @@
       "strict_model_loading": true,
       "model_source": "huggingface",
       "confidence_threshold": 0.7,
+      "open_set_enabled": true,
+      "open_set_min_confidence": 0.55,
+      "open_set_margin": 0.10,
       "max_detections": 10,
       "model_ids": {
         "grounding_dino": "IDEA-Research/grounding-dino-base",
