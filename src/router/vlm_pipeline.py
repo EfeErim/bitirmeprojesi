@@ -371,6 +371,55 @@ class VLMPipeline:
         uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
         return Image.fromarray(uint8_img)
 
+    @staticmethod
+    def _extract_roi(image: Image.Image, bbox: Optional[List[float]], pad_ratio: float = 0.08) -> Image.Image:
+        """Extract padded ROI from bbox; fallback to original image when bbox invalid."""
+        if bbox is None or len(bbox) != 4:
+            return image
+
+        width, height = image.size
+        x1, y1, x2, y2 = [float(v) for v in bbox]
+
+        box_w = max(1.0, x2 - x1)
+        box_h = max(1.0, y2 - y1)
+        pad_x = box_w * pad_ratio
+        pad_y = box_h * pad_ratio
+
+        left = max(0, int(x1 - pad_x))
+        top = max(0, int(y1 - pad_y))
+        right = min(width, int(x2 + pad_x))
+        bottom = min(height, int(y2 + pad_y))
+
+        if right <= left or bottom <= top:
+            return image
+
+        return image.crop((left, top, right, bottom))
+
+    @staticmethod
+    def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+        """Select best detection by score, fallback to first detection."""
+        if not detections:
+            return None
+        return max(detections, key=lambda det: float(det.get('score', 0.0)))
+
+    @staticmethod
+    def _unique_nonempty(values: List[Optional[str]]) -> List[str]:
+        """Return order-preserving unique non-empty strings."""
+        out: List[str] = []
+        seen = set()
+        for value in values:
+            if not isinstance(value, str):
+                continue
+            normalized = value.strip()
+            if not normalized:
+                continue
+            key = normalized.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(normalized)
+        return out
+
     def _classify_with_prompt_ensemble(
         self, 
         image: Image.Image, 
@@ -638,20 +687,32 @@ class VLMPipeline:
 
             dino_out = self._run_grounding_dino(pil_image)
             detections = dino_out.get('detections', [])
-            best_det = detections[0] if detections else None
+            best_det = self._select_best_detection(detections)
 
-            # Classify using CLIP/BioCLIP prompt-ensemble scoring
-            crop_label, crop_conf = self._classify_with_prompt_ensemble(pil_image, 'crop')
-            part_label, part_conf = self._classify_with_prompt_ensemble(pil_image, 'part')
+            best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
+            roi_image = self._extract_roi(pil_image, best_bbox)
 
-            if best_det and best_det.get('crop_guess'):
-                crop_label = best_det.get('crop_guess')
-                crop_conf = max(crop_conf, float(best_det.get('score', 0.0)))
+            candidate_crops = self._unique_nonempty([det.get('crop_guess') for det in detections])
+            candidate_parts = self._unique_nonempty([det.get('part_guess') for det in detections])
+
+            if candidate_crops:
+                crop_label, crop_conf = self._clip_score_labels(roi_image, candidate_crops, label_type='crop')
+            else:
+                crop_label, crop_conf = 'unknown', 0.0
+
+            part_label, part_conf = self._classify_with_prompt_ensemble(roi_image, 'part')
+
             if best_det and best_det.get('part_guess'):
                 part_label = best_det.get('part_guess')
                 part_conf = max(part_conf, float(best_det.get('score', 0.0)))
 
-            best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
+            if candidate_parts and part_label == 'unknown':
+                dino_part = candidate_parts[0]
+                part_label = dino_part
+                part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
+
+            if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < self.confidence_threshold:
+                crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
             best_mask = self._run_sam_mask(pil_image, best_bbox)
 
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
