@@ -152,24 +152,11 @@ class VLMPipeline:
                 model = SAM(checkpoint)
                 self.sam_backend = 'ultralytics'
                 return {'backend': 'ultralytics', 'checkpoint': checkpoint}, model
-            except Exception:
-                try:
-                    from transformers import Sam2Processor, Sam2Model
-                    processor = Sam2Processor.from_pretrained(model_id)
-                    model = Sam2Model.from_pretrained(model_id)
-                    self.sam_backend = 'transformers_sam2'
-                except Exception:
-                    try:
-                        from transformers.models.sam2.processing_sam2 import Sam2Processor
-                        from transformers.models.sam2.modeling_sam2 import Sam2Model
-                        processor = Sam2Processor.from_pretrained(model_id)
-                        model = Sam2Model.from_pretrained(model_id)
-                        self.sam_backend = 'transformers_sam2_submodule'
-                    except Exception as e2:
-                        raise RuntimeError(
-                            "SAM-2 model requested but could not load via ultralytics or transformers SAM-2 APIs. "
-                            "Install ultralytics with SAM-2 weights availability or a transformers build with SAM-2 support."
-                        ) from e2
+            except Exception as e:
+                raise RuntimeError(
+                    "SAM-2 requires ultralytics in this pipeline configuration. "
+                    "Install ultralytics and ensure SAM-2 weights are accessible (e.g., checkpoint 'sam2_b.pt')."
+                ) from e
         else:
             from transformers import SamProcessor, SamModel
             processor = SamProcessor.from_pretrained(model_id)

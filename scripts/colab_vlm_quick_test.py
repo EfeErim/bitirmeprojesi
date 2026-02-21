@@ -7,20 +7,42 @@ Usage in Colab:
 """
 
 import sys
+import subprocess
 from pathlib import Path
 import torch
 from PIL import Image
 import matplotlib.pyplot as plt
 
 # Add project to path
+
+def ensure_ultralytics():
+    """Ensure ultralytics is installed for SAM2 backend."""
+    try:
+        import ultralytics  # noqa: F401
+        return
+    except Exception:
+        print("📦 Installing ultralytics for SAM2 backend...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "ultralytics"])
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.router.vlm_pipeline import VLMPipeline
 
 
+def ensure_dependencies():
+    """Install runtime dependencies required for SAM2 + BioCLIP2 in Colab."""
+    packages = [
+        'ultralytics',
+        'open-clip-torch',
+    ]
+    ensure_ultralytics()
+    for package in packages:
+        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', package])
+
+
 def main():
     """Run interactive VLM test with image upload."""
+    ensure_dependencies()
     
     # Configuration
     config = {
