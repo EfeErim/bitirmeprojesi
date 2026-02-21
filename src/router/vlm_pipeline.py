@@ -39,12 +39,6 @@ class VLMPipeline:
         self.open_set_margin = float(
             config.get('vlm_open_set_margin', self.vlm_config.get('open_set_margin', 0.10))
         )
-        self.open_set_vegetative_min_confidence = float(
-            config.get(
-                'vlm_open_set_vegetative_min_confidence',
-                self.vlm_config.get('open_set_vegetative_min_confidence', 0.85),
-            )
-        )
         strict_from_env = str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
         self.strict_model_loading = config.get('vlm_strict_model_loading', self.vlm_config.get('strict_model_loading', strict_from_env))
         self.model_source = config.get('vlm_model_source', self.vlm_config.get('model_source', 'huggingface'))
@@ -598,6 +592,8 @@ class VLMPipeline:
             label_text = str(label).lower()
             crop_guess = next((c for c in self.crop_labels if c.lower() in label_text), None)
             part_guess = next((p for p in self.part_labels if p.lower() in label_text), None)
+            if part_guess is None and crop_guess is None:
+                part_guess = str(label).strip().lower()
             detections.append({
                 'label': str(label),
                 'score': score_val,
@@ -716,13 +712,6 @@ class VLMPipeline:
                 dino_part = candidate_parts[0]
                 part_label = dino_part
                 part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
-
-            if (
-                crop_label != 'unknown'
-                and part_label in {'leaf', 'stem'}
-                and crop_conf < self.open_set_vegetative_min_confidence
-            ):
-                crop_label, crop_conf = 'unknown', crop_conf
 
             if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < self.confidence_threshold:
                 crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
