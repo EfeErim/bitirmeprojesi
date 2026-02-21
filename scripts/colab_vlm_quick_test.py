@@ -54,6 +54,32 @@ def _run_preflight() -> None:
     if torch.cuda.is_available():
         print(f"  CUDA device: {torch.cuda.get_device_name(0)}")
     print(f"  Colab mode: {_is_colab()}")
+    
+    # Check critical dependencies
+    print("\n📦 Dependency Check")
+    critical_packages = {
+        'transformers': 'transformers',
+        'open_clip': 'open-clip-torch',
+        'ultralytics': 'ultralytics',
+        'groundingdino': 'groundingdino-hf',
+    }
+    
+    missing_deps = []
+    for pkg_name, pip_name in critical_packages.items():
+        try:
+            __import__(pkg_name)
+            print(f"  ✅ {pkg_name}: {_safe_import_version(pkg_name)}")
+        except ImportError:
+            print(f"  ❌ {pkg_name}: NOT INSTALLED (run: !pip install {pip_name})")
+            missing_deps.append(pip_name)
+    
+    if missing_deps:
+        print(f"\n⚠️  Missing dependencies detected!")
+        print(f"Install them with:")
+        print(f"  !pip install {' '.join(missing_deps)}")
+        print(f"\nOr run the setup script:")
+        print(f"  %run scripts/colab_setup_dependencies.py")
+        raise RuntimeError(f"Missing required packages: {', '.join(missing_deps)}")
 
 
 def _write_error_report(exc: Exception) -> Path:

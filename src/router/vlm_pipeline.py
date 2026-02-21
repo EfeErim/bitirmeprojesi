@@ -160,6 +160,39 @@ class VLMPipeline:
             logger.error(f"Failed to load taxonomy from {path}: {e}")
             return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
 
+    @staticmethod
+    def _check_dependencies():
+        """Check for required dependencies and provide installation hints."""
+        missing_deps = []
+        
+        # Check transformers version for SAM3 support
+        try:
+            import transformers
+            version = transformers.__version__
+            major, minor, patch = map(int, version.split('.')[:3])
+            if (major, minor) < (4, 41):
+                logger.warning(f"transformers {version} may not have SAM3. Recommend >=4.41.0. Install: !pip install transformers --upgrade")
+        except Exception as e:
+            logger.warning(f"Could not check transformers version: {e}")
+        
+        # Check for optional dependencies
+        optional_packages = {
+            'open_clip': 'open-clip-torch',
+            'ultralytics': 'ultralytics',
+            'groundingdino': 'groundingdino-hf',
+        }
+        
+        for package_name, pip_name in optional_packages.items():
+            try:
+                __import__(package_name)
+            except ImportError:
+                missing_deps.append(pip_name)
+        
+        if missing_deps:
+            install_cmd = f"!pip install {' '.join(missing_deps)}"
+            logger.warning(f"Missing optional dependencies: {', '.join(missing_deps)}")
+            logger.warning(f"Install in Colab cell: {install_cmd}")
+
     def load_models(self):
         """Load all VLM models with SAM3+BioCLIP-2.5 as primary, DINO+SAM2.1+BioCLIP-2.5 as fallback."""
         logger.info("Loading VLM models...")
@@ -168,6 +201,9 @@ class VLMPipeline:
             logger.info("VLM pipeline is disabled; skipping model loading")
             self.models_loaded = False
             return
+
+        # Check required dependencies before loading
+        self._check_dependencies()
 
         # Authenticate with HuggingFace if token available (e.g., from Colab secrets)
         hf_token = os.getenv('HF_TOKEN')
@@ -179,7 +215,7 @@ class VLMPipeline:
             except Exception as hf_auth_error:
                 logger.warning(f"HuggingFace authentication failed: {hf_auth_error}")
         else:
-            logger.info("No HF_TOKEN found in environment; some models may require authentication")
+            logger.warning("No HF_TOKEN found in environment; SAM3 models may require manual agreement on HuggingFace")
 
         try:
             if self.model_source != 'huggingface':
@@ -188,6 +224,7 @@ class VLMPipeline:
             # Try SAM3 + BioCLIP-2.5 first (primary pipeline)
             if self.pipeline_mode == 'sam3' and not self.fallback_attempted:
                 logger.info("Attempting SAM3 + BioCLIP-2.5 pipeline...")
+                logger.info("Note: First run downloads ~1-2 GB. This may take 2-5 minutes...")
                 try:
                     self._load_sam3_bioclip25()
                     self.actual_pipeline = 'sam3'
@@ -204,15 +241,16 @@ class VLMPipeline:
             self.grounding_dino_processor, self.grounding_dino = self._load_grounding_dino(
                 self.model_ids['grounding_dino']
             )
-            # Use SAM2.1 for better performance in fallback mode
-            self.sam_processor, self.sam2 = self._load_sam('sam2.1_b.pt')
+            # Use configured SAM model (defaults to sam2.1_b.pt if not overridden)
+            sam_model_id = self.model_ids.get('sam', 'sam2.1_b.pt')
+            self.sam_processor, self.sam2 = self._load_sam(sam_model_id)
             
             # Use BioCLIP-2.5 even in fallback for consistency and better accuracy
             self.bioclip_processor, self.bioclip = self._load_clip_like_model('imageomics/bioclip-2.5-vith14')
             
             self.actual_pipeline = 'dino'
             self.models_loaded = True
-            logger.info("✅ DINO + SAM2 + BioCLIP-2 loaded successfully (fallback mode)")
+            logger.info("✅ DINO + SAM2.1 + BioCLIP-2.5 loaded successfully (fallback mode)")
             
         except Exception as e:
             self.models_loaded = False

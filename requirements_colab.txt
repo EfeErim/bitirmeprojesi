@@ -1,0 +1,25 @@
+# Core ML Framework
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.41.0  # Must have SAM3 support
+
+# Vision Models
+open-clip-torch>=2.20.0  # For BioCLIP-2.5
+ultralytics>=8.0.0  # For SAM2.1
+groundingdino-hf>=0.18.0  # For DINO fallback
+
+# HuggingFace Hub
+huggingface-hub>=0.17.0
+
+# Data Processing
+numpy>=1.21.0
+Pillow>=9.0.0
+opencv-python>=4.5.0
+
+# Utilities
+tqdm>=4.60.0
+pyyaml>=5.4.0
+
+# Optional: For Colab notebooks
+matplotlib>=3.5.0
+jupyter>=1.0.0

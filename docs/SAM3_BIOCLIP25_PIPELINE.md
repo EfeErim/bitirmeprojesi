@@ -208,6 +208,31 @@ results = pipeline.analyze_image(tensor)
 
 ---
 
+## Colab Setup (REQUIRED)
+
+### **Step 0: Install Dependencies (First Cell in Colab)**
+
+Run this cell FIRST before anything else:
+
+```python
+# Colab setup - Install all dependencies
+!pip install --upgrade pip
+!pip install transformers>=4.41.0
+!pip install open-clip-torch
+!pip install ultralytics
+!pip install groundingdino-hf
+!pip install huggingface-hub --upgrade
+!git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || (cd /content/bitirmeprojesi && git pull)
+print("✅ All dependencies installed!")
+```
+
+**Or use the automated setup script:**
+```python
+%run /content/bitirmeprojesi/scripts/colab_setup_dependencies.py
+```
+
+---
+
 ## HuggingFace Authentication (Colab)
 
 To enable SAM3 loading without fallback, authenticate with your HuggingFace account:
@@ -217,6 +242,7 @@ To enable SAM3 loading without fallback, authenticate with your HuggingFace acco
 2. Click **"+ Add new secret"**
 3. Name: `HF_TOKEN`
 4. Value: Your HuggingFace token (from https://huggingface.co/settings/tokens)
+   - **Required permission**: ✅ "Read access to contents of all public gated repos you can access"
 5. Enable **"Notebook access"**
 6. Click **"Add secret"**
 
@@ -233,6 +259,7 @@ pipeline.load_models()
 
 # Output will show:
 # ✅ Authenticated with HuggingFace
+# Note: First run downloads ~1-2 GB. This may take 2-5 minutes...
 # ✅ SAM3 + BioCLIP-2.5 loaded successfully
 ```
 
