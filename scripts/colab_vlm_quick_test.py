@@ -2,7 +2,22 @@
 """
 Quick VLM Pipeline Test for Colab - No config file needed!
 
-Usage in Colab:
+IMPORTANT: Run these cells FIRST in your Colab notebook:
+
+    # Cell 1: Clone repo and change directory (CRITICAL!)
+    !git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || !cd /content/bitirmeprojesi && git pull
+    %cd /content/bitirmeprojesi
+
+    # Cell 2: Install dependencies
+    %run scripts/colab_setup_dependencies.py
+
+    # Cell 3: Add HF_TOKEN from secrets
+    from google.colab import userdata
+    import os
+    hf_token = userdata.get('HF_TOKEN')
+    os.environ['HF_TOKEN'] = hf_token
+
+    # Cell 4: Run this test
     %run scripts/colab_vlm_quick_test.py
 """
 
@@ -17,6 +32,16 @@ from pathlib import Path
 import torch
 from PIL import Image
 import matplotlib.pyplot as plt
+import os
+
+# CRITICAL: Verify we're in the repo directory
+if not os.path.exists('src'):
+    print("❌ ERROR: Not in bitirmeprojesi directory!")
+    print("   You must run: %cd /content/bitirmeprojesi")
+    print("   Then run:    %run scripts/colab_vlm_quick_test.py")
+    sys.exit(1)
+
+print("✅ Confirmed: Working in correct directory")
 
 # Add project to path
 

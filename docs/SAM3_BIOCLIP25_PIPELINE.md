@@ -210,25 +210,38 @@ results = pipeline.analyze_image(tensor)
 
 ## Colab Setup (REQUIRED)
 
-### **Step 0: Install Dependencies (First Cell in Colab)**
+### **Step 0: Clone Repository & Install Dependencies (First Cell in Colab)**
 
 Run this cell FIRST before anything else:
 
 ```python
-# Colab setup - Install all dependencies
+# Clone repository
+!git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || !cd /content/bitirmeprojesi && git pull
+
+# Change to repo directory (CRITICAL for imports!)
+%cd /content/bitirmeprojesi
+
+# Install all dependencies
 !pip install --upgrade pip
 !pip install transformers>=4.41.0
 !pip install open-clip-torch
 !pip install ultralytics
 !pip install groundingdino-hf
 !pip install huggingface-hub --upgrade
-!git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || (cd /content/bitirmeprojesi && git pull)
-print("✅ All dependencies installed!")
+
+print("✅ Repository cloned and dependencies installed!")
 ```
 
 **Or use the automated setup script:**
 ```python
-%run /content/bitirmeprojesi/scripts/colab_setup_dependencies.py
+# Clone first
+!git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || !cd /content/bitirmeprojesi && git pull
+
+# Change directory
+%cd /content/bitirmeprojesi
+
+# Run setup script
+%run scripts/colab_setup_dependencies.py
 ```
 
 ---
@@ -248,6 +261,9 @@ To enable SAM3 loading without fallback, authenticate with your HuggingFace acco
 
 ### **Step 2: Pipeline Automatically Authenticates**
 ```python
+# Make sure you're in the repo directory first!
+%cd /content/bitirmeprojesi
+
 # The pipeline reads HF_TOKEN from Colab secrets automatically
 # No need to manually login!
 
@@ -269,8 +285,11 @@ pipeline.load_models()
 
 ### **In Colab:**
 ```python
-# Clone and test
-!cd /content/bitirmeprojesi && git pull origin master
+# Clone and change directory (if not already done)
+!git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || !cd /content/bitirmeprojesi && git pull
+%cd /content/bitirmeprojesi
+
+# Run test
 %run scripts/colab_vlm_quick_test.py
 
 # Upload your leaf image

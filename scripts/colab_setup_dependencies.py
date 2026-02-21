@@ -2,7 +2,14 @@
 """
 Colab Setup Script: Install all dependencies for SAM3+BioCLIP-2.5 pipeline
 
-Run this at the start of your Colab notebook to ensure all dependencies are available.
+IMPORTANT: Run these cells FIRST in your Colab notebook:
+
+    # Cell 1: Clone repo and change directory
+    !git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || !cd /content/bitirmeprojesi && git pull
+    %cd /content/bitirmeprojesi
+
+    # Cell 2: Run this setup script
+    %run scripts/colab_setup_dependencies.py
 """
 
 import subprocess
@@ -29,6 +36,15 @@ def run_command(cmd, description=""):
 
 def main():
     """Main setup function."""
+    import os
+    
+    # Check if we're in the repo directory, if not try to cd or clone
+    if not os.path.exists('src'):
+        print("\n⚠️  Not in bitirmeprojesi directory. Cloning now...")
+        os.system("git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || (cd /content/bitirmeprojesi && git pull)")
+        os.chdir('/content/bitirmeprojesi')
+        print("✅ Cloned/updated and changed to repository directory")
+    
     print("\n" + "="*70)
     print(" AADS-ULoRA SAM3+BioCLIP-2.5 Pipeline - Colab Setup")
     print("="*70)
