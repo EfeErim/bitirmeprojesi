@@ -539,6 +539,11 @@ class VLMPipeline:
     def _run_grounding_dino(self, image: Image.Image, threshold: Optional[float] = None) -> Dict[str, Any]:
         """Run GroundingDINO detection for crop/part prompts."""
         prompt_labels = self.crop_labels + self.part_labels
+        
+        # Add generic plant detection prompts for better coverage
+        generic_prompts = ['plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part']
+        prompt_labels = prompt_labels + generic_prompts
+        
         if not prompt_labels:
             return {'detections': []}
 
