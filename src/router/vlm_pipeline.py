@@ -9,6 +9,7 @@ import builtins
 import logging
 import os
 import time
+from pathlib import Path
 from typing import Dict, Optional, Any, List, Tuple
 from PIL import Image
 import numpy as np
@@ -558,6 +559,49 @@ class VLMPipeline:
         return Image.fromarray(uint8_img)
 
     @staticmethod
+    def _coerce_image_input(image_input: Any) -> Tuple[Image.Image, Tuple[int, int, int]]:
+        """Normalize supported image inputs to PIL and return a best-effort image_size tuple.
+
+        Supported inputs:
+        - torch.Tensor (CHW or NCHW)
+        - str / pathlib.Path file path
+        - PIL.Image.Image
+        - numpy.ndarray (HWC/CHW)
+        """
+        if isinstance(image_input, torch.Tensor):
+            pil = VLMPipeline._tensor_to_pil(image_input)
+            return pil, tuple(image_input.shape)
+
+        if isinstance(image_input, (str, Path)):
+            pil = Image.open(str(image_input)).convert('RGB')
+            width, height = pil.size
+            return pil, (3, height, width)
+
+        if isinstance(image_input, Image.Image):
+            pil = image_input.convert('RGB')
+            width, height = pil.size
+            return pil, (3, height, width)
+
+        if isinstance(image_input, np.ndarray):
+            arr = image_input
+            if arr.ndim == 3 and arr.shape[0] in {1, 3} and arr.shape[-1] not in {1, 3}:
+                arr = np.transpose(arr, (1, 2, 0))
+            if arr.ndim == 2:
+                arr = np.stack([arr] * 3, axis=-1)
+            if arr.ndim != 3:
+                raise ValueError(f"Unsupported ndarray shape for image input: {arr.shape}")
+            if arr.dtype != np.uint8:
+                arr = np.clip(arr, 0, 255).astype(np.uint8)
+            pil = Image.fromarray(arr).convert('RGB')
+            height, width = arr.shape[:2]
+            return pil, (3, height, width)
+
+        raise TypeError(
+            f"Unsupported image_input type: {type(image_input).__name__}. "
+            "Expected torch.Tensor, str/path, PIL.Image, or numpy.ndarray."
+        )
+
+    @staticmethod
     def _extract_roi(image: Image.Image, bbox: Optional[List[float]], pad_ratio: float = 0.08) -> Image.Image:
         """Extract padded ROI from bbox; fallback to original image when bbox invalid."""
         if bbox is None or len(bbox) != 4:
@@ -875,7 +919,7 @@ class VLMPipeline:
 
     def analyze_image(
         self,
-        image_tensor: torch.Tensor,
+        image_tensor: Any,
         confidence_threshold: float = 0.8,
         max_detections: int = 10
     ) -> Dict[str, Any]:
@@ -890,30 +934,32 @@ class VLMPipeline:
         Returns:
             Dictionary with analysis results
         """
+        pil_image, image_size = self._coerce_image_input(image_tensor)
+
         if self.enabled and self.models_loaded:
             # Route to appropriate pipeline
             if self.actual_pipeline == 'sam3':
-                return self._analyze_image_sam3(image_tensor, confidence_threshold, max_detections)
+                return self._analyze_image_sam3(pil_image, image_size, confidence_threshold, max_detections)
             else:
-                return self._analyze_image_dino(image_tensor, confidence_threshold, max_detections)
+                return self._analyze_image_dino(pil_image, image_size, confidence_threshold, max_detections)
         
         # Pipeline not ready/enabled
         return {
             'detections': [],
-            'image_size': tuple(image_tensor.shape),
+            'image_size': image_size,
             'processing_time_ms': 0.0
         }
     
     def _analyze_image_sam3(
         self,
-        image_tensor: torch.Tensor,
+        pil_image: Image.Image,
+        image_size: Tuple[int, int, int],
         confidence_threshold: float = 0.8,
         max_detections: int = 10
     ) -> Dict[str, Any]:
         """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
         import time
         start_time = time.perf_counter()
-        pil_image = self._tensor_to_pil(image_tensor)
         
         effective_threshold = float(confidence_threshold)
         effective_max_detections = int(max_detections)
@@ -954,7 +1000,7 @@ class VLMPipeline:
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
         return {
             'detections': detections,
-            'image_size': tuple(image_tensor.shape),
+            'image_size': image_size,
             'processing_time_ms': elapsed_ms,
             'pipeline_type': 'sam3_bioclip25',
             'sam3_instances': len(masks)
@@ -991,14 +1037,14 @@ class VLMPipeline:
     
     def _analyze_image_dino(
         self,
-        image_tensor: torch.Tensor,
+        pil_image: Image.Image,
+        image_size: Tuple[int, int, int],
         confidence_threshold: float = 0.8,
         max_detections: int = 10
     ) -> Dict[str, Any]:
         """Analyze using DINO + SAM2 + BioCLIP-2 pipeline (fallback)."""
         import time
         start_time = time.perf_counter()
-        pil_image = self._tensor_to_pil(image_tensor)
 
         effective_threshold = float(confidence_threshold)
         effective_max_detections = int(max_detections)
@@ -1048,7 +1094,7 @@ class VLMPipeline:
                     'grounding_label': best_det.get('label') if best_det else None
                 }
             ],
-            'image_size': tuple(image_tensor.shape),
+            'image_size': image_size,
             'processing_time_ms': elapsed_ms,
             'raw_detections': detections[:effective_max_detections],
             'pipeline_type': 'dino_sam2_bioclip2'
