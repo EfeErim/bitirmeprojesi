@@ -77,12 +77,12 @@ Results
 
 ---
 
-### **Pipeline 2: GroundingDINO + SAM2 + BioCLIP-2 (Fallback)**
+### **Pipeline 2: GroundingDINO + SAM2.1 + BioCLIP-2.5 (Fallback)**
 
 **Models:**
 - **GroundingDINO**: `IDEA-Research/grounding-dino-base`
-- **SAM2**: `sam2_b.pt` (ultralytics)
-- **BioCLIP-2**: `imageomics/bioclip-2` (smaller, ViT-L/14)
+- **SAM2.1**: `sam2.1_b.pt` (ultralytics, improved segmentation)
+- **BioCLIP-2.5**: `imageomics/bioclip-2.5-vith14` (same as primary, ViT-H/14)
 
 **Architecture:**
 ```
@@ -92,26 +92,27 @@ GroundingDINO:
   ├─ Text prompts: "crop, part, plant, leaf, ..."
   └─ Returns: [detection1, ..., detectionN]
   ↓
-SAM2 Mask:
+SAM2.1 Mask:
   ├─ Take best detection bbox
-  └─ Segment region
+  └─ Segment region (improved from SAM2)
   ↓
-BioCLIP-2:
+BioCLIP-2.5:
   ├─ Classify from detected crops/parts
-  └─ Return prediction + confidence
+  └─ Return prediction + confidence (higher accuracy)
   ↓
 Results
 ```
 
 **Advantages:**
-✅ Original, proven architecture  
+✅ Proven architecture (DINO detection)  
 ✅ Well-tested, known behavior  
-✅ Smaller model (faster)  
+✅ Improved segmentation (SAM2.1 vs SAM2)  
+✅ Better classification (BioCLIP-2.5 vs BioCLIP-2, +5.7% accuracy)  
 ✅ More explicit detection step  
 
 **Trade-offs:**
 ⚠️ More complex (3 stages)  
-⚠️ Slower inference  
+⚠️ Slower inference than SAM3  
 ⚠️ Less accurate detection on generic plant images  
 
 ---

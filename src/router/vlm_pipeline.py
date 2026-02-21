@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 VLM Pipeline for AADS-ULoRA
-Dual-mode: SAM3 + BioCLIP-2.5 (primary) with fallback to GroundingDINO + SAM2 + BioCLIP-2
+Dual-mode: SAM3 + BioCLIP-2.5 (primary) with fallback to GroundingDINO + SAM2.1 + BioCLIP-2.5
 """
 
 import torch
@@ -24,9 +24,8 @@ class VLMPipeline:
        - Better segmentation with text prompts
        - Improved classification accuracy (+5.7% over BioCLIP-2)
        
-    2. GroundingDINO + SAM2 + BioCLIP-2 (Fallback)
-       - Original architecture
-       - More stable, known performance
+    2. GroundingDINO + SAM2.1 + BioCLIP-2.5 (Fallback)
+       - Proven detection, improved segmentation (SAM2.1), better classification (BioCLIP-2.5)
        
     Automatically falls back to mode 2 if mode 1 fails.
     """
@@ -60,8 +59,8 @@ class VLMPipeline:
 
         defaults = {
             'grounding_dino': 'IDEA-Research/grounding-dino-base',
-            'sam': 'facebook/sam3',  # Default to SAM3, fallback to sam2_b.pt
-            'bioclip': 'imageomics/bioclip-2.5-vith14'  # Default to BioCLIP-2.5, fallback to 2
+            'sam': 'facebook/sam3',  # Default to SAM3, fallback to sam2.1_b.pt
+            'bioclip': 'imageomics/bioclip-2.5-vith14'  # BioCLIP-2.5 for both primary and fallback
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
         self.model_ids = {
@@ -162,7 +161,7 @@ class VLMPipeline:
             return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
 
     def load_models(self):
-        """Load all VLM models with SAM3+BioCLIP-2.5 as primary, DINO+SAM2+BioCLIP-2 as fallback."""
+        """Load all VLM models with SAM3+BioCLIP-2.5 as primary, DINO+SAM2.1+BioCLIP-2.5 as fallback."""
         logger.info("Loading VLM models...")
 
         if not self.enabled:
@@ -185,19 +184,19 @@ class VLMPipeline:
                     return
                 except Exception as sam3_error:
                     logger.warning(f"SAM3 + BioCLIP-2.5 failed: {sam3_error}")
-                    logger.info("Falling back to DINO + SAM2 + BioCLIP-2...")
+                    logger.info("Falling back to DINO + SAM2.1 + BioCLIP-2.5...")
                     self.fallback_attempted = True
             
-            # Fallback to DINO + SAM2 + BioCLIP-2
-            logger.info("Loading DINO + SAM2 + BioCLIP-2 pipeline...")
+            # Fallback to DINO + SAM2.1 + BioCLIP-2.5 (upgraded fallback)
+            logger.info("Loading DINO + SAM2.1 + BioCLIP-2.5 pipeline...")
             self.grounding_dino_processor, self.grounding_dino = self._load_grounding_dino(
                 self.model_ids['grounding_dino']
             )
-            self.sam_processor, self.sam2 = self._load_sam(self.model_ids['sam'])
+            # Use SAM2.1 for better performance in fallback mode
+            self.sam_processor, self.sam2 = self._load_sam('sam2.1_b.pt')
             
-            # Use BioCLIP-2 for fallback, not BioCLIP-2.5
-            bioclip_model_id = 'imageomics/bioclip-2' if 'bioclip-2.5' in self.model_ids['bioclip'] else self.model_ids['bioclip']
-            self.bioclip_processor, self.bioclip = self._load_clip_like_model(bioclip_model_id)
+            # Use BioCLIP-2.5 even in fallback for consistency and better accuracy
+            self.bioclip_processor, self.bioclip = self._load_clip_like_model('imageomics/bioclip-2.5-vith14')
             
             self.actual_pipeline = 'dino'
             self.models_loaded = True
