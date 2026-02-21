@@ -83,7 +83,7 @@ def test_vlm_pipeline():
     print("="*80)
     print(f"Testing with crop labels: {pipeline.crop_labels}")
     
-    crop_label, confidence = pipeline._classify_with_preencoded(image, 'crop')
+    crop_label, confidence = pipeline._classify_with_prompt_ensemble(image, 'crop')
     print(f"\nResult: {crop_label} with confidence {confidence:.1%}")
     
     # Test part classification if available
@@ -93,7 +93,7 @@ def test_vlm_pipeline():
         print("="*80)
         print(f"Testing with part labels: {pipeline.part_labels}")
         
-        part_label, confidence = pipeline._classify_with_preencoded(image, 'part')
+        part_label, confidence = pipeline._classify_with_prompt_ensemble(image, 'part')
         print(f"\nResult: {part_label} with confidence {confidence:.1%}")
     
     print("\n" + "="*80)

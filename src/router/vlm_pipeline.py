@@ -273,7 +273,7 @@ class VLMPipeline:
         return prompt_texts, prompt_to_class
 
     @staticmethod
-    def _open_set_unknown_prompts(label_type: str) -> List[str]:
+    def _open_set_unknown_prompts(label_type: str, known_labels: Optional[List[str]] = None) -> List[str]:
         """Prompt set for unknown/out-of-scope rejection."""
         if label_type == 'part':
             return [
@@ -282,12 +282,20 @@ class VLMPipeline:
                 "an unclear close-up image",
             ]
 
+        known_labels = known_labels or []
+        known_phrase = ' '.join(str(label).strip() for label in known_labels if str(label).strip())
+        other_than_prompt = (
+            f"a photo of something other than {known_phrase}"
+            if known_phrase
+            else "a photo of an out-of-scope crop"
+        )
+
         return [
             "a photo of an unknown plant",
             "a photo of a non-crop plant",
             "a photo of random foliage",
             "an unclear plant image",
-            "a photo of something other than tomato potato grape strawberry",
+            other_than_prompt,
         ]
 
     @staticmethod
@@ -447,7 +455,7 @@ class VLMPipeline:
         use_open_set = bool(self.open_set_enabled and label_type == 'crop')
         unknown_class_index = known_class_count
         if use_open_set:
-            unknown_prompts = self._open_set_unknown_prompts(label_type=label_type)
+            unknown_prompts = self._open_set_unknown_prompts(label_type=label_type, known_labels=labels)
             text_prompts.extend(unknown_prompts)
             prompt_to_class.extend([unknown_class_index] * len(unknown_prompts))
             class_count = known_class_count + 1
@@ -528,11 +536,13 @@ class VLMPipeline:
         label = labels[class_index] if class_index < len(labels) else 'unknown'
         return label, confidence
 
-    def _run_grounding_dino(self, image: Image.Image) -> Dict[str, Any]:
+    def _run_grounding_dino(self, image: Image.Image, threshold: Optional[float] = None) -> Dict[str, Any]:
         """Run GroundingDINO detection for crop/part prompts."""
         prompt_labels = self.crop_labels + self.part_labels
         if not prompt_labels:
             return {'detections': []}
+
+        threshold_value = float(self.confidence_threshold if threshold is None else threshold)
 
         text_prompt = '. '.join(prompt_labels) + '.'
         inputs = self.grounding_dino_processor(images=image, text=text_prompt, return_tensors='pt')
@@ -559,8 +569,8 @@ class VLMPipeline:
             results = self.grounding_dino_processor.post_process_grounded_object_detection(
                 outputs,
                 input_ids,
-                box_threshold=float(self.confidence_threshold),
-                text_threshold=float(self.confidence_threshold),
+                box_threshold=threshold_value,
+                text_threshold=threshold_value,
                 target_sizes=target_sizes,
             )
 
@@ -572,7 +582,7 @@ class VLMPipeline:
             score_val = float(score) if torch.is_tensor(score) else float(score)
             
             # Filter by confidence threshold
-            if score_val < self.confidence_threshold:
+            if score_val < threshold_value:
                 continue
                 
             box_xyxy = [float(x) for x in box.tolist()]
@@ -674,7 +684,10 @@ class VLMPipeline:
             start_time = time.perf_counter()
             pil_image = self._tensor_to_pil(image_tensor)
 
-            dino_out = self._run_grounding_dino(pil_image)
+            effective_threshold = float(confidence_threshold)
+            effective_max_detections = int(max_detections)
+
+            dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)
             detections = dino_out.get('detections', [])
             best_det = self._select_best_detection(detections)
 
@@ -700,7 +713,7 @@ class VLMPipeline:
                 part_label = dino_part
                 part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
 
-            if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < self.confidence_threshold:
+            if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < effective_threshold:
                 crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
             best_mask = self._run_sam_mask(pil_image, best_bbox)
 
@@ -721,7 +734,7 @@ class VLMPipeline:
                 ],
                 'image_size': tuple(image_tensor.shape),
                 'processing_time_ms': elapsed_ms,
-                'raw_detections': detections[:self.max_detections]
+                'raw_detections': detections[:effective_max_detections]
             }
 
         # No fallback to placeholder data - return empty result when models not loaded
