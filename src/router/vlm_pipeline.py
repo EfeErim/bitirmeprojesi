@@ -297,6 +297,24 @@ class VLMPipeline:
         return class_logits.unsqueeze(0)
 
     @staticmethod
+    def _get_clip_logit_scale(model: Any) -> float:
+        """Get CLIP logit scale (temperature inverse) with safe fallback."""
+        logit_scale_attr = getattr(model, 'logit_scale', None)
+        if logit_scale_attr is None:
+            return 1.0
+
+        try:
+            if torch.is_tensor(logit_scale_attr):
+                scale_value = logit_scale_attr.detach().float().squeeze().exp().item()
+            elif hasattr(logit_scale_attr, 'data') and torch.is_tensor(logit_scale_attr.data):
+                scale_value = logit_scale_attr.data.detach().float().squeeze().exp().item()
+            else:
+                scale_value = float(logit_scale_attr)
+            return max(1.0, min(scale_value, 100.0))
+        except Exception:
+            return 1.0
+
+    @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
         """Convert CHW or NCHW tensor to PIL image."""
         tensor = image_tensor.detach().cpu()
@@ -367,6 +385,7 @@ class VLMPipeline:
         if self.bioclip_backend == 'open_clip':
             preprocess = self.bioclip_processor['preprocess']
             tokenizer = self.bioclip_processor['tokenizer']
+            logit_scale = self._get_clip_logit_scale(self.bioclip)
 
             image_tensor = preprocess(image).unsqueeze(0).to(self.device)
             text_tokens = tokenizer(text_prompts).to(self.device)
@@ -376,7 +395,7 @@ class VLMPipeline:
                 text_embeds = self.bioclip.encode_text(text_tokens)
                 image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
                 text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                prompt_logits = image_embeds @ text_embeds.T
+                prompt_logits = (image_embeds @ text_embeds.T) * logit_scale
                 logits = self._aggregate_prompt_logits(prompt_logits, prompt_to_class, len(labels))
                 probabilities = torch.softmax(logits, dim=-1)
                 best_confidence, best_index = torch.max(probabilities, dim=-1)
@@ -398,7 +417,8 @@ class VLMPipeline:
                     text_embeds = outputs.text_embeds
                     image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
                     text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                    logits = image_embeds @ text_embeds.T
+                    logit_scale = self._get_clip_logit_scale(self.bioclip)
+                    logits = (image_embeds @ text_embeds.T) * logit_scale
                 else:
                     raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
 

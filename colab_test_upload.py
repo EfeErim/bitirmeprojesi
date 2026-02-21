@@ -29,6 +29,10 @@ tokenizer = open_clip.get_tokenizer("hf-hub:imageomics/bioclip-2")
 model = model.to(device).eval()
 print(f"✅ Loaded on {device}")
 
+logit_scale = float(model.logit_scale.exp().item()) if hasattr(model, 'logit_scale') else 1.0
+logit_scale = max(1.0, min(logit_scale, 100.0))
+print(f"✅ CLIP logit_scale: {logit_scale:.2f}")
+
 # Upload file
 print("\n4. Uploading image...")
 try:
@@ -68,7 +72,7 @@ with torch.no_grad():
     img_embeds_train = model.encode_image(img_tensor_train)
     img_embeds_train_norm = img_embeds_train.norm(dim=-1).item()
     img_embeds_train = img_embeds_train / img_embeds_train.norm(dim=-1, keepdim=True)
-    logits_train = img_embeds_train @ text_embeds.T
+    logits_train = (img_embeds_train @ text_embeds.T) * logit_scale
     probs_train = torch.softmax(logits_train, dim=-1)
 
 print(f"Embedding norm (before): {img_embeds_train_norm:.4f}")
@@ -92,7 +96,7 @@ with torch.no_grad():
     img_embeds_val = model.encode_image(img_tensor_val)
     img_embeds_val_norm = img_embeds_val.norm(dim=-1).item()
     img_embeds_val = img_embeds_val / img_embeds_val.norm(dim=-1, keepdim=True)
-    logits_val = img_embeds_val @ text_embeds.T
+    logits_val = (img_embeds_val @ text_embeds.T) * logit_scale
     probs_val = torch.softmax(logits_val, dim=-1)
 
 print(f"Embedding norm (before): {img_embeds_val_norm:.4f}")
