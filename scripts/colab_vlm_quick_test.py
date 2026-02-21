@@ -8,6 +8,11 @@ Usage in Colab:
 
 import sys
 import subprocess
+import argparse
+import traceback
+import platform
+import json
+from datetime import datetime
 from pathlib import Path
 import torch
 from PIL import Image
@@ -29,19 +34,111 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.router.vlm_pipeline import VLMPipeline
 
 
+def _is_colab() -> bool:
+    return 'google.colab' in sys.modules
+
+
+def _safe_import_version(module_name: str) -> str:
+    try:
+        module = __import__(module_name)
+        return getattr(module, '__version__', 'unknown')
+    except Exception:
+        return 'not-installed'
+
+
+def _run_preflight() -> None:
+    print("\n🩺 Preflight")
+    print(f"  Python: {platform.python_version()}")
+    print(f"  Torch: {torch.__version__}")
+    print(f"  CUDA available: {torch.cuda.is_available()}")
+    if torch.cuda.is_available():
+        print(f"  CUDA device: {torch.cuda.get_device_name(0)}")
+    print(f"  Colab mode: {_is_colab()}")
+
+
+def _write_error_report(exc: Exception) -> Path:
+    report_dir = PROJECT_ROOT / 'logs'
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / 'colab_vlm_quick_test_error.json'
+
+    payload = {
+        'timestamp': datetime.utcnow().isoformat() + 'Z',
+        'python': platform.python_version(),
+        'platform': platform.platform(),
+        'colab_mode': _is_colab(),
+        'torch_version': torch.__version__,
+        'cuda_available': torch.cuda.is_available(),
+        'ultralytics_version': _safe_import_version('ultralytics'),
+        'open_clip_version': _safe_import_version('open_clip'),
+        'error_type': type(exc).__name__,
+        'error_message': str(exc),
+        'traceback': traceback.format_exc(),
+    }
+    report_path.write_text(json.dumps(payload, indent=2), encoding='utf-8')
+    return report_path
+
+
+def _print_actionable_hint(exc: Exception) -> None:
+    message = str(exc).lower()
+    print("\n❌ Quick Test Failed")
+    if 'no module named' in message and 'ultralytics' in message:
+        print("Hint: ultralytics install failed. Re-run and ensure internet is available in Colab runtime.")
+    elif 'requires notebook kernel' in message or 'could not load image via colab uploader' in message:
+        print("Hint: use `%run scripts/colab_vlm_quick_test.py` in a notebook cell, or run `!python ... --image /content/file.jpg`.")
+    elif 'strict vlm model loading failed' in message or 'sam-2 requires ultralytics' in message:
+        print("Hint: SAM2 backend failed. Verify `ultralytics` is installed and checkpoint download is allowed.")
+    else:
+        print("Hint: check generated report file for full traceback and environment snapshot.")
+
+
 def ensure_dependencies():
     """Install runtime dependencies required for SAM2 + BioCLIP2 in Colab."""
-    packages = [
-        'ultralytics',
-        'open-clip-torch',
-    ]
+    packages = [('ultralytics', 'ultralytics'), ('open-clip-torch', 'open_clip')]
     ensure_ultralytics()
-    for package in packages:
-        subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', package])
+    for package_name, import_name in packages:
+        try:
+            __import__(import_name)
+        except Exception:
+            print(f"📦 Installing {package_name}...")
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-q', package_name])
 
 
-def main():
+def _load_test_image(cli_image_path: str = '') -> tuple[Image.Image, str]:
+    """Load image from Colab uploader (notebook mode) or CLI path."""
+    if cli_image_path:
+        image_path = Path(cli_image_path).expanduser().resolve()
+        if not image_path.exists():
+            raise FileNotFoundError(f"Image path not found: {image_path}")
+        return Image.open(image_path).convert('RGB'), image_path.name
+
+    try:
+        from google.colab import files
+        from IPython import get_ipython
+        import io
+
+        if get_ipython() is None:
+            raise RuntimeError(
+                "Colab uploader requires notebook kernel. "
+                "Run with %run in a cell or pass --image /path/to/file.jpg when using !python."
+            )
+
+        uploaded = files.upload()
+        if not uploaded:
+            raise RuntimeError("No image uploaded")
+
+        filename = list(uploaded.keys())[0]
+        test_image = Image.open(io.BytesIO(uploaded[filename])).convert('RGB')
+        return test_image, filename
+    except Exception as exc:
+        raise RuntimeError(
+            "Could not load image via Colab uploader. "
+            "Use notebook mode (%run scripts/colab_vlm_quick_test.py) or provide --image <path>."
+        ) from exc
+
+
+def main(cli_image_path: str = ''):
     """Run interactive VLM test with image upload."""
+    _run_preflight()
     ensure_dependencies()
     
     # Configuration
@@ -108,33 +205,20 @@ def main():
     print(f"{'='*60}\n")
     
     try:
-        from google.colab import files
-        import io
-        
-        uploaded = files.upload()
-        
-        if not uploaded:
-            print("❌ No image uploaded. Exiting.")
-            return
-        
-        filename = list(uploaded.keys())[0]
-        test_image = Image.open(io.BytesIO(uploaded[filename])).convert('RGB')
-        
-        # Display
-        plt.figure(figsize=(10, 8))
-        plt.imshow(test_image)
-        plt.axis('off')
-        plt.title(f"Uploaded: {filename}")
-        plt.tight_layout()
-        plt.show()
-        
-        print(f"\n✅ Image loaded: {test_image.size[0]}x{test_image.size[1]} pixels")
-        
-    except ImportError:
-        print("⚠️ Not running in Colab - using test image path")
-        test_image_path = input("Enter image path: ")
-        test_image = Image.open(test_image_path).convert('RGB')
-        filename = Path(test_image_path).name
+        test_image, filename = _load_test_image(cli_image_path=cli_image_path)
+    except Exception as e:
+        print(f"❌ {e}")
+        return
+
+    # Display
+    plt.figure(figsize=(10, 8))
+    plt.imshow(test_image)
+    plt.axis('off')
+    plt.title(f"Uploaded: {filename}")
+    plt.tight_layout()
+    plt.show()
+
+    print(f"\n✅ Image loaded: {test_image.size[0]}x{test_image.size[1]} pixels")
     
     # Run VLM analysis
     print(f"\n{'='*60}")
@@ -201,4 +285,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Quick VLM Pipeline Test for Colab')
+    parser.add_argument('--image', type=str, default='', help='Optional image path for !python mode')
+    args = parser.parse_args()
+    try:
+        main(cli_image_path=args.image)
+    except Exception as exc:
+        _print_actionable_hint(exc)
+        report_path = _write_error_report(exc)
+        print(f"Report saved: {report_path}")
