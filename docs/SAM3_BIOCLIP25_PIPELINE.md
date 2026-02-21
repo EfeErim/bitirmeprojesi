@@ -3,7 +3,7 @@
 ## Overview
 
 ✅ **Implementation Complete**  
-You now have a **dual-pipeline architecture** with SAM3+BioCLIP-2.5 as the primary pipeline and automatic fallback to DINO+SAM2+BioCLIP-2.
+You now have a **dual-pipeline architecture** with SAM3+BioCLIP-2.5 as the primary pipeline and automatic fallback to DINO+SAM2.1+BioCLIP-2.5.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -144,7 +144,7 @@ pipeline.load_models()
 #    If SUCCESS: actual_pipeline = 'sam3', RETURN
 #    If FAIL: continue to step 2
 #
-# 2. Load GroundingDINO + SAM2 + BioCLIP-2
+# 2. Load GroundingDINO + SAM2.1 + BioCLIP-2.5
 #    actual_pipeline = 'dino'
 #    RETURN (fallback loaded)
 ```
@@ -157,12 +157,12 @@ results = pipeline.analyze_image(tensor)
 # if actual_pipeline == 'sam3':
 #   Use SAM3 + BioCLIP-2.5
 # else:
-#   Use GroundingDINO + SAM2 + BioCLIP-2
+#   Use GroundingDINO + SAM2.1 + BioCLIP-2.5
 
 # Results dict contains 'pipeline_type' key:
 # {
 #   'detections': [...],
-#   'pipeline_type': 'sam3_bioclip25' or 'dino_sam2_bioclip2',
+#   'pipeline_type': 'sam3_bioclip25' or 'dino_sam21_bioclip25',
 #   'processing_time_ms': 123.4
 # }
 ```
@@ -192,10 +192,10 @@ results = pipeline.analyze_image(tensor)
 {
   "router": {
     "vlm": {
-      "pipeline_mode": "dino",  # Will skip SAM3, go straight to DINO
+      "pipeline_mode": "dino",  # Will skip SAM3, use DINO directly
       "model_ids": {
-        "sam": "sam2_b.pt",
-        "bioclip": "imageomics/bioclip-2"
+        "sam": "sam2.1_b.pt",
+        "bioclip": "imageomics/bioclip-2.5-vith14"
       }
     }
   }
@@ -262,7 +262,7 @@ The pipeline automatically falls back to DINO if:
 3. **CUDA out of memory**
    ```
    RuntimeError: CUDA out of memory (SAM3 is larger)
-   → Falls back to smaller SAM2 + BioCLIP-2
+   → Falls back to SAM2.1 + BioCLIP-2.5 (improved segmentation & classification)
    ```
 
 4. **Explicit force via config**
@@ -280,11 +280,11 @@ The pipeline automatically falls back to DINO if:
 
 ### **Accuracy**
 - **SAM3 + BioCLIP-2.5**: +5.7% on species classification
-- **DINO + BioCLIP-2**: Proven baseline
+- **DINO + BioCLIP-2.5**: Improved baseline
 
 ### **Memory**
 - **SAM3 + BioCLIP-2.5**: ~6-8 GB VRAM
-- **DINO + SAM2 + BioCLIP-2**: ~4-6 GB VRAM
+- **DINO + SAM2.1 + BioCLIP-2.5**: ~4-6 GB VRAM
 
 ---
 
@@ -295,14 +295,14 @@ A: Check console logs for the reason:
 ```python
 logger.info("Attempting SAM3 + BioCLIP-2.5 pipeline...")
 logger.warning(f"SAM3 + BioCLIP-2.5 failed: {error}")
-logger.info("Falling back to DINO + SAM2 + BioCLIP-2...")
+logger.info("Falling back to DINO + SAM2.1 + BioCLIP-2.5...")
 ```
 
 ### **Q: How to know which pipeline is running?**
 A: Check the `pipeline_type` in results:
 ```python
 results = pipeline.analyze_image(image)
-print(results['pipeline_type'])  # 'sam3_bioclip25' or 'dino_sam2_bioclip2'
+print(results['pipeline_type'])  # 'sam3_bioclip25' or 'dino_sam21_bioclip25'
 ```
 
 ### **Q: Force SAM3 and fail if unavailable**
@@ -324,14 +324,14 @@ A: DINO is ~30% faster, SAM3 is +5.7% more accurate. Choose based on your needs.
 
 ## Architecture Summary
 
-| Aspect | SAM3 + BioCLIP-2.5 | DINO + SAM2 + BioCLIP-2 |
+| Aspect | SAM3 + BioCLIP-2.5 | DINO + SAM2.1 + BioCLIP-2.5 |
 |--------|-------------------|------------------------|
 | **Stages** | 2 | 3 |
 | **Detection** | Text prompts | Text matching |
-| **Segmentation** | SAM3 | SAM2 |
-| **Classification** | BioCLIP-2.5 (ViT-H/14) | BioCLIP-2 (ViT-L/14) |
+| **Segmentation** | SAM3 | SAM2.1 |
+| **Classification** | BioCLIP-2.5 (ViT-H/14) | BioCLIP-2.5 (ViT-H/14) |
 | **Speed** | ~2s | ~1.5s |
-| **Accuracy** | +5.7% ✅ | Baseline |
+| **Accuracy** | +5.7% ✅ | Better (BioCLIP-2.5) |
 | **Memory** | ~7GB | ~5GB |
 | **Status** | **Primary** | **Fallback** |
 
@@ -339,17 +339,19 @@ A: DINO is ~30% faster, SAM3 is +5.7% more accurate. Choose based on your needs.
 
 ## Code Changes
 
-- **src/router/vlm_pipeline.py**: Dual-mode support + routing logic
+- **src/router/vlm_pipeline.py**: Dual-mode support + fallback routing logic
 - **src/router/sam3_bioclip25_pipeline.py**: Standalone SAM3 class (reference)
 - **config/colab.json**: Updated default models + pipeline_mode
-- **Commit**: `f790af7` - SAM3 + BioCLIP-2.5 with fallback
+- **Commits**: 
+  - `f790af7` - SAM3 + BioCLIP-2.5 with fallback
+  - `4262ee0` - Upgrade fallback to SAM2.1 + BioCLIP-2.5
 
 ---
 
 ## Next Steps
 
 1. **Test in Colab**: Run `%run scripts/colab_vlm_quick_test.py` with your grape leaf image
-2. **Check which pipeline loaded**: Look for "Pipeline type: sam3_bioclip25" or "dino_sam2_bioclip2" in output
+2. **Check which pipeline loaded**: Look for "Pipeline type: sam3_bioclip25" or "dino_sam21_bioclip25" in output
 3. **Verify accuracy**: Compare confidence scores between pipelines (if fallback used)
 4. **Production deployment**: Use dynamic taxonomy + both pipelines for maximum robustness
 
