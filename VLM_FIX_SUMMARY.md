@@ -53,11 +53,10 @@
 ## 🧪 HOW TO TEST IN COLAB
 
 ### Option A: Quick Direct BioCLIP-2 Test
-**File:** `DEBUG_VLM_COLAB.py` - Contains 4 cells of test code
-- Cell 1: Check GPU and install dependencies
-- Cell 2: Direct BioCLIP-2 test (bypasses VLM pipeline)
-- Cell 3: Diagnostics if still seeing 25% per class
-- Cell 4: Full VLM pipeline test
+**File:** `colab_test_upload.py`
+- Upload your own image in Colab
+- Runs BioCLIP-2 direct classification diagnostics
+- Compares preprocessing behavior and confidence outputs
 
 ### Option B: Full VLM Pipeline Test
 **File:** `scripts/colab_test_gpu_vlm.py`
@@ -66,9 +65,9 @@ python colab_test_gpu_vlm.py
 ```
 Runs full pipeline with debug logging enabled.
 
-### Option C: Colab Notebook
-**File:** `colab_notebooks/TEST_VLM_PIPELINE_GPU.ipynb` (auto-generated)
-Interactive cells for step-by-step testing.
+### Option C: Quick Pipeline Smoke Test
+**File:** `scripts/colab_vlm_quick_test.py`
+Lightweight end-to-end pipeline sanity check.
 
 ## ✅ VALIDATION CHECKLIST
 

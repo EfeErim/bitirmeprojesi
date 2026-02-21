@@ -68,10 +68,6 @@ class VLMPipeline:
         self.bioclip_backend = None
         self.models_loaded = False
         
-        # Pre-encoded text embeddings (populated after models load)
-        self.crop_text_embeds = None
-        self.part_text_embeds = None
-        
         # Log GPU availability for debugging
         logger.info(f"VLMPipeline initialized on {self.device}")
         logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
@@ -103,10 +99,7 @@ class VLMPipeline:
             self.bioclip_processor, self.bioclip = self._load_clip_like_model(self.model_ids['bioclip'])
             self.models_loaded = True
             
-            # Pre-encode text labels for efficient inference (inspired by reference implementation)
-            self._encode_text_labels()
-
-            logger.info("VLM models loaded successfully with pre-encoded text embeddings")
+            logger.info("VLM models loaded successfully")
         except Exception as e:
             self.models_loaded = False
             if self.strict_model_loading:
@@ -194,7 +187,7 @@ class VLMPipeline:
                 hub_model_id = f'hf-hub:{model_id}' if not model_id.startswith('hf-hub:') else model_id
                 
                 # open_clip returns (model, preprocess_train, preprocess_val)
-                model, preprocess_train, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
+                model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
                 tokenizer = open_clip.get_tokenizer(hub_model_id)
                 
                 model = model.to(self.device)
@@ -203,7 +196,6 @@ class VLMPipeline:
                 
                 processor = {
                     'preprocess': preprocess_val,  # Use validation preprocess for inference (no augmentation)
-                    'preprocess_train': preprocess_train,  # Keep for reference
                     'tokenizer': tokenizer,
                 }
                 return processor, model
@@ -226,38 +218,83 @@ class VLMPipeline:
                 f"For BioCLIP models, ensure open_clip_torch is installed."
             ) from e
 
-    def _encode_text_labels(self):
-        """Pre-encode text labels for efficient inference (inspired by reference implementation)."""
-        if not self.crop_labels or not self.part_labels:
-            logger.warning("No crop or part labels configured - skipping text embedding pre-encoding")
-            return
-            
-        crop_prompts = [f"a photo of {label}" for label in self.crop_labels]
-        part_prompts = [f"a photo of a plant {label}" for label in self.part_labels]
-        
-        if self.bioclip_backend == 'open_clip':
-            tokenizer = self.bioclip_processor['tokenizer']
-            
-            try:
-                crop_tokens = tokenizer(crop_prompts).to(self.device)
-                part_tokens = tokenizer(part_prompts).to(self.device)
-                
-                with torch.no_grad():
-                    self.crop_text_embeds = self.bioclip.encode_text(crop_tokens)
-                    self.part_text_embeds = self.bioclip.encode_text(part_tokens)
-                    self.crop_text_embeds = self.crop_text_embeds / self.crop_text_embeds.norm(dim=-1, keepdim=True)
-                    self.part_text_embeds = self.part_text_embeds / self.part_text_embeds.norm(dim=-1, keepdim=True)
-                    
-                logger.info(f"Pre-encoded {len(self.crop_labels)} crop labels and {len(self.part_labels)} part labels using open_clip")
-            except Exception as e:
-                logger.error(f"Failed to pre-encode text labels: {e}")
-                self.crop_text_embeds = None
-                self.part_text_embeds = None
+    @staticmethod
+    def _crop_prompt_aliases() -> Dict[str, List[str]]:
+        """Return crop prompt aliases including scientific names where available."""
+        return {
+            'tomato': ['tomato', 'Solanum lycopersicum'],
+            'potato': ['potato', 'Solanum tuberosum'],
+            'grape': ['grape', 'Vitis vinifera'],
+            'strawberry': ['strawberry', 'Fragaria × ananassa'],
+        }
+
+    def _build_prompt_ensemble(self, label: str, label_type: str) -> List[str]:
+        """Build multiple prompt variants for a single semantic class label."""
+        label_text = str(label).strip()
+        if not label_text:
+            return []
+
+        if label_type == 'part':
+            base_terms = [label_text]
+            templates = [
+                "a photo of a plant {term}",
+                "a close-up photo of a plant {term}",
+                "a macro photo of a plant {term}",
+            ]
         else:
-            # For transformers backend, we'll encode on-the-fly as batching is more complex
-            logger.info(f"Using transformers backend - text encoding will be done per-image")
-            self.crop_text_embeds = None
-            self.part_text_embeds = None
+            aliases = self._crop_prompt_aliases()
+            alias_terms = aliases.get(label_text.lower(), [label_text])
+            base_terms = [term for term in [label_text, *alias_terms] if isinstance(term, str) and term.strip()]
+            templates = [
+                "a photo of {term}",
+                "a close-up photo of {term}",
+                "a macro photo of {term}",
+                "an image of {term}",
+            ]
+
+        prompts: List[str] = []
+        seen = set()
+        for term in base_terms:
+            clean_term = term.strip()
+            for template in templates:
+                prompt = template.format(term=clean_term)
+                key = prompt.lower()
+                if key not in seen:
+                    seen.add(key)
+                    prompts.append(prompt)
+        return prompts
+
+    def _build_prompt_batch(self, labels: List[str], label_type: str) -> Tuple[List[str], List[int]]:
+        """Build prompt list and class index mapping for class-level aggregation."""
+        prompt_texts: List[str] = []
+        prompt_to_class: List[int] = []
+
+        for class_index, label in enumerate(labels):
+            class_prompts = self._build_prompt_ensemble(label, label_type=label_type)
+            if not class_prompts:
+                class_prompts = [str(label)]
+            prompt_texts.extend(class_prompts)
+            prompt_to_class.extend([class_index] * len(class_prompts))
+
+        return prompt_texts, prompt_to_class
+
+    @staticmethod
+    def _aggregate_prompt_logits(logits: torch.Tensor, prompt_to_class: List[int], num_classes: int) -> torch.Tensor:
+        """Aggregate prompt-level logits into class-level logits using max pooling."""
+        if logits.ndim == 2:
+            logits = logits.squeeze(0)
+
+        class_logits = torch.full(
+            (num_classes,),
+            float('-inf'),
+            device=logits.device,
+            dtype=logits.dtype,
+        )
+
+        for prompt_index, class_index in enumerate(prompt_to_class):
+            class_logits[class_index] = torch.maximum(class_logits[class_index], logits[prompt_index])
+
+        return class_logits.unsqueeze(0)
 
     @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
@@ -291,22 +328,19 @@ class VLMPipeline:
         uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
         return Image.fromarray(uint8_img)
 
-    def _classify_with_preencoded(
+    def _classify_with_prompt_ensemble(
         self, 
         image: Image.Image, 
         label_type: str  # 'crop' or 'part'
     ) -> Tuple[str, float]:
-        """Classify image using pre-encoded text embeddings for efficiency (reference-inspired)."""
+        """Classify image with prompt-ensemble scoring."""
         if label_type == 'crop':
             labels = self.crop_labels
-            text_embeds = self.crop_text_embeds
         elif label_type == 'part':
             labels = self.part_labels
-            text_embeds = self.part_text_embeds
         else:
             raise ValueError(f"label_type must be 'crop' or 'part', got {label_type}")
             
-        # Always use on-the-fly encoding for now - pre-encoded has issues
         if not labels:
             return 'unknown', 0.0
             
@@ -326,11 +360,9 @@ class VLMPipeline:
         if not labels:
             return 'unknown', 0.0
 
-        # Format prompts based on label type (inspired by reference implementation)
-        if label_type == 'part':
-            text_prompts = [f"a photo of a plant {label}" for label in labels]
-        else:
-            text_prompts = [f"a photo of {label}" for label in labels]
+        text_prompts, prompt_to_class = self._build_prompt_batch(labels, label_type=label_type)
+        if not text_prompts:
+            return 'unknown', 0.0
             
         if self.bioclip_backend == 'open_clip':
             preprocess = self.bioclip_processor['preprocess']
@@ -344,7 +376,8 @@ class VLMPipeline:
                 text_embeds = self.bioclip.encode_text(text_tokens)
                 image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
                 text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                logits = image_embeds @ text_embeds.T
+                prompt_logits = image_embeds @ text_embeds.T
+                logits = self._aggregate_prompt_logits(prompt_logits, prompt_to_class, len(labels))
                 probabilities = torch.softmax(logits, dim=-1)
                 best_confidence, best_index = torch.max(probabilities, dim=-1)
         else:
@@ -369,6 +402,7 @@ class VLMPipeline:
                 else:
                     raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
 
+                logits = self._aggregate_prompt_logits(logits, prompt_to_class, len(labels))
                 probabilities = torch.softmax(logits, dim=-1)
                 best_confidence, best_index = torch.max(probabilities, dim=-1)
 
@@ -525,9 +559,9 @@ class VLMPipeline:
             detections = dino_out.get('detections', [])
             best_det = detections[0] if detections else None
 
-            # Use pre-encoded text embeddings for efficiency (reference-inspired)
-            crop_label, crop_conf = self._classify_with_preencoded(pil_image, 'crop')
-            part_label, part_conf = self._classify_with_preencoded(pil_image, 'part')
+            # Classify using CLIP/BioCLIP prompt-ensemble scoring
+            crop_label, crop_conf = self._classify_with_prompt_ensemble(pil_image, 'crop')
+            part_label, part_conf = self._classify_with_prompt_ensemble(pil_image, 'part')
 
             if best_det and best_det.get('crop_guess'):
                 crop_label = best_det.get('crop_guess')
