@@ -7,6 +7,7 @@ SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 import torch
 import builtins
 import logging
+import json
 import os
 import time
 from pathlib import Path
@@ -378,6 +379,8 @@ class VLMPipeline:
                 "a photo of a plant {term}",
                 "a close-up photo of a plant {term}",
                 "a macro photo of a plant {term}",
+                "a {term} with damage",
+                "a {term} with disease",
             ]
         else:
             aliases = self._crop_prompt_aliases()
@@ -388,6 +391,10 @@ class VLMPipeline:
                 "a close-up photo of {term}",
                 "a macro photo of {term}",
                 "an image of {term}",
+                "a {term} crop",
+                "a {term} plant with disease",
+                "a {term} leaf with damage",
+                "a diseased {term}",
             ]
 
         prompts: List[str] = []
@@ -418,28 +425,26 @@ class VLMPipeline:
 
     @staticmethod
     def _open_set_unknown_prompts(label_type: str, known_labels: Optional[List[str]] = None) -> List[str]:
-        """Prompt set for unknown/out-of-scope rejection."""
+        """Prompt set for unknown/out-of-scope rejection.
+        
+        Uses truly out-of-domain examples to create a distinct visual concept
+        for what is NOT a target crop/part, preventing false positives.
+        """
         if label_type == 'part':
             return [
-                "a photo of an unknown plant part",
-                "a photo of a non-plant object",
-                "an unclear close-up image",
+                "a photo of a rock or stone",
+                "a photo of water or liquid",
+                "a photo of a building or concrete",
+                "a photo of an animal or insect",
             ]
 
-        known_labels = known_labels or []
-        known_phrase = ' '.join(str(label).strip() for label in known_labels if str(label).strip())
-        other_than_prompt = (
-            f"a photo of something other than {known_phrase}"
-            if known_phrase
-            else "a photo of an out-of-scope crop"
-        )
-
+        # For crops: use objects/materials completely outside agricultural domain
         return [
-            "a photo of an unknown plant",
-            "a photo of a non-crop plant",
-            "a photo of random foliage",
-            "an unclear plant image",
-            other_than_prompt,
+            "a photo of a rock or stone",
+            "a photo of water or liquid surface",
+            "a photo of soil or dirt only",
+            "a photo of a building or concrete",
+            "a photo of an unrelated object",
         ]
 
     @staticmethod
@@ -707,13 +712,37 @@ class VLMPipeline:
             unknown_confidence = float(unknown_prob.item())
             margin = confidence - float(second_confidence.item())
 
-            if (
-                unknown_confidence >= confidence
-                or confidence < self.open_set_min_confidence
-                or margin < self.open_set_margin
-            ):
+            # DEBUG: Log open-set decision details
+            debug_info = {
+                'label_type': label_type,
+                'known_labels': labels,
+                'known_class_probabilities': {
+                    labels[i]: float(known_probs[0, i].item()) if i < len(labels) else None
+                    for i in range(known_class_count)
+                },
+                'unknown_probability': unknown_confidence,
+                'best_known_label': labels[class_index] if class_index < len(labels) else 'unknown',
+                'best_known_confidence': confidence,
+                'second_known_confidence': float(second_confidence.item()),
+                'margin_best_vs_second': margin,
+                'threshold_min_confidence': self.open_set_min_confidence,
+                'threshold_margin': self.open_set_margin,
+                'rejection_reasons': []
+            }
+            
+            # Check rejection conditions
+            if unknown_confidence >= confidence:
+                debug_info['rejection_reasons'].append(f'unknown_confidence ({unknown_confidence:.4f}) >= confidence ({confidence:.4f})')
+            if confidence < self.open_set_min_confidence:
+                debug_info['rejection_reasons'].append(f'confidence ({confidence:.4f}) < threshold ({self.open_set_min_confidence:.4f})')
+            if margin < self.open_set_margin:
+                debug_info['rejection_reasons'].append(f'margin ({margin:.4f}) < threshold ({self.open_set_margin:.4f})')
+            
+            if debug_info['rejection_reasons']:
+                logger.debug(f"[OPEN-SET] REJECTED as unknown: {json.dumps(debug_info, indent=2, default=str)}")
                 return 'unknown', max(unknown_confidence, confidence)
-
+            
+            logger.debug(f"[OPEN-SET] ACCEPTED {debug_info['best_known_label']}: {json.dumps(debug_info, indent=2, default=str)}")
             label = labels[class_index] if class_index < len(labels) else 'unknown'
             return label, confidence
 
