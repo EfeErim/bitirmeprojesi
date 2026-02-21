@@ -1,0 +1,30 @@
+{
+  "crops": [
+    "tomato", "potato", "grape", "strawberry",
+    "corn", "wheat", "rice", "soybean", "cotton",
+    "apple", "orange", "lemon", "banana", "mango",
+    "lettuce", "cabbage", "broccoli", "cauliflower", "spinach",
+    "carrot", "radish", "beet", "turnip", "onion",
+    "pepper", "cucumber", "squash", "pumpkin", "zucchini",
+    "bean", "pea", "lentil", "chickpea",
+    "sunflower", "canola", "flax", "hemp",
+    "sugarcane", "sugar beet", "cassava", "yam",
+    "cherry", "plum", "peach", "apricot", "pear",
+    "walnut", "almond", "hazelnut", "pecan",
+    "coffee", "tea", "cacao", "vanilla",
+    "basil", "parsley", "cilantro", "mint", "rosemary", "thyme"
+  ],
+  "parts": [
+    "leaf", "fruit", "flower", "stem", "root", "seed",
+    "whole plant", "tuber", "bulb", "pod", "grain",
+    "branch", "trunk", "bark", "bud", "shoot"
+  ],
+  "common_weeds": [
+    "dandelion", "clover", "thistle", "nettle", "dock",
+    "chickweed", "plantain", "purslane", "lambsquarters"
+  ],
+  "ornamentals": [
+    "rose", "tulip", "daisy", "sunflower", "orchid",
+    "lily", "iris", "petunia", "marigold", "zinnia"
+  ]
+}

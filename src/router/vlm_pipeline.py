@@ -55,14 +55,25 @@ class VLMPipeline:
             'bioclip': configured_ids.get('bioclip', defaults['bioclip'])
         }
 
+        # Dynamic taxonomy support
+        self.use_dynamic_taxonomy = self.vlm_config.get('use_dynamic_taxonomy', False)
+        self.taxonomy_path = self.vlm_config.get('taxonomy_path', 'config/plant_taxonomy.json')
+        
         crop_mapping = router_config.get('crop_mapping', {}) if isinstance(router_config, dict) else {}
-        self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
-        parts_from_mapping = []
-        for crop_data in crop_mapping.values() if isinstance(crop_mapping, dict) else []:
-            if isinstance(crop_data, dict):
-                parts_from_mapping.extend(crop_data.get('parts', []))
-        default_parts = sorted(set(parts_from_mapping))
-        self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
+        
+        if self.use_dynamic_taxonomy:
+            # Load comprehensive taxonomy from file
+            self.crop_labels, self.part_labels = self._load_taxonomy(self.taxonomy_path)
+            logger.info(f"Loaded dynamic taxonomy: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
+        else:
+            # Use config-specified labels (original behavior)
+            self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
+            parts_from_mapping = []
+            for crop_data in crop_mapping.values() if isinstance(crop_mapping, dict) else []:
+                if isinstance(crop_data, dict):
+                    parts_from_mapping.extend(crop_data.get('parts', []))
+            default_parts = sorted(set(parts_from_mapping))
+            self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
         
         # Model placeholders
         self.grounding_dino = None
@@ -85,6 +96,48 @@ class VLMPipeline:
             builtins.torch = torch
         except Exception:
             pass
+
+    @staticmethod
+    def _load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
+        """Load plant taxonomy from JSON file.
+        
+        Returns:
+            Tuple of (crop_labels, part_labels)
+        """
+        import json
+        from pathlib import Path
+        
+        # Try relative to project root, then absolute
+        path = Path(taxonomy_path)
+        if not path.is_absolute():
+            # Try relative to current working directory
+            if not path.exists():
+                # Try relative to this file's location (src/router/)
+                file_dir = Path(__file__).parent
+                path = file_dir.parent.parent / taxonomy_path
+        
+        if not path.exists():
+            logger.warning(f"Taxonomy file not found: {taxonomy_path}, using minimal defaults")
+            return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
+        
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                taxonomy = json.load(f)
+            
+            # Combine all plant categories
+            crops = taxonomy.get('crops', [])
+            weeds = taxonomy.get('common_weeds', [])
+            ornamentals = taxonomy.get('ornamentals', [])
+            
+            all_crops = crops + weeds + ornamentals
+            parts = taxonomy.get('parts', [])
+            
+            logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
+            return all_crops, parts
+            
+        except Exception as e:
+            logger.error(f"Failed to load taxonomy from {path}: {e}")
+            return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
 
     def load_models(self):
         """Load all VLM models."""
@@ -537,17 +590,31 @@ class VLMPipeline:
         return label, confidence
 
     def _run_grounding_dino(self, image: Image.Image, threshold: Optional[float] = None) -> Dict[str, Any]:
-        """Run GroundingDINO detection for crop/part prompts."""
-        prompt_labels = self.crop_labels + self.part_labels
+        """Run GroundingDINO detection for crop/part prompts.
         
-        # Add generic plant detection prompts for better coverage
-        generic_prompts = ['plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part']
-        prompt_labels = prompt_labels + generic_prompts
+        Strategy:
+        - With dynamic taxonomy (many labels): use generic prompts for detection,
+          let BioCLIP do fine-grained classification
+        - With specific labels (few crops): use those specific prompts
+        """
+        threshold_value = float(self.confidence_threshold if threshold is None else threshold)
+        
+        if self.use_dynamic_taxonomy or len(self.crop_labels) > 20:
+            # Use generic prompts when we have many possible labels
+            # GroundingDINO works better with fewer, generic prompts
+            prompt_labels = [
+                'plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part',
+                'flower', 'fruit', 'stem', 'whole plant'
+            ]
+        else:
+            # Use specific prompts when we have few targeted crops
+            prompt_labels = self.crop_labels + self.part_labels
+            # Add generic fallbacks
+            generic_prompts = ['plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part']
+            prompt_labels = prompt_labels + generic_prompts
         
         if not prompt_labels:
             return {'detections': []}
-
-        threshold_value = float(self.confidence_threshold if threshold is None else threshold)
 
         text_prompt = '. '.join(prompt_labels) + '.'
         inputs = self.grounding_dino_processor(images=image, text=text_prompt, return_tensors='pt')

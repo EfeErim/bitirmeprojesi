@@ -93,6 +93,8 @@
       "open_set_min_confidence": 0.55,
       "open_set_margin": 0.10,
       "max_detections": 10,
+      "use_dynamic_taxonomy": true,
+      "taxonomy_path": "config/plant_taxonomy.json",
       "model_ids": {
         "grounding_dino": "IDEA-Research/grounding-dino-base",
         "sam": "sam2_b.pt",
