@@ -91,6 +91,25 @@ def _print_actionable_hint(exc: Exception) -> None:
         print("Hint: check generated report file for full traceback and environment snapshot.")
 
 
+def _run_backend_health_check(pipeline: VLMPipeline) -> bool:
+    """Validate that all expected backends and model handles are loaded."""
+    checks = {
+        'pipeline_ready': pipeline.is_ready(),
+        'grounding_dino_loaded': pipeline.grounding_dino is not None,
+        'sam_loaded': pipeline.sam2 is not None,
+        'bioclip_loaded': pipeline.bioclip is not None,
+        'sam_backend_ultralytics': pipeline.sam_backend == 'ultralytics',
+        'bioclip_backend_open_clip': pipeline.bioclip_backend == 'open_clip',
+    }
+
+    print("\n🧪 Backend Health Check")
+    for name, passed in checks.items():
+        status = '✅' if passed else '❌'
+        print(f"  {status} {name}")
+
+    return all(checks.values())
+
+
 def ensure_dependencies():
     """Install runtime dependencies required for SAM2 + BioCLIP2 in Colab."""
     packages = [('ultralytics', 'ultralytics'), ('open-clip-torch', 'open_clip')]
@@ -136,7 +155,7 @@ def _load_test_image(cli_image_path: str = '') -> tuple[Image.Image, str]:
         ) from exc
 
 
-def main(cli_image_path: str = ''):
+def main(cli_image_path: str = '', health_only: bool = False):
     """Run interactive VLM test with image upload."""
     _run_preflight()
     ensure_dependencies()
@@ -198,6 +217,13 @@ def main(cli_image_path: str = ''):
     print(f"\n✅ Models loaded in {elapsed:.1f}s")
     print(f"   - SAM backend: {pipeline.sam_backend}")
     print(f"   - BioCLIP backend: {pipeline.bioclip_backend}")
+
+    if not _run_backend_health_check(pipeline):
+        raise RuntimeError('Backend health-check failed. See checklist above.')
+
+    if health_only:
+        print("\n✅ Health-only mode complete.")
+        return
     
     # Image upload
     print(f"\n{'='*60}")
@@ -287,9 +313,10 @@ def main(cli_image_path: str = ''):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Quick VLM Pipeline Test for Colab')
     parser.add_argument('--image', type=str, default='', help='Optional image path for !python mode')
+    parser.add_argument('--health-only', action='store_true', help='Only run backend health checks and exit')
     args = parser.parse_args()
     try:
-        main(cli_image_path=args.image)
+        main(cli_image_path=args.image, health_only=args.health_only)
     except Exception as exc:
         _print_actionable_hint(exc)
         report_path = _write_error_report(exc)
