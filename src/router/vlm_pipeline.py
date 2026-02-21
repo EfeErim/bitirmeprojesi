@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 VLM Pipeline for AADS-ULoRA
-Uses Grounding DINO + SAM-2 + BioCLIP 2 for crop and disease analysis.
+Dual-mode: SAM3 + BioCLIP-2.5 (primary) with fallback to GroundingDINO + SAM2 + BioCLIP-2
 """
 
 import torch
@@ -18,8 +18,17 @@ logger = logging.getLogger(__name__)
 
 class VLMPipeline:
     """
-    VLM-based pipeline using Grounding DINO + SAM-2 + BioCLIP 2.
-    Provides crop identification and disease diagnosis capabilities.
+    Unified VLM pipeline supporting two modes:
+    
+    1. SAM3 + BioCLIP-2.5 (Primary, if available)
+       - Better segmentation with text prompts
+       - Improved classification accuracy (+5.7% over BioCLIP-2)
+       
+    2. GroundingDINO + SAM2 + BioCLIP-2 (Fallback)
+       - Original architecture
+       - More stable, known performance
+       
+    Automatically falls back to mode 2 if mode 1 fails.
     """
 
     def __init__(self, config: Dict, device: str = 'cuda'):
@@ -28,6 +37,12 @@ class VLMPipeline:
         # Accept both nested and flat config keys used by tests
         router_config = config.get('router', {}) if isinstance(config.get('router'), dict) else {}
         self.vlm_config = router_config.get('vlm', {}) if isinstance(router_config, dict) else {}
+        
+        # Pipeline mode selection: "sam3" (primary) or "dino" (fallback)
+        self.pipeline_mode = self.vlm_config.get('pipeline_mode', 'sam3')
+        self.fallback_attempted = False
+        self.actual_pipeline = None  # Will be set to 'sam3' or 'dino' after load_models
+        
         # Backwards-compatible flat keys
         self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
         self.confidence_threshold = config.get('vlm_confidence_threshold', self.vlm_config.get('confidence_threshold', 0.8))
@@ -45,8 +60,8 @@ class VLMPipeline:
 
         defaults = {
             'grounding_dino': 'IDEA-Research/grounding-dino-base',
-            'sam': 'sam2_b.pt',
-            'bioclip': 'imageomics/bioclip-2'
+            'sam': 'facebook/sam3',  # Default to SAM3, fallback to sam2_b.pt
+            'bioclip': 'imageomics/bioclip-2.5-vith14'  # Default to BioCLIP-2.5, fallback to 2
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
         self.model_ids = {
@@ -75,19 +90,26 @@ class VLMPipeline:
             default_parts = sorted(set(parts_from_mapping))
             self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
         
-        # Model placeholders
+        # DINO-specific model placeholders
         self.grounding_dino = None
-        self.sam2 = None
-        self.bioclip = None
         self.grounding_dino_processor = None
+        
+        # SAM model placeholders (can be SAM3 or SAM2)
+        self.sam2 = None
         self.sam_processor = None
+        
+        # BioCLIP model placeholders (can be BioCLIP-2.5 or BioCLIP-2)
+        self.bioclip = None
         self.bioclip_processor = None
+        
+        # Backend tracking
         self.sam_backend = None
         self.bioclip_backend = None
         self.models_loaded = False
         
         # Log GPU availability for debugging
         logger.info(f"VLMPipeline initialized on {self.device}")
+        logger.info(f"Pipeline mode: {self.pipeline_mode} (will fallback to 'dino' if needed)")
         logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
         if torch.cuda.is_available():
             logger.info(f"GPU device: {torch.cuda.get_device_name(0)}, Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
@@ -140,7 +162,7 @@ class VLMPipeline:
             return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
 
     def load_models(self):
-        """Load all VLM models."""
+        """Load all VLM models with SAM3+BioCLIP-2.5 as primary, DINO+SAM2+BioCLIP-2 as fallback."""
         logger.info("Loading VLM models...")
 
         if not self.enabled:
@@ -152,25 +174,92 @@ class VLMPipeline:
             if self.model_source != 'huggingface':
                 raise ValueError(f"Unsupported VLM model_source '{self.model_source}'. Currently supported: 'huggingface'")
 
+            # Try SAM3 + BioCLIP-2.5 first (primary pipeline)
+            if self.pipeline_mode == 'sam3' and not self.fallback_attempted:
+                logger.info("Attempting SAM3 + BioCLIP-2.5 pipeline...")
+                try:
+                    self._load_sam3_bioclip25()
+                    self.actual_pipeline = 'sam3'
+                    self.models_loaded = True
+                    logger.info("✅ SAM3 + BioCLIP-2.5 loaded successfully")
+                    return
+                except Exception as sam3_error:
+                    logger.warning(f"SAM3 + BioCLIP-2.5 failed: {sam3_error}")
+                    logger.info("Falling back to DINO + SAM2 + BioCLIP-2...")
+                    self.fallback_attempted = True
+            
+            # Fallback to DINO + SAM2 + BioCLIP-2
+            logger.info("Loading DINO + SAM2 + BioCLIP-2 pipeline...")
             self.grounding_dino_processor, self.grounding_dino = self._load_grounding_dino(
                 self.model_ids['grounding_dino']
             )
             self.sam_processor, self.sam2 = self._load_sam(self.model_ids['sam'])
-            self.bioclip_processor, self.bioclip = self._load_clip_like_model(self.model_ids['bioclip'])
-            self.models_loaded = True
             
-            logger.info("VLM models loaded successfully")
+            # Use BioCLIP-2 for fallback, not BioCLIP-2.5
+            bioclip_model_id = 'imageomics/bioclip-2' if 'bioclip-2.5' in self.model_ids['bioclip'] else self.model_ids['bioclip']
+            self.bioclip_processor, self.bioclip = self._load_clip_like_model(bioclip_model_id)
+            
+            self.actual_pipeline = 'dino'
+            self.models_loaded = True
+            logger.info("✅ DINO + SAM2 + BioCLIP-2 loaded successfully (fallback mode)")
+            
         except Exception as e:
             self.models_loaded = False
             if self.strict_model_loading:
                 raise RuntimeError(f"Strict VLM model loading failed: {e}") from e
             # In non-strict mode, leave models as None - no placeholder strings
             logger.warning(f"VLM model loading failed. Models remain unloaded: {e}")
+    
+    def _load_sam3_bioclip25(self):
+        """Load SAM3 and BioCLIP-2.5 models."""
+        from transformers import Sam3Processor, Sam3Model
+        import open_clip
+        
+        # Load SAM3
+        logger.info(f"Loading SAM3...")
+        sam3_processor = Sam3Processor.from_pretrained(self.model_ids['sam'])
+        sam3_model = Sam3Model.from_pretrained(self.model_ids['sam'])
+        sam3_model = sam3_model.to(self.device)
+        sam3_model.eval()
+        
+        # Load BioCLIP-2.5
+        logger.info(f"Loading BioCLIP-2.5...")
+        hub_model_id = f"hf-hub:{self.model_ids['bioclip']}"
+        model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
+        tokenizer = open_clip.get_tokenizer(hub_model_id)
+        
+        model = model.to(self.device)
+        model.eval()
+        
+        # Store models (sam2 field reused for sam3, bioclip_processor adapted)
+        self.sam_processor = sam3_processor
+        self.sam2 = sam3_model  # Reuse sam2 slot for sam3
+        self.sam_backend = 'sam3'
+        
+        self.bioclip = model
+        self.bioclip_processor = {
+            'preprocess': preprocess_val,
+            'tokenizer': tokenizer,
+        }
+        self.bioclip_backend = 'open_clip'
 
     def is_ready(self) -> bool:
         """Return whether the pipeline is ready for real inference."""
         if not self.enabled:
             return False
+        
+        # SAM3 pipeline: SAM3 + BioCLIP-2.5
+        if self.actual_pipeline == 'sam3':
+            return bool(
+                self.models_loaded
+                and self.sam2 is not None  # sam3 stored in sam2 slot
+                and self.bioclip is not None
+                and self.sam_processor is not None
+                and self.bioclip_processor is not None
+                and self.sam_backend == 'sam3'
+            )
+        
+        # DINO pipeline: DINO + SAM2 + BioCLIP-2 (fallback)
         return bool(
             self.models_loaded
             and self.grounding_dino is not None
@@ -742,7 +831,7 @@ class VLMPipeline:
         max_detections: int = 10
     ) -> Dict[str, Any]:
         """
-        Analyze an image using VLM pipeline.
+        Analyze an image using VLM pipeline (SAM3 or DINO mode).
         
         Args:
             image_tensor: Preprocessed image tensor
@@ -753,67 +842,167 @@ class VLMPipeline:
             Dictionary with analysis results
         """
         if self.enabled and self.models_loaded:
-            start_time = time.perf_counter()
-            pil_image = self._tensor_to_pil(image_tensor)
-
-            effective_threshold = float(confidence_threshold)
-            effective_max_detections = int(max_detections)
-
-            dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)
-            detections = dino_out.get('detections', [])
-            best_det = self._select_best_detection(detections)
-
-            best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
-            roi_image = self._extract_roi(pil_image, best_bbox)
-
-            candidate_crops = self._unique_nonempty([det.get('crop_guess') for det in detections])
-            candidate_parts = self._unique_nonempty([det.get('part_guess') for det in detections])
-
-            if candidate_crops:
-                crop_label, crop_conf = self._clip_score_labels(roi_image, candidate_crops, label_type='crop')
+            # Route to appropriate pipeline
+            if self.actual_pipeline == 'sam3':
+                return self._analyze_image_sam3(image_tensor, confidence_threshold, max_detections)
             else:
-                crop_label, crop_conf = 'unknown', 0.0
-
-            part_label, part_conf = self._classify_with_prompt_ensemble(roi_image, 'part')
-
-            if best_det and best_det.get('part_guess'):
-                part_label = best_det.get('part_guess')
-                part_conf = max(part_conf, float(best_det.get('score', 0.0)))
-
-            if candidate_parts and part_label == 'unknown':
-                dino_part = candidate_parts[0]
-                part_label = dino_part
-                part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
-
-            if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < effective_threshold:
-                crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
-            best_mask = self._run_sam_mask(pil_image, best_bbox)
-
-            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            return {
-                'detections': [
-                    {
-                        'crop': crop_label,
-                        'part': part_label,
-                        'crop_confidence': crop_conf,
-                        'disease': None,
-                        'disease_confidence': 0.0,
-                        'bbox': best_bbox,
-                        'mask': best_mask,
-                        'part_confidence': part_conf,
-                        'grounding_label': best_det.get('label') if best_det else None
-                    }
-                ],
-                'image_size': tuple(image_tensor.shape),
-                'processing_time_ms': elapsed_ms,
-                'raw_detections': detections[:effective_max_detections]
-            }
-
-        # No fallback to placeholder data - return empty result when models not loaded
+                return self._analyze_image_dino(image_tensor, confidence_threshold, max_detections)
+        
+        # Pipeline not ready/enabled
         return {
             'detections': [],
             'image_size': tuple(image_tensor.shape),
             'processing_time_ms': 0.0
+        }
+    
+    def _analyze_image_sam3(
+        self,
+        image_tensor: torch.Tensor,
+        confidence_threshold: float = 0.8,
+        max_detections: int = 10
+    ) -> Dict[str, Any]:
+        """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
+        import time
+        start_time = time.perf_counter()
+        pil_image = self._tensor_to_pil(image_tensor)
+        
+        effective_threshold = float(confidence_threshold)
+        effective_max_detections = int(max_detections)
+        
+        # SAM3 with generic text prompt
+        sam3_prompt = "plant leaf"
+        sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=effective_threshold)
+        masks = sam3_results.get('masks', [])
+        boxes = sam3_results.get('boxes', [])
+        scores = sam3_results.get('scores', [])
+        
+        detections = []
+        if masks:
+            for i, (box, score) in enumerate(zip(boxes[:effective_max_detections], 
+                                                   scores[:effective_max_detections])):
+                if float(score) < effective_threshold:
+                    continue
+                
+                # Extract ROI
+                roi_image = self._extract_roi(pil_image, box.tolist() if torch.is_tensor(box) else box)
+                
+                # Classify with BioCLIP-2.5
+                crop_label, crop_conf = self._clip_score_labels(roi_image, self.crop_labels, label_type='crop')
+                part_label, part_conf = self._clip_score_labels(roi_image, self.part_labels, label_type='part')
+                
+                detections.append({
+                    'crop': crop_label,
+                    'part': part_label,
+                    'crop_confidence': crop_conf,
+                    'part_confidence': part_conf,
+                    'disease': None,
+                    'disease_confidence': 0.0,
+                    'bbox': box.tolist() if torch.is_tensor(box) else box,
+                    'mask': None,  # SAM3 masks can be included if needed
+                    'sam3_score': float(score),
+                })
+        
+        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+        return {
+            'detections': detections,
+            'image_size': tuple(image_tensor.shape),
+            'processing_time_ms': elapsed_ms,
+            'pipeline_type': 'sam3_bioclip25',
+            'sam3_instances': len(masks)
+        }
+    
+    def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
+        """Run SAM3 instance segmentation with text prompt."""
+        try:
+            inputs = self.sam_processor(images=image, text=prompt, return_tensors="pt").to(self.device)
+            
+            with torch.no_grad():
+                outputs = self.sam2(**inputs)  # sam3 stored in sam2 slot
+            
+            # Post-process
+            results = self.sam_processor.post_process_instance_segmentation(
+                outputs,
+                threshold=threshold,
+                mask_threshold=threshold,
+                target_sizes=inputs.get("original_sizes").tolist()
+            )[0]
+            
+            masks = results.get('masks', torch.tensor([]))
+            boxes = results.get('boxes', torch.tensor([]))
+            scores = results.get('scores', torch.tensor([]))
+            
+            return {
+                'masks': masks if len(masks.shape) > 0 else [],
+                'boxes': boxes if len(boxes.shape) > 0 else [],
+                'scores': scores if len(scores.shape) > 0 else []
+            }
+        except Exception as e:
+            logger.error(f"SAM3 inference failed: {e}")
+            return {'masks': [], 'boxes': [], 'scores': []}
+    
+    def _analyze_image_dino(
+        self,
+        image_tensor: torch.Tensor,
+        confidence_threshold: float = 0.8,
+        max_detections: int = 10
+    ) -> Dict[str, Any]:
+        """Analyze using DINO + SAM2 + BioCLIP-2 pipeline (fallback)."""
+        import time
+        start_time = time.perf_counter()
+        pil_image = self._tensor_to_pil(image_tensor)
+
+        effective_threshold = float(confidence_threshold)
+        effective_max_detections = int(max_detections)
+
+        dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)
+        detections = dino_out.get('detections', [])
+        best_det = self._select_best_detection(detections)
+
+        best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
+        roi_image = self._extract_roi(pil_image, best_bbox)
+
+        candidate_crops = self._unique_nonempty([det.get('crop_guess') for det in detections])
+        candidate_parts = self._unique_nonempty([det.get('part_guess') for det in detections])
+
+        if candidate_crops:
+            crop_label, crop_conf = self._clip_score_labels(roi_image, candidate_crops, label_type='crop')
+        else:
+            crop_label, crop_conf = 'unknown', 0.0
+
+        part_label, part_conf = self._classify_with_prompt_ensemble(roi_image, 'part')
+
+        if best_det and best_det.get('part_guess'):
+            part_label = best_det.get('part_guess')
+            part_conf = max(part_conf, float(best_det.get('score', 0.0)))
+
+        if candidate_parts and part_label == 'unknown':
+            dino_part = candidate_parts[0]
+            part_label = dino_part
+            part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
+
+        if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < effective_threshold:
+            crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
+        best_mask = self._run_sam_mask(pil_image, best_bbox)
+
+        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+        return {
+            'detections': [
+                {
+                    'crop': crop_label,
+                    'part': part_label,
+                    'crop_confidence': crop_conf,
+                    'disease': None,
+                    'disease_confidence': 0.0,
+                    'bbox': best_bbox,
+                    'mask': best_mask,
+                    'part_confidence': part_conf,
+                    'grounding_label': best_det.get('label') if best_det else None
+                }
+            ],
+            'image_size': tuple(image_tensor.shape),
+            'processing_time_ms': elapsed_ms,
+            'raw_detections': detections[:effective_max_detections],
+            'pipeline_type': 'dino_sam2_bioclip2'
         }
 
     def route_batch(self, batch: torch.Tensor) -> Tuple[List[Dict], List[float]]:
