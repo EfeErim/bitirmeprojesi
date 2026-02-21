@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 VLM Pipeline for AADS-ULoRA
-Dual-mode: SAM3 + BioCLIP-2.5 (primary) with fallback to GroundingDINO + SAM2.1 + BioCLIP-2.5
+SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 """
 
 import torch
@@ -19,16 +19,7 @@ logger = logging.getLogger(__name__)
 
 class VLMPipeline:
     """
-    Unified VLM pipeline supporting two modes:
-    
-    1. SAM3 + BioCLIP-2.5 (Primary, if available)
-       - Better segmentation with text prompts
-       - Improved classification accuracy (+5.7% over BioCLIP-2)
-       
-    2. GroundingDINO + SAM2.1 + BioCLIP-2.5 (Fallback)
-       - Proven detection, improved segmentation (SAM2.1), better classification (BioCLIP-2.5)
-       
-    Automatically falls back to mode 2 if mode 1 fails.
+     Unified VLM pipeline (SAM3 + BioCLIP-2.5 only).
     """
 
     def __init__(self, config: Dict, device: str = 'cuda'):
@@ -38,10 +29,10 @@ class VLMPipeline:
         router_config = config.get('router', {}) if isinstance(config.get('router'), dict) else {}
         self.vlm_config = router_config.get('vlm', {}) if isinstance(router_config, dict) else {}
         
-        # Pipeline mode selection: "sam3" (primary) or "dino" (fallback)
-        self.pipeline_mode = self.vlm_config.get('pipeline_mode', 'sam3')
+        # Pipeline mode is SAM3-only (legacy values are ignored)
+        self.pipeline_mode = 'sam3'
         self.fallback_attempted = False
-        self.actual_pipeline = None  # Will be set to 'sam3' or 'dino' after load_models
+        self.actual_pipeline = None  # Will be set to 'sam3' after load_models
         
         # Backwards-compatible flat keys
         self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
@@ -60,8 +51,8 @@ class VLMPipeline:
 
         defaults = {
             'grounding_dino': 'IDEA-Research/grounding-dino-base',
-            'sam': 'facebook/sam3',  # Default to SAM3, fallback to sam2.1_b.pt
-            'bioclip': 'imageomics/bioclip-2.5-vith14'  # BioCLIP-2.5 for both primary and fallback
+            'sam': 'facebook/sam3',
+            'bioclip': 'imageomics/bioclip-2.5-vith14'
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
         self.model_ids = {
@@ -109,7 +100,7 @@ class VLMPipeline:
         
         # Log GPU availability for debugging
         logger.info(f"VLMPipeline initialized on {self.device}")
-        logger.info(f"Pipeline mode: {self.pipeline_mode} (will fallback to 'dino' if needed)")
+        logger.info("Pipeline mode: sam3 (fallback disabled)")
         logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
         if torch.cuda.is_available():
             logger.info(f"GPU device: {torch.cuda.get_device_name(0)}, Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
@@ -179,8 +170,6 @@ class VLMPipeline:
         # Check for optional dependencies
         optional_packages = {
             'open_clip': 'open-clip-torch',
-            'ultralytics': 'ultralytics',
-            'groundingdino': 'groundingdino-hf',
         }
         
         for package_name, pip_name in optional_packages.items():
@@ -195,7 +184,7 @@ class VLMPipeline:
             logger.warning(f"Install in Colab cell: {install_cmd}")
 
     def load_models(self):
-        """Load all VLM models with SAM3+BioCLIP-2.5 as primary, DINO+SAM2.1+BioCLIP-2.5 as fallback."""
+        """Load SAM3 + BioCLIP-2.5 models (fallback disabled)."""
         logger.info("Loading VLM models...")
 
         if not self.enabled:
@@ -222,43 +211,18 @@ class VLMPipeline:
             if self.model_source != 'huggingface':
                 raise ValueError(f"Unsupported VLM model_source '{self.model_source}'. Currently supported: 'huggingface'")
 
-            # Try SAM3 + BioCLIP-2.5 first (primary pipeline)
-            if self.pipeline_mode == 'sam3' and not self.fallback_attempted:
-                logger.info("Attempting SAM3 + BioCLIP-2.5 pipeline...")
-                logger.info("Note: First run downloads ~1-2 GB. This may take 2-5 minutes...")
-                try:
-                    self._load_sam3_bioclip25()
-                    self.actual_pipeline = 'sam3'
-                    self.models_loaded = True
-                    logger.info("✅ SAM3 + BioCLIP-2.5 loaded successfully")
-                    return
-                except Exception as sam3_error:
-                    logger.warning(f"SAM3 + BioCLIP-2.5 failed: {sam3_error}")
-                    logger.info("Falling back to DINO + SAM2.1 + BioCLIP-2.5...")
-                    self.fallback_attempted = True
-            
-            # Fallback to DINO + SAM2.1 + BioCLIP-2.5 (upgraded fallback)
-            logger.info("Loading DINO + SAM2.1 + BioCLIP-2.5 pipeline...")
-            self.grounding_dino_processor, self.grounding_dino = self._load_grounding_dino(
-                self.model_ids['grounding_dino']
-            )
-            # Use configured SAM model (defaults to sam2.1_b.pt if not overridden)
-            sam_model_id = self.model_ids.get('sam', 'sam2.1_b.pt')
-            self.sam_processor, self.sam2 = self._load_sam(sam_model_id)
-            
-            # Use BioCLIP-2.5 even in fallback for consistency and better accuracy
-            self.bioclip_processor, self.bioclip = self._load_clip_like_model('imageomics/bioclip-2.5-vith14')
-            
-            self.actual_pipeline = 'dino'
+            logger.info("Loading SAM3 + BioCLIP-2.5 pipeline...")
+            logger.info("Note: First run downloads ~1-2 GB. This may take 2-5 minutes...")
+            self._load_sam3_bioclip25()
+            self.actual_pipeline = 'sam3'
             self.models_loaded = True
-            logger.info("✅ DINO + SAM2.1 + BioCLIP-2.5 loaded successfully (fallback mode)")
+            logger.info("✅ SAM3 + BioCLIP-2.5 loaded successfully")
             
         except Exception as e:
             self.models_loaded = False
             if self.strict_model_loading:
                 raise RuntimeError(f"Strict VLM model loading failed: {e}") from e
-            # In non-strict mode, leave models as None - no placeholder strings
-            logger.warning(f"VLM model loading failed. Models remain unloaded: {e}")
+            logger.warning(f"SAM3 model loading failed. Models remain unloaded: {e}")
     
     def _load_sam3_bioclip25(self):
         """Load SAM3 and BioCLIP-2.5 models."""
@@ -297,27 +261,15 @@ class VLMPipeline:
         """Return whether the pipeline is ready for real inference."""
         if not self.enabled:
             return False
-        
-        # SAM3 pipeline: SAM3 + BioCLIP-2.5
-        if self.actual_pipeline == 'sam3':
-            return bool(
-                self.models_loaded
-                and self.sam2 is not None  # sam3 stored in sam2 slot
-                and self.bioclip is not None
-                and self.sam_processor is not None
-                and self.bioclip_processor is not None
-                and self.sam_backend == 'sam3'
-            )
-        
-        # DINO pipeline: DINO + SAM2 + BioCLIP-2 (fallback)
+
         return bool(
             self.models_loaded
-            and self.grounding_dino is not None
-            and self.sam2 is not None
-            and self.bioclip is not None
-            and self.grounding_dino_processor is not None
+            and self.actual_pipeline == 'sam3'
+            and self.sam2 is not None  # sam3 stored in sam2 slot
             and self.sam_processor is not None
+            and self.bioclip is not None
             and self.bioclip_processor is not None
+            and self.sam_backend == 'sam3'
         )
 
     def _load_grounding_dino(self, model_id: str):
@@ -924,7 +876,7 @@ class VLMPipeline:
         max_detections: int = 10
     ) -> Dict[str, Any]:
         """
-        Analyze an image using VLM pipeline (SAM3 or DINO mode).
+        Analyze an image using SAM3 + BioCLIP-2.5.
         
         Args:
             image_tensor: Preprocessed image tensor
@@ -936,12 +888,8 @@ class VLMPipeline:
         """
         pil_image, image_size = self._coerce_image_input(image_tensor)
 
-        if self.enabled and self.models_loaded:
-            # Route to appropriate pipeline
-            if self.actual_pipeline == 'sam3':
-                return self._analyze_image_sam3(pil_image, image_size, confidence_threshold, max_detections)
-            else:
-                return self._analyze_image_dino(pil_image, image_size, confidence_threshold, max_detections)
+        if self.enabled and self.models_loaded and self.actual_pipeline == 'sam3':
+            return self._analyze_image_sam3(pil_image, image_size, confidence_threshold, max_detections)
         
         # Pipeline not ready/enabled
         return {
