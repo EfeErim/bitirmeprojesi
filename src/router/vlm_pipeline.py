@@ -970,9 +970,16 @@ class VLMPipeline:
         masks = sam3_results.get('masks', [])
         boxes = sam3_results.get('boxes', [])
         scores = sam3_results.get('scores', [])
+
+        if torch.is_tensor(masks):
+            mask_count = int(masks.shape[0]) if masks.ndim > 0 else int(masks.numel() > 0)
+        elif isinstance(masks, (list, tuple)):
+            mask_count = len(masks)
+        else:
+            mask_count = 0
         
         detections = []
-        if masks:
+        if mask_count > 0:
             for i, (box, score) in enumerate(zip(boxes[:effective_max_detections], 
                                                    scores[:effective_max_detections])):
                 if float(score) < effective_threshold:
@@ -1003,7 +1010,7 @@ class VLMPipeline:
             'image_size': image_size,
             'processing_time_ms': elapsed_ms,
             'pipeline_type': 'sam3_bioclip25',
-            'sam3_instances': len(masks)
+            'sam3_instances': mask_count
         }
     
     def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
