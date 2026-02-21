@@ -208,6 +208,36 @@ results = pipeline.analyze_image(tensor)
 
 ---
 
+## HuggingFace Authentication (Colab)
+
+To enable SAM3 loading without fallback, authenticate with your HuggingFace account:
+
+### **Step 1: Add HF_TOKEN to Colab Secrets**
+1. Click **🔑 "Secrets"** in the left sidebar (key icon)
+2. Click **"+ Add new secret"**
+3. Name: `HF_TOKEN`
+4. Value: Your HuggingFace token (from https://huggingface.co/settings/tokens)
+5. Enable **"Notebook access"**
+6. Click **"Add secret"**
+
+### **Step 2: Pipeline Automatically Authenticates**
+```python
+# The pipeline reads HF_TOKEN from Colab secrets automatically
+# No need to manually login!
+
+from src.router.vlm_pipeline import VLMPipeline
+
+config = {'router': {'vlm': {'enabled': True, 'pipeline_mode': 'sam3'}}}
+pipeline = VLMPipeline(config)
+pipeline.load_models()
+
+# Output will show:
+# ✅ Authenticated with HuggingFace
+# ✅ SAM3 + BioCLIP-2.5 loaded successfully
+```
+
+---
+
 ## Testing the New Pipeline
 
 ### **In Colab:**

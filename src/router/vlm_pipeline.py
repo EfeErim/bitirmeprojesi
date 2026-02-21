@@ -169,6 +169,18 @@ class VLMPipeline:
             self.models_loaded = False
             return
 
+        # Authenticate with HuggingFace if token available (e.g., from Colab secrets)
+        hf_token = os.getenv('HF_TOKEN')
+        if hf_token:
+            try:
+                from huggingface_hub import login
+                login(token=hf_token, add_to_git_credential=False)
+                logger.info("✅ Authenticated with HuggingFace")
+            except Exception as hf_auth_error:
+                logger.warning(f"HuggingFace authentication failed: {hf_auth_error}")
+        else:
+            logger.info("No HF_TOKEN found in environment; some models may require authentication")
+
         try:
             if self.model_source != 'huggingface':
                 raise ValueError(f"Unsupported VLM model_source '{self.model_source}'. Currently supported: 'huggingface'")
