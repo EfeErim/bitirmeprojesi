@@ -577,6 +577,42 @@ class VLMPipeline:
         return image.crop((left, top, right, bottom))
 
     @staticmethod
+    def _sanitize_bbox(bbox: Optional[List[float]], image_width: int, image_height: int) -> Optional[List[float]]:
+        """Clamp bbox to image bounds and return None when invalid."""
+        if bbox is None or len(bbox) != 4:
+            return None
+
+        try:
+            x1, y1, x2, y2 = [float(v) for v in bbox]
+        except Exception:
+            return None
+
+        x1 = max(0.0, min(float(image_width), x1))
+        y1 = max(0.0, min(float(image_height), y1))
+        x2 = max(0.0, min(float(image_width), x2))
+        y2 = max(0.0, min(float(image_height), y2))
+
+        if x2 <= x1 or y2 <= y1:
+            return None
+
+        return [x1, y1, x2, y2]
+
+    @staticmethod
+    def _bbox_area_ratio(bbox: Optional[List[float]], image_width: int, image_height: int) -> float:
+        """Compute normalized bbox area in [0,1], returning 0 for invalid boxes."""
+        if bbox is None or image_width <= 0 or image_height <= 0:
+            return 0.0
+
+        x1, y1, x2, y2 = bbox
+        box_w = max(0.0, float(x2) - float(x1))
+        box_h = max(0.0, float(y2) - float(y1))
+        image_area = float(image_width * image_height)
+        if image_area <= 0.0:
+            return 0.0
+
+        return (box_w * box_h) / image_area
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -934,10 +970,21 @@ class VLMPipeline:
         
         effective_threshold = float(confidence_threshold)
         effective_max_detections = int(max_detections)
+        image_width, image_height = pil_image.size
+
+        sam3_threshold_cfg = self.vlm_config.get('sam3_mask_threshold', 0.60)
+        sam3_threshold = max(0.35, min(0.95, float(sam3_threshold_cfg)))
+
+        min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.003))
+        min_box_side_px = float(self.vlm_config.get('min_box_side_px', 18))
+        classification_min_confidence = max(
+            float(self.vlm_config.get('classification_min_confidence', 0.30)),
+            effective_threshold,
+        )
         
         # SAM3 with generic text prompt
         sam3_prompt = "plant leaf"
-        sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=effective_threshold)
+        sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=sam3_threshold)
         masks = sam3_results.get('masks', [])
         boxes = sam3_results.get('boxes', [])
         scores = sam3_results.get('scores', [])
@@ -951,17 +998,36 @@ class VLMPipeline:
         
         detections = []
         if mask_count > 0:
-            for i, (box, score) in enumerate(zip(boxes[:effective_max_detections], 
-                                                   scores[:effective_max_detections])):
-                if float(score) < effective_threshold:
+            for box, score in zip(boxes, scores):
+                sam3_score = float(score)
+                if sam3_score < sam3_threshold:
+                    continue
+
+                raw_bbox = box.tolist() if torch.is_tensor(box) else box
+                bbox = self._sanitize_bbox(raw_bbox, image_width, image_height)
+                if bbox is None:
+                    continue
+
+                box_w = bbox[2] - bbox[0]
+                box_h = bbox[3] - bbox[1]
+                if box_w < min_box_side_px or box_h < min_box_side_px:
+                    continue
+
+                area_ratio = self._bbox_area_ratio(bbox, image_width, image_height)
+                if area_ratio < min_box_area_ratio:
                     continue
                 
                 # Extract ROI
-                roi_image = self._extract_roi(pil_image, box.tolist() if torch.is_tensor(box) else box)
+                roi_image = self._extract_roi(pil_image, bbox)
                 
                 # Classify with BioCLIP-2.5
                 crop_label, crop_conf = self._clip_score_labels(roi_image, self.crop_labels, label_type='crop')
                 part_label, part_conf = self._clip_score_labels(roi_image, self.part_labels, label_type='part')
+
+                if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
+                    continue
+
+                quality_score = 0.65 * float(crop_conf) + 0.20 * float(part_conf) + 0.15 * sam3_score
                 
                 detections.append({
                     'crop': crop_label,
@@ -970,10 +1036,16 @@ class VLMPipeline:
                     'part_confidence': part_conf,
                     'disease': None,
                     'disease_confidence': 0.0,
-                    'bbox': box.tolist() if torch.is_tensor(box) else box,
+                    'bbox': bbox,
                     'mask': None,  # SAM3 masks can be included if needed
-                    'sam3_score': float(score),
+                    'sam3_score': sam3_score,
+                    '_quality_score': quality_score,
                 })
+
+        detections.sort(key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
+        detections = detections[:effective_max_detections]
+        for det in detections:
+            det.pop('_quality_score', None)
         
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
         return {
@@ -981,7 +1053,10 @@ class VLMPipeline:
             'image_size': image_size,
             'processing_time_ms': elapsed_ms,
             'pipeline_type': 'sam3_bioclip25',
-            'sam3_instances': mask_count
+            'sam3_instances': mask_count,
+            'sam3_threshold': sam3_threshold,
+            'sam3_instances_raw': mask_count,
+            'sam3_instances_retained': len(detections),
         }
     
     def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
