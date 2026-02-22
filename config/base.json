@@ -33,7 +33,7 @@
         "bioclip": "imageomics/bioclip-2.5-vith14"
       },
       "sam3_text_prompt": "plant",
-      "sam3_mask_threshold": 0.60,
+      "sam3_mask_threshold": 0.01,
       "min_box_area_ratio": 0.001,
       "min_box_side_px": 10,
       "classification_min_confidence": 0.20,
