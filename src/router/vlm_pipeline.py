@@ -688,6 +688,137 @@ class VLMPipeline:
             label_type=label_type
         )
 
+    def _get_prompt_templates_for_type(self, label_type: str) -> List[str]:
+        """Get dynamic prompt templates from config."""
+        templates = self.vlm_config.get('prompt_templates', {})
+        if label_type == 'crop':
+            return templates.get('crop', [
+                "a photo of {term}",
+                "a close-up photo of {term}",
+                "a {term} plant",
+                "a {term} with disease",
+            ])
+        elif label_type == 'part':
+            return templates.get('part', [
+                "a photo of a plant {term}",
+                "a {term} with disease",
+                "a diseased plant {term}",
+            ])
+        return ["a photo of {term}"]
+
+    def _clip_score_labels_ensemble(
+        self, 
+        image: Image.Image, 
+        labels: List[str],
+        label_type: str = 'generic',
+        num_prompts: int = 3  # Use top-N prompt templates for robustness
+    ) -> Tuple[str, float, Dict[str, float]]:
+        """
+        Score text labels against image with multiple prompts for robustness.
+        Returns: (best_label, best_score, all_scores_dict)
+        """
+        if not labels:
+            return 'unknown', 0.0, {}
+
+        templates = self._get_prompt_templates_for_type(label_type)[:num_prompts]
+        label_ensemble_scores = {label: [] for label in labels}
+        
+        # Score each label with each prompt template
+        for template in templates:
+            prompts = [template.format(term=label) for label in labels]
+            scores = self._encode_and_score(image, prompts)
+            for label, score in zip(labels, scores):
+                label_ensemble_scores[label].append(float(score))
+        
+        # Average scores across prompts
+        label_avg_scores = {
+            label: np.mean(scores) if scores else 0.0 
+            for label, scores in label_ensemble_scores.items()
+        }
+        
+        best_label = max(label_avg_scores, key=label_avg_scores.get) if label_avg_scores else 'unknown'
+        best_score = label_avg_scores.get(best_label, 0.0)
+        
+        return best_label, best_score, label_avg_scores
+
+    def _encode_and_score(self, image: Image.Image, prompts: List[str]) -> List[float]:
+        """Encode image and score against text prompts."""
+        try:
+            from PIL import Image as PILImage
+            # Ensure image is PIL
+            if not isinstance(image, PILImage.Image):
+                image = PILImage.fromarray(np.array(image))
+            
+            # Process image
+            image_input = self.bioclip_processor(images=image, return_tensors="pt", padding=True).to(self.device)
+            
+            # Process text
+            text_input = self.bioclip_processor(text=prompts, return_tensors="pt", padding=True).to(self.device)
+            
+            with torch.no_grad():
+                image_features = self.bioclip(image_input['pixel_values'])
+                text_features = self.bioclip.get_text_features(text_input['input_ids'], text_input['attention_mask'])
+            
+            # Compute similarity
+            logits_per_image = image_features @ text_features.T
+            scores = torch.nn.functional.softmax(logits_per_image, dim=-1)[0]
+            
+            return scores.cpu().numpy().tolist()
+        except Exception as e:
+            logger.error(f"Encoding failed: {e}")
+            return [0.0] * len(prompts)
+
+    def _select_best_crop_with_fallback(
+        self,
+        roi_image: Image.Image,
+        crop_scores: Dict[str, float],
+        part_label: str,
+        part_scores: Dict[str, float],
+        min_confidence: float = 0.20
+    ) -> Tuple[str, float]:
+        """
+        Select best crop with intelligent fallback based on part predictions.
+        
+        Logic:
+        1. If best crop score >= min_confidence, use it
+        2. If uncertain (confidence < threshold), check if part suggests specific crops:
+           - Uses part_to_crop_hints from config (e.g., tuber → potato/yam/cassava)
+        3. Otherwise, use best available crop
+        
+        All mapping is configurable and dynamic - no hardcoding.
+        """
+        if not crop_scores:
+            return 'unknown', 0.0
+        
+        sorted_crops = sorted(crop_scores.items(), key=lambda x: x[1], reverse=True)
+        best_crop, best_score = sorted_crops[0]
+        
+        # If confidence is good, use it
+        if best_score >= min_confidence:
+            return best_crop, best_score
+        
+        # Confidence is low - check if part hints at specific crop
+        part_to_crops = self.vlm_config.get('part_to_crop_hints', {})
+        hinted_crops = part_to_crops.get(part_label, part_to_crops.get('_default', []))
+        
+        if hinted_crops:
+            # Filter crop scores to only hinted crops
+            hinted_scores = {
+                crop: score for crop, score in crop_scores.items() 
+                if crop in hinted_crops
+            }
+            if hinted_scores:
+                hinted_best = max(hinted_scores, key=hinted_scores.get)
+                hinted_score = hinted_scores[hinted_best]
+                # Use hinted crop if it's reasonably close to best
+                margin_threshold = float(self.vlm_config.get('ensemble_config', {}).get('confidence_margin_threshold', 0.7))
+                if hinted_score >= best_score * margin_threshold:
+                    return hinted_best, hinted_score
+        
+        # No helpful hints - still return best, even if low confidence
+        # (caller can decide whether to filter out based on threshold)
+        return best_crop, best_score
+
     def _clip_score_labels(
         self, 
         image: Image.Image, 
@@ -1056,9 +1187,21 @@ class VLMPipeline:
                 # Extract ROI
                 roi_image = self._extract_roi(pil_image, bbox)
                 
-                # Classify with BioCLIP-2.5
-                crop_label, crop_conf = self._clip_score_labels(roi_image, self.crop_labels, label_type='crop')
-                part_label, part_conf = self._clip_score_labels(roi_image, self.part_labels, label_type='part')
+                # Classify parts first (used for crop inference fallback)
+                part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
+                    roi_image, self.part_labels, label_type='part', num_prompts=3
+                )
+                
+                # Classify crops with ensemble for robustness to disease/damage
+                crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
+                    roi_image, self.crop_labels, label_type='crop', num_prompts=2
+                )
+                
+                # Intelligent fallback: use part to resolve uncertain crop classifications
+                crop_label, crop_conf = self._select_best_crop_with_fallback(
+                    roi_image, crop_scores, part_label, part_scores, 
+                    min_confidence=classification_min_confidence
+                )
 
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue

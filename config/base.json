@@ -45,22 +45,44 @@
       "prompt_templates": {
         "crop": [
           "a photo of {term}",
-          "a close-up photo of {term}",
-          "a macro photo of {term}",
-          "an image of {term}",
-          "a {term} crop",
           "a {term} plant",
+          "a {term} crop leaf",
+          "a damaged {term}",
           "a {term} with disease",
-          "a diseased {term}"
+          "a diseased {term} leaf",
+          "an unhealthy {term}",
+          "a close-up of {term}",
+          "a macro photo of {term} foliage",
+          "a {term} showing symptoms"
         ],
         "part": [
           "a photo of a plant {term}",
-          "a closeup photo of a plant {term}",
-          "a macro photo of a plant {term}",
-          "a {term} with damage",
+          "a plant {term}",
+          "a {term} of a plant",
           "a {term} with disease",
-          "a diseased plant {term}"
+          "a diseased plant {term}",
+          "an unhealthy {term}",
+          "a close-up of a plant {term}",
+          "a macro photo of a {term}",
+          "a {term} with spots",
+          "a {term} showing lesions"
         ]
+      },
+      "part_to_crop_hints": {
+        "tuber": ["potato", "yam", "cassava", "taro"],
+        "bulb": ["onion", "garlic", "shallot", "leek"],
+        "grain": ["wheat", "corn", "rice", "barley", "oat", "sorghum"],
+        "ear": ["wheat", "corn", "sorghum"],
+        "berry": ["grape", "blueberry", "strawberry", "raspberry", "blackberry"],
+        "pod": ["bean", "pea", "soybean", "lentil"],
+        "fruit": ["tomato", "potato", "pepper", "eggplant", "squash", "pumpkin", "cucumber", "melon"],
+        "root": ["carrot", "beet", "turnip", "radish", "parsnip"],
+        "_default": []
+      },
+      "ensemble_config": {
+        "crop_num_prompts": 2,
+        "part_num_prompts": 3,
+        "confidence_margin_threshold": 0.7
       }
     },
     "crop_mapping": {
