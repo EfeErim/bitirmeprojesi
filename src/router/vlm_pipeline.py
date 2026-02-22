@@ -982,8 +982,8 @@ class VLMPipeline:
             effective_threshold,
         )
         
-        # SAM3 with generic text prompt
-        sam3_prompt = "plant leaf"
+        # SAM3 with configurable text prompt (default "plant" works for leaves, fruits, stems, etc.)
+        sam3_prompt = self.vlm_config.get('sam3_text_prompt', 'plant')
         sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=sam3_threshold)
         masks = sam3_results.get('masks', [])
         boxes = sam3_results.get('boxes', [])

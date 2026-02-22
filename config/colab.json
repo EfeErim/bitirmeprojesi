@@ -101,6 +101,11 @@
         "sam": "facebook/sam3",
         "bioclip": "imageomics/bioclip-2.5-vith14"
       },
+      "sam3_text_prompt": "plant",
+      "sam3_mask_threshold": 0.60,
+      "min_box_area_ratio": 0.003,
+      "min_box_side_px": 18,
+      "classification_min_confidence": 0.30,
       "crop_labels": ["tomato", "potato", "wheat"],
       "part_labels": ["leaf", "fruit", "stem", "whole", "tuber", "ear"]
     },

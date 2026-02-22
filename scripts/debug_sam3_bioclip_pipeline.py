@@ -272,9 +272,12 @@ def main() -> int:
     pil_image, _ = pipeline._coerce_image_input(str(image_path))
     width, height = pil_image.size
 
+    sam_prompt = pipeline.vlm_config.get("sam3_text_prompt", "plant")
+    logger.info(f"SAM3 prompt: '{sam_prompt}', threshold: {chosen_threshold}")
+
     sam_results = pipeline._run_sam3(
         pil_image,
-        prompt="plant leaf",
+        prompt=sam_prompt,
         threshold=chosen_threshold,
     )
 
@@ -343,6 +346,7 @@ def main() -> int:
 
     report = {
         "image_path": str(image_path),
+        "sam_prompt": sam_prompt,
         "sam_threshold": chosen_threshold,
         "total_raw_instances": int(total_raw_instances),
         "kept_instances": int(len(roi_rows)),
