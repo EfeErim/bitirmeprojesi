@@ -797,11 +797,18 @@ class VLMPipeline:
             if prompt_limit > 0:
                 templates = templates[:prompt_limit]
         label_ensemble_scores = {label: [] for label in labels}
+
+        open_clip_image_embedding: Optional[torch.Tensor] = None
+        if self.bioclip_backend == 'open_clip':
+            open_clip_image_embedding = self._get_open_clip_image_embedding(image)
         
         # Score each label with each prompt template
         for template in templates:
             prompts = [template.format(term=label) for label in labels]
-            scores = self._encode_and_score(image, prompts)
+            if open_clip_image_embedding is not None:
+                scores = self._score_open_clip_with_image_embedding(open_clip_image_embedding, prompts)
+            else:
+                scores = self._encode_and_score(image, prompts)
             for label, score in zip(labels, scores):
                 label_ensemble_scores[label].append(float(score))
         
@@ -837,6 +844,24 @@ class VLMPipeline:
             self._open_clip_text_embedding_cache[cache_key] = text_embeds
         return text_embeds
 
+    def _get_open_clip_image_embedding(self, image: Image.Image) -> torch.Tensor:
+        """Encode a single image once for open_clip scoring."""
+        preprocess = self.bioclip_processor['preprocess']
+        image_tensor = preprocess(image).unsqueeze(0).to(self.device)
+        with torch.no_grad():
+            image_embeds = self.bioclip.encode_image(image_tensor)
+            image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+        return image_embeds
+
+    def _score_open_clip_with_image_embedding(self, image_embedding: torch.Tensor, prompts: List[str]) -> List[float]:
+        """Score prompts against a precomputed open_clip image embedding."""
+        text_embeds = self._get_open_clip_text_embeddings(prompts)
+        logit_scale = self._get_clip_logit_scale(self.bioclip)
+        with torch.no_grad():
+            logits_per_image = (image_embedding @ text_embeds.T) * logit_scale
+            scores = torch.softmax(logits_per_image, dim=-1)[0]
+        return scores.detach().cpu().numpy().tolist()
+
     def _encode_and_score(self, image: Image.Image, prompts: List[str]) -> List[float]:
         """Encode image and score against text prompts."""
         try:
@@ -846,17 +871,8 @@ class VLMPipeline:
                 image = PILImage.fromarray(np.array(image))
 
             if self.bioclip_backend == 'open_clip':
-                preprocess = self.bioclip_processor['preprocess']
-                logit_scale = self._get_clip_logit_scale(self.bioclip)
-
-                image_tensor = preprocess(image).unsqueeze(0).to(self.device)
-                text_embeds = self._get_open_clip_text_embeddings(prompts)
-
-                with torch.no_grad():
-                    image_embeds = self.bioclip.encode_image(image_tensor)
-                    image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                    logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
-                    scores = torch.softmax(logits_per_image, dim=-1)[0]
+                image_embedding = self._get_open_clip_image_embedding(image)
+                return self._score_open_clip_with_image_embedding(image_embedding, prompts)
             else:
                 model_inputs = self.bioclip_processor(
                     text=prompts,
@@ -880,8 +896,8 @@ class VLMPipeline:
                     else:
                         raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
                     scores = torch.softmax(logits_per_image, dim=-1)[0]
-            
-            return scores.cpu().numpy().tolist()
+
+            return scores.detach().cpu().numpy().tolist()
         except Exception as e:
             logger.error(f"Encoding failed: {e}")
             return [0.0] * len(prompts)
