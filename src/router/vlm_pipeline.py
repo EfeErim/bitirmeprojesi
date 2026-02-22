@@ -126,6 +126,7 @@ class VLMPipeline:
         # BioCLIP model placeholders (can be BioCLIP-2.5 or BioCLIP-2)
         self.bioclip = None
         self.bioclip_processor = None
+        self._open_clip_text_embedding_cache: Dict[Tuple[str, ...], torch.Tensor] = {}
         
         # Backend tracking
         self.sam_backend = None
@@ -815,6 +816,27 @@ class VLMPipeline:
         
         return best_label, best_score, label_avg_scores
 
+    def _get_open_clip_text_embeddings(self, prompts: List[str]) -> torch.Tensor:
+        """Get normalized text embeddings for prompts with lightweight in-memory caching."""
+        cache_key = tuple(prompts)
+        cached = self._open_clip_text_embedding_cache.get(cache_key)
+        if cached is not None:
+            return cached
+
+        tokenizer = self.bioclip_processor['tokenizer']
+        text_tokens = tokenizer(prompts).to(self.device)
+        with torch.no_grad():
+            text_embeds = self.bioclip.encode_text(text_tokens)
+            text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+
+        max_cache_size = int(self.vlm_config.get('open_clip_text_cache_size', 64))
+        if len(self._open_clip_text_embedding_cache) >= max_cache_size and max_cache_size > 0:
+            oldest_key = next(iter(self._open_clip_text_embedding_cache))
+            self._open_clip_text_embedding_cache.pop(oldest_key, None)
+        if max_cache_size > 0:
+            self._open_clip_text_embedding_cache[cache_key] = text_embeds
+        return text_embeds
+
     def _encode_and_score(self, image: Image.Image, prompts: List[str]) -> List[float]:
         """Encode image and score against text prompts."""
         try:
@@ -825,17 +847,14 @@ class VLMPipeline:
 
             if self.bioclip_backend == 'open_clip':
                 preprocess = self.bioclip_processor['preprocess']
-                tokenizer = self.bioclip_processor['tokenizer']
                 logit_scale = self._get_clip_logit_scale(self.bioclip)
 
                 image_tensor = preprocess(image).unsqueeze(0).to(self.device)
-                text_tokens = tokenizer(prompts).to(self.device)
+                text_embeds = self._get_open_clip_text_embeddings(prompts)
 
                 with torch.no_grad():
                     image_embeds = self.bioclip.encode_image(image_tensor)
-                    text_embeds = self.bioclip.encode_text(text_tokens)
                     image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
                     logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
                     scores = torch.softmax(logits_per_image, dim=-1)[0]
             else:
@@ -1315,15 +1334,16 @@ class VLMPipeline:
                 # Refine part prediction using dynamic crop-part compatibility map
                 compatible_parts = self._compatible_parts_for_crop(crop_label)
                 if compatible_parts:
-                    refined_part_label, refined_part_conf, _ = self._clip_score_labels_ensemble(
-                        roi_image,
-                        compatible_parts,
-                        label_type='part',
-                        num_prompts=part_num_prompts,
-                    )
-                    if refined_part_label != 'unknown':
-                        part_label = refined_part_label
-                        part_conf = refined_part_conf
+                    compatible_part_scores = {
+                        part_name: float(part_scores.get(part_name, 0.0))
+                        for part_name in compatible_parts
+                    }
+                    if compatible_part_scores:
+                        refined_part_label = max(compatible_part_scores, key=compatible_part_scores.get)
+                        refined_part_conf = float(compatible_part_scores.get(refined_part_label, 0.0))
+                        if refined_part_label:
+                            part_label = refined_part_label
+                            part_conf = refined_part_conf
 
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue
