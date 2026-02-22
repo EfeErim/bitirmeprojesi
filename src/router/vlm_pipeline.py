@@ -37,7 +37,12 @@ class VLMPipeline:
         # Backwards-compatible flat keys
         self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
         self.confidence_threshold = config.get('vlm_confidence_threshold', self.vlm_config.get('confidence_threshold', 0.7))
-        self.max_detections = config.get('vlm_max_detections', self.vlm_config.get('max_detections', 10))
+        configured_max = config.get('vlm_max_detections', self.vlm_config.get('max_detections', 0))
+        try:
+            configured_max_int = int(configured_max)
+        except Exception:
+            configured_max_int = 0
+        self.max_detections = None if configured_max_int <= 0 else configured_max_int
         self.open_set_enabled = config.get('vlm_open_set_enabled', self.vlm_config.get('open_set_enabled', True))
         self.open_set_min_confidence = float(
             config.get('vlm_open_set_min_confidence', self.vlm_config.get('open_set_min_confidence', 0.55))
@@ -76,6 +81,16 @@ class VLMPipeline:
                 logger.info(f"Loaded taxonomy from {self.taxonomy_path}: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
             except Exception as e:
                 logger.warning(f"Failed to load taxonomy from {self.taxonomy_path}: {e}")
+
+        # Optional dynamic crop->part compatibility map
+        self.crop_part_compatibility: Dict[str, List[str]] = {}
+        if taxonomy_available:
+            try:
+                self.crop_part_compatibility = self._load_crop_part_compatibility(self.taxonomy_path)
+                if self.crop_part_compatibility:
+                    logger.info(f"Loaded crop-part compatibility for {len(self.crop_part_compatibility)} crops")
+            except Exception as e:
+                logger.warning(f"Failed to load crop-part compatibility from {self.taxonomy_path}: {e}")
         
         # Fallback to config-specified labels only if taxonomy not loaded
         if not taxonomy_available:
@@ -87,6 +102,18 @@ class VLMPipeline:
             default_parts = sorted(set(parts_from_mapping))
             self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
             logger.info(f"Using config labels: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
+
+        if not self.crop_part_compatibility and isinstance(crop_mapping, dict):
+            for crop_name, crop_data in crop_mapping.items():
+                if not isinstance(crop_data, dict):
+                    continue
+                parts = crop_data.get('parts', [])
+                if not isinstance(parts, list):
+                    continue
+                normalized_crop = str(crop_name).strip().lower()
+                normalized_parts = [str(part).strip().lower() for part in parts if str(part).strip()]
+                if normalized_crop and normalized_parts:
+                    self.crop_part_compatibility[normalized_crop] = normalized_parts
         
         # DINO-specific model placeholders
         self.grounding_dino = None
@@ -164,6 +191,51 @@ class VLMPipeline:
         except Exception as e:
             logger.error(f"Failed to load taxonomy from {path}: {e}")
             return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
+
+    @staticmethod
+    def _load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
+        """Load optional crop_part_compatibility map from taxonomy JSON."""
+        from pathlib import Path
+
+        path = Path(taxonomy_path)
+        if not path.is_absolute():
+            if not path.exists():
+                file_dir = Path(__file__).parent
+                path = file_dir.parent.parent / taxonomy_path
+
+        if not path.exists():
+            return {}
+
+        with open(path, 'r', encoding='utf-8') as f:
+            taxonomy = json.load(f)
+
+        compatibility = taxonomy.get('crop_part_compatibility', {})
+        if not isinstance(compatibility, dict):
+            return {}
+
+        normalized: Dict[str, List[str]] = {}
+        for crop_name, parts in compatibility.items():
+            if not isinstance(parts, list):
+                continue
+            crop_key = str(crop_name).strip().lower()
+            part_values = [str(part).strip().lower() for part in parts if str(part).strip()]
+            if crop_key and part_values:
+                normalized[crop_key] = part_values
+        return normalized
+
+    def _compatible_parts_for_crop(self, crop_label: str) -> List[str]:
+        """Return configured compatible parts for a crop, filtered to active part labels."""
+        if not crop_label:
+            return []
+
+        crop_key = str(crop_label).strip().lower()
+        allowed_parts = self.crop_part_compatibility.get(crop_key, [])
+        if not allowed_parts:
+            return []
+
+        part_labels_by_lower = {str(label).strip().lower(): label for label in self.part_labels}
+        compatible = [part_labels_by_lower[part] for part in allowed_parts if part in part_labels_by_lower]
+        return compatible
 
     @staticmethod
     def _check_dependencies():
@@ -690,28 +762,23 @@ class VLMPipeline:
 
     def _get_prompt_templates_for_type(self, label_type: str) -> List[str]:
         """Get dynamic prompt templates from config."""
-        templates = self.vlm_config.get('prompt_templates', {})
-        if label_type == 'crop':
-            return templates.get('crop', [
-                "a photo of {term}",
-                "a close-up photo of {term}",
-                "a {term} plant",
-                "a {term} with disease",
-            ])
-        elif label_type == 'part':
-            return templates.get('part', [
-                "a photo of a plant {term}",
-                "a {term} with disease",
-                "a diseased plant {term}",
-            ])
-        return ["a photo of {term}"]
+        templates_cfg = self.vlm_config.get('prompt_templates', {})
+        if not isinstance(templates_cfg, dict):
+            templates_cfg = {}
+
+        label_templates = templates_cfg.get(label_type, templates_cfg.get('default', []))
+        if not isinstance(label_templates, list):
+            label_templates = []
+
+        cleaned_templates = [str(template).strip() for template in label_templates if str(template).strip()]
+        return cleaned_templates if cleaned_templates else ["{term}"]
 
     def _clip_score_labels_ensemble(
         self, 
         image: Image.Image, 
         labels: List[str],
         label_type: str = 'generic',
-        num_prompts: int = 3  # Use top-N prompt templates for robustness
+        num_prompts: Optional[int] = None
     ) -> Tuple[str, float, Dict[str, float]]:
         """
         Score text labels against image with multiple prompts for robustness.
@@ -720,7 +787,14 @@ class VLMPipeline:
         if not labels:
             return 'unknown', 0.0, {}
 
-        templates = self._get_prompt_templates_for_type(label_type)[:num_prompts]
+        templates = self._get_prompt_templates_for_type(label_type)
+        if num_prompts is not None:
+            try:
+                prompt_limit = int(num_prompts)
+            except Exception:
+                prompt_limit = 0
+            if prompt_limit > 0:
+                templates = templates[:prompt_limit]
         label_ensemble_scores = {label: [] for label in labels}
         
         # Score each label with each prompt template
@@ -805,43 +879,35 @@ class VLMPipeline:
         Select best crop with intelligent fallback based on part predictions.
         
         Logic:
-        1. If best crop score >= min_confidence, use it
-        2. If uncertain (confidence < threshold), check if part suggests specific crops:
-           - Uses part_to_crop_hints from config (e.g., tuber → potato/yam/cassava)
-        3. Otherwise, use best available crop
-        
-        All mapping is configurable and dynamic - no hardcoding.
+        1. Start from raw crop scores
+        2. If crop-part compatibility is available in taxonomy, rerank crops dynamically
+           using observed part probabilities (no static mapping table)
+        3. Return best crop after dynamic reranking
         """
         if not crop_scores:
             return 'unknown', 0.0
-        
-        sorted_crops = sorted(crop_scores.items(), key=lambda x: x[1], reverse=True)
-        best_crop, best_score = sorted_crops[0]
-        
-        # If confidence is good, use it
-        if best_score >= min_confidence:
-            return best_crop, best_score
-        
-        # Confidence is low - check if part hints at specific crop
-        part_to_crops = self.vlm_config.get('part_to_crop_hints', {})
-        hinted_crops = part_to_crops.get(part_label, part_to_crops.get('_default', []))
-        
-        if hinted_crops:
-            # Filter crop scores to only hinted crops
-            hinted_scores = {
-                crop: score for crop, score in crop_scores.items() 
-                if crop in hinted_crops
-            }
-            if hinted_scores:
-                hinted_best = max(hinted_scores, key=hinted_scores.get)
-                hinted_score = hinted_scores[hinted_best]
-                # Use hinted crop if it's reasonably close to best
-                margin_threshold = float(self.vlm_config.get('ensemble_config', {}).get('confidence_margin_threshold', 0.7))
-                if hinted_score >= best_score * margin_threshold:
-                    return hinted_best, hinted_score
-        
-        # No helpful hints - still return best, even if low confidence
-        # (caller can decide whether to filter out based on threshold)
+
+        best_crop_raw, best_score_raw = max(crop_scores.items(), key=lambda item: item[1])
+
+        if not part_scores:
+            return best_crop_raw, best_score_raw
+
+        # Dynamic uncertainty signal from current crop distribution (no fixed constants)
+        sorted_crop_scores = sorted(float(v) for v in crop_scores.values())
+        second_best = sorted_crop_scores[-2] if len(sorted_crop_scores) > 1 else 0.0
+        uncertainty = max(0.0, 1.0 - max(0.0, min(1.0, best_score_raw - second_best)))
+
+        reranked_scores: Dict[str, float] = {}
+        for crop_name, base_score in crop_scores.items():
+            compatible_parts = self._compatible_parts_for_crop(crop_name)
+            compatible_part_score = 0.0
+            if compatible_parts:
+                compatible_part_score = max(float(part_scores.get(part, 0.0)) for part in compatible_parts)
+
+            combined_score = float(base_score) + (1.0 - float(base_score)) * compatible_part_score * uncertainty
+            reranked_scores[crop_name] = combined_score
+
+        best_crop, best_score = max(reranked_scores.items(), key=lambda item: item[1])
         return best_crop, best_score
 
     def _clip_score_labels(
@@ -1117,7 +1183,7 @@ class VLMPipeline:
         self,
         image_tensor: Any,
         confidence_threshold: float = 0.8,
-        max_detections: int = 10
+        max_detections: Optional[int] = None
     ) -> Dict[str, Any]:
         """
         Analyze an image using SAM3 + BioCLIP-2.5.
@@ -1125,7 +1191,7 @@ class VLMPipeline:
         Args:
             image_tensor: Preprocessed image tensor
             confidence_threshold: Minimum confidence for detections
-            max_detections: Maximum number of detections to return
+            max_detections: Maximum detections to return; None/<=0 means no cap
             
         Returns:
             Dictionary with analysis results
@@ -1147,14 +1213,21 @@ class VLMPipeline:
         pil_image: Image.Image,
         image_size: Tuple[int, int, int],
         confidence_threshold: float = 0.8,
-        max_detections: int = 10
+        max_detections: Optional[int] = None
     ) -> Dict[str, Any]:
         """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
         import time
         start_time = time.perf_counter()
         
         effective_threshold = float(confidence_threshold)
-        effective_max_detections = int(max_detections)
+        if max_detections is None:
+            effective_max_detections = None
+        else:
+            try:
+                max_det_int = int(max_detections)
+            except Exception:
+                max_det_int = 0
+            effective_max_detections = None if max_det_int <= 0 else max_det_int
         image_width, image_height = pil_image.size
 
         # Load SAM3 parameters from config (no artificial clamps)
@@ -1165,8 +1238,16 @@ class VLMPipeline:
         min_box_side_px = float(self.vlm_config.get('min_box_side_px', 10))
         classification_min_confidence = float(self.vlm_config.get('classification_min_confidence', 0.20))
         ensemble_config = self.vlm_config.get('ensemble_config', {})
-        crop_num_prompts = max(1, int(ensemble_config.get('crop_num_prompts', 2)))
-        part_num_prompts = max(1, int(ensemble_config.get('part_num_prompts', 3)))
+        crop_num_prompts_raw = ensemble_config.get('crop_num_prompts', None)
+        part_num_prompts_raw = ensemble_config.get('part_num_prompts', None)
+        try:
+            crop_num_prompts = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
+        except Exception:
+            crop_num_prompts = None
+        try:
+            part_num_prompts = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
+        except Exception:
+            part_num_prompts = None
         
         # Use effective_threshold if it's higher (user override)
         classification_min_confidence = max(classification_min_confidence, effective_threshold)
@@ -1231,6 +1312,19 @@ class VLMPipeline:
                     min_confidence=classification_min_confidence
                 )
 
+                # Refine part prediction using dynamic crop-part compatibility map
+                compatible_parts = self._compatible_parts_for_crop(crop_label)
+                if compatible_parts:
+                    refined_part_label, refined_part_conf, _ = self._clip_score_labels_ensemble(
+                        roi_image,
+                        compatible_parts,
+                        label_type='part',
+                        num_prompts=part_num_prompts,
+                    )
+                    if refined_part_label != 'unknown':
+                        part_label = refined_part_label
+                        part_conf = refined_part_conf
+
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue
 
@@ -1255,7 +1349,8 @@ class VLMPipeline:
                 })
 
         detections.sort(key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
-        detections = detections[:effective_max_detections]
+        if effective_max_detections is not None:
+            detections = detections[:effective_max_detections]
         for det in detections:
             det.pop('_quality_score', None)
         
@@ -1305,14 +1400,21 @@ class VLMPipeline:
         pil_image: Image.Image,
         image_size: Tuple[int, int, int],
         confidence_threshold: float = 0.8,
-        max_detections: int = 10
+        max_detections: Optional[int] = None
     ) -> Dict[str, Any]:
         """Analyze using DINO + SAM2 + BioCLIP-2 pipeline (fallback)."""
         import time
         start_time = time.perf_counter()
 
         effective_threshold = float(confidence_threshold)
-        effective_max_detections = int(max_detections)
+        if max_detections is None:
+            effective_max_detections = None
+        else:
+            try:
+                max_det_int = int(max_detections)
+            except Exception:
+                max_det_int = 0
+            effective_max_detections = None if max_det_int <= 0 else max_det_int
 
         dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)
         detections = dino_out.get('detections', [])
@@ -1361,7 +1463,7 @@ class VLMPipeline:
             ],
             'image_size': image_size,
             'processing_time_ms': elapsed_ms,
-            'raw_detections': detections[:effective_max_detections],
+            'raw_detections': detections[:effective_max_detections] if effective_max_detections is not None else detections,
             'pipeline_type': 'dino_sam2_bioclip2'
         }
 
@@ -1419,7 +1521,12 @@ class DiagnosticScoutingAnalyzer:
         # Get configuration (support both flat and nested keys)
         vlm_conf = config.get('router', {}).get('vlm', {}) if isinstance(config.get('router'), dict) else {}
         self.confidence_threshold = config.get('vlm_confidence_threshold', vlm_conf.get('confidence_threshold', 0.8))
-        self.max_detections = config.get('vlm_max_detections', vlm_conf.get('max_detections', 10))
+        configured_max = config.get('vlm_max_detections', vlm_conf.get('max_detections', 0))
+        try:
+            configured_max_int = int(configured_max)
+        except Exception:
+            configured_max_int = 0
+        self.max_detections = None if configured_max_int <= 0 else configured_max_int
 
         logger.info(f"DiagnosticScoutingAnalyzer initialized on {self.device}")
 
