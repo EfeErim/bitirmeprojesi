@@ -265,9 +265,9 @@ def main() -> int:
     if args.sam_threshold is not None:
         chosen_threshold = float(args.sam_threshold)
     else:
-        cfg_threshold = pipeline.vlm_config.get("sam3_mask_threshold", 0.60)
+        cfg_threshold = pipeline.vlm_config.get("sam3_mask_threshold", 0.01)
         chosen_threshold = float(cfg_threshold)
-    chosen_threshold = clamp(chosen_threshold, 0.35, 0.95)
+    # No clamp - use threshold as-is (SAM3 scores are in 0-0.1 range)
 
     pil_image, _ = pipeline._coerce_image_input(str(image_path))
     width, height = pil_image.size
