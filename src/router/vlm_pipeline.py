@@ -373,7 +373,9 @@ class VLMPipeline:
         sam2_requested = 'sam2' in model_id.lower() or 'hiera' in model_id.lower() or model_id.lower().endswith('.pt')
         if sam2_requested:
             try:
-                from ultralytics import SAM
+                import importlib
+                ultralytics_module = importlib.import_module('ultralytics')
+                SAM = getattr(ultralytics_module, 'SAM')
 
                 checkpoint = model_id
                 if '/' in checkpoint and checkpoint.startswith('facebook/sam2'):
