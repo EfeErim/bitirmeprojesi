@@ -86,7 +86,7 @@ def test_non_strict_loading_falls_back_to_placeholder():
     # Models should remain None (not placeholder strings) - inspired by reference implementation
     assert pipeline.models_loaded is False
     assert pipeline.grounding_dino is None
-    assert pipeline.sam2 is None
+    assert pipeline.sam_model is None
     assert pipeline.bioclip is None
 
 

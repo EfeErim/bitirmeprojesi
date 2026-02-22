@@ -147,7 +147,7 @@ def _run_backend_health_check(pipeline: VLMPipeline) -> bool:
     checks = {
         'pipeline_ready': pipeline.is_ready(),
         'grounding_dino_loaded': pipeline.grounding_dino is not None,
-        'sam_loaded': pipeline.sam2 is not None,
+        'sam_loaded': pipeline.sam_model is not None,
         'bioclip_loaded': pipeline.bioclip is not None,
         'sam_backend_ultralytics': pipeline.sam_backend == 'ultralytics',
         'bioclip_backend_open_clip': pipeline.bioclip_backend == 'open_clip',

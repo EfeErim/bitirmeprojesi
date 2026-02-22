@@ -181,33 +181,16 @@ class IndependentMultiCropPipeline:
             return False
 
     def initialize_adapters(self) -> bool:
-        """Initialize all crop adapters."""
-        logger.info("Initializing crop adapters...")
+        """Initialize all crop adapters.
         
-        try:
-            # Initialize each adapter based on router configuration
-            crop_mapping = self.config.get('router', {}).get('crop_mapping', {})
-            
-            for crop_name, crop_config in crop_mapping.items():
-                adapter_path = crop_config.get('model_path')
-                if not adapter_path:
-                    logger.warning(f"No model path for crop {crop_name}, skipping")
-                    continue
-                
-                # Initialize adapter (placeholder - actual adapter initialization would go here)
-                self.adapters[crop_name] = {
-                    'path': adapter_path,
-                    'initialized': False,
-                    'config': crop_config
-                }
-                logger.info(f"Adapter initialized for {crop_name} at {adapter_path}")
-            
-            logger.info("All adapters initialized successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to initialize adapters: {e}")
-            return False
+        Currently bypassed - no trained adapters exist yet.
+        The VLM pipeline handles crop/part routing; disease classification
+        adapters will be added after training.
+        """
+        logger.info("Adapter initialization bypassed - no trained adapters available yet")
+        logger.info("VLM pipeline will handle crop/part routing only")
+        self.adapters = {}  # Explicitly empty - no adapters loaded
+        return True
 
     def process_image(
         self,
@@ -249,6 +232,8 @@ class IndependentMultiCropPipeline:
 
         # Preprocess image into tensor if needed. If a torch.Tensor is provided,
         # use it directly (tests pass tensors).
+        # Keep the original image for VLM routing (SAM3 needs full resolution)
+        original_image = image  # Preserve original for VLM router
         if isinstance(image, torch.Tensor):
             image_tensor = image
         else:
@@ -258,7 +243,7 @@ class IndependentMultiCropPipeline:
         # Router step (unless crop is specified)
         if crop is None:
             try:
-                router_result = self._route_image(image_tensor)
+                router_result = self._route_image(image_tensor, original_image=original_image)
             except Exception as e:
                 # Re-raise critical runtime errors (router not initialized)
                 if isinstance(e, RuntimeError):
@@ -277,8 +262,14 @@ class IndependentMultiCropPipeline:
                     image_tensor, crop, part, return_ood
                 )
             else:
-                # No adapter for predicted crop -> error
-                adapter_result = {'status': 'error', 'message': f'No adapter available', 'diagnosis': {'unknown': 1.0}, 'confidence': 0.0, 'ood_analysis': {'is_ood': True, 'ood_score': 1.0, 'threshold': 1.0}}
+                # No adapter for predicted crop -> not yet trained
+                adapter_result = {
+                    'status': 'no_adapter',
+                    'message': f"No trained adapter for crop '{crop}'",
+                    'diagnosis': None,
+                    'confidence': 0.0,
+                    'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
+                }
         else:
             # Handle unknown crop when router didn't select one
             adapter_result = self._handle_unknown_crop(image_tensor, crop, part)
@@ -405,8 +396,14 @@ class IndependentMultiCropPipeline:
 
         return results
 
-    def _route_image(self, image_tensor: torch.Tensor) -> Dict[str, Any]:
-        """Route image to appropriate crop adapter."""
+    def _route_image(self, image_tensor: torch.Tensor, original_image: Any = None) -> Dict[str, Any]:
+        """Route image to appropriate crop adapter.
+        
+        Args:
+            image_tensor: Preprocessed image tensor (224px, for adapter use)
+            original_image: Original unprocessed image (PIL/path/etc) for VLM router.
+                           SAM3 benefits from full-resolution images.
+        """
         if not self.router:
             raise RuntimeError("Router not initialized")
         
@@ -446,9 +443,11 @@ class IndependentMultiCropPipeline:
                 # Normalize raised errors to be handled by caller
                 raise
         else:
+            # Use original_image if available for better SAM3 resolution
+            router_input = original_image if original_image is not None else image_tensor
             router_result = self.router.analyze_image(
-                image_tensor,
-                confidence_threshold=router_config.get('vlm', {}).get('confidence_threshold', 0.8),
+                router_input,
+                confidence_threshold=router_config.get('vlm', {}).get('confidence_threshold', 0.7),
                 max_detections=router_config.get('vlm', {}).get('max_detections', 10)
             )
         
@@ -457,7 +456,16 @@ class IndependentMultiCropPipeline:
         best_part = None
         best_confidence = 0.0
         
-        for detection in router_result.get('detections', []):
+        detections = router_result.get('detections', [])
+        if not detections:
+            return {
+                'crop': 'unknown',
+                'part': 'unknown',
+                'confidence': 0.0,
+                'detections': []
+            }
+        
+        for detection in detections:
             crop_confidence = detection.get('crop_confidence', 0.0)
             if crop_confidence > best_confidence:
                 best_confidence = crop_confidence
@@ -478,9 +486,20 @@ class IndependentMultiCropPipeline:
         part: Optional[str],
         return_ood: bool
     ) -> Dict[str, Any]:
-        """Process image with specific crop adapter."""
+        """Process image with specific crop adapter.
+        
+        If no adapter is loaded for the given crop (expected when adapters
+        haven't been trained yet), returns a clear status indicating the
+        VLM routing succeeded but disease classification is unavailable.
+        """
         if crop not in self.adapters:
-            return {'status': 'error', 'message': f'No adapter available', 'diagnosis': {'unknown': 1.0}, 'confidence': 0.0, 'ood_analysis': {'is_ood': True, 'ood_score': 1.0, 'threshold': 1.0}}
+            return {
+                'status': 'no_adapter',
+                'message': f"No trained adapter for crop '{crop}'. VLM routing succeeded but disease classification is unavailable.",
+                'diagnosis': None,
+                'confidence': 0.0,
+                'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
+            }
         
         adapter_info = self.adapters[crop]
         
@@ -504,23 +523,14 @@ class IndependentMultiCropPipeline:
             except Exception as e:
                 return {'status': 'error', 'message': str(e), 'diagnosis': None, 'confidence': 0.0, 'ood_analysis': {'is_ood': True, 'ood_score': 1.0, 'threshold': 1.0}}
 
-        # Fallback placeholder behavior if adapter doesn't implement expected method
-        diagnosis = {
-            'healthy': 0.7,
-            'early_blight': 0.2,
-            'late_blight': 0.1
-        }
-        confidence = max(diagnosis.values())
-        ood_analysis = {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
-        if return_ood and self.config.get('ood', {}).get('enabled', True):
-            score, status = self._perform_ood_detection(image_tensor)
-            ood_analysis = {'is_ood': score > 0.5, 'ood_score': score, 'threshold': 0.5}
-
+        # No predict_with_ood method available on adapter
+        # This means the adapter is a placeholder dict, not a trained model
         return {
-            'status': 'success',
-            'diagnosis': diagnosis,
-            'confidence': confidence,
-            'ood_analysis': ood_analysis
+            'status': 'no_adapter',
+            'message': f"Adapter for crop '{crop}' is not yet trained.",
+            'diagnosis': None,
+            'confidence': 0.0,
+            'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
         }
 
     def _handle_unknown_crop(
@@ -539,16 +549,27 @@ class IndependentMultiCropPipeline:
             'ood_status': 'unknown_crop'
         }
 
-    def _perform_ood_detection(self, image_tensor: torch.Tensor) -> Tuple[float, str]:
-        """Perform OOD detection."""
+    def _perform_ood_detection(self, image_tensor: torch.Tensor, crop: Optional[str] = None) -> Tuple[float, str]:
+        """Perform OOD detection, delegating to adapter when available."""
         ood_config = self.config.get('ood', {})
-        
+
         if not ood_config.get('enabled', True):
             return 0.0, 'normal'
-        
-        # Placeholder OOD detection logic
-        # In a real implementation, this would use the configured OOD method
-        return 0.3, 'uncertain'
+
+        # Try adapter-level OOD if crop adapter exists
+        if crop and crop in self.adapters:
+            adapter = self.adapters[crop]
+            if hasattr(adapter, 'detect_ood_dynamic'):
+                try:
+                    ood_result = adapter.detect_ood_dynamic(image_tensor)
+                    score = ood_result.get('ood_score', 0.0)
+                    status = 'ood' if ood_result.get('is_ood', False) else 'normal'
+                    return float(score), status
+                except Exception as e:
+                    logger.warning(f"Adapter OOD detection failed for {crop}: {e}")
+
+        # No adapter available — return conservative default
+        return 0.0, 'normal'
 
     def _handle_ood_detection(self, result: Dict[str, Any], metadata: Optional[Dict] = None):
         """Handle OOD detection by annotating the result with recommendations.

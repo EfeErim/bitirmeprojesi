@@ -296,6 +296,82 @@ class IndependentCropAdapter:
             'ood_score': ood_score
         }
 
+    def predict_with_ood(self, image: torch.Tensor) -> Dict[str, Any]:
+        """
+        Run forward pass + classifier + dynamic OOD detection.
+
+        Returns dict with keys:
+            status: 'success' or 'error'
+            disease: dict with class_index, name, confidence
+            ood_analysis: dict with is_ood, ood_score, threshold, dynamic_threshold_applied, ood_type
+            recommendations: dict (present when OOD detected)
+        """
+        if not self.is_trained:
+            raise RuntimeError("Adapter must be trained before prediction")
+
+        if self.adapter is None or self.classifier is None:
+            raise RuntimeError("Adapter must be trained before prediction")
+
+        if image.dim() == 3:
+            image = image.unsqueeze(0)
+        image = image.to(self.device)
+
+        self.adapter.eval()
+        self.classifier.eval()
+
+        with torch.no_grad():
+            output = self.adapter(image)
+            if hasattr(output, 'last_hidden_state'):
+                features = output.last_hidden_state[:, 0]
+            else:
+                features = output
+
+            logits = self.classifier(features)
+            probs = torch.softmax(logits, dim=1)
+            confidence, predicted_class = probs.max(1)
+
+            predicted_idx = predicted_class.item()
+            confidence_val = confidence.item()
+
+        # OOD detection
+        if hasattr(self, '_detect_ood') and callable(self._detect_ood):
+            is_ood, ood_score, threshold = self._detect_ood(features)
+        else:
+            ood_result = self.detect_ood_dynamic(image)
+            is_ood = ood_result['is_ood']
+            ood_score = ood_result['mahalanobis_distance']
+            threshold = ood_result['threshold']
+
+        disease_name = (
+            self.disease_classes[predicted_idx]
+            if predicted_idx < len(self.disease_classes)
+            else 'unknown'
+        )
+
+        result: Dict[str, Any] = {
+            'status': 'success',
+            'disease': {
+                'class_index': predicted_idx,
+                'name': disease_name,
+                'confidence': confidence_val,
+            },
+            'ood_analysis': {
+                'is_ood': is_ood,
+                'ood_score': ood_score,
+                'threshold': threshold,
+                'dynamic_threshold_applied': True,
+                'ood_type': 'NEW_DISEASE_CANDIDATE' if is_ood else 'IN_DISTRIBUTION',
+            },
+        }
+
+        if is_ood:
+            result['recommendations'] = {
+                'expert_consultation': True,
+                'reason': f'Sample flagged as OOD (score={ood_score:.2f} > threshold={threshold:.2f})',
+            }
+
+        return result
+
     def phase2_add_disease(
         self,
         new_disease_name: str,

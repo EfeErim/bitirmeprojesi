@@ -5,8 +5,6 @@ transformers>=4.41.0  # Must have SAM3 support
 
 # Vision Models
 open-clip-torch>=2.20.0  # For BioCLIP-2.5
-ultralytics>=8.0.0  # For SAM2.1
-groundingdino-hf>=0.18.0  # For DINO fallback
 
 # HuggingFace Hub
 huggingface-hub>=0.17.0

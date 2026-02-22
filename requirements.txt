@@ -4,10 +4,14 @@ torch>=2.1.0
 torchvision>=0.15.0
 
 # Transformers and PEFT
-transformers>=4.40.0
+transformers>=4.41.0
 peft>=0.10.0
 accelerate>=0.20.0
 bitsandbytes>=0.41.0
+
+# Vision Language Models (VLM Pipeline)
+open-clip-torch>=2.20.0
+huggingface-hub>=0.17.0
 
 # Data Processing
 numpy>=1.24.0

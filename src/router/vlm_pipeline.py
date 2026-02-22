@@ -5,7 +5,6 @@ SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 """
 
 import torch
-import builtins
 import logging
 import json
 import os
@@ -37,7 +36,7 @@ class VLMPipeline:
         
         # Backwards-compatible flat keys
         self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
-        self.confidence_threshold = config.get('vlm_confidence_threshold', self.vlm_config.get('confidence_threshold', 0.8))
+        self.confidence_threshold = config.get('vlm_confidence_threshold', self.vlm_config.get('confidence_threshold', 0.7))
         self.max_detections = config.get('vlm_max_detections', self.vlm_config.get('max_detections', 10))
         self.open_set_enabled = config.get('vlm_open_set_enabled', self.vlm_config.get('open_set_enabled', True))
         self.open_set_min_confidence = float(
@@ -86,8 +85,8 @@ class VLMPipeline:
         self.grounding_dino = None
         self.grounding_dino_processor = None
         
-        # SAM model placeholders (can be SAM3 or SAM2)
-        self.sam2 = None
+        # SAM model placeholders
+        self.sam_model = None
         self.sam_processor = None
         
         # BioCLIP model placeholders (can be BioCLIP-2.5 or BioCLIP-2)
@@ -105,11 +104,6 @@ class VLMPipeline:
         logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
         if torch.cuda.is_available():
             logger.info(f"GPU device: {torch.cuda.get_device_name(0)}, Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
-        # Make torch available in builtins for tests that omit an explicit import
-        try:
-            builtins.torch = torch
-        except Exception:
-            pass
 
     @staticmethod
     def _load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
@@ -248,7 +242,7 @@ class VLMPipeline:
         
         # Store models (sam2 field reused for sam3, bioclip_processor adapted)
         self.sam_processor = sam3_processor
-        self.sam2 = sam3_model  # Reuse sam2 slot for sam3
+        self.sam_model = sam3_model
         self.sam_backend = 'sam3'
         
         self.bioclip = model
@@ -266,7 +260,7 @@ class VLMPipeline:
         return bool(
             self.models_loaded
             and self.actual_pipeline == 'sam3'
-            and self.sam2 is not None  # sam3 stored in sam2 slot
+            and self.sam_model is not None
             and self.sam_processor is not None
             and self.bioclip is not None
             and self.bioclip_processor is not None
@@ -844,9 +838,9 @@ class VLMPipeline:
                 image_np = np.array(image.convert('RGB'))
                 xyxy = [float(v) for v in bbox]
                 try:
-                    results = self.sam2(image_np, bboxes=[xyxy], verbose=False)
+                    results = self.sam_model(image_np, bboxes=[xyxy], verbose=False)
                 except Exception:
-                    results = self.sam2.predict(image_np, bboxes=[xyxy], verbose=False)
+                    results = self.sam_model.predict(image_np, bboxes=[xyxy], verbose=False)
 
                 if not results:
                     return None
@@ -865,7 +859,7 @@ class VLMPipeline:
             sam_inputs = self.sam_processor(images=image, input_boxes=input_boxes, return_tensors='pt')
             sam_inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in sam_inputs.items()}
             with torch.no_grad():
-                sam_outputs = self.sam2(**sam_inputs)
+                sam_outputs = self.sam_model(**sam_inputs)
             masks = self.sam_processor.image_processor.post_process_masks(
                 sam_outputs.pred_masks.cpu(),
                 sam_inputs['original_sizes'].cpu(),
@@ -996,7 +990,7 @@ class VLMPipeline:
             inputs = self.sam_processor(images=image, text=prompt, return_tensors="pt").to(self.device)
             
             with torch.no_grad():
-                outputs = self.sam2(**inputs)  # sam3 stored in sam2 slot
+                outputs = self.sam_model(**inputs)
             
             # Post-process
             results = self.sam_processor.post_process_instance_segmentation(
@@ -1017,7 +1011,7 @@ class VLMPipeline:
             }
         except Exception as e:
             logger.error(f"SAM3 inference failed: {e}")
-            return {'masks': [], 'boxes': [], 'scores': []}
+            return {'masks': [], 'boxes': [], 'scores': [], 'error': str(e)}
     
     def _analyze_image_dino(
         self,
