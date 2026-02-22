@@ -46,13 +46,29 @@ print("✅ Confirmed: Working in correct directory")
 # Add project to path
 
 def ensure_ultralytics():
-    """Ensure ultralytics is installed for SAM2 backend."""
+    """Ensure ultralytics is installed when SAM2 backend is requested."""
     try:
         import ultralytics  # noqa: F401
         return
     except Exception:
         print("📦 Installing ultralytics for SAM2 backend...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "ultralytics"])
+
+
+def _sam_requires_ultralytics(config: dict) -> bool:
+    """Return True only when configured SAM model points to SAM2/Ultralytics path."""
+    sam_model_id = (
+        config.get('router', {})
+        .get('vlm', {})
+        .get('model_ids', {})
+        .get('sam', '')
+    )
+    sam_model_id = str(sam_model_id).lower()
+    return (
+        'sam2' in sam_model_id
+        or 'hiera' in sam_model_id
+        or sam_model_id.endswith('.pt')
+    )
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
@@ -71,7 +87,7 @@ def _safe_import_version(module_name: str) -> str:
         return 'not-installed'
 
 
-def _run_preflight() -> None:
+def _run_preflight(sam_requires_ultralytics: bool) -> None:
     print("\n🩺 Preflight")
     print(f"  Python: {platform.python_version()}")
     print(f"  Torch: {torch.__version__}")
@@ -85,8 +101,10 @@ def _run_preflight() -> None:
     critical_packages = {
         'transformers': 'transformers',
         'open_clip': 'open-clip-torch',
+        'huggingface_hub': 'huggingface-hub',
+    }
+    optional_packages = {
         'ultralytics': 'ultralytics',
-        'groundingdino': 'groundingdino-hf',
     }
     
     missing_deps = []
@@ -97,6 +115,17 @@ def _run_preflight() -> None:
         except ImportError:
             print(f"  ❌ {pkg_name}: NOT INSTALLED (run: !pip install {pip_name})")
             missing_deps.append(pip_name)
+
+    for pkg_name, pip_name in optional_packages.items():
+        try:
+            __import__(pkg_name)
+            print(f"  ✅ {pkg_name}: {_safe_import_version(pkg_name)} (optional)")
+        except ImportError:
+            if sam_requires_ultralytics:
+                print(f"  ❌ {pkg_name}: REQUIRED for SAM2 (run: !pip install {pip_name})")
+                missing_deps.append(pip_name)
+            else:
+                print(f"  ℹ️  {pkg_name}: not installed (optional; needed only for SAM2)")
     
     if missing_deps:
         print(f"\n⚠️  Missing dependencies detected!")
@@ -142,14 +171,14 @@ def _print_actionable_hint(exc: Exception) -> None:
         print("Hint: check generated report file for full traceback and environment snapshot.")
 
 
-def _run_backend_health_check(pipeline: VLMPipeline) -> bool:
+def _run_backend_health_check(pipeline: VLMPipeline, sam_requires_ultralytics: bool) -> bool:
     """Validate that all expected backends and model handles are loaded."""
+    expected_sam_backend = 'ultralytics' if sam_requires_ultralytics else 'sam3'
     checks = {
         'pipeline_ready': pipeline.is_ready(),
-        'grounding_dino_loaded': pipeline.grounding_dino is not None,
         'sam_loaded': pipeline.sam_model is not None,
         'bioclip_loaded': pipeline.bioclip is not None,
-        'sam_backend_ultralytics': pipeline.sam_backend == 'ultralytics',
+        f'sam_backend_{expected_sam_backend}': pipeline.sam_backend == expected_sam_backend,
         'bioclip_backend_open_clip': pipeline.bioclip_backend == 'open_clip',
     }
 
@@ -161,10 +190,11 @@ def _run_backend_health_check(pipeline: VLMPipeline) -> bool:
     return all(checks.values())
 
 
-def ensure_dependencies():
-    """Install runtime dependencies required for SAM2 + BioCLIP2 in Colab."""
-    packages = [('ultralytics', 'ultralytics'), ('open-clip-torch', 'open_clip')]
-    ensure_ultralytics()
+def ensure_dependencies(sam_requires_ultralytics: bool):
+    """Install runtime dependencies for selected SAM backend and BioCLIP."""
+    packages = [('open-clip-torch', 'open_clip')]
+    if sam_requires_ultralytics:
+        ensure_ultralytics()
     for package_name, import_name in packages:
         try:
             __import__(import_name)
@@ -208,9 +238,6 @@ def _load_test_image(cli_image_path: str = '') -> tuple[Image.Image, str]:
 
 def main(cli_image_path: str = '', health_only: bool = False):
     """Run interactive VLM test with image upload."""
-    _run_preflight()
-    ensure_dependencies()
-    
     # Configuration
     config = {
         'vlm_enabled': True,
@@ -234,14 +261,18 @@ def main(cli_image_path: str = '', health_only: bool = False):
                 'model_source': 'huggingface',
                 'model_ids': {
                     'grounding_dino': 'IDEA-Research/grounding-dino-base',
-                    'sam': 'sam2_b.pt',
-                    'bioclip': 'imageomics/bioclip-2'
+                    'sam': 'facebook/sam3',
+                    'bioclip': 'imageomics/bioclip-2.5-vith14'
                 },
                 'confidence_threshold': 0.3,
                 'max_detections': 5
             }
         }
     }
+
+    sam_requires_ultralytics = _sam_requires_ultralytics(config)
+    _run_preflight(sam_requires_ultralytics)
+    ensure_dependencies(sam_requires_ultralytics)
     
     # Initialize
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -257,7 +288,7 @@ def main(cli_image_path: str = '', health_only: bool = False):
     pipeline = VLMPipeline(config=config, device=device)
     
     # Load models
-    print("\n⏳ Loading models (GroundingDINO + SAM2 + BioCLIP2)...")
+    print("\n⏳ Loading models (SAM3 + BioCLIP-2.5)...")
     print("   First run may take 2-3 minutes to download...\n")
     
     import time
@@ -269,7 +300,7 @@ def main(cli_image_path: str = '', health_only: bool = False):
     print(f"   - SAM backend: {pipeline.sam_backend}")
     print(f"   - BioCLIP backend: {pipeline.bioclip_backend}")
 
-    if not _run_backend_health_check(pipeline):
+    if not _run_backend_health_check(pipeline, sam_requires_ultralytics):
         raise RuntimeError('Backend health-check failed. See checklist above.')
 
     if health_only:
@@ -302,9 +333,8 @@ def main(cli_image_path: str = '', health_only: bool = False):
     print("🔍 Running VLM Analysis")
     print(f"{'='*60}\n")
     print("Pipeline stages:")
-    print("  1️⃣ GroundingDINO: Detect plant regions")
-    print("  2️⃣ SAM2: Segment detected regions")
-    print("  3️⃣ BioCLIP2: Classify crop type & plant part\n")
+    print("  1️⃣ SAM3: Segment plant regions")
+    print("  2️⃣ BioCLIP-2.5: Classify crop type & plant part\n")
     
     # Prepare tensor
     import torchvision.transforms as T
@@ -317,7 +347,7 @@ def main(cli_image_path: str = '', health_only: bool = False):
     # Analyze
     start = time.time()
     result = pipeline.analyze_image(
-        image_tensor,
+        test_image,
         confidence_threshold=0.3,
         max_detections=5
     )
