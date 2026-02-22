@@ -96,8 +96,10 @@ def test_taxonomy_loading():
     print("\nNext: Test in Colab with real models and your leaf image!")
     print("Run: %run scripts/colab_vlm_quick_test.py")
     print("="*70 + "\n")
-    
-    return True
+
+    assert len(pipeline_dynamic.crop_labels) > 0
+    assert len(pipeline_dynamic.part_labels) > 0
+    assert len(covered) >= 5
 
 
 if __name__ == '__main__':

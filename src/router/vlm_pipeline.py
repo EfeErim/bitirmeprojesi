@@ -1255,6 +1255,15 @@ class VLMPipeline:
         """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
         import time
         start_time = time.perf_counter()
+        timing_logs_enabled = bool(self.vlm_config.get('timing_logs_enabled', True))
+        stage_timings_ms: Dict[str, float] = {
+            'preprocess': 0.0,
+            'sam3_inference': 0.0,
+            'roi_total': 0.0,
+            'roi_classification': 0.0,
+            'postprocess': 0.0,
+        }
+        stage_start = time.perf_counter()
         
         effective_threshold = float(confidence_threshold)
         if max_detections is None:
@@ -1266,6 +1275,7 @@ class VLMPipeline:
                 max_det_int = 0
             effective_max_detections = None if max_det_int <= 0 else max_det_int
         image_width, image_height = pil_image.size
+        stage_timings_ms['preprocess'] = (time.perf_counter() - stage_start) * 1000.0
 
         # Load SAM3 parameters from config (no artificial clamps)
         sam3_threshold_cfg = self.vlm_config.get('sam3_mask_threshold', 0.60)
@@ -1297,7 +1307,9 @@ class VLMPipeline:
         
         # SAM3 with configurable text prompt (default "plant" works for leaves, fruits, stems, etc.)
         sam3_prompt = self.vlm_config.get('sam3_text_prompt', 'plant')
+        stage_start = time.perf_counter()
         sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=sam3_threshold)
+        stage_timings_ms['sam3_inference'] = (time.perf_counter() - stage_start) * 1000.0
         masks = sam3_results.get('masks', [])
         boxes = sam3_results.get('boxes', [])
         scores = sam3_results.get('scores', [])
@@ -1310,8 +1322,13 @@ class VLMPipeline:
             mask_count = 0
         
         detections = []
+        roi_seen = 0
+        roi_kept = 0
+        roi_classification_calls = 0
         if mask_count > 0:
+            roi_stage_start = time.perf_counter()
             for box, score in zip(boxes, scores):
+                roi_seen += 1
                 sam3_score = float(score)
                 if sam3_score < sam3_threshold:
                     continue
@@ -1332,16 +1349,21 @@ class VLMPipeline:
                 
                 # Extract ROI
                 roi_image = self._extract_roi(pil_image, bbox)
+
+                classify_start = time.perf_counter()
                 
                 # Classify parts first (used for crop inference fallback)
                 part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
                     roi_image, self.part_labels, label_type='part', num_prompts=part_num_prompts
                 )
+                roi_classification_calls += 1
                 
                 # Classify crops with ensemble for robustness to disease/damage
                 crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
                     roi_image, self.crop_labels, label_type='crop', num_prompts=crop_num_prompts
                 )
+                roi_classification_calls += 1
+                stage_timings_ms['roi_classification'] += (time.perf_counter() - classify_start) * 1000.0
                 
                 # Intelligent fallback: use part to resolve uncertain crop classifications
                 crop_label, crop_conf = self._select_best_crop_with_fallback(
@@ -1385,18 +1407,51 @@ class VLMPipeline:
                     'sam3_score': sam3_score,
                     '_quality_score': quality_score,
                 })
+                roi_kept += 1
+            stage_timings_ms['roi_total'] = (time.perf_counter() - roi_stage_start) * 1000.0
 
+        stage_start = time.perf_counter()
         detections.sort(key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
         if effective_max_detections is not None:
             detections = detections[:effective_max_detections]
         for det in detections:
             det.pop('_quality_score', None)
+        stage_timings_ms['postprocess'] = (time.perf_counter() - stage_start) * 1000.0
         
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+        avg_roi_ms = (stage_timings_ms['roi_total'] / roi_seen) if roi_seen > 0 else 0.0
+        avg_classification_ms = (stage_timings_ms['roi_classification'] / roi_classification_calls) if roi_classification_calls > 0 else 0.0
+        stage_summary = {
+            'preprocess': round(stage_timings_ms['preprocess'], 2),
+            'sam3_inference': round(stage_timings_ms['sam3_inference'], 2),
+            'roi_total': round(stage_timings_ms['roi_total'], 2),
+            'roi_classification': round(stage_timings_ms['roi_classification'], 2),
+            'postprocess': round(stage_timings_ms['postprocess'], 2),
+            'avg_roi': round(avg_roi_ms, 2),
+            'avg_classification_call': round(avg_classification_ms, 2),
+        }
+
+        if timing_logs_enabled:
+            logger.info(
+                "[TIMING] SAM3 pipeline | total=%.2fms | sam3=%.2fms | roi_total=%.2fms | roi_class=%.2fms | rois=%d | kept=%d",
+                elapsed_ms,
+                stage_timings_ms['sam3_inference'],
+                stage_timings_ms['roi_total'],
+                stage_timings_ms['roi_classification'],
+                roi_seen,
+                roi_kept,
+            )
+
         return {
             'detections': detections,
             'image_size': image_size,
             'processing_time_ms': elapsed_ms,
+            'stage_timings_ms': stage_summary,
+            'roi_stats': {
+                'seen': roi_seen,
+                'retained': roi_kept,
+                'classification_calls': roi_classification_calls,
+            },
             'pipeline_type': 'sam3_bioclip25',
             'sam3_instances': mask_count,
             'sam3_threshold': sam3_threshold,
