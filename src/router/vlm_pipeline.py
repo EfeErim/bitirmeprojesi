@@ -748,20 +748,45 @@ class VLMPipeline:
             # Ensure image is PIL
             if not isinstance(image, PILImage.Image):
                 image = PILImage.fromarray(np.array(image))
-            
-            # Process image
-            image_input = self.bioclip_processor(images=image, return_tensors="pt", padding=True).to(self.device)
-            
-            # Process text
-            text_input = self.bioclip_processor(text=prompts, return_tensors="pt", padding=True).to(self.device)
-            
-            with torch.no_grad():
-                image_features = self.bioclip(image_input['pixel_values'])
-                text_features = self.bioclip.get_text_features(text_input['input_ids'], text_input['attention_mask'])
-            
-            # Compute similarity
-            logits_per_image = image_features @ text_features.T
-            scores = torch.nn.functional.softmax(logits_per_image, dim=-1)[0]
+
+            if self.bioclip_backend == 'open_clip':
+                preprocess = self.bioclip_processor['preprocess']
+                tokenizer = self.bioclip_processor['tokenizer']
+                logit_scale = self._get_clip_logit_scale(self.bioclip)
+
+                image_tensor = preprocess(image).unsqueeze(0).to(self.device)
+                text_tokens = tokenizer(prompts).to(self.device)
+
+                with torch.no_grad():
+                    image_embeds = self.bioclip.encode_image(image_tensor)
+                    text_embeds = self.bioclip.encode_text(text_tokens)
+                    image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+                    logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
+                    scores = torch.softmax(logits_per_image, dim=-1)[0]
+            else:
+                model_inputs = self.bioclip_processor(
+                    text=prompts,
+                    images=image,
+                    return_tensors='pt',
+                    padding=True
+                )
+                model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
+
+                with torch.no_grad():
+                    outputs = self.bioclip(**model_inputs)
+                    if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
+                        logits_per_image = outputs.logits_per_image
+                    elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
+                        image_embeds = outputs.image_embeds
+                        text_embeds = outputs.text_embeds
+                        image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+                        text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+                        logit_scale = self._get_clip_logit_scale(self.bioclip)
+                        logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
+                    else:
+                        raise RuntimeError('BioCLIP model output does not provide logits_per_image or embeddable outputs')
+                    scores = torch.softmax(logits_per_image, dim=-1)[0]
             
             return scores.cpu().numpy().tolist()
         except Exception as e:
@@ -1139,6 +1164,9 @@ class VLMPipeline:
         min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.001))
         min_box_side_px = float(self.vlm_config.get('min_box_side_px', 10))
         classification_min_confidence = float(self.vlm_config.get('classification_min_confidence', 0.20))
+        ensemble_config = self.vlm_config.get('ensemble_config', {})
+        crop_num_prompts = max(1, int(ensemble_config.get('crop_num_prompts', 2)))
+        part_num_prompts = max(1, int(ensemble_config.get('part_num_prompts', 3)))
         
         # Use effective_threshold if it's higher (user override)
         classification_min_confidence = max(classification_min_confidence, effective_threshold)
@@ -1189,12 +1217,12 @@ class VLMPipeline:
                 
                 # Classify parts first (used for crop inference fallback)
                 part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
-                    roi_image, self.part_labels, label_type='part', num_prompts=3
+                    roi_image, self.part_labels, label_type='part', num_prompts=part_num_prompts
                 )
                 
                 # Classify crops with ensemble for robustness to disease/damage
                 crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
-                    roi_image, self.crop_labels, label_type='crop', num_prompts=2
+                    roi_image, self.crop_labels, label_type='crop', num_prompts=crop_num_prompts
                 )
                 
                 # Intelligent fallback: use part to resolve uncertain crop classifications
