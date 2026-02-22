@@ -145,9 +145,20 @@ class VLMPipeline:
             ornamentals = taxonomy.get('ornamentals', [])
             
             all_crops = crops + weeds + ornamentals
-            parts = taxonomy.get('parts', [])
             
-            logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
+            # Handle tiered parts structure
+            parts_data = taxonomy.get('parts', [])
+            if isinstance(parts_data, dict):
+                # New tiered structure: use core + extended (skip specialized)
+                core_parts = parts_data.get('core', [])
+                extended_parts = parts_data.get('extended', [])
+                parts = core_parts + extended_parts
+                logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} crops, {len(parts)} parts (core+extended)")
+            else:
+                # Old flat list structure
+                parts = parts_data
+                logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
+            
             return all_crops, parts
             
         except Exception as e:

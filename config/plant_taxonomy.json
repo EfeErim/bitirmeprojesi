@@ -125,17 +125,34 @@
     "severe - 51-75% affected",
     "very severe - 76-100% affected"
   ],
-  "parts": [
-    "leaf", "fruit", "flower", "stem", "root", "seed",
-    "whole plant", "tuber", "bulb", "pod", "grain",
-    "branch", "trunk", "bark", "bud", "shoot",
-    "ear", "spike", "tassel", "cob", "kernel",
-    "berry", "nut", "shell", "husk", "peel",
-    "vine", "tendril", "node", "internode",
-    "petiole", "blade", "vein", "margin",
-    "crown", "collar", "sheath", "stolon", "rhizome",
-    "seedling", "sprout", "cotyledon"
-  ],
+  "parts": {
+    "core": [
+      "leaf", "fruit", "flower", "stem", "root",
+      "whole plant", "seed", "bud", "shoot", "seedling"
+    ],
+    "extended": [
+      "tuber", "bulb", "pod", "grain", "berry", "nut",
+      "branch", "trunk", "bark", "peel", "shell", "husk",
+      "ear", "spike", "tassel", "cob"
+    ],
+    "specialized": [
+      "vine", "tendril", "node", "internode",
+      "petiole", "blade", "vein", "margin",
+      "crown", "collar", "sheath", "stolon", "rhizome",
+      "kernel", "sprout", "cotyledon"
+    ]
+  },
+  "crop_part_compatibility": {
+    "tomato": ["leaf", "fruit", "flower", "stem", "whole plant", "seed", "bud", "shoot", "seedling"],
+    "potato": ["leaf", "tuber", "flower", "stem", "root", "whole plant", "shoot", "seedling"],
+    "grape": ["leaf", "fruit", "berry", "vine", "stem", "whole plant", "tendril", "shoot"],
+    "wheat": ["leaf", "grain", "ear", "spike", "stem", "root", "whole plant", "kernel", "seedling"],
+    "corn": ["leaf", "grain", "ear", "tassel", "cob", "kernel", "stem", "root", "whole plant", "shoot", "seedling"],
+    "apple": ["leaf", "fruit", "flower", "branch", "bark", "stem", "whole plant", "bud", "seed"],
+    "pepper": ["leaf", "fruit", "flower", "stem", "whole plant", "seed", "bud", "shoot", "seedling"],
+    "cucumber": ["leaf", "fruit", "flower", "vine", "stem", "whole plant", "seed", "tendril", "seedling"],
+    "strawberry": ["leaf", "fruit", "berry", "flower", "crown", "root", "whole plant", "shoot", "seedling"]
+  },
   "common_weeds": [
     "dandelion", "clover", "thistle", "nettle", "dock",
     "chickweed", "plantain", "purslane", "lambsquarters"
