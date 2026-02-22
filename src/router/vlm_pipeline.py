@@ -67,12 +67,18 @@ class VLMPipeline:
         
         crop_mapping = router_config.get('crop_mapping', {}) if isinstance(router_config, dict) else {}
         
-        if self.use_dynamic_taxonomy:
-            # Load comprehensive taxonomy from file
-            self.crop_labels, self.part_labels = self._load_taxonomy(self.taxonomy_path)
-            logger.info(f"Loaded dynamic taxonomy: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
-        else:
-            # Use config-specified labels (original behavior)
+        # Always try to load from taxonomy first if available
+        taxonomy_available = False
+        if self.use_dynamic_taxonomy or not self.vlm_config.get('crop_labels'):
+            try:
+                self.crop_labels, self.part_labels = self._load_taxonomy(self.taxonomy_path)
+                taxonomy_available = True
+                logger.info(f"Loaded taxonomy from {self.taxonomy_path}: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
+            except Exception as e:
+                logger.warning(f"Failed to load taxonomy from {self.taxonomy_path}: {e}")
+        
+        # Fallback to config-specified labels only if taxonomy not loaded
+        if not taxonomy_available:
             self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
             parts_from_mapping = []
             for crop_data in crop_mapping.values() if isinstance(crop_mapping, dict) else []:
@@ -80,6 +86,7 @@ class VLMPipeline:
                     parts_from_mapping.extend(crop_data.get('parts', []))
             default_parts = sorted(set(parts_from_mapping))
             self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
+            logger.info(f"Using config labels: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
         
         # DINO-specific model placeholders
         self.grounding_dino = None
@@ -367,29 +374,40 @@ class VLMPipeline:
         if not label_text:
             return []
 
+        # Use configurable templates if available, otherwise fallback to defaults
+        custom_templates = self.vlm_config.get('prompt_templates', {}).get(label_type, [])
+        
         if label_type == 'part':
+            if custom_templates:
+                templates = custom_templates
+            else:
+                templates = [
+                    "a photo of a plant {term}",
+                    "a close-up photo of a plant {term}",
+                    "a macro photo of a plant {term}",
+                    "a {term} with damage",
+                    "a {term} with disease",
+                    "a diseased plant {term}",
+                ]
             base_terms = [label_text]
-            templates = [
-                "a photo of a plant {term}",
-                "a close-up photo of a plant {term}",
-                "a macro photo of a plant {term}",
-                "a {term} with damage",
-                "a {term} with disease",
-            ]
         else:
             aliases = self._crop_prompt_aliases()
             alias_terms = aliases.get(label_text.lower(), [label_text])
             base_terms = [term for term in [label_text, *alias_terms] if isinstance(term, str) and term.strip()]
-            templates = [
-                "a photo of {term}",
-                "a close-up photo of {term}",
-                "a macro photo of {term}",
-                "an image of {term}",
-                "a {term} crop",
-                "a {term} plant with disease",
-                "a {term} leaf with damage",
-                "a diseased {term}",
-            ]
+            
+            if custom_templates:
+                templates = custom_templates
+            else:
+                templates = [
+                    "a photo of {term}",
+                    "a close-up photo of {term}",
+                    "a macro photo of {term}",
+                    "an image of {term}",
+                    "a {term} crop",
+                    "a {term} plant",
+                    "a {term} with disease",
+                    "a diseased {term}",
+                ]
 
         prompts: List[str] = []
         seen = set()
@@ -972,15 +990,22 @@ class VLMPipeline:
         effective_max_detections = int(max_detections)
         image_width, image_height = pil_image.size
 
+        # Load SAM3 parameters from config (no artificial clamps)
         sam3_threshold_cfg = self.vlm_config.get('sam3_mask_threshold', 0.60)
-        sam3_threshold = max(0.35, min(0.95, float(sam3_threshold_cfg)))
+        sam3_threshold = float(sam3_threshold_cfg)
 
-        min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.003))
-        min_box_side_px = float(self.vlm_config.get('min_box_side_px', 18))
-        classification_min_confidence = max(
-            float(self.vlm_config.get('classification_min_confidence', 0.30)),
-            effective_threshold,
-        )
+        min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.001))
+        min_box_side_px = float(self.vlm_config.get('min_box_side_px', 10))
+        classification_min_confidence = float(self.vlm_config.get('classification_min_confidence', 0.20))
+        
+        # Use effective_threshold if it's higher (user override)
+        classification_min_confidence = max(classification_min_confidence, effective_threshold)
+        
+        # Load quality score weights from config
+        quality_weights = self.vlm_config.get('quality_score_weights', {})
+        weight_crop = float(quality_weights.get('crop_confidence', 0.65))
+        weight_part = float(quality_weights.get('part_confidence', 0.20))
+        weight_sam3 = float(quality_weights.get('sam3_score', 0.15))
         
         # SAM3 with configurable text prompt (default "plant" works for leaves, fruits, stems, etc.)
         sam3_prompt = self.vlm_config.get('sam3_text_prompt', 'plant')
@@ -1027,7 +1052,12 @@ class VLMPipeline:
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue
 
-                quality_score = 0.65 * float(crop_conf) + 0.20 * float(part_conf) + 0.15 * sam3_score
+                # Calculate quality score with configurable weights
+                quality_score = (
+                    weight_crop * float(crop_conf) + 
+                    weight_part * float(part_conf) + 
+                    weight_sam3 * sam3_score
+                )
                 
                 detections.append({
                     'crop': crop_label,

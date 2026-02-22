@@ -12,7 +12,17 @@
     "cherry", "plum", "peach", "apricot", "pear",
     "walnut", "almond", "hazelnut", "pecan",
     "coffee", "tea", "cacao", "vanilla",
-    "basil", "parsley", "cilantro", "mint", "rosemary", "thyme"
+    "basil", "parsley", "cilantro", "mint", "rosemary", "thyme",
+    "watermelon", "melon", "cantaloupe", "honeydew",
+    "eggplant", "okra", "asparagus", "celery", "kale",
+    "garlic", "leek", "shallot", "chive",
+    "ginger", "turmeric", "cardamom", "black pepper",
+    "pineapple", "papaya", "avocado", "guava", "fig",
+    "blueberry", "raspberry", "blackberry", "cranberry", "gooseberry",
+    "dates", "pomegranate", "kiwi", "passionfruit",
+    "barley", "oats", "rye", "millet", "sorghum", "quinoa",
+    "arugula", "chard", "bok choy", "collard greens", "mustard greens",
+    "fennel", "dill", "oregano", "sage", "chives", "tarragon"
   ],
   "crop_specific_diseases": {
     "tomato": [
@@ -118,7 +128,13 @@
   "parts": [
     "leaf", "fruit", "flower", "stem", "root", "seed",
     "whole plant", "tuber", "bulb", "pod", "grain",
-    "branch", "trunk", "bark", "bud", "shoot"
+    "branch", "trunk", "bark", "bud", "shoot",
+    "ear", "spike", "tassel", "cob", "kernel",
+    "berry", "nut", "shell", "husk", "peel",
+    "vine", "tendril", "node", "internode",
+    "petiole", "blade", "vein", "margin",
+    "crown", "collar", "sheath", "stolon", "rhizome",
+    "seedling", "sprout", "cotyledon"
   ],
   "common_weeds": [
     "dandelion", "clover", "thistle", "nettle", "dock",

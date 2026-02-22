@@ -89,11 +89,11 @@
       "strict_model_loading": true,
       "model_source": "huggingface",
       "pipeline_mode": "sam3",
-      "confidence_threshold": 0.7,
+      "confidence_threshold": 0.25,
       "open_set_enabled": true,
-      "open_set_min_confidence": 0.35,
-      "open_set_margin": 0.02,
-      "max_detections": 10,
+      "open_set_min_confidence": 0.25,
+      "open_set_margin": 0.01,
+      "max_detections": 50,
       "use_dynamic_taxonomy": true,
       "taxonomy_path": "config/plant_taxonomy.json",
       "model_ids": {
@@ -103,11 +103,34 @@
       },
       "sam3_text_prompt": "plant",
       "sam3_mask_threshold": 0.60,
-      "min_box_area_ratio": 0.003,
-      "min_box_side_px": 18,
-      "classification_min_confidence": 0.30,
-      "crop_labels": ["tomato", "potato", "wheat"],
-      "part_labels": ["leaf", "fruit", "stem", "whole", "tuber", "ear"]
+      "min_box_area_ratio": 0.001,
+      "min_box_side_px": 10,
+      "classification_min_confidence": 0.20,
+      "quality_score_weights": {
+        "crop_confidence": 0.65,
+        "part_confidence": 0.20,
+        "sam3_score": 0.15
+      },
+      "prompt_templates": {
+        "crop": [
+          "a photo of {term}",
+          "a close-up photo of {term}",
+          "a macro photo of {term}",
+          "an image of {term}",
+          "a {term} crop",
+          "a {term} plant",
+          "a {term} with disease",
+          "a diseased {term}"
+        ],
+        "part": [
+          "a photo of a plant {term}",
+          "a close-up photo of a plant {term}",
+          "a macro photo of a plant {term}",
+          "a {term} with damage",
+          "a {term} with disease",
+          "a diseased plant {term}"
+        ]
+      }
     },
     "crop_mapping": {
       "tomato": {
