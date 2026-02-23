@@ -1624,6 +1624,10 @@ class VLMPipeline:
         leaf_visual_override_enabled = bool(self.vlm_config.get('leaf_visual_override_enabled', True))
         leaf_visual_likeness_threshold = float(self.vlm_config.get('leaf_visual_likeness_threshold', 0.44))
         leaf_visual_green_min = float(self.vlm_config.get('leaf_visual_green_min', 0.12))
+        leaf_visual_force_generic = bool(self.vlm_config.get('leaf_visual_force_generic', True))
+        leaf_visual_force_without_leaf_score = bool(self.vlm_config.get('leaf_visual_force_without_leaf_score', True))
+        leaf_visual_force_conf_floor = float(self.vlm_config.get('leaf_visual_force_conf_floor', 0.16))
+        leaf_visual_force_part_factor = float(self.vlm_config.get('leaf_visual_force_part_factor', 0.65))
         max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
@@ -1796,10 +1800,26 @@ class VLMPipeline:
                         image_width=image_width,
                         image_height=image_height,
                     )
-                    leaf_score = float(resolved_part_scores.get(leaf_override_label, 0.0))
-                    if leaf_likeness >= max(0.0, min(1.0, leaf_visual_likeness_threshold)) and leaf_score >= max(0.0, min(1.0, leaf_visual_green_min)):
-                        part_label = leaf_override_label
-                        part_conf = max(part_conf, leaf_score)
+                    leaf_key = str(leaf_override_label).strip().lower()
+                    leaf_score = 0.0
+                    for score_label, score_value in resolved_part_scores.items():
+                        if str(score_label).strip().lower() == leaf_key:
+                            leaf_score = max(leaf_score, float(score_value))
+
+                    threshold = max(0.0, min(1.0, leaf_visual_likeness_threshold))
+                    min_leaf_score = max(0.0, min(1.0, leaf_visual_green_min))
+                    if leaf_likeness >= threshold:
+                        leaf_score_ok = leaf_score >= min_leaf_score
+                        if leaf_score_ok or leaf_visual_force_without_leaf_score:
+                            if leaf_visual_force_generic:
+                                floor_conf = max(0.0, min(1.0, leaf_visual_force_conf_floor))
+                                part_factor = max(0.0, min(1.0, leaf_visual_force_part_factor))
+                                forced_conf = max(leaf_score, float(part_conf) * part_factor, floor_conf)
+                                part_label = leaf_override_label
+                                part_conf = forced_conf
+                            elif leaf_score_ok:
+                                part_label = leaf_override_label
+                                part_conf = max(part_conf, leaf_score)
 
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue
