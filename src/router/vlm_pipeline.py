@@ -844,6 +844,66 @@ class VLMPipeline:
         return adjusted
 
     @staticmethod
+    def _select_part_label_with_specificity(
+        part_scores: Dict[str, float],
+        generic_part_labels: List[str],
+        specific_override_ratio: float,
+        specific_min_confidence: float,
+        preferred_part_labels: Optional[List[str]] = None,
+        preferred_override_ratio: float = 0.50,
+    ) -> Tuple[str, float]:
+        """Select part label while preferring specific parts over generic labels when close."""
+        if not part_scores:
+            return 'unknown', 0.0
+
+        best_label = max(part_scores, key=part_scores.get)
+        best_score = float(part_scores.get(best_label, 0.0))
+
+        generic_set = {
+            str(label).strip().lower()
+            for label in generic_part_labels
+            if str(label).strip()
+        }
+
+        specific_override_ratio = max(0.0, min(1.0, float(specific_override_ratio)))
+        specific_min_confidence = max(0.0, min(1.0, float(specific_min_confidence)))
+        preferred_override_ratio = max(0.0, min(1.0, float(preferred_override_ratio)))
+
+        preferred_set = {
+            str(label).strip().lower()
+            for label in (preferred_part_labels or [])
+            if str(label).strip()
+        }
+
+        if preferred_set:
+            preferred_candidates = [
+                (label, float(score))
+                for label, score in part_scores.items()
+                if str(label).strip().lower() in preferred_set
+            ]
+            if preferred_candidates:
+                preferred_label, preferred_score = max(preferred_candidates, key=lambda item: item[1])
+                if preferred_score >= specific_min_confidence and preferred_score >= best_score * preferred_override_ratio:
+                    return preferred_label, preferred_score
+
+        if str(best_label).strip().lower() not in generic_set:
+            return best_label, best_score
+
+        specific_candidates = [
+            (label, float(score))
+            for label, score in part_scores.items()
+            if str(label).strip().lower() not in generic_set
+        ]
+        if not specific_candidates:
+            return best_label, best_score
+
+        specific_label, specific_score = max(specific_candidates, key=lambda item: item[1])
+        if specific_score >= specific_min_confidence and specific_score >= best_score * specific_override_ratio:
+            return specific_label, specific_score
+
+        return best_label, best_score
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -1424,6 +1484,14 @@ class VLMPipeline:
             generic_part_labels = [str(label) for label in generic_part_labels_raw]
         else:
             generic_part_labels = ['whole plant', 'whole', 'plant', 'entire plant']
+        specific_part_override_ratio = float(self.vlm_config.get('specific_part_override_ratio', 0.45))
+        specific_part_min_confidence = float(self.vlm_config.get('specific_part_min_confidence', 0.12))
+        preferred_part_labels_raw = self.vlm_config.get('preferred_part_labels', ['leaf'])
+        if isinstance(preferred_part_labels_raw, list):
+            preferred_part_labels = [str(label) for label in preferred_part_labels_raw]
+        else:
+            preferred_part_labels = ['leaf']
+        preferred_part_override_ratio = float(self.vlm_config.get('preferred_part_override_ratio', 0.50))
         max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
@@ -1556,8 +1624,14 @@ class VLMPipeline:
                         generic_part_penalty,
                     )
                     if compatible_part_scores:
-                        refined_part_label = max(compatible_part_scores, key=compatible_part_scores.get)
-                        refined_part_conf = float(compatible_part_scores.get(refined_part_label, 0.0))
+                        refined_part_label, refined_part_conf = self._select_part_label_with_specificity(
+                            compatible_part_scores,
+                            generic_part_labels,
+                            specific_override_ratio=specific_part_override_ratio,
+                            specific_min_confidence=specific_part_min_confidence,
+                            preferred_part_labels=preferred_part_labels,
+                            preferred_override_ratio=preferred_part_override_ratio,
+                        )
                         if refined_part_label:
                             part_label = refined_part_label
                             part_conf = refined_part_conf
