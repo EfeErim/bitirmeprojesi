@@ -815,6 +815,35 @@ class VLMPipeline:
         return merged
 
     @staticmethod
+    def _apply_generic_part_penalty(
+        part_scores: Dict[str, float],
+        generic_part_labels: List[str],
+        generic_penalty: float,
+    ) -> Dict[str, float]:
+        """Down-weight overly generic part labels to prefer specific parts when close."""
+        if not part_scores:
+            return {}
+
+        generic_set = {
+            str(label).strip().lower()
+            for label in generic_part_labels
+            if str(label).strip()
+        }
+        if not generic_set:
+            return dict(part_scores)
+
+        penalty = max(0.0, min(1.0, float(generic_penalty)))
+        adjusted: Dict[str, float] = {}
+        for part_name, score in part_scores.items():
+            normalized = str(part_name).strip().lower()
+            base_score = float(score)
+            if normalized in generic_set:
+                adjusted[part_name] = base_score * penalty
+            else:
+                adjusted[part_name] = base_score
+        return adjusted
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -1386,6 +1415,15 @@ class VLMPipeline:
         detection_nms_same_crop_only = bool(self.vlm_config.get('detection_nms_same_crop_only', True))
         conditioned_part_weight = float(self.vlm_config.get('conditioned_part_weight', 0.45))
         conditioned_part_weight = max(0.0, min(1.0, conditioned_part_weight))
+        generic_part_penalty = float(self.vlm_config.get('generic_part_penalty', 0.78))
+        generic_part_labels_raw = self.vlm_config.get(
+            'generic_part_labels',
+            ['whole plant', 'whole', 'plant', 'entire plant'],
+        )
+        if isinstance(generic_part_labels_raw, list):
+            generic_part_labels = [str(label) for label in generic_part_labels_raw]
+        else:
+            generic_part_labels = ['whole plant', 'whole', 'plant', 'entire plant']
         max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
@@ -1512,6 +1550,11 @@ class VLMPipeline:
                                 + conditioned_part_weight * conditioned_score
                             )
                         compatible_part_scores = blended_scores
+                    compatible_part_scores = self._apply_generic_part_penalty(
+                        compatible_part_scores,
+                        generic_part_labels,
+                        generic_part_penalty,
+                    )
                     if compatible_part_scores:
                         refined_part_label = max(compatible_part_scores, key=compatible_part_scores.get)
                         refined_part_conf = float(compatible_part_scores.get(refined_part_label, 0.0))
