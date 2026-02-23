@@ -717,6 +717,104 @@ class VLMPipeline:
         return (box_w * box_h) / image_area
 
     @staticmethod
+    def _bbox_iou(box_a: Optional[List[float]], box_b: Optional[List[float]]) -> float:
+        """Compute IoU between two xyxy boxes."""
+        if box_a is None or box_b is None or len(box_a) != 4 or len(box_b) != 4:
+            return 0.0
+
+        ax1, ay1, ax2, ay2 = [float(v) for v in box_a]
+        bx1, by1, bx2, by2 = [float(v) for v in box_b]
+
+        inter_x1 = max(ax1, bx1)
+        inter_y1 = max(ay1, by1)
+        inter_x2 = min(ax2, bx2)
+        inter_y2 = min(ay2, by2)
+
+        inter_w = max(0.0, inter_x2 - inter_x1)
+        inter_h = max(0.0, inter_y2 - inter_y1)
+        inter_area = inter_w * inter_h
+        if inter_area <= 0.0:
+            return 0.0
+
+        area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+        area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+        union_area = area_a + area_b - inter_area
+        if union_area <= 0.0:
+            return 0.0
+
+        return float(inter_area / union_area)
+
+    def _suppress_overlapping_detections(
+        self,
+        detections: List[Dict[str, Any]],
+        iou_threshold: float = 0.75,
+        same_crop_only: bool = True,
+    ) -> List[Dict[str, Any]]:
+        """Suppress highly-overlapping detections by keeping higher-quality detections first."""
+        if not detections:
+            return []
+
+        kept: List[Dict[str, Any]] = []
+        for candidate in detections:
+            candidate_bbox = candidate.get('bbox')
+            candidate_crop = str(candidate.get('crop', '')).strip().lower()
+            should_drop = False
+
+            for existing in kept:
+                if same_crop_only:
+                    existing_crop = str(existing.get('crop', '')).strip().lower()
+                    if existing_crop != candidate_crop:
+                        continue
+
+                overlap = self._bbox_iou(candidate_bbox, existing.get('bbox'))
+                if overlap >= iou_threshold:
+                    should_drop = True
+                    break
+
+            if not should_drop:
+                kept.append(candidate)
+
+        return kept
+
+    def _score_parts_conditioned_on_crop(
+        self,
+        roi_image: Image.Image,
+        crop_label: str,
+        candidate_parts: List[str],
+        num_prompts: Optional[int] = None,
+    ) -> Dict[str, float]:
+        """Rescore compatible parts using crop-conditioned terms (e.g., 'strawberry leaf')."""
+        if not crop_label or not candidate_parts:
+            return {}
+
+        conditioned_terms: List[str] = []
+        term_to_part: Dict[str, str] = {}
+        for part_name in candidate_parts:
+            normalized_part = str(part_name).strip()
+            if not normalized_part:
+                continue
+            term = f"{crop_label} {normalized_part}".strip()
+            conditioned_terms.append(term)
+            term_to_part[term] = normalized_part
+
+        if not conditioned_terms:
+            return {}
+
+        _, _, conditioned_scores = self._clip_score_labels_ensemble(
+            roi_image,
+            conditioned_terms,
+            label_type='part',
+            num_prompts=num_prompts,
+        )
+
+        merged: Dict[str, float] = {part: 0.0 for part in candidate_parts}
+        for term, score in conditioned_scores.items():
+            part_name = term_to_part.get(term)
+            if part_name:
+                merged[part_name] = float(score)
+        return merged
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -1284,6 +1382,10 @@ class VLMPipeline:
         min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.001))
         min_box_side_px = float(self.vlm_config.get('min_box_side_px', 10))
         classification_min_confidence = float(self.vlm_config.get('classification_min_confidence', 0.20))
+        detection_nms_iou_threshold = float(self.vlm_config.get('detection_nms_iou_threshold', 0.75))
+        detection_nms_same_crop_only = bool(self.vlm_config.get('detection_nms_same_crop_only', True))
+        conditioned_part_weight = float(self.vlm_config.get('conditioned_part_weight', 0.45))
+        conditioned_part_weight = max(0.0, min(1.0, conditioned_part_weight))
         ensemble_config = self.vlm_config.get('ensemble_config', {})
         crop_num_prompts_raw = ensemble_config.get('crop_num_prompts', None)
         part_num_prompts_raw = ensemble_config.get('part_num_prompts', None)
@@ -1378,6 +1480,24 @@ class VLMPipeline:
                         part_name: float(part_scores.get(part_name, 0.0))
                         for part_name in compatible_parts
                     }
+
+                    conditioned_part_scores = self._score_parts_conditioned_on_crop(
+                        roi_image,
+                        crop_label,
+                        compatible_parts,
+                        num_prompts=part_num_prompts,
+                    )
+                    if conditioned_part_scores:
+                        blended_scores: Dict[str, float] = {}
+                        for part_name in compatible_parts:
+                            generic_score = float(compatible_part_scores.get(part_name, 0.0))
+                            conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
+                            blended_scores[part_name] = (
+                                (1.0 - conditioned_part_weight) * generic_score
+                                + conditioned_part_weight * conditioned_score
+                            )
+                        compatible_part_scores = blended_scores
+
                     if compatible_part_scores:
                         refined_part_label = max(compatible_part_scores, key=compatible_part_scores.get)
                         refined_part_conf = float(compatible_part_scores.get(refined_part_label, 0.0))
@@ -1412,6 +1532,11 @@ class VLMPipeline:
 
         stage_start = time.perf_counter()
         detections.sort(key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
+        detections = self._suppress_overlapping_detections(
+            detections,
+            iou_threshold=detection_nms_iou_threshold,
+            same_crop_only=detection_nms_same_crop_only,
+        )
         if effective_max_detections is not None:
             detections = detections[:effective_max_detections]
         for det in detections:
