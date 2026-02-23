@@ -1386,6 +1386,13 @@ class VLMPipeline:
         detection_nms_same_crop_only = bool(self.vlm_config.get('detection_nms_same_crop_only', True))
         conditioned_part_weight = float(self.vlm_config.get('conditioned_part_weight', 0.45))
         conditioned_part_weight = max(0.0, min(1.0, conditioned_part_weight))
+        max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
+        try:
+            max_rois_for_classification = int(max_rois_raw)
+        except Exception:
+            max_rois_for_classification = 0
+        if max_rois_for_classification <= 0:
+            max_rois_for_classification = None
         ensemble_config = self.vlm_config.get('ensemble_config', {})
         crop_num_prompts_raw = ensemble_config.get('crop_num_prompts', None)
         part_num_prompts_raw = ensemble_config.get('part_num_prompts', None)
@@ -1429,7 +1436,16 @@ class VLMPipeline:
         roi_classification_calls = 0
         if mask_count > 0:
             roi_stage_start = time.perf_counter()
-            for box, score in zip(boxes, scores):
+
+            roi_pairs = list(zip(boxes, scores))
+            if max_rois_for_classification is not None and len(roi_pairs) > max_rois_for_classification:
+                roi_pairs.sort(
+                    key=lambda pair: float(pair[1].item()) if torch.is_tensor(pair[1]) else float(pair[1]),
+                    reverse=True,
+                )
+                roi_pairs = roi_pairs[:max_rois_for_classification]
+
+            for box, score in roi_pairs:
                 roi_seen += 1
                 sam3_score = float(score)
                 if sam3_score < sam3_threshold:
@@ -1480,7 +1496,6 @@ class VLMPipeline:
                         part_name: float(part_scores.get(part_name, 0.0))
                         for part_name in compatible_parts
                     }
-
                     conditioned_part_scores = self._score_parts_conditioned_on_crop(
                         roi_image,
                         crop_label,
@@ -1497,7 +1512,6 @@ class VLMPipeline:
                                 + conditioned_part_weight * conditioned_score
                             )
                         compatible_part_scores = blended_scores
-
                     if compatible_part_scores:
                         refined_part_label = max(compatible_part_scores, key=compatible_part_scores.get)
                         refined_part_conf = float(compatible_part_scores.get(refined_part_label, 0.0))
