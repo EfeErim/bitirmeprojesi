@@ -1018,6 +1018,54 @@ class VLMPipeline:
         return float(max(0.0, min(1.0, (0.60 * green_ratio) + (0.25 * size_score) + (0.15 * shape_score))))
 
     @staticmethod
+    def _rebalance_part_scores_for_leaf_like_roi(
+        part_scores: Dict[str, float],
+        leaf_likeness: float,
+        leaf_label: str = 'leaf',
+        non_foliar_part_labels: Optional[List[str]] = None,
+        activation_threshold: float = 0.34,
+        non_foliar_penalty: float = 0.55,
+        leaf_boost: float = 1.35,
+    ) -> Dict[str, float]:
+        """Rebalance part scores for leaf-like ROIs by boosting leaf and suppressing non-foliar labels."""
+        if not part_scores:
+            return {}
+
+        threshold = max(0.0, min(1.0, float(activation_threshold)))
+        if float(leaf_likeness) < threshold:
+            return dict(part_scores)
+
+        leaf_key = str(leaf_label).strip().lower()
+        if not leaf_key:
+            return dict(part_scores)
+
+        default_non_foliar = [
+            'husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb',
+            'fruit', 'berry', 'bark', 'peel', 'whole plant', 'whole', 'plant', 'entire plant'
+        ]
+        non_foliar_set = {
+            str(label).strip().lower()
+            for label in (non_foliar_part_labels if isinstance(non_foliar_part_labels, list) else default_non_foliar)
+            if str(label).strip()
+        }
+
+        penalty = max(0.0, min(1.0, float(non_foliar_penalty)))
+        boost = max(1.0, float(leaf_boost))
+
+        adjusted: Dict[str, float] = {}
+        for part_name, score in part_scores.items():
+            key = str(part_name).strip().lower()
+            value = float(score)
+            if key == leaf_key:
+                adjusted[part_name] = value * boost
+            elif key in non_foliar_set:
+                adjusted[part_name] = value * penalty
+            else:
+                adjusted[part_name] = value
+
+        return adjusted
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -1628,6 +1676,18 @@ class VLMPipeline:
         leaf_visual_force_without_leaf_score = bool(self.vlm_config.get('leaf_visual_force_without_leaf_score', True))
         leaf_visual_force_conf_floor = float(self.vlm_config.get('leaf_visual_force_conf_floor', 0.16))
         leaf_visual_force_part_factor = float(self.vlm_config.get('leaf_visual_force_part_factor', 0.65))
+        leaf_non_foliar_labels_raw = self.vlm_config.get(
+            'leaf_non_foliar_part_labels',
+            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel'],
+        )
+        if isinstance(leaf_non_foliar_labels_raw, list):
+            leaf_non_foliar_part_labels = [str(label) for label in leaf_non_foliar_labels_raw]
+        else:
+            leaf_non_foliar_part_labels = ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
+        leaf_part_rebalance_enabled = bool(self.vlm_config.get('leaf_part_rebalance_enabled', True))
+        leaf_part_rebalance_threshold = float(self.vlm_config.get('leaf_part_rebalance_threshold', 0.34))
+        leaf_part_rebalance_penalty = float(self.vlm_config.get('leaf_part_rebalance_penalty', 0.55))
+        leaf_part_rebalance_boost = float(self.vlm_config.get('leaf_part_rebalance_boost', 1.35))
         max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
@@ -1717,6 +1777,26 @@ class VLMPipeline:
                     roi_image, self.part_labels, label_type='part', num_prompts=part_num_prompts
                 )
                 roi_classification_calls += 1
+
+                leaf_likeness = self._compute_leaf_likeness(
+                    roi_image=roi_image,
+                    bbox=bbox,
+                    image_width=image_width,
+                    image_height=image_height,
+                )
+                if leaf_part_rebalance_enabled:
+                    part_scores = self._rebalance_part_scores_for_leaf_like_roi(
+                        part_scores=part_scores,
+                        leaf_likeness=leaf_likeness,
+                        leaf_label=leaf_override_label,
+                        non_foliar_part_labels=leaf_non_foliar_part_labels,
+                        activation_threshold=leaf_part_rebalance_threshold,
+                        non_foliar_penalty=leaf_part_rebalance_penalty,
+                        leaf_boost=leaf_part_rebalance_boost,
+                    )
+                    if part_scores:
+                        part_label = max(part_scores, key=part_scores.get)
+                        part_conf = float(part_scores.get(part_label, 0.0))
                 
                 # Classify crops with ensemble for robustness to disease/damage
                 crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
@@ -1794,12 +1874,6 @@ class VLMPipeline:
                 if leaf_visual_override_enabled and str(part_label).strip().lower() in {
                     'whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'
                 }:
-                    leaf_likeness = self._compute_leaf_likeness(
-                        roi_image=roi_image,
-                        bbox=bbox,
-                        image_width=image_width,
-                        image_height=image_height,
-                    )
                     leaf_key = str(leaf_override_label).strip().lower()
                     leaf_score = 0.0
                     for score_label, score_value in resolved_part_scores.items():
