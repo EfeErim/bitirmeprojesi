@@ -967,6 +967,57 @@ class VLMPipeline:
         return selected_label, float(selected_score)
 
     @staticmethod
+    def _compute_leaf_likeness(
+        roi_image: Image.Image,
+        bbox: Optional[List[float]],
+        image_width: int,
+        image_height: int,
+    ) -> float:
+        """Estimate how leaf-like an ROI is using color + geometry cues in [0,1]."""
+        if roi_image is None or bbox is None or len(bbox) != 4 or image_width <= 0 or image_height <= 0:
+            return 0.0
+
+        try:
+            roi_np = np.asarray(roi_image.convert('RGB'), dtype=np.float32)
+        except Exception:
+            return 0.0
+
+        if roi_np.size == 0:
+            return 0.0
+
+        h, w = roi_np.shape[:2]
+        if h <= 0 or w <= 0:
+            return 0.0
+
+        y1 = int(max(0, round(h * 0.15)))
+        y2 = int(min(h, round(h * 0.85)))
+        x1 = int(max(0, round(w * 0.15)))
+        x2 = int(min(w, round(w * 0.85)))
+        center = roi_np[y1:y2, x1:x2] if (y2 > y1 and x2 > x1) else roi_np
+
+        r = center[..., 0]
+        g = center[..., 1]
+        b = center[..., 2]
+        green_mask = (g > (r * 0.95)) & (g > (b * 1.05)) & (g > 45.0)
+        green_ratio = float(np.mean(green_mask)) if green_mask.size > 0 else 0.0
+
+        bx1, by1, bx2, by2 = [float(v) for v in bbox]
+        box_w = max(0.0, bx2 - bx1)
+        box_h = max(0.0, by2 - by1)
+        area_ratio = (box_w * box_h) / float(image_width * image_height)
+        aspect = box_w / max(1e-6, box_h)
+
+        size_score = max(0.0, min(1.0, area_ratio / 0.15))
+        if 0.25 <= aspect <= 4.2:
+            shape_score = 1.0
+        elif 0.15 <= aspect <= 5.5:
+            shape_score = 0.6
+        else:
+            shape_score = 0.2
+
+        return float(max(0.0, min(1.0, (0.60 * green_ratio) + (0.25 * size_score) + (0.15 * shape_score))))
+
+    @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
         if not detections:
@@ -1570,6 +1621,9 @@ class VLMPipeline:
         leaf_override_min_area_ratio = float(self.vlm_config.get('leaf_override_min_area_ratio', 0.02))
         leaf_override_aspect_min = float(self.vlm_config.get('leaf_override_aspect_min', 0.30))
         leaf_override_aspect_max = float(self.vlm_config.get('leaf_override_aspect_max', 3.20))
+        leaf_visual_override_enabled = bool(self.vlm_config.get('leaf_visual_override_enabled', True))
+        leaf_visual_likeness_threshold = float(self.vlm_config.get('leaf_visual_likeness_threshold', 0.44))
+        leaf_visual_green_min = float(self.vlm_config.get('leaf_visual_green_min', 0.12))
         max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
@@ -1675,6 +1729,7 @@ class VLMPipeline:
 
                 # Refine part prediction using dynamic crop-part compatibility map
                 compatible_parts = self._compatible_parts_for_crop(crop_label)
+                resolved_part_scores = dict(part_scores)
                 if compatible_parts:
                     compatible_part_scores = {
                         part_name: float(part_scores.get(part_name, 0.0))
@@ -1701,6 +1756,7 @@ class VLMPipeline:
                         generic_part_labels,
                         generic_part_penalty,
                     )
+                    resolved_part_scores = dict(compatible_part_scores)
                     if compatible_part_scores:
                         refined_part_label, refined_part_conf = self._select_part_label_with_specificity(
                             compatible_part_scores,
@@ -1718,7 +1774,7 @@ class VLMPipeline:
                     part_label, part_conf = self._apply_leaf_like_override(
                         selected_label=part_label,
                         selected_score=part_conf,
-                        part_scores=compatible_part_scores if compatible_parts else part_scores,
+                        part_scores=resolved_part_scores,
                         bbox=bbox,
                         image_width=image_width,
                         image_height=image_height,
@@ -1730,6 +1786,20 @@ class VLMPipeline:
                         leaf_aspect_min=leaf_override_aspect_min,
                         leaf_aspect_max=leaf_override_aspect_max,
                     )
+
+                if leaf_visual_override_enabled and str(part_label).strip().lower() in {
+                    'whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'
+                }:
+                    leaf_likeness = self._compute_leaf_likeness(
+                        roi_image=roi_image,
+                        bbox=bbox,
+                        image_width=image_width,
+                        image_height=image_height,
+                    )
+                    leaf_score = float(resolved_part_scores.get(leaf_override_label, 0.0))
+                    if leaf_likeness >= max(0.0, min(1.0, leaf_visual_likeness_threshold)) and leaf_score >= max(0.0, min(1.0, leaf_visual_green_min)):
+                        part_label = leaf_override_label
+                        part_conf = max(part_conf, leaf_score)
 
                 if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
                     continue
