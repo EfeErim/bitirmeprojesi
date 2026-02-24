@@ -1712,6 +1712,424 @@ class VLMPipeline:
             'image_size': image_size,
             'processing_time_ms': 0.0
         }
+
+    def _sam3_stage_order(self) -> List[str]:
+        """Resolve SAM3 stage execution order from policy graph."""
+        default_order = ['roi_filter', 'roi_classification', 'open_set_gate', 'postprocess']
+        configured = self._policy_value('execution', 'sam3_stage_order', default_order)
+        if not isinstance(configured, list):
+            return default_order
+
+        allowed = {'roi_filter', 'roi_classification', 'open_set_gate', 'postprocess'}
+        ordered: List[str] = []
+        for stage_name in configured:
+            normalized = str(stage_name).strip()
+            if normalized in allowed and normalized not in ordered:
+                ordered.append(normalized)
+        return ordered or default_order
+
+    @staticmethod
+    def _passes_open_set_gate(crop_label: str, crop_confidence: float, min_confidence: float) -> bool:
+        """Evaluate open-set acceptance for a classified detection."""
+        if str(crop_label).strip().lower() == 'unknown':
+            return False
+        return float(crop_confidence) >= float(min_confidence)
+
+    def _postprocess_sam3_detections(
+        self,
+        detections: List[Dict[str, Any]],
+        settings: Dict[str, Any],
+        effective_max_detections: Optional[int],
+        stage_order: List[str],
+    ) -> List[Dict[str, Any]]:
+        """Finalize SAM3 detections with optional dedupe and cap."""
+        ordered = sorted(detections, key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
+        if self._policy_enabled('dedupe', True) and 'postprocess' in stage_order:
+            ordered = self._suppress_overlapping_detections(
+                ordered,
+                iou_threshold=settings['detection_nms_iou_threshold'],
+                same_crop_only=settings['detection_nms_same_crop_only'],
+            )
+        if effective_max_detections is not None:
+            ordered = ordered[:effective_max_detections]
+        for det in ordered:
+            det.pop('_quality_score', None)
+        return ordered
+
+    def _build_sam3_runtime_settings(self, effective_threshold: float) -> Dict[str, Any]:
+        """Collect policy-controlled runtime settings for SAM3 analysis."""
+        settings: Dict[str, Any] = {}
+        settings['sam3_threshold'] = float(self._policy_value('roi_filter', 'sam3_mask_threshold', 0.60))
+        settings['min_box_area_ratio'] = float(self._policy_value('roi_filter', 'min_box_area_ratio', 0.001))
+        settings['min_box_side_px'] = float(self._policy_value('roi_filter', 'min_box_side_px', 10))
+        settings['classification_min_confidence'] = max(
+            float(self._policy_value('crop_evidence', 'classification_min_confidence', 0.20)),
+            float(effective_threshold),
+        )
+        settings['detection_nms_iou_threshold'] = float(self._policy_value('dedupe', 'detection_nms_iou_threshold', 0.75))
+        settings['detection_nms_same_crop_only'] = bool(self._policy_value('dedupe', 'detection_nms_same_crop_only', True))
+        settings['conditioned_part_weight'] = max(
+            0.0,
+            min(1.0, float(self._policy_value('compatibility_fusion', 'conditioned_part_weight', 0.45))),
+        )
+        settings['generic_part_penalty'] = float(self._policy_value('part_resolution', 'generic_part_penalty', 0.78))
+
+        generic_part_labels_raw = self._policy_value(
+            'part_resolution',
+            'generic_part_labels',
+            ['whole plant', 'whole', 'plant', 'entire plant'],
+        )
+        settings['generic_part_labels'] = (
+            [str(label) for label in generic_part_labels_raw]
+            if isinstance(generic_part_labels_raw, list)
+            else ['whole plant', 'whole', 'plant', 'entire plant']
+        )
+
+        settings['specific_part_override_ratio'] = float(self._policy_value('part_resolution', 'specific_part_override_ratio', 0.45))
+        settings['specific_part_min_confidence'] = float(self._policy_value('part_resolution', 'specific_part_min_confidence', 0.12))
+
+        preferred_part_labels_raw = self._policy_value('part_resolution', 'preferred_part_labels', ['leaf'])
+        settings['preferred_part_labels'] = (
+            [str(label) for label in preferred_part_labels_raw]
+            if isinstance(preferred_part_labels_raw, list)
+            else ['leaf']
+        )
+        settings['preferred_part_override_ratio'] = float(self._policy_value('part_resolution', 'preferred_part_override_ratio', 0.50))
+
+        settings['leaf_override_enabled'] = bool(self._policy_value('part_resolution', 'leaf_override_enabled', True))
+        settings['leaf_override_label'] = str(self._policy_value('part_resolution', 'leaf_override_label', 'leaf'))
+
+        leaf_override_target_raw = self._policy_value(
+            'part_resolution',
+            'leaf_override_target_labels',
+            ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'],
+        )
+        settings['leaf_override_target_labels'] = (
+            [str(label) for label in leaf_override_target_raw]
+            if isinstance(leaf_override_target_raw, list)
+            else ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
+        )
+
+        settings['leaf_override_ratio'] = float(self._policy_value('part_resolution', 'leaf_override_ratio', 0.35))
+        settings['leaf_override_min_confidence'] = float(self._policy_value('part_resolution', 'leaf_override_min_confidence', 0.10))
+        settings['leaf_override_min_area_ratio'] = float(self._policy_value('part_resolution', 'leaf_override_min_area_ratio', 0.02))
+        settings['leaf_override_aspect_min'] = float(self._policy_value('part_resolution', 'leaf_override_aspect_min', 0.30))
+        settings['leaf_override_aspect_max'] = float(self._policy_value('part_resolution', 'leaf_override_aspect_max', 3.20))
+
+        settings['leaf_visual_override_enabled'] = bool(self._policy_value('part_resolution', 'leaf_visual_override_enabled', True))
+        settings['leaf_visual_likeness_threshold'] = float(self._policy_value('part_resolution', 'leaf_visual_likeness_threshold', 0.44))
+        settings['leaf_visual_green_min'] = float(self._policy_value('part_resolution', 'leaf_visual_green_min', 0.12))
+        settings['leaf_visual_force_generic'] = bool(self._policy_value('part_resolution', 'leaf_visual_force_generic', True))
+        settings['leaf_visual_force_without_leaf_score'] = bool(self._policy_value('part_resolution', 'leaf_visual_force_without_leaf_score', True))
+        settings['leaf_visual_force_conf_floor'] = float(self._policy_value('part_resolution', 'leaf_visual_force_conf_floor', 0.16))
+        settings['leaf_visual_force_part_factor'] = float(self._policy_value('part_resolution', 'leaf_visual_force_part_factor', 0.65))
+
+        leaf_non_foliar_labels_raw = self._policy_value(
+            'part_resolution',
+            'leaf_non_foliar_part_labels',
+            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel'],
+        )
+        settings['leaf_non_foliar_part_labels'] = (
+            [str(label) for label in leaf_non_foliar_labels_raw]
+            if isinstance(leaf_non_foliar_labels_raw, list)
+            else ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
+        )
+
+        settings['leaf_part_rebalance_enabled'] = bool(self._policy_value('part_resolution', 'leaf_part_rebalance_enabled', True))
+        settings['leaf_part_rebalance_threshold'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_threshold', 0.34))
+        settings['leaf_part_rebalance_penalty'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_penalty', 0.55))
+        settings['leaf_part_rebalance_boost'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_boost', 1.35))
+
+        max_rois_raw = self._policy_value('roi_filter', 'max_rois_for_classification', 0)
+        try:
+            max_rois = int(max_rois_raw)
+        except Exception:
+            max_rois = 0
+        settings['max_rois_for_classification'] = None if max_rois <= 0 else max_rois
+
+        ensemble_config = self.vlm_config.get('ensemble_config', {})
+        crop_num_prompts_raw = self._policy_value('crop_evidence', 'crop_num_prompts', ensemble_config.get('crop_num_prompts', None))
+        part_num_prompts_raw = self._policy_value('part_evidence', 'part_num_prompts', ensemble_config.get('part_num_prompts', None))
+
+        try:
+            settings['crop_num_prompts'] = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
+        except Exception:
+            settings['crop_num_prompts'] = None
+        try:
+            settings['part_num_prompts'] = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
+        except Exception:
+            settings['part_num_prompts'] = None
+
+        quality_weights = self.vlm_config.get('quality_score_weights', {})
+        settings['weight_crop'] = float(quality_weights.get('crop_confidence', 0.65))
+        settings['weight_part'] = float(quality_weights.get('part_confidence', 0.20))
+        settings['weight_sam3'] = float(quality_weights.get('sam3_score', 0.15))
+        return settings
+
+    def _collect_sam3_roi_candidates(
+        self,
+        boxes: Any,
+        scores: Any,
+        image_width: int,
+        image_height: int,
+        settings: Dict[str, Any],
+        apply_roi_filters: bool,
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Collect ROI candidates from SAM3 outputs with optional policy filtering."""
+        candidates: List[Dict[str, Any]] = []
+        roi_seen = 0
+
+        roi_pairs = list(zip(boxes, scores))
+        max_rois = settings.get('max_rois_for_classification')
+        if max_rois is not None and len(roi_pairs) > max_rois:
+            roi_pairs.sort(
+                key=lambda pair: float(pair[1].item()) if torch.is_tensor(pair[1]) else float(pair[1]),
+                reverse=True,
+            )
+            roi_pairs = roi_pairs[:max_rois]
+
+        for box, score in roi_pairs:
+            roi_seen += 1
+            sam3_score = float(score)
+
+            raw_bbox = box.tolist() if torch.is_tensor(box) else box
+            bbox = self._sanitize_bbox(raw_bbox, image_width, image_height)
+            if bbox is None:
+                continue
+
+            if apply_roi_filters:
+                if sam3_score < settings['sam3_threshold']:
+                    continue
+                box_w = bbox[2] - bbox[0]
+                box_h = bbox[3] - bbox[1]
+                if box_w < settings['min_box_side_px'] or box_h < settings['min_box_side_px']:
+                    continue
+                area_ratio = self._bbox_area_ratio(bbox, image_width, image_height)
+                if area_ratio < settings['min_box_area_ratio']:
+                    continue
+
+            candidates.append({'bbox': bbox, 'sam3_score': sam3_score})
+
+        return candidates, roi_seen
+
+    def _classify_sam3_roi_candidate(
+        self,
+        pil_image: Image.Image,
+        candidate: Dict[str, Any],
+        image_width: int,
+        image_height: int,
+        settings: Dict[str, Any],
+    ) -> Tuple[Optional[Dict[str, Any]], int]:
+        """Run ROI classification and part/crop fusion for one SAM3 candidate."""
+        bbox = candidate['bbox']
+        sam3_score = float(candidate['sam3_score'])
+        roi_image = self._extract_roi(pil_image, bbox)
+
+        part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
+            roi_image, self.part_labels, label_type='part', num_prompts=settings.get('part_num_prompts')
+        )
+        classification_calls = 1
+
+        leaf_likeness = self._compute_leaf_likeness(
+            roi_image=roi_image,
+            bbox=bbox,
+            image_width=image_width,
+            image_height=image_height,
+        )
+        if settings.get('leaf_part_rebalance_enabled', True):
+            part_scores = self._rebalance_part_scores_for_leaf_like_roi(
+                part_scores=part_scores,
+                leaf_likeness=leaf_likeness,
+                leaf_label=settings['leaf_override_label'],
+                non_foliar_part_labels=settings['leaf_non_foliar_part_labels'],
+                activation_threshold=settings['leaf_part_rebalance_threshold'],
+                non_foliar_penalty=settings['leaf_part_rebalance_penalty'],
+                leaf_boost=settings['leaf_part_rebalance_boost'],
+            )
+            if part_scores:
+                part_label = max(part_scores, key=part_scores.get)
+                part_conf = float(part_scores.get(part_label, 0.0))
+
+        crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
+            roi_image, self.crop_labels, label_type='crop', num_prompts=settings.get('crop_num_prompts')
+        )
+        classification_calls += 1
+
+        crop_label, crop_conf = self._select_best_crop_with_fallback(
+            roi_image,
+            crop_scores,
+            part_label,
+            part_scores,
+            min_confidence=settings['classification_min_confidence'],
+        )
+
+        compatible_parts = self._compatible_parts_for_crop(crop_label)
+        resolved_part_scores = dict(part_scores)
+        if compatible_parts and self._policy_enabled('compatibility_fusion', True):
+            compatible_part_scores = {
+                part_name: float(part_scores.get(part_name, 0.0))
+                for part_name in compatible_parts
+            }
+            conditioned_part_scores = self._score_parts_conditioned_on_crop(
+                roi_image,
+                crop_label,
+                compatible_parts,
+                num_prompts=settings.get('part_num_prompts'),
+            )
+            if conditioned_part_scores:
+                blended_scores: Dict[str, float] = {}
+                for part_name in compatible_parts:
+                    generic_score = float(compatible_part_scores.get(part_name, 0.0))
+                    conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
+                    blended_scores[part_name] = (
+                        (1.0 - settings['conditioned_part_weight']) * generic_score
+                        + settings['conditioned_part_weight'] * conditioned_score
+                    )
+                compatible_part_scores = blended_scores
+            compatible_part_scores = self._apply_generic_part_penalty(
+                compatible_part_scores,
+                settings['generic_part_labels'],
+                settings['generic_part_penalty'],
+            )
+            resolved_part_scores = dict(compatible_part_scores)
+            if compatible_part_scores:
+                refined_part_label, refined_part_conf = self._select_part_label_with_specificity(
+                    compatible_part_scores,
+                    settings['generic_part_labels'],
+                    specific_override_ratio=settings['specific_part_override_ratio'],
+                    specific_min_confidence=settings['specific_part_min_confidence'],
+                    preferred_part_labels=settings['preferred_part_labels'],
+                    preferred_override_ratio=settings['preferred_part_override_ratio'],
+                )
+                if refined_part_label:
+                    part_label = refined_part_label
+                    part_conf = refined_part_conf
+
+        if settings.get('leaf_override_enabled', True):
+            part_label, part_conf = self._apply_leaf_like_override(
+                selected_label=part_label,
+                selected_score=part_conf,
+                part_scores=resolved_part_scores,
+                bbox=bbox,
+                image_width=image_width,
+                image_height=image_height,
+                leaf_label=settings['leaf_override_label'],
+                override_target_labels=settings['leaf_override_target_labels'],
+                leaf_score_ratio=settings['leaf_override_ratio'],
+                leaf_min_confidence=settings['leaf_override_min_confidence'],
+                leaf_min_area_ratio=settings['leaf_override_min_area_ratio'],
+                leaf_aspect_min=settings['leaf_override_aspect_min'],
+                leaf_aspect_max=settings['leaf_override_aspect_max'],
+            )
+
+        if settings.get('leaf_visual_override_enabled', True) and str(part_label).strip().lower() in {
+            'whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'
+        }:
+            leaf_key = str(settings['leaf_override_label']).strip().lower()
+            leaf_score = 0.0
+            for score_label, score_value in resolved_part_scores.items():
+                if str(score_label).strip().lower() == leaf_key:
+                    leaf_score = max(leaf_score, float(score_value))
+
+            threshold = max(0.0, min(1.0, settings['leaf_visual_likeness_threshold']))
+            min_leaf_score = max(0.0, min(1.0, settings['leaf_visual_green_min']))
+            if leaf_likeness >= threshold:
+                leaf_score_ok = leaf_score >= min_leaf_score
+                if leaf_score_ok or settings.get('leaf_visual_force_without_leaf_score', True):
+                    if settings.get('leaf_visual_force_generic', True):
+                        floor_conf = max(0.0, min(1.0, settings['leaf_visual_force_conf_floor']))
+                        part_factor = max(0.0, min(1.0, settings['leaf_visual_force_part_factor']))
+                        forced_conf = max(leaf_score, float(part_conf) * part_factor, floor_conf)
+                        part_label = settings['leaf_override_label']
+                        part_conf = forced_conf
+                    elif leaf_score_ok:
+                        part_label = settings['leaf_override_label']
+                        part_conf = max(part_conf, leaf_score)
+
+        quality_score = (
+            settings['weight_crop'] * float(crop_conf)
+            + settings['weight_part'] * float(part_conf)
+            + settings['weight_sam3'] * sam3_score
+        )
+
+        return {
+            'crop': crop_label,
+            'part': part_label,
+            'crop_confidence': crop_conf,
+            'part_confidence': part_conf,
+            'disease': None,
+            'disease_confidence': 0.0,
+            'bbox': bbox,
+            'mask': None,
+            'sam3_score': sam3_score,
+            '_quality_score': quality_score,
+        }, classification_calls
+
+    def _run_sam3_roi_classification_stage(
+        self,
+        pil_image: Image.Image,
+        candidates: List[Dict[str, Any]],
+        image_width: int,
+        image_height: int,
+        settings: Dict[str, Any],
+        stage_order: List[str],
+    ) -> Tuple[List[Dict[str, Any]], int, int, float]:
+        """Execute ROI classification and optional open-set gate stage."""
+        detections: List[Dict[str, Any]] = []
+        roi_kept = 0
+        roi_classification_calls = 0
+        roi_classification_ms = 0.0
+
+        run_classification = self._policy_enabled('crop_evidence', True) and 'roi_classification' in stage_order
+        run_open_set_gate = self._policy_enabled('open_set_gate', True) and 'open_set_gate' in stage_order
+        if not run_classification:
+            return detections, roi_kept, roi_classification_calls, roi_classification_ms
+
+        for candidate in candidates:
+            classify_start = time.perf_counter()
+            detection, classification_calls = self._classify_sam3_roi_candidate(
+                pil_image=pil_image,
+                candidate=candidate,
+                image_width=image_width,
+                image_height=image_height,
+                settings=settings,
+            )
+            roi_classification_calls += classification_calls
+            roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
+
+            if detection is None:
+                continue
+            if run_open_set_gate and not self._passes_open_set_gate(
+                crop_label=str(detection.get('crop', 'unknown')),
+                crop_confidence=float(detection.get('crop_confidence', 0.0)),
+                min_confidence=float(settings['classification_min_confidence']),
+            ):
+                continue
+            detections.append(detection)
+            roi_kept += 1
+
+        return detections, roi_kept, roi_classification_calls, roi_classification_ms
+
+    def _run_sam3_roi_filter_stage(
+        self,
+        boxes: Any,
+        scores: Any,
+        image_width: int,
+        image_height: int,
+        settings: Dict[str, Any],
+        stage_order: List[str],
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """Execute ROI candidate filtering stage."""
+        apply_roi_filters = self._policy_enabled('roi_filter', True) and 'roi_filter' in stage_order
+        candidates, roi_seen = self._collect_sam3_roi_candidates(
+            boxes=boxes,
+            scores=scores,
+            image_width=image_width,
+            image_height=image_height,
+            settings=settings,
+            apply_roi_filters=apply_roi_filters,
+        )
+        return candidates, roi_seen
     
     def _analyze_image_sam3(
         self,
@@ -1745,98 +2163,8 @@ class VLMPipeline:
         image_width, image_height = pil_image.size
         stage_timings_ms['preprocess'] = (time.perf_counter() - stage_start) * 1000.0
 
-        # Load SAM3 parameters from config (no artificial clamps)
-        sam3_threshold_cfg = self._policy_value('roi_filter', 'sam3_mask_threshold', 0.60)
-        sam3_threshold = float(sam3_threshold_cfg)
-
-        min_box_area_ratio = float(self._policy_value('roi_filter', 'min_box_area_ratio', 0.001))
-        min_box_side_px = float(self._policy_value('roi_filter', 'min_box_side_px', 10))
-        classification_min_confidence = float(self._policy_value('crop_evidence', 'classification_min_confidence', 0.20))
-        detection_nms_iou_threshold = float(self._policy_value('dedupe', 'detection_nms_iou_threshold', 0.75))
-        detection_nms_same_crop_only = bool(self._policy_value('dedupe', 'detection_nms_same_crop_only', True))
-        conditioned_part_weight = float(self._policy_value('compatibility_fusion', 'conditioned_part_weight', 0.45))
-        conditioned_part_weight = max(0.0, min(1.0, conditioned_part_weight))
-        generic_part_penalty = float(self._policy_value('part_resolution', 'generic_part_penalty', 0.78))
-        generic_part_labels_raw = self._policy_value(
-            'part_resolution',
-            'generic_part_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant']
-        )
-        if isinstance(generic_part_labels_raw, list):
-            generic_part_labels = [str(label) for label in generic_part_labels_raw]
-        else:
-            generic_part_labels = ['whole plant', 'whole', 'plant', 'entire plant']
-        specific_part_override_ratio = float(self._policy_value('part_resolution', 'specific_part_override_ratio', 0.45))
-        specific_part_min_confidence = float(self._policy_value('part_resolution', 'specific_part_min_confidence', 0.12))
-        preferred_part_labels_raw = self._policy_value('part_resolution', 'preferred_part_labels', ['leaf'])
-        if isinstance(preferred_part_labels_raw, list):
-            preferred_part_labels = [str(label) for label in preferred_part_labels_raw]
-        else:
-            preferred_part_labels = ['leaf']
-        preferred_part_override_ratio = float(self._policy_value('part_resolution', 'preferred_part_override_ratio', 0.50))
-        leaf_override_enabled = bool(self._policy_value('part_resolution', 'leaf_override_enabled', True))
-        leaf_override_label = str(self._policy_value('part_resolution', 'leaf_override_label', 'leaf'))
-        leaf_override_target_raw = self._policy_value(
-            'part_resolution',
-            'leaf_override_target_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
-        )
-        if isinstance(leaf_override_target_raw, list):
-            leaf_override_target_labels = [str(label) for label in leaf_override_target_raw]
-        else:
-            leaf_override_target_labels = ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
-        leaf_override_ratio = float(self._policy_value('part_resolution', 'leaf_override_ratio', 0.35))
-        leaf_override_min_confidence = float(self._policy_value('part_resolution', 'leaf_override_min_confidence', 0.10))
-        leaf_override_min_area_ratio = float(self._policy_value('part_resolution', 'leaf_override_min_area_ratio', 0.02))
-        leaf_override_aspect_min = float(self._policy_value('part_resolution', 'leaf_override_aspect_min', 0.30))
-        leaf_override_aspect_max = float(self._policy_value('part_resolution', 'leaf_override_aspect_max', 3.20))
-        leaf_visual_override_enabled = bool(self._policy_value('part_resolution', 'leaf_visual_override_enabled', True))
-        leaf_visual_likeness_threshold = float(self._policy_value('part_resolution', 'leaf_visual_likeness_threshold', 0.44))
-        leaf_visual_green_min = float(self._policy_value('part_resolution', 'leaf_visual_green_min', 0.12))
-        leaf_visual_force_generic = bool(self._policy_value('part_resolution', 'leaf_visual_force_generic', True))
-        leaf_visual_force_without_leaf_score = bool(self._policy_value('part_resolution', 'leaf_visual_force_without_leaf_score', True))
-        leaf_visual_force_conf_floor = float(self._policy_value('part_resolution', 'leaf_visual_force_conf_floor', 0.16))
-        leaf_visual_force_part_factor = float(self._policy_value('part_resolution', 'leaf_visual_force_part_factor', 0.65))
-        leaf_non_foliar_labels_raw = self._policy_value(
-            'part_resolution',
-            'leaf_non_foliar_part_labels',
-            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
-        )
-        if isinstance(leaf_non_foliar_labels_raw, list):
-            leaf_non_foliar_part_labels = [str(label) for label in leaf_non_foliar_labels_raw]
-        else:
-            leaf_non_foliar_part_labels = ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
-        leaf_part_rebalance_enabled = bool(self._policy_value('part_resolution', 'leaf_part_rebalance_enabled', True))
-        leaf_part_rebalance_threshold = float(self._policy_value('part_resolution', 'leaf_part_rebalance_threshold', 0.34))
-        leaf_part_rebalance_penalty = float(self._policy_value('part_resolution', 'leaf_part_rebalance_penalty', 0.55))
-        leaf_part_rebalance_boost = float(self._policy_value('part_resolution', 'leaf_part_rebalance_boost', 1.35))
-        max_rois_raw = self._policy_value('roi_filter', 'max_rois_for_classification', 0)
-        try:
-            max_rois_for_classification = int(max_rois_raw)
-        except Exception:
-            max_rois_for_classification = 0
-        if max_rois_for_classification <= 0:
-            max_rois_for_classification = None
-        ensemble_config = self.vlm_config.get('ensemble_config', {})
-        crop_num_prompts_raw = self._policy_value('crop_evidence', 'crop_num_prompts', ensemble_config.get('crop_num_prompts', None))
-        part_num_prompts_raw = self._policy_value('part_evidence', 'part_num_prompts', ensemble_config.get('part_num_prompts', None))
-        try:
-            crop_num_prompts = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
-        except Exception:
-            crop_num_prompts = None
-        try:
-            part_num_prompts = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
-        except Exception:
-            part_num_prompts = None
-        
-        # Use effective_threshold if it's higher (user override)
-        classification_min_confidence = max(classification_min_confidence, effective_threshold)
-        
-        # Load quality score weights from config
-        quality_weights = self.vlm_config.get('quality_score_weights', {})
-        weight_crop = float(quality_weights.get('crop_confidence', 0.65))
-        weight_part = float(quality_weights.get('part_confidence', 0.20))
-        weight_sam3 = float(quality_weights.get('sam3_score', 0.15))
+        settings = self._build_sam3_runtime_settings(effective_threshold)
+        sam3_threshold = settings['sam3_threshold']
         
         # SAM3 with configurable text prompt (default "plant" works for leaves, fruits, stems, etc.)
         sam3_prompt = self.vlm_config.get('sam3_text_prompt', 'plant')
@@ -1855,204 +2183,40 @@ class VLMPipeline:
             mask_count = 0
         
         detections = []
+        stage_order = self._sam3_stage_order()
         roi_seen = 0
         roi_kept = 0
         roi_classification_calls = 0
         if mask_count > 0:
             roi_stage_start = time.perf_counter()
 
-            roi_pairs = list(zip(boxes, scores))
-            if max_rois_for_classification is not None and len(roi_pairs) > max_rois_for_classification:
-                roi_pairs.sort(
-                    key=lambda pair: float(pair[1].item()) if torch.is_tensor(pair[1]) else float(pair[1]),
-                    reverse=True,
-                )
-                roi_pairs = roi_pairs[:max_rois_for_classification]
+            candidates, roi_seen = self._run_sam3_roi_filter_stage(
+                boxes=boxes,
+                scores=scores,
+                image_width=image_width,
+                image_height=image_height,
+                settings=settings,
+                stage_order=stage_order,
+            )
 
-            for box, score in roi_pairs:
-                roi_seen += 1
-                sam3_score = float(score)
-                if sam3_score < sam3_threshold:
-                    continue
-
-                raw_bbox = box.tolist() if torch.is_tensor(box) else box
-                bbox = self._sanitize_bbox(raw_bbox, image_width, image_height)
-                if bbox is None:
-                    continue
-
-                box_w = bbox[2] - bbox[0]
-                box_h = bbox[3] - bbox[1]
-                if box_w < min_box_side_px or box_h < min_box_side_px:
-                    continue
-
-                area_ratio = self._bbox_area_ratio(bbox, image_width, image_height)
-                if area_ratio < min_box_area_ratio:
-                    continue
-                
-                # Extract ROI
-                roi_image = self._extract_roi(pil_image, bbox)
-
-                classify_start = time.perf_counter()
-                
-                # Classify parts first (used for crop inference fallback)
-                part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
-                    roi_image, self.part_labels, label_type='part', num_prompts=part_num_prompts
-                )
-                roi_classification_calls += 1
-
-                leaf_likeness = self._compute_leaf_likeness(
-                    roi_image=roi_image,
-                    bbox=bbox,
-                    image_width=image_width,
-                    image_height=image_height,
-                )
-                if leaf_part_rebalance_enabled:
-                    part_scores = self._rebalance_part_scores_for_leaf_like_roi(
-                        part_scores=part_scores,
-                        leaf_likeness=leaf_likeness,
-                        leaf_label=leaf_override_label,
-                        non_foliar_part_labels=leaf_non_foliar_part_labels,
-                        activation_threshold=leaf_part_rebalance_threshold,
-                        non_foliar_penalty=leaf_part_rebalance_penalty,
-                        leaf_boost=leaf_part_rebalance_boost,
-                    )
-                    if part_scores:
-                        part_label = max(part_scores, key=part_scores.get)
-                        part_conf = float(part_scores.get(part_label, 0.0))
-                
-                # Classify crops with ensemble for robustness to disease/damage
-                crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
-                    roi_image, self.crop_labels, label_type='crop', num_prompts=crop_num_prompts
-                )
-                roi_classification_calls += 1
-                stage_timings_ms['roi_classification'] += (time.perf_counter() - classify_start) * 1000.0
-                
-                # Intelligent fallback: use part to resolve uncertain crop classifications
-                crop_label, crop_conf = self._select_best_crop_with_fallback(
-                    roi_image, crop_scores, part_label, part_scores, 
-                    min_confidence=classification_min_confidence
-                )
-
-                # Refine part prediction using dynamic crop-part compatibility map
-                compatible_parts = self._compatible_parts_for_crop(crop_label)
-                resolved_part_scores = dict(part_scores)
-                if compatible_parts:
-                    compatible_part_scores = {
-                        part_name: float(part_scores.get(part_name, 0.0))
-                        for part_name in compatible_parts
-                    }
-                    conditioned_part_scores = self._score_parts_conditioned_on_crop(
-                        roi_image,
-                        crop_label,
-                        compatible_parts,
-                        num_prompts=part_num_prompts,
-                    )
-                    if conditioned_part_scores:
-                        blended_scores: Dict[str, float] = {}
-                        for part_name in compatible_parts:
-                            generic_score = float(compatible_part_scores.get(part_name, 0.0))
-                            conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
-                            blended_scores[part_name] = (
-                                (1.0 - conditioned_part_weight) * generic_score
-                                + conditioned_part_weight * conditioned_score
-                            )
-                        compatible_part_scores = blended_scores
-                    compatible_part_scores = self._apply_generic_part_penalty(
-                        compatible_part_scores,
-                        generic_part_labels,
-                        generic_part_penalty,
-                    )
-                    resolved_part_scores = dict(compatible_part_scores)
-                    if compatible_part_scores:
-                        refined_part_label, refined_part_conf = self._select_part_label_with_specificity(
-                            compatible_part_scores,
-                            generic_part_labels,
-                            specific_override_ratio=specific_part_override_ratio,
-                            specific_min_confidence=specific_part_min_confidence,
-                            preferred_part_labels=preferred_part_labels,
-                            preferred_override_ratio=preferred_part_override_ratio,
-                        )
-                        if refined_part_label:
-                            part_label = refined_part_label
-                            part_conf = refined_part_conf
-
-                if leaf_override_enabled:
-                    part_label, part_conf = self._apply_leaf_like_override(
-                        selected_label=part_label,
-                        selected_score=part_conf,
-                        part_scores=resolved_part_scores,
-                        bbox=bbox,
-                        image_width=image_width,
-                        image_height=image_height,
-                        leaf_label=leaf_override_label,
-                        override_target_labels=leaf_override_target_labels,
-                        leaf_score_ratio=leaf_override_ratio,
-                        leaf_min_confidence=leaf_override_min_confidence,
-                        leaf_min_area_ratio=leaf_override_min_area_ratio,
-                        leaf_aspect_min=leaf_override_aspect_min,
-                        leaf_aspect_max=leaf_override_aspect_max,
-                    )
-
-                if leaf_visual_override_enabled and str(part_label).strip().lower() in {
-                    'whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'
-                }:
-                    leaf_key = str(leaf_override_label).strip().lower()
-                    leaf_score = 0.0
-                    for score_label, score_value in resolved_part_scores.items():
-                        if str(score_label).strip().lower() == leaf_key:
-                            leaf_score = max(leaf_score, float(score_value))
-
-                    threshold = max(0.0, min(1.0, leaf_visual_likeness_threshold))
-                    min_leaf_score = max(0.0, min(1.0, leaf_visual_green_min))
-                    if leaf_likeness >= threshold:
-                        leaf_score_ok = leaf_score >= min_leaf_score
-                        if leaf_score_ok or leaf_visual_force_without_leaf_score:
-                            if leaf_visual_force_generic:
-                                floor_conf = max(0.0, min(1.0, leaf_visual_force_conf_floor))
-                                part_factor = max(0.0, min(1.0, leaf_visual_force_part_factor))
-                                forced_conf = max(leaf_score, float(part_conf) * part_factor, floor_conf)
-                                part_label = leaf_override_label
-                                part_conf = forced_conf
-                            elif leaf_score_ok:
-                                part_label = leaf_override_label
-                                part_conf = max(part_conf, leaf_score)
-
-                if crop_label == 'unknown' or float(crop_conf) < classification_min_confidence:
-                    continue
-
-                # Calculate quality score with configurable weights
-                quality_score = (
-                    weight_crop * float(crop_conf) + 
-                    weight_part * float(part_conf) + 
-                    weight_sam3 * sam3_score
-                )
-                
-                detections.append({
-                    'crop': crop_label,
-                    'part': part_label,
-                    'crop_confidence': crop_conf,
-                    'part_confidence': part_conf,
-                    'disease': None,
-                    'disease_confidence': 0.0,
-                    'bbox': bbox,
-                    'mask': None,  # SAM3 masks can be included if needed
-                    'sam3_score': sam3_score,
-                    '_quality_score': quality_score,
-                })
-                roi_kept += 1
+            detections, roi_kept, roi_classification_calls, roi_classification_ms = self._run_sam3_roi_classification_stage(
+                pil_image=pil_image,
+                candidates=candidates,
+                image_width=image_width,
+                image_height=image_height,
+                settings=settings,
+                stage_order=stage_order,
+            )
+            stage_timings_ms['roi_classification'] += roi_classification_ms
             stage_timings_ms['roi_total'] = (time.perf_counter() - roi_stage_start) * 1000.0
 
         stage_start = time.perf_counter()
-        detections.sort(key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
-        detections = self._suppress_overlapping_detections(
-            detections,
-            iou_threshold=detection_nms_iou_threshold,
-            same_crop_only=detection_nms_same_crop_only,
+        detections = self._postprocess_sam3_detections(
+            detections=detections,
+            settings=settings,
+            effective_max_detections=effective_max_detections,
+            stage_order=stage_order,
         )
-        if effective_max_detections is not None:
-            detections = detections[:effective_max_detections]
-        for det in detections:
-            det.pop('_quality_score', None)
         stage_timings_ms['postprocess'] = (time.perf_counter() - stage_start) * 1000.0
         
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
