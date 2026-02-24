@@ -107,5 +107,83 @@ class TestSchemas:
         with pytest.raises(Exception):  # Should raise ConfigurationError
             config_validator.validate("router", invalid_config)
 
+    def test_valid_router_policy_execution_config(self):
+        """Test router schema accepts valid policy_graph.execution configuration."""
+        config_validator._schemas.clear()
+        config_validator.register_schema("router", router_schema())
+
+        valid_config = {
+            "router": {
+                "enabled": True,
+                "type": "vlm",
+                "vlm": {
+                    "enabled": True,
+                    "policy_graph": {
+                        "execution": {
+                            "sam3_stage_order": [
+                                "roi_filter",
+                                "roi_classification",
+                                "open_set_gate",
+                                "postprocess"
+                            ],
+                            "confidence_threshold_multiplier": 1.15,
+                            "confidence_threshold_min": 0.0,
+                            "confidence_threshold_max": 1.0
+                        }
+                    }
+                }
+            }
+        }
+
+        result = config_validator.validate("router", valid_config)
+        assert result["router"]["vlm"]["policy_graph"]["execution"]["confidence_threshold_multiplier"] == 1.15
+
+    def test_invalid_router_policy_execution_stage_order(self):
+        """Test router schema rejects invalid sam3 stage names in execution config."""
+        config_validator._schemas.clear()
+        config_validator.register_schema("router", router_schema())
+
+        invalid_config = {
+            "router": {
+                "enabled": True,
+                "type": "vlm",
+                "vlm": {
+                    "enabled": True,
+                    "policy_graph": {
+                        "execution": {
+                            "sam3_stage_order": ["roi_filter", "invalid_stage"]
+                        }
+                    }
+                }
+            }
+        }
+
+        with pytest.raises(Exception):
+            config_validator.validate("router", invalid_config)
+
+    def test_invalid_router_policy_execution_threshold_bounds(self):
+        """Test router schema rejects out-of-range threshold clamp values."""
+        config_validator._schemas.clear()
+        config_validator.register_schema("router", router_schema())
+
+        invalid_config = {
+            "router": {
+                "enabled": True,
+                "type": "vlm",
+                "vlm": {
+                    "enabled": True,
+                    "policy_graph": {
+                        "execution": {
+                            "confidence_threshold_min": -0.1,
+                            "confidence_threshold_max": 1.2
+                        }
+                    }
+                }
+            }
+        }
+
+        with pytest.raises(Exception):
+            config_validator.validate("router", invalid_config)
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

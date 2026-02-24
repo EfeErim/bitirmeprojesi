@@ -1,4 +1,5 @@
 import torch
+import pytest
 from unittest.mock import patch
 
 from src.router.vlm_pipeline import VLMPipeline
@@ -126,3 +127,144 @@ def test_postprocess_stage_removed_keeps_overlapping_detections():
     result = pipeline.analyze_image(image)
 
     assert len(result['detections']) == 2
+
+
+def test_threshold_multiplier_raises_effective_threshold():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+                'policy_graph': {
+                    'execution': {
+                        'confidence_threshold_multiplier': 1.5,
+                        'confidence_threshold_min': 0.0,
+                        'confidence_threshold_max': 1.0,
+                    }
+                }
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    effective = pipeline._resolve_effective_confidence_threshold(0.4)
+    assert effective == pytest.approx(0.6)
+
+
+def test_threshold_multiplier_respects_min_max_clamps():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+                'policy_graph': {
+                    'execution': {
+                        'confidence_threshold_multiplier': 2.0,
+                        'confidence_threshold_min': 0.3,
+                        'confidence_threshold_max': 0.7,
+                    }
+                }
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    low_effective = pipeline._resolve_effective_confidence_threshold(0.1)
+    high_effective = pipeline._resolve_effective_confidence_threshold(0.5)
+
+    assert low_effective == pytest.approx(0.3)
+    assert high_effective == pytest.approx(0.7)
+
+
+def test_runtime_profile_switch_changes_effective_threshold():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+                'profile': 'balanced',
+                'policy_graph': {
+                    'execution': {
+                        'confidence_threshold_multiplier': 1.0,
+                        'confidence_threshold_min': 0.0,
+                        'confidence_threshold_max': 1.0,
+                    }
+                },
+                'profiles': {
+                    'fast': {
+                        'policy_graph': {
+                            'execution': {
+                                'confidence_threshold_multiplier': 1.15
+                            }
+                        }
+                    },
+                    'calibrated': {
+                        'policy_graph': {
+                            'execution': {
+                                'confidence_threshold_multiplier': 0.90
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    pipeline.set_runtime_profile('fast')
+    fast_threshold = pipeline._resolve_effective_confidence_threshold(0.4)
+
+    pipeline.set_runtime_profile('calibrated')
+    calibrated_threshold = pipeline._resolve_effective_confidence_threshold(0.4)
+
+    assert fast_threshold == pytest.approx(0.46)
+    assert calibrated_threshold == pytest.approx(0.36)
+    assert fast_threshold > calibrated_threshold
+
+
+def test_stage_order_invalid_list_falls_back_to_default():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+                'policy_graph': {
+                    'execution': {
+                        'sam3_stage_order': ['invalid_stage', 'another_invalid']
+                    }
+                }
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    assert pipeline._sam3_stage_order() == ['roi_filter', 'roi_classification', 'open_set_gate', 'postprocess']
+
+
+def test_stage_order_normalizes_and_deduplicates_values():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+                'policy_graph': {
+                    'execution': {
+                        'sam3_stage_order': ['roi_filter', 'postprocess', 'roi_filter', 'open_set_gate', 'invalid']
+                    }
+                }
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    assert pipeline._sam3_stage_order() == ['roi_filter', 'postprocess', 'open_set_gate']

@@ -158,6 +158,12 @@
         "confidence_margin_threshold": 0.7
       },
       "policy_graph": {
+        "execution": {
+          "sam3_stage_order": ["roi_filter", "roi_classification", "open_set_gate", "postprocess"],
+          "confidence_threshold_multiplier": 1.0,
+          "confidence_threshold_min": 0.0,
+          "confidence_threshold_max": 1.0
+        },
         "roi_filter": {
           "enabled": true,
           "sam3_mask_threshold": 0.01,
@@ -195,6 +201,9 @@
       "profiles": {
         "fast": {
           "policy_graph": {
+            "execution": {
+              "confidence_threshold_multiplier": 1.15
+            },
             "roi_filter": {
               "max_rois_for_classification": 4,
               "sam3_mask_threshold": 0.08,
@@ -218,6 +227,9 @@
           "open_set_min_confidence": 0.35,
           "open_set_margin": 0.03,
           "policy_graph": {
+            "execution": {
+              "confidence_threshold_multiplier": 0.90
+            },
             "crop_evidence": {
               "crop_num_prompts": 3,
               "classification_min_confidence": 0.30

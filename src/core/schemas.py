@@ -47,6 +47,25 @@ def router_schema() -> Dict[str, Any]:
                     },
                     "policy_graph": {
                         "type": "object",
+                        "properties": {
+                            "execution": {
+                                "type": "object",
+                                "properties": {
+                                    "enabled": {"type": "boolean"},
+                                    "sam3_stage_order": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": ["roi_filter", "roi_classification", "open_set_gate", "postprocess"]
+                                        }
+                                    },
+                                    "confidence_threshold_multiplier": {"type": "number", "minimum": 0},
+                                    "confidence_threshold_min": {"type": "number", "minimum": 0, "maximum": 1},
+                                    "confidence_threshold_max": {"type": "number", "minimum": 0, "maximum": 1}
+                                },
+                                "additionalProperties": True
+                            }
+                        },
                         "additionalProperties": {
                             "type": "object"
                         }
