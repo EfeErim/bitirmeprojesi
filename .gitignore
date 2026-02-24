@@ -36,6 +36,7 @@ Thumbs.db
 
 # Project specific
 .tmp.driveupload/
+.tmp.drivedownload/
 data/archive.zip
 data/*.xlsx
 data/*.csv
@@ -131,12 +132,10 @@ tensorboard/
 .Trashes
 ehthumbs.db
 Desktop.ini
+desktop.ini
 
 # Documentation PDFs (large files - keep local, don't push to Git)
 documents/**/*.pdf
 eski döküman/**/*.pdf
 lit review/**/*.pdf
 *.pdf
- 
-"# Windows system files"  
-"desktop.ini" 

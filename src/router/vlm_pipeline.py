@@ -1892,6 +1892,18 @@ class VLMPipeline:
         settings['weight_crop'] = float(quality_weights.get('crop_confidence', 0.65))
         settings['weight_part'] = float(quality_weights.get('part_confidence', 0.20))
         settings['weight_sam3'] = float(quality_weights.get('sam3_score', 0.15))
+
+        # Leaf/fruit focus mode settings
+        settings['focus_part_mode_enabled'] = bool(self._policy_value('focus_mode', 'focus_part_mode_enabled', False))
+        focus_parts_raw = self._policy_value('focus_mode', 'focus_parts', ['leaf'])
+        settings['focus_parts'] = (
+            [str(label) for label in focus_parts_raw]
+            if isinstance(focus_parts_raw, list)
+            else ['leaf']
+        )
+        settings['focus_min_confidence_fallback'] = float(self._policy_value('focus_mode', 'focus_min_confidence_fallback', 0.50))
+        settings['focus_fallback_enabled'] = bool(self._policy_value('focus_mode', 'focus_fallback_enabled', True))
+        
         return settings
 
     def _collect_sam3_roi_candidates(
@@ -1908,6 +1920,13 @@ class VLMPipeline:
         roi_seen = 0
 
         roi_pairs = list(zip(boxes, scores))
+        
+        # Pre-classification focus-aware logging (focus filtering is primarily post-classification)
+        if settings.get('focus_part_mode_enabled'):
+            focus_parts = settings.get('focus_parts', ['leaf'])
+            logger.debug(f"Focus part mode enabled: focusing on {focus_parts}; "
+                       f"strong filtering applied during classification stage")
+
         max_rois = settings.get('max_rois_for_classification')
         if max_rois is not None and len(roi_pairs) > max_rois:
             roi_pairs.sort(
@@ -2113,6 +2132,9 @@ class VLMPipeline:
         if not run_classification:
             return detections, roi_kept, roi_classification_calls, roi_classification_ms
 
+        # First pass: classify all ROIs
+        all_detections: List[Dict[str, Any]] = []
+        focused_detections: List[Dict[str, Any]] = []
         for candidate in candidates:
             classify_start = time.perf_counter()
             detection, classification_calls = self._classify_sam3_roi_candidate(
@@ -2127,6 +2149,49 @@ class VLMPipeline:
 
             if detection is None:
                 continue
+            
+            all_detections.append(detection)
+            
+            # Check if this ROI matches focus criteria (if focus mode enabled)
+            if settings.get('focus_part_mode_enabled'):
+                focus_parts = settings.get('focus_parts', ['leaf'])
+                part_label = str(detection.get('part', 'unknown')).lower()
+                part_confidence = float(detection.get('part_confidence', 0.0))
+                
+                # If part is in focus list and meets min confidence threshold, mark as focused
+                if any(fp.lower() in part_label for fp in focus_parts) and \
+                   part_confidence >= settings.get('focus_min_confidence_fallback', 0.50):
+                    focused_detections.append(detection)
+        
+        # Determine which detections to use based on focus fallback logic
+        if settings.get('focus_part_mode_enabled') and settings.get('focus_fallback_enabled'):
+            focus_parts = settings.get('focus_parts', ['leaf'])
+            if focused_detections:
+                # Use focused detections if we have any with sufficient confidence
+                max_focused_conf = max(
+                    float(d.get('part_confidence', 0.0)) for d in focused_detections
+                ) if focused_detections else 0.0
+                
+                if max_focused_conf >= settings.get('focus_min_confidence_fallback', 0.50):
+                    logger.debug(f"Using {len(focused_detections)} focused ROIs "
+                               f"(parts={focus_parts}, max_conf={max_focused_conf:.2f})")
+                    result_detections = focused_detections
+                else:
+                    # Fallback: confidence too low, use all detections
+                    logger.debug(f"Focus mode confidence threshold not met "
+                               f"({max_focused_conf:.2f} < {settings.get('focus_min_confidence_fallback', 0.50):.2f}); "
+                               f"reverting to full ROI set")
+                    result_detections = all_detections
+            else:
+                # No focused detections found, fall back to all
+                logger.debug(f"No ROIs with focus_parts={focus_parts}; "
+                           f"reverting to full ROI set ({len(all_detections)} total)")
+                result_detections = all_detections
+        else:
+            result_detections = all_detections
+        
+        # Apply open-set gate if enabled
+        for detection in result_detections:
             if run_open_set_gate and not self._passes_open_set_gate(
                 crop_label=str(detection.get('crop', 'unknown')),
                 crop_confidence=float(detection.get('crop_confidence', 0.0)),

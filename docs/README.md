@@ -5,6 +5,9 @@ Welcome to the AADS-ULoRA documentation. This index provides an overview of all 
 ## 📚 Getting Started
 
 - **[Project Overview](../README.md)** - Project overview and quick start guide
+- **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** - Where files live, what they do, and how they connect
+- **[Notebook Index](../colab_notebooks/README.md)** - Which notebook to run for each workflow
+- **[Scripts Index](../scripts/README.md)** - Script categories and usage guidance
 - **[Colab Migration Guide](colab_migration_guide.md)** - End-to-end Colab setup and training flow
 - **[Colab Data Pipeline](colab_data_pipeline.md)** - Data preparation and ingestion workflow
 - **[Colab Training Manual](user_guide/colab_training_manual.md)** - Detailed training instructions
@@ -44,7 +47,8 @@ Welcome to the AADS-ULoRA documentation. This index provides an overview of all 
 
 - **[Deployment Guide](deployment/README.md)** - Training and inference deployment considerations
 - **[Security Guide](security/README.md)** - Runtime security controls and best practices
-- **[Colab Migration Implementation Summary](../COLAB_MIGRATION_IMPLEMENTATION.md)** - Implemented Colab training workflow
+- **[Colab Migration Implementation Summary](guides/COLAB_MIGRATION_IMPLEMENTATION.md)** - Implemented Colab training workflow
+- **[Reports Archive](reports/README.md)** - Historical implementation/status reports
 
 ---
 

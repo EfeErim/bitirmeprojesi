@@ -95,6 +95,10 @@
       "open_set_min_confidence": 0.25,
       "open_set_margin": 0.01,
       "max_detections": 50,
+      "focus_part_mode_enabled": false,
+      "focus_parts": ["leaf"],
+      "focus_min_confidence_fallback": 0.50,
+      "focus_fallback_enabled": true,
       "use_dynamic_taxonomy": true,
       "taxonomy_path": "config/plant_taxonomy.json",
       "model_ids": {
@@ -236,6 +240,32 @@
             },
             "part_evidence": {
               "part_num_prompts": 4
+            }
+          }
+        },
+        "leaf_fruit_production": {
+          "focus_part_mode_enabled": true,
+          "focus_parts": ["leaf", "fruit"],
+          "focus_min_confidence_fallback": 0.55,
+          "focus_fallback_enabled": true,
+          "open_set_min_confidence": 0.35,
+          "open_set_margin": 0.03,
+          "policy_graph": {
+            "execution": {
+              "confidence_threshold_multiplier": 0.90
+            },
+            "roi_filter": {
+              "max_rois_for_classification": 15
+            },
+            "crop_evidence": {
+              "crop_num_prompts": 3,
+              "classification_min_confidence": 0.30
+            },
+            "part_evidence": {
+              "part_num_prompts": 4
+            },
+            "dedupe": {
+              "detection_nms_iou_threshold": 0.70
             }
           }
         }

@@ -241,10 +241,10 @@ After training:
 
 ## 📚 Documentation
 
-- [Complete README](README.md)
-- [Architecture Overview](docs/architecture/overview.md)
-- [Training Manual](docs/user_guide/colab_training_manual.md)
-- [Code Documentation](docs/development/development-setup.md)
+- [Complete README](../../README.md)
+- [Architecture Overview](../architecture/overview.md)
+- [Training Manual](../user_guide/colab_training_manual.md)
+- [Code Documentation](../development/development-setup.md)
 
 ---
 

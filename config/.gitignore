@@ -135,6 +135,4 @@ documents/**/*.pdf
 eski döküman/**/*.pdf
 lit review/**/*.pdf
 *.pdf
- 
-"# Windows system files"  
-"desktop.ini" 
+desktop.ini

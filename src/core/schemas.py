@@ -38,7 +38,7 @@ def router_schema() -> Dict[str, Any]:
                 "type": "object",
                 "properties": {
                     "enabled": {"type": "boolean"},
-                    "profile": {"type": "string", "enum": ["fast", "balanced", "calibrated"]},
+                    "profile": {"type": "string", "enum": ["fast", "balanced", "calibrated", "leaf_fruit_production"]},
                     "profiles": {
                         "type": "object",
                         "additionalProperties": {

@@ -18,6 +18,16 @@ AADS-ULoRA is focused on the **core ML training and inference engine** for multi
 
 This project focuses on the **research and training components** of the agricultural AI system. Mobile application deployment, API servers, and web service integrations have been removed to maintain focus on the core product development pipeline.
 
+## Repository Navigation
+
+- **Full file-purpose + relationship map:** [docs/REPO_FILE_RELATIONS.md](docs/REPO_FILE_RELATIONS.md)
+- **Documentation index:** [docs/README.md](docs/README.md)
+- **Reports archive:** [docs/reports/README.md](docs/reports/README.md)
+- **Notebook index:** [colab_notebooks/README.md](colab_notebooks/README.md)
+- **Scripts index:** [scripts/README.md](scripts/README.md)
+
+If you're unsure where to start, use the file-relation map first and then jump to the relevant notebook/script index.
+
 ### Removed Components (February 2026)
 - Mobile application code (`mobile/android/`)
 - FastAPI server and REST endpoints (`api/`)
@@ -30,57 +40,46 @@ This project focuses on the **research and training components** of the agricult
 
 ```
 d:/bitirme projesi/
-├── colab_notebooks/       # Jupyter training notebooks
-│   ├── 1_data_preparation.ipynb
-│   ├── 2_phase1_training.ipynb
-│   ├── 3_phase2_training.ipynb
-│   ├── 4_phase3_training.ipynb
-│   ├── 5_testing_validation.ipynb
-│   └── 6_performance_monitoring.ipynb
-├── src/                   # Core training and inference code
-│   ├── adapter/          # Crop-specific adapters
-│   ├── core/             # Configuration and contracts
-│   ├── dataset/          # Data preparation and loading
-│   ├── debugging/        # Performance monitoring
-│   ├── evaluation/       # Metrics and evaluation
-│   ├── ood/              # OOD detection components
-│   ├── pipeline/         # Multi-crop inference pipeline
-│   ├── router/           # Crop routing logic
-│   ├── training/         # Phase trainers (Phase 1-3)
-│   ├── utils/            # Shared utilities
-│   └── visualization/    # Visualization tools
-├── tests/                 # Comprehensive test suites
-│   ├── colab/            # Colab environment smoke tests
-│   ├── integration/       # End-to-end pipeline tests
-│   ├── unit/             # Unit tests for components
-│   └── fixtures/         # Test data and fixtures
-├── config/                # Configuration files
-│   ├── base.json         # Base configuration
-│   ├── colab.json        # Colab environment config
-│   ├── development.json  # Development overrides
-│   ├── production.json   # Production settings
-│   ├── adapter_spec_v55.json
+├── colab_notebooks/            # Jupyter notebooks (one-click + phase-by-phase)
+├── src/                        # Core training/inference code
+│   ├── adapter/                # Crop adapters
+│   ├── core/                   # Contracts/config managers
+│   ├── dataset/                # Data prep/load/cache
+│   ├── debugging/              # Debug/perf helpers
+│   ├── evaluation/             # Metrics and evaluation
+│   ├── monitoring/             # Runtime monitoring metrics
+│   ├── ood/                    # OOD detection components
+│   ├── pipeline/               # Multi-crop pipeline
+│   ├── router/                 # VLM and crop routing
+│   ├── training/               # Phase 1/2/3 trainers
+│   ├── utils/                  # Shared utilities
+│   └── visualization/          # Visualization tools
+├── tests/                      # Unit/integration/colab test suites
+├── config/                     # Runtime and taxonomy config
+│   ├── base.json
+│   ├── colab.json
+│   ├── plant_taxonomy.json
 │   └── pytest.ini
-├── docs/                  # Documentation
+├── docs/                       # Documentation and reports
 │   ├── README.md
+│   ├── REPO_FILE_RELATIONS.md
+│   ├── reports/
+│   │   ├── README.md
+│   │   └── v55/
 │   ├── architecture/
 │   ├── development/
-│   ├── contributing/
-│   ├── deployment/
-│   ├── security/
+│   ├── guides/
 │   ├── user_guide/
-│   ├── api/
-│   └── colab_migration_guide.md
-├── scripts/               # Utility scripts
-│   ├── check_markdown_links.py
-│   ├── download_data_colab.py
-│   └── install_colab.py
-├── data/                  # Data storage
-│   └── test_dataset/
-├── logs/                  # Training logs
-├── colab_bootstrap.ipynb  # Colab setup notebook
-├── requirements.txt       # Python dependencies
-├── setup.py               # Package setup
+│   └── security/
+├── scripts/                    # Setup/testing/regression scripts
+├── data/                       # Local data/test dataset
+├── logs/                       # Run logs
+├── plans/                      # Planning artifacts
+├── specs/                      # Adapter/spec files
+├── README.md
+├── requirements.txt
+├── requirements_colab.txt
+├── setup.py
 └── validate_notebook_imports.py
 ```
 
@@ -179,7 +178,7 @@ checkpoint_manager.clear_checkpoints(['phase2'])
 checkpoint_manager.clear_checkpoints()
 ```
 
-See [Checkpoint System Guide](CHECKPOINT_SYSTEM_GUIDE.md) for detailed usage.
+See [Checkpoint System Guide](docs/guides/CHECKPOINT_SYSTEM_GUIDE.md) for detailed usage.
 
 ### 🎯 Interactive Configuration
 
@@ -219,6 +218,9 @@ pytest tests/unit/ -v
 
 # Run integration tests
 pytest tests/integration/ -v
+
+# Run core Python sanity checks (notebook imports + local pipeline checks)
+python scripts/run_python_sanity_bundle.py
 
 # Check documentation
 python scripts/check_markdown_links.py --root .
@@ -325,8 +327,8 @@ The checkpoint log allows you to resume training exactly where it left off. OOD 
 ## 📚 Documentation
 
 ### Getting Started
-- [Seamless Auto-Train Guide](SEAMLESS_AUTOTRAIN_GUIDE.md) - Complete end-to-end Colab training walkthrough
-- **[Checkpoint System Guide](CHECKPOINT_SYSTEM_GUIDE.md)** - Recovery, resuming, and managing training checkpoints
+- [Seamless Auto-Train Guide](docs/guides/SEAMLESS_AUTOTRAIN_GUIDE.md) - Complete end-to-end Colab training walkthrough
+- **[Checkpoint System Guide](docs/guides/CHECKPOINT_SYSTEM_GUIDE.md)** - Recovery, resuming, and managing training checkpoints
 
 ### Technical Documentation
 - [Documentation Index](docs/README.md)
