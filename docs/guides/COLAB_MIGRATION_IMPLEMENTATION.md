@@ -45,12 +45,13 @@ This document summarizes the complete implementation of the AADS-ULoRA training 
 
 ### 3. Requirements File
 
-#### `colab_notebooks/requirements_colab.txt`
-- Pinned dependencies for Colab environment
+#### `requirements_colab.txt` (canonical) + `colab_notebooks/requirements_colab.txt` (compatibility mirror)
+- Canonical dependencies are maintained at repository root
+- Notebook-local requirements file mirrors canonical file for compatibility
 - Core ML libraries (PyTorch, Transformers, PEFT, Accelerate)
 - Data processing (NumPy, Pandas, Pillow, scikit-learn)
 - Training & monitoring (tqdm, psutil, TensorBoard)
-- API & web (FastAPI, Uvicorn)
+- Optional runtime/web libraries (legacy compatibility)
 - Colab-specific packages
 
 ### 4. Training Implementations
@@ -155,7 +156,7 @@ This document summarizes the complete implementation of the AADS-ULoRA training 
 - Memory optimization techniques
 - Troubleshooting section
 - Performance tips
-- API deployment instructions
+- Legacy API deployment notes (archived)
 - Cleaning up and best practices
 
 #### `docs/user_guide/colab_training_manual.md`
@@ -169,7 +170,7 @@ This document summarizes the complete implementation of the AADS-ULoRA training 
 - File structure documentation
 - Common commands reference
 
-#### `docs/user_guide/cheatsheet_colynb.md`
+#### `docs/user_guide/cheatsheet_colab.md`
 - Quick reference for common commands
 - Code snippets for all operations
 - GPU and memory management

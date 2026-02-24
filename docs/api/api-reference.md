@@ -1,5 +1,12 @@
 # AADS-ULoRA v5.5 API Reference
 
+> ⚠️ Legacy document: this API reference is preserved for historical context. The repository's primary path is Colab-first training and script-based validation.
+
+Use these entrypoints for current workflows:
+- `../README.md`
+- `../colab_notebooks/README.md`
+- `../scripts/README.md`
+
 ## Base URL
 
 ```

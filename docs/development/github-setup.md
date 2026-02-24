@@ -17,7 +17,7 @@ git push -u origin feature/docs-sync
 
 ## Pull Request Checklist
 
-- [ ] `python validate_notebook_imports.py` passes
+- [ ] `python scripts/validate_notebook_imports.py` passes
 - [ ] Relevant pytest suites pass
 - [ ] Documentation links validated
 - [ ] Config changes documented
@@ -25,7 +25,7 @@ git push -u origin feature/docs-sync
 ## Suggested Repository Checks
 
 - Python lint/type checks (if enabled)
-- pytest suites (`tests/colab`, `tests/api`, integration)
+- pytest suites (`tests/colab`, `tests/integration`, `tests/unit`)
 - markdown link checker for `README.md` and `docs/`
 
 ## Markdown Link Guardrails

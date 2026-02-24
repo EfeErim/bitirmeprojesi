@@ -18,8 +18,8 @@ pip install -r requirements.txt
 ## Verify Installation
 
 ```powershell
-python validate_notebook_imports.py
-pytest -c config/pytest.ini tests/import_test.py
+python scripts/validate_notebook_imports.py
+python tests/import_test.py
 python scripts/check_markdown_links.py --root .
 ```
 
@@ -41,13 +41,13 @@ pytest tests/ --cov=src --cov-report=html
 
 - Base config: `config/base.json`
 - Training config (Colab): `config/colab.json`
-- Environment overrides: `config/development.json`, `config/production.json`
+- Performance guardrails: `config/perf_guardrails_phase5.json`
 - Config loader: `src/core/config_manager.py`
 
 ## Colab Workflow (Primary Training Path)
 
-1. Run `colab_bootstrap.ipynb`
-2. Run notebooks in order under `colab_notebooks/`
+1. Run `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` (recommended)
+2. For manual control, run `colab_notebooks/colab_bootstrap.ipynb` then notebooks in order under `colab_notebooks/`
 3. Use `config/colab.json` as default training configuration
 
 ## Common Issues

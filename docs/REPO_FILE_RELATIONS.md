@@ -28,7 +28,7 @@ This guide is a practical map of what each major file/group does and how pieces 
 - `../test_pipeline_final_check.py` - compatibility wrapper to canonical script.
 
 ### Root notebooks and guides
-- `../colab_bootstrap.ipynb` - root-level bootstrap notebook (legacy-compatible location).
+- `../colab_bootstrap.ipynb` - legacy-compatible mirror of `../colab_notebooks/colab_bootstrap.ipynb`.
 - `guides/CHECKPOINT_SYSTEM_GUIDE.md` - checkpointing behavior and recovery.
 - `guides/COLAB_QUICK_START.md` - quick Colab onboarding.
 - `guides/SEAMLESS_AUTOTRAIN_GUIDE.md` - auto-train flow guidance.
@@ -110,6 +110,7 @@ This guide is a practical map of what each major file/group does and how pieces 
 - Canonical Colab upload helper: `../scripts/colab_test_upload.py`.
 - Colab setup scripts support notebook bootstrapping and automation.
 - Debug/test scripts provide targeted troubleshooting for VLM/SAM3/BioCLIP.
+- **VLM testing:** See [`scripts/README.md` VLM Test Decision Matrix](../scripts/README.md#vlm-test-decision-matrix) for choosing between `colab_vlm_quick_test.py`, `colab_interactive_vlm_test.py`, `test_vlm_pipeline_standalone.py`, and legacy `colab_test_gpu_vlm.py`.
 - See `../scripts/README.md` for categorized script usage.
 
 ## Configuration, Tests, and Specs

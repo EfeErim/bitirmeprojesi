@@ -12,7 +12,7 @@ Documentation and repository structure were synchronized as of February 2026.
 
 ## Verified Sources
 
-- Runtime/API: `api/main.py`, `api/endpoints/*`
+- Runtime scripts/notebooks: `scripts/*`, `colab_notebooks/*`
 - Pipeline/router: `src/pipeline/independent_multi_crop_pipeline.py`, `src/router/vlm_pipeline.py`
 - Training: `src/training/colab_phase*_*.py`
 - Tests/config: `tests/*`, `config/pytest.ini`, `config/*.json`
@@ -21,4 +21,4 @@ Documentation and repository structure were synchronized as of February 2026.
 
 1. Add CI markdown link checking.
 2. Keep docs updated with every structural refactor.
-3. Add automated route inventory checks for API.
+3. Add automated script/notebook entrypoint inventory checks.

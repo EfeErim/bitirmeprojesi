@@ -111,6 +111,13 @@ Training and inference engine for AADS-ULoRA. Version 5.5.0. Last updated: Febru
 
 ## 🚀 Quick Start: Complete Seamless Training
 
+### Canonical Entrypoints (User-Facing)
+
+- **Primary start path:** `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
+- **Manual/diagnostic path:** `colab_notebooks/colab_bootstrap.ipynb` then notebooks `1` → `6`
+- **Canonical local sanity command:** `python scripts/validate_notebook_imports.py`
+- **Compatibility aliases (root scripts):** retained for legacy workflows, but `scripts/` is preferred in documentation.
+
 ### Option 1: One-Click Colab Training (Recommended)
 
 **No manual intervention needed** - Just one notebook, everything runs automatically!
@@ -206,8 +213,8 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # Verify setup
-python validate_notebook_imports.py
-pytest -c config/pytest.ini tests/import_test.py
+python scripts/validate_notebook_imports.py
+python tests/import_test.py
 ```
 
 ### Option 3: Local Testing

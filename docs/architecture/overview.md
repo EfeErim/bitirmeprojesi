@@ -7,33 +7,30 @@ AADS-ULoRA is a multi-crop disease diagnosis system with:
 - a routing stage to identify crop/part,
 - crop-specific adapter inference,
 - out-of-distribution (OOD) checks,
-- API-facing response formatting.
+- training/inference-focused output composition.
 
 This document reflects the current implementation in the repository.
 
 ## High-Level Flow
 
-1. **Request ingress** via Python function calls in inference scripts.
-2. **Image decoding + preprocessing** in API endpoint handlers.
+1. **Input ingress** via notebooks/scripts and pipeline entry utilities.
+2. **Image decoding + preprocessing** in router/pipeline helpers.
 3. **Pipeline orchestration** in `src/pipeline/independent_multi_crop_pipeline.py`.
 4. **Router analysis** through `src/router/vlm_pipeline.py` (`VLMPipeline` + `DiagnosticScoutingAnalyzer`).
 5. **Adapter inference** per crop (if available).
-6. **OOD analysis + response assembly** returned to API clients.
+6. **OOD analysis + response assembly** returned to calling workflows.
 
 ## Core Components
 
-### API Layer
+### Runtime Integration Layer
 
-- `api/main.py` initializes app configuration, middleware, and startup lifecycle.
-- Endpoints under `api/endpoints/` expose:
-  - `/v1/diagnose` for diagnosis,
-  - `/v1/crops` and adapter status endpoints,
-  - feedback and monitoring endpoints.
+- Runtime orchestration is currently centered on notebooks and scripts in `colab_notebooks/` and `scripts/`.
+- API/deployment documentation is preserved only as legacy archive material.
 
 ### Configuration Layer
 
-- `src/core/config_manager.py` loads base and environment configuration files.
-- Primary runtime configs live in `config/` (`base.json`, `development.json`, `production.json`, `colab.json`).
+- `src/core/config_manager.py` loads base and runtime configuration files.
+- Primary runtime configs live in `config/` (`base.json`, `colab.json`, `perf_guardrails_phase5.json`).
 
 ### Orchestration Layer
 
@@ -60,14 +57,14 @@ This document reflects the current implementation in the repository.
 - Pytest-based test suites in `tests/`:
   - `tests/colab/` for environment/data/training smoke coverage,
   - `tests/integration/` for pipeline integration checks,
-  - `tests/api/` for endpoint behavior.
+  - `tests/unit/` for component-level behavior.
 
 ## Runtime Modes
 
 ### Local Development
 
 - Use `.venv` + `requirements.txt`.
-- Run API with `python -m api.main`.
+- Run sanity and regression scripts under `scripts/`.
 
 ### Colab Training
 
@@ -85,3 +82,5 @@ This document reflects the current implementation in the repository.
 - `docs/api/api-reference.md`
 - `docs/colab_migration_guide.md`
 - `docs/user_guide/colab_training_manual.md`
+
+> Note: `docs/api/api-reference.md` is archived legacy documentation and not part of the primary workflow.

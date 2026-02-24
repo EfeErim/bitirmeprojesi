@@ -4,6 +4,13 @@ Welcome to the AADS-ULoRA documentation. This index provides an overview of all 
 
 ## 📚 Getting Started
 
+### Start Here (Recommended Order)
+
+1. **[Project Overview](../README.md)**
+2. **[Notebook Index](../colab_notebooks/README.md)** → start with `0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
+3. **[Scripts Index](../scripts/README.md)** for local sanity/regression commands
+4. **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** for detailed file ownership
+
 - **[Project Overview](../README.md)** - Project overview and quick start guide
 - **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** - Where files live, what they do, and how they connect
 - **[Notebook Index](../colab_notebooks/README.md)** - Which notebook to run for each workflow
@@ -45,7 +52,9 @@ Welcome to the AADS-ULoRA documentation. This index provides an overview of all 
 
 ## 🚀 Operations & Deployment
 
-- **[Deployment Guide](deployment/README.md)** - Training and inference deployment considerations
+> ⚠️ Legacy scope: API/deployment docs are preserved for historical context. This repository is currently focused on training/inference engine workflows.
+
+- **[Deployment Guide](deployment/README.md)** - Legacy deployment notes (archived)
 - **[Security Guide](security/README.md)** - Runtime security controls and best practices
 - **[Colab Migration Implementation Summary](guides/COLAB_MIGRATION_IMPLEMENTATION.md)** - Implemented Colab training workflow
 - **[Reports Archive](reports/README.md)** - Historical implementation/status reports

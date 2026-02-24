@@ -2,11 +2,11 @@
 
 ## Snapshot (February 2026)
 
-The repository is organized around a Colab-first training workflow and an API runtime for diagnosis.
+The repository is organized around a Colab-first training workflow and script-driven validation.
 
 ### Strengths
 
-- Clear module boundaries (`api/`, `src/`, `tests/`, `config/`, `colab_notebooks/`).
+- Clear module boundaries (`src/`, `tests/`, `config/`, `colab_notebooks/`, `scripts/`).
 - Multi-phase training implementation with test coverage in `tests/colab/` and `tests/integration/`.
 - Centralized configuration loading/validation infrastructure.
 - Practical Colab migration artifacts and notebooks.
@@ -15,7 +15,7 @@ The repository is organized around a Colab-first training workflow and an API ru
 
 1. **Doc drift risk**: links and index pages can diverge from filesystem state.
 2. **Mixed production/test semantics**: some router/training logic includes placeholder/stub behavior for resilience; needs explicit mode documentation.
-3. **API assembly consistency**: endpoint registration and runtime startup contracts should be continuously verified by API integration tests.
+3. **Workflow consistency**: notebook/script entrypoint contracts should be continuously verified by sanity and integration tests.
 4. **Config sprawl**: multiple config files and overlays can produce ambiguous effective runtime settings.
 
 ## Technical Debt Themes
@@ -27,8 +27,8 @@ The repository is organized around a Colab-first training workflow and an API ru
 
 ### 2) Runtime Contracts
 
-- Formalize API startup invariants (pipeline initialized, endpoint inclusion checks).
-- Add smoke test to verify all expected routes are mounted.
+- Formalize script/notebook startup invariants (config load, model fallback, data path checks).
+- Add smoke tests to verify expected training/inference utilities initialize correctly.
 
 ### 3) Model Loading Modes
 
@@ -43,13 +43,13 @@ The repository is organized around a Colab-first training workflow and an API ru
 ## Recommended Near-Term Actions
 
 1. Add markdown link checker in CI.
-2. Add API route inventory test.
+2. Add script/notebook entrypoint smoke tests to CI.
 3. Document effective config precedence (`base` + environment overlay + runtime env).
 4. Continue hardening Colab notebooks with strict preflight gates.
 
 ## Validation Checklist
 
-- `python validate_notebook_imports.py`
+- `python scripts/validate_notebook_imports.py`
 - `pytest -c config/pytest.ini tests/colab`
 - `pytest -c config/pytest.ini tests/integration`
-- `pytest -c config/pytest.ini tests/api`
+- `pytest -c config/pytest.ini tests/unit`

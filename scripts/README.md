@@ -2,6 +2,22 @@
 
 This folder contains operational scripts used for setup, testing, and policy checks.
 
+## Canonical Usage Policy
+
+- Prefer calling scripts through `scripts/...` paths in all user docs.
+- Root-level script names (for example `validate_notebook_imports.py`) are compatibility aliases and remain for legacy workflows.
+
+## Script Intent Matrix
+
+| User Goal | Preferred Script | When to Use |
+|---|---|---|
+| Verify core local Python sanity | `run_python_sanity_bundle.py` | Before local changes/PRs |
+| Validate notebook-related imports only | `validate_notebook_imports.py` | Fast import compatibility check |
+| Run policy/profile regression | `run_policy_regression_bundle.py` | Router/policy changes |
+| Check markdown links | `check_markdown_links.py --root .` | Docs updates |
+| Benchmark phase5 router | `benchmark_router_phase5.py` | Performance baseline updates |
+| Enforce phase5 performance guardrails | `check_phase5_perf_regression.py` | Benchmark regression gate |
+
 ## Colab Setup & Orchestration
 
 - `install_colab.py` - installs Colab prerequisites.
@@ -17,6 +33,18 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `colab_interactive_vlm_test.py` - interactive VLM test runner.
 - `colab_test_upload.py` - Colab image-upload + BioCLIP preprocessing helper.
 - `test_vlm_pipeline_standalone.py` - standalone VLM pipeline checks.
+
+### VLM Test Decision Matrix
+
+| Scenario | Preferred Surface | Status |
+|---|---|---|
+| Quick Colab VLM sanity check | `colab_vlm_quick_test.py` | Primary |
+| Interactive repeated image probing in Colab | `colab_interactive_vlm_test.py` | Primary |
+| End-to-end standalone local VLM pipeline check | `test_vlm_pipeline_standalone.py` | Primary |
+| Legacy GPU-first debug script with overlapping scope | `colab_test_gpu_vlm.py` | Legacy/secondary |
+| Upload-focused BioCLIP preprocessing check | `colab_test_upload.py` | Specialized |
+
+For new docs and user instructions, prefer the **Primary** surfaces above.
 
 ## Policy/Profile Regression
 
@@ -41,3 +69,5 @@ This folder contains operational scripts used for setup, testing, and policy che
 - Quick docs validation: run `python scripts/check_markdown_links.py --root .`.
 - Phase 5 benchmark baseline: run `python scripts/benchmark_router_phase5.py`.
 - Phase 5 guardrail check: run `python scripts/check_phase5_perf_regression.py`.
+- VLM quick sanity (Colab): run `%run scripts/colab_vlm_quick_test.py`.
+- VLM interactive checks (Colab): use `from scripts.colab_interactive_vlm_test import run_interactive_vlm_test`.

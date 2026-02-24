@@ -11,7 +11,7 @@ This document provides contribution conventions for this repository.
 3. Run baseline checks:
 
 ```powershell
-python validate_notebook_imports.py
+python scripts/validate_notebook_imports.py
 pytest -c config/pytest.ini tests/colab/test_environment.py
 ```
 

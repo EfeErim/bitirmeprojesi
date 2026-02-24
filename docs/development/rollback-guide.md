@@ -4,7 +4,6 @@
 
 Use rollback when one of these occurs:
 
-- API startup regressions after config/code changes
 - notebook execution regressions in Colab pipeline
 - training checkpoint compatibility breaks
 
@@ -27,7 +26,7 @@ git reset --hard <known_good_sha>
 2. Re-run local smoke checks:
 
 ```powershell
-python validate_notebook_imports.py
+python scripts/validate_notebook_imports.py
 pytest -c config/pytest.ini tests/colab/test_environment.py
 ```
 
@@ -36,15 +35,9 @@ pytest -c config/pytest.ini tests/colab/test_environment.py
 - Restore previous checkpoint directories from backup location (Drive/local).
 - For phase3 output bundles, verify `manifest.json` and referenced artifacts exist.
 
-## API Verification After Rollback
+## Post-Rollback Runtime Verification
 
 ```powershell
-$env:APP_ENV="development"
-python -m api.main
+python scripts/run_python_sanity_bundle.py
+python scripts/check_markdown_links.py --root .
 ```
-
-Check:
-
-- `/health`
-- `/v1/crops`
-- `/v1/liveness`

@@ -12,13 +12,19 @@ This guide explains how to migrate the AADS-ULoRA training pipeline to Google Co
 
 ## Quick Start
 
-### 1. Open Bootstrap Notebook
+### 1. Open One-Click Notebook (Recommended)
+
+1. Open `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
+2. Run all cells in order
+3. Use interactive configuration in the first section
+
+### 2. Manual Path (Optional)
 
 1. Upload the `colab_bootstrap.ipynb` notebook to your Google Drive
 2. Open it in Google Colab: Right-click → Open with → Google Colaboratory
 3. Follow the instructions in the notebook
 
-### 2. Run Installation
+### 3. Run Installation
 
 The bootstrap notebook will:
 - Detect your GPU type and CUDA version
@@ -26,12 +32,12 @@ The bootstrap notebook will:
 - Set up workspace directory structure
 - Create Colab-specific configuration
 
-### 3. Restart Runtime
+### 4. Restart Runtime
 
 After installation completes, restart the runtime:
 - Runtime → Restart runtime
 
-### 4. Start Training
+### 5. Start Training
 
 Run the training notebooks in order:
 1. `1_data_preparation.ipynb` - Prepare and load datasets

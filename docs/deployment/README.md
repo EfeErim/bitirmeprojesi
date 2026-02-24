@@ -1,5 +1,12 @@
 # Deployment Guide
 
+> ⚠️ Legacy document: API/container deployment paths described here are archived and not part of the primary training/inference workflow.
+
+For active usage, start from:
+- `../README.md`
+- `../colab_notebooks/README.md`
+- `../scripts/README.md`
+
 ## Current Deployment Modes
 
 ### 1) Local API Runtime

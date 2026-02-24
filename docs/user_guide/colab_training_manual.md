@@ -17,7 +17,15 @@ This manual provides detailed instructions for training the AADS-ULoRA system on
 
 ## Quick Start Guide
 
-### Step 1: Initial Setup
+### Step 1: Choose Training Path
+
+**Recommended (one-click):**
+
+1. Open `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
+2. Run all cells and follow the interactive configuration UI
+3. Use this path for end-to-end training with minimal manual setup
+
+**Manual/diagnostic path:**
 
 1. Open `colab_bootstrap.ipynb` in Google Colab
 2. Run all cells sequentially

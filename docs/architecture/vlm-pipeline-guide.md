@@ -66,6 +66,6 @@ For production hardening, the current code supports extending:
 
 Use these checks when modifying VLM behavior:
 
-- `python validate_notebook_imports.py`
-- `pytest -c config/pytest.ini tests/api`
+- `python scripts/validate_notebook_imports.py`
+- `pytest -c config/pytest.ini tests/unit/router`
 - `pytest -c config/pytest.ini tests/integration`
