@@ -38,10 +38,67 @@ def router_schema() -> Dict[str, Any]:
                 "type": "object",
                 "properties": {
                     "enabled": {"type": "boolean"},
+                    "profile": {"type": "string", "enum": ["fast", "balanced", "calibrated"]},
+                    "profiles": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
+                    "policy_graph": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "object"
+                        }
+                    },
                     "use_diagnostic_scouting": {"type": "boolean"},
                     "confidence_threshold": {"type": "number", "minimum": 0, "maximum": 1},
-                    "max_detections": {"type": "integer", "minimum": 1},
-                    "min_crop_confidence": {"type": "number", "minimum": 0, "maximum": 1}
+                    "max_detections": {"type": "integer", "minimum": 0},
+                    "min_crop_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "open_set_enabled": {"type": "boolean"},
+                    "open_set_min_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "open_set_margin": {"type": "number", "minimum": 0, "maximum": 1},
+                    "use_dynamic_taxonomy": {"type": "boolean"},
+                    "taxonomy_path": {"type": "string"},
+                    "model_source": {"type": "string"},
+                    "pipeline_mode": {"type": "string"},
+                    "strict_model_loading": {"type": "boolean"},
+                    "sam3_text_prompt": {"type": "string"},
+                    "sam3_mask_threshold": {"type": "number", "minimum": 0, "maximum": 1},
+                    "min_box_area_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+                    "min_box_side_px": {"type": "number", "minimum": 0},
+                    "classification_min_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "model_ids": {
+                        "type": "object",
+                        "properties": {
+                            "grounding_dino": {"type": "string"},
+                            "sam": {"type": "string"},
+                            "bioclip": {"type": "string"}
+                        }
+                    },
+                    "quality_score_weights": {
+                        "type": "object",
+                        "properties": {
+                            "crop_confidence": {"type": "number", "minimum": 0},
+                            "part_confidence": {"type": "number", "minimum": 0},
+                            "sam3_score": {"type": "number", "minimum": 0}
+                        }
+                    },
+                    "prompt_templates": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {"type": "string"}
+                        }
+                    },
+                    "ensemble_config": {
+                        "type": "object",
+                        "properties": {
+                            "crop_num_prompts": {"type": "integer", "minimum": 1},
+                            "part_num_prompts": {"type": "integer", "minimum": 1},
+                            "confidence_margin_threshold": {"type": "number", "minimum": 0}
+                        }
+                    }
                 }
             },
             "caching": {

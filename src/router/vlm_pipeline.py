@@ -9,6 +9,7 @@ import logging
 import json
 import os
 import time
+import copy
 from pathlib import Path
 from typing import Dict, Optional, Any, List, Tuple
 from PIL import Image
@@ -27,7 +28,12 @@ class VLMPipeline:
         self.config = config
         # Accept both nested and flat config keys used by tests
         router_config = config.get('router', {}) if isinstance(config.get('router'), dict) else {}
-        self.vlm_config = router_config.get('vlm', {}) if isinstance(router_config, dict) else {}
+        raw_vlm_config = router_config.get('vlm', {}) if isinstance(router_config, dict) else {}
+        self.vlm_config = copy.deepcopy(raw_vlm_config) if isinstance(raw_vlm_config, dict) else {}
+        self._base_vlm_config = copy.deepcopy(self.vlm_config)
+        self.active_profile: Optional[str] = None
+        self.policy_graph: Dict[str, Dict[str, Any]] = {}
+        self.set_runtime_profile(self._resolve_requested_profile(), suppress_warning=True)
         
         # Pipeline mode is SAM3-only (legacy values are ignored)
         self.pipeline_mode = 'sam3'
@@ -139,6 +145,92 @@ class VLMPipeline:
         logger.info(f"GPU available: {torch.cuda.is_available()}, CUDA version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
         if torch.cuda.is_available():
             logger.info(f"GPU device: {torch.cuda.get_device_name(0)}, Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f}GB")
+
+    @staticmethod
+    def _deep_merge_dicts(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+        """Recursively merge two dictionaries without mutating inputs."""
+        merged = copy.deepcopy(base) if isinstance(base, dict) else {}
+        if not isinstance(override, dict):
+            return merged
+
+        for key, value in override.items():
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                merged[key] = VLMPipeline._deep_merge_dicts(merged[key], value)
+            else:
+                merged[key] = copy.deepcopy(value)
+        return merged
+
+    @staticmethod
+    def _default_policy_graph() -> Dict[str, Dict[str, Any]]:
+        """Default policy stage configuration used when policy_graph is not provided."""
+        return {
+            'roi_filter': {'enabled': True},
+            'part_evidence': {'enabled': True},
+            'crop_evidence': {'enabled': True},
+            'compatibility_fusion': {'enabled': True},
+            'part_resolution': {'enabled': True},
+            'open_set_gate': {'enabled': True},
+            'dedupe': {'enabled': True},
+        }
+
+    def _refresh_policy_graph(self) -> None:
+        """Refresh merged policy graph from defaults + configuration."""
+        configured_policy = self.vlm_config.get('policy_graph', {})
+        if not isinstance(configured_policy, dict):
+            configured_policy = {}
+        self.policy_graph = self._deep_merge_dicts(self._default_policy_graph(), configured_policy)
+
+    def _resolve_requested_profile(self) -> Optional[str]:
+        """Resolve runtime profile from env override or config."""
+        env_profile = str(os.getenv('AADS_ULORA_VLM_PROFILE', '')).strip()
+        if env_profile:
+            return env_profile
+
+        config_profile = self.vlm_config.get('profile')
+        if isinstance(config_profile, str) and config_profile.strip():
+            return config_profile.strip()
+        return None
+
+    def set_runtime_profile(self, profile_name: Optional[str], suppress_warning: bool = False) -> bool:
+        """Apply named runtime profile to VLM config. Returns True if a profile was applied."""
+        self.vlm_config = copy.deepcopy(self._base_vlm_config)
+        self.active_profile = None
+
+        if not profile_name:
+            self._refresh_policy_graph()
+            return False
+
+        profiles = self._base_vlm_config.get('profiles', {})
+        if not isinstance(profiles, dict):
+            profiles = {}
+
+        profile_cfg = profiles.get(profile_name)
+        if not isinstance(profile_cfg, dict):
+            if not suppress_warning:
+                logger.warning(f"Requested VLM profile '{profile_name}' not found; using base config")
+            self._refresh_policy_graph()
+            return False
+
+        self.vlm_config = self._deep_merge_dicts(self._base_vlm_config, profile_cfg)
+        self.vlm_config['profile'] = profile_name
+        self.active_profile = profile_name
+        self._refresh_policy_graph()
+        logger.info(f"Applied VLM profile: {profile_name}")
+        return True
+
+    def _policy_value(self, stage: str, key: str, default: Any) -> Any:
+        """Read value from policy stage first, then root vlm config, then fallback default."""
+        stage_cfg = self.policy_graph.get(stage, {})
+        if isinstance(stage_cfg, dict) and key in stage_cfg:
+            return stage_cfg.get(key)
+        return self.vlm_config.get(key, default)
+
+    def _policy_enabled(self, stage: str, default: bool = True) -> bool:
+        """Check if a policy stage is enabled."""
+        stage_cfg = self.policy_graph.get(stage, {})
+        if not isinstance(stage_cfg, dict):
+            return bool(default)
+        return bool(stage_cfg.get('enabled', default))
 
     @staticmethod
     def _load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
@@ -1627,68 +1719,71 @@ class VLMPipeline:
         stage_timings_ms['preprocess'] = (time.perf_counter() - stage_start) * 1000.0
 
         # Load SAM3 parameters from config (no artificial clamps)
-        sam3_threshold_cfg = self.vlm_config.get('sam3_mask_threshold', 0.60)
+        sam3_threshold_cfg = self._policy_value('roi_filter', 'sam3_mask_threshold', 0.60)
         sam3_threshold = float(sam3_threshold_cfg)
 
-        min_box_area_ratio = float(self.vlm_config.get('min_box_area_ratio', 0.001))
-        min_box_side_px = float(self.vlm_config.get('min_box_side_px', 10))
-        classification_min_confidence = float(self.vlm_config.get('classification_min_confidence', 0.20))
-        detection_nms_iou_threshold = float(self.vlm_config.get('detection_nms_iou_threshold', 0.75))
-        detection_nms_same_crop_only = bool(self.vlm_config.get('detection_nms_same_crop_only', True))
-        conditioned_part_weight = float(self.vlm_config.get('conditioned_part_weight', 0.45))
+        min_box_area_ratio = float(self._policy_value('roi_filter', 'min_box_area_ratio', 0.001))
+        min_box_side_px = float(self._policy_value('roi_filter', 'min_box_side_px', 10))
+        classification_min_confidence = float(self._policy_value('crop_evidence', 'classification_min_confidence', 0.20))
+        detection_nms_iou_threshold = float(self._policy_value('dedupe', 'detection_nms_iou_threshold', 0.75))
+        detection_nms_same_crop_only = bool(self._policy_value('dedupe', 'detection_nms_same_crop_only', True))
+        conditioned_part_weight = float(self._policy_value('compatibility_fusion', 'conditioned_part_weight', 0.45))
         conditioned_part_weight = max(0.0, min(1.0, conditioned_part_weight))
-        generic_part_penalty = float(self.vlm_config.get('generic_part_penalty', 0.78))
-        generic_part_labels_raw = self.vlm_config.get(
+        generic_part_penalty = float(self._policy_value('part_resolution', 'generic_part_penalty', 0.78))
+        generic_part_labels_raw = self._policy_value(
+            'part_resolution',
             'generic_part_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant'],
+            ['whole plant', 'whole', 'plant', 'entire plant']
         )
         if isinstance(generic_part_labels_raw, list):
             generic_part_labels = [str(label) for label in generic_part_labels_raw]
         else:
             generic_part_labels = ['whole plant', 'whole', 'plant', 'entire plant']
-        specific_part_override_ratio = float(self.vlm_config.get('specific_part_override_ratio', 0.45))
-        specific_part_min_confidence = float(self.vlm_config.get('specific_part_min_confidence', 0.12))
-        preferred_part_labels_raw = self.vlm_config.get('preferred_part_labels', ['leaf'])
+        specific_part_override_ratio = float(self._policy_value('part_resolution', 'specific_part_override_ratio', 0.45))
+        specific_part_min_confidence = float(self._policy_value('part_resolution', 'specific_part_min_confidence', 0.12))
+        preferred_part_labels_raw = self._policy_value('part_resolution', 'preferred_part_labels', ['leaf'])
         if isinstance(preferred_part_labels_raw, list):
             preferred_part_labels = [str(label) for label in preferred_part_labels_raw]
         else:
             preferred_part_labels = ['leaf']
-        preferred_part_override_ratio = float(self.vlm_config.get('preferred_part_override_ratio', 0.50))
-        leaf_override_enabled = bool(self.vlm_config.get('leaf_override_enabled', True))
-        leaf_override_label = str(self.vlm_config.get('leaf_override_label', 'leaf'))
-        leaf_override_target_raw = self.vlm_config.get(
+        preferred_part_override_ratio = float(self._policy_value('part_resolution', 'preferred_part_override_ratio', 0.50))
+        leaf_override_enabled = bool(self._policy_value('part_resolution', 'leaf_override_enabled', True))
+        leaf_override_label = str(self._policy_value('part_resolution', 'leaf_override_label', 'leaf'))
+        leaf_override_target_raw = self._policy_value(
+            'part_resolution',
             'leaf_override_target_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'],
+            ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
         )
         if isinstance(leaf_override_target_raw, list):
             leaf_override_target_labels = [str(label) for label in leaf_override_target_raw]
         else:
             leaf_override_target_labels = ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
-        leaf_override_ratio = float(self.vlm_config.get('leaf_override_ratio', 0.35))
-        leaf_override_min_confidence = float(self.vlm_config.get('leaf_override_min_confidence', 0.10))
-        leaf_override_min_area_ratio = float(self.vlm_config.get('leaf_override_min_area_ratio', 0.02))
-        leaf_override_aspect_min = float(self.vlm_config.get('leaf_override_aspect_min', 0.30))
-        leaf_override_aspect_max = float(self.vlm_config.get('leaf_override_aspect_max', 3.20))
-        leaf_visual_override_enabled = bool(self.vlm_config.get('leaf_visual_override_enabled', True))
-        leaf_visual_likeness_threshold = float(self.vlm_config.get('leaf_visual_likeness_threshold', 0.44))
-        leaf_visual_green_min = float(self.vlm_config.get('leaf_visual_green_min', 0.12))
-        leaf_visual_force_generic = bool(self.vlm_config.get('leaf_visual_force_generic', True))
-        leaf_visual_force_without_leaf_score = bool(self.vlm_config.get('leaf_visual_force_without_leaf_score', True))
-        leaf_visual_force_conf_floor = float(self.vlm_config.get('leaf_visual_force_conf_floor', 0.16))
-        leaf_visual_force_part_factor = float(self.vlm_config.get('leaf_visual_force_part_factor', 0.65))
-        leaf_non_foliar_labels_raw = self.vlm_config.get(
+        leaf_override_ratio = float(self._policy_value('part_resolution', 'leaf_override_ratio', 0.35))
+        leaf_override_min_confidence = float(self._policy_value('part_resolution', 'leaf_override_min_confidence', 0.10))
+        leaf_override_min_area_ratio = float(self._policy_value('part_resolution', 'leaf_override_min_area_ratio', 0.02))
+        leaf_override_aspect_min = float(self._policy_value('part_resolution', 'leaf_override_aspect_min', 0.30))
+        leaf_override_aspect_max = float(self._policy_value('part_resolution', 'leaf_override_aspect_max', 3.20))
+        leaf_visual_override_enabled = bool(self._policy_value('part_resolution', 'leaf_visual_override_enabled', True))
+        leaf_visual_likeness_threshold = float(self._policy_value('part_resolution', 'leaf_visual_likeness_threshold', 0.44))
+        leaf_visual_green_min = float(self._policy_value('part_resolution', 'leaf_visual_green_min', 0.12))
+        leaf_visual_force_generic = bool(self._policy_value('part_resolution', 'leaf_visual_force_generic', True))
+        leaf_visual_force_without_leaf_score = bool(self._policy_value('part_resolution', 'leaf_visual_force_without_leaf_score', True))
+        leaf_visual_force_conf_floor = float(self._policy_value('part_resolution', 'leaf_visual_force_conf_floor', 0.16))
+        leaf_visual_force_part_factor = float(self._policy_value('part_resolution', 'leaf_visual_force_part_factor', 0.65))
+        leaf_non_foliar_labels_raw = self._policy_value(
+            'part_resolution',
             'leaf_non_foliar_part_labels',
-            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel'],
+            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
         )
         if isinstance(leaf_non_foliar_labels_raw, list):
             leaf_non_foliar_part_labels = [str(label) for label in leaf_non_foliar_labels_raw]
         else:
             leaf_non_foliar_part_labels = ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
-        leaf_part_rebalance_enabled = bool(self.vlm_config.get('leaf_part_rebalance_enabled', True))
-        leaf_part_rebalance_threshold = float(self.vlm_config.get('leaf_part_rebalance_threshold', 0.34))
-        leaf_part_rebalance_penalty = float(self.vlm_config.get('leaf_part_rebalance_penalty', 0.55))
-        leaf_part_rebalance_boost = float(self.vlm_config.get('leaf_part_rebalance_boost', 1.35))
-        max_rois_raw = self.vlm_config.get('max_rois_for_classification', 0)
+        leaf_part_rebalance_enabled = bool(self._policy_value('part_resolution', 'leaf_part_rebalance_enabled', True))
+        leaf_part_rebalance_threshold = float(self._policy_value('part_resolution', 'leaf_part_rebalance_threshold', 0.34))
+        leaf_part_rebalance_penalty = float(self._policy_value('part_resolution', 'leaf_part_rebalance_penalty', 0.55))
+        leaf_part_rebalance_boost = float(self._policy_value('part_resolution', 'leaf_part_rebalance_boost', 1.35))
+        max_rois_raw = self._policy_value('roi_filter', 'max_rois_for_classification', 0)
         try:
             max_rois_for_classification = int(max_rois_raw)
         except Exception:
@@ -1696,8 +1791,8 @@ class VLMPipeline:
         if max_rois_for_classification <= 0:
             max_rois_for_classification = None
         ensemble_config = self.vlm_config.get('ensemble_config', {})
-        crop_num_prompts_raw = ensemble_config.get('crop_num_prompts', None)
-        part_num_prompts_raw = ensemble_config.get('part_num_prompts', None)
+        crop_num_prompts_raw = self._policy_value('crop_evidence', 'crop_num_prompts', ensemble_config.get('crop_num_prompts', None))
+        part_num_prompts_raw = self._policy_value('part_evidence', 'part_num_prompts', ensemble_config.get('part_num_prompts', None))
         try:
             crop_num_prompts = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
         except Exception:

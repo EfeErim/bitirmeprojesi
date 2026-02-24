@@ -17,6 +17,7 @@
     "type": "enhanced",
     "vlm": {
       "enabled": true,
+      "profile": "balanced",
       "strict_model_loading": false,
       "model_source": "huggingface",
       "pipeline_mode": "sam3",
@@ -83,6 +84,77 @@
         "crop_num_prompts": 2,
         "part_num_prompts": 3,
         "confidence_margin_threshold": 0.7
+      },
+      "policy_graph": {
+        "roi_filter": {
+          "enabled": true,
+          "sam3_mask_threshold": 0.01,
+          "min_box_area_ratio": 0.001,
+          "min_box_side_px": 10,
+          "max_rois_for_classification": 0
+        },
+        "part_evidence": {
+          "enabled": true,
+          "part_num_prompts": 3
+        },
+        "crop_evidence": {
+          "enabled": true,
+          "crop_num_prompts": 2,
+          "classification_min_confidence": 0.20
+        },
+        "compatibility_fusion": {
+          "enabled": true,
+          "conditioned_part_weight": 0.60
+        },
+        "part_resolution": {
+          "enabled": true
+        },
+        "open_set_gate": {
+          "enabled": true,
+          "open_set_min_confidence": 0.25,
+          "open_set_margin": 0.01
+        },
+        "dedupe": {
+          "enabled": true,
+          "detection_nms_iou_threshold": 0.75,
+          "detection_nms_same_crop_only": true
+        }
+      },
+      "profiles": {
+        "fast": {
+          "policy_graph": {
+            "roi_filter": {
+              "max_rois_for_classification": 4,
+              "sam3_mask_threshold": 0.08,
+              "min_box_area_ratio": 0.004,
+              "min_box_side_px": 18
+            },
+            "crop_evidence": {
+              "crop_num_prompts": 2,
+              "classification_min_confidence": 0.40
+            },
+            "part_evidence": {
+              "part_num_prompts": 3
+            },
+            "dedupe": {
+              "detection_nms_iou_threshold": 0.60
+            }
+          }
+        },
+        "balanced": {},
+        "calibrated": {
+          "open_set_min_confidence": 0.35,
+          "open_set_margin": 0.03,
+          "policy_graph": {
+            "crop_evidence": {
+              "crop_num_prompts": 3,
+              "classification_min_confidence": 0.30
+            },
+            "part_evidence": {
+              "part_num_prompts": 4
+            }
+          }
+        }
       }
     },
     "crop_mapping": {
