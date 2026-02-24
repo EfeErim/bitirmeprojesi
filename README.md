@@ -222,6 +222,9 @@ pytest tests/integration/ -v
 # Run core Python sanity checks (notebook imports + local pipeline checks)
 python scripts/run_python_sanity_bundle.py
 
+# Run core import validation smoke check
+python tests/import_test.py
+
 # Check documentation
 python scripts/check_markdown_links.py --root .
 

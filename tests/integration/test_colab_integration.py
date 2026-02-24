@@ -22,6 +22,7 @@ from src.dataset.colab_datasets import ColabCropDataset
 from src.dataset.colab_dataloader import ColabDataLoader
 
 
+@pytest.mark.heavy_model
 class TestColabEndToEnd:
     """Complete end-to-end integration tests."""
 

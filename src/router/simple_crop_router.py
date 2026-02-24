@@ -30,28 +30,30 @@ class SimpleCropRouter:
     Once trained, routes images to the appropriate per-crop adapter (Layer 2).
     """
     
-    def __init__(self, crops: List[str], device: str = 'cuda'):
+    def __init__(self, crops: List[str], model_name: str = 'facebook/dinov2-giant', device: str = 'cuda'):
         """
         Initialize simple crop router.
         
         Args:
             crops: List of crop names (e.g., ['tomato', 'pepper', 'corn'])
+            model_name: Hugging Face model id for DINOv2 backbone
             device: Device to use ('cuda' or 'cpu')
         """
         self.crops = crops
         self.num_crops = len(crops)
+        self.model_name = str(model_name)
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         
         logger.info(f"Initializing SimpleCropRouter for {self.num_crops} crops: {crops}")
         logger.info(f"Device: {self.device}")
         
         # Load frozen DINOv2-giant backbone
-        logger.info("Loading DINOv2-giant backbone (frozen)...")
+        logger.info(f"Loading backbone (frozen): {self.model_name}")
         try:
-            self.backbone = AutoModel.from_pretrained('facebook/dinov2-giant')
+            self.backbone = AutoModel.from_pretrained(self.model_name)
         except Exception as e:
-            logger.error(f"Failed to load DINOv2-giant: {e}")
-            raise RuntimeError(f"Cannot load DINOv2-giant backbone: {e}")
+            logger.error(f"Failed to load backbone {self.model_name}: {e}")
+            raise RuntimeError(f"Cannot load backbone {self.model_name}: {e}")
         
         # Freeze backbone
         for param in self.backbone.parameters():
@@ -59,9 +61,9 @@ class SimpleCropRouter:
         
         self.backbone = self.backbone.to(self.device)
         
-        # Get feature dimension from backbone
-        # DINOv2-giant outputs 1536-dimensional features
-        self.feature_dim = 1536
+        backbone_config = getattr(self.backbone, 'config', None)
+        hidden_size = getattr(backbone_config, 'hidden_size', None)
+        self.feature_dim = int(hidden_size) if hidden_size is not None else 1536
         
         # Add trainable linear classifier
         self.classifier = nn.Linear(self.feature_dim, self.num_crops).to(self.device)
@@ -76,7 +78,7 @@ class SimpleCropRouter:
         }
         
         logger.info(f"SimpleCropRouter initialized")
-        logger.info(f"Backbone: DINOv2-giant (frozen, feature_dim={self.feature_dim})")
+        logger.info(f"Backbone: {self.model_name} (frozen, feature_dim={self.feature_dim})")
         logger.info(f"Classifier: Linear({self.feature_dim}, {self.num_crops})")
         logger.info(f"Trainable parameters: {sum(p.numel() for p in self.classifier.parameters()):,}")
     
@@ -278,6 +280,10 @@ class SimpleCropRouter:
         
         torch.save(checkpoint, path)
         logger.info(f"Router checkpoint saved to {path}")
+
+    def save_model(self, path: str) -> None:
+        """Backward-compatible alias for save_checkpoint."""
+        self.save_checkpoint(path)
     
     def load_checkpoint(self, path: str) -> None:
         """
@@ -308,13 +314,17 @@ class SimpleCropRouter:
         
         logger.info(f"Router checkpoint loaded from {path}")
         logger.info(f"Best accuracy from checkpoint: {self.best_accuracy:.2f}%")
+
+    def load_model(self, path: str) -> None:
+        """Backward-compatible alias for load_checkpoint."""
+        self.load_checkpoint(path)
     
     def get_summary(self) -> dict:
         """Get router summary information."""
         return {
             'crops': self.crops,
             'num_crops': self.num_crops,
-            'backbone': 'facebook/dinov2-giant',
+            'backbone': self.model_name,
             'feature_dim': self.feature_dim,
             'classifier_params': sum(p.numel() for p in self.classifier.parameters()),
             'best_accuracy': self.best_accuracy,

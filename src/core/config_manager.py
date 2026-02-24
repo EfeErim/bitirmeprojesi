@@ -184,7 +184,8 @@ class ConfigurationManager:
         if not self._base_config:
             self.load_base_config()
         
-        # Load all specific configs
+        # Load optional legacy split configs if present.
+        # Canonical runtime model uses base.json + optional <environment>.json.
         config_files = [
             ("router-config.json", "router"),
             ("ood-config.json", "ood"),
@@ -193,6 +194,9 @@ class ConfigurationManager:
         ]
         
         for filename, schema_name in config_files:
+            config_path = self.config_dir / filename
+            if not config_path.exists():
+                continue
             try:
                 self.load_config_file(filename, schema_name)
             except ConfigurationError as e:
@@ -295,8 +299,8 @@ class ConfigurationManager:
             # Custom validation rules can be added here
             config = self._validated_configs.get("merged", {})
             
-            # Validate critical sections exist
-            required_sections = ['api', 'database', 'ml', 'router', 'ood', 'monitoring', 'security']
+            # Validate critical sections exist for the current repository scope.
+            required_sections = ['training', 'router', 'ood']
             for section in required_sections:
                 if section not in config:
                     logger.warning(f"Missing required configuration section: {section}")

@@ -29,4 +29,5 @@ Use this index to choose the right notebook quickly.
 
 - `../scripts/colab_auto_orchestrator.py` orchestrates one-click notebook flow.
 - `../scripts/colab_setup_dependencies.py` installs notebook dependencies.
-- `../requirements_colab.txt` and `requirements_colab.txt` contain Colab dependency sets.
+- `../requirements_colab.txt` is the canonical Colab dependency manifest.
+- `requirements_colab.txt` mirrors the canonical file for notebook compatibility paths.

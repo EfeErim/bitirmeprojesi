@@ -28,12 +28,10 @@ setup(
         'aads_ulora_v55.dataset',
         'aads_ulora_v55.debugging',
         'aads_ulora_v55.evaluation',
-        'aads_ulora_v55.middleware',
         'aads_ulora_v55.monitoring',
         'aads_ulora_v55.ood',
         'aads_ulora_v55.pipeline',
         'aads_ulora_v55.router',
-        'aads_ulora_v55.security',
         'aads_ulora_v55.training',
         'aads_ulora_v55.utils',
         'aads_ulora_v55.visualization'
@@ -85,7 +83,6 @@ setup(
     entry_points={
         "console_scripts": [
             "aads-train=src.training.phase1_training:main",
-            "aads-demo=demo.app:main",
             "aads-pipeline=src.pipeline.independent_multi_crop_pipeline:main",
         ],
     },

@@ -16,9 +16,22 @@ import gc
 from typing import Tuple, Dict, Optional, Any, List, Callable, Union
 import json
 import numpy as np
-from dataclasses import dataclass, asdict
 import os
 from src.core.artifact_manifest import write_output_manifest
+from src.training.phase3_components import (
+    CoNeCConfig,
+    PrototypeManager,
+    MahalanobisDetector,
+    DynamicThresholdManager,
+    ColabMemoryMonitor,
+)
+from src.training.phase3_runtime import (
+    phase3_training_step,
+    phase3_train_epoch,
+    phase3_validate,
+    phase3_save_checkpoint,
+    phase3_load_checkpoint,
+)
 
 # Try to import dependencies, fallback to mock classes for testing
 class AutoModel:
@@ -63,43 +76,6 @@ def compute_conec_loss(*args, **kwargs):
     return torch.tensor(0.0)
 
 
-class PrototypeManager:
-    def __init__(self, num_prototypes: int = 10, prototype_dim: int = 128, device: str = 'cpu'):
-        self._prototypes = torch.zeros(num_prototypes, prototype_dim, device=device)
-
-    def get_prototypes(self):
-        return self._prototypes
-
-    def update_prototypes(self, features: torch.Tensor, labels: torch.Tensor):
-        if features is not None and features.ndim == 2 and features.size(1) == self._prototypes.size(1):
-            with torch.no_grad():
-                self._prototypes[0] = 0.9 * self._prototypes[0] + 0.1 * features.mean(dim=0)
-
-    def set_prototypes(self, prototypes: torch.Tensor):
-        self._prototypes = prototypes
-
-
-class MahalanobisDetector:
-    def __init__(self):
-        self.enabled = True
-
-    def compute_scores(self, features: torch.Tensor, labels: torch.Tensor):
-        return torch.norm(features, dim=1)
-
-
-class DynamicThresholdManager:
-    def __init__(self, threshold: float = 1.0):
-        self._threshold = threshold
-
-    def get_threshold(self) -> float:
-        return self._threshold
-
-
-class ColabMemoryMonitor:
-    def __init__(self, max_memory_gb: Optional[float] = None, clear_cache_frequency: int = 10):
-        self.max_memory_gb = max_memory_gb
-        self.clear_cache_frequency = clear_cache_frequency
-
 # Try to import real dependencies if available
 try:
     from transformers import AutoModel, AutoConfig
@@ -136,64 +112,7 @@ try:
 except Exception:
     pass
 
-try:
-    from src.debugging.monitoring import ColabMemoryMonitor
-except Exception:
-    pass
-
-try:
-    from src.ood.prototypes import PrototypeManager
-except Exception:
-    pass
-
-try:
-    from src.ood.mahalanobis import MahalanobisDetector
-except Exception:
-    pass
-
-try:
-    from src.ood.dynamic_thresholds import DynamicThresholdManager
-except Exception:
-    pass
-
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class CoNeCConfig:
-    """Configuration for CoNeC-LoRA training."""
-    lora_r: int = 8
-    lora_alpha: int = 16
-    lora_dropout: float = 0.1
-    model_name: str = "facebook/dinov3-giant"
-    learning_rate: float = 5e-5
-    num_epochs: int = 10
-    batch_size: int = 16
-    device: str = "cuda"
-    # CoNeC-specific
-    temperature: float = 0.07
-    prototype_dim: int = 128
-    num_prototypes: int = 10
-    contrastive_weight: float = 0.1
-    orthogonal_weight: float = 0.01
-    target_modules: List[str] = None
-    # Colab-specific
-    gradient_accumulation_steps: int = 2
-    use_amp: bool = True
-    memory_efficient_attention: bool = True
-    checkpoint_interval: int = 5
-    early_stopping_patience: int = 10
-    max_memory_gb: Optional[float] = None
-
-    def __post_init__(self):
-        if self.target_modules is None:
-            self.target_modules = ["q_proj", "k_proj", "v_proj", "out_proj"]
-        # Validation checks
-        if getattr(self, 'temperature', 0.0) <= 0:
-            raise ValueError("temperature must be positive")
-        total_weight = getattr(self, 'contrastive_weight', 0.0) + getattr(self, 'orthogonal_weight', 0.0)
-        if total_weight > 1.0:
-            raise ValueError("contrastive_weight + orthogonal_weight must be <= 1.0")
 
 
 class ColabPhase3Trainer:
@@ -228,7 +147,7 @@ class ColabPhase3Trainer:
         
         # Memory optimization
         self.use_amp = config.use_amp and torch.cuda.is_available()
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
+        self.scaler = torch.amp.GradScaler('cuda', enabled=self.use_amp)
         self.gradient_accumulation_steps = config.gradient_accumulation_steps
         
         # Training state
@@ -283,6 +202,7 @@ class ColabPhase3Trainer:
         logger.info(f"Trainable parameters: {sum(p.numel() for p in self.model.parameters() if p.requires_grad)}")
         logger.info(f"Using mixed precision: {self.use_amp}")
         logger.info(f"Gradient accumulation steps: {self.gradient_accumulation_steps}")
+        self.extract_pooled_output = extract_pooled_output
         
     def _setup_model(self) -> nn.Module:
         """Setup base model and apply CoNeC-LoRA adapter."""
@@ -557,202 +477,15 @@ class ColabPhase3Trainer:
 
     def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         """Single-step forward loss used by smoke tests."""
-        self.model.train()
-        self.classifier.train()
-
-        images = batch['images'].to(self.device)
-        labels = batch['labels'].to(self.device)
-
-        with torch.cuda.amp.autocast(enabled=self.use_amp):
-            pooled = extract_pooled_output(self.model, images)
-            
-            # Lazy init classifier if dimensions don't match (test stub compatibility)
-            if self.classifier.in_features != pooled.shape[1]:
-                logger.warning(f"Classifier input mismatch ({self.classifier.in_features} != {pooled.shape[1]}), rebuilding classifier")
-                self.classifier = nn.Linear(pooled.shape[1], self.classifier.out_features).to(self.device)
-                # Re-setup optimizer with new classifier
-                self.setup_optimizer()
-            
-            logits = self.classifier(pooled)
-            classification_loss = nn.CrossEntropyLoss()(logits, labels)
-            conec_loss, _, _ = self._compute_conec_loss(pooled, labels)
-
-        return classification_loss + conec_loss
+        return phase3_training_step(self, batch)
     
     def train_epoch(self, train_loader: DataLoader, epoch: int) -> Dict[str, float]:
         """Train for one epoch with mixed precision and gradient accumulation."""
-        self.model.train()
-        self.classifier.train()
-        total_loss = 0.0
-        total_contrastive_loss = 0.0
-        total_orthogonal_loss = 0.0
-        num_batches = 0
-        accumulation_steps = max(1, int(self.gradient_accumulation_steps))
-
-        self.optimizer.zero_grad(set_to_none=True)
-        self.current_step = 0
-        
-        try:
-            for batch_idx, batch in enumerate(train_loader):
-                # Get images and labels
-                images = batch['images'].to(self.device)
-                labels = batch['labels'].to(self.device)
-            
-                # Clear cache periodically
-                if batch_idx % 10 == 0:
-                    gc.collect()
-                    torch.cuda.empty_cache()
-            
-                # Forward pass with mixed precision
-                with torch.cuda.amp.autocast(enabled=self.use_amp):
-                    # Extract features
-                    pooled = extract_pooled_output(self.model, images)
-                
-                    # Compute CoNeC loss
-                    conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
-                
-                    # Compute classification loss
-                    logits = self.classifier(pooled)
-                    classification_loss = nn.CrossEntropyLoss()(logits, labels)
-                
-                    # Combine losses
-                    total_batch_loss = conec_loss + classification_loss
-            
-                # Check for NaN/Inf loss
-                if torch.isnan(total_batch_loss) or torch.isinf(total_batch_loss):
-                    logger.error(f"NaN/Inf loss detected at batch {batch_idx}, epoch {epoch}: {total_batch_loss.item()}")
-                    raise RuntimeError("Training diverged - loss is NaN/Inf. Check gradients and loss scales.")
-            
-                # Backward pass with gradient accumulation
-                self.scaler.scale(total_batch_loss).backward()
-            
-                self.current_step += 1
-                if self.current_step % accumulation_steps == 0:
-                    # Unscale gradients before clipping
-                    self.scaler.unscale_(self.optimizer)
-                
-                    # Clip gradients to prevent gradient explosion
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-                    torch.nn.utils.clip_grad_norm_(self.classifier.parameters(), max_norm=1.0)
-                
-                    self.scaler.step(self.optimizer)
-                    self.scaler.update()
-                    self.optimizer.zero_grad(set_to_none=True)
-            
-                # Update prototypes periodically
-                if batch_idx % 50 == 0:
-                    self._update_prototypes(pooled, labels)
-            
-                # Perform OOD detection periodically
-                if batch_idx % 100 == 0:
-                    ood_metrics = self._perform_ood_detection(pooled, labels)
-                    self.history['ood_metrics'].append(ood_metrics)
-            
-                # Update metrics
-                total_loss += total_batch_loss.item()
-                total_contrastive_loss += contrastive_loss.item()
-                total_orthogonal_loss += orthogonal_loss.item()
-                num_batches += 1
-            
-                # Log progress
-                if batch_idx % 10 == 0:
-                    logger.info(f"Epoch {epoch}, Batch {batch_idx}: "
-                              f"Loss={total_batch_loss.item():.4f}, "
-                              f"Contrastive={contrastive_loss.item():.4f}, "
-                              f"Orthogonal={orthogonal_loss.item():.4f}")
-            
-                # Memory monitoring
-                self._log_memory_usage()
-            
-            # Handle remaining gradients if accumulation steps not evenly divisible
-            if self.current_step % accumulation_steps != 0:
-                self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-                torch.nn.utils.clip_grad_norm_(self.classifier.parameters(), max_norm=1.0)
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-                self.optimizer.zero_grad(set_to_none=True)
-        finally:
-            self.optimizer.zero_grad(set_to_none=True)
-            self.current_step = 0
-        
-        avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
-        avg_contrastive_loss = total_contrastive_loss / num_batches if num_batches > 0 else 0.0
-        avg_orthogonal_loss = total_orthogonal_loss / num_batches if num_batches > 0 else 0.0
-        
-        return {
-            'loss': avg_loss,
-            'contrastive_loss': avg_contrastive_loss,
-            'orthogonal_loss': avg_orthogonal_loss
-        }
+        return phase3_train_epoch(self, train_loader, epoch)
     
     def validate(self, val_loader: DataLoader) -> Dict[str, float]:
         """Validate model performance."""
-        prev_model_mode = self.model.training
-        prev_classifier_mode = self.classifier.training
-        self.model.eval()
-        self.classifier.eval()
-        total_loss = 0.0
-        total_contrastive_loss = 0.0
-        total_orthogonal_loss = 0.0
-        all_preds = []
-        all_labels = []
-        
-        try:
-            with torch.no_grad():
-                for batch in val_loader:
-                    images = batch['images'].to(self.device)
-                    labels = batch['labels'].to(self.device)
-                
-                    # Extract features
-                    pooled = extract_pooled_output(self.model, images)
-                
-                    # Lazy init classifier if dimensions don't match (test stub compatibility)
-                    if self.classifier.in_features != pooled.shape[1]:
-                        logger.warning(f"Classifier input mismatch in validation, rebuilding classifier")
-                        self.classifier = nn.Linear(pooled.shape[1], self.classifier.out_features).to(self.device)
-                        self.setup_optimizer()
-                
-                    # Compute CoNeC loss
-                    conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
-                
-                    # Compute classification loss
-                    logits = self.classifier(pooled)
-                    classification_loss = nn.CrossEntropyLoss()(logits, labels)
-                
-                    # Combine losses
-                    total_batch_loss = conec_loss + classification_loss
-                
-                    # Update metrics
-                    total_loss += total_batch_loss.item()
-                    total_contrastive_loss += contrastive_loss.item()
-                    total_orthogonal_loss += orthogonal_loss.item()
-                
-                    # Collect predictions
-                    all_preds.extend(torch.argmax(logits, dim=1).cpu().numpy())
-                    all_labels.extend(labels.cpu().numpy())
-        
-            # Compute metrics
-            all_preds = np.array(all_preds)
-            all_labels = np.array(all_labels)
-            accuracy = np.mean(all_preds == all_labels)
-        
-            avg_loss = total_loss / len(val_loader) if len(val_loader) > 0 else 0.0
-            avg_contrastive_loss = total_contrastive_loss / len(val_loader) if len(val_loader) > 0 else 0.0
-            avg_orthogonal_loss = total_orthogonal_loss / len(val_loader) if len(val_loader) > 0 else 0.0
-        
-            metrics = {
-                'loss': avg_loss,
-                'contrastive_loss': avg_contrastive_loss,
-                'orthogonal_loss': avg_orthogonal_loss,
-                'accuracy': float(accuracy),
-                'num_samples': len(all_labels)
-            }
-        finally:
-            self.model.train(prev_model_mode)
-            self.classifier.train(prev_classifier_mode)
-        
-        return metrics
+        return phase3_validate(self, val_loader)
     
     def train(
         self, 
@@ -838,33 +571,7 @@ class ColabPhase3Trainer:
     
     def save_checkpoint(self, path: str, epoch: int, loss: float):
         """Save training checkpoint."""
-        # Handle both directory and file paths
-        path_obj = Path(path)
-        if path_obj.suffix:  # If path has extension, it's a file path
-            save_path = path_obj.parent
-            filename = path_obj.name
-        else:  # It's a directory
-            save_path = path_obj
-            # Use epoch directly for filename (already 0-indexed)
-            filename = f'checkpoint_epoch_{epoch}.pth'
-        
-        save_path.mkdir(parents=True, exist_ok=True)
-        
-        checkpoint = {
-            'epoch': epoch,
-            'loss': loss,
-            'model_state_dict': self.model.state_dict(),
-            'classifier_state_dict': self.classifier.state_dict(),
-            'optimizer_state_dict': self.optimizer.state_dict(),
-            'scaler_state_dict': self.scaler.state_dict(),
-            'prototype_embeddings': self.prototype_manager.get_prototypes(),
-            'config': asdict(self.config),
-            'history': self.history
-        }
-        
-        checkpoint_path = save_path / filename
-        torch.save(checkpoint, checkpoint_path)
-        logger.info(f"Checkpoint saved: {checkpoint_path}")
+        return phase3_save_checkpoint(self, path, epoch, loss)
 
     def save_output_suite(self, save_path: str) -> Path:
         """Save phase3 adapter bundle and emit an output manifest."""
@@ -902,20 +609,7 @@ class ColabPhase3Trainer:
     
     def load_checkpoint(self, path: str):
         """Load training checkpoint."""
-        checkpoint = torch.load(path, map_location=self.device)
-        
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.classifier.load_state_dict(checkpoint['classifier_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        self.scaler.load_state_dict(checkpoint['scaler_state_dict'])
-        self.prototype_manager.set_prototypes(checkpoint['prototype_embeddings'])
-        self.history = checkpoint['history']
-        
-        self.current_epoch = checkpoint['epoch']
-        self.best_val_loss = checkpoint['loss']
-        
-        logger.info(f"Checkpoint loaded from: {path}")
-        logger.info(f"Resuming from epoch {self.current_epoch+1}")
+        return phase3_load_checkpoint(self, path)
 
 
 def train_colab_conec_lora(

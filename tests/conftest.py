@@ -61,6 +61,9 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "unit: marks tests as unit tests"
     )
+    config.addinivalue_line(
+        "markers", "heavy_model: marks tests that may download/load large external models"
+    )
 
 
 # Optional: Add command line options
@@ -78,6 +81,12 @@ def pytest_addoption(parser):
         default=False,
         help="run integration tests"
     )
+    parser.addoption(
+        "--runheavymodel",
+        action="store_true",
+        default=False,
+        help="run tests marked as heavy_model"
+    )
 
 
 def pytest_collection_modifyitems(config, items):
@@ -93,6 +102,12 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "integration" in item.keywords:
                 item.add_marker(skip_integration)
+
+    if not config.getoption("--runheavymodel"):
+        skip_heavy_model = pytest.mark.skip(reason="need --runheavymodel option to run")
+        for item in items:
+            if "heavy_model" in item.keywords:
+                item.add_marker(skip_heavy_model)
 
 
 # Set up logging for tests

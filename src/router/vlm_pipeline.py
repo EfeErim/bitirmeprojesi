@@ -14,6 +14,33 @@ from pathlib import Path
 from typing import Dict, Optional, Any, List, Tuple
 from PIL import Image
 import numpy as np
+from src.router.policy_taxonomy_utils import (
+    deep_merge_dicts,
+    default_policy_graph,
+    build_policy_graph,
+    resolve_requested_profile,
+    apply_runtime_profile,
+    policy_value,
+    policy_enabled,
+    load_taxonomy,
+    load_crop_part_compatibility,
+)
+from src.router.roi_helpers import (
+    tensor_to_pil,
+    coerce_image_input,
+    extract_roi,
+    sanitize_bbox,
+    bbox_area_ratio,
+    bbox_iou,
+    suppress_overlapping_detections,
+    select_best_detection,
+    unique_nonempty,
+)
+from src.router.roi_pipeline import (
+    collect_sam3_roi_candidates,
+    classify_sam3_roi_candidate,
+    run_sam3_roi_classification_stage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -149,88 +176,38 @@ class VLMPipeline:
     @staticmethod
     def _deep_merge_dicts(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
         """Recursively merge two dictionaries without mutating inputs."""
-        merged = copy.deepcopy(base) if isinstance(base, dict) else {}
-        if not isinstance(override, dict):
-            return merged
-
-        for key, value in override.items():
-            if isinstance(value, dict) and isinstance(merged.get(key), dict):
-                merged[key] = VLMPipeline._deep_merge_dicts(merged[key], value)
-            else:
-                merged[key] = copy.deepcopy(value)
-        return merged
+        return deep_merge_dicts(base, override)
 
     @staticmethod
     def _default_policy_graph() -> Dict[str, Dict[str, Any]]:
         """Default policy stage configuration used when policy_graph is not provided."""
-        return {
-            'roi_filter': {'enabled': True},
-            'part_evidence': {'enabled': True},
-            'crop_evidence': {'enabled': True},
-            'compatibility_fusion': {'enabled': True},
-            'part_resolution': {'enabled': True},
-            'open_set_gate': {'enabled': True},
-            'dedupe': {'enabled': True},
-        }
+        return default_policy_graph()
 
     def _refresh_policy_graph(self) -> None:
         """Refresh merged policy graph from defaults + configuration."""
-        configured_policy = self.vlm_config.get('policy_graph', {})
-        if not isinstance(configured_policy, dict):
-            configured_policy = {}
-        self.policy_graph = self._deep_merge_dicts(self._default_policy_graph(), configured_policy)
+        self.policy_graph = build_policy_graph(self.vlm_config)
 
     def _resolve_requested_profile(self) -> Optional[str]:
         """Resolve runtime profile from env override or config."""
-        env_profile = str(os.getenv('AADS_ULORA_VLM_PROFILE', '')).strip()
-        if env_profile:
-            return env_profile
-
-        config_profile = self.vlm_config.get('profile')
-        if isinstance(config_profile, str) and config_profile.strip():
-            return config_profile.strip()
-        return None
+        return resolve_requested_profile(self.vlm_config)
 
     def set_runtime_profile(self, profile_name: Optional[str], suppress_warning: bool = False) -> bool:
         """Apply named runtime profile to VLM config. Returns True if a profile was applied."""
-        self.vlm_config = copy.deepcopy(self._base_vlm_config)
-        self.active_profile = None
-
-        if not profile_name:
-            self._refresh_policy_graph()
-            return False
-
-        profiles = self._base_vlm_config.get('profiles', {})
-        if not isinstance(profiles, dict):
-            profiles = {}
-
-        profile_cfg = profiles.get(profile_name)
-        if not isinstance(profile_cfg, dict):
-            if not suppress_warning:
-                logger.warning(f"Requested VLM profile '{profile_name}' not found; using base config")
-            self._refresh_policy_graph()
-            return False
-
-        self.vlm_config = self._deep_merge_dicts(self._base_vlm_config, profile_cfg)
-        self.vlm_config['profile'] = profile_name
-        self.active_profile = profile_name
+        self.vlm_config, self.active_profile, applied = apply_runtime_profile(
+            self._base_vlm_config,
+            profile_name,
+            suppress_warning=suppress_warning,
+        )
         self._refresh_policy_graph()
-        logger.info(f"Applied VLM profile: {profile_name}")
-        return True
+        return applied
 
     def _policy_value(self, stage: str, key: str, default: Any) -> Any:
         """Read value from policy stage first, then root vlm config, then fallback default."""
-        stage_cfg = self.policy_graph.get(stage, {})
-        if isinstance(stage_cfg, dict) and key in stage_cfg:
-            return stage_cfg.get(key)
-        return self.vlm_config.get(key, default)
+        return policy_value(self.policy_graph, self.vlm_config, stage, key, default)
 
     def _policy_enabled(self, stage: str, default: bool = True) -> bool:
         """Check if a policy stage is enabled."""
-        stage_cfg = self.policy_graph.get(stage, {})
-        if not isinstance(stage_cfg, dict):
-            return bool(default)
-        return bool(stage_cfg.get('enabled', default))
+        return policy_enabled(self.policy_graph, stage, default)
 
     @staticmethod
     def _load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
@@ -239,82 +216,12 @@ class VLMPipeline:
         Returns:
             Tuple of (crop_labels, part_labels)
         """
-        import json
-        from pathlib import Path
-        
-        # Try relative to project root, then absolute
-        path = Path(taxonomy_path)
-        if not path.is_absolute():
-            # Try relative to current working directory
-            if not path.exists():
-                # Try relative to this file's location (src/router/)
-                file_dir = Path(__file__).parent
-                path = file_dir.parent.parent / taxonomy_path
-        
-        if not path.exists():
-            logger.warning(f"Taxonomy file not found: {taxonomy_path}, using minimal defaults")
-            return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
-        
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                taxonomy = json.load(f)
-            
-            # Combine all plant categories
-            crops = taxonomy.get('crops', [])
-            weeds = taxonomy.get('common_weeds', [])
-            ornamentals = taxonomy.get('ornamentals', [])
-            
-            all_crops = crops + weeds + ornamentals
-            
-            # Handle tiered parts structure
-            parts_data = taxonomy.get('parts', [])
-            if isinstance(parts_data, dict):
-                # New tiered structure: use core + extended (skip specialized)
-                core_parts = parts_data.get('core', [])
-                extended_parts = parts_data.get('extended', [])
-                parts = core_parts + extended_parts
-                logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} crops, {len(parts)} parts (core+extended)")
-            else:
-                # Old flat list structure
-                parts = parts_data
-                logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
-            
-            return all_crops, parts
-            
-        except Exception as e:
-            logger.error(f"Failed to load taxonomy from {path}: {e}")
-            return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
+        return load_taxonomy(taxonomy_path)
 
     @staticmethod
     def _load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
         """Load optional crop_part_compatibility map from taxonomy JSON."""
-        from pathlib import Path
-
-        path = Path(taxonomy_path)
-        if not path.is_absolute():
-            if not path.exists():
-                file_dir = Path(__file__).parent
-                path = file_dir.parent.parent / taxonomy_path
-
-        if not path.exists():
-            return {}
-
-        with open(path, 'r', encoding='utf-8') as f:
-            taxonomy = json.load(f)
-
-        compatibility = taxonomy.get('crop_part_compatibility', {})
-        if not isinstance(compatibility, dict):
-            return {}
-
-        normalized: Dict[str, List[str]] = {}
-        for crop_name, parts in compatibility.items():
-            if not isinstance(parts, list):
-                continue
-            crop_key = str(crop_name).strip().lower()
-            part_values = [str(part).strip().lower() for part in parts if str(part).strip()]
-            if crop_key and part_values:
-                normalized[crop_key] = part_values
-        return normalized
+        return load_crop_part_compatibility(taxonomy_path)
 
     def _compatible_parts_for_crop(self, crop_label: str) -> List[str]:
         """Return configured compatible parts for a crop, filtered to active part labels."""
@@ -700,34 +607,7 @@ class VLMPipeline:
     @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
         """Convert CHW or NCHW tensor to PIL image."""
-        tensor = image_tensor.detach().cpu()
-
-        if tensor.ndim == 4:
-            tensor = tensor[0]
-        if tensor.ndim != 3:
-            raise ValueError(f"Expected image tensor with 3 dims (C,H,W), got shape {tuple(tensor.shape)}")
-
-        if tensor.shape[0] not in {1, 3} and tensor.shape[-1] in {1, 3}:
-            tensor = tensor.permute(2, 0, 1)
-
-        if tensor.shape[0] == 1:
-            tensor = tensor.repeat(3, 1, 1)
-        elif tensor.shape[0] != 3:
-            raise ValueError(f"Expected 1 or 3 channels, got {tensor.shape[0]}")
-
-        tensor_min = float(tensor.min())
-        tensor_max = float(tensor.max())
-
-        if tensor_max <= 1.0 and tensor_min >= 0.0:
-            normalized = tensor
-        else:
-            normalized = tensor.clone()
-            if tensor_min < 0.0:
-                normalized = (normalized + 1.0) / 2.0
-            normalized = normalized.clamp(0.0, 1.0)
-
-        uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
-        return Image.fromarray(uint8_img)
+        return tensor_to_pil(image_tensor)
 
     @staticmethod
     def _coerce_image_input(image_input: Any) -> Tuple[Image.Image, Tuple[int, int, int]]:
@@ -739,126 +619,27 @@ class VLMPipeline:
         - PIL.Image.Image
         - numpy.ndarray (HWC/CHW)
         """
-        if isinstance(image_input, torch.Tensor):
-            pil = VLMPipeline._tensor_to_pil(image_input)
-            return pil, tuple(image_input.shape)
-
-        if isinstance(image_input, (str, Path)):
-            pil = Image.open(str(image_input)).convert('RGB')
-            width, height = pil.size
-            return pil, (3, height, width)
-
-        if isinstance(image_input, Image.Image):
-            pil = image_input.convert('RGB')
-            width, height = pil.size
-            return pil, (3, height, width)
-
-        if isinstance(image_input, np.ndarray):
-            arr = image_input
-            if arr.ndim == 3 and arr.shape[0] in {1, 3} and arr.shape[-1] not in {1, 3}:
-                arr = np.transpose(arr, (1, 2, 0))
-            if arr.ndim == 2:
-                arr = np.stack([arr] * 3, axis=-1)
-            if arr.ndim != 3:
-                raise ValueError(f"Unsupported ndarray shape for image input: {arr.shape}")
-            if arr.dtype != np.uint8:
-                arr = np.clip(arr, 0, 255).astype(np.uint8)
-            pil = Image.fromarray(arr).convert('RGB')
-            height, width = arr.shape[:2]
-            return pil, (3, height, width)
-
-        raise TypeError(
-            f"Unsupported image_input type: {type(image_input).__name__}. "
-            "Expected torch.Tensor, str/path, PIL.Image, or numpy.ndarray."
-        )
+        return coerce_image_input(image_input)
 
     @staticmethod
     def _extract_roi(image: Image.Image, bbox: Optional[List[float]], pad_ratio: float = 0.08) -> Image.Image:
         """Extract padded ROI from bbox; fallback to original image when bbox invalid."""
-        if bbox is None or len(bbox) != 4:
-            return image
-
-        width, height = image.size
-        x1, y1, x2, y2 = [float(v) for v in bbox]
-
-        box_w = max(1.0, x2 - x1)
-        box_h = max(1.0, y2 - y1)
-        pad_x = box_w * pad_ratio
-        pad_y = box_h * pad_ratio
-
-        left = max(0, int(x1 - pad_x))
-        top = max(0, int(y1 - pad_y))
-        right = min(width, int(x2 + pad_x))
-        bottom = min(height, int(y2 + pad_y))
-
-        if right <= left or bottom <= top:
-            return image
-
-        return image.crop((left, top, right, bottom))
+        return extract_roi(image, bbox, pad_ratio=pad_ratio)
 
     @staticmethod
     def _sanitize_bbox(bbox: Optional[List[float]], image_width: int, image_height: int) -> Optional[List[float]]:
         """Clamp bbox to image bounds and return None when invalid."""
-        if bbox is None or len(bbox) != 4:
-            return None
-
-        try:
-            x1, y1, x2, y2 = [float(v) for v in bbox]
-        except Exception:
-            return None
-
-        x1 = max(0.0, min(float(image_width), x1))
-        y1 = max(0.0, min(float(image_height), y1))
-        x2 = max(0.0, min(float(image_width), x2))
-        y2 = max(0.0, min(float(image_height), y2))
-
-        if x2 <= x1 or y2 <= y1:
-            return None
-
-        return [x1, y1, x2, y2]
+        return sanitize_bbox(bbox, image_width, image_height)
 
     @staticmethod
     def _bbox_area_ratio(bbox: Optional[List[float]], image_width: int, image_height: int) -> float:
         """Compute normalized bbox area in [0,1], returning 0 for invalid boxes."""
-        if bbox is None or image_width <= 0 or image_height <= 0:
-            return 0.0
-
-        x1, y1, x2, y2 = bbox
-        box_w = max(0.0, float(x2) - float(x1))
-        box_h = max(0.0, float(y2) - float(y1))
-        image_area = float(image_width * image_height)
-        if image_area <= 0.0:
-            return 0.0
-
-        return (box_w * box_h) / image_area
+        return bbox_area_ratio(bbox, image_width, image_height)
 
     @staticmethod
     def _bbox_iou(box_a: Optional[List[float]], box_b: Optional[List[float]]) -> float:
         """Compute IoU between two xyxy boxes."""
-        if box_a is None or box_b is None or len(box_a) != 4 or len(box_b) != 4:
-            return 0.0
-
-        ax1, ay1, ax2, ay2 = [float(v) for v in box_a]
-        bx1, by1, bx2, by2 = [float(v) for v in box_b]
-
-        inter_x1 = max(ax1, bx1)
-        inter_y1 = max(ay1, by1)
-        inter_x2 = min(ax2, bx2)
-        inter_y2 = min(ay2, by2)
-
-        inter_w = max(0.0, inter_x2 - inter_x1)
-        inter_h = max(0.0, inter_y2 - inter_y1)
-        inter_area = inter_w * inter_h
-        if inter_area <= 0.0:
-            return 0.0
-
-        area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
-        area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
-        union_area = area_a + area_b - inter_area
-        if union_area <= 0.0:
-            return 0.0
-
-        return float(inter_area / union_area)
+        return bbox_iou(box_a, box_b)
 
     def _suppress_overlapping_detections(
         self,
@@ -867,30 +648,11 @@ class VLMPipeline:
         same_crop_only: bool = True,
     ) -> List[Dict[str, Any]]:
         """Suppress highly-overlapping detections by keeping higher-quality detections first."""
-        if not detections:
-            return []
-
-        kept: List[Dict[str, Any]] = []
-        for candidate in detections:
-            candidate_bbox = candidate.get('bbox')
-            candidate_crop = str(candidate.get('crop', '')).strip().lower()
-            should_drop = False
-
-            for existing in kept:
-                if same_crop_only:
-                    existing_crop = str(existing.get('crop', '')).strip().lower()
-                    if existing_crop != candidate_crop:
-                        continue
-
-                overlap = self._bbox_iou(candidate_bbox, existing.get('bbox'))
-                if overlap >= iou_threshold:
-                    should_drop = True
-                    break
-
-            if not should_drop:
-                kept.append(candidate)
-
-        return kept
+        return suppress_overlapping_detections(
+            detections,
+            iou_threshold=iou_threshold,
+            same_crop_only=same_crop_only,
+        )
 
     def _score_parts_conditioned_on_crop(
         self,
@@ -1184,27 +946,12 @@ class VLMPipeline:
     @staticmethod
     def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
         """Select best detection by score, fallback to first detection."""
-        if not detections:
-            return None
-        return max(detections, key=lambda det: float(det.get('score', 0.0)))
+        return select_best_detection(detections)
 
     @staticmethod
     def _unique_nonempty(values: List[Optional[str]]) -> List[str]:
         """Return order-preserving unique non-empty strings."""
-        out: List[str] = []
-        seen = set()
-        for value in values:
-            if not isinstance(value, str):
-                continue
-            normalized = value.strip()
-            if not normalized:
-                continue
-            key = normalized.lower()
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(normalized)
-        return out
+        return unique_nonempty(values)
 
     def _classify_with_prompt_ensemble(
         self, 
@@ -1916,48 +1663,16 @@ class VLMPipeline:
         apply_roi_filters: bool,
     ) -> Tuple[List[Dict[str, Any]], int]:
         """Collect ROI candidates from SAM3 outputs with optional policy filtering."""
-        candidates: List[Dict[str, Any]] = []
-        roi_seen = 0
-
-        roi_pairs = list(zip(boxes, scores))
-        
-        # Pre-classification focus-aware logging (focus filtering is primarily post-classification)
-        if settings.get('focus_part_mode_enabled'):
-            focus_parts = settings.get('focus_parts', ['leaf'])
-            logger.debug(f"Focus part mode enabled: focusing on {focus_parts}; "
-                       f"strong filtering applied during classification stage")
-
-        max_rois = settings.get('max_rois_for_classification')
-        if max_rois is not None and len(roi_pairs) > max_rois:
-            roi_pairs.sort(
-                key=lambda pair: float(pair[1].item()) if torch.is_tensor(pair[1]) else float(pair[1]),
-                reverse=True,
-            )
-            roi_pairs = roi_pairs[:max_rois]
-
-        for box, score in roi_pairs:
-            roi_seen += 1
-            sam3_score = float(score)
-
-            raw_bbox = box.tolist() if torch.is_tensor(box) else box
-            bbox = self._sanitize_bbox(raw_bbox, image_width, image_height)
-            if bbox is None:
-                continue
-
-            if apply_roi_filters:
-                if sam3_score < settings['sam3_threshold']:
-                    continue
-                box_w = bbox[2] - bbox[0]
-                box_h = bbox[3] - bbox[1]
-                if box_w < settings['min_box_side_px'] or box_h < settings['min_box_side_px']:
-                    continue
-                area_ratio = self._bbox_area_ratio(bbox, image_width, image_height)
-                if area_ratio < settings['min_box_area_ratio']:
-                    continue
-
-            candidates.append({'bbox': bbox, 'sam3_score': sam3_score})
-
-        return candidates, roi_seen
+        return collect_sam3_roi_candidates(
+            boxes=boxes,
+            scores=scores,
+            image_width=image_width,
+            image_height=image_height,
+            settings=settings,
+            apply_roi_filters=apply_roi_filters,
+            sanitize_bbox_fn=self._sanitize_bbox,
+            bbox_area_ratio_fn=self._bbox_area_ratio,
+        )
 
     def _classify_sam3_roi_candidate(
         self,
@@ -1968,149 +1683,26 @@ class VLMPipeline:
         settings: Dict[str, Any],
     ) -> Tuple[Optional[Dict[str, Any]], int]:
         """Run ROI classification and part/crop fusion for one SAM3 candidate."""
-        bbox = candidate['bbox']
-        sam3_score = float(candidate['sam3_score'])
-        roi_image = self._extract_roi(pil_image, bbox)
-
-        part_label, part_conf, part_scores = self._clip_score_labels_ensemble(
-            roi_image, self.part_labels, label_type='part', num_prompts=settings.get('part_num_prompts')
-        )
-        classification_calls = 1
-
-        leaf_likeness = self._compute_leaf_likeness(
-            roi_image=roi_image,
-            bbox=bbox,
+        return classify_sam3_roi_candidate(
+            pil_image=pil_image,
+            candidate=candidate,
             image_width=image_width,
             image_height=image_height,
+            settings=settings,
+            part_labels=self.part_labels,
+            crop_labels=self.crop_labels,
+            policy_enabled_fn=self._policy_enabled,
+            extract_roi_fn=self._extract_roi,
+            clip_score_labels_ensemble_fn=self._clip_score_labels_ensemble,
+            compute_leaf_likeness_fn=self._compute_leaf_likeness,
+            rebalance_part_scores_for_leaf_like_roi_fn=self._rebalance_part_scores_for_leaf_like_roi,
+            select_best_crop_with_fallback_fn=self._select_best_crop_with_fallback,
+            compatible_parts_for_crop_fn=self._compatible_parts_for_crop,
+            score_parts_conditioned_on_crop_fn=self._score_parts_conditioned_on_crop,
+            apply_generic_part_penalty_fn=self._apply_generic_part_penalty,
+            select_part_label_with_specificity_fn=self._select_part_label_with_specificity,
+            apply_leaf_like_override_fn=self._apply_leaf_like_override,
         )
-        if settings.get('leaf_part_rebalance_enabled', True):
-            part_scores = self._rebalance_part_scores_for_leaf_like_roi(
-                part_scores=part_scores,
-                leaf_likeness=leaf_likeness,
-                leaf_label=settings['leaf_override_label'],
-                non_foliar_part_labels=settings['leaf_non_foliar_part_labels'],
-                activation_threshold=settings['leaf_part_rebalance_threshold'],
-                non_foliar_penalty=settings['leaf_part_rebalance_penalty'],
-                leaf_boost=settings['leaf_part_rebalance_boost'],
-            )
-            if part_scores:
-                part_label = max(part_scores, key=part_scores.get)
-                part_conf = float(part_scores.get(part_label, 0.0))
-
-        crop_label, crop_conf, crop_scores = self._clip_score_labels_ensemble(
-            roi_image, self.crop_labels, label_type='crop', num_prompts=settings.get('crop_num_prompts')
-        )
-        classification_calls += 1
-
-        crop_label, crop_conf = self._select_best_crop_with_fallback(
-            roi_image,
-            crop_scores,
-            part_label,
-            part_scores,
-            min_confidence=settings['classification_min_confidence'],
-        )
-
-        compatible_parts = self._compatible_parts_for_crop(crop_label)
-        resolved_part_scores = dict(part_scores)
-        if compatible_parts and self._policy_enabled('compatibility_fusion', True):
-            compatible_part_scores = {
-                part_name: float(part_scores.get(part_name, 0.0))
-                for part_name in compatible_parts
-            }
-            conditioned_part_scores = self._score_parts_conditioned_on_crop(
-                roi_image,
-                crop_label,
-                compatible_parts,
-                num_prompts=settings.get('part_num_prompts'),
-            )
-            if conditioned_part_scores:
-                blended_scores: Dict[str, float] = {}
-                for part_name in compatible_parts:
-                    generic_score = float(compatible_part_scores.get(part_name, 0.0))
-                    conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
-                    blended_scores[part_name] = (
-                        (1.0 - settings['conditioned_part_weight']) * generic_score
-                        + settings['conditioned_part_weight'] * conditioned_score
-                    )
-                compatible_part_scores = blended_scores
-            compatible_part_scores = self._apply_generic_part_penalty(
-                compatible_part_scores,
-                settings['generic_part_labels'],
-                settings['generic_part_penalty'],
-            )
-            resolved_part_scores = dict(compatible_part_scores)
-            if compatible_part_scores:
-                refined_part_label, refined_part_conf = self._select_part_label_with_specificity(
-                    compatible_part_scores,
-                    settings['generic_part_labels'],
-                    specific_override_ratio=settings['specific_part_override_ratio'],
-                    specific_min_confidence=settings['specific_part_min_confidence'],
-                    preferred_part_labels=settings['preferred_part_labels'],
-                    preferred_override_ratio=settings['preferred_part_override_ratio'],
-                )
-                if refined_part_label:
-                    part_label = refined_part_label
-                    part_conf = refined_part_conf
-
-        if settings.get('leaf_override_enabled', True):
-            part_label, part_conf = self._apply_leaf_like_override(
-                selected_label=part_label,
-                selected_score=part_conf,
-                part_scores=resolved_part_scores,
-                bbox=bbox,
-                image_width=image_width,
-                image_height=image_height,
-                leaf_label=settings['leaf_override_label'],
-                override_target_labels=settings['leaf_override_target_labels'],
-                leaf_score_ratio=settings['leaf_override_ratio'],
-                leaf_min_confidence=settings['leaf_override_min_confidence'],
-                leaf_min_area_ratio=settings['leaf_override_min_area_ratio'],
-                leaf_aspect_min=settings['leaf_override_aspect_min'],
-                leaf_aspect_max=settings['leaf_override_aspect_max'],
-            )
-
-        if settings.get('leaf_visual_override_enabled', True) and str(part_label).strip().lower() in {
-            'whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'
-        }:
-            leaf_key = str(settings['leaf_override_label']).strip().lower()
-            leaf_score = 0.0
-            for score_label, score_value in resolved_part_scores.items():
-                if str(score_label).strip().lower() == leaf_key:
-                    leaf_score = max(leaf_score, float(score_value))
-
-            threshold = max(0.0, min(1.0, settings['leaf_visual_likeness_threshold']))
-            min_leaf_score = max(0.0, min(1.0, settings['leaf_visual_green_min']))
-            if leaf_likeness >= threshold:
-                leaf_score_ok = leaf_score >= min_leaf_score
-                if leaf_score_ok or settings.get('leaf_visual_force_without_leaf_score', True):
-                    if settings.get('leaf_visual_force_generic', True):
-                        floor_conf = max(0.0, min(1.0, settings['leaf_visual_force_conf_floor']))
-                        part_factor = max(0.0, min(1.0, settings['leaf_visual_force_part_factor']))
-                        forced_conf = max(leaf_score, float(part_conf) * part_factor, floor_conf)
-                        part_label = settings['leaf_override_label']
-                        part_conf = forced_conf
-                    elif leaf_score_ok:
-                        part_label = settings['leaf_override_label']
-                        part_conf = max(part_conf, leaf_score)
-
-        quality_score = (
-            settings['weight_crop'] * float(crop_conf)
-            + settings['weight_part'] * float(part_conf)
-            + settings['weight_sam3'] * sam3_score
-        )
-
-        return {
-            'crop': crop_label,
-            'part': part_label,
-            'crop_confidence': crop_conf,
-            'part_confidence': part_conf,
-            'disease': None,
-            'disease_confidence': 0.0,
-            'bbox': bbox,
-            'mask': None,
-            'sam3_score': sam3_score,
-            '_quality_score': quality_score,
-        }, classification_calls
 
     def _run_sam3_roi_classification_stage(
         self,
@@ -2122,86 +1714,20 @@ class VLMPipeline:
         stage_order: List[str],
     ) -> Tuple[List[Dict[str, Any]], int, int, float]:
         """Execute ROI classification and optional open-set gate stage."""
-        detections: List[Dict[str, Any]] = []
-        roi_kept = 0
-        roi_classification_calls = 0
-        roi_classification_ms = 0.0
-
-        run_classification = self._policy_enabled('crop_evidence', True) and 'roi_classification' in stage_order
-        run_open_set_gate = self._policy_enabled('open_set_gate', True) and 'open_set_gate' in stage_order
-        if not run_classification:
-            return detections, roi_kept, roi_classification_calls, roi_classification_ms
-
-        # First pass: classify all ROIs
-        all_detections: List[Dict[str, Any]] = []
-        focused_detections: List[Dict[str, Any]] = []
-        for candidate in candidates:
-            classify_start = time.perf_counter()
-            detection, classification_calls = self._classify_sam3_roi_candidate(
+        return run_sam3_roi_classification_stage(
+            candidates=candidates,
+            settings=settings,
+            stage_order=stage_order,
+            policy_enabled_fn=self._policy_enabled,
+            classify_candidate_fn=lambda candidate: self._classify_sam3_roi_candidate(
                 pil_image=pil_image,
                 candidate=candidate,
                 image_width=image_width,
                 image_height=image_height,
                 settings=settings,
-            )
-            roi_classification_calls += classification_calls
-            roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
-
-            if detection is None:
-                continue
-            
-            all_detections.append(detection)
-            
-            # Check if this ROI matches focus criteria (if focus mode enabled)
-            if settings.get('focus_part_mode_enabled'):
-                focus_parts = settings.get('focus_parts', ['leaf'])
-                part_label = str(detection.get('part', 'unknown')).lower()
-                part_confidence = float(detection.get('part_confidence', 0.0))
-                
-                # If part is in focus list and meets min confidence threshold, mark as focused
-                if any(fp.lower() in part_label for fp in focus_parts) and \
-                   part_confidence >= settings.get('focus_min_confidence_fallback', 0.50):
-                    focused_detections.append(detection)
-        
-        # Determine which detections to use based on focus fallback logic
-        if settings.get('focus_part_mode_enabled') and settings.get('focus_fallback_enabled'):
-            focus_parts = settings.get('focus_parts', ['leaf'])
-            if focused_detections:
-                # Use focused detections if we have any with sufficient confidence
-                max_focused_conf = max(
-                    float(d.get('part_confidence', 0.0)) for d in focused_detections
-                ) if focused_detections else 0.0
-                
-                if max_focused_conf >= settings.get('focus_min_confidence_fallback', 0.50):
-                    logger.debug(f"Using {len(focused_detections)} focused ROIs "
-                               f"(parts={focus_parts}, max_conf={max_focused_conf:.2f})")
-                    result_detections = focused_detections
-                else:
-                    # Fallback: confidence too low, use all detections
-                    logger.debug(f"Focus mode confidence threshold not met "
-                               f"({max_focused_conf:.2f} < {settings.get('focus_min_confidence_fallback', 0.50):.2f}); "
-                               f"reverting to full ROI set")
-                    result_detections = all_detections
-            else:
-                # No focused detections found, fall back to all
-                logger.debug(f"No ROIs with focus_parts={focus_parts}; "
-                           f"reverting to full ROI set ({len(all_detections)} total)")
-                result_detections = all_detections
-        else:
-            result_detections = all_detections
-        
-        # Apply open-set gate if enabled
-        for detection in result_detections:
-            if run_open_set_gate and not self._passes_open_set_gate(
-                crop_label=str(detection.get('crop', 'unknown')),
-                crop_confidence=float(detection.get('crop_confidence', 0.0)),
-                min_confidence=float(settings['classification_min_confidence']),
-            ):
-                continue
-            detections.append(detection)
-            roi_kept += 1
-
-        return detections, roi_kept, roi_classification_calls, roi_classification_ms
+            ),
+            passes_open_set_gate_fn=self._passes_open_set_gate,
+        )
 
     def _run_sam3_roi_filter_stage(
         self,

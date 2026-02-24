@@ -30,6 +30,8 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `test_sam3_raw.py` - raw SAM3 probing helper.
 - `test_bioclip_github.py` - BioCLIP source integration helper.
 - `check_markdown_links.py` - repository markdown link validation.
+- `benchmark_router_phase5.py` - deterministic Phase 5 router latency benchmark.
+- `check_phase5_perf_regression.py` - validates benchmark output against Phase 5 guardrail thresholds.
 
 ## Recommended Usage
 
@@ -37,3 +39,5 @@ This folder contains operational scripts used for setup, testing, and policy che
 - Policy regression testing: run `python scripts/run_policy_regression_bundle.py`.
 - Core Python sanity checks: run `python scripts/run_python_sanity_bundle.py`.
 - Quick docs validation: run `python scripts/check_markdown_links.py --root .`.
+- Phase 5 benchmark baseline: run `python scripts/benchmark_router_phase5.py`.
+- Phase 5 guardrail check: run `python scripts/check_phase5_perf_regression.py`.

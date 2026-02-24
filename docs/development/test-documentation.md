@@ -18,16 +18,15 @@
 pytest -c config/pytest.ini tests/colab/test_environment.py
 pytest -c config/pytest.ini tests/colab/test_smoke_training.py
 pytest -c config/pytest.ini tests/integration/test_colab_integration.py
-pytest -c config/pytest.ini tests/api/test_endpoints.py
 ```
 
 ## Fast Preflight
 
 ```powershell
-python validate_notebook_imports.py
+python tests/import_test.py
 ```
 
-This script validates imports and key trainer compatibility methods used by notebooks.
+This script validates imports and key trainer compatibility.
 
 ## Useful Pytest Options
 
@@ -43,8 +42,7 @@ pytest -c config/pytest.ini tests --runslow
 
 ## Suggested CI Gate Order
 
-1. `python validate_notebook_imports.py`
+1. `python tests/import_test.py`
 2. `tests/colab/test_environment.py`
 3. `tests/colab/test_smoke_training.py`
-4. `tests/api/test_endpoints.py`
-5. integration suite
+4. integration suite

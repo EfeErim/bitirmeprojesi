@@ -322,8 +322,18 @@ class ColabInstaller:
         try:
             req_path = self.workspace_dir / 'colab_notebooks' / 'requirements_colab.txt'
             req_path.parent.mkdir(exist_ok=True)
+
+            canonical_req_path = self.workspace_dir / 'requirements_colab.txt'
+            if canonical_req_path.exists():
+                requirements = canonical_req_path.read_text(encoding='utf-8')
+                logger.info(f"Using canonical requirements from {canonical_req_path}")
+            else:
+                logger.warning(
+                    f"Canonical requirements not found at {canonical_req_path}. "
+                    "Falling back to embedded defaults."
+                )
             
-            requirements = """# AADS-ULoRA Colab Dependencies
+                requirements = """# AADS-ULoRA Colab Dependencies
 # Generated automatically by install_colab.py
 
 # Core ML

@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "description": "Phase 5 router performance guardrails (CPU deterministic benchmark)",
+    "last_updated": "2026-02-24",
+    "variance_note": "Allow moderate runtime noise while detecting material regressions"
+  },
+  "limits": {
+    "full_pipeline": {
+      "avg_wall_ms_max": 0.85,
+      "p95_wall_ms_max": 0.95,
+      "avg_processing_ms_max": 0.45,
+      "roi_classification_ms_max": 0.35
+    },
+    "no_postprocess": {
+      "avg_wall_ms_max": 0.80,
+      "p95_wall_ms_max": 0.95
+    },
+    "no_open_set_gate": {
+      "avg_wall_ms_max": 0.80,
+      "p95_wall_ms_max": 0.95
+    }
+  }
+}

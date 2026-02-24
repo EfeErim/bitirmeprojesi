@@ -1,33 +1,37 @@
-from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
 import torch
 
-# Test VLM pipeline initialization
-config = {
-    'vlm_enabled': True,
-    'vlm_confidence_threshold': 0.8,
-    'vlm_max_detections': 10
-}
-pipeline = VLMPipeline(
-    config=config,
-    device='cpu'
-)
+from src.router.vlm_pipeline import DiagnosticScoutingAnalyzer, VLMPipeline
 
-print("VLM Pipeline initialized successfully!")
-pipeline.load_models()
 
-# Test processing an image
-dummy_input = torch.randn(1, 3, 224, 224)
-result = pipeline.process_image(dummy_input)
+def test_router_comprehensive_pipeline_init_and_process_disabled_path():
+    config = {
+        'vlm_enabled': False,
+        'vlm_confidence_threshold': 0.8,
+        'vlm_max_detections': 10,
+    }
+    pipeline = VLMPipeline(config=config, device='cpu')
 
-print(f"\nProcessing result status: {result['status']}")
-print(f"Scenario: {result['scenario']}")
+    dummy_input = torch.randn(1, 3, 224, 224)
+    result = pipeline.process_image(dummy_input)
 
-# Test diagnostic analyzer
-analyzer = DiagnosticScoutingAnalyzer(config, device='cpu')
-print("\nDiagnostic Scouting Analyzer initialized successfully!")
+    assert isinstance(result, dict)
+    assert 'status' in result
+    assert 'analysis' in result
+    assert isinstance(result['analysis'], dict)
+    assert 'detections' in result['analysis']
 
-# Quick assessment
-quick_result = analyzer.quick_assessment(dummy_input)
-print(f"Quick assessment status: {quick_result['status']}")
 
-print("\nAll tests passed!")
+def test_router_comprehensive_diagnostic_quick_assessment_contract():
+    config = {
+        'vlm_enabled': False,
+        'vlm_confidence_threshold': 0.8,
+        'vlm_max_detections': 10,
+    }
+    analyzer = DiagnosticScoutingAnalyzer(config, device='cpu')
+
+    dummy_input = torch.randn(1, 3, 224, 224)
+    quick_result = analyzer.quick_assessment(dummy_input)
+
+    assert isinstance(quick_result, dict)
+    assert 'status' in quick_result
+    assert 'explanation' in quick_result

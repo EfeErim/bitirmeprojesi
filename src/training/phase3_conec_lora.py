@@ -411,7 +411,7 @@ class Phase3Trainer:
         
         # Mixed precision training
         self.use_amp = torch.cuda.is_available() and torch.backends.cuda.is_built()
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
+        self.scaler = torch.amp.GradScaler('cuda', enabled=self.use_amp)
 
         # Gradient accumulation (note: already assigned above at line 219)
         self.current_step = 0
@@ -474,7 +474,7 @@ class Phase3Trainer:
             labels = labels.to(self.device)
             
             # Forward pass with mixed precision
-            with torch.cuda.amp.autocast(enabled=self.use_amp):
+            with torch.amp.autocast('cuda', enabled=self.use_amp):
                 pooled = extract_pooled_output(self.model, images)
                 logits = self.classifier(pooled)
 

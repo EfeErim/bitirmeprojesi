@@ -24,7 +24,7 @@ jobs:
     
     - name: Validate configuration
       run: |
-        python scripts/config_utils.py validate --config config/base.json
+        python scripts/profile_policy_sanity.py
     
     - name: Run tests
       run: |
@@ -127,3 +127,35 @@ jobs:
         path: |
           bandit-report.json
           safety-report.json
+
+  performance-guardrails:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-mock
+    
+    - name: Run Phase 5 router benchmark
+      run: |
+        python scripts/benchmark_router_phase5.py
+    
+    - name: Check performance guardrails
+      run: |
+        python scripts/check_phase5_perf_regression.py
+    
+    - name: Upload benchmark artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: phase5-benchmark-results
+        path: logs/phase5_router_benchmark.json

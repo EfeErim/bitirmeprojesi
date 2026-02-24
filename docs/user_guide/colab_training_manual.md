@@ -487,22 +487,19 @@ writer = SummaryWriter('./logs/tensorboard')
 
 3. **Colab output**: Real-time progress bars and metrics
 
-## API Deployment
+## Inference
 
-After training, deploy the API:
+After training, use the pipeline directly in your code:
 
 ```python
-# For inference, use the pipeline directly in your code
-# See the Colab Cheatsheet for example inference code
+from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
+
+# Load trained adapters and run inference
+pipeline = IndependentMultiCropPipeline(...)
+predictions = pipeline.predict(image)
 ```
 
-Expose with ngrok:
-```python
-!pip install pyngrok
-from pyngrok import ngrok
-public_url = ngrok.connect(8000)
-print(f"Public URL: {public_url}")
-```
+See [Colab quick-start](../README.md) for example inference workflows.
 
 ## Cleaning Up
 
