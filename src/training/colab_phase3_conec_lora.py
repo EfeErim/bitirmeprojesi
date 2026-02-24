@@ -587,86 +587,94 @@ class ColabPhase3Trainer:
         total_contrastive_loss = 0.0
         total_orthogonal_loss = 0.0
         num_batches = 0
+        accumulation_steps = max(1, int(self.gradient_accumulation_steps))
+
+        self.optimizer.zero_grad(set_to_none=True)
+        self.current_step = 0
         
-        for batch_idx, batch in enumerate(train_loader):
-            # Get images and labels
-            images = batch['images'].to(self.device)
-            labels = batch['labels'].to(self.device)
+        try:
+            for batch_idx, batch in enumerate(train_loader):
+                # Get images and labels
+                images = batch['images'].to(self.device)
+                labels = batch['labels'].to(self.device)
             
-            # Clear cache periodically
-            if batch_idx % 10 == 0:
-                gc.collect()
-                torch.cuda.empty_cache()
+                # Clear cache periodically
+                if batch_idx % 10 == 0:
+                    gc.collect()
+                    torch.cuda.empty_cache()
             
-            # Forward pass with mixed precision
-            with torch.cuda.amp.autocast(enabled=self.use_amp):
-                # Extract features
-                pooled = extract_pooled_output(self.model, images)
+                # Forward pass with mixed precision
+                with torch.cuda.amp.autocast(enabled=self.use_amp):
+                    # Extract features
+                    pooled = extract_pooled_output(self.model, images)
                 
-                # Compute CoNeC loss
-                conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
+                    # Compute CoNeC loss
+                    conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
                 
-                # Compute classification loss
-                logits = self.classifier(pooled)
-                classification_loss = nn.CrossEntropyLoss()(logits, labels)
+                    # Compute classification loss
+                    logits = self.classifier(pooled)
+                    classification_loss = nn.CrossEntropyLoss()(logits, labels)
                 
-                # Combine losses
-                total_batch_loss = conec_loss + classification_loss
+                    # Combine losses
+                    total_batch_loss = conec_loss + classification_loss
             
-            # Check for NaN/Inf loss
-            if torch.isnan(total_batch_loss) or torch.isinf(total_batch_loss):
-                logger.error(f"NaN/Inf loss detected at batch {batch_idx}, epoch {epoch}: {total_batch_loss.item()}")
-                raise RuntimeError("Training diverged - loss is NaN/Inf. Check gradients and loss scales.")
+                # Check for NaN/Inf loss
+                if torch.isnan(total_batch_loss) or torch.isinf(total_batch_loss):
+                    logger.error(f"NaN/Inf loss detected at batch {batch_idx}, epoch {epoch}: {total_batch_loss.item()}")
+                    raise RuntimeError("Training diverged - loss is NaN/Inf. Check gradients and loss scales.")
             
-            # Backward pass with gradient accumulation
-            self.scaler.scale(total_batch_loss).backward()
+                # Backward pass with gradient accumulation
+                self.scaler.scale(total_batch_loss).backward()
             
-            self.current_step += 1
-            if self.current_step % self.gradient_accumulation_steps == 0:
-                # Unscale gradients before clipping
+                self.current_step += 1
+                if self.current_step % accumulation_steps == 0:
+                    # Unscale gradients before clipping
+                    self.scaler.unscale_(self.optimizer)
+                
+                    # Clip gradients to prevent gradient explosion
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                    torch.nn.utils.clip_grad_norm_(self.classifier.parameters(), max_norm=1.0)
+                
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                    self.optimizer.zero_grad(set_to_none=True)
+            
+                # Update prototypes periodically
+                if batch_idx % 50 == 0:
+                    self._update_prototypes(pooled, labels)
+            
+                # Perform OOD detection periodically
+                if batch_idx % 100 == 0:
+                    ood_metrics = self._perform_ood_detection(pooled, labels)
+                    self.history['ood_metrics'].append(ood_metrics)
+            
+                # Update metrics
+                total_loss += total_batch_loss.item()
+                total_contrastive_loss += contrastive_loss.item()
+                total_orthogonal_loss += orthogonal_loss.item()
+                num_batches += 1
+            
+                # Log progress
+                if batch_idx % 10 == 0:
+                    logger.info(f"Epoch {epoch}, Batch {batch_idx}: "
+                              f"Loss={total_batch_loss.item():.4f}, "
+                              f"Contrastive={contrastive_loss.item():.4f}, "
+                              f"Orthogonal={orthogonal_loss.item():.4f}")
+            
+                # Memory monitoring
+                self._log_memory_usage()
+            
+            # Handle remaining gradients if accumulation steps not evenly divisible
+            if self.current_step % accumulation_steps != 0:
                 self.scaler.unscale_(self.optimizer)
-                
-                # Clip gradients to prevent gradient explosion
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                 torch.nn.utils.clip_grad_norm_(self.classifier.parameters(), max_norm=1.0)
-                
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
-                self.optimizer.zero_grad()
-            
-            # Update prototypes periodically
-            if batch_idx % 50 == 0:
-                self._update_prototypes(pooled, labels)
-            
-            # Perform OOD detection periodically
-            if batch_idx % 100 == 0:
-                ood_metrics = self._perform_ood_detection(pooled, labels)
-                self.history['ood_metrics'].append(ood_metrics)
-            
-            # Update metrics
-            total_loss += total_batch_loss.item()
-            total_contrastive_loss += contrastive_loss.item()
-            total_orthogonal_loss += orthogonal_loss.item()
-            num_batches += 1
-            
-            # Log progress
-            if batch_idx % 10 == 0:
-                logger.info(f"Epoch {epoch}, Batch {batch_idx}: "
-                          f"Loss={total_batch_loss.item():.4f}, "
-                          f"Contrastive={contrastive_loss.item():.4f}, "
-                          f"Orthogonal={orthogonal_loss.item():.4f}")
-            
-            # Memory monitoring
-            self._log_memory_usage()
-            
-        # Handle remaining gradients if accumulation steps not evenly divisible
-        if self.current_step % self.gradient_accumulation_steps != 0:
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-            self.optimizer.zero_grad()
-        
-        # Reset step counter for next epoch
-        self.current_step %= self.gradient_accumulation_steps
+                self.optimizer.zero_grad(set_to_none=True)
+        finally:
+            self.optimizer.zero_grad(set_to_none=True)
+            self.current_step = 0
         
         avg_loss = total_loss / num_batches if num_batches > 0 else 0.0
         avg_contrastive_loss = total_contrastive_loss / num_batches if num_batches > 0 else 0.0
@@ -680,6 +688,8 @@ class ColabPhase3Trainer:
     
     def validate(self, val_loader: DataLoader) -> Dict[str, float]:
         """Validate model performance."""
+        prev_model_mode = self.model.training
+        prev_classifier_mode = self.classifier.training
         self.model.eval()
         self.classifier.eval()
         total_loss = 0.0
@@ -688,55 +698,59 @@ class ColabPhase3Trainer:
         all_preds = []
         all_labels = []
         
-        with torch.no_grad():
-            for batch in val_loader:
-                images = batch['images'].to(self.device)
-                labels = batch['labels'].to(self.device)
+        try:
+            with torch.no_grad():
+                for batch in val_loader:
+                    images = batch['images'].to(self.device)
+                    labels = batch['labels'].to(self.device)
                 
-                # Extract features
-                pooled = extract_pooled_output(self.model, images)
+                    # Extract features
+                    pooled = extract_pooled_output(self.model, images)
                 
-                # Lazy init classifier if dimensions don't match (test stub compatibility)
-                if self.classifier.in_features != pooled.shape[1]:
-                    logger.warning(f"Classifier input mismatch in validation, rebuilding classifier")
-                    self.classifier = nn.Linear(pooled.shape[1], self.classifier.out_features).to(self.device)
-                    self.setup_optimizer()
+                    # Lazy init classifier if dimensions don't match (test stub compatibility)
+                    if self.classifier.in_features != pooled.shape[1]:
+                        logger.warning(f"Classifier input mismatch in validation, rebuilding classifier")
+                        self.classifier = nn.Linear(pooled.shape[1], self.classifier.out_features).to(self.device)
+                        self.setup_optimizer()
                 
-                # Compute CoNeC loss
-                conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
+                    # Compute CoNeC loss
+                    conec_loss, contrastive_loss, orthogonal_loss = self._compute_conec_loss(pooled, labels)
                 
-                # Compute classification loss
-                logits = self.classifier(pooled)
-                classification_loss = nn.CrossEntropyLoss()(logits, labels)
+                    # Compute classification loss
+                    logits = self.classifier(pooled)
+                    classification_loss = nn.CrossEntropyLoss()(logits, labels)
                 
-                # Combine losses
-                total_batch_loss = conec_loss + classification_loss
+                    # Combine losses
+                    total_batch_loss = conec_loss + classification_loss
                 
-                # Update metrics
-                total_loss += total_batch_loss.item()
-                total_contrastive_loss += contrastive_loss.item()
-                total_orthogonal_loss += orthogonal_loss.item()
+                    # Update metrics
+                    total_loss += total_batch_loss.item()
+                    total_contrastive_loss += contrastive_loss.item()
+                    total_orthogonal_loss += orthogonal_loss.item()
                 
-                # Collect predictions
-                all_preds.extend(torch.argmax(logits, dim=1).cpu().numpy())
-                all_labels.extend(labels.cpu().numpy())
+                    # Collect predictions
+                    all_preds.extend(torch.argmax(logits, dim=1).cpu().numpy())
+                    all_labels.extend(labels.cpu().numpy())
         
-        # Compute metrics
-        all_preds = np.array(all_preds)
-        all_labels = np.array(all_labels)
-        accuracy = np.mean(all_preds == all_labels)
+            # Compute metrics
+            all_preds = np.array(all_preds)
+            all_labels = np.array(all_labels)
+            accuracy = np.mean(all_preds == all_labels)
         
-        avg_loss = total_loss / len(val_loader) if len(val_loader) > 0 else 0.0
-        avg_contrastive_loss = total_contrastive_loss / len(val_loader) if len(val_loader) > 0 else 0.0
-        avg_orthogonal_loss = total_orthogonal_loss / len(val_loader) if len(val_loader) > 0 else 0.0
+            avg_loss = total_loss / len(val_loader) if len(val_loader) > 0 else 0.0
+            avg_contrastive_loss = total_contrastive_loss / len(val_loader) if len(val_loader) > 0 else 0.0
+            avg_orthogonal_loss = total_orthogonal_loss / len(val_loader) if len(val_loader) > 0 else 0.0
         
-        metrics = {
-            'loss': avg_loss,
-            'contrastive_loss': avg_contrastive_loss,
-            'orthogonal_loss': avg_orthogonal_loss,
-            'accuracy': float(accuracy),
-            'num_samples': len(all_labels)
-        }
+            metrics = {
+                'loss': avg_loss,
+                'contrastive_loss': avg_contrastive_loss,
+                'orthogonal_loss': avg_orthogonal_loss,
+                'accuracy': float(accuracy),
+                'num_samples': len(all_labels)
+            }
+        finally:
+            self.model.train(prev_model_mode)
+            self.classifier.train(prev_classifier_mode)
         
         return metrics
     

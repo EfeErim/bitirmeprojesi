@@ -413,70 +413,81 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
     ) -> Dict[str, float]:
         """Train for one epoch with mixed precision and gradient accumulation."""
         self.model.train()
+        self.classifier.train()
         total_loss = 0.0
         correct = 0
         total = 0
         num_batches = len(train_loader)
+        accumulation_steps = max(1, int(self.gradient_accumulation_steps))
 
         start_time = time.time()
 
-        for batch_idx, (images, labels) in enumerate(train_loader):
-            images = images.to(self.device, non_blocking=True)
-            labels = labels.to(self.device, non_blocking=True)
+        self.optimizer.zero_grad(set_to_none=True)
+        self.current_step = 0
 
-            # Forward pass with mixed precision
-            with torch.cuda.amp.autocast(enabled=self.use_amp):
-                pooled_output = extract_pooled_output(self.base_model, images)
-                logits = self.classifier(pooled_output)
-                loss = self.criterion(logits, labels)
+        try:
+            for batch_idx, (images, labels) in enumerate(train_loader):
+                images = images.to(self.device, non_blocking=True)
+                labels = labels.to(self.device, non_blocking=True)
 
-            # Check for NaN/Inf loss
-            if torch.isnan(loss) or torch.isinf(loss):
-                logger.error(f"NaN/Inf loss detected at batch {batch_idx}, epoch {epoch}: {loss.item()}")
-                raise RuntimeError("Training diverged - loss is NaN/Inf")
+                # Forward pass with mixed precision
+                with torch.cuda.amp.autocast(enabled=self.use_amp):
+                    pooled_output = extract_pooled_output(self.base_model, images)
+                    logits = self.classifier(pooled_output)
+                    loss = self.criterion(logits, labels)
 
-            # Backward pass with gradient accumulation
-            self.scaler.scale(loss).backward()
-            self.current_step += 1
+                # Check for NaN/Inf loss
+                if torch.isnan(loss) or torch.isinf(loss):
+                    logger.error(f"NaN/Inf loss detected at batch {batch_idx}, epoch {epoch}: {loss.item()}")
+                    raise RuntimeError("Training diverged - loss is NaN/Inf")
 
-            if self.current_step % self.gradient_accumulation_steps == 0:
-                # Unscale gradients before clipping
+                # Backward pass with gradient accumulation
+                self.scaler.scale(loss).backward()
+                self.current_step += 1
+
+                if self.current_step % accumulation_steps == 0:
+                    # Unscale gradients before clipping
+                    self.scaler.unscale_(self.optimizer)
+
+                    # Clip gradients
+                    torch.nn.utils.clip_grad_norm_(
+                        self.model.parameters(),
+                        max_norm=1.0
+                    )
+
+                    self.scaler.step(self.optimizer)
+                    self.scaler.update()
+                    self.optimizer.zero_grad(set_to_none=True)
+
+                # Statistics
+                total_loss += loss.item()
+                predictions = torch.argmax(logits, dim=1)
+                correct += (predictions == labels).sum().item()
+                total += labels.size(0)
+
+                # Progress callback for Colab notebooks
+                if progress_callback and batch_idx % 10 == 0:
+                    progress_callback(epoch, batch_idx, num_batches, loss.item())
+
+                # Log every 50 batches
+                if batch_idx % 50 == 0:
+                    gpu_mem = self._get_gpu_memory_usage()
+                    logger.info(f"Epoch {epoch}, Batch {batch_idx}/{num_batches}: "
+                              f"Loss = {loss.item():.4f}, GPU Mem: {gpu_mem['allocated_mb']:.0f}MB")
+
+            # Handle remaining gradients
+            if self.current_step % accumulation_steps != 0:
                 self.scaler.unscale_(self.optimizer)
-
-                # Clip gradients
                 torch.nn.utils.clip_grad_norm_(
                     self.model.parameters(),
                     max_norm=1.0
                 )
-
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
-                self.optimizer.zero_grad()
-
-            # Statistics
-            total_loss += loss.item()
-            predictions = torch.argmax(logits, dim=1)
-            correct += (predictions == labels).sum().item()
-            total += labels.size(0)
-
-            # Progress callback for Colab notebooks
-            if progress_callback and batch_idx % 10 == 0:
-                progress_callback(epoch, batch_idx, num_batches, loss.item())
-
-            # Log every 50 batches
-            if batch_idx % 50 == 0:
-                gpu_mem = self._get_gpu_memory_usage()
-                logger.info(f"Epoch {epoch}, Batch {batch_idx}/{num_batches}: "
-                          f"Loss = {loss.item():.4f}, GPU Mem: {gpu_mem['allocated_mb']:.0f}MB")
-
-        # Handle remaining gradients
-        if self.current_step % self.gradient_accumulation_steps != 0:
-            self.scaler.step(self.optimizer)
-            self.scaler.update()
-            self.optimizer.zero_grad()
-
-        # Reset step counter
-        self.current_step %= self.gradient_accumulation_steps
+                self.optimizer.zero_grad(set_to_none=True)
+        finally:
+            self.optimizer.zero_grad(set_to_none=True)
+            self.current_step = 0
 
         epoch_time = time.time() - start_time
         gpu_mem = self._get_gpu_memory_usage()
@@ -499,7 +510,10 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
     @torch.no_grad()
     def validate(self, val_loader: DataLoader) -> Dict[str, float]:
         """Validate on validation set."""
+        prev_model_mode = self.model.training
+        prev_classifier_mode = self.classifier.training
         self.model.eval()
+        self.classifier.eval()
         total_loss = 0.0
         correct = 0
         total = 0
@@ -507,29 +521,33 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
         all_predictions = []
         all_labels = []
 
-        for images, labels in val_loader:
-            images = images.to(self.device, non_blocking=True)
-            labels = labels.to(self.device, non_blocking=True)
+        try:
+            for images, labels in val_loader:
+                images = images.to(self.device, non_blocking=True)
+                labels = labels.to(self.device, non_blocking=True)
 
-            # Forward pass
-            pooled_output = extract_pooled_output(self.base_model, images)
-            logits = self.classifier(pooled_output)
-            loss = self.criterion(logits, labels)
+                # Forward pass
+                pooled_output = extract_pooled_output(self.base_model, images)
+                logits = self.classifier(pooled_output)
+                loss = self.criterion(logits, labels)
 
-            total_loss += loss.item()
-            predictions = torch.argmax(logits, dim=1)
-            correct += (predictions == labels).sum().item()
-            total += labels.size(0)
+                total_loss += loss.item()
+                predictions = torch.argmax(logits, dim=1)
+                correct += (predictions == labels).sum().item()
+                total += labels.size(0)
 
-            all_predictions.extend(predictions.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
+                all_predictions.extend(predictions.cpu().numpy())
+                all_labels.extend(labels.cpu().numpy())
 
-        # Compute detailed metrics
-        metrics = compute_metrics(
-            predictions=np.array(all_predictions),
-            labels=np.array(all_labels)
-        )
-        metrics['loss'] = total_loss / len(val_loader)
+            # Compute detailed metrics
+            metrics = compute_metrics(
+                predictions=np.array(all_predictions),
+                labels=np.array(all_labels)
+            )
+            metrics['loss'] = total_loss / len(val_loader)
+        finally:
+            self.model.train(prev_model_mode)
+            self.classifier.train(prev_classifier_mode)
 
         return metrics
 
