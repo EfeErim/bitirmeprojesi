@@ -222,7 +222,12 @@ pytest tests/integration/ -v
 
 # Check documentation
 python scripts/check_markdown_links.py --root .
+
+# Run policy profile + stage-order regression bundle
+python scripts/run_policy_regression_bundle.py
 ```
+
+The GitHub Actions CI workflow also runs this policy regression bundle on every push/PR via the `policy-regression` job.
 
 ## 💾 Output Files
 
