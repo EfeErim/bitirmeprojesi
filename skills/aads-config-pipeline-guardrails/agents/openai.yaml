@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Config and Pipeline Guardrails"
+  short_description: "Protect config and pipeline contracts during changes"
+  default_prompt: "Use $aads-config-pipeline-guardrails to update config or pipeline contracts with backward compatibility and targeted validation."

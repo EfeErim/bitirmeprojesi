@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Training Lifecycle"
+  short_description: "Maintain phase1-3 training and lifecycle invariants"
+  default_prompt: "Use $aads-training-lifecycle to update training behavior while preserving phase invariants, adapter compatibility, and local-Colab parity."

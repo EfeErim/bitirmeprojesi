@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Status Triage"
+  short_description: "Map impact and minimal safe validation before coding"
+  default_prompt: "Use $aads-status-triage to scope this request, list impacted surfaces, and define the minimum safe validation set."

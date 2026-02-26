@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Colab and Docs Sync"
+  short_description: "Synchronize notebooks, scripts, and docs entrypoints"
+  default_prompt: "Use $aads-colab-doc-sync to align notebook, script, and documentation entrypoints while preserving canonical scripts paths and compatibility aliases."

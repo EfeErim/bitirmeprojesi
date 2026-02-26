@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Orchestrator"
+  short_description: "Sequence cross-track work and validation dependencies"
+  default_prompt: "Use $aads-orchestrator to split this request into dependency-aware tracks with explicit validation gates and integration checks."
