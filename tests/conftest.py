@@ -21,6 +21,16 @@ warnings.filterwarnings('ignore', category=PendingDeprecationWarning)
 # that are not scannable by the current user. Pytest tmpdir internals create
 # temp paths with mode=0o700, so normalize that mode during tests.
 _ORIG_PATH_MKDIR = Path.mkdir
+_ORIG_TEMPFILE_TEMPDIR = tempfile.tempdir
+_ORIG_TEMPFILE_GETTEMPDIR = tempfile.gettempdir
+_ORIG_TEMPFILE_GETTEMPDIRB = tempfile.gettempdirb
+_ORIG_TEMPFILE_MKDTEMP = tempfile.mkdtemp
+_ORIG_SHUTIL_RMTREE = shutil.rmtree
+
+_PYTEST_PATHLIB = None
+_PYTEST_TMPDIR = None
+_ORIG_PYTEST_PATHLIB_CLEANUP = None
+_ORIG_PYTEST_TMPDIR_CLEANUP = None
 
 
 def _safe_path_mkdir(self, mode=0o777, parents=False, exist_ok=False):
@@ -35,7 +45,6 @@ Path.mkdir = _safe_path_mkdir
 # Keep temporary path operations stable in restricted Windows environments.
 _RUNTIME_TMP_ROOT = (Path(__file__).resolve().parent.parent / ".runtime_tmp").resolve()
 _RUNTIME_TMP_ROOT.mkdir(parents=True, exist_ok=True)
-_ORIG_RMTREE = shutil.rmtree
 
 
 def _safe_gettempdir() -> str:
@@ -64,7 +73,7 @@ def _safe_mkdtemp(suffix=None, prefix=None, dir=None):
 
 def _safe_rmtree(path, *args, **kwargs):
     try:
-        return _ORIG_RMTREE(path, *args, **kwargs)
+        return _ORIG_SHUTIL_RMTREE(path, *args, **kwargs)
     except PermissionError:
         return None
     except OSError:
@@ -80,17 +89,20 @@ shutil.rmtree = _safe_rmtree
 try:
     import _pytest.pathlib as _pytest_pathlib
 
-    _orig_cleanup_dead_symlinks = _pytest_pathlib.cleanup_dead_symlinks
+    _PYTEST_PATHLIB = _pytest_pathlib
+    _ORIG_PYTEST_PATHLIB_CLEANUP = _pytest_pathlib.cleanup_dead_symlinks
 
     def _patched_cleanup_dead_symlinks(root):
         try:
-            return _orig_cleanup_dead_symlinks(root)
+            return _ORIG_PYTEST_PATHLIB_CLEANUP(root)
         except PermissionError:
             return None
 
     _pytest_pathlib.cleanup_dead_symlinks = _patched_cleanup_dead_symlinks
 
     import _pytest.tmpdir as _pytest_tmpdir
+    _PYTEST_TMPDIR = _pytest_tmpdir
+    _ORIG_PYTEST_TMPDIR_CLEANUP = getattr(_pytest_tmpdir, "cleanup_dead_symlinks", None)
     _pytest_tmpdir.cleanup_dead_symlinks = _patched_cleanup_dead_symlinks
 except Exception:
     pass
@@ -194,6 +206,21 @@ def pytest_collection_modifyitems(config, items):
         for item in items:
             if "heavy_model" in item.keywords:
                 item.add_marker(skip_heavy_model)
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Restore global monkeypatches applied in this conftest."""
+    Path.mkdir = _ORIG_PATH_MKDIR
+    tempfile.tempdir = _ORIG_TEMPFILE_TEMPDIR
+    tempfile.gettempdir = _ORIG_TEMPFILE_GETTEMPDIR
+    tempfile.gettempdirb = _ORIG_TEMPFILE_GETTEMPDIRB
+    tempfile.mkdtemp = _ORIG_TEMPFILE_MKDTEMP
+    shutil.rmtree = _ORIG_SHUTIL_RMTREE
+
+    if _PYTEST_PATHLIB is not None and _ORIG_PYTEST_PATHLIB_CLEANUP is not None:
+        _PYTEST_PATHLIB.cleanup_dead_symlinks = _ORIG_PYTEST_PATHLIB_CLEANUP
+    if _PYTEST_TMPDIR is not None and _ORIG_PYTEST_TMPDIR_CLEANUP is not None:
+        _PYTEST_TMPDIR.cleanup_dead_symlinks = _ORIG_PYTEST_TMPDIR_CLEANUP
 
 
 # Set up logging for tests

@@ -546,7 +546,10 @@ class AdaptiveThresholdManager:
         self.confidence_level = confidence_level
         
         # Track threshold history
+        # `threshold_history` keeps a stabilized view for long-running dashboards.
         self.threshold_history = {k: [v] for k, v in initial_thresholds.items()}
+        # `operational_history` records the actual applied threshold after each update.
+        self.operational_history = {k: [v] for k, v in initial_thresholds.items()}
         self.update_counts = {k: 1 for k in initial_thresholds.keys()}
     
     def update_thresholds(
@@ -590,6 +593,10 @@ class AdaptiveThresholdManager:
             # Track history
             if class_idx not in self.threshold_history:
                 self.threshold_history[class_idx] = []
+            if class_idx not in self.operational_history:
+                self.operational_history[class_idx] = []
+
+            self.operational_history[class_idx].append(adapted)
             class_history = self.threshold_history[class_idx]
             if class_history:
                 # Keep a stabilized history view that damps successive updates
@@ -617,8 +624,12 @@ class AdaptiveThresholdManager:
         return self.thresholds.get(class_idx, 25.0)
     
     def get_threshold_history(self, class_idx: int) -> list:
-        """Get threshold history for a class."""
+        """Get stabilized threshold history for a class."""
         return self.threshold_history.get(class_idx, [])
+
+    def get_operational_threshold_history(self, class_idx: int) -> list:
+        """Get actual applied threshold history for a class."""
+        return self.operational_history.get(class_idx, [])
     
     def get_update_count(self, class_idx: int) -> int:
         """Get number of times threshold for class has been updated."""

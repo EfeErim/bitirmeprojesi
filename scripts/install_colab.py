@@ -11,7 +11,7 @@ import json
 import logging
 import importlib
 from pathlib import Path
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, List
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.core.colab_contract import COLAB_WORKSPACE_PATH, required_workspace_paths, StepGate
@@ -97,23 +97,43 @@ class ColabInstaller:
                 'device_count': 0
             }
     
-    def get_pytorch_install_command(self, cuda_version: str) -> str:
+    def get_pytorch_install_command(self, cuda_version: str) -> List[str]:
         """Determine PyTorch installation command based on CUDA version."""
         logger.info(f"Determining PyTorch version for CUDA {cuda_version}")
         
         # Map CUDA version to PyTorch version
         if cuda_version.startswith('11.8'):
-            return 'pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118'
+            return [
+                sys.executable, '-m', 'pip', 'install',
+                'torch', 'torchvision', 'torchaudio',
+                '--index-url', 'https://download.pytorch.org/whl/cu118'
+            ]
         elif cuda_version.startswith('11.7'):
-            return 'pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu117'
+            return [
+                sys.executable, '-m', 'pip', 'install',
+                'torch', 'torchvision', 'torchaudio',
+                '--index-url', 'https://download.pytorch.org/whl/cu117'
+            ]
         elif cuda_version.startswith('12.1'):
-            return 'pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121'
+            return [
+                sys.executable, '-m', 'pip', 'install',
+                'torch', 'torchvision', 'torchaudio',
+                '--index-url', 'https://download.pytorch.org/whl/cu121'
+            ]
         elif cuda_version.startswith('12.2'):
-            return 'pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu122'
+            return [
+                sys.executable, '-m', 'pip', 'install',
+                'torch', 'torchvision', 'torchaudio',
+                '--index-url', 'https://download.pytorch.org/whl/cu122'
+            ]
         else:
             # Default to CPU version if CUDA version not recognized
             logger.warning(f"CUDA version {cuda_version} not recognized. Installing CPU version.")
-            return 'pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu'
+            return [
+                sys.executable, '-m', 'pip', 'install',
+                'torch', 'torchvision', 'torchaudio',
+                '--index-url', 'https://download.pytorch.org/whl/cpu'
+            ]
     
     def install_dependencies(self) -> bool:
         """Install all required dependencies."""
@@ -132,7 +152,7 @@ class ColabInstaller:
             # Detect CUDA version from nvidia-smi if available
             cuda_version = self._detect_cuda_from_nvidia_smi()
             torch_cmd = self.get_pytorch_install_command(cuda_version)
-            subprocess.run(torch_cmd, shell=True, check=True)
+            subprocess.run(torch_cmd, check=True)
             logger.info("✅ PyTorch installed")
         
         # Install other dependencies
