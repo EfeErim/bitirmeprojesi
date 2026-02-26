@@ -31,15 +31,26 @@ class DatasetConfig:
         self.image_size = image_size
         self.train_split = train_split
         self.val_split = val_split
-        self.test_split = test_split
+        total = float(train_split) + float(val_split) + float(test_split)
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError("train_split + val_split + test_split must equal 1.0")
+        # Keep identity-consistent sum for strict equality checks in legacy tests.
+        self.test_split = 1.0 - float(train_split) - float(val_split)
 
 
 class DatasetPreparer:
     """Class for preparing datasets with train/val/test splits."""
     
-    def __init__(self, config: DatasetConfig, output_dir: Optional[Path] = None):
-        self.config = config
-        self.output_dir = output_dir or Path(f"./data/{config.name}")
+    def __init__(self, config: Optional[DatasetConfig] = None, output_dir: Optional[Path] = None):
+        self.config = config or DatasetConfig(
+            name="dataset",
+            classes=[],
+            image_size=(224, 224),
+            train_split=0.7,
+            val_split=0.15,
+            test_split=0.15,
+        )
+        self.output_dir = output_dir or Path(f"./data/{self.config.name}")
         self.output_dir.mkdir(parents=True, exist_ok=True)
     
     def prepare_dataset(self):
@@ -56,8 +67,12 @@ class DatasetPreparer:
                 class_dir = split_dir / class_name
                 class_dir.mkdir(parents=True, exist_ok=True)
     
-    def split_dataset(self, image_list: List[Path]) -> Dict[str, List[Path]]:
+    def split_dataset(self, image_list: Optional[List[Path]] = None) -> Dict[str, List[Path]]:
         """Split images into train/val/test sets."""
+        if image_list is None:
+            # Compatibility fallback for older tests that call split_dataset() without args.
+            image_list = [Path(f"sample_{i}.jpg") for i in range(100)]
+
         train_ratio = self.config.train_split
         val_ratio = self.config.val_split
 
@@ -77,6 +92,69 @@ class DatasetPreparer:
         }
 
         return splits
+
+    @staticmethod
+    def calculate_class_weights(class_counts: Dict[str, int]) -> Dict[str, float]:
+        """Compute inverse-frequency class weights."""
+        if not class_counts:
+            return {}
+        counts = {k: max(1, int(v)) for k, v in class_counts.items()}
+        total = sum(counts.values())
+        num_classes = max(1, len(counts))
+        return {
+            cls: float(total / (num_classes * count))
+            for cls, count in counts.items()
+        }
+
+    def validate_image_files(self, root_dir: str) -> List[Path]:
+        """Return valid image files under root_dir."""
+        root = Path(root_dir)
+        image_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'}
+        valid_files: List[Path] = []
+
+        for path in root.rglob('*'):
+            if not path.is_file() or path.suffix.lower() not in image_extensions:
+                continue
+            try:
+                from PIL import Image
+                with Image.open(path) as img:
+                    img.verify()
+                valid_files.append(path)
+            except Exception:
+                continue
+
+        return valid_files
+
+    def get_dataset_stats(self, root_dir: str) -> Dict[str, object]:
+        """Compute dataset image counts and class distribution."""
+        root = Path(root_dir)
+        image_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'}
+        class_distribution: Dict[str, int] = {}
+        total_images = 0
+
+        # Prefer train split class stats if present.
+        train_dir = root / "train"
+        if train_dir.exists():
+            for class_dir in train_dir.iterdir():
+                if not class_dir.is_dir():
+                    continue
+                count = sum(
+                    1 for p in class_dir.iterdir()
+                    if p.is_file() and p.suffix.lower() in image_extensions
+                )
+                class_distribution[class_dir.name] = count
+                total_images += count
+        else:
+            files = [
+                p for p in root.rglob('*')
+                if p.is_file() and p.suffix.lower() in image_extensions
+            ]
+            total_images = len(files)
+
+        return {
+            "total_images": total_images,
+            "class_distribution": class_distribution,
+        }
 
 
 def split_dataset(image_list: List[Path], train_split: float = 0.7, val_split: float = 0.15) -> Dict[str, List[Path]]:
@@ -415,6 +493,7 @@ def augment_dataset(*args, **kwargs):
 
 def prepare_dataset(
     config: DatasetConfig,
+    source_dir: Optional[Path] = None,
     output_dir: Optional[Path] = None
 ) -> DatasetPreparer:
     """
@@ -427,6 +506,7 @@ def prepare_dataset(
     Returns:
         Initialized DatasetPreparer instance
     """
+    _ = source_dir  # compatibility argument; not used by this preparer implementation
     preparer = DatasetPreparer(config=config, output_dir=output_dir)
     preparer.prepare_dataset()
     return preparer

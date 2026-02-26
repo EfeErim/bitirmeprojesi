@@ -23,6 +23,14 @@ from src.dataset.preparation import (
 )
 
 
+@pytest.fixture
+def temp_dataset_dir():
+    """Create a temporary directory for test dataset."""
+    temp_dir = tempfile.mkdtemp()
+    yield Path(temp_dir)
+    shutil.rmtree(temp_dir, ignore_errors=True)
+
+
 class TestDatasetPreparer:
     """Test dataset preparation functionality."""
 
