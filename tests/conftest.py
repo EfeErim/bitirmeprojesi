@@ -21,6 +21,7 @@ warnings.filterwarnings('ignore', category=PendingDeprecationWarning)
 # that are not scannable by the current user. Pytest tmpdir internals create
 # temp paths with mode=0o700, so normalize that mode during tests.
 _ORIG_PATH_MKDIR = Path.mkdir
+_ORIG_PATH_UNLINK = Path.unlink
 _ORIG_TEMPFILE_TEMPDIR = tempfile.tempdir
 _ORIG_TEMPFILE_GETTEMPDIR = tempfile.gettempdir
 _ORIG_TEMPFILE_GETTEMPDIRB = tempfile.gettempdirb
@@ -39,7 +40,16 @@ def _safe_path_mkdir(self, mode=0o777, parents=False, exist_ok=False):
     return _ORIG_PATH_MKDIR(self, mode=mode, parents=parents, exist_ok=exist_ok)
 
 
+def _safe_path_unlink(self, missing_ok=False):
+    try:
+        return _ORIG_PATH_UNLINK(self, missing_ok=missing_ok)
+    except PermissionError:
+        # Restricted local sandbox can deny delete; keep test cleanup best-effort.
+        return None
+
+
 Path.mkdir = _safe_path_mkdir
+Path.unlink = _safe_path_unlink
 
 
 # Keep temporary path operations stable in restricted Windows environments.
@@ -149,6 +159,16 @@ def pytest_configure(config):
     if not getattr(config.option, "basetemp", None):
         forced_base = _RUNTIME_TMP_ROOT / f"pytest_basetemp_{uuid.uuid4().hex}"
         config.option.basetemp = str(forced_base)
+    runtime_cache = _RUNTIME_TMP_ROOT / ".pytest_cache"
+    runtime_cache.mkdir(parents=True, exist_ok=True)
+    try:
+        config.option.cache_dir = str(runtime_cache)
+    except Exception:
+        pass
+    try:
+        config._inicache["cache_dir"] = str(runtime_cache)
+    except Exception:
+        pass
 
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
@@ -211,6 +231,7 @@ def pytest_collection_modifyitems(config, items):
 def pytest_sessionfinish(session, exitstatus):
     """Restore global monkeypatches applied in this conftest."""
     Path.mkdir = _ORIG_PATH_MKDIR
+    Path.unlink = _ORIG_PATH_UNLINK
     tempfile.tempdir = _ORIG_TEMPFILE_TEMPDIR
     tempfile.gettempdir = _ORIG_TEMPFILE_GETTEMPDIR
     tempfile.gettempdirb = _ORIG_TEMPFILE_GETTEMPDIRB
