@@ -62,6 +62,10 @@ logs/
 *.temp
 .cache/
 temp/
+.runtime_tmp/
+.tmp_*/
+.tmp*
+pytest-cache-files-*/
 
 # Google Drive
 .gdrive/
