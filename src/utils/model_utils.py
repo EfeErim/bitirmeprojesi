@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import json
 import fnmatch
+import math
 from pathlib import Path
 
 
@@ -26,14 +27,19 @@ def extract_pooled_output(model: Any, images: torch.Tensor) -> torch.Tensor:
     if is_test_stub:
         # For test stubs, create higher-dimensional pooled features from global average pooling
         batch_size = images.shape[0]
-        # Global avg pool to (batch, channels, 1, 1), then flatten, then project to reasonable feature dim
+        # Global avg pool to (batch, channels, 1, 1), then flatten.
         pooled = torch.nn.functional.adaptive_avg_pool2d(images, (1, 1))
         pooled = pooled.view(batch_size, -1)  # (batch, channels)
-        # Project to hidden dimension (e.g., 64) to avoid dimension mismatch with classifiers
+        # Expand/truncate deterministically to avoid nondeterminism in test paths.
         hidden_dim = 64
-        projection = torch.nn.Linear(pooled.shape[1], hidden_dim).to(pooled.device)
-        pooled = projection(pooled)  # (batch, hidden_dim)
-        return pooled
+        if pooled.shape[1] == hidden_dim:
+            return pooled
+        if pooled.shape[1] > hidden_dim:
+            return pooled[:, :hidden_dim]
+
+        repeat_factor = max(1, math.ceil(hidden_dim / pooled.shape[1]))
+        expanded = pooled.repeat(1, repeat_factor)
+        return expanded[:, :hidden_dim]
     
     outputs = model(images)
 

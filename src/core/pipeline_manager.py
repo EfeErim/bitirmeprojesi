@@ -119,6 +119,8 @@ class PipelineManager:
             
             # Execute pipeline
             output = pipeline_func(config)
+            if asyncio.iscoroutine(output):
+                output = await output
             
             # Create result
             result = PipelineResult(
@@ -164,24 +166,30 @@ class PipelineManager:
         async with self._lock:
             if pipeline_id not in self._pipelines:
                 return False
-            
+
             metadata = self._pipelines[pipeline_id]
             if metadata.state not in [PipelineState.RUNNING, PipelineState.CREATED]:
                 return False
-            
-            # Cancel running task
+
             task = self._running_pipelines.get(pipeline_id)
-            if task:
-                task.cancel()
-                try:
-                    await task
-                except asyncio.CancelledError:
-                    pass
-            
-            # Update state
+
+        # Await cancellation outside lock to avoid deadlock with task finalizers
+        # that also acquire `_lock`.
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+        async with self._lock:
+            metadata = self._pipelines.get(pipeline_id)
+            if metadata is None:
+                return False
+            if metadata.state in [PipelineState.COMPLETED, PipelineState.FAILED]:
+                return False
             metadata.state = PipelineState.CANCELLED
             metadata.completed_at = time.time()
-            
             return True
     
     async def get_pipeline_status(self, pipeline_id: str) -> PipelineMetadata:

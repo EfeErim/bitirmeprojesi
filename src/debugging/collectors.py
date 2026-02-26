@@ -202,6 +202,8 @@ class MemoryProfiler:
 
             allocations = [p.allocated_gb for p in self._allocation_history]
             reserved = [p.reserved_gb for p in self._allocation_history]
+            recent_profiles = list(self._allocation_history)[-10:]
+            leak_suspected = any(p.leak_suspected for p in recent_profiles)
 
             return {
                 'avg_allocated_gb': float(np.mean(allocations)),
@@ -213,7 +215,8 @@ class MemoryProfiler:
                 'current_allocated_gb': allocations[-1] if allocations else 0.0,
                 'current_reserved_gb': reserved[-1] if reserved else 0.0,
                 'fragmentation_ratio': reserved[-1] / allocations[-1] if allocations and allocations[-1] > 0 else 0.0,
-                'samples': len(self._allocation_history)
+                'samples': len(self._allocation_history),
+                'leak_suspected': leak_suspected,
             }
 
     def reset(self):

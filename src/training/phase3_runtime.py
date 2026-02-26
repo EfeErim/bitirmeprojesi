@@ -201,6 +201,10 @@ def phase3_save_checkpoint(trainer, path: str, epoch: int, loss: float):
 
     save_path.mkdir(parents=True, exist_ok=True)
 
+    history = dict(getattr(trainer, 'history', {}) or {})
+    history['train_loss'] = list(getattr(trainer, 'training_losses', history.get('train_loss', [])))
+    history['val_loss'] = list(getattr(trainer, 'validation_losses', history.get('val_loss', [])))
+
     checkpoint = {
         'epoch': epoch,
         'loss': loss,
@@ -210,7 +214,8 @@ def phase3_save_checkpoint(trainer, path: str, epoch: int, loss: float):
         'scaler_state_dict': trainer.scaler.state_dict(),
         'prototype_embeddings': trainer.prototype_manager.get_prototypes(),
         'config': asdict(trainer.config),
-        'history': trainer.history,
+        'history': history,
+        'prototype_history': list(getattr(trainer, 'prototype_history', [])),
     }
 
     checkpoint_path = save_path / filename
@@ -226,7 +231,16 @@ def phase3_load_checkpoint(trainer, path: str):
     trainer.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     trainer.scaler.load_state_dict(checkpoint['scaler_state_dict'])
     trainer.prototype_manager.set_prototypes(checkpoint['prototype_embeddings'])
-    trainer.history = checkpoint['history']
+    loaded_history = checkpoint.get('history') or {}
+    if not isinstance(loaded_history, dict):
+        loaded_history = {}
+    trainer.history = loaded_history
+    trainer.history.setdefault('train_loss', [])
+    trainer.history.setdefault('val_loss', [])
+    # Preserve legacy aliases expected by tests and older callers.
+    trainer.training_losses = trainer.history['train_loss']
+    trainer.validation_losses = trainer.history['val_loss']
+    trainer.prototype_history = list(checkpoint.get('prototype_history', []))
 
     trainer.current_epoch = checkpoint['epoch']
     trainer.best_val_loss = checkpoint['loss']

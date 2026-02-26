@@ -12,104 +12,121 @@ IMPORTANT: Run these cells FIRST in your Colab notebook:
     %run scripts/colab_setup_dependencies.py
 """
 
+import os
 import subprocess
 import sys
 from pathlib import Path
+from typing import Optional, Sequence
 
-def run_command(cmd, description=""):
-    """Run shell command with error handling."""
+REPO_URL = "https://github.com/EfeErim/bitirmeprojesi.git"
+REPO_DIR = Path("/content/bitirmeprojesi")
+
+
+def _format_cmd(cmd: Sequence[str]) -> str:
+    return " ".join(cmd)
+
+
+def run_command(cmd: Sequence[str], description: str = "", cwd: Optional[Path] = None) -> bool:
+    """Run command with error handling and without shell expansion."""
     try:
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"Setting up: {description}")
-        print(f"Command: {cmd}")
-        print(f"{'='*60}")
-        result = subprocess.run(cmd, shell=True, capture_output=False, text=True)
+        print(f"Command: {_format_cmd(cmd)}")
+        print(f"{'=' * 60}")
+        result = subprocess.run(
+            list(cmd),
+            cwd=str(cwd) if cwd else None,
+            check=False,
+            capture_output=False,
+            text=True,
+        )
         if result.returncode == 0:
-            print(f"✅ {description} - SUCCESS")
+            print(f"[OK] {description} - SUCCESS")
             return True
-        else:
-            print(f"⚠️ {description} - WARNING (check logs above)")
-            return False
-    except Exception as e:
-        print(f"❌ {description} - ERROR: {e}")
+        print(f"[WARN] {description} - WARNING (check logs above)")
+        return False
+    except Exception as exc:
+        print(f"[ERROR] {description} - ERROR: {exc}")
         return False
 
-def main():
+
+def ensure_repo_checkout(repo_dir: Path) -> bool:
+    """Clone repository when missing, otherwise pull latest changes."""
+    if not repo_dir.exists():
+        return run_command(
+            ["git", "clone", REPO_URL, str(repo_dir)],
+            "Clone repository",
+        )
+    return run_command(
+        ["git", "pull"],
+        "Update repository",
+        cwd=repo_dir,
+    )
+
+
+def main() -> None:
     """Main setup function."""
-    import os
-    
+    failed_steps = []
+
     # Check if we're in the repo directory, if not try to cd or clone
-    if not os.path.exists('src'):
-        print("\n⚠️  Not in bitirmeprojesi directory. Cloning now...")
-        os.system("git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || (cd /content/bitirmeprojesi && git pull)")
-        os.chdir('/content/bitirmeprojesi')
-        print("✅ Cloned/updated and changed to repository directory")
-    
-    print("\n" + "="*70)
+    if not Path("src").exists():
+        print("\n[WARN] Not in bitirmeprojesi directory. Preparing checkout...")
+        if not ensure_repo_checkout(REPO_DIR):
+            failed_steps.append("Clone/update repository")
+        os.chdir(REPO_DIR)
+        print("[OK] Changed to repository directory")
+    else:
+        # If already in repository, still try to sync latest code.
+        if not ensure_repo_checkout(Path.cwd()):
+            failed_steps.append("Clone/update repository")
+
+    print("\n" + "=" * 70)
     print(" AADS-ULoRA SAM3+BioCLIP-2.5 Pipeline - Colab Setup")
-    print("="*70)
-    
+    print("=" * 70)
+
     setup_steps = [
         # 1. Update pip
-        ("pip install --upgrade pip", "Upgrade pip"),
-        
-        # 2. Clone/update repo
-        ("git clone https://github.com/EfeErim/bitirmeprojesi.git /content/bitirmeprojesi 2>/dev/null || cd /content/bitirmeprojesi && git pull", 
-         "Clone/update repository"),
-        
-        # 3. Install transformers with SAM3 support
-        ("pip install transformers>=4.41.0 --upgrade", 
-         "Install transformers (SAM3 support)"),
-        
-        # 4. Install open_clip for BioCLIP-2.5
-        ("pip install open-clip-torch", 
-         "Install open-clip (BioCLIP-2.5)"),
-        
-        # 5. Install ultralytics for SAM2.1
-        ("pip install ultralytics", 
-         "Install ultralytics (SAM2.1 fallback)"),
-        
-        # 6. Install GroundingDINO for fallback
-        ("pip install groundingdino-hf", 
-         "Install GroundingDINO (DINO fallback)"),
-        
-        # 7. Install torch-vision for image processing
-        ("pip install torchvision",
-         "Install torchvision (image ops)"),
-        
-        # 8. Install huggingface_hub for model access
-        ("pip install huggingface-hub --upgrade",
-         "Install huggingface_hub (model hub)"),
+        ([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], "Upgrade pip"),
+        # 2. Install transformers with SAM3 support
+        ([sys.executable, "-m", "pip", "install", "--upgrade", "transformers>=4.41.0"], "Install transformers (SAM3 support)"),
+        # 3. Install open_clip for BioCLIP-2.5
+        ([sys.executable, "-m", "pip", "install", "open-clip-torch"], "Install open-clip (BioCLIP-2.5)"),
+        # 4. Install ultralytics for SAM2.1
+        ([sys.executable, "-m", "pip", "install", "ultralytics"], "Install ultralytics (SAM2.1 fallback)"),
+        # 5. Install GroundingDINO for fallback
+        ([sys.executable, "-m", "pip", "install", "groundingdino-hf"], "Install GroundingDINO (DINO fallback)"),
+        # 6. Install torch-vision for image processing
+        ([sys.executable, "-m", "pip", "install", "torchvision"], "Install torchvision (image ops)"),
+        # 7. Install huggingface_hub for model access
+        ([sys.executable, "-m", "pip", "install", "--upgrade", "huggingface-hub"], "Install huggingface_hub (model hub)"),
     ]
-    
-    failed_steps = []
-    
+
     for cmd, desc in setup_steps:
         if not run_command(cmd, desc):
             failed_steps.append(desc)
-    
+
     # Summary
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print(" SETUP COMPLETE")
-    print("="*70)
-    
+    print("=" * 70)
+
     if not failed_steps:
-        print("\n✅ ALL DEPENDENCIES INSTALLED SUCCESSFULLY!")
+        print("\n[OK] ALL DEPENDENCIES INSTALLED SUCCESSFULLY!")
         print("\nYou can now run:")
         print("  %cd /content/bitirmeprojesi")
         print("  %run scripts/colab_vlm_quick_test.py")
     else:
-        print(f"\n⚠️ {len(failed_steps)} step(s) had warnings:")
+        print(f"\n[WARN] {len(failed_steps)} step(s) had warnings:")
         for step in failed_steps:
             print(f"   - {step}")
         print("\nYou may still be able to proceed, but check the output above.")
-    
-    print("\n" + "="*70)
+
+    print("\n" + "=" * 70)
     print(" NEXT STEPS")
-    print("="*70)
+    print("=" * 70)
     print("""
 1. Set HF_TOKEN as a Colab secret:
-   - Click 🔑 Secrets in left sidebar
+   - Click the Secrets tab in left sidebar
    - Click "+ Add new secret"
    - Name: HF_TOKEN
    - Value: Your HuggingFace token (from https://huggingface.co/settings/tokens)
@@ -122,6 +139,7 @@ def main():
 
 3. Upload your grape leaf image when prompted
 """)
+
 
 if __name__ == "__main__":
     main()

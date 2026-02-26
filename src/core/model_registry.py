@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 import asyncio
 import logging
 from pathlib import Path
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -48,11 +49,18 @@ class ModelRegistry:
         self,
         model_dir: str = "models",
         cache_size: int = 10,
-        cache_ttl: int = 3600
+        cache_ttl: int = 3600,
+        allow_unsafe_pickle: Optional[bool] = None,
     ):
         self.model_dir = Path(model_dir)
         self.cache_size = cache_size
         self.cache_ttl = cache_ttl
+        if allow_unsafe_pickle is None:
+            allow_unsafe_pickle = (
+                str(os.getenv("AADS_ALLOW_UNSAFE_PICKLE", "0")).strip().lower()
+                in {"1", "true", "yes", "on"}
+            )
+        self.allow_unsafe_pickle = bool(allow_unsafe_pickle)
         self._models: Dict[str, ModelMetadata] = {}
         self._cache: Dict[str, ModelCacheEntry] = {}
         self._lock = asyncio.Lock()
@@ -194,9 +202,41 @@ class ModelRegistry:
     def _load_model_from_disk(self, metadata: ModelMetadata) -> Any:
         """Load model from disk."""
         try:
-            # For this example, assume models are pickled
-            with open(metadata.file_path, 'rb') as f:
-                model = pickle.load(f)
+            file_path = Path(metadata.file_path)
+            if not file_path.exists():
+                raise FileNotFoundError(f"Model file does not exist: {file_path}")
+
+            current_checksum = self._calculate_checksum(str(file_path))
+            if current_checksum != metadata.checksum:
+                raise RuntimeError(
+                    f"Checksum mismatch for model {metadata.model_id}:{metadata.version}. "
+                    f"Expected {metadata.checksum}, got {current_checksum}."
+                )
+
+            suffix = file_path.suffix.lower()
+            if suffix in {".pt", ".pth", ".bin"}:
+                model = torch.load(str(file_path), map_location="cpu")
+            elif suffix in {".pkl", ".pickle"}:
+                if not self.allow_unsafe_pickle:
+                    raise RuntimeError(
+                        "Refusing to load pickle model without explicit opt-in. "
+                        "Set AADS_ALLOW_UNSAFE_PICKLE=1 if you trust the artifact source."
+                    )
+                with open(file_path, 'rb') as f:
+                    model = pickle.load(f)
+            else:
+                # Try torch first for common serialized artifacts; only fallback to
+                # pickle when explicitly allowed.
+                try:
+                    model = torch.load(str(file_path), map_location="cpu")
+                except Exception:
+                    if not self.allow_unsafe_pickle:
+                        raise RuntimeError(
+                            f"Unsupported model format '{file_path.suffix}' for safe loading. "
+                            "Use a torch-serialized artifact or opt into unsafe pickle loading."
+                        )
+                    with open(file_path, 'rb') as f:
+                        model = pickle.load(f)
             
             logger.info(f"Loaded model {metadata.model_id} from disk")
             return model

@@ -542,6 +542,7 @@ class IndependentMultiCropPipeline:
     ) -> Dict[str, Any]:
         """Handle cases where crop is unknown or unsupported."""
         return {
+            'status': 'unknown_crop',
             'diagnosis': {
                 'unknown': 1.0
             },

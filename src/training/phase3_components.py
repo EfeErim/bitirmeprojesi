@@ -86,16 +86,121 @@ except Exception:
     pass
 
 try:
-    from src.ood.prototypes import PrototypeManager  # type: ignore[assignment]
+    from src.ood.prototypes import PrototypeComputer, PrototypeConfig
+
+    class _OODPrototypeManager:
+        """Compatibility wrapper backed by src.ood.prototypes."""
+
+        def __init__(self, num_prototypes: int = 10, prototype_dim: int = 128, device: str = 'cpu'):
+            self._num_prototypes = int(num_prototypes)
+            self._prototype_dim = int(prototype_dim)
+            self._device = torch.device(device)
+            config = PrototypeConfig(feature_dim=self._prototype_dim, device=str(self._device))
+            self._computer = PrototypeComputer(config=config)
+            self._prototypes = torch.zeros(self._num_prototypes, self._prototype_dim, device=self._device)
+
+        def get_prototypes(self):
+            return self._prototypes
+
+        def update_prototypes(self, features: torch.Tensor, labels: torch.Tensor):
+            if features is None or labels is None or features.numel() == 0:
+                return
+            try:
+                feats = features.to(self._device)
+                lbls = labels.to(self._device).view(-1)
+                if feats.ndim != 2 or feats.shape[1] != self._prototype_dim:
+                    return
+                for cls in torch.unique(lbls):
+                    cls_idx = int(cls.item())
+                    if cls_idx < 0 or cls_idx >= self._num_prototypes:
+                        continue
+                    class_features = feats[lbls == cls]
+                    if class_features.numel() == 0:
+                        continue
+                    class_mean = class_features.mean(dim=0)
+                    self._prototypes[cls_idx] = (
+                        0.9 * self._prototypes[cls_idx] + 0.1 * class_mean
+                    )
+            except Exception:
+                # Keep previous prototypes on update failures.
+                return
+
+        def set_prototypes(self, prototypes: torch.Tensor):
+            tensor = prototypes.to(self._device)
+            if tensor.ndim == 2 and tensor.shape[1] == self._prototype_dim:
+                n = min(self._num_prototypes, tensor.shape[0])
+                updated = torch.zeros(self._num_prototypes, self._prototype_dim, device=self._device)
+                updated[:n] = tensor[:n]
+                self._prototypes = updated
+
+    PrototypeManager = _OODPrototypeManager  # type: ignore[assignment]
 except Exception:
     pass
 
 try:
-    from src.ood.mahalanobis import MahalanobisDetector  # type: ignore[assignment]
+    from src.ood.mahalanobis import MahalanobisDistance
+
+    class _OODMahalanobisDetector:
+        """Compatibility wrapper backed by src.ood.mahalanobis."""
+
+        def __init__(self):
+            self.enabled = True
+
+        def compute_scores(self, features: torch.Tensor, labels: torch.Tensor):
+            if features is None or labels is None or features.numel() == 0:
+                return torch.empty(0, device=features.device if torch.is_tensor(features) else 'cpu')
+
+            unique_classes = torch.unique(labels)
+            prototypes = []
+            class_stds = {}
+            class_to_slot = {}
+
+            for slot, cls in enumerate(unique_classes.tolist()):
+                cls_features = features[labels == cls]
+                proto = cls_features.mean(dim=0)
+                std = cls_features.std(dim=0, unbiased=False).clamp(min=1e-6)
+                prototypes.append(proto)
+                class_stds[slot] = std
+                class_to_slot[int(cls)] = slot
+
+            prototype_tensor = torch.stack(prototypes, dim=0)
+            md = MahalanobisDistance(prototype_tensor, class_stds, device=str(features.device))
+
+            scores = []
+            for feat, label in zip(features, labels):
+                slot = class_to_slot[int(label.item())]
+                score = md.compute_distance(feat.unsqueeze(0), slot)
+                scores.append(score.reshape(-1)[0])
+
+            return torch.stack(scores)
+
+    MahalanobisDetector = _OODMahalanobisDetector  # type: ignore[assignment]
 except Exception:
     pass
 
 try:
-    from src.ood.dynamic_thresholds import DynamicThresholdManager  # type: ignore[assignment]
+    from src.ood.dynamic_thresholds import AdaptiveThresholdManager
+
+    class _OODDynamicThresholdManager:
+        """Compatibility wrapper backed by src.ood.dynamic_thresholds."""
+
+        def __init__(self, threshold: float = 1.0):
+            self._threshold = float(threshold)
+            self._manager = AdaptiveThresholdManager(
+                initial_thresholds={0: self._threshold},
+                adaptation_rate=0.05,
+                min_threshold=0.0,
+                max_threshold=1e9,
+            )
+
+        def update_threshold(self, value: float) -> float:
+            updated = self._manager.update_thresholds({0: float(value)})
+            self._threshold = float(updated.get(0, self._threshold))
+            return self._threshold
+
+        def get_threshold(self) -> float:
+            return self._threshold
+
+    DynamicThresholdManager = _OODDynamicThresholdManager  # type: ignore[assignment]
 except Exception:
     pass
