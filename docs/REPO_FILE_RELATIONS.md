@@ -8,6 +8,7 @@ This guide is a practical map of what each major file/group does and how pieces 
 - Documentation index: `README.md`
 - Notebook index: `../colab_notebooks/README.md`
 - Script index: `../scripts/README.md`
+- Exhaustive per-file relationship catalog: `REPO_FILE_RELATIONS_DETAILED.md`
 
 ## Top-Level Files (Root)
 

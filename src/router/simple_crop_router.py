@@ -8,6 +8,13 @@ Target accuracy: ≥98%
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
+import sys
+from importlib.machinery import ModuleSpec
+
+_peft_module = sys.modules.get("peft")
+if _peft_module is not None and getattr(_peft_module, "__spec__", None) is None:
+    _peft_module.__spec__ = ModuleSpec("peft", loader=None)
+
 from transformers import AutoModel
 import logging
 from pathlib import Path

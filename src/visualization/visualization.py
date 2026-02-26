@@ -1,10 +1,29 @@
 #!/usr/bin/env python3
 from typing import Dict, List, Optional, Any, Tuple
+import matplotlib
+matplotlib.use("Agg", force=True)
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import torch
+import torch.nn.functional as F
 from pathlib import Path
+from sklearn.metrics import (
+    auc,
+    average_precision_score,
+    precision_recall_curve,
+    roc_curve,
+)
+
+
+def _resolve_style(style: str) -> str:
+    """Resolve style name across matplotlib/seaborn version differences."""
+    candidates = [style, "seaborn-v0_8", "seaborn", "default"]
+    available = set(plt.style.available)
+    for candidate in candidates:
+        if candidate in available or candidate == "default":
+            return candidate
+    return "default"
 
 
 class PlotGenerator:
@@ -18,18 +37,43 @@ class PlotGenerator:
 
     def set_style(self, style: str):
         """Set plot style."""
+        resolved = _resolve_style(style)
         self.style = style
-        plt.style.use(style)
+        plt.style.use(resolved)
 
     def create_figure(self):
         """Create a new figure."""
         fig, ax = plt.subplots(figsize=self.figsize, dpi=self.dpi)
         return fig, ax
 
-    def save_plot(self, filepath: str, bbox_inches: str = 'tight'):
-        """Save plot to file."""
-        plt.savefig(filepath, bbox_inches=bbox_inches)
-        plt.close()
+    def save_plot(
+        self,
+        fig_or_filepath,
+        filepath: Optional[str] = None,
+        bbox_inches: str = "tight",
+        format: Optional[str] = None,
+    ):
+        """Save a plot.
+
+        Supports both call styles:
+        - save_plot("path.png")
+        - save_plot(fig, "path", format="png")
+        """
+        if filepath is None:
+            fig = plt.gcf()
+            target = Path(fig_or_filepath)
+        else:
+            fig = fig_or_filepath
+            target = Path(filepath)
+
+        if format:
+            ext = f".{str(format).lstrip('.')}"
+            if target.suffix == "":
+                target = target.with_suffix(ext)
+
+        fig.savefig(str(target), bbox_inches=bbox_inches, format=format)
+        plt.close(fig)
+        return str(target)
 
 
 class ConfusionMatrixPlotter(PlotGenerator):
@@ -49,6 +93,22 @@ class ConfusionMatrixPlotter(PlotGenerator):
         plt.colorbar(im, ax=ax)
         return fig
 
+    def plot_confusion_matrix(
+        self,
+        cm: np.ndarray,
+        class_names: Optional[List[str]] = None,
+        title: str = "Confusion Matrix",
+        normalize: bool = False,
+        cmap: str = "Blues",
+    ):
+        """Compatibility API expected by tests."""
+        matrix = np.asarray(cm, dtype=float)
+        if normalize:
+            row_sums = matrix.sum(axis=1, keepdims=True)
+            row_sums[row_sums == 0] = 1.0
+            matrix = matrix / row_sums
+        return self.plot(matrix, class_names=class_names, title=title, cmap=cmap)
+
 
 class ROCPlotter(PlotGenerator):
     """Plot ROC curves."""
@@ -67,6 +127,38 @@ class ROCPlotter(PlotGenerator):
         ax.legend(loc="lower right")
         return fig
 
+    def plot_roc_curve(
+        self,
+        y_true: np.ndarray,
+        y_score: np.ndarray,
+        multiclass: bool = False,
+        title: str = "ROC Curve",
+    ):
+        """Compute and plot ROC curve(s) from labels/scores."""
+        y_true_arr = np.asarray(y_true)
+        y_score_arr = np.asarray(y_score)
+
+        if multiclass:
+            fig, ax = self.create_figure()
+            classes = np.unique(y_true_arr)
+            for class_idx in classes:
+                class_mask = (y_true_arr == class_idx).astype(int)
+                fpr, tpr, _ = roc_curve(class_mask, y_score_arr[:, int(class_idx)])
+                roc_auc = auc(fpr, tpr)
+                ax.plot(fpr, tpr, lw=2, label=f"Class {class_idx} (AUC = {roc_auc:.2f})")
+            ax.plot([0, 1], [0, 1], color="navy", lw=1.5, linestyle="--")
+            ax.set_xlim([0.0, 1.0])
+            ax.set_ylim([0.0, 1.05])
+            ax.set_xlabel("False Positive Rate")
+            ax.set_ylabel("True Positive Rate")
+            ax.set_title(title)
+            ax.legend(loc="lower right")
+            return fig
+
+        fpr, tpr, _ = roc_curve(y_true_arr, y_score_arr)
+        roc_auc = auc(fpr, tpr)
+        return self.plot(fpr, tpr, roc_auc, title=title)
+
 
 class PrecisionRecallPlotter(PlotGenerator):
     """Plot precision-recall curves."""
@@ -81,6 +173,19 @@ class PrecisionRecallPlotter(PlotGenerator):
         ax.set_title(title)
         ax.legend(loc="lower left")
         return fig
+
+    def plot_pr_curve(
+        self,
+        y_true: np.ndarray,
+        y_score: np.ndarray,
+        title: str = "Precision-Recall Curve",
+    ):
+        """Compatibility API expected by tests."""
+        y_true_arr = np.asarray(y_true)
+        y_score_arr = np.asarray(y_score)
+        precision, recall, _ = precision_recall_curve(y_true_arr, y_score_arr)
+        ap = average_precision_score(y_true_arr, y_score_arr)
+        return self.plot(precision, recall, ap, title=title)
 
 
 class TrainingCurvePlotter(PlotGenerator):
@@ -100,6 +205,55 @@ class TrainingCurvePlotter(PlotGenerator):
         ax.legend()
         return fig
 
+    def plot_loss_curves(
+        self,
+        train_losses: List[float],
+        val_losses: Optional[List[float]] = None,
+        title: str = "Loss Curves",
+    ):
+        """Plot train/validation loss over epochs."""
+        fig, ax = self.create_figure()
+        ax.plot(train_losses, label="Train Loss")
+        if val_losses is not None:
+            ax.plot(val_losses, label="Val Loss", linestyle="--")
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Loss")
+        ax.set_title(title)
+        ax.legend()
+        return fig
+
+    def plot_accuracy_curves(
+        self,
+        train_acc: List[float],
+        val_acc: Optional[List[float]] = None,
+        title: str = "Accuracy Curves",
+    ):
+        """Plot train/validation accuracy over epochs."""
+        fig, ax = self.create_figure()
+        ax.plot(train_acc, label="Train Accuracy")
+        if val_acc is not None:
+            ax.plot(val_acc, label="Val Accuracy", linestyle="--")
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Accuracy")
+        ax.set_title(title)
+        ax.legend()
+        return fig
+
+    def plot_metrics_comparison(
+        self,
+        metrics: Dict[str, List[float]],
+        title: str = "Metrics Comparison",
+    ):
+        """Plot multiple metrics on one chart for quick trend comparison."""
+        fig, ax = self.create_figure()
+        for name, values in metrics.items():
+            ax.plot(values, label=name)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Value")
+        ax.set_title(title)
+        ax.legend()
+        return fig
+
 
 class AttentionVisualizer(PlotGenerator):
     """Visualize attention maps."""
@@ -111,6 +265,51 @@ class AttentionVisualizer(PlotGenerator):
         ax.set_title(title)
         plt.colorbar(im, ax=ax)
         return fig
+
+    def plot_attention_heatmap(
+        self,
+        attention: np.ndarray,
+        tokens: Optional[List[str]] = None,
+        title: str = "Attention Heatmap",
+    ):
+        """Compatibility API for plotting a single attention matrix."""
+        fig, ax = self.create_figure()
+        matrix = np.asarray(attention)
+        im = ax.imshow(matrix, cmap="viridis", interpolation="nearest")
+        ax.set_title(title)
+        if tokens is not None:
+            ticks = np.arange(len(tokens))
+            ax.set_xticks(ticks)
+            ax.set_yticks(ticks)
+            ax.set_xticklabels(tokens, rotation=45, ha="right")
+            ax.set_yticklabels(tokens)
+        plt.colorbar(im, ax=ax)
+        return fig
+
+    def plot_multihead_attention(
+        self,
+        attention: np.ndarray,
+        tokens: Optional[List[str]] = None,
+        title: str = "Multi-head Attention",
+    ):
+        """Plot average attention over heads."""
+        attention_arr = np.asarray(attention)
+        if attention_arr.ndim != 3:
+            raise ValueError("Expected attention with shape [num_heads, seq_len, seq_len]")
+        mean_attention = attention_arr.mean(axis=0)
+        return self.plot_attention_heatmap(mean_attention, tokens=tokens, title=title)
+
+    def plot_attention_rollout(
+        self,
+        attentions: List[np.ndarray],
+        title: str = "Attention Rollout",
+    ):
+        """Plot rollout as the mean attention matrix across layers."""
+        if not attentions:
+            raise ValueError("attentions must contain at least one layer")
+        stack = np.stack([np.asarray(a) for a in attentions], axis=0)
+        rollout = stack.mean(axis=0)
+        return self.plot_attention_heatmap(rollout, tokens=None, title=title)
 
 
 class GradCAMVisualizer(PlotGenerator):
@@ -129,6 +328,115 @@ class GradCAMVisualizer(PlotGenerator):
         ax.axis('off')
         return fig
 
+    def generate_gradcam(
+        self,
+        model: torch.nn.Module,
+        input_tensor: torch.Tensor,
+        target_layer: torch.nn.Module,
+        target_class: Optional[int] = None,
+    ) -> np.ndarray:
+        """Generate a Grad-CAM heatmap for a single input."""
+        activations: Dict[str, torch.Tensor] = {}
+        gradients: Dict[str, torch.Tensor] = {}
+
+        def _forward_hook(_module, _inp, out):
+            activations["value"] = out
+
+        def _backward_hook(_module, _grad_in, grad_out):
+            gradients["value"] = grad_out[0]
+
+        f_handle = target_layer.register_forward_hook(_forward_hook)
+        b_handle = target_layer.register_full_backward_hook(_backward_hook)
+
+        try:
+            model.zero_grad(set_to_none=True)
+            output = model(input_tensor)
+            if output.ndim == 1:
+                output = output.unsqueeze(0)
+            if target_class is None:
+                target_class = int(output.argmax(dim=1).item())
+            score = output[:, target_class].sum()
+            score.backward()
+
+            acts = activations["value"]
+            grads = gradients["value"]
+            weights = grads.mean(dim=(2, 3), keepdim=True)
+            cam = (weights * acts).sum(dim=1, keepdim=True)
+            cam = F.relu(cam)
+            cam = F.interpolate(
+                cam,
+                size=input_tensor.shape[-2:],
+                mode="bilinear",
+                align_corners=False,
+            )
+            cam = cam[0, 0]
+            cam = cam - cam.min()
+            denom = cam.max().clamp(min=1e-8)
+            cam = cam / denom
+            return cam.detach().cpu().numpy()
+        finally:
+            f_handle.remove()
+            b_handle.remove()
+
+    def overlay_heatmap(
+        self,
+        image: np.ndarray,
+        heatmap: np.ndarray,
+        alpha: float = 0.5,
+        cmap: str = "jet",
+    ) -> np.ndarray:
+        """Overlay normalized heatmap on an RGB image."""
+        image_arr = np.asarray(image)
+        heatmap_arr = np.asarray(heatmap, dtype=float)
+
+        if heatmap_arr.ndim != 2:
+            raise ValueError("heatmap must be 2D")
+        if image_arr.ndim != 3 or image_arr.shape[2] != 3:
+            raise ValueError("image must have shape [H, W, 3]")
+
+        heatmap_arr = heatmap_arr - heatmap_arr.min()
+        denom = heatmap_arr.max() if heatmap_arr.max() > 0 else 1.0
+        heatmap_arr = heatmap_arr / denom
+
+        color_heatmap = plt.get_cmap(cmap)(heatmap_arr)[..., :3]
+        if image_arr.dtype == np.uint8:
+            base = image_arr.astype(np.float32) / 255.0
+        else:
+            base = image_arr.astype(np.float32)
+            max_val = max(float(base.max()), 1.0)
+            if max_val > 1.0:
+                base = base / max_val
+
+        overlay = (1.0 - alpha) * base + alpha * color_heatmap
+        overlay = np.clip(overlay, 0.0, 1.0)
+        return (overlay * 255.0).astype(np.uint8)
+
+    def plot_gradcam_comparison(
+        self,
+        image: np.ndarray,
+        heatmap: np.ndarray,
+        title: str = "Grad-CAM Comparison",
+    ):
+        """Plot original image, heatmap, and overlay side by side."""
+        overlay = self.overlay_heatmap(image, heatmap, alpha=0.5)
+        fig, axes = plt.subplots(1, 3, figsize=(15, 5), dpi=self.dpi)
+
+        axes[0].imshow(image)
+        axes[0].set_title("Original")
+        axes[0].axis("off")
+
+        axes[1].imshow(heatmap, cmap="jet")
+        axes[1].set_title("Heatmap")
+        axes[1].axis("off")
+
+        axes[2].imshow(overlay)
+        axes[2].set_title("Overlay")
+        axes[2].axis("off")
+
+        fig.suptitle(title)
+        fig.tight_layout()
+        return fig
+
 
 def save_plot(fig, filepath: str, bbox_inches: str = 'tight'):
     """Save plot to file."""
@@ -138,7 +446,7 @@ def save_plot(fig, filepath: str, bbox_inches: str = 'tight'):
 
 def set_plot_style(style: str = "seaborn"):
     """Set global plot style."""
-    plt.style.use(style)
+    plt.style.use(_resolve_style(style))
 
 
 def get_color_palette(palette_or_n: object = 'husl', n_colors: int = None):
@@ -186,7 +494,7 @@ class Visualizer:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Configure style
-        plt.style.use('seaborn')
+        plt.style.use(_resolve_style('seaborn-v0_8'))
         self.palette = sns.color_palette('husl', 8)
         plt.rcParams.update({
             'font.size': 12,

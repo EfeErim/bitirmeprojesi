@@ -8,7 +8,7 @@ import logging
 import torch
 import numpy as np
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 import smtplib
 from email.message import EmailMessage
@@ -27,6 +27,7 @@ class TrainingMonitor:
         self.early_stop_counter = 0
         self.current_epoch = 0
         self.current_batch = 0
+        self.epoch = 0
         self.epoch_metrics = {}
         self.batch_metrics = {}
         
@@ -96,6 +97,7 @@ class TrainingMonitor:
                      train_acc: float = None, val_acc: float = None, **kwargs):
         """Record epoch-level metrics."""
         self.current_epoch = epoch
+        self.epoch = epoch
         self.epoch_metrics[epoch] = {
             'train_loss': train_loss,
             'val_loss': val_loss,
@@ -111,6 +113,51 @@ class TrainingMonitor:
         if val_acc is not None:
             if 'best_val_acc' not in self.best_metrics or val_acc > self.best_metrics['best_val_acc']:
                 self.best_metrics['best_val_acc'] = val_acc
+
+    def should_stop_early(self, patience: int = 10, min_delta: float = 0.0) -> bool:
+        """Return whether validation loss has stopped improving."""
+        losses = [
+            m['val_loss']
+            for _, m in sorted(self.epoch_metrics.items())
+            if m.get('val_loss') is not None
+        ]
+        if len(losses) <= patience:
+            return False
+
+        best_before_window = min(losses[:-patience])
+        recent = losses[-patience:]
+        return all((loss - best_before_window) > min_delta for loss in recent)
+
+    def suggest_learning_rate_adjustment(self) -> str:
+        """Suggest a coarse LR action based on recent train-loss trend."""
+        train_losses = [
+            m['train_loss']
+            for _, m in sorted(self.epoch_metrics.items())
+            if m.get('train_loss') is not None
+        ]
+        if len(train_losses) < 3:
+            return "maintain"
+
+        recent = train_losses[-3:]
+        diffs = [recent[i] - recent[i - 1] for i in range(1, len(recent))]
+        if all(abs(d) < 1e-6 for d in diffs):
+            return "reduce"
+        if all(d < 0 for d in diffs):
+            return "maintain"
+        if all(d > 0 for d in diffs):
+            return "reduce"
+        return "maintain"
+
+    def get_summary(self) -> Dict[str, float]:
+        """Return high-level training summary for dashboards/tests."""
+        total_epochs = len(self.epoch_metrics)
+        return {
+            'total_epochs': total_epochs,
+            'best_val_loss': self.best_metrics.get('best_val_loss'),
+            'best_val_acc': self.best_metrics.get('best_val_acc'),
+            'current_epoch': self.current_epoch,
+            'current_batch': self.current_batch,
+        }
     
     def record_batch(self, batch: int, loss: float = None, learning_rate: float = None,
                      gradient_norm: float = None, **kwargs):
@@ -180,7 +227,8 @@ class TrainingMonitor:
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
         # Regular checkpoint
-        checkpoint_path = self.checkpoint_dir / f'checkpoint_epoch{self.epoch}.pth'
+        epoch_value = self.current_epoch if self.current_epoch is not None else self.epoch
+        checkpoint_path = self.checkpoint_dir / f'checkpoint_epoch{epoch_value}.pth'
         torch.save(state, checkpoint_path)
         
         # Best checkpoint
@@ -198,6 +246,7 @@ class TrainingMonitor:
         """Begin epoch tracking"""
         self.epoch_start_time = datetime.now()
         self.epoch += 1
+        self.current_epoch = self.epoch
         
     def end_epoch(self):
         """Log epoch duration"""
@@ -245,184 +294,247 @@ class DebugMonitor:
         """Reset all metrics."""
         self.metrics.clear()
 
+    def reset(self):
+        """Backward-compatible alias used by existing tests."""
+        self.reset_metrics()
+
 
 class ModelDebugger:
     """Model-specific debugging utilities."""
-    
-    @staticmethod
-    def check_gradients(model: torch.nn.Module) -> Dict:
-        """Check gradient statistics."""
-        grad_norms = []
-        for name, param in model.named_parameters():
-            if param.grad is not None:
-                norm = param.grad.data.norm(2).item()
-                grad_norms.append(norm)
-        
-        if grad_norms:
-            return {
-                'grad_norm_mean': float(np.mean(grad_norms)),
-                'grad_norm_std': float(np.std(grad_norms)),
-                'grad_norm_max': float(np.max(grad_norms))
-            }
-        return {}
-    
-    @staticmethod
-    def check_weights(model: torch.nn.Module) -> Dict:
-        """Check weight statistics."""
-        weight_norms = []
-        for name, param in model.named_parameters():
-            if param.data is not None:
-                norm = param.data.norm(2).item()
-                weight_norms.append(norm)
-        
-        if weight_norms:
-            return {
-                'weight_norm_mean': float(np.mean(weight_norms)),
-                'weight_norm_std': float(np.std(weight_norms)),
-                'weight_norm_max': float(np.max(weight_norms))
-            }
-        return {}
-    
-    @staticmethod
-    def validate_forward_pass(model: torch.nn.Module, input_tensor: torch.Tensor) -> bool:
-        """Validate that forward pass works without errors."""
-        try:
-            with torch.no_grad():
-                _ = model(input_tensor)
-            return True
-        except Exception:
-            return False
-    
-    @staticmethod
-    def detect_nan_inf(model: torch.nn.Module) -> Dict[str, List[str]]:
-        """Detect NaN/Inf in model parameters."""
-        issues = {'nan': [], 'inf': []}
-        
-        for name, param in model.named_parameters():
-            if torch.isnan(param.data).any():
-                issues['nan'].append(name)
-            if torch.isinf(param.data).any():
-                issues['inf'].append(name)
-        
-        return issues
-    
-    def get_debug_report(self, model: torch.nn.Module) -> Dict:
-        """Generate comprehensive debug report."""
-        report = {
-            'gradients': self.check_gradients(model),
-            'weights': self.check_weights(model),
-            'nan_inf': self.detect_nan_inf(model)
+
+    def __init__(self, model: torch.nn.Module):
+        self.model = model
+
+    def check_gradients(self) -> Dict:
+        """Check gradient statistics and flag vanishing/exploding layers."""
+        gradient_norms = {}
+        vanishing = []
+        exploding = []
+
+        for name, param in self.model.named_parameters():
+            if param.grad is None:
+                continue
+            norm = float(param.grad.data.norm(2).item())
+            gradient_norms[name] = norm
+            if norm < 1e-6:
+                vanishing.append(name)
+            if norm > 1e3:
+                exploding.append(name)
+
+        return {
+            "gradient_norms": gradient_norms,
+            "vanishing_gradients": vanishing,
+            "exploding_gradients": exploding,
         }
-        return report
+
+    def check_weights(self) -> Dict:
+        """Check weight norms and dead-neuron ratio per parameter."""
+        weight_norms = {}
+        dead_neurons = {}
+        flat_values = []
+
+        for name, param in self.model.named_parameters():
+            data = param.data
+            weight_norms[name] = float(data.norm(2).item())
+            dead_neurons[name] = float((data == 0).float().mean().item())
+            flat_values.append(data.detach().flatten())
+
+        merged = torch.cat(flat_values) if flat_values else torch.tensor([])
+        weight_stats = {
+            "mean": float(merged.mean().item()) if merged.numel() else 0.0,
+            "std": float(merged.std().item()) if merged.numel() else 0.0,
+            "max": float(merged.max().item()) if merged.numel() else 0.0,
+            "min": float(merged.min().item()) if merged.numel() else 0.0,
+        }
+        return {
+            "weight_norms": weight_norms,
+            "dead_neurons": dead_neurons,
+            "weight_stats": weight_stats,
+        }
+
+    def validate_forward_pass(self, input_tensor: torch.Tensor):
+        """Run a no-grad forward pass and return the output tensor."""
+        with torch.no_grad():
+            return self.model(input_tensor)
+
+    def detect_nan_inf(self, input_tensor: Optional[torch.Tensor] = None) -> Tuple[bool, bool]:
+        """Detect NaN/Inf in model parameters and optional forward output."""
+        has_nan = False
+        has_inf = False
+
+        for _, param in self.model.named_parameters():
+            if torch.isnan(param.data).any():
+                has_nan = True
+            if torch.isinf(param.data).any():
+                has_inf = True
+
+        if input_tensor is not None:
+            with torch.no_grad():
+                output = self.model(input_tensor)
+            if torch.isnan(output).any():
+                has_nan = True
+            if torch.isinf(output).any():
+                has_inf = True
+
+        return bool(has_nan), bool(has_inf)
+
+    def generate_report(self) -> Dict:
+        """Generate high-level model debug report."""
+        parameter_stats = self.check_weights()
+        gradient_stats = self.check_gradients()
+        model_summary = {
+            "total_parameters": int(sum(p.numel() for p in self.model.parameters())),
+            "trainable_parameters": int(sum(p.numel() for p in self.model.parameters() if p.requires_grad)),
+        }
+        return {
+            "model_summary": model_summary,
+            "parameter_stats": parameter_stats,
+            "gradient_stats": gradient_stats,
+        }
 
 
 class GradientTracker:
     """Track gradient flow through the model."""
     
     def __init__(self):
-        self.gradients = {}
-        self.hooks = []
-    
-    def track_gradients(self, model: torch.nn.Module):
-        """Start tracking gradients."""
-        self.gradients = {}
-        
-        def get_gradient(name):
-            def hook(grad):
-                self.gradients[name] = grad.detach().cpu()
-            return hook
-        
-        for name, param in model.named_parameters():
-            if param.requires_grad:
-                hook = param.register_hook(get_gradient(name))
-                self.hooks.append(hook)
-    
-    def gradient_flow_analysis(self) -> Dict:
-        """Analyze gradient flow."""
-        if not self.gradients:
-            return {}
-        
-        stats = {}
-        for name, grad in self.gradients.items():
-            if grad is not None:
-                stats[name] = {
-                    'mean': grad.abs().mean().item(),
-                    'std': grad.abs().std().item(),
-                    'max': grad.abs().max().item()
-                }
-        
-        return stats
-    
-    def reset_tracker(self):
-        """Reset tracking state."""
-        self.gradients.clear()
-        for hook in self.hooks:
-            hook.remove()
-        self.hooks.clear()
+        self.model = None
+        self.gradient_history = []
+
+    def register_model(self, model: torch.nn.Module):
+        self.model = model
+
+    def track_gradients(self):
+        """Capture current gradients from the registered model."""
+        if self.model is None:
+            return
+        snapshot = {}
+        for name, param in self.model.named_parameters():
+            if param.grad is not None:
+                snapshot[name] = float(param.grad.data.norm(2).item())
+        if snapshot:
+            self.gradient_history.append(snapshot)
+
+    def analyze_gradient_flow(self) -> Dict:
+        """Return aggregate gradient-flow statistics."""
+        if not self.gradient_history:
+            return {"layer_gradients": {}, "avg_gradient_norm": 0.0}
+
+        latest = self.gradient_history[-1]
+        avg_norm = float(np.mean(list(latest.values()))) if latest else 0.0
+        return {"layer_gradients": latest, "avg_gradient_norm": avg_norm}
+
+    # Backward-compatible aliases
+    gradient_flow_analysis = analyze_gradient_flow
+
+    def reset(self):
+        self.gradient_history.clear()
+
+    reset_tracker = reset
 
 
 class ActivationTracker:
     """Track activations through the model."""
     
     def __init__(self):
-        self.activations = {}
+        self.model = None
+        self.current_activations = {}
+        self.activation_history = []
         self.hooks = []
-    
-    def track_activations(self, model: torch.nn.Module):
-        """Start tracking activations."""
-        self.activations = {}
-        
+
+    def register_model(self, model: torch.nn.Module):
+        self.model = model
+
+    def _register_hooks(self):
+        self.current_activations = {}
+
         def get_activation(name):
-            def hook(module, input, output):
-                self.activations[name] = output.detach().cpu()
+            def hook(_module, _input, output):
+                if torch.is_tensor(output):
+                    self.current_activations[name] = output.detach().cpu()
             return hook
-        
-        for name, module in model.named_modules():
-            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear)):
-                hook = module.register_forward_hook(get_activation(name))
-                self.hooks.append(hook)
-    
-    def activation_statistics(self) -> Dict:
-        """Compute activation statistics."""
-        stats = {}
-        for name, act in self.activations.items():
-            if act is not None:
-                stats[name] = {
-                    'mean': act.abs().mean().item(),
-                    'std': act.abs().std().item(),
-                    'sparsity': (act == 0).float().mean().item()
-                }
-        return stats
-    
-    def dead_activation_detection(self, threshold: float = 1e-6) -> List[str]:
-        """Detect dead neurons (near-zero activations)."""
-        dead = []
-        for name, act in self.activations.items():
-            if act is not None and act.abs().mean().item() < threshold:
-                dead.append(name)
-        return dead
-    
-    def reset_tracker(self):
-        """Reset tracking state."""
-        self.activations.clear()
+
+        for name, module in self.model.named_modules():
+            if isinstance(module, (torch.nn.Conv2d, torch.nn.Linear, torch.nn.ReLU)):
+                self.hooks.append(module.register_forward_hook(get_activation(name)))
+
+    def _remove_hooks(self):
         for hook in self.hooks:
             hook.remove()
         self.hooks.clear()
+
+    def track_activations(self):
+        """Context manager used as `with tracker.track_activations():`."""
+        from contextlib import contextmanager
+
+        @contextmanager
+        def _ctx():
+            if self.model is None:
+                yield
+                return
+            self._register_hooks()
+            try:
+                yield
+            finally:
+                if self.current_activations:
+                    self.activation_history.append(self.current_activations.copy())
+                self._remove_hooks()
+
+        return _ctx()
+
+    def get_activation_stats(self) -> Dict:
+        """Compute aggregate activation stats from latest captured activations."""
+        if not self.activation_history:
+            return {
+                "mean_activations": {},
+                "std_activations": {},
+                "sparsity": {},
+            }
+        latest = self.activation_history[-1]
+        return {
+            "mean_activations": {k: float(v.abs().mean().item()) for k, v in latest.items()},
+            "std_activations": {k: float(v.abs().std().item()) for k, v in latest.items()},
+            "sparsity": {k: float((v == 0).float().mean().item()) for k, v in latest.items()},
+        }
+
+    def find_dead_neurons(self, threshold: float = 1e-6) -> Dict[str, bool]:
+        """Identify near-zero activation layers from latest capture."""
+        if not self.activation_history:
+            return {}
+        latest = self.activation_history[-1]
+        return {k: bool(v.abs().mean().item() < threshold) for k, v in latest.items()}
+
+    # Backward-compatible aliases
+    activation_statistics = get_activation_stats
+    dead_activation_detection = find_dead_neurons
+
+    def reset(self):
+        self.current_activations.clear()
+        self.activation_history.clear()
+        self._remove_hooks()
+
+    reset_tracker = reset
 
 
 class DebugLogger:
     """Logging utilities for debugging."""
     
-    def __init__(self, log_file: str = None):
+    def __init__(self, log_file: str = None, log_dir: str = None):
+        if log_dir:
+            log_dir_path = Path(log_dir)
+            log_dir_path.mkdir(parents=True, exist_ok=True)
+            log_file = str(log_dir_path / "debug.log")
+
         self.log_file = log_file
-        self.logger = logging.getLogger('debug')
-        
-        if not self.logger.handlers:
-            handler = logging.FileHandler(log_file) if log_file else logging.StreamHandler()
-            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-            self.logger.setLevel(logging.DEBUG)
+        # Use a per-instance logger to avoid cross-test handler reuse.
+        self.logger = logging.getLogger(f'debug.{id(self)}')
+        self.logger.propagate = False
+        self.logger.handlers.clear()
+
+        handler = logging.FileHandler(log_file) if log_file else logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
+        self.logger.setLevel(logging.DEBUG)
     
     def log_metric(self, name: str, value: float, step: int = None):
         """Log a metric value."""
@@ -434,20 +546,28 @@ class DebugLogger:
     def log_message(self, message: str, level: str = 'info'):
         """Log a message."""
         getattr(self.logger, level)(message)
+
+    def log(self, message: str, level: str = "INFO"):
+        """Compatibility alias expected by tests."""
+        self.log_message(message, level=level.lower())
     
     def log_histogram(self, name: str, values: np.ndarray, step: int = None):
         """Log histogram data (simplified)."""
+        if torch.is_tensor(values):
+            values = values.detach().cpu().numpy()
+        values = np.asarray(values)
         msg = f"Histogram: {name} - mean={np.mean(values):.4f}, std={np.std(values):.4f}"
         if step is not None:
             msg += f" (step={step})"
         self.logger.info(msg)
     
-    def log_model_graph(self, model: torch.nn.Module, input_shape: tuple):
+    def log_model_graph(self, model: torch.nn.Module, input_shape: tuple = None, input_size: tuple = None):
         """Log model architecture summary."""
+        shape = input_shape if input_shape is not None else input_size
         total_params = sum(p.numel() for p in model.parameters())
         trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
         
-        self.logger.info(f"Model Graph: input_shape={input_shape}")
+        self.logger.info(f"Model Graph: input_shape={shape}")
         self.logger.info(f"  Total parameters: {total_params:,}")
         self.logger.info(f"  Trainable parameters: {trainable_params:,}")
     

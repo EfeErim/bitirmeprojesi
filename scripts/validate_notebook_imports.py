@@ -6,10 +6,23 @@ Canonical script location: scripts/validate_notebook_imports.py
 """
 
 import sys
+import builtins
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+
+
+def _safe_print(*args, **kwargs):
+    """Print with graceful fallback on non-UTF8 terminals."""
+    try:
+        builtins.print(*args, **kwargs)
+    except UnicodeEncodeError:
+        converted = [str(a).encode("ascii", errors="replace").decode("ascii") for a in args]
+        builtins.print(*converted, **kwargs)
+
+
+print = _safe_print
 
 
 def gate_label(step_id: str, name: str) -> str:

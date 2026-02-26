@@ -264,8 +264,9 @@ class IndependentMultiCropPipeline:
             else:
                 # No adapter for predicted crop -> not yet trained
                 adapter_result = {
-                    'status': 'no_adapter',
-                    'message': f"No trained adapter for crop '{crop}'",
+                    'status': 'error',
+                    'adapter_status': 'no_adapter',
+                    'message': f"No adapter available for crop '{crop}'",
                     'diagnosis': None,
                     'confidence': 0.0,
                     'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}

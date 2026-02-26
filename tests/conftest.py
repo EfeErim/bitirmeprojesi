@@ -7,11 +7,93 @@ import torch
 import numpy as np
 from pathlib import Path
 import warnings
+import os
+import shutil
+import tempfile
+import uuid
 
 # Fix for Python 3.13 warnings filter issue
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=UserWarning)
 warnings.filterwarnings('ignore', category=PendingDeprecationWarning)
+
+# On this Windows/Python 3.13 environment, mode=0o700 can produce directories
+# that are not scannable by the current user. Pytest tmpdir internals create
+# temp paths with mode=0o700, so normalize that mode during tests.
+_ORIG_PATH_MKDIR = Path.mkdir
+
+
+def _safe_path_mkdir(self, mode=0o777, parents=False, exist_ok=False):
+    if os.name == "nt" and mode == 0o700:
+        mode = 0o777
+    return _ORIG_PATH_MKDIR(self, mode=mode, parents=parents, exist_ok=exist_ok)
+
+
+Path.mkdir = _safe_path_mkdir
+
+
+# Keep temporary path operations stable in restricted Windows environments.
+_RUNTIME_TMP_ROOT = (Path(__file__).resolve().parent.parent / ".runtime_tmp").resolve()
+_RUNTIME_TMP_ROOT.mkdir(parents=True, exist_ok=True)
+_ORIG_RMTREE = shutil.rmtree
+
+
+def _safe_gettempdir() -> str:
+    return str(_RUNTIME_TMP_ROOT)
+
+
+def _safe_gettempdirb() -> bytes:
+    return os.fsencode(str(_RUNTIME_TMP_ROOT))
+
+
+def _safe_mkdtemp(suffix=None, prefix=None, dir=None):
+    base = Path(dir).resolve() if dir else _RUNTIME_TMP_ROOT
+    base.mkdir(parents=True, exist_ok=True)
+    suffix = "" if suffix is None else str(suffix)
+    prefix = "tmp" if prefix is None else str(prefix)
+
+    for _ in range(1024):
+        candidate = base / f"{prefix}{uuid.uuid4().hex}{suffix}"
+        try:
+            candidate.mkdir(parents=False, exist_ok=False)
+            return str(candidate)
+        except FileExistsError:
+            continue
+    raise FileExistsError("Unable to create temporary directory")
+
+
+def _safe_rmtree(path, *args, **kwargs):
+    try:
+        return _ORIG_RMTREE(path, *args, **kwargs)
+    except PermissionError:
+        return None
+    except OSError:
+        return None
+
+
+tempfile.tempdir = str(_RUNTIME_TMP_ROOT)
+tempfile.gettempdir = _safe_gettempdir
+tempfile.gettempdirb = _safe_gettempdirb
+tempfile.mkdtemp = _safe_mkdtemp
+shutil.rmtree = _safe_rmtree
+
+try:
+    import _pytest.pathlib as _pytest_pathlib
+
+    _orig_cleanup_dead_symlinks = _pytest_pathlib.cleanup_dead_symlinks
+
+    def _patched_cleanup_dead_symlinks(root):
+        try:
+            return _orig_cleanup_dead_symlinks(root)
+        except PermissionError:
+            return None
+
+    _pytest_pathlib.cleanup_dead_symlinks = _patched_cleanup_dead_symlinks
+
+    import _pytest.tmpdir as _pytest_tmpdir
+    _pytest_tmpdir.cleanup_dead_symlinks = _patched_cleanup_dead_symlinks
+except Exception:
+    pass
 
 
 # Import fixtures from test_fixtures module
@@ -52,6 +134,10 @@ def temp_dir():
 # Configure pytest markers
 def pytest_configure(config):
     """Configure pytest markers."""
+    if not getattr(config.option, "basetemp", None):
+        forced_base = _RUNTIME_TMP_ROOT / f"pytest_basetemp_{uuid.uuid4().hex}"
+        config.option.basetemp = str(forced_base)
+
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )

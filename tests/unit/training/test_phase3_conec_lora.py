@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 from tests.fixtures.test_fixtures import mock_dataset_factory, mock_tensor_factory
 from src.training.colab_phase3_conec_lora import (
     ColabPhase3Trainer,
+    CoNeCTrainer,
     CoNeCConfig,
     train_conec_lora,
     load_base_model,

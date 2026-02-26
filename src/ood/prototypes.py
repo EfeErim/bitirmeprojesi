@@ -38,6 +38,37 @@ class PrototypeConfig:
             raise ValueError(f"cache_size must be > 0, got {self.cache_size}")
 
 
+class PrototypeLookupResult:
+    """Tensor-like wrapper that can also be unpacked as (prototype, class_std)."""
+
+    def __init__(self, prototype: torch.Tensor, class_std: Optional[torch.Tensor]):
+        self.prototype = prototype
+        self.class_std = class_std
+
+    def __iter__(self):
+        yield self.prototype
+        yield self.class_std
+
+    def __getattr__(self, name):
+        return getattr(self.prototype, name)
+
+    def __getitem__(self, item):
+        return self.prototype[item]
+
+    def __repr__(self) -> str:
+        return repr(self.prototype)
+
+    def __torch_function__(self, func, types, args=(), kwargs=None):
+        if kwargs is None:
+            kwargs = {}
+        norm_args = tuple(a.prototype if isinstance(a, PrototypeLookupResult) else a for a in args)
+        norm_kwargs = {
+            key: (value.prototype if isinstance(value, PrototypeLookupResult) else value)
+            for key, value in kwargs.items()
+        }
+        return func(*norm_args, **norm_kwargs)
+
+
 class PrototypeComputer:
     """
     Compute class prototypes and statistics for OOD detection.
@@ -306,7 +337,7 @@ class PrototypeComputer:
     def get_prototype_for_class(
         self,
         class_idx: int
-    ) -> torch.Tensor:
+    ) -> PrototypeLookupResult:
         """
         Get prototype for a specific class with caching.
         
@@ -317,9 +348,14 @@ class PrototypeComputer:
             Prototype tensor
         """
         if class_idx not in self.prototypes:
+            self.cache_misses += 1
             raise ValueError(f"No prototype computed for class {class_idx}")
-        
-        return self.prototypes[class_idx]
+
+        self.cache_hits += 1
+        return PrototypeLookupResult(
+            prototype=self.prototypes[class_idx],
+            class_std=self.class_stds.get(class_idx)
+        )
     
     def get_prototype_cache_stats(self) -> Dict[str, int]:
         """

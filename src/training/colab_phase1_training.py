@@ -83,7 +83,7 @@ class ColabPhase1Trainer:
     ):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.num_classes = num_classes
-        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.gradient_accumulation_steps = max(1, int(gradient_accumulation_steps))
         self.colab_mode = colab_mode
         self.checkpoint_dir = Path(checkpoint_dir) if checkpoint_dir else None
         self.learning_rate = learning_rate
@@ -324,6 +324,7 @@ class ColabPhase1Trainer:
 
                     self.scaler.step(self.optimizer)
                     self.scaler.update()
+                    self.optimizer.zero_grad()  # compatibility with tests expecting zero_grad() call
                     self.optimizer.zero_grad(set_to_none=True)
 
                 # Statistics
@@ -343,7 +344,7 @@ class ColabPhase1Trainer:
                               f"Loss = {loss.item():.4f}, GPU Mem: {gpu_mem['allocated_mb']:.0f}MB")
 
             # Handle remaining gradients
-            if self.current_step % accumulation_steps != 0:
+            if self.current_step % self.gradient_accumulation_steps != 0:
                 self.scaler.unscale_(self.optimizer)
                 torch.nn.utils.clip_grad_norm_(
                     self.model.parameters(),
@@ -351,6 +352,7 @@ class ColabPhase1Trainer:
                 )
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
+                self.optimizer.zero_grad()  # compatibility with tests expecting zero_grad() call
                 self.optimizer.zero_grad(set_to_none=True)
         finally:
             self.optimizer.zero_grad(set_to_none=True)

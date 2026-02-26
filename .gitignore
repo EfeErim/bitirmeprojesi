@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -68,6 +69,7 @@ GoogleDrive/
 
 # Testing
 .pytest_cache/
+config/.pytest_cache/
 .coverage
 htmlcov/
 .tox/
@@ -133,6 +135,8 @@ tensorboard/
 ehthumbs.db
 Desktop.ini
 desktop.ini
+aads_ulora_v5.5.egg-info/
+src/aads_ulora_v5.5.egg-info/
 
 # Documentation PDFs (large files - keep local, don't push to Git)
 documents/**/*.pdf

@@ -66,6 +66,11 @@ class ModelRegistry:
         
         # Start cache cleanup task
         self._start_cache_cleanup()
+
+    @staticmethod
+    def _registry_key(model_id: str, version: str) -> str:
+        """Return canonical key for a specific model version."""
+        return f"{model_id}:{version}"
     
     def _load_models(self):
         """Load model metadata from disk."""
@@ -78,7 +83,7 @@ class ModelRegistry:
                     
                 for model_data in models_data:
                     metadata = ModelMetadata(**model_data)
-                    self._models[metadata.model_id] = metadata
+                    self._models[self._registry_key(metadata.model_id, metadata.version)] = metadata
                 
                 logger.info(f"Loaded {len(models_data)} models from registry")
             except Exception as e:
@@ -113,8 +118,9 @@ class ModelRegistry:
     ) -> ModelMetadata:
         """Register a new model version."""
         async with self._lock:
-            if model_id in self._models:
-                raise ValueError(f"Model {model_id} already registered")
+            registry_key = self._registry_key(model_id, version)
+            if registry_key in self._models:
+                raise ValueError(f"Model {model_id} version {version} already registered")
             
             # Calculate checksum
             checksum = self._calculate_checksum(file_path)
@@ -137,7 +143,7 @@ class ModelRegistry:
             )
             
             # Add to registry
-            self._models[model_id] = metadata
+            self._models[registry_key] = metadata
             self._save_models()
             
             logger.info(f"Registered model {model_id} version {version}")
@@ -173,22 +179,17 @@ class ModelRegistry:
     
     def _find_model(self, model_id: str, version: str = None) -> Optional[ModelMetadata]:
         """Find the best matching model."""
-        if model_id not in self._models:
-            return None
-        
         if not version:
-            # Return latest version
-            return max(
-                (meta for meta in self._models.values() if meta.model_id == model_id),
-                key=lambda m: m.created_at
-            )
+            versions = [
+                meta for meta in self._models.values()
+                if meta.model_id == model_id
+            ]
+            if not versions:
+                return None
+            return max(versions, key=lambda m: m.created_at)
         
         # Find exact version
-        for meta in self._models.values():
-            if meta.model_id == model_id and meta.version == version:
-                return meta
-        
-        return None
+        return self._models.get(self._registry_key(model_id, version))
     
     def _load_model_from_disk(self, metadata: ModelMetadata) -> Any:
         """Load model from disk."""
@@ -223,14 +224,12 @@ class ModelRegistry:
             return
         
         # Find LRU entry
-        lru_entry = min(self._cache.values(), key=lambda e: e.last_accessed)
-        
-        # Remove from cache
-        for key, entry in self._cache.items():
-            if entry == lru_entry:
-                self._cache.pop(key)
-                logger.info(f"Evicted model {entry.metadata.model_id} from cache")
-                break
+        lru_key, lru_entry = min(
+            self._cache.items(),
+            key=lambda item: item[1].last_accessed
+        )
+        self._cache.pop(lru_key, None)
+        logger.info(f"Evicted model {lru_entry.metadata.model_id} from cache")
     
     def _calculate_checksum(self, file_path: str) -> str:
         """Calculate file checksum."""
@@ -281,7 +280,7 @@ class ModelRegistry:
                 return False
             
             # Remove from registry
-            del self._models[metadata.model_id]
+            self._models.pop(self._registry_key(metadata.model_id, metadata.version), None)
             self._save_models()
             
             # Remove from cache
@@ -293,12 +292,40 @@ class ModelRegistry:
     
     def _start_cache_cleanup(self):
         """Start periodic cache cleanup."""
+        if self._cache_cleanup_task and not self._cache_cleanup_task.done():
+            return
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # Imported in synchronous contexts (CLI/tests) where no loop is running.
+            # Defer background cleanup until an async caller explicitly enables it.
+            logger.debug("No running event loop; cache cleanup task not started.")
+            return
+
         async def cleanup():
-            while True:
-                await asyncio.sleep(self.cache_ttl)
-                self._cleanup_cache()
+            try:
+                while True:
+                    await asyncio.sleep(self.cache_ttl)
+                    self._cleanup_cache()
+            except asyncio.CancelledError:
+                return
         
-        self._cache_cleanup_task = asyncio.create_task(cleanup())
+        self._cache_cleanup_task = loop.create_task(cleanup())
+
+    def ensure_cache_cleanup_task(self):
+        """Public hook for async contexts to start cleanup if needed."""
+        self._start_cache_cleanup()
+
+    async def shutdown(self):
+        """Stop background tasks owned by this registry."""
+        if self._cache_cleanup_task and not self._cache_cleanup_task.done():
+            self._cache_cleanup_task.cancel()
+            try:
+                await self._cache_cleanup_task
+            except asyncio.CancelledError:
+                pass
+        self._cache_cleanup_task = None
     
     def _cleanup_cache(self):
         """Clean up expired cache entries."""

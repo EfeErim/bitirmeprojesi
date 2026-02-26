@@ -10,7 +10,8 @@ from sklearn.metrics import (
     precision_recall_fscore_support,
     confusion_matrix,
     roc_auc_score,
-    roc_curve
+    roc_curve,
+    average_precision_score,
 )
 from typing import Dict, List, Optional
 import logging
@@ -42,18 +43,31 @@ class ClassificationMetrics:
             'f1': float(f1)
         }
     
-    def confusion_matrix(self, y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
-        """Compute confusion matrix."""
-        return confusion_matrix(y_true, y_pred)
+    def confusion_matrix(
+        self,
+        y_true: np.ndarray,
+        y_pred: np.ndarray,
+        num_classes: Optional[int] = None
+    ) -> np.ndarray:
+        """Compute confusion matrix with optional explicit class count."""
+        if torch.is_tensor(y_true):
+            y_true = y_true.detach().cpu().numpy()
+        if torch.is_tensor(y_pred):
+            y_pred = y_pred.detach().cpu().numpy()
+        labels = list(range(int(num_classes))) if num_classes is not None else None
+        cm = confusion_matrix(y_true, y_pred, labels=labels)
+        return torch.as_tensor(cm)
     
     def per_class_metrics(
         self,
         y_true: np.ndarray,
-        y_pred: np.ndarray
-    ) -> Dict[str, Dict[str, float]]:
+        y_pred: np.ndarray,
+        num_classes: Optional[int] = None
+    ) -> List[Dict[str, float]]:
         """Compute per-class metrics."""
-        cm = self.confusion_matrix(y_true, y_pred)
-        per_class = {}
+        cm = self.confusion_matrix(y_true, y_pred, num_classes=num_classes)
+        cm = cm.to(torch.float32) if torch.is_tensor(cm) else torch.as_tensor(cm, dtype=torch.float32)
+        per_class: List[Dict[str, float]] = []
         
         for i in range(cm.shape[0]):
             tp = cm[i, i]
@@ -64,12 +78,13 @@ class ClassificationMetrics:
             recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
             f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
             
-            per_class[f'class_{i}'] = {
-                'precision': precision,
-                'recall': recall,
-                'f1': f1,
+            per_class.append({
+                'class_index': int(i),
+                'precision': float(precision),
+                'recall': float(recall),
+                'f1': float(f1),
                 'support': int(cm[i, :].sum())
-            }
+            })
         
         return per_class
 
@@ -77,10 +92,19 @@ class ClassificationMetrics:
 class SegmentationMetrics:
     """Segmentation metrics calculator."""
     
-    def iou(self, y_true: np.ndarray, y_pred: np.ndarray, num_classes: int) -> float:
+    def iou(self, y_true: np.ndarray, y_pred: np.ndarray, num_classes: Optional[int] = None) -> float:
         """Compute Intersection over Union (IoU)."""
+        if torch.is_tensor(y_true):
+            y_true = y_true.detach().cpu().numpy()
+        if torch.is_tensor(y_pred):
+            y_pred = y_pred.detach().cpu().numpy()
+
+        if num_classes is None:
+            labels = np.unique(np.concatenate([y_true.reshape(-1), y_pred.reshape(-1)]))
+            num_classes = int(labels.max()) + 1 if labels.size > 0 else 0
+
         ious = []
-        for cls in range(num_classes):
+        for cls in range(int(num_classes)):
             intersection = ((y_true == cls) & (y_pred == cls)).sum()
             union = ((y_true == cls) | (y_pred == cls)).sum()
             if union > 0:
@@ -99,7 +123,15 @@ class SegmentationMetrics:
     
     def pixel_accuracy(self, y_true: np.ndarray, y_pred: np.ndarray) -> float:
         """Compute pixel-wise accuracy."""
-        return float((y_true == y_pred).mean())
+        if torch.is_tensor(y_true):
+            y_true = y_true.detach().cpu()
+        if torch.is_tensor(y_pred):
+            y_pred = y_pred.detach().cpu()
+
+        eq = (y_true == y_pred)
+        if torch.is_tensor(eq):
+            return float(eq.float().mean().item())
+        return float(np.mean(eq))
 
 
 class DetectionMetrics:
@@ -119,6 +151,66 @@ class DetectionMetrics:
         union = area1 + area2 - intersection
         
         return intersection / union if union > 0 else 0.0
+
+    def bbox_iou(self, box1: np.ndarray, box2: np.ndarray) -> float:
+        """Backward-compatible alias for iou_bbox."""
+        return self.iou_bbox(box1, box2)
+
+    def compute_ap(
+        self,
+        pred_boxes,
+        pred_scores,
+        gt_boxes,
+        iou_threshold: float = 0.5,
+    ) -> Dict[str, float]:
+        """Compute a simplified AP/precision/recall tuple for one class."""
+        if torch.is_tensor(pred_boxes):
+            pred_boxes = pred_boxes.detach().cpu().numpy()
+        if torch.is_tensor(pred_scores):
+            pred_scores = pred_scores.detach().cpu().numpy()
+        if torch.is_tensor(gt_boxes):
+            gt_boxes = gt_boxes.detach().cpu().numpy()
+
+        if len(pred_boxes) == 0:
+            recall = 0.0 if len(gt_boxes) > 0 else 1.0
+            return {"ap": 0.0, "precision": 0.0, "recall": recall}
+
+        order = np.argsort(-np.asarray(pred_scores))
+        pred_boxes = np.asarray(pred_boxes)[order]
+        gt_boxes = np.asarray(gt_boxes)
+
+        matched_gt = set()
+        tp = 0
+        fp = 0
+
+        for pred in pred_boxes:
+            best_iou = 0.0
+            best_idx = -1
+            for idx, gt in enumerate(gt_boxes):
+                if idx in matched_gt:
+                    continue
+                iou = self.iou_bbox(pred, gt)
+                if iou > best_iou:
+                    best_iou = iou
+                    best_idx = idx
+            if best_iou >= iou_threshold and best_idx >= 0:
+                tp += 1
+                matched_gt.add(best_idx)
+            else:
+                fp += 1
+
+        fn = max(len(gt_boxes) - tp, 0)
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        ap = precision * recall
+        return {"ap": float(ap), "precision": float(precision), "recall": float(recall)}
+
+    def compute_map(self, all_pred_boxes, all_pred_scores, all_gt_boxes, iou_threshold: float = 0.5) -> float:
+        """Compute mAP across classes."""
+        aps = []
+        for pred_boxes, pred_scores, gt_boxes in zip(all_pred_boxes, all_pred_scores, all_gt_boxes):
+            aps.append(self.compute_ap(pred_boxes, pred_scores, gt_boxes, iou_threshold=iou_threshold)["ap"])
+        return float(np.mean(aps)) if aps else 0.0
     
     def precision_recall_at_iou(
         self,
@@ -171,13 +263,41 @@ def compute_precision_recall_f1(
     return ClassificationMetrics().precision_recall_f1(y_true, y_pred, average)
 
 
-def compute_ap(detections: List[Dict], ground_truth: List[Dict]) -> float:
-    """Compute Average Precision."""
+def compute_ap(detections, ground_truth) -> float:
+    """Compute Average Precision.
+
+    Supports:
+    - Detection-style input: list[dict] detections + ground-truth boxes.
+    - Classification-style input: score tensor/array + binary labels.
+    """
+    if torch.is_tensor(detections) or isinstance(detections, np.ndarray):
+        scores = detections.detach().cpu().numpy() if torch.is_tensor(detections) else np.asarray(detections)
+        labels = ground_truth.detach().cpu().numpy() if torch.is_tensor(ground_truth) else np.asarray(ground_truth)
+        try:
+            return float(average_precision_score(labels, scores))
+        except Exception:
+            return 0.0
     return DetectionMetrics().map(detections, ground_truth)
 
 
 def compute_auc(y_true: np.ndarray, y_scores: np.ndarray) -> float:
     """Compute Area Under ROC Curve."""
+    if torch.is_tensor(y_true):
+        y_true = y_true.detach().cpu().numpy()
+    if torch.is_tensor(y_scores):
+        y_scores = y_scores.detach().cpu().numpy()
+
+    y_true = np.asarray(y_true)
+    y_scores = np.asarray(y_scores)
+
+    # Backward-compatible support for callers that pass (scores, labels).
+    true_set = set(np.unique(y_true).tolist())
+    score_set = set(np.unique(y_scores).tolist())
+    is_true_binary = true_set.issubset({0, 1})
+    is_score_binary = score_set.issubset({0, 1})
+    if not is_true_binary and is_score_binary:
+        y_true, y_scores = y_scores, y_true
+
     return roc_auc_score(y_true, y_scores)
 
 

@@ -38,14 +38,16 @@ def extract_pooled_output(model: Any, images: torch.Tensor) -> torch.Tensor:
     outputs = model(images)
 
     # HuggingFace-style output with attribute
-    if hasattr(outputs, 'last_hidden_state'):
-        return outputs.last_hidden_state[:, 0, :]
+    last_hidden_state = getattr(outputs, "last_hidden_state", None)
+    if isinstance(last_hidden_state, torch.Tensor):
+        return last_hidden_state[:, 0, :]
 
     # Tuple/list outputs (e.g., (last_hidden_state, ...))
     if isinstance(outputs, (tuple, list)) and len(outputs) > 0:
         first = outputs[0]
-        if hasattr(first, 'last_hidden_state'):
-            return first.last_hidden_state[:, 0, :]
+        first_last_hidden_state = getattr(first, "last_hidden_state", None)
+        if isinstance(first_last_hidden_state, torch.Tensor):
+            return first_last_hidden_state[:, 0, :]
         if isinstance(first, torch.Tensor) and first.ndim == 3:
             return first[:, 0, :]
 

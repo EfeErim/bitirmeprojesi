@@ -9,10 +9,12 @@ Welcome to the AADS-ULoRA documentation. This index provides an overview of all 
 1. **[Project Overview](../README.md)**
 2. **[Notebook Index](../colab_notebooks/README.md)** → start with `0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
 3. **[Scripts Index](../scripts/README.md)** for local sanity/regression commands
-4. **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** for detailed file ownership
+4. **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** for concise file ownership/navigation
+5. **[Detailed Repository Relationships](REPO_FILE_RELATIONS_DETAILED.md)** for exhaustive per-file edges and references
 
 - **[Project Overview](../README.md)** - Project overview and quick start guide
 - **[Repository File & Relationship Map](REPO_FILE_RELATIONS.md)** - Where files live, what they do, and how they connect
+- **[Detailed Repository Relationships](REPO_FILE_RELATIONS_DETAILED.md)** - Exhaustive per-file relationship catalog with incoming/outgoing edges
 - **[Notebook Index](../colab_notebooks/README.md)** - Which notebook to run for each workflow
 - **[Scripts Index](../scripts/README.md)** - Script categories and usage guidance
 - **[Colab Migration Guide](colab_migration_guide.md)** - End-to-end Colab setup and training flow

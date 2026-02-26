@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 from tests.fixtures.test_fixtures import mock_dataset_factory, mock_tensor_factory
 from src.training.colab_phase2_sd_lora import (
     ColabPhase2Trainer,
+    SDLoRATrainer,
     SDLoRAConfig,
     train_sd_lora,
     load_pretrained_sd,
