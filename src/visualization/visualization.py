@@ -349,8 +349,15 @@ class GradCAMVisualizer(PlotGenerator):
         b_handle = target_layer.register_full_backward_hook(_backward_hook)
 
         try:
+            # Ensure a grad-enabled input path so backward hooks are triggered
+            # through layer inputs and avoid module-output-only hook warnings.
+            if input_tensor.requires_grad:
+                model_input = input_tensor
+            else:
+                model_input = input_tensor.detach().clone().requires_grad_(True)
+
             model.zero_grad(set_to_none=True)
-            output = model(input_tensor)
+            output = model(model_input)
             if output.ndim == 1:
                 output = output.unsqueeze(0)
             if target_class is None:
@@ -365,7 +372,7 @@ class GradCAMVisualizer(PlotGenerator):
             cam = F.relu(cam)
             cam = F.interpolate(
                 cam,
-                size=input_tensor.shape[-2:],
+                size=model_input.shape[-2:],
                 mode="bilinear",
                 align_corners=False,
             )
