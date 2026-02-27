@@ -208,6 +208,12 @@ class ColabCacheManager:
         try:
             with self.lru_cache._lock:
                 entry = self.lru_cache.get(file_key)
+                if entry is None:
+                    # Compatibility path: resolve user-facing file_key to internal cache key.
+                    for cache_key, cache_entry in self.lru_cache.cache.items():
+                        if cache_entry.metadata.get("file_key") == file_key:
+                            entry = self.lru_cache.get(cache_key)
+                            break
                 if entry and entry.file_path and Path(entry.file_path).exists():
                     logger.debug(f"Cache hit for: {file_key}")
                     return Path(entry.file_path)
@@ -249,7 +255,7 @@ class ColabCacheManager:
             cache_key = self._generate_cache_key(source_path, file_key)
             
             # Check if already cached
-            existing = self.get_cached_file(cache_key)
+            existing = self.get_cached_file(file_key)
             if existing:
                 return existing
             
@@ -265,6 +271,8 @@ class ColabCacheManager:
             checksum = self._calculate_checksum(cache_path)
             
             # Create cache entry
+            merged_metadata = dict(metadata or {})
+            merged_metadata.setdefault("file_key", file_key)
             entry = CacheEntry(
                 file_path=str(cache_path),
                 original_path=str(source_path),
@@ -272,7 +280,7 @@ class ColabCacheManager:
                 last_accessed=time.time(),
                 access_count=1,
                 checksum=checksum,
-                metadata=metadata or {}
+                metadata=merged_metadata
             )
             
             # Add to LRU cache
@@ -296,13 +304,20 @@ class ColabCacheManager:
     def invalidate(self, file_key: str) -> bool:
         """Invalidate a cached file."""
         with self.lru_cache._lock:
-            entry = self.lru_cache.cache.get(file_key)
+            cache_key = file_key
+            entry = self.lru_cache.cache.get(cache_key)
+            if entry is None:
+                for key, cached_entry in self.lru_cache.cache.items():
+                    if cached_entry.metadata.get("file_key") == file_key:
+                        cache_key = key
+                        entry = cached_entry
+                        break
             if entry:
                 try:
                     cache_path = Path(entry.file_path)
                     if cache_path.exists():
                         cache_path.unlink()
-                    self.lru_cache._remove_entry(file_key)
+                    self.lru_cache._remove_entry(cache_key)
                     self._save_metadata()
                     logger.info(f"Invalidated cache entry: {file_key}")
                     return True
@@ -376,6 +391,7 @@ class ColabCacheManager:
     def _perform_cleanup(self):
         """Perform cache cleanup based on TTL and size constraints."""
         logger.info("Starting cache cleanup...")
+        current_time = time.time()
         
         # Remove expired entries
         expired_keys = []

@@ -480,9 +480,19 @@ class ColabDataLoader:
         """Get iterator with optional prefetching."""
         if self._dataloader is None:
             raise RuntimeError("DataLoader not initialized")
-        
-        # Use PyTorch's built-in iterator
-        return iter(self._dataloader)
+
+        dataloader_iter = iter(self._dataloader)
+
+        while True:
+            start_time = time.perf_counter()
+            try:
+                batch = next(dataloader_iter)
+            except StopIteration:
+                break
+
+            batch_time = max(0.0, time.perf_counter() - start_time)
+            self._batch_times.append(batch_time)
+            yield batch
     
     def __len__(self) -> int:
         """Get number of batches."""
@@ -551,13 +561,23 @@ def benchmark_dataloader(
     end_time = time.time()
     
     stats = dataloader.get_performance_stats()
+
+    if "config" not in stats:
+        stats["config"] = {
+            "batch_size": getattr(dataloader.config, "batch_size", 0),
+            "num_workers": getattr(dataloader.config, "num_workers", 0),
+            "pin_memory": getattr(dataloader.config, "pin_memory", False),
+            "prefetch_factor": getattr(dataloader.config, "prefetch_factor", 0)
+        }
+    processed_batches = int(stats.get("num_batches", 0))
+    benchmark_batches = processed_batches if processed_batches > 0 else num_benchmark_batches
     
     # Add overall metrics
     total_time = end_time - start_time
     stats.update({
         "benchmark_total_time_seconds": total_time,
         "benchmark_throughput_samples_per_sec": (
-            stats["config"]["batch_size"] * num_benchmark_batches / total_time
+            stats["config"]["batch_size"] * benchmark_batches / total_time
             if total_time > 0 else 0.0
         )
     })
@@ -584,9 +604,15 @@ def get_colab_dataloader(
     Returns:
         ColabDataLoader instance
     """
+    resolved_num_workers = (
+        AdaptiveWorkerManager.get_optimal_workers()
+        if num_workers is None
+        else num_workers
+    )
+
     config = DataLoaderConfig(
         batch_size=batch_size,
-        num_workers=num_workers or AdaptiveWorkerManager.get_optimal_workers(),
+        num_workers=resolved_num_workers,
         **kwargs
     )
     

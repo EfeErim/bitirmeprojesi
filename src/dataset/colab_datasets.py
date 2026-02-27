@@ -152,6 +152,7 @@ class LazyLoadingDataset(Dataset):
         self._prefetch_queue: List[int] = []
         self._prefetch_threads: List[threading.Thread] = []
         self._stop_prefetch = threading.Event()
+        self._next_prefetch_idx = 0
         
         # Start prefetching if enabled
         if self.config.enabled and self.config.prefetch_size > 0:
@@ -210,9 +211,14 @@ class LazyLoadingDataset(Dataset):
         """Start background prefetching."""
         if self._stop_prefetch.is_set():
             self._stop_prefetch.clear()
-        
+
+        if len(self.dataset) == 0:
+            return
+
         # Create prefetch threads
-        for _ in range(min(self.config.max_prefetch_threads, self.config.prefetch_size)):
+        max_items = min(len(self.dataset), self.config.prefetch_size)
+        worker_count = min(self.config.max_prefetch_threads, max_items)
+        for _ in range(worker_count):
             thread = threading.Thread(target=self._prefetch_worker, daemon=True)
             thread.start()
             self._prefetch_threads.append(thread)
@@ -221,21 +227,13 @@ class LazyLoadingDataset(Dataset):
         """Background worker for prefetching."""
         try:
             while not self._stop_prefetch.is_set():
-                # Get next index to prefetch
                 with self._cache_lock:
-                    if len(self._prefetch_queue) < self.config.prefetch_size:
-                        # Get next available index
-                        next_idx = len(self._prefetch_queue)
-                        if next_idx < len(self.dataset):
-                            self._prefetch_queue.append(next_idx)
-                        else:
-                            break
-                    else:
-                        time.sleep(0.01)
-                        continue
-                
-                # Prefetch the item
-                idx = self._prefetch_queue[-1]
+                    if self._next_prefetch_idx >= min(len(self.dataset), self.config.prefetch_size):
+                        break
+                    idx = self._next_prefetch_idx
+                    self._next_prefetch_idx += 1
+                    self._prefetch_queue.append(idx)
+
                 try:
                     item = self._load_item(idx)
                     with self._cache_lock:
@@ -258,6 +256,7 @@ class LazyLoadingDataset(Dataset):
         with self._cache_lock:
             self._cache.clear()
             self._prefetch_queue.clear()
+            self._next_prefetch_idx = 0
     
     def __del__(self):
         """Clean up resources."""
@@ -362,10 +361,18 @@ class ProgressiveLoadingDataset(LazyLoadingDataset):
         config: ProgressiveLoadConfig = None,
         **kwargs
     ):
-        super().__init__(dataset, **kwargs)
-        self.config = config or ProgressiveLoadConfig()
-        
-        self._current_batch_size = self.config.initial_batch_size
+        self.progressive_config = config or ProgressiveLoadConfig()
+        super().__init__(
+            dataset,
+            config=LazyLoadConfig(
+                enabled=self.progressive_config.enabled,
+                prefetch_size=0,
+                cache_size_mb=1024
+            ),
+            **kwargs
+        )
+
+        self._current_batch_size = self.progressive_config.initial_batch_size
         self._batch_count = 0
         self._progress_lock = threading.Lock()
     
@@ -376,19 +383,19 @@ class ProgressiveLoadingDataset(LazyLoadingDataset):
         # Apply progressive loading logic
         with self._progress_lock:
             self._batch_count += 1
-            if self.config.adaptive and self._batch_count % 10 == 0:
+            if self.progressive_config.adaptive and self._batch_count % 10 == 0:
                 self._adjust_batch_size()
         
         return item
     
     def _adjust_batch_size(self):
         """Adjust batch size based on performance."""
-        if self.config.adaptive:
+        if self.progressive_config.adaptive:
             # This would need actual performance monitoring
             # For now, just increase gradually
             new_size = min(
-                self.config.max_batch_size,
-                int(self._current_batch_size * self.config.growth_factor)
+                self.progressive_config.max_batch_size,
+                int(self._current_batch_size * self.progressive_config.growth_factor)
             )
             self._current_batch_size = new_size
     
@@ -499,7 +506,23 @@ class ColabDataset(Dataset):
             
             # Apply transformations
             if self.transform:
-                item = self.transform(item)
+                if isinstance(item, tuple) and len(item) > 0:
+                    image = self._apply_transform(item[0])
+                    item = (image, *item[1:])
+                elif isinstance(item, list) and len(item) > 0:
+                    image = self._apply_transform(item[0])
+                    item = [image, *item[1:]]
+                elif isinstance(item, dict):
+                    if "image" in item:
+                        item = dict(item)
+                        item["image"] = self._apply_transform(item["image"])
+                    elif "images" in item:
+                        item = dict(item)
+                        item["images"] = self._apply_transform(item["images"])
+                    else:
+                        item = self._apply_transform(item)
+                else:
+                    item = self._apply_transform(item)
             
             return item
             
@@ -512,6 +535,21 @@ class ColabDataset(Dataset):
                     cause=e
                 )
             )
+            raise
+
+    def _apply_transform(self, data: Any) -> Any:
+        """Apply configured transform, including Tensor->PIL fallback when needed."""
+        if self.transform is None:
+            return data
+
+        try:
+            return self.transform(data)
+        except Exception as first_error:
+            if isinstance(data, torch.Tensor):
+                try:
+                    return self.transform(transforms.ToPILImage()(data))
+                except Exception:
+                    raise first_error
             raise
     
     def get_optimization_stats(self) -> Dict[str, Any]:

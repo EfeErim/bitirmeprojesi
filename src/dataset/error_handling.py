@@ -345,13 +345,18 @@ def get_error_handler() -> ColabDataPipelineErrorHandler:
     return ColabDataPipelineErrorHandler(log_level="INFO")
 
 
-def get_retry_handler() -> RetryHandler:
+def get_retry_handler(
+    max_retries: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 30.0,
+    backoff_factor: float = 2.0
+) -> RetryHandler:
     """Get a retry handler configured for Colab."""
     return RetryHandler(
-        max_retries=3,
-        base_delay=1.0,
-        max_delay=30.0,
-        backoff_factor=2.0
+        max_retries=max_retries,
+        base_delay=base_delay,
+        max_delay=max_delay,
+        backoff_factor=backoff_factor
     )
 
 
