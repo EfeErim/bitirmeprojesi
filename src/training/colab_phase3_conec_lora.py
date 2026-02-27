@@ -324,7 +324,10 @@ class ColabPhase3Trainer:
         # Apply LoRA adapter
         try:
             model = get_peft_model(base_model, lora_config)
-            model = model.to(self.device)
+            if isinstance(model, nn.Module):
+                model = model.to(self.device)
+            else:
+                raise TypeError("get_peft_model did not return an nn.Module")
         except Exception as e:
             if self.strict_model_loading:
                 raise RuntimeError("MODEL_LOAD_STRICT failed: could not apply CoNeC-LoRA adapter.") from e
@@ -394,9 +397,12 @@ class ColabPhase3Trainer:
         
         trainable = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         total = sum(p.numel() for p in self.model.parameters())
-        logger.info(f"   - Trainable: {trainable:,} / {total:,} ({100*trainable/total:.1f}%)")
-        logger.info(f"   - Target: ≥85% retention of protected crop classes")
-    
+        trainable_ratio = (100 * trainable / total) if total > 0 else 0.0
+        logger.info(f"   - Trainable: {trainable:,} / {total:,} ({trainable_ratio:.1f}%)")
+        if total == 0:
+            logger.warning("Model has zero parameters after CoNeC-LoRA setup; check PEFT/model wiring.")
+        logger.info(f"   - Target: >=85% retention of protected crop classes")
+
     def setup_optimizer(self):
         """Setup optimizer with stratified learning rates for CONEC-LoRA parameters.
         

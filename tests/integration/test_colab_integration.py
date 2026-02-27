@@ -554,18 +554,22 @@ class TestColabEndToEnd:
 class TestDataPipelineIntegration:
     """Test data pipeline integration."""
 
-    def test_dataset_to_loader_pipeline(self, temp_workspace):
+    def test_dataset_to_loader_pipeline(self, tmp_path):
         """Test complete data pipeline from dataset to loader."""
+        temp_workspace = tmp_path / "colab_workspace"
+        (temp_workspace / "data").mkdir(parents=True, exist_ok=True)
+        class_dir = temp_workspace / "data" / "dummy_class"
+        class_dir.mkdir(parents=True, exist_ok=True)
+        from PIL import Image
+        Image.new('RGB', (224, 224), color='white').save(class_dir / "sample.jpg")
+
         # Create mock dataset
         class TestDataset(torch.utils.data.Dataset):
             def __len__(self):
                 return 10
             
             def __getitem__(self, idx):
-                return {
-                    'images': torch.randn(3, 224, 224),
-                    'labels': idx % 3
-                }
+                return torch.randn(3, 224, 224), idx % 3
         
         dataset = TestDataset()
         
@@ -595,10 +599,11 @@ class TestDataPipelineIntegration:
         assert len(batches) == 5  # 10 samples / batch_size 2
         
         for batch in batches:
-            assert 'images' in batch
-            assert 'labels' in batch
-            assert batch['images'].shape[0] <= 2
-            assert batch['labels'].shape[0] <= 2
+            assert isinstance(batch, (list, tuple))
+            assert len(batch) == 2
+            batch_images, batch_labels = batch
+            assert batch_images.shape[0] <= 2
+            assert batch_labels.shape[0] <= 2
         
         print("✅ Dataset to loader pipeline test passed")
 

@@ -178,6 +178,10 @@ class TestSDLoRATrainer:
         # Get initial LR
         initial_lr = trainer.get_learning_rate()
 
+        # Mimic realistic order: optimizer step before scheduler step.
+        trainer.optimizer.zero_grad()
+        trainer.optimizer.step()
+
         # Simulate epoch
         trainer.scheduler_step()
 

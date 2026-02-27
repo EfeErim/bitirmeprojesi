@@ -297,10 +297,9 @@ class TestConfigurationIntegration:
 
     def test_missing_base_config_error(self):
         """Test error handling for missing base configuration."""
-        # Remove base.json
-        (self.config_dir / "base.json").unlink()
-        
-        manager = ConfigurationManager(config_dir=str(self.config_dir))
+        # Use a non-existent config directory to avoid filesystem delete restrictions.
+        missing_dir = self.config_dir / "missing_config_dir"
+        manager = ConfigurationManager(config_dir=str(missing_dir))
         
         with pytest.raises(ConfigurationError):
             manager.load_base_config()

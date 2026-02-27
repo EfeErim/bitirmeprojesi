@@ -64,7 +64,7 @@ def test_basic_functionality():
     metrics = validator.validate_thresholds(thresholds, val_loader, model, mahalanobis, device='cpu')
     print(f"✓ Validation metrics: FPR = {metrics['false_positive_rate']:.4f}, TNR = {metrics['true_negative_rate']:.4f}")
     
-    return True
+    assert len(thresholds) == num_classes
 
 def test_insufficient_samples():
     """Test fallback strategy with insufficient samples."""
@@ -107,7 +107,7 @@ def test_insufficient_samples():
     for class_idx, threshold in thresholds.items():
         print(f"  Class {class_idx}: threshold = {threshold:.4f}")
     
-    return True
+    assert len(thresholds) == num_classes
 
 def test_configurable_parameters():
     """Test custom configuration parameters."""
@@ -125,14 +125,9 @@ def test_configurable_parameters():
     print(f"✓ Using custom config: {custom_config}")
     
     # Verify configuration validation
-    try:
-        threshold_computer = DynamicOODThreshold(**custom_config)
-        print("✓ Configuration accepted and validated")
-    except Exception as e:
-        print(f"✗ Configuration error: {e}")
-        return False
-    
-    return True
+    threshold_computer = DynamicOODThreshold(**custom_config)
+    print("Configuration accepted and validated")
+    assert threshold_computer is not None
 
 def test_confidence_intervals():
     """Test confidence interval computation."""
@@ -153,7 +148,7 @@ def test_confidence_intervals():
     assert ci_lower <= mean <= ci_upper, "Confidence interval should contain the mean"
     print("✓ Confidence interval correctly contains the sample mean")
     
-    return True
+    assert ci_lower <= mean <= ci_upper
 
 def main():
     """Run all tests."""

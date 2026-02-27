@@ -58,7 +58,8 @@ class PrototypeLookupResult:
     def __repr__(self) -> str:
         return repr(self.prototype)
 
-    def __torch_function__(self, func, types, args=(), kwargs=None):
+    @classmethod
+    def __torch_function__(cls, func, types, args=(), kwargs=None):
         if kwargs is None:
             kwargs = {}
         norm_args = tuple(a.prototype if isinstance(a, PrototypeLookupResult) else a for a in args)

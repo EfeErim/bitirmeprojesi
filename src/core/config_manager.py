@@ -146,22 +146,16 @@ class ConfigurationManager:
         try:
             with open(config_path, 'r') as f:
                 config = json.load(f)
-            
-            # Extract the section to validate if schema_name provided
-            config_to_validate = config
-            if schema_name and schema_name in config:
-                config_to_validate = config[schema_name]
-            
-            # Validate if schema provided
+
+            # Validate if schema provided.
+            # Accept both wrapped format {"router": {...}} and legacy unwrapped {...}.
             if schema_name:
-                config_to_validate = config_validator.validate(schema_name, config_to_validate)
+                is_wrapped = isinstance(config, dict) and schema_name in config
+                candidate = config if is_wrapped else {schema_name: config}
+                validated_wrapper = config_validator.validate(schema_name, candidate)
+                validated_section = validated_wrapper.get(schema_name, {})
+                config = {schema_name: validated_section}
                 logger.info(f"Validated {filename} against schema '{schema_name}'")
-            
-            # Store the full config, but replace the section with validated version
-            if schema_name and schema_name in config:
-                config[schema_name] = config_to_validate
-            else:
-                config = config_to_validate
             
             self._configs[filename] = config
             return config

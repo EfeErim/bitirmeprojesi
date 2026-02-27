@@ -90,10 +90,19 @@ class ConfigurationValidator:
         """Apply default values to configuration."""
         defaults = self._default_values.get(schema_name, {})
         validated_config = config.copy()
-        
+
+        schema = self._schemas.get(schema_name, {})
+        properties = schema.get('properties', {})
+        is_wrapped = (
+            schema_name in properties
+            and isinstance(validated_config.get(schema_name), dict)
+        )
+
+        target = validated_config[schema_name] if is_wrapped else validated_config
+
         for key, default_value in defaults.items():
-            if key not in validated_config:
-                validated_config[key] = default_value
+            if key not in target:
+                target[key] = default_value
         
         return validated_config
     

@@ -10,6 +10,14 @@ import time
 import sys
 
 # Mock PEFT imports before importing pipeline
+_ORIG_MODULES = {name: sys.modules.get(name) for name in [
+    'peft',
+    'peft.LoraConfig',
+    'peft.get_peft_model',
+    'peft.SDLoRAConfig',
+    'src.ood.prototypes',
+]}
+
 sys.modules['peft'] = MagicMock()
 sys.modules['peft.LoraConfig'] = MagicMock()
 sys.modules['peft.get_peft_model'] = MagicMock()
@@ -21,6 +29,13 @@ sys.modules['src.ood.prototypes'].compute_class_prototypes = MagicMock(return_va
 
 from src.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
 from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
+
+# Restore global module table to avoid cross-test contamination.
+for _name, _mod in _ORIG_MODULES.items():
+    if _mod is None:
+        sys.modules.pop(_name, None)
+    else:
+        sys.modules[_name] = _mod
 
 
 class TestIndependentMultiCropPipelineInitialization:
