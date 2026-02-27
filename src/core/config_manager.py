@@ -293,11 +293,20 @@ class ConfigurationManager:
             # Custom validation rules can be added here
             config = self._validated_configs.get("merged", {})
             
-            # Validate critical sections exist for the current repository scope.
-            required_sections = ['training', 'router', 'ood']
+            # Validate critical runtime sections. `training` can be absent in
+            # inference-only deployments, so do not hard-require it here.
+            required_sections = ['router', 'ood']
+            missing_sections = []
             for section in required_sections:
                 if section not in config:
                     logger.warning(f"Missing required configuration section: {section}")
+                    missing_sections.append(section)
+            if missing_sections:
+                logger.error(
+                    "Merged configuration validation failed. Missing sections: %s",
+                    ", ".join(missing_sections),
+                )
+                return False
             
             logger.info("Merged configuration validation passed")
             return True

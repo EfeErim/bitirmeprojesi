@@ -156,6 +156,7 @@ class ColabCacheManager:
         self.lru_cache = LRUCache(max_cache_size_bytes, max_entries)
         self.cleanup_interval = cleanup_interval_hours * 3600
         self.ttl_seconds = ttl_days * 86400
+        self._stop_cleanup = threading.Event()
         
         self.metadata_file = self.cache_dir / "cache_metadata.json"
         self.last_cleanup = self._load_metadata()
@@ -316,7 +317,12 @@ class ColabCacheManager:
                 try:
                     cache_path = Path(entry.file_path)
                     if cache_path.exists():
-                        cache_path.unlink()
+                        try:
+                            cache_path.unlink()
+                        except Exception as unlink_error:
+                            logger.warning(
+                                f"Cache file could not be deleted during invalidation ({cache_path}): {unlink_error}"
+                            )
                     self.lru_cache._remove_entry(cache_key)
                     self._save_metadata()
                     logger.info(f"Invalidated cache entry: {file_key}")
@@ -378,8 +384,10 @@ class ColabCacheManager:
     
     def _background_cleanup(self):
         """Background thread for periodic cleanup."""
-        while True:
-            time.sleep(3600)  # Check every hour
+        while not self._stop_cleanup.is_set():
+            # Wait with timeout so shutdown can interrupt sleep.
+            if self._stop_cleanup.wait(timeout=3600):
+                break
             
             try:
                 current_time = time.time()
@@ -387,6 +395,23 @@ class ColabCacheManager:
                     self._perform_cleanup()
             except Exception as e:
                 logger.error(f"Error in background cleanup: {str(e)}")
+
+    def shutdown(self):
+        """Stop background cleanup thread and persist metadata."""
+        self._stop_cleanup.set()
+        if getattr(self, "_cleanup_thread", None) and self._cleanup_thread.is_alive():
+            self._cleanup_thread.join(timeout=2.0)
+        try:
+            self._save_metadata()
+        except Exception:
+            pass
+
+    def __del__(self):
+        """Best-effort cleanup for interpreter shutdown paths."""
+        try:
+            self.shutdown()
+        except Exception:
+            pass
     
     def _perform_cleanup(self):
         """Perform cache cleanup based on TTL and size constraints."""
@@ -405,7 +430,12 @@ class ColabCacheManager:
                     entry = self.lru_cache.cache[key]
                     cache_path = Path(entry.file_path)
                     if cache_path.exists():
-                        cache_path.unlink()
+                        try:
+                            cache_path.unlink()
+                        except Exception as unlink_error:
+                            logger.warning(
+                                f"Cache file could not be deleted during cleanup ({cache_path}): {unlink_error}"
+                            )
                     self.lru_cache._remove_entry(key)
                 except Exception as e:
                     logger.error(f"Error removing expired entry {key}: {str(e)}")

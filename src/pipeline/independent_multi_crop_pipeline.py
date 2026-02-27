@@ -38,6 +38,8 @@ class IndependentMultiCropPipeline:
         self.router_analyzer = None  # DiagnosticScoutingAnalyzer for VLM
         self.adapters = {}  # crop_name -> IndependentCropAdapter
         self.ood_buffers = {}  # Phase 2/3 triggering
+        self.last_router_error: Optional[str] = None
+        self.last_adapter_error: Dict[str, str] = {}
         
         # Supported crops: allow top-level `crops` or nested `router.crop_mapping`
         if 'crops' in config:
@@ -170,11 +172,15 @@ class IndependentMultiCropPipeline:
             
             # Create diagnostic analyzer for easier crop classification
             self.router_analyzer = DiagnosticScoutingAnalyzer(config=self.config, device=self.device)
+            self.last_router_error = None
             
             logger.info("VLM router initialized successfully")
             return True
             
         except Exception as e:
+            self.router = None
+            self.router_analyzer = None
+            self.last_router_error = str(e)
             logger.error(f"Failed to initialize VLM router: {e}")
             if self.strict_model_loading:
                 raise
@@ -608,14 +614,22 @@ class IndependentMultiCropPipeline:
             # Attempt to load adapter resources
             adapter.load_adapter(adapter_path)
             self.adapters[crop_name] = adapter
+            self.last_adapter_error.pop(crop_name, None)
 
             # Clear caches after registration
             self.clear_cache()
             return True
-        except Exception:
+        except Exception as e:
             # On any failure, do not register adapter
             if crop_name in self.adapters:
                 del self.adapters[crop_name]
+            self.last_adapter_error[crop_name] = str(e)
+            logger.error(
+                "Failed to register adapter for crop '%s' from '%s': %s",
+                crop_name,
+                adapter_path,
+                e,
+            )
             return False
 
     def get_crop_status(self) -> Dict[str, Dict[str, Any]]:
