@@ -97,7 +97,7 @@ class IndependentMultiCropPipeline:
             except Exception:
                 tensor_bytes = unnorm.cpu().numpy().tobytes()
 
-            tensor_hash = hashlib.md5(tensor_bytes).hexdigest()
+            tensor_hash = hashlib.md5(tensor_bytes, usedforsecurity=False).hexdigest()
             return tensor_hash
 
         # If not a tensor, try to handle PIL.Image, numpy array, path or string
@@ -122,7 +122,7 @@ class IndependentMultiCropPipeline:
         # Fallback: string representation hashed (MD5)
         try:
             s = str(img).encode('utf-8')
-            return hashlib.md5(s).hexdigest()
+            return hashlib.md5(s, usedforsecurity=False).hexdigest()
         except Exception:
             return 'unknown'
 

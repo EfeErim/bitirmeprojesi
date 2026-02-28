@@ -6,7 +6,7 @@ Provides centralized management of model versions, caching, and loading.
 import time
 import os
 import json
-import pickle
+import pickle  # nosec B403 - unsafe pickle loading is opt-in and runtime-gated
 import hashlib
 from typing import Dict, Any, Optional, List, Tuple
 from dataclasses import dataclass, field
@@ -223,7 +223,7 @@ class ModelRegistry:
                         "Set AADS_ALLOW_UNSAFE_PICKLE=1 if you trust the artifact source."
                     )
                 with open(file_path, 'rb') as f:
-                    model = pickle.load(f)
+                    model = pickle.load(f)  # nosec B301 - gated by allow_unsafe_pickle
             else:
                 # Try torch first for common serialized artifacts; only fallback to
                 # pickle when explicitly allowed.
@@ -236,7 +236,7 @@ class ModelRegistry:
                             "Use a torch-serialized artifact or opt into unsafe pickle loading."
                         )
                     with open(file_path, 'rb') as f:
-                        model = pickle.load(f)
+                        model = pickle.load(f)  # nosec B301 - gated by allow_unsafe_pickle
             
             logger.info(f"Loaded model {metadata.model_id} from disk")
             return model
@@ -273,7 +273,7 @@ class ModelRegistry:
     
     def _calculate_checksum(self, file_path: str) -> str:
         """Calculate file checksum."""
-        hash_algo = hashlib.md5()
+        hash_algo = hashlib.md5(usedforsecurity=False)
         
         with open(file_path, 'rb') as f:
             for chunk in iter(lambda: f.read(4096), b""):

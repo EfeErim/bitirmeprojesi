@@ -449,7 +449,7 @@ class ColabCacheManager:
     def _generate_cache_key(self, source_path: Path, file_key: str) -> str:
         """Generate a unique cache key."""
         combined = f"{source_path}:{file_key}"
-        return hashlib.md5(combined.encode()).hexdigest()[:16]
+        return hashlib.md5(combined.encode(), usedforsecurity=False).hexdigest()[:16]
     
     def _calculate_checksum(self, file_path: Path, chunk_size: int = 1024*1024) -> str:
         """Calculate SHA256 checksum of a file."""

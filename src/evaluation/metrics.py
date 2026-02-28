@@ -367,7 +367,8 @@ def compute_retention_rate(
         Dictionary with retention metrics
     """
     # Ensure same length
-    assert len(old_predictions) == len(new_predictions) == len(old_labels) == len(new_labels)
+    if not (len(old_predictions) == len(new_predictions) == len(old_labels) == len(new_labels)):
+        raise ValueError("old/new predictions and labels must have identical lengths")
     
     # Compute old accuracy before and after
     old_accuracy = accuracy_score(old_labels, old_predictions)

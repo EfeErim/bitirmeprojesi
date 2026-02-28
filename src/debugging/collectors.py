@@ -2,7 +2,7 @@
 """Collector implementations for performance monitoring."""
 
 import logging
-import subprocess
+import subprocess  # nosec B404 - subprocess is required for system metric collection
 import threading
 import time
 from collections import deque
@@ -31,7 +31,7 @@ class GPUMonitor:
 
     def _check_nvidia_smi(self) -> bool:
         try:
-            subprocess.run(['nvidia-smi', '--version'], capture_output=True, check=True, timeout=2)
+            subprocess.run(['nvidia-smi', '--version'], capture_output=True, check=True, timeout=2)  # nosec B603,B607
             return True
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
             logger.warning("nvidia-smi not available, GPU monitoring disabled")
@@ -73,7 +73,7 @@ class GPUMonitor:
                 '--query-gpu=utilization.gpu,utilization.memory,memory.used,memory.total,temperature.gpu,power.draw,fan.speed',
                 '--format=csv,noheader,nounits'
             ]
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=2)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=2)  # nosec B603,B607
 
             if result.returncode == 0:
                 values = result.stdout.strip().split(', ')
@@ -269,7 +269,7 @@ class DriveIOMonitor:
         metrics = DriveIOMetrics(timestamp=time.time())
 
         try:
-            result = subprocess.run(['iostat', '-x', '1', '1'], capture_output=True, text=True, timeout=3)
+            result = subprocess.run(['iostat', '-x', '1', '1'], capture_output=True, text=True, timeout=3)  # nosec B603,B607
 
             if result.returncode == 0:
                 lines = result.stdout.strip().split('\n')
