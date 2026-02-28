@@ -123,7 +123,7 @@ jobs:
     
     - name: Upload security reports
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -157,7 +157,7 @@ jobs:
     
     - name: Upload benchmark artifacts
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: phase5-benchmark-results
         path: logs/phase5_router_benchmark.json
