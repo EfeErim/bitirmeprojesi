@@ -7,7 +7,7 @@ import torch
 from pathlib import Path
 from PIL import Image
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 def create_dummy_dataset(
     base_dir: Path,

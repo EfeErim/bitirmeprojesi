@@ -5,6 +5,7 @@ Test fixtures for AADS-ULoRA unit tests.
 import pytest
 import torch
 import numpy as np
+import base64
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 

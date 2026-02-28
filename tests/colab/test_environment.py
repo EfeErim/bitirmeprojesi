@@ -60,25 +60,25 @@ class TestPyTorchInstallation:
         """Test PyTorch install command for CUDA 11.8."""
         installer = ColabInstaller()
         cmd = installer.get_pytorch_install_command('11.8')
-        assert 'cu118' in cmd
+        assert any('cu118' in part for part in cmd)
 
     def test_get_pytorch_install_command_cuda117(self):
         """Test PyTorch install command for CUDA 11.7."""
         installer = ColabInstaller()
         cmd = installer.get_pytorch_install_command('11.7')
-        assert 'cu117' in cmd
+        assert any('cu117' in part for part in cmd)
 
     def test_get_pytorch_install_command_cuda121(self):
         """Test PyTorch install command for CUDA 12.1."""
         installer = ColabInstaller()
         cmd = installer.get_pytorch_install_command('12.1')
-        assert 'cu121' in cmd
+        assert any('cu121' in part for part in cmd)
 
     def test_get_pytorch_install_command_unknown(self):
         """Test PyTorch install command for unknown CUDA version."""
         installer = ColabInstaller()
         cmd = installer.get_pytorch_install_command('unknown')
-        assert 'cpu' in cmd
+        assert any('cpu' in part for part in cmd)
 
     def test_detect_cuda_from_nvidia_smi(self):
         """Test CUDA detection from nvidia-smi."""

@@ -14,7 +14,7 @@ import hashlib
 from PIL import Image
 
 from src.router.vlm_pipeline import VLMPipeline, DiagnosticScoutingAnalyzer
-from src.utils.data_loader import preprocess_image, LRUCache
+from src.utils.data_loader import preprocess_image, LRUCache, CropDataset
 
 logger = logging.getLogger(__name__)
 

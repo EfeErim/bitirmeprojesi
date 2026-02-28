@@ -358,7 +358,7 @@ def _get_config_manager(environment: str = None) -> ConfigurationManager:
     Returns:
         Thread-safe ConfigurationManager instance
     """
-    global _config_manager, _config_lock
+    global _config_manager
 
     with _config_lock:
         if _config_manager is None:
