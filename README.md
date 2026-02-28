@@ -220,11 +220,20 @@ python tests/import_test.py
 ### Option 3: Local Testing
 
 ```bash
-# Run unit tests
-pytest tests/unit/ -v
+# Run quick modular suite group (fast default)
+python scripts/run_test_suites.py
 
-# Run integration tests
-pytest tests/integration/ -v
+# Run only router-focused unit tests
+python scripts/run_test_suites.py --suite unit/router
+
+# Run all unit suites
+python scripts/run_test_suites.py --suite unit
+
+# Run integration suites
+python scripts/run_test_suites.py --suite integration
+
+# Run full matrix explicitly
+python scripts/run_test_suites.py --suite all
 
 # Run core Python sanity checks (notebook imports + local pipeline checks)
 python scripts/run_python_sanity_bundle.py
@@ -239,7 +248,7 @@ python scripts/check_markdown_links.py --root .
 python scripts/run_policy_regression_bundle.py
 ```
 
-The GitHub Actions CI workflow also runs this policy regression bundle on every push/PR via the `policy-regression` job.
+The GitHub Actions CI workflow also runs this policy regression bundle on every push/PR via the `policy-regression` job, and runs modular suites via `python scripts/run_test_suites.py` in the `test` job.
 
 ## 💾 Output Files
 

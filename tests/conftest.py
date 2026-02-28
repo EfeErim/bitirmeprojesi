@@ -209,6 +209,11 @@ def pytest_addoption(parser):
 
 def pytest_collection_modifyitems(config, items):
     """Modify test collection based on command line options."""
+    for item in items:
+        normalized_path = str(item.fspath).replace("\\", "/")
+        if "/tests/integration/" in normalized_path and "integration" not in item.keywords:
+            item.add_marker(pytest.mark.integration)
+
     if not config.getoption("--runslow"):
         skip_slow = pytest.mark.skip(reason="need --runslow option to run")
         for item in items:

@@ -11,6 +11,7 @@ This folder contains operational scripts used for setup, testing, and policy che
 
 | User Goal | Preferred Script | When to Use |
 |---|---|---|
+| Run modular test subsets with suite-level status | `run_test_suites.py` | Day-to-day local testing and targeted debugging |
 | Verify core local Python sanity | `run_python_sanity_bundle.py` | Before local changes/PRs |
 | Validate notebook-related imports only | `validate_notebook_imports.py` | Fast import compatibility check |
 | Run policy/profile regression | `run_policy_regression_bundle.py` | Router/policy changes |
@@ -49,6 +50,7 @@ For new docs and user instructions, prefer the **Primary** surfaces above.
 ## Policy/Profile Regression
 
 - `run_policy_regression_bundle.py` - main policy/stage-order regression bundle (used in CI).
+- `run_test_suites.py` - modular pytest runner with named suites (`quick`, `unit`, `colab`, `integration`, `all`) and per-suite pass/fail summary.
 - `profile_policy_sanity.py` - profile and policy sanity validation.
 - `run_python_sanity_bundle.py` - consolidated local Python sanity checks (`validate_notebook_imports.py`, dynamic taxonomy, final pipeline check).
 
@@ -64,6 +66,8 @@ For new docs and user instructions, prefer the **Primary** surfaces above.
 ## Recommended Usage
 
 - Full training: prefer `../colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`.
+- Fast modular local tests: run `python scripts/run_test_suites.py` (defaults to `quick` suite group).
+- Full modular test matrix: run `python scripts/run_test_suites.py --suite all`.
 - Policy regression testing: run `python scripts/run_policy_regression_bundle.py`.
 - Core Python sanity checks: run `python scripts/run_python_sanity_bundle.py`.
 - Quick docs validation: run `python scripts/check_markdown_links.py --root .`.
