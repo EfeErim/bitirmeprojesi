@@ -161,8 +161,8 @@ def main() -> int:
     parser.add_argument(
         "--root",
         type=Path,
-        default=Path("data/plantvillage"),
-        help="Dataset root to evaluate (default: data/plantvillage)",
+        default=Path("data/class_root_dataset"),
+        help="Dataset root to evaluate (default: data/class_root_dataset)",
     )
     parser.add_argument(
         "--min-classes",
