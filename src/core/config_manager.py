@@ -60,7 +60,8 @@ class ConfigurationManager:
             router_schema,
             ood_schema,
             monitoring_schema,
-            security_schema
+            security_schema,
+            training_continual_schema,
         )
         
         # Register each schema (call functions to get actual schemas)
@@ -110,6 +111,21 @@ class ConfigurationManager:
                 "cors": {"allow_origins": ["*"]},
                 "input_validation": {"max_request_size_mb": 10}
             }
+        )
+
+        config_validator.register_schema(
+            "training_continual",
+            training_continual_schema(),
+            default_values={
+                "training": {
+                    "continual": {
+                        "backbone": {"model_name": "facebook/dinov3-giant"},
+                        "quantization": {"mode": "int8_hybrid", "strict_backend": True},
+                        "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                        "fusion": {"layers": [2, 5, 8, 11]},
+                    }
+                }
+            },
         )
         
         logger.info("All configuration schemas registered")
@@ -216,6 +232,15 @@ class ConfigurationManager:
             if env_config:
                 merged_config = self._apply_env_overrides(merged_config, env_config)
                 logger.info(f"Applied environment overrides for '{self._environment}'")
+
+        # v6 hard guard: do not allow unsupported low-bit adapter settings.
+        from src.training.quantization import assert_no_prohibited_4bit_flags
+
+        assert_no_prohibited_4bit_flags(merged_config)
+
+        # Validate continual training contract when training section is present.
+        if "training" in merged_config:
+            config_validator.validate("training_continual", merged_config, allow_extra_fields=True)
         
         self._validated_configs["merged"] = merged_config
         logger.info("Configuration merge completed")
@@ -293,9 +318,8 @@ class ConfigurationManager:
             # Custom validation rules can be added here
             config = self._validated_configs.get("merged", {})
             
-            # Validate critical runtime sections. `training` can be absent in
-            # inference-only deployments, so do not hard-require it here.
-            required_sections = ['router', 'ood']
+            # v6 runtime requires continual training contract in merged config.
+            required_sections = ['router', 'ood', 'training']
             missing_sections = []
             for section in required_sections:
                 if section not in config:
@@ -306,6 +330,11 @@ class ConfigurationManager:
                     "Merged configuration validation failed. Missing sections: %s",
                     ", ".join(missing_sections),
                 )
+                return False
+
+            continual = config.get("training", {}).get("continual")
+            if not isinstance(continual, dict):
+                logger.error("Merged configuration validation failed. Missing 'training.continual'.")
                 return False
             
             logger.info("Merged configuration validation passed")

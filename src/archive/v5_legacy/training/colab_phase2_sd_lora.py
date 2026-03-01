@@ -298,7 +298,7 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
         except Exception as e:
             if self.strict_model_loading:
                 raise RuntimeError(
-                    f"MODEL_LOAD_STRICT failed: could not load phase1 adapter from '{adapter_path}'."
+                    f"MODEL_LOAD_STRICT failed: could not load prior adapter from '{adapter_path}'."
                 ) from e
             logger.warning(f"Failed to load adapter '{adapter_path}': {e}. Falling back to lightweight local stub.")
             self.base_model = nn.Sequential(

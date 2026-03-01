@@ -39,6 +39,13 @@ jobs:
         python -m coverage xml
         python -m coverage html
 
+    - name: Static legacy-token guard
+      run: |
+        if rg -n "DoRA|CoNeC|phase1|phase3|load_in_4bit|nf4|QLoRA" src config colab_notebooks scripts docs -g "!**/archive/**"; then
+          echo "Legacy tokens detected in non-archive paths."
+          exit 1
+        fi
+
     - name: Upload coverage
       uses: codecov/codecov-action@v3
       with:

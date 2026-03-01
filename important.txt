@@ -1,0 +1,17 @@
+To build the state-of-the-art, rehearsal-free continual learning stack for plant disease classification, here is exactly what you need to exclude from your original setup and what you need to introduce:
+
+What to Exclude
+Standard QLoRA (4-bit NF4 Quantization): Exclude this entirely. Because class-incremental learning relies on exceptionally small weight updates, 4-bit quantization bins are too coarse and actively mask these delicate changes, effectively neutralizing the model's anti-forgetting mechanisms. Furthermore, extreme quantization introduces severe representation errors that destroy the fine-grained spatial reasoning required to identify subtle plant diseases.
+
+Conec-LoRA: Exclude this module. Conec-LoRA utilizes an auxiliary network and a stochastic classifier to dynamically route inputs to task-specific adapters. This dynamic routing fundamentally clashes with SD-LoRA, which requires a unified inference pass evaluated directly without task-specific component selection.
+
+Standalone DoRA: Exclude this to eliminate algorithmic redundancy. SD-LoRA already mathematically separates the learning of magnitude and direction to add low-rank components incrementally. Having a separate DoRA module running concurrently is mathematically redundant and computationally inefficient.
+
+What to Introduce
+Frozen DINOv3 Backbone: Introduce DINOv3 as your base vision encoder. DINOv3 is a highly versatile vision foundation model that produces exceptionally high-quality dense features and spatial representations, allowing it to outperform specialized models across a broad range of settings without requiring the backbone to be fine-tuned.
+
+8-bit (INT8) Quantization (with QAT/Hybrid approaches): Introduce 8-bit quantization instead of 4-bit. Research shows that INT8 quantization introduces a specific noise that acts as an implicit regularizer; this prevents the model from overfitting to new task gradients and actually improves continual learning performance and retention compared to 16-bit precision. For Vision Transformers like DINOv3, using a hybrid quantization technique helps manage activation outliers while reducing latency.
+
+SD-LoRA as the Sole Continual Learning Engine: Rely exclusively on SD-LoRA to manage the addition of new crop diseases. By fixing the directions learned from previous tasks and only updating the magnitude vectors, SD-LoRA converges on an overlapping low-loss region for all learned tasks, allowing for scalable, rehearsal-free class-incremental learning.
+
+Multi-Scale Feature Fusion and "All-Linear" Targeting: Introduce Multi-Scale Adaptive Adapters (MAA) or feature fusion modules to combine global and local features, which significantly enhances the model's ability to segment and classify blurred disease spot boundaries and complex feature distributions. Additionally, configure your adapters to target "all-linear" modules within the transformer to maximize the expressive capacity needed for fine-grained classification.

@@ -5,9 +5,14 @@ Provides centralized validation for all configuration inputs.
 
 import os
 import json
-import jsonschema
+import re
 from typing import Dict, Any, List, Union, Callable
 import logging
+
+try:
+    import jsonschema  # type: ignore
+except Exception:  # pragma: no cover - environment-dependent fallback
+    jsonschema = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -65,10 +70,14 @@ class ConfigurationValidator:
         
         # Validate against JSON schema
         try:
-            jsonschema.validate(instance=validated_config, schema=schema)
-        except jsonschema.ValidationError as e:
+            if jsonschema is not None:
+                jsonschema.validate(instance=validated_config, schema=schema)
+            else:
+                self._validate_schema_subset(validated_config, schema, path=f"${schema_name}")
+        except Exception as e:
+            # Normalize all schema failures under ConfigurationError.
             raise ConfigurationError(
-                f"Schema validation failed for '{schema_name}': {e.message}"
+                f"Schema validation failed for '{schema_name}': {str(e)}"
             ) from e
 
         # Run custom validation rules
@@ -120,6 +129,78 @@ class ConfigurationValidator:
             raise ConfigurationError(
                 f"Extra fields found in configuration: {', '.join(extra_fields)}"
             )
+
+    def _validate_schema_subset(self, value: Any, schema: Dict[str, Any], path: str = "$") -> None:
+        """Fallback schema validator for environments where jsonschema import fails.
+
+        Supports the subset used by this repository:
+        - type, enum, minimum, maximum
+        - required, properties, patternProperties
+        - items, minItems, maxItems
+        """
+        expected_type = schema.get("type")
+        if expected_type is not None:
+            self._validate_type(value, expected_type, path)
+
+        if "enum" in schema and value not in schema["enum"]:
+            raise ValueError(f"{path} must be one of {schema['enum']}, got {value!r}")
+
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if "minimum" in schema and value < schema["minimum"]:
+                raise ValueError(f"{path} must be >= {schema['minimum']}, got {value}")
+            if "maximum" in schema and value > schema["maximum"]:
+                raise ValueError(f"{path} must be <= {schema['maximum']}, got {value}")
+
+        if isinstance(value, list):
+            min_items = schema.get("minItems")
+            max_items = schema.get("maxItems")
+            if min_items is not None and len(value) < int(min_items):
+                raise ValueError(f"{path} requires at least {min_items} items")
+            if max_items is not None and len(value) > int(max_items):
+                raise ValueError(f"{path} allows at most {max_items} items")
+            item_schema = schema.get("items")
+            if isinstance(item_schema, dict):
+                for idx, item in enumerate(value):
+                    self._validate_schema_subset(item, item_schema, f"{path}[{idx}]")
+
+        if isinstance(value, dict):
+            required = schema.get("required", [])
+            for key in required:
+                if key not in value:
+                    raise ValueError(f"{path}.{key} is required")
+
+            properties = schema.get("properties", {})
+            for key, child_schema in properties.items():
+                if key in value and isinstance(child_schema, dict):
+                    self._validate_schema_subset(value[key], child_schema, f"{path}.{key}")
+
+            pattern_properties = schema.get("patternProperties", {})
+            if pattern_properties:
+                for key, child_value in value.items():
+                    for pattern, child_schema in pattern_properties.items():
+                        if re.match(pattern, str(key)):
+                            self._validate_schema_subset(child_value, child_schema, f"{path}.{key}")
+
+    def _validate_type(self, value: Any, expected: Union[str, List[str]], path: str) -> None:
+        expected_list = [expected] if isinstance(expected, str) else list(expected)
+        match = False
+        for t in expected_list:
+            if t == "object" and isinstance(value, dict):
+                match = True
+            elif t == "array" and isinstance(value, list):
+                match = True
+            elif t == "string" and isinstance(value, str):
+                match = True
+            elif t == "boolean" and isinstance(value, bool):
+                match = True
+            elif t == "integer" and isinstance(value, int) and not isinstance(value, bool):
+                match = True
+            elif t == "number" and isinstance(value, (int, float)) and not isinstance(value, bool):
+                match = True
+            elif t == "null" and value is None:
+                match = True
+        if not match:
+            raise ValueError(f"{path} expected type {expected_list}, got {type(value).__name__}")
     
     def load_and_validate_file(
         self,

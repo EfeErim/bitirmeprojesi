@@ -95,7 +95,7 @@ class CropDataset(Dataset):
     Expected directory structure:
     data/
       {crop}/
-        phase1/
+        continual/
           {class1}/
           {class2}/
         val/
@@ -165,7 +165,7 @@ class CropDataset(Dataset):
         
         # Determine which subdirectory to use based on split
         if self.split == 'train':
-            base_dir = self.data_dir / self.crop / 'phase1'
+            base_dir = self.data_dir / self.crop / 'continual'
         elif self.split == 'val':
             base_dir = self.data_dir / self.crop / 'val'
         elif self.split == 'test':

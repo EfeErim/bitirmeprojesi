@@ -549,12 +549,12 @@ class TestIndependentMultiCropPipelineStatus:
             # Mock adapters
             mock_adapter1 = MagicMock()
             mock_adapter1.is_trained = True
-            mock_adapter1.current_phase = 1
+            mock_adapter1.engine = 'continual_sd_lora'
             mock_adapter1.class_to_idx = {'healthy': 0, 'disease1': 1}
             
             mock_adapter2 = MagicMock()
             mock_adapter2.is_trained = False
-            mock_adapter2.current_phase = None
+            mock_adapter2.engine = None
             mock_adapter2.class_to_idx = None
             
             pipeline.adapters['tomato'] = mock_adapter1
@@ -568,12 +568,12 @@ class TestIndependentMultiCropPipelineStatus:
         
         assert 'tomato' in status
         assert status['tomato']['is_trained'] is True
-        assert status['tomato']['current_phase'] == 1
+        assert status['tomato']['engine'] == 'continual_sd_lora'
         assert status['tomato']['num_classes'] == 2
         
         assert 'pepper' in status
         assert status['pepper']['is_trained'] is False
-        assert status['pepper']['current_phase'] is None
+        assert status['pepper']['engine'] is None
         assert status['pepper']['num_classes'] == 0
     
     def test_get_cache_stats(self, pipeline_for_status):

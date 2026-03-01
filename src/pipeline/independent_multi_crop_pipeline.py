@@ -37,7 +37,7 @@ class IndependentMultiCropPipeline:
         self.router = None
         self.router_analyzer = None  # DiagnosticScoutingAnalyzer for VLM
         self.adapters = {}  # crop_name -> IndependentCropAdapter
-        self.ood_buffers = {}  # Phase 2/3 triggering
+        self.ood_buffers = {}  # OOD calibration caches
         self.last_router_error: Optional[str] = None
         self.last_adapter_error: Dict[str, str] = {}
         
@@ -256,7 +256,18 @@ class IndependentMultiCropPipeline:
                     raise
                 # Normalize other router errors into pipeline result
                 msg = str(e)
-                return {'status': 'error', 'message': msg, 'crop': None, 'crop_confidence': 0.0, 'ood_analysis': {'is_ood': True, 'ood_score': 1.0, 'threshold': 1.0}}
+                return {
+                    'status': 'error',
+                    'message': msg,
+                    'crop': None,
+                    'crop_confidence': 0.0,
+                    'ood_analysis': {
+                        'is_ood': True,
+                        'ensemble_score': 1.0,
+                        'class_threshold': 1.0,
+                        'calibration_version': 0,
+                    },
+                }
             crop = router_result.get('crop')
             part = router_result.get('part')
         
@@ -275,21 +286,41 @@ class IndependentMultiCropPipeline:
                     'message': f"No adapter available for crop '{crop}'",
                     'diagnosis': None,
                     'confidence': 0.0,
-                    'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
+                    'ood_analysis': {
+                        'is_ood': False,
+                        'ensemble_score': 0.0,
+                        'class_threshold': 0.0,
+                        'calibration_version': 0,
+                    }
                 }
         else:
             # Handle unknown crop when router didn't select one
             adapter_result = self._handle_unknown_crop(image_tensor, crop, part)
         
+        default_ood = {
+            'is_ood': False,
+            'ensemble_score': 0.0,
+            'class_threshold': 0.0,
+            'calibration_version': 0,
+        }
+        ood_payload = adapter_result.get('ood_analysis', default_ood)
+        if not isinstance(ood_payload, dict):
+            ood_payload = dict(default_ood)
+
         # Combine results
         result = {
             'crop': crop,
             'part': part,
             'diagnosis': adapter_result.get('diagnosis'),
             'confidence': adapter_result.get('confidence'),
-            'ood_score': adapter_result.get('ood_score', adapter_result.get('ood_analysis', {}).get('ood_score', 0.0)),
+            'ood_score': adapter_result.get('ood_score', ood_payload.get('ensemble_score', 0.0)),
             'ood_status': adapter_result.get('ood_status', 'unknown'),
-            'ood_analysis': adapter_result.get('ood_analysis', {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}),
+            'ood_analysis': {
+                'is_ood': bool(ood_payload.get('is_ood', False)),
+                'ensemble_score': float(ood_payload.get('ensemble_score', 0.0)),
+                'class_threshold': float(ood_payload.get('class_threshold', 0.0)),
+                'calibration_version': int(ood_payload.get('calibration_version', 0)),
+            },
             'router_confidence': router_result.get('confidence', 0.0) if isinstance(router_result, dict) else (1.0 if crop is not None else 0.0),
             'crop_confidence': router_result.get('confidence', 0.0) if isinstance(router_result, dict) else 0.0,
             'cache_hit': False,
@@ -393,7 +424,15 @@ class IndependentMultiCropPipeline:
                     'crop': crop,
                     'confidence': conf,
                     'diagnosis': pred.get('disease'),
-                    'ood_analysis': pred.get('ood_analysis')
+                    'ood_analysis': pred.get(
+                        'ood_analysis',
+                        {
+                            'is_ood': False,
+                            'ensemble_score': 0.0,
+                            'class_threshold': 0.0,
+                            'calibration_version': 0,
+                        },
+                    ),
                 }
             else:
                 results.append({'status': 'error', 'message': 'No adapter available', 'crop': crop})
@@ -505,7 +544,12 @@ class IndependentMultiCropPipeline:
                 'message': f"No trained adapter for crop '{crop}'. VLM routing succeeded but disease classification is unavailable.",
                 'diagnosis': None,
                 'confidence': 0.0,
-                'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
+                'ood_analysis': {
+                    'is_ood': False,
+                    'ensemble_score': 0.0,
+                    'class_threshold': 0.0,
+                    'calibration_version': 0,
+                },
             }
         
         adapter_info = self.adapters[crop]
@@ -525,10 +569,29 @@ class IndependentMultiCropPipeline:
                     'status': pred.get('status', 'success'),
                     'diagnosis': pred.get('disease'),
                     'confidence': pred.get('disease', {}).get('confidence', 0.0) if isinstance(pred.get('disease'), dict) else 0.0,
-                    'ood_analysis': pred.get('ood_analysis', {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0})
+                    'ood_analysis': pred.get(
+                        'ood_analysis',
+                        {
+                            'is_ood': False,
+                            'ensemble_score': 0.0,
+                            'class_threshold': 0.0,
+                            'calibration_version': 0,
+                        },
+                    ),
                 }
             except Exception as e:
-                return {'status': 'error', 'message': str(e), 'diagnosis': None, 'confidence': 0.0, 'ood_analysis': {'is_ood': True, 'ood_score': 1.0, 'threshold': 1.0}}
+                return {
+                    'status': 'error',
+                    'message': str(e),
+                    'diagnosis': None,
+                    'confidence': 0.0,
+                    'ood_analysis': {
+                        'is_ood': True,
+                        'ensemble_score': 1.0,
+                        'class_threshold': 1.0,
+                        'calibration_version': 0,
+                    },
+                }
 
         # No predict_with_ood method available on adapter
         # This means the adapter is a placeholder dict, not a trained model
@@ -537,7 +600,12 @@ class IndependentMultiCropPipeline:
             'message': f"Adapter for crop '{crop}' is not yet trained.",
             'diagnosis': None,
             'confidence': 0.0,
-            'ood_analysis': {'is_ood': False, 'ood_score': 0.0, 'threshold': 0.0}
+            'ood_analysis': {
+                'is_ood': False,
+                'ensemble_score': 0.0,
+                'class_threshold': 0.0,
+                'calibration_version': 0,
+            },
         }
 
     def _handle_unknown_crop(
@@ -554,7 +622,13 @@ class IndependentMultiCropPipeline:
             },
             'confidence': 0.0,
             'ood_score': 1.0,
-            'ood_status': 'unknown_crop'
+            'ood_status': 'unknown_crop',
+            'ood_analysis': {
+                'is_ood': True,
+                'ensemble_score': 1.0,
+                'class_threshold': 1.0,
+                'calibration_version': 0,
+            },
         }
 
     def _perform_ood_detection(self, image_tensor: torch.Tensor, crop: Optional[str] = None) -> Tuple[float, str]:
@@ -570,7 +644,7 @@ class IndependentMultiCropPipeline:
             if hasattr(adapter, 'detect_ood_dynamic'):
                 try:
                     ood_result = adapter.detect_ood_dynamic(image_tensor)
-                    score = ood_result.get('ood_score', 0.0)
+                    score = ood_result.get('ensemble_score', ood_result.get('ood_score', 0.0))
                     status = 'ood' if ood_result.get('is_ood', False) else 'normal'
                     return float(score), status
                 except Exception as e:
@@ -638,14 +712,13 @@ class IndependentMultiCropPipeline:
         for c in self.crops:
             adapter = self.adapters.get(c)
             if adapter is None:
-                status[c] = {'is_trained': False, 'current_phase': None, 'num_classes': 0}
+                status[c] = {'is_trained': False, 'engine': None, 'num_classes': 0}
             else:
                 is_trained = getattr(adapter, 'is_trained', False)
-                current_phase = getattr(adapter, 'current_phase', None)
                 class_to_idx = getattr(adapter, 'class_to_idx', None) or {}
                 status[c] = {
                     'is_trained': is_trained,
-                    'current_phase': current_phase,
+                    'engine': getattr(adapter, 'engine', None),
                     'num_classes': len(class_to_idx)
                 }
         return status

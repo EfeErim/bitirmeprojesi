@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Simple Crop Router for AADS-ULoRA v5.5
-Lightweight crop classification using frozen DINOv2 backbone with trainable linear classifier.
-Target accuracy: ≥98%
+Simple Crop Router for AADS v6
+Lightweight crop classification using frozen DINOv3 backbone with trainable linear classifier.
+Target accuracy: >=98%
 """
 
 import torch
@@ -29,21 +29,21 @@ class SimpleCropRouter:
     Simple crop router for routing images to per-crop adapters.
     
     Architecture:
-    - Frozen DINOv2-giant backbone for feature extraction
+    - Frozen DINOv3-giant backbone for feature extraction
     - Trainable linear classifier on top
-    - Target: ≥98% crop classification accuracy
+    - Target: >=98% crop classification accuracy
     
-    This is the Layer 1 of the v5.5 independent multi-crop architecture.
+    This is the Layer 1 of the v6 continual architecture.
     Once trained, routes images to the appropriate per-crop adapter (Layer 2).
     """
     
-    def __init__(self, crops: List[str], model_name: str = 'facebook/dinov2-giant', device: str = 'cuda'):
+    def __init__(self, crops: List[str], model_name: str = 'facebook/dinov3-giant', device: str = 'cuda'):
         """
         Initialize simple crop router.
         
         Args:
             crops: List of crop names (e.g., ['tomato', 'pepper', 'corn'])
-            model_name: Hugging Face model id for DINOv2 backbone
+            model_name: Hugging Face model id for DINOv3 backbone
             device: Device to use ('cuda' or 'cpu')
         """
         self.crops = crops
@@ -54,7 +54,7 @@ class SimpleCropRouter:
         logger.info(f"Initializing SimpleCropRouter for {self.num_crops} crops: {crops}")
         logger.info(f"Device: {self.device}")
         
-        # Load frozen DINOv2-giant backbone
+        # Load frozen DINOv3-giant backbone
         logger.info(f"Loading backbone (frozen): {self.model_name}")
         try:
             self.backbone = AutoModel.from_pretrained(self.model_name)
@@ -102,12 +102,12 @@ class SimpleCropRouter:
             val_loader: Optional validation DataLoader
             
         Returns:
-            Best validation accuracy achieved (≥0.98 target)
+            Best validation accuracy achieved (>=0.98 target)
         """
         logger.info(f"\n{'='*60}")
         logger.info(f"Starting SimpleCropRouter Training")
         logger.info(f"Epochs: {epochs}, LR: {lr}")
-        logger.info(f"Target accuracy: ≥98%")
+        logger.info(f"Target accuracy: >=98%")
         logger.info(f"{'='*60}\n")
         
         # Optimizer - trains only classifier (backbone frozen)
@@ -130,7 +130,7 @@ class SimpleCropRouter:
                 
                 # Forward pass - extract features from frozen backbone
                 with torch.no_grad():
-                    # DINOv2 returns a model output with last_hidden_state
+                    # DINOv3 returns a model output with last_hidden_state
                     backbone_output = self.backbone(images)
                     if hasattr(backbone_output, 'last_hidden_state'):
                         features = backbone_output.last_hidden_state[:, 0]  # [CLS] token
@@ -337,3 +337,4 @@ class SimpleCropRouter:
             'best_accuracy': self.best_accuracy,
             'target_accuracy': 0.98
         }
+

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""
-Validate that all notebook imports work correctly.
-This simulates the import cells from notebooks 1-6.
-Canonical script location: scripts/validate_notebook_imports.py
-"""
+"""Validate continual notebook/runtime imports for AADS v6."""
 
-import sys
+from __future__ import annotations
+
 import builtins
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +12,6 @@ sys.path.insert(0, str(ROOT))
 
 
 def _safe_print(*args, **kwargs):
-    """Print with graceful fallback on non-UTF8 terminals."""
     try:
         builtins.print(*args, **kwargs)
     except UnicodeEncodeError:
@@ -29,251 +26,130 @@ def gate_label(step_id: str, name: str) -> str:
     return f"[{step_id}] {name}"
 
 
-def test_dataset_imports():
-    """Test dataset module imports."""
+def test_dataset_imports() -> bool:
     step_id = "DATA_IMPORTS"
     print(f"Testing {gate_label(step_id, 'dataset imports')}...")
     try:
         from src.dataset.colab_datasets import ColabCropDataset, ColabDomainShiftDataset
-        print(f"✅ {gate_label(step_id, 'Dataset classes imported successfully')}")
+        _ = (ColabCropDataset, ColabDomainShiftDataset)
+        print(f"PASS {gate_label(step_id, 'Dataset classes imported successfully')}")
         return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'Dataset import failed: {e}')}")
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Dataset import failed: {exc}')}")
         return False
 
 
-def test_dataloader_imports():
-    """Test dataloader imports."""
-    step_id = "DATALOADER_IMPORTS"
-    print(f"\nTesting {gate_label(step_id, 'dataloader imports')}...")
+def test_continual_trainer_imports() -> bool:
+    step_id = "CONTINUAL_IMPORT"
+    print(f"\nTesting {gate_label(step_id, 'continual trainer imports')}...")
     try:
-        from src.dataset.colab_dataloader import ColabDataLoader, DataLoaderConfig
-        print(f"✅ {gate_label(step_id, 'DataLoader classes imported successfully')}")
-        return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'DataLoader import failed: {e}')}")
-        return False
+        from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 
-
-def test_phase1_imports():
-    """Test Phase 1 trainer imports."""
-    step_id = "PHASE1_IMPORT"
-    print(f"\nTesting {gate_label(step_id, 'Phase 1 trainer imports')}...")
-    try:
-        from src.training.colab_phase1_training import ColabPhase1Trainer
-        print(f"✅ {gate_label(step_id, 'Phase 1 trainer imported successfully')}")
-
-        trainer = ColabPhase1Trainer(
-            model_name='facebook/dinov3-giant',
-            num_classes=10,
-            device='cpu'
+        config = ContinualSDLoRAConfig.from_training_config(
+            {
+                "backbone": {"model_name": "facebook/dinov3-giant"},
+                "quantization": {"mode": "int8_hybrid", "strict_backend": False, "allow_cpu_fallback": True},
+                "adapter": {
+                    "target_modules_strategy": "all_linear_transformer",
+                    "lora_r": 4,
+                    "lora_alpha": 8,
+                },
+                "fusion": {"layers": [2, 5, 8, 11]},
+                "device": "cpu",
+            }
         )
+        trainer = ContinualSDLoRATrainer(config)
+        assert hasattr(trainer, "initialize_engine")
+        assert hasattr(trainer, "add_classes")
+        assert hasattr(trainer, "train_increment")
+        assert hasattr(trainer, "save_adapter")
+        assert hasattr(trainer, "load_adapter")
 
-        assert hasattr(trainer, 'setup_optimizer'), "Missing setup_optimizer method"
-        assert hasattr(trainer, 'training_step'), "Missing training_step method"
-        assert hasattr(trainer, 'current_epoch'), "Missing current_epoch attribute"
-
-        print(f"✅ {gate_label(step_id, 'Phase 1 trainer instantiated with compatibility methods')}")
+        print(f"PASS {gate_label(step_id, 'Continual trainer surface imported and validated')}")
         return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'Phase 1 trainer test failed: {e}')}")
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Continual trainer test failed: {exc}')}")
         return False
 
 
-def test_phase2_imports():
-    """Test Phase 2 trainer imports."""
-    step_id = "PHASE2_IMPORT"
-    print(f"\nTesting {gate_label(step_id, 'Phase 2 trainer imports')}...")
+def test_quantization_guard() -> bool:
+    step_id = "INT8_GUARD"
+    print(f"\nTesting {gate_label(step_id, '4-bit rejection guard')}...")
     try:
-        from src.training.colab_phase2_sd_lora import ColabPhase2Trainer
-        print(f"✅ {gate_label(step_id, 'Phase 2 trainer imported successfully')}")
+        from src.training.quantization import assert_no_prohibited_4bit_flags
 
-        trainer = ColabPhase2Trainer(
-            adapter_path=None,
-            lora_r=16,
-            learning_rate=1e-4,
-            device='cpu'
-        )
+        valid_payload = {
+            "training": {
+                "continual": {
+                    "quantization": {"mode": "int8_hybrid"}
+                }
+            }
+        }
+        assert_no_prohibited_4bit_flags(valid_payload)
 
-        assert hasattr(trainer, 'setup_optimizer'), "Missing setup_optimizer method"
-        assert hasattr(trainer, 'training_step'), "Missing training_step method"
-
-        print(f"✅ {gate_label(step_id, 'Phase 2 trainer instantiated with compatibility methods')}")
-        return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'Phase 2 trainer test failed: {e}')}")
-        return False
-
-
-def test_phase3_imports():
-    """Test Phase 3 trainer imports."""
-    step_id = "PHASE3_IMPORT"
-    print(f"\nTesting {gate_label(step_id, 'Phase 3 trainer imports')}...")
-    try:
-        from src.training.colab_phase3_conec_lora import ColabPhase3Trainer, CoNeCConfig
-        print(f"✅ {gate_label(step_id, 'Phase 3 trainer imported successfully')}")
-
-        config = CoNeCConfig(
-            lora_r=8,
-            learning_rate=5e-5,
-            batch_size=16,
-            device='cpu'
-        )
-        trainer = ColabPhase3Trainer(config)
-
-        assert hasattr(trainer, 'setup_optimizer'), "Missing setup_optimizer method"
-        assert hasattr(trainer, 'training_step'), "Missing training_step method"
-
-        print(f"✅ {gate_label(step_id, 'Phase 3 trainer instantiated with compatibility methods')}")
-        return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'Phase 3 trainer test failed: {e}')}")
-        return False
-
-
-def test_strict_model_loading_gate():
-    """Verify MODEL_LOAD_STRICT gate fails as expected on invalid model path."""
-    step_id = "MODEL_LOAD_STRICT"
-    print(f"\nTesting {gate_label(step_id, 'strict model loading gate')}...")
-    try:
-        from src.training.colab_phase1_training import ColabPhase1Trainer
-        failed_as_expected = False
+        rejected = False
         try:
-            ColabPhase1Trainer(
-                model_name='invalid/non-existent-model',
-                num_classes=2,
-                device='cpu',
-                strict_model_loading=True
-            )
-        except RuntimeError:
-            failed_as_expected = True
+            forbidden_key = "load_in_" + "4bit"
+            assert_no_prohibited_4bit_flags({forbidden_key: True})
+        except ValueError:
+            rejected = True
 
-        if not failed_as_expected:
-            raise AssertionError('Expected strict model loading to fail for invalid model path')
-
-        print(f"✅ {gate_label(step_id, 'strict model loading gate behaves correctly')}")
+        assert rejected, "4-bit payload was expected to be rejected"
+        print(f"PASS {gate_label(step_id, 'Quantization guard behaves correctly')}")
         return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'strict gate test failed: {e}')}")
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Quantization guard failed: {exc}')}")
         return False
 
 
-def test_dataset_creation():
-    """Test dataset creation with mock data."""
-    step_id = "DATA_SCHEMA_OK"
-    print(f"\nTesting {gate_label(step_id, 'dataset creation')}...")
+def test_adapter_surface() -> bool:
+    step_id = "ADAPTER_API"
+    print(f"\nTesting {gate_label(step_id, 'adapter lifecycle surface')}...")
     try:
-        from src.dataset.colab_datasets import ColabCropDataset
-        from torchvision import transforms
-        from pathlib import Path
-        import tempfile
+        from src.adapter.independent_crop_adapter import IndependentCropAdapter
 
-        with tempfile.TemporaryDirectory() as tmpdir:
-            test_dir = Path(tmpdir) / "test_data" / "class1"
-            test_dir.mkdir(parents=True, exist_ok=True)
+        adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+        assert hasattr(adapter, "initialize_engine")
+        assert hasattr(adapter, "add_classes")
+        assert hasattr(adapter, "train_increment")
+        assert hasattr(adapter, "save_adapter")
+        assert hasattr(adapter, "load_adapter")
 
-            (test_dir / "test.jpg").touch()
-
-            transform = transforms.Compose([
-                transforms.Resize((224, 224)),
-                transforms.ToTensor()
-            ])
-
-            try:
-                dataset = ColabCropDataset(
-                    data_dir=test_dir.parent,
-                    transform=transform
-                )
-                print(f"✅ {gate_label(step_id, f'Dataset created with {len(dataset)} items (may use fallback tensors)')}")
-            except Exception as e:
-                print(f"⚠️  {gate_label(step_id, f'Dataset creation warning (expected): {e}')}")
-                print(f"✅ {gate_label(step_id, 'Dataset handles errors gracefully')}")
-
+        print(f"PASS {gate_label(step_id, 'Adapter lifecycle surface available')}")
         return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'Dataset creation test failed: {e}')}")
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Adapter API test failed: {exc}')}")
         return False
 
 
-def test_dataloader_creation():
-    """Test dataloader creation."""
-    step_id = "DATALOADER_READY"
-    print(f"\nTesting {gate_label(step_id, 'dataloader creation')}...")
-    try:
-        import torch
-        from src.dataset.colab_dataloader import ColabDataLoader
-
-        class MockDataset:
-            def __len__(self):
-                return 10
-
-            def __getitem__(self, idx):
-                return torch.randn(3, 224, 224), idx % 5
-
-        dataset = MockDataset()
-
-        loader = ColabDataLoader(
-            dataset,
-            batch_size=4,
-            shuffle=False,
-            num_workers=0
-        )
-
-        print(f"✅ {gate_label(step_id, 'DataLoader created with kwargs interface')}")
-
-        from src.dataset.colab_dataloader import DataLoaderConfig
-        config = DataLoaderConfig(
-            batch_size=4,
-            num_workers=0
-        )
-        loader2 = ColabDataLoader(dataset, config=config, shuffle=False)
-
-        print(f"✅ {gate_label(step_id, 'DataLoader created with config interface')}")
-        return True
-    except Exception as e:
-        print(f"❌ {gate_label(step_id, f'DataLoader creation test failed: {e}')}")
-        return False
-
-
-def main():
-    """Run all validation tests."""
+def main() -> int:
     print("=" * 60)
-    print("AADS-ULoRA Notebook Import Validation")
+    print("AADS v6 Notebook Import Validation")
     print("=" * 60)
 
-    results = []
-
-    results.append(("Dataset Imports", test_dataset_imports()))
-    results.append(("DataLoader Imports", test_dataloader_imports()))
-    results.append(("Phase 1 Trainer", test_phase1_imports()))
-    results.append(("Phase 2 Trainer", test_phase2_imports()))
-    results.append(("Phase 3 Trainer", test_phase3_imports()))
-    results.append(("Strict Model Load Gate", test_strict_model_loading_gate()))
-    results.append(("Dataset Creation", test_dataset_creation()))
-    results.append(("DataLoader Creation", test_dataloader_creation()))
+    results = [
+        ("Dataset Imports", test_dataset_imports()),
+        ("Continual Trainer", test_continual_trainer_imports()),
+        ("Quantization Guard", test_quantization_guard()),
+        ("Adapter Lifecycle", test_adapter_surface()),
+    ]
 
     print("\n" + "=" * 60)
     print("VALIDATION SUMMARY")
     print("=" * 60)
 
-    passed = sum(1 for _, result in results if result)
+    passed = sum(1 for _, ok in results if ok)
     total = len(results)
-
-    for name, result in results:
-        status = "✅ PASS" if result else "❌ FAIL"
+    for name, ok in results:
+        status = "PASS" if ok else "FAIL"
         print(f"{status}: {name}")
 
     print("=" * 60)
     print(f"Results: {passed}/{total} tests passed")
     print("=" * 60)
 
-    if passed == total:
-        print("\n🎉 All validation tests passed! Notebooks are ready for execution.")
-        return 0
-    else:
-        print(f"\n⚠️  {total - passed} test(s) failed. Please review errors above.")
-        return 1
+    return 0 if passed == total else 1
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

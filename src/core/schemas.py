@@ -449,3 +449,81 @@ def security_schema() -> Dict[str, Any]:
         },
         "required": ["security"]
     }
+
+
+def training_continual_schema() -> Dict[str, Any]:
+    """Schema for v6 continual training configuration."""
+    return {
+        "title": "Continual Training Configuration Schema",
+        "type": "object",
+        "properties": {
+            "training": {
+                "type": "object",
+                "properties": {
+                    "continual": {
+                        "type": "object",
+                        "properties": {
+                            "backbone": {
+                                "type": "object",
+                                "properties": {
+                                    "model_name": {"type": "string"},
+                                },
+                                "required": ["model_name"],
+                            },
+                            "quantization": {
+                                "type": "object",
+                                "properties": {
+                                    "mode": {"type": "string", "enum": ["int8_hybrid"]},
+                                    "strict_backend": {"type": "boolean"},
+                                    "allow_cpu_fallback": {"type": "boolean"},
+                                },
+                                "required": ["mode"],
+                            },
+                            "adapter": {
+                                "type": "object",
+                                "properties": {
+                                    "target_modules_strategy": {
+                                        "type": "string",
+                                        "enum": ["all_linear_transformer"],
+                                    },
+                                    "lora_r": {"type": "integer", "minimum": 1},
+                                    "lora_alpha": {"type": "integer", "minimum": 1},
+                                    "lora_dropout": {"type": "number", "minimum": 0, "maximum": 1},
+                                },
+                                "required": ["target_modules_strategy"],
+                            },
+                            "fusion": {
+                                "type": "object",
+                                "properties": {
+                                    "layers": {
+                                        "type": "array",
+                                        "items": {"type": "integer", "minimum": 0},
+                                        "minItems": 1,
+                                    },
+                                    "output_dim": {"type": "integer", "minimum": 1},
+                                    "dropout": {"type": "number", "minimum": 0, "maximum": 1},
+                                    "gating": {"type": "string"},
+                                },
+                                "required": ["layers"],
+                            },
+                            "ood": {
+                                "type": "object",
+                                "properties": {
+                                    "threshold_factor": {"type": "number", "minimum": 0},
+                                },
+                            },
+                            "learning_rate": {"type": "number", "minimum": 0},
+                            "weight_decay": {"type": "number", "minimum": 0},
+                            "num_epochs": {"type": "integer", "minimum": 1},
+                            "batch_size": {"type": "integer", "minimum": 1},
+                            "device": {"type": "string"},
+                            "strict_model_loading": {"type": "boolean"},
+                        },
+                        "required": ["backbone", "quantization", "adapter", "fusion"],
+                    }
+                },
+                "required": ["continual"],
+            }
+        },
+        "required": ["training"],
+    }

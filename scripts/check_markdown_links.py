@@ -15,6 +15,7 @@ DEFAULT_EXCLUDES = {
     ".git",
     ".venv",
     "venv",
+    "archive",
     "node_modules",
     "site-packages",
     "__pycache__",
