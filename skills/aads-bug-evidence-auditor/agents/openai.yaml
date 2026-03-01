@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Bug Evidence Auditor"
+  short_description: "Fact-only bug audits with concrete evidence"
+  default_prompt: "Use $aads-bug-evidence-auditor to audit this codebase for defects and risks using concrete evidence only."
