@@ -1,43 +1,23 @@
 #!/usr/bin/env python3
-"""
-Simple test script to verify imports work correctly."""
+"""Import smoke tests for active v6 module paths."""
 
-import sys
-import os
+from __future__ import annotations
 
-# Add project root to path (go up two levels from test file)
-test_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(test_dir))
-sys.path.insert(0, project_root)
+import importlib
 
-print("Testing imports...")
+import pytest
 
-# Test imports
-try:
-    from aads_ulora_v55.utils.data_loader import CropDataset
-    print("[OK] aads_ulora_v55.utils.data_loader imported successfully")
-except Exception as e:
-    print(f"[ERROR] aads_ulora_v55.utils.data_loader import failed: {e}")
 
-# Test imports
-try:
-    from aads_ulora_v55.router.vlm_pipeline import VLMPipeline
-    print("[OK] aads_ulora_v55.router.vlm_pipeline imported successfully")
-except Exception as e:
-    print(f"[ERROR] aads_ulora_v55.router.vlm_pipeline import failed: {e}")
-
-# Test imports
-try:
-    from aads_ulora_v55.pipeline.independent_multi_crop_pipeline import IndependentMultiCropPipeline
-    print("[OK] aads_ulora_v55.pipeline.independent_multi_crop_pipeline imported successfully")
-except Exception as e:
-    print(f"[ERROR] aads_ulora_v55.pipeline.independent_multi_crop_pipeline import failed: {e}")
-
-# Test imports
-try:
-    from aads_ulora_v55.ood.prototypes import PrototypeComputer
-    print("[OK] aads_ulora_v55.ood.prototypes imported successfully")
-except Exception as e:
-    print(f"[ERROR] aads_ulora_v55.ood.prototypes import failed: {e}")
-
-print("Import test completed")
+@pytest.mark.parametrize(
+    "module_name,symbol_name",
+    [
+        ("src.utils.data_loader", "CropDataset"),
+        ("src.router.vlm_pipeline", "VLMPipeline"),
+        ("src.pipeline.independent_multi_crop_pipeline", "IndependentMultiCropPipeline"),
+        ("src.ood.prototypes", "PrototypeComputer"),
+    ],
+)
+def test_v6_symbol_imports(module_name: str, symbol_name: str) -> None:
+    """Validate core v6 symbols are importable from active package paths."""
+    module = importlib.import_module(module_name)
+    assert hasattr(module, symbol_name), f"{symbol_name} not found in {module_name}"
