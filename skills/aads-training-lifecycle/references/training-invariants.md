@@ -52,6 +52,6 @@ pytest tests/integration/test_full_pipeline.py -v --runintegration
 
 ## Related Status Docs
 
-- `docs/reports/v55/V55_FINAL_STATUS_REPORT.md`
+- `docs/archive/v5_legacy/reports/v55/V55_FINAL_STATUS_REPORT.md`
 - `docs/reports/v55/V55_CRITICAL_FIXES_SUMMARY.md`
 - `docs/reports/v55/V55_SPECIFICATION_AUDIT.md`

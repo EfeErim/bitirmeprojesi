@@ -15,7 +15,7 @@ description: Triage AADS-ULoRA requests by capturing repository state, mapping i
 2. Capture system state from canonical sources.
 - Read `README.md`.
 - Read `docs/REPO_FILE_RELATIONS.md`.
-- Read `docs/reports/v55/V55_FINAL_STATUS_REPORT.md`.
+- Read `docs/archive/v5_legacy/reports/v55/V55_FINAL_STATUS_REPORT.md`.
 - Read `scripts/README.md`.
 - Read `.github/workflows/ci.yml`.
 
