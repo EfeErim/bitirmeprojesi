@@ -128,7 +128,7 @@ Training and inference engine for AADS-ULoRA. Version 5.5.0. Last updated: Febru
 2. **Configure Training (Interactive UI)**
    - The first cell will display an interactive configuration interface:
      - Select crops (tomato, potato, wheat, custom)
-     - Set dataset path on Google Drive
+     - Set class-root dataset path on Google Drive (<root>/<class_name>/<images>)
      - Choose training parameters (batch size, learning rate, epochs)
      - Select which phases to train
      - Enable/disable validation
@@ -191,7 +191,7 @@ See [Checkpoint System Guide](docs/guides/CHECKPOINT_SYSTEM_GUIDE.md) for detail
 
 Before training starts, the notebook displays an interactive UI where you can:
 - **🌾 Select Crops** - Choose from tomato, potato, wheat, or provide custom crop names
-- **📂 Dataset Path** - Specify the Google Drive path to your PlantVillage dataset
+- **📂 Dataset Path** - Specify the Google Drive class-root dataset path (<root>/<class_name>/<images>). The notebook auto-creates train/val/test splits (80/10/10).
 - **⚙️ Training Parameters** - Set batch size (8-128), learning rate (1e-6 to 1e-2), epochs per phase (1-10)
 - **🔀 Phase Selection** - Run only the phases you need (Phase 1, 2, 3 independently or together)
 - **🖥️ Advanced Options** - Enable mixed precision, validation, device selection, checkpoint resume, etc.

@@ -34,10 +34,16 @@ This manual provides detailed instructions for training the AADS-ULoRA system on
 
 ### Step 2: Data Preparation
 
-1. Open `1_data_preparation.ipynb`
-2. Mount Google Drive
-3. Download and preprocess datasets
-4. Verify data integrity
+For `0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`, the dataset path must use **class-root layout**:
+
+```text
+<dataset_root>/
+  <class_name_1>/
+  <class_name_2>/
+  ...
+```
+
+The notebook automatically creates `/content/aads_ulora/data/plantvillage/{train,val,test}` with an 80/10/10 split.
 
 ### Step 3: Training
 

@@ -16,6 +16,7 @@ This folder contains operational scripts used for setup, testing, and policy che
 | Validate notebook-related imports only | `validate_notebook_imports.py` | Fast import compatibility check |
 | Run policy/profile regression | `run_policy_regression_bundle.py` | Router/policy changes |
 | Check markdown links | `check_markdown_links.py --root .` | Docs updates |
+| Validate class-root dataset layout for autotrain | `evaluate_dataset_layout.py --root <path>` | Before running the one-click Colab notebook |
 | Benchmark phase5 router | `benchmark_router_phase5.py` | Performance baseline updates |
 | Enforce phase5 performance guardrails | `check_phase5_perf_regression.py` | Benchmark regression gate |
 
