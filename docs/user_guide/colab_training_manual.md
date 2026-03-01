@@ -391,7 +391,7 @@ LoRA adapter application includes graceful degradation:
 **Verify data paths:**
 ```python
 import os
-print(os.listdir('/content/drive/MyDrive/aads_ulora/data'))
+print(os.listdir('/content/aads_ulora/data'))
 ```
 
 **Check class balance:**
@@ -549,11 +549,11 @@ For issues:
 ### File Structure
 
 ```
-/content/drive/MyDrive/aads_ulora/
+/content/aads_ulora/
 ├── config/
 │   └── colab.json
 ├── data/
-│   └── plantvillage/
+│   └── plantvillage/   # Auto-generated from class-root source dataset
 │       ├── train/
 │       ├── val/
 │       └── test/
@@ -598,7 +598,7 @@ torch.cuda.empty_cache()
 
 ```python
 import os
-os.environ['AADS_WORKSPACE'] = '/content/drive/MyDrive/aads_ulora'
+os.environ['AADS_WORKSPACE'] = '/content/aads_ulora'
 os.environ['CUDA_LAUNCH_BLOCKING'] = '1'  # For debugging
 ```
 

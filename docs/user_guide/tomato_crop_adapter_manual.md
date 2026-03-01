@@ -490,11 +490,15 @@ export AADS_OOD_ENABLED=true
 
 ```python
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
-from src.dataset.colab_datasets import TomatoDataset
+from src.dataset.colab_datasets import ColabCropDataset
+from torchvision import transforms
 from src.training.colab_phase1_training import ColabPhase1Trainer
 
-# Initialize dataset
-dataset = TomatoDataset(root_dir='data/tomato', split='train')
+# Initialize dataset (ImageFolder layout expected: data/tomato/train/<class_name>/*.jpg)
+dataset = ColabCropDataset(
+    data_dir='data/tomato/train',
+    transform=transforms.ToTensor()
+)
 
 # Initialize adapter
 adapter = IndependentCropAdapter(crop_name='tomato', device='cuda')

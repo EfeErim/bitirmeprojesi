@@ -252,13 +252,13 @@ The GitHub Actions CI workflow also runs this policy regression bundle on every 
 
 ## 💾 Output Files
 
-After training completes (Colab):
+After training completes (Colab one-click workspace):
 
 ```
-Google Drive/aads_ulora/
+/content/aads_ulora/
 ├── data/
 │   ├── dataset_metadata.json           # Dataset normalization, augmentation, class counts
-│   └── plantvillage/                   # Training/val/test splits
+│   └── plantvillage/                   # Auto-generated train/val/test splits (from class-root source)
 ├── models/
 │   ├── phase1_dora_adapter/
 │   │   ├── adapter/                    # PEFT LoRA weights

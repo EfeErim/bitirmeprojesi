@@ -268,7 +268,10 @@ class ColabPhase2Trainer(ColabSDLoRATrainer):
 
         # Mixed precision training
         self.use_amp = torch.cuda.is_available() and torch.backends.cuda.is_built()
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
+        if hasattr(torch, "amp") and hasattr(torch.amp, "GradScaler"):
+            self.scaler = torch.amp.GradScaler("cuda", enabled=self.use_amp)
+        else:
+            self.scaler = torch.cuda.amp.GradScaler(enabled=self.use_amp)
 
         # Gradient accumulation counter
         self.current_step = 0
