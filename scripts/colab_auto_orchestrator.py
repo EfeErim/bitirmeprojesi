@@ -4,17 +4,24 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Iterable, Optional
+
+LOG_FILE_PATH = Path(tempfile.gettempdir()) / 'aads_orchestrator.log'
+LOG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+MAX_OUTPUT_LINES_PER_STAGE = int(os.environ.get('AADS_ORCH_MAX_OUTPUT_LINES', '600'))
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - [%(levelname)s] - %(message)s",
-    handlers=[logging.FileHandler('/tmp/aads_orchestrator.log'), logging.StreamHandler()],
+    handlers=[logging.FileHandler(LOG_FILE_PATH, encoding='utf-8'), logging.StreamHandler(sys.stdout)],
+    force=True,
 )
 logger = logging.getLogger(__name__)
 
@@ -27,6 +34,75 @@ class CoLabOrchestrator:
         self.start_time = datetime.now()
         self.stage_times: Dict[str, float] = {}
         logger.info("AADS v6 Auto-Orchestrator initialized at %s", self.repo_path)
+        logger.info("Orchestrator log file: %s", LOG_FILE_PATH)
+
+    @staticmethod
+    def _normalize_output_text(raw: object) -> str:
+        if isinstance(raw, list):
+            return ''.join(str(part) for part in raw)
+        if raw is None:
+            return ''
+        return str(raw)
+
+    def _iter_output_lines(self, output: dict) -> Iterable[str]:
+        output_type = output.get('output_type')
+        if output_type == 'stream':
+            text = self._normalize_output_text(output.get('text'))
+            for line in text.splitlines():
+                yield line
+            return
+
+        if output_type == 'error':
+            traceback = output.get('traceback')
+            if isinstance(traceback, list) and traceback:
+                for line in traceback:
+                    yield str(line)
+            else:
+                ename = output.get('ename', 'Error')
+                evalue = output.get('evalue', '')
+                yield f"{ename}: {evalue}".strip()
+            return
+
+        if output_type in {'execute_result', 'display_data'}:
+            data = output.get('data', {})
+            if isinstance(data, dict):
+                text = data.get('text/plain') or data.get('text/markdown')
+                for line in self._normalize_output_text(text).splitlines():
+                    yield line
+
+    def _log_notebook_outputs(self, notebook, stage_name: str) -> None:
+        lines_remaining = MAX_OUTPUT_LINES_PER_STAGE
+        emitted_any = False
+
+        for cell_idx, cell in enumerate(notebook.get('cells', []), start=1):
+            if cell.get('cell_type') != 'code':
+                continue
+            outputs = cell.get('outputs') or []
+            if not outputs:
+                continue
+
+            source = self._normalize_output_text(cell.get('source')).strip()
+            headline = source.splitlines()[0] if source else '<empty code cell>'
+            logger.info("[%s][Cell %d] %s", stage_name, cell_idx, headline[:120])
+            emitted_any = True
+
+            for output in outputs:
+                for line in self._iter_output_lines(output):
+                    cleaned = line.rstrip()
+                    if not cleaned:
+                        continue
+                    logger.info("[%s][Cell %d] %s", stage_name, cell_idx, cleaned)
+                    lines_remaining -= 1
+                    if lines_remaining <= 0:
+                        logger.warning(
+                            "[%s] Output truncated after %d lines. Increase AADS_ORCH_MAX_OUTPUT_LINES to see more.",
+                            stage_name,
+                            MAX_OUTPUT_LINES_PER_STAGE,
+                        )
+                        return
+
+        if not emitted_any:
+            logger.info("[%s] No notebook cell outputs captured.", stage_name)
 
     def setup_environment(self) -> bool:
         logger.info("\n%s", "=" * 60)
@@ -54,19 +130,22 @@ class CoLabOrchestrator:
 
     def run_notebook(self, notebook_path: Path, stage_name: str, timeout: int = 3600) -> bool:
         logger.info("\nExecuting %s...", stage_name)
+        logger.info("Notebook: %s | Timeout: %ss", notebook_path, timeout)
         if not notebook_path.exists():
             logger.warning("Notebook not found: %s", notebook_path)
             return False
 
         start = time.time()
+        notebook = None
         try:
             try:
                 import nbformat
                 from nbconvert.preprocessors import ExecutePreprocessor
 
-                nb = nbformat.read(str(notebook_path), as_version=4)
+                notebook = nbformat.read(str(notebook_path), as_version=4)
                 ep = ExecutePreprocessor(timeout=timeout, kernel_name='python3')
-                ep.preprocess(nb, {'metadata': {'path': str(notebook_path.parent)}})
+                ep.preprocess(notebook, {'metadata': {'path': str(notebook_path.parent)}})
+                self._log_notebook_outputs(notebook, stage_name)
             except ImportError:
                 subprocess.run(['papermill', str(notebook_path), '/tmp/output.ipynb'], timeout=timeout, check=True)
 
@@ -75,7 +154,9 @@ class CoLabOrchestrator:
             logger.info("%s completed in %.1f minutes", stage_name, elapsed)
             return True
         except Exception as exc:
-            logger.error("%s failed: %s", stage_name, exc)
+            if notebook is not None:
+                self._log_notebook_outputs(notebook, stage_name)
+            logger.exception("%s failed: %s", stage_name, exc)
             return False
 
     def run_pipeline(self) -> bool:
