@@ -6,7 +6,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 import torch
 
@@ -128,11 +128,16 @@ class IndependentCropAdapter:
         train_loader: Iterable[Dict[str, torch.Tensor]],
         *,
         num_epochs: Optional[int] = None,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
     ) -> Dict[str, Any]:
         """Run continual increment training."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before train_increment().")
-        history = self._trainer.train_increment(train_loader, num_epochs=num_epochs)
+        history = self._trainer.train_increment(
+            train_loader,
+            num_epochs=num_epochs,
+            progress_callback=progress_callback,
+        )
         self.is_trained = True
         return {
             "status": "trained",

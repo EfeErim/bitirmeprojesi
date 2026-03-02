@@ -12,8 +12,9 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
 
 ## Canonical Entrypoints
 
-- Colab one-click: `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
-- Continual training notebook: `colab_notebooks/2_continual_sd_lora_training.ipynb`
+- Colab Notebook 1 (router pipeline): `colab_notebooks/1_crop_router_pipeline.ipynb`
+- Colab Notebook 2 (interactive adapter training): `colab_notebooks/2_interactive_adapter_training.ipynb`
+- Superseded notebook archive: `colab_notebooks/archive/v6_superseded_2026-03-02/`
 - Local validation: `python scripts/validate_notebook_imports.py`
 
 ## Colab Bootstrap Behavior

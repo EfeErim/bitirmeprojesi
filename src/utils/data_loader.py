@@ -5,7 +5,7 @@ Provides dataset classes for crop images, domain shift data, and preprocessing.
 """
 
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union
 from collections import OrderedDict
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -510,6 +510,56 @@ def create_data_loaders(
             pin_memory=True
         )
     
+    return loaders
+
+
+def dict_collate_fn(batch: List[Tuple[torch.Tensor, int]]) -> Dict[str, torch.Tensor]:
+    """Collate `(image, label)` tuples into trainer-compatible dict batches."""
+    if not batch:
+        return {
+            'images': torch.empty(0),
+            'labels': torch.empty(0, dtype=torch.long),
+        }
+
+    images, labels = zip(*batch)
+    return {
+        'images': torch.stack(list(images), dim=0),
+        'labels': torch.tensor(labels, dtype=torch.long),
+    }
+
+
+def create_training_loaders(
+    data_dir: str,
+    crop: str,
+    batch_size: int = 32,
+    num_workers: int = 4,
+    use_cache: bool = True,
+    cache_size: int = 1000,
+    **dataloader_kwargs: Any,
+) -> Dict[str, DataLoader]:
+    """Create train/val/test loaders that emit `{'images', 'labels'}` batches."""
+    loaders: Dict[str, DataLoader] = {}
+
+    for split in ['train', 'val', 'test']:
+        dataset = CropDataset(
+            data_dir=data_dir,
+            crop=crop,
+            split=split,
+            transform=(split == 'train'),
+            use_cache=use_cache,
+            cache_size=cache_size
+        )
+
+        loaders[split] = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=(split == 'train'),
+            num_workers=num_workers,
+            pin_memory=True,
+            collate_fn=dict_collate_fn,
+            **dataloader_kwargs,
+        )
+
     return loaders
 
 if __name__ == "__main__":

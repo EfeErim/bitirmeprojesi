@@ -23,7 +23,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
    - Required keys: `schema_version`, `engine`, `backbone`, `quantization`, `fusion`, `class_to_idx`, `ood_calibration`, `target_modules_resolved`.
    - Remove phase-indexed fields (`current_phase`, phase-specific retention fields).
 5. Notebook/script entrypoints move to continual naming:
-   - New: `2_continual_sd_lora_training.ipynb`
+   - Historical note: prior v6 Colab notebooks are now archived under `colab_notebooks/archive/v6_superseded_2026-03-02/`.
    - Remove runtime dependency on `2_phase1_training.ipynb` and `4_phase3_training.ipynb`.
 
 ## Implementation Plan With Subtasks
@@ -75,9 +75,9 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 3. `G3` Keep VLMPipeline routing logic intact unless required by interface break; only adjust integration contracts.
 
 ### Phase H: Notebook and Script Migration
-1. `H1` Update `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` from 3-phase orchestration to continual stages:
+1. `H1` Historical task (superseded): update archived `0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` flow assumptions to continual stages:
    - Data prep -> Continual training -> Validation -> Monitoring.
-2. `H2` Add/replace training notebook with `2_continual_sd_lora_training.ipynb`.
+2. `H2` Historical task (superseded): add/replace training notebook with `2_continual_sd_lora_training.ipynb`.
 3. `H3` Update `scripts/colab_auto_orchestrator.py` stage names, notebook paths, checkpoint keys, and logs.
 4. `H4` Remove runtime logic that toggles phase1/phase2/phase3 independently.
 

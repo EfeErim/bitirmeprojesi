@@ -5,18 +5,17 @@ This folder contains operational scripts used for setup, testing, and policy che
 ## Canonical Usage Policy
 
 - Prefer calling scripts through `scripts/...` paths in all user docs.
-- Root-level script names (for example `validate_notebook_imports.py`) are compatibility aliases and remain for legacy workflows.
 
 ## Script Intent Matrix
 
 | User Goal | Preferred Script | When to Use |
 |---|---|---|
-| Run modular test subsets with suite-level status | `run_test_suites.py` | Day-to-day local testing and targeted debugging |
-| Verify core local Python sanity | `run_python_sanity_bundle.py` | Before local changes/PRs |
-| Validate notebook-related imports only | `validate_notebook_imports.py` | Fast import compatibility check |
-| Run policy/profile regression | `run_policy_regression_bundle.py` | Router/policy changes |
+| Run modular test subsets with suite-level status | `scripts/run_test_suites.py` | Day-to-day local testing and targeted debugging |
+| Verify core local Python sanity | `scripts/run_python_sanity_bundle.py` | Before local changes/PRs |
+| Validate notebook-related imports only | `scripts/validate_notebook_imports.py` | Fast import compatibility check |
+| Run policy/profile regression | `scripts/run_policy_regression_bundle.py` | Router/policy changes |
 | Check markdown links | `check_markdown_links.py --root .` | Docs updates |
-| Validate class-root dataset layout for autotrain | `evaluate_dataset_layout.py --root <path>` | Before running the one-click Colab notebook |
+| Validate class-root dataset layout for training notebook | `evaluate_dataset_layout.py --root <path>` | Before running `2_interactive_adapter_training.ipynb` |
 | Benchmark phase5 router | `benchmark_router_phase5.py` | Performance baseline updates |
 | Enforce phase5 performance guardrails | `check_phase5_perf_regression.py` | Benchmark regression gate |
 
@@ -25,7 +24,7 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `install_colab.py` - installs Colab prerequisites.
 - `colab_setup_dependencies.py` - dependency setup for Colab runtime.
 - `colab_quick_setup.py` - quick environment setup path.
-- `colab_auto_orchestrator.py` - automation helper for one-click flows.
+- `colab_auto_orchestrator.py` - automation helper for multi-stage Colab runs.
 - `download_data_colab.py` - dataset download utilities for Colab.
 
 Notebook bootstrap behavior in `colab_notebooks/`:
@@ -60,7 +59,7 @@ For new docs and user instructions, prefer the **Primary** surfaces above.
 - `run_policy_regression_bundle.py` - main policy/stage-order regression bundle (used in CI).
 - `run_test_suites.py` - modular pytest runner with named suites (`quick`, `unit`, `colab`, `integration`, `all`) and per-suite pass/fail summary.
 - `profile_policy_sanity.py` - profile and policy sanity validation.
-- `run_python_sanity_bundle.py` - consolidated local Python sanity checks (`validate_notebook_imports.py`, dynamic taxonomy, final pipeline check).
+- `run_python_sanity_bundle.py` - consolidated local Python sanity checks (`scripts/validate_notebook_imports.py`, dynamic taxonomy, final pipeline check).
 
 ## Diagnostics & Utilities
 
@@ -73,7 +72,9 @@ For new docs and user instructions, prefer the **Primary** surfaces above.
 
 ## Recommended Usage
 
-- Full training: prefer `../colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`.
+- Router/inference notebook: `../colab_notebooks/1_crop_router_pipeline.ipynb`.
+- Interactive training notebook: `../colab_notebooks/2_interactive_adapter_training.ipynb`.
+- Superseded v6 archive: `../colab_notebooks/archive/v6_superseded_2026-03-02/`.
 - Fast modular local tests: run `python scripts/run_test_suites.py` (defaults to `quick` suite group).
 - Full modular test matrix: run `python scripts/run_test_suites.py --suite all`.
 - Policy regression testing: run `python scripts/run_policy_regression_bundle.py`.

@@ -2,16 +2,30 @@
 
 ## Recommended Path
 
-- Use `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` for one-click continual flow.
+- Run `colab_notebooks/1_crop_router_pipeline.ipynb` for image upload + VLM routing.
+- Run `colab_notebooks/2_interactive_adapter_training.ipynb` for parameterized continual adapter training.
+- Use `colab_notebooks/README.md` for status and archive references.
 
-## Manual Stage Path
+## Active Two-Notebook Flow
 
-Run notebooks in order when you need per-stage control:
+1. Open `1_crop_router_pipeline.ipynb`.
+2. Upload image(s), choose runtime profile, and validate router detections.
+3. Open `2_interactive_adapter_training.ipynb`.
+4. Validate dataset path, initialize training engine, run training with live progress.
+5. Calibrate OOD and save adapter outputs.
 
-1. `1_data_preparation.ipynb`
-2. `2_continual_sd_lora_training.ipynb`
-3. `5_testing_validation.ipynb`
-4. `6_performance_monitoring.ipynb`
+## Superseded Notebook Set
+
+The previous manual stage notebooks are archived/superseded:
+
+1. `0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb`
+2. `1_data_preparation.ipynb`
+3. `2_continual_sd_lora_training.ipynb`
+4. `5_testing_validation.ipynb`
+5. `6_performance_monitoring.ipynb`
+6. `colab_bootstrap.ipynb`
+
+Archive location: `colab_notebooks/archive/v6_superseded_2026-03-02/`
 
 ## Repository Root Resolution
 

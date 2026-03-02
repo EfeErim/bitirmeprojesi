@@ -1,6 +1,11 @@
 # Seamless Auto-Train Guide (v6)
 
-Use `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` for the canonical continual run.
+Use the active two-notebook Colab flow:
+
+- `colab_notebooks/1_crop_router_pipeline.ipynb`
+- `colab_notebooks/2_interactive_adapter_training.ipynb`
+
+Superseded v6 notebook flow remains archived under `colab_notebooks/archive/v6_superseded_2026-03-02/`.
 
 ## Bootstrap Compatibility
 

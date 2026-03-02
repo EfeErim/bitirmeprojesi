@@ -40,7 +40,10 @@ class FakeTrainer:
                 self.class_to_idx[name] = len(self.class_to_idx)
         return dict(self.class_to_idx)
 
-    def train_increment(self, train_loader, num_epochs=None):
+    def train_increment(self, train_loader, num_epochs=None, progress_callback=None):
+        if progress_callback is not None:
+            progress_callback({'epoch': 1, 'batch': 1, 'total_batches': 1, 'batch_loss': 0.1, 'epoch_progress': 1.0})
+            progress_callback({'epoch_done': 1, 'epoch_loss': 0.1})
         return {'train_loss': [0.1]}
 
     def calibrate_ood(self, loader):
@@ -104,3 +107,20 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
 
     assert loaded.class_to_idx
     assert loaded.is_trained is True
+
+
+def test_adapter_train_increment_forwards_progress_callback(monkeypatch):
+    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
+    adapter.initialize_engine(class_names=['healthy'])
+
+    events = []
+    result = adapter.train_increment(
+        train_loader=[{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}],
+        progress_callback=events.append,
+    )
+
+    assert result['status'] == 'trained'
+    assert any('batch' in event for event in events)
+    assert any('epoch_done' in event for event in events)

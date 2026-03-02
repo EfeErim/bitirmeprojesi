@@ -8,7 +8,7 @@ import json
 import logging
 import warnings
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 import torch
 import torch.nn as nn
@@ -353,26 +353,50 @@ class ContinualSDLoRATrainer:
         logits = self.forward_logits(images)
         return nn.functional.cross_entropy(logits, labels)
 
-    def train_increment(self, train_loader: Iterable[Dict[str, torch.Tensor]], num_epochs: Optional[int] = None) -> Dict[str, List[float]]:
+    def train_increment(
+        self,
+        train_loader: Iterable[Dict[str, torch.Tensor]],
+        num_epochs: Optional[int] = None,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+    ) -> Dict[str, List[float]]:
         if self.optimizer is None:
             self.setup_optimizer()
 
         epochs = int(num_epochs if num_epochs is not None else self.config.num_epochs)
         history = {"train_loss": []}
-        for _ in range(max(1, epochs)):
+        for epoch_idx in range(max(1, epochs)):
             self.adapter_model.train()  # type: ignore[union-attr]
             self.classifier.train()  # type: ignore[union-attr]
             self.fusion.train()  # type: ignore[union-attr]
             losses: List[float] = []
-            for batch in train_loader:
+            total_batches = len(train_loader) if hasattr(train_loader, "__len__") else 0
+            for batch_idx, batch in enumerate(train_loader):
                 self.optimizer.zero_grad()
                 loss = self.training_step(batch)
                 loss.backward()
                 self.optimizer.step()
                 losses.append(float(loss.item()))
+
+                if progress_callback is not None:
+                    callback_payload = {
+                        "epoch": epoch_idx + 1,
+                        "batch": batch_idx + 1,
+                        "total_batches": int(total_batches),
+                        "batch_loss": float(loss.item()),
+                        "epoch_progress": float((batch_idx + 1) / max(1, total_batches)),
+                    }
+                    progress_callback(callback_payload)
+
             epoch_loss = float(sum(losses) / max(1, len(losses)))
             history["train_loss"].append(epoch_loss)
             self.current_epoch += 1
+            if progress_callback is not None:
+                progress_callback(
+                    {
+                        "epoch_done": epoch_idx + 1,
+                        "epoch_loss": epoch_loss,
+                    }
+                )
         return history
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:

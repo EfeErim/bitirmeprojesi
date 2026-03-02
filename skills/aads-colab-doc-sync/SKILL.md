@@ -8,14 +8,15 @@ description: Keep Colab notebooks, canonical scripts, and repository documentati
 ## Workflow
 
 1. Confirm canonical entrypoints.
-- Treat `colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb` as the primary full-flow notebook unless intentionally changed.
+- Treat `colab_notebooks/archive/v6_superseded_2026-03-02/` as archived/superseded assets.
+- Use active notebook references only when new canonical notebooks are explicitly introduced.
 
 2. Synchronize docs and scripts.
 - Keep `README.md`, `scripts/README.md`, and `docs/REPO_FILE_RELATIONS.md` aligned with notebook/script changes.
 - Keep `docs/README.md` and notebook index pages aligned with renamed or re-prioritized entrypoints.
 
 3. Preserve compatibility policy.
-- Keep root wrappers as compatibility aliases unless explicitly deprecating.
+- Prefer canonical `scripts/...` entrypoints; do not rely on removed root wrapper aliases.
 
 4. Validate documentation and import surfaces.
 - Run markdown link checks and notebook import validation.

@@ -127,3 +127,47 @@ def test_warns_when_peft_is_missing(monkeypatch):
 
     assert wrapped is backbone
     assert trainer._adapter_wrapped is False
+
+
+def test_train_increment_emits_progress_callback_events():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name='facebook/dinov3-giant',
+        quantization_mode='int8_hybrid',
+        target_modules_strategy='all_linear_transformer',
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device='cpu',
+        num_epochs=1,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    class DummyModule(nn.Module):
+        def forward(self, x, *args, **kwargs):
+            return x
+
+    trainer.adapter_model = DummyModule()
+    trainer.classifier = DummyModule()
+    trainer.fusion = DummyModule()
+
+    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
+    trainer.optimizer = torch.optim.SGD([trainable], lr=0.1)
+    trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
+
+    train_loader = [
+        {'images': torch.zeros(1, 3, 8, 8), 'labels': torch.zeros(1, dtype=torch.long)},
+        {'images': torch.zeros(1, 3, 8, 8), 'labels': torch.zeros(1, dtype=torch.long)},
+    ]
+
+    events = []
+    history = trainer.train_increment(train_loader, num_epochs=1, progress_callback=events.append)
+
+    assert len(history['train_loss']) == 1
+    batch_events = [event for event in events if 'batch' in event]
+    epoch_events = [event for event in events if 'epoch_done' in event]
+    assert len(batch_events) == 2
+    assert len(epoch_events) == 1
+    assert batch_events[0]['epoch'] == 1
+    assert batch_events[0]['total_batches'] == 2
+    assert 'batch_loss' in batch_events[0]
+    assert 'epoch_progress' in batch_events[0]
+    assert 'epoch_loss' in epoch_events[0]

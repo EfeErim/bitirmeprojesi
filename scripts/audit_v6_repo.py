@@ -489,7 +489,12 @@ def main() -> int:
         "notebook_import_validation": ["colab_notebooks/", "colab_bootstrap.ipynb"],
         "suite_colab_smoke": ["colab_notebooks/", "colab_bootstrap.ipynb"],
         "markdown_links": ["docs/", "README.md", "PLAN.md", "SECURITY.md"],
-        "python_sanity_bundle": ["scripts/", "test_dynamic_taxonomy.py", "test_pipeline_final_check.py", "validate_notebook_imports.py"],
+        "python_sanity_bundle": [
+            "scripts/",
+            "scripts/test_dynamic_taxonomy.py",
+            "scripts/test_pipeline_final_check.py",
+            "scripts/validate_notebook_imports.py",
+        ],
         "suite_unit_colab_integration": ["src/", "tests/", "config/"],
         "policy_regression_bundle": ["src/router/", "config/"],
     }
