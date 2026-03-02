@@ -5,7 +5,6 @@ Provides GPU monitoring, training metrics, memory profiling, and real-time repor
 """
 
 import os
-import sys
 import time
 import json
 import logging
@@ -18,9 +17,6 @@ import warnings
 import torch
 import numpy as np
 from tqdm.auto import tqdm
-
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from src.dataset.error_handling import get_error_handler, get_resource_monitor
 from src.core.config_manager import ConfigurationManager

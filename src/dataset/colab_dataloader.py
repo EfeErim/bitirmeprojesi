@@ -5,7 +5,6 @@ Prefetching implementation, pin_memory optimization, and memory-efficient batchi
 """
 
 import os
-import sys
 import logging
 import time
 import threading
@@ -16,9 +15,6 @@ from dataclasses import dataclass
 import torch
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
-
-# Add src to path for error handling imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from src.dataset.error_handling import (
     ErrorContext,

@@ -5,6 +5,7 @@ Tests for OOD prototypes module.
 
 import pytest
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 from pathlib import Path
 import sys
 import tempfile
@@ -68,6 +69,33 @@ class TestPrototypeComputer:
         assert prototypes.shape[0] == num_classes
         assert prototypes.shape[1] == 128
         assert len(class_stds) == num_classes
+
+    def test_compute_prototypes_tracks_prototype_counts_with_model_api(self):
+        """Regression test: model API path should populate prototype_counts (not class_counts)."""
+        feature_dim = 8
+        config = PrototypeConfig(feature_dim=feature_dim, device="cpu")
+        computer = PrototypeComputer(config=config)
+
+        class DummyModel(torch.nn.Module):
+            def forward(self, x):
+                batch = x.shape[0]
+                pooled = x.view(batch, -1).mean(dim=1, keepdim=True).repeat(1, feature_dim)
+                return type("Output", (), {"last_hidden_state": pooled.unsqueeze(1)})()
+
+        images = torch.randn(6, 3, 8, 8)
+        labels = torch.tensor([0, 0, 0, 1, 1, 1], dtype=torch.long)
+        loader = DataLoader(TensorDataset(images, labels), batch_size=2, shuffle=False)
+
+        prototypes, class_stds = computer.compute_prototypes(
+            DummyModel(),
+            loader,
+            {"class_0": 0, "class_1": 1},
+        )
+
+        assert prototypes.shape == (2, feature_dim)
+        assert set(class_stds.keys()) == {0, 1}
+        assert computer.prototype_counts[0] == 3
+        assert computer.prototype_counts[1] == 3
 
     def test_prototype_caching(self, sample_config, sample_features, sample_labels):
         """Test prototype caching functionality."""

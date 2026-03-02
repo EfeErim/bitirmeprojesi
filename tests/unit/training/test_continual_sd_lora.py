@@ -1,3 +1,4 @@
+import pytest
 import torch
 import torch.nn as nn
 
@@ -103,3 +104,26 @@ def test_predict_payload_contains_v6_ood_keys():
 
     assert 'ood_analysis' in result
     assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(result['ood_analysis'].keys())
+
+
+def test_warns_when_peft_is_missing(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name='facebook/dinov3-giant',
+        quantization_mode='int8_hybrid',
+        target_modules_strategy='all_linear_transformer',
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device='cpu',
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    backbone = DummyBackbone()
+
+    monkeypatch.setattr(continual_module, 'LoraConfig', None)
+
+    with pytest.warns(RuntimeWarning, match='peft is not installed'):
+        wrapped = trainer._apply_lora(backbone, ['transformer.block.0.0'])
+
+    assert wrapped is backbone
+    assert trainer._adapter_wrapped is False

@@ -6,6 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 import logging
+import warnings
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -176,6 +177,9 @@ class ContinualSDLoRATrainer:
         self.ood_detector = ContinualOODDetector(threshold_factor=self.config.ood_threshold_factor)
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
+        self._peft_available = LoraConfig is not None
+        self._adapter_wrapped = False
+        self._peft_warning_emitted = False
 
     @property
     def quantization_metadata(self) -> Dict[str, Any]:
@@ -228,9 +232,21 @@ class ContinualSDLoRATrainer:
             len(self.target_modules_resolved),
         )
 
+    def _warn_missing_peft_once(self) -> None:
+        if self._peft_warning_emitted:
+            return
+        message = (
+            "peft is not installed; continuing without LoRA adapter wrapping. "
+            "Training will run in degraded mode (fusion/classifier only). Install `peft` to enable SD-LoRA adapters."
+        )
+        logger.warning(message)
+        warnings.warn(message, RuntimeWarning, stacklevel=2)
+        self._peft_warning_emitted = True
+
     def _apply_lora(self, model: nn.Module, target_modules: Sequence[str]) -> nn.Module:
         if LoraConfig is None:
-            logger.warning("peft is unavailable; continuing without adapter wrapping.")
+            self._warn_missing_peft_once()
+            self._adapter_wrapped = False
             return model
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
@@ -245,6 +261,7 @@ class ContinualSDLoRATrainer:
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
                 param.requires_grad = True
+        self._adapter_wrapped = True
         return wrapped
 
     def resolve_target_modules(self, model: nn.Module) -> List[str]:
@@ -431,6 +448,11 @@ class ContinualSDLoRATrainer:
             "class_to_idx": self.class_to_idx,
             "ood_calibration": {"version": self.ood_detector.calibration_version},
             "target_modules_resolved": list(self.target_modules_resolved),
+            "adapter_runtime": {
+                "peft_available": bool(self._peft_available),
+                "adapter_wrapped": bool(self._adapter_wrapped),
+                "degraded_without_peft": bool(not self._adapter_wrapped),
+            },
         }
 
     def save_adapter(self, output_dir: str) -> Path:

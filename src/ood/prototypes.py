@@ -177,14 +177,14 @@ class PrototypeComputer:
                 
                 # Store for later use
                 self.class_means[class_idx] = mean
-                self.class_counts[class_idx] = len(feat_list)
+                self.prototype_counts[class_idx] = len(feat_list)
             else:
                 logger.warning(f"Insufficient samples for class {class_idx}")
                 # Use zero vector as placeholder
                 prototypes[class_idx] = torch.zeros(self.feature_dim, device=self.device)
                 class_stds[class_idx] = torch.ones(self.feature_dim, device=self.device) * 1e-6
                 self.class_means[class_idx] = torch.zeros(self.feature_dim, device=self.device)
-                self.class_counts[class_idx] = len(feat_list)
+                self.prototype_counts[class_idx] = len(feat_list)
         
         logger.info(f"Computed prototypes for {len(class_stds)} classes")
         

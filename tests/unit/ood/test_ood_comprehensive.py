@@ -570,9 +570,9 @@ class TestCalibrateThresholdsUsingValidation:
                     batch = all_data[i:i+batch_size]
                     images = torch.randn(len(batch), 3, 224, 224)
                     labels = torch.tensor([item[0] for item in batch])
-                    # Store distances for later retrieval
+                    # Encode deterministic sample distance in pixel payload.
                     for j, (class_idx, distance) in enumerate(batch):
-                        setattr(images[j], '_distance', distance)
+                        images[j, 0, 0, 0] = float(distance)
                     yield images, labels
             
             loader.__iter__.return_value = mock_iter()
@@ -582,10 +582,8 @@ class TestCalibrateThresholdsUsingValidation:
         # Mock mahalanobis
         mahalanobis = MagicMock()
         def mock_compute(features, class_idx):
-            # Get distance from the first feature in batch
-            if hasattr(features[0], '_distance'):
-                return torch.tensor(features[0]._distance)
-            return torch.tensor(class_distributions[class_idx]['mean'])
+            # Read the encoded distance from pixel payload.
+            return torch.tensor(float(features[0, 0, 0, 0].item()))
         mahalanobis.compute_distance = mock_compute
         
         return {
@@ -635,14 +633,14 @@ class TestCalibrateThresholdsUsingValidation:
                 images = torch.randn(batch_size, 3, 224, 224)
                 labels = torch.zeros(batch_size, dtype=torch.long)
                 for j in range(batch_size):
-                    setattr(images[j], '_distance', distances_0[i+j])
+                    images[j, 0, 0, 0] = float(distances_0[i + j])
                 yield images, labels
         val_loader.__iter__.return_value = mock_iter()
         val_loader.__len__.return_value = 5
         
         mahalanobis = MagicMock()
         def mock_compute(features, class_idx):
-            return torch.tensor(features[0]._distance)
+            return torch.tensor(float(features[0, 0, 0, 0].item()))
         mahalanobis.compute_distance = mock_compute
         
         thresholds = calibrate_thresholds_using_validation(
@@ -673,13 +671,13 @@ class TestCalibrateThresholdsUsingValidation:
             images = torch.randn(5, 3, 224, 224)
             labels = torch.zeros(5, dtype=torch.long)
             for i in range(5):
-                setattr(images[i], '_distance', distances[i])
+                images[i, 0, 0, 0] = float(distances[i])
             yield images, labels
         val_loader.__iter__.return_value = iter([next(mock_iter())])
         val_loader.__len__.return_value = 1
         
         mahalanobis = MagicMock()
-        mahalanobis.compute_distance = lambda f, c: torch.tensor(f[0]._distance)
+        mahalanobis.compute_distance = lambda f, c: torch.tensor(float(f[0, 0, 0, 0].item()))
         
         thresholds = calibrate_thresholds_using_validation(
             model=model,

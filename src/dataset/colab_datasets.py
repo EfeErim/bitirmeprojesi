@@ -5,11 +5,11 @@ Lazy loading, on-the-fly augmentation, memory-mapped file support, and progressi
 """
 
 import os
-import sys
 import logging
 import time
 import threading
 import mmap
+import io
 import numpy as np
 import torch
 from pathlib import Path
@@ -18,9 +18,6 @@ from dataclasses import dataclass, field
 from collections import defaultdict
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-
-# Add src to path for error handling imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from src.dataset.error_handling import (
     ErrorContext,
@@ -301,11 +298,11 @@ class MemoryMappedDataset(LazyLoadingDataset):
                 # For large files, map in chunks
                 file_size = file_path.stat().st_size
                 if file_size > self.mmap_config.chunk_size_mb * 1024 * 1024:
-                    # Map in chunks
+                    # Keep chunk metadata only; reopening file per read avoids dangling handles.
                     return {
-                        "file": f,
+                        "path": str(file_path),
                         "size": file_size,
-                        "chunks": []
+                        "chunk_size_bytes": int(self.mmap_config.chunk_size_mb * 1024 * 1024),
                     }
                 else:
                     # Map entire file
@@ -320,27 +317,67 @@ class MemoryMappedDataset(LazyLoadingDataset):
             mmap_obj = self._mmaps[idx]
             if isinstance(mmap_obj, dict):
                 # Handle chunked mapping
-                return self._load_chunked_mmap(mmap_obj)
+                return self._load_chunked_mmap(idx, mmap_obj)
             else:
                 # Read from memory map
                 mmap_obj.seek(0)
                 data = mmap_obj.read()
-                return self._process_mmap_data(data)
+                processed = self._process_mmap_data(data)
+                if processed is not None:
+                    return processed
         
         # Fallback to normal loading
         return super()._load_item(idx)
     
-    def _load_chunked_mmap(self, mmap_info: Dict[str, Any]) -> Any:
-        """Load data from chunked memory map."""
-        # This would need implementation based on file type
-        # For now, return placeholder
-        return None
+    def _load_chunked_mmap(self, idx: int, mmap_info: Dict[str, Any]) -> Any:
+        """Load data from chunked mapping metadata with safe fallback."""
+        path = mmap_info.get("path")
+        chunk_size = int(
+            mmap_info.get(
+                "chunk_size_bytes",
+                self.mmap_config.chunk_size_mb * 1024 * 1024,
+            )
+        )
+        if not path:
+            return super()._load_item(idx)
+        try:
+            with open(path, "rb") as handle:
+                data = handle.read(chunk_size)
+            processed = self._process_mmap_data(data)
+            if processed is not None:
+                return processed
+        except Exception as e:
+            logger.debug(f"Chunked mmap read failed for {path}: {str(e)}")
+        return super()._load_item(idx)
     
     def _process_mmap_data(self, data: bytes) -> Any:
-        """Process memory-mapped data."""
-        # This would need implementation based on file type
-        # For now, return placeholder
-        return data
+        """Process memory-mapped data into common in-memory representations."""
+        if not data:
+            return None
+
+        buffer = io.BytesIO(data)
+
+        # Tensor payloads saved via torch.save
+        try:
+            tensor_payload = torch.load(buffer, map_location="cpu")
+            return tensor_payload
+        except Exception:
+            pass
+
+        buffer.seek(0)
+
+        # NumPy payloads saved via np.save
+        try:
+            np_payload = np.load(buffer, allow_pickle=False)
+            return np_payload
+        except Exception:
+            pass
+
+        # UTF-8 text files
+        try:
+            return data.decode("utf-8")
+        except UnicodeDecodeError:
+            return data
     
     def __del__(self):
         """Clean up memory maps."""

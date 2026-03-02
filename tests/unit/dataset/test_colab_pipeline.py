@@ -399,6 +399,48 @@ class TestLazyLoadingDataset:
         assert len(lazy_dataset._cache) == 0
 
 
+class TestMemoryMappedDataset:
+    """Test memory-mapped dataset behavior."""
+
+    def test_torch_payload_roundtrip(self, tmp_path):
+        payload = torch.randn(2, 3)
+        payload_path = tmp_path / "payload.pt"
+        torch.save(payload, payload_path)
+
+        base = TensorDataset(torch.zeros(1, 1), torch.zeros(1, dtype=torch.long))
+        mapped = MemoryMappedDataset(
+            base,
+            [payload_path],
+            mmap_config=MemoryMapConfig(enabled=True, chunk_size_mb=64),
+            config=LazyLoadConfig(enabled=False, prefetch_size=0),
+        )
+
+        item = mapped[0]
+
+        assert torch.is_tensor(item)
+        assert torch.allclose(item, payload)
+
+    def test_chunked_mode_falls_back_to_dataset_item(self, tmp_path):
+        fallback_item = torch.tensor([42.0])
+        fallback_label = torch.tensor(7)
+        base = TensorDataset(fallback_item.unsqueeze(0), fallback_label.unsqueeze(0))
+
+        blob_path = tmp_path / "blob.bin"
+        blob_path.write_bytes(b"\x00\x01\x02\x03")
+
+        mapped = MemoryMappedDataset(
+            base,
+            [blob_path],
+            mmap_config=MemoryMapConfig(enabled=True, chunk_size_mb=0),
+            config=LazyLoadConfig(enabled=False, prefetch_size=0),
+        )
+
+        item = mapped[0]
+
+        assert torch.equal(item[0], fallback_item)
+        assert int(item[1].item()) == int(fallback_label.item())
+
+
 class TestColabDataset:
     """Test high-level Colab dataset."""
     

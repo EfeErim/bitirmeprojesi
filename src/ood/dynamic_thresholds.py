@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Dynamic OOD Threshold Computation for AADS-ULoRA v5.5
+Dynamic OOD Threshold Computation for AADS-ULoRA v6
 Computes per-class OOD thresholds using Mahalanobis distance statistics with statistical confidence.
 """
 
@@ -15,24 +15,20 @@ from src.utils.model_utils import extract_pooled_output
 logger = logging.getLogger(__name__)
 
 
-def _is_mock_like(obj: object) -> bool:
-    """Detect unittest.mock objects to preserve unit-test compatibility paths."""
-    return type(obj).__module__.startswith("unittest.mock")
-
-
 def _compute_distance_with_guard(mahalanobis, feat: torch.Tensor, class_idx: int) -> float:
-    """Compute distance with strict behavior for production and relaxed mock fallback for tests."""
+    """Compute distance and normalize the result to a scalar float."""
     try:
-        return float(mahalanobis.compute_distance(feat.unsqueeze(0), class_idx).item())
-    except (AttributeError, TypeError) as exc:
-        if not _is_mock_like(mahalanobis):
-            raise RuntimeError(
-                f"Failed to compute Mahalanobis distance for class {class_idx}: {exc}"
-            ) from exc
-        # Preserve compatibility with legacy tests that use lightweight mocks.
-        if torch.is_tensor(feat):
-            return float(10.0 + 10.0 * class_idx + feat.detach().float().mean().item())
-        return float(10.0 + 10.0 * class_idx)
+        distance = mahalanobis.compute_distance(feat.unsqueeze(0), class_idx)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Failed to compute Mahalanobis distance for class {class_idx}: {exc}"
+        ) from exc
+
+    if torch.is_tensor(distance):
+        if distance.numel() == 0:
+            raise RuntimeError(f"Mahalanobis distance returned an empty tensor for class {class_idx}.")
+        return float(distance.reshape(-1)[0].item())
+    return float(distance)
 
 class DynamicOODThreshold:
     """
@@ -413,25 +409,10 @@ class DynamicOODThreshold:
                     if isinstance(pooled_output, torch.Tensor) and pooled_output.ndim == 2:
                         features = pooled_output
                     else:
-                        # Fallback for mocked models that do not return tensor features.
+                        # Fallback for models that do not return tensor features.
                         features = images
 
-                # Some tests mock distances by attaching '_distance' to the raw
-                # image tensors. If the extracted features don't carry that
-                # attribute, but the original `images` do, prefer using
-                # `images` for distance computation to respect those tests.
-                if (
-                    isinstance(features, torch.Tensor)
-                    and len(features) > 0
-                    and not hasattr(features[0], '_distance')
-                    and len(images) > 0
-                    and hasattr(images[0], '_distance')
-                ):
-                    features_for_distance = images
-                else:
-                    features_for_distance = features
-                if not isinstance(features_for_distance, torch.Tensor):
-                    features_for_distance = images
+                features_for_distance = features if isinstance(features, torch.Tensor) else images
 
                 # For each sample, check if it's correctly classified as in-distribution
                 for feat, label in zip(features_for_distance, labels):
@@ -675,21 +656,10 @@ def calibrate_thresholds_using_validation(
                 pooled_output = extract_pooled_output(model, images)
                 features = pooled_output
             except Exception:
-                # Test doubles may not provide transformer-like outputs.
-                # Fall back to images so mocked distance attributes are preserved.
+                # Some models may not expose transformer-like outputs.
                 features = images
 
-            # Respect tests that mock distances on the original image tensors
-            if (
-                isinstance(features, torch.Tensor)
-                and len(features) > 0
-                and not hasattr(features[0], '_distance')
-                and len(images) > 0
-                and hasattr(images[0], '_distance')
-            ):
-                features_for_distance = images
-            else:
-                features_for_distance = features
+            features_for_distance = features if isinstance(features, torch.Tensor) else images
 
             for feat, label in zip(features_for_distance, labels):
                 class_idx = label.item()

@@ -5,7 +5,6 @@ LRU cache implementation for Google Drive with local SSD caching.
 """
 
 import os
-import sys
 import time
 import json
 import hashlib
@@ -17,9 +16,6 @@ from collections import OrderedDict
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 import threading
-
-# Add src to path for error handling imports
-sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
 
 from src.dataset.error_handling import (
     CacheError,
@@ -55,8 +51,8 @@ class CacheEntry:
         return cls(**data)
 
 
-class LRUCache:
-    """Least Recently Used (LRU) cache implementation."""
+class ByteSizeLRUCache:
+    """LRU cache implementation constrained by byte budget and entry count."""
     
     def __init__(self, max_size_bytes: int, max_entries: int = 1000):
         self.max_size_bytes = max_size_bytes
@@ -153,7 +149,7 @@ class ColabCacheManager:
         # Convert GB to bytes
         max_cache_size_bytes = int(max_cache_size_gb * 1024**3)
         
-        self.lru_cache = LRUCache(max_cache_size_bytes, max_entries)
+        self.lru_cache = ByteSizeLRUCache(max_cache_size_bytes, max_entries)
         self.cleanup_interval = cleanup_interval_hours * 3600
         self.ttl_seconds = ttl_days * 86400
         self._stop_cleanup = threading.Event()
@@ -539,6 +535,10 @@ class PerformanceMonitor:
         for key in self.metrics:
             self.metrics[key].clear()
         self.start_time = time.time()
+
+
+# Backwards-compatible alias retained for existing imports/tests.
+LRUCache = ByteSizeLRUCache
 
 
 def get_colab_cache_manager(

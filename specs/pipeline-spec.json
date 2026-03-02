@@ -1,0 +1,53 @@
+{
+  "pipeline_id": "aads_v6_independent_multicrop_pipeline",
+  "version": "6.0.0",
+  "class": "src.pipeline.independent_multi_crop_pipeline.IndependentMultiCropPipeline",
+  "dependencies": {
+    "router": [
+      "src.router.vlm_pipeline.VLMPipeline",
+      "src.router.simple_crop_router.SimpleCropRouter"
+    ],
+    "adapter": "src.adapter.independent_crop_adapter.IndependentCropAdapter",
+    "ood": "src.ood.continual_ood.ContinualOODDetector"
+  },
+  "input_contract": {
+    "image": "PIL.Image | numpy.ndarray | torch.Tensor | path-like",
+    "optional_overrides": [
+      "crop",
+      "part",
+      "return_ood"
+    ]
+  },
+  "result_contract": {
+    "required_keys": [
+      "status",
+      "crop",
+      "part",
+      "diagnosis",
+      "confidence",
+      "ood_analysis",
+      "router_confidence",
+      "crop_confidence",
+      "cache_hit"
+    ],
+    "ood_analysis_fields": [
+      "is_ood",
+      "ensemble_score",
+      "class_threshold",
+      "calibration_version"
+    ]
+  },
+  "error_contract": {
+    "router_unavailable": "status=error, crop=null",
+    "adapter_unavailable": "status=error, adapter_status=no_adapter",
+    "unknown_crop": "status=unknown_crop, ood_analysis.is_ood=true"
+  },
+  "cache_contract": {
+    "keys": [
+      "cache_enabled",
+      "cache_size",
+      "cache_ttl_seconds"
+    ],
+    "stats_method": "get_cache_stats"
+  }
+}

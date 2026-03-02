@@ -1,4 +1,4 @@
-"""Router module for AADS-ULoRA v5.5 VLM pipeline."""
+"""Router module for AADS-ULoRA v6 VLM pipeline."""
 
 from importlib import import_module
 

@@ -1,0 +1,37 @@
+{
+  "router_id": "aads_v6_router_contract",
+  "version": "6.0.0",
+  "primary_router": {
+    "class": "src.router.vlm_pipeline.VLMPipeline",
+    "strict_model_loading": "config.vlm_strict_model_loading | config.router.vlm.strict_model_loading",
+    "confidence_threshold": "config.router.vlm.confidence_threshold",
+    "max_detections": "config.router.vlm.max_detections"
+  },
+  "fallback_router": {
+    "class": "src.router.simple_crop_router.SimpleCropRouter",
+    "intent": "resource-constrained environments"
+  },
+  "policy_graph": {
+    "stage_order": [
+      "sam3_roi_classification",
+      "sam3_roi_filter",
+      "postprocess"
+    ],
+    "profile_source": "config.router.vlm.runtime_profile",
+    "taxonomy_normalization": "src.router.policy_taxonomy_utils"
+  },
+  "analyze_image_response": {
+    "required_keys": [
+      "crop",
+      "part",
+      "confidence",
+      "detections"
+    ],
+    "detection_fields": [
+      "crop",
+      "part",
+      "crop_confidence",
+      "bbox"
+    ]
+  }
+}
