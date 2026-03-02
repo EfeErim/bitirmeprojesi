@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import logging
 import os
 import subprocess
@@ -142,7 +143,9 @@ class CoLabOrchestrator:
                 import nbformat
                 from nbconvert.preprocessors import ExecutePreprocessor
 
-                notebook = nbformat.read(str(notebook_path), as_version=4)
+                # Notebooks are committed with UTF-8 BOM to preserve cross-tool compatibility.
+                notebook_text = notebook_path.read_text(encoding='utf-8-sig')
+                notebook = nbformat.reads(notebook_text, as_version=4)
                 ep = ExecutePreprocessor(timeout=timeout, kernel_name='python3')
                 ep.preprocess(notebook, {'metadata': {'path': str(notebook_path.parent)}})
                 self._log_notebook_outputs(notebook, stage_name)
@@ -168,9 +171,15 @@ class CoLabOrchestrator:
         if not self.setup_environment():
             return False
 
+        dataset_root_override = os.environ.get('AADS_DATASET_ROOT', '').strip()
+        if dataset_root_override:
+            logger.info("Dataset root override from env: %s", dataset_root_override)
+        else:
+            logger.info("Dataset root override not set; notebooks use ROOT/data/class_root_dataset by default.")
+
         notebook_dir = self.repo_path / 'colab_notebooks'
         stages = [
-            (notebook_dir / '1_data_preparation.ipynb', 'STAGE 1: Data Preparation', 1800, True),
+            (notebook_dir / '1_data_preparation.ipynb', 'STAGE 1: Data Preparation', 1800, False),
             (notebook_dir / '2_continual_sd_lora_training.ipynb', 'STAGE 2: Continual Training', 5400, False),
             (notebook_dir / '5_testing_validation.ipynb', 'STAGE 3: Validation', 1800, True),
             (notebook_dir / '6_performance_monitoring.ipynb', 'STAGE 4: Monitoring', 1800, True),
@@ -199,6 +208,18 @@ class CoLabOrchestrator:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Run AADS v6 Colab notebook orchestration.")
+    parser.add_argument(
+        '--dataset-root',
+        type=str,
+        default='',
+        help='Optional dataset root override passed to stage notebooks via AADS_DATASET_ROOT.',
+    )
+    args = parser.parse_args()
+
+    if args.dataset_root:
+        os.environ['AADS_DATASET_ROOT'] = args.dataset_root
+
     orchestrator = CoLabOrchestrator(Path.cwd())
     success = orchestrator.run_pipeline()
     orchestrator.print_summary(success)
