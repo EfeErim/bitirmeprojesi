@@ -35,6 +35,8 @@ Notebook bootstrap behavior in `colab_notebooks/`:
 
 ## VLM/Router Testing
 
+These scripts are router diagnostics and are not required for continual SD-LoRA adapter training.
+
 - `colab_test_gpu_vlm.py` - GPU availability + VLM smoke checks.
 - `colab_vlm_quick_test.py` - short VLM sanity checks.
 - `colab_interactive_vlm_test.py` - interactive VLM test runner.
@@ -79,5 +81,5 @@ For new docs and user instructions, prefer the **Primary** surfaces above.
 - Quick docs validation: run `python scripts/check_markdown_links.py --root .`.
 - Phase 5 benchmark baseline: run `python scripts/benchmark_router_phase5.py`.
 - Phase 5 guardrail check: run `python scripts/check_phase5_perf_regression.py`.
-- VLM quick sanity (Colab): run `%run scripts/colab_vlm_quick_test.py`.
-- VLM interactive checks (Colab): use `from scripts.colab_interactive_vlm_test import run_interactive_vlm_test`.
+- Optional VLM router sanity (Colab): run `%run scripts/colab_vlm_quick_test.py`.
+- Optional VLM interactive checks (Colab): use `from scripts.colab_interactive_vlm_test import run_interactive_vlm_test`.

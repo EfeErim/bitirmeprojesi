@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Colab Setup Script: Install all dependencies for SAM3+BioCLIP-2.5 pipeline
+Colab setup script for AADS v6 notebooks and optional router diagnostics.
 
 IMPORTANT: Run these cells FIRST in your Colab notebook:
 
@@ -81,7 +81,7 @@ def main() -> None:
             failed_steps.append("Clone/update repository")
 
     print("\n" + "=" * 70)
-    print(" AADS-ULoRA SAM3+BioCLIP-2.5 Pipeline - Colab Setup")
+    print(" AADS v6 Colab Setup")
     print("=" * 70)
 
     setup_steps = [
@@ -114,7 +114,7 @@ def main() -> None:
         print("\n[OK] ALL DEPENDENCIES INSTALLED SUCCESSFULLY!")
         print("\nYou can now run:")
         print("  %cd /content/bitirmeprojesi")
-        print("  %run scripts/colab_vlm_quick_test.py")
+        print("  %run scripts/validate_notebook_imports.py")
     else:
         print(f"\n[WARN] {len(failed_steps)} step(s) had warnings:")
         for step in failed_steps:
@@ -133,11 +133,17 @@ def main() -> None:
    - Enable "Notebook access"
    - Save
 
-2. Run the pipeline test:
+2. Run training readiness check:
    %cd /content/bitirmeprojesi
-   %run scripts/colab_vlm_quick_test.py
+   %run scripts/validate_notebook_imports.py
 
-3. Upload your grape leaf image when prompted
+3. Start the continual training notebook:
+   Open: colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb
+   Set DATASET_ROOT_INPUT to your class-root dataset path
+   Set RUN_PIPELINE=True when ready
+
+4. Optional router-only VLM sanity check:
+   %run scripts/colab_vlm_quick_test.py
 """)
 
 
