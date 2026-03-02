@@ -28,6 +28,11 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `colab_auto_orchestrator.py` - automation helper for one-click flows.
 - `download_data_colab.py` - dataset download utilities for Colab.
 
+Notebook bootstrap behavior in `colab_notebooks/`:
+- Auto-discovers repository root from common Colab and Drive paths.
+- Falls back to auto-clone when root is missing.
+- Supports `AADS_REPO_ROOT`, `REPO_ROOT`, `AADS_REPO_CLONE_TARGET`, `AADS_REPO_URL`, and `AADS_DISABLE_AUTO_CLONE`.
+
 ## VLM/Router Testing
 
 - `colab_test_gpu_vlm.py` - GPU availability + VLM smoke checks.

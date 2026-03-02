@@ -6,6 +6,8 @@ This repository now uses a continual-only SD-LoRA runtime.
 
 - `docs/architecture/overview.md`
 - `docs/development/development-setup.md`
+- `docs/user_guide/colab_training_manual.md`
+- `docs/guides/SEAMLESS_AUTOTRAIN_GUIDE.md`
 - `colab_notebooks/README.md`
 - `scripts/README.md`
 

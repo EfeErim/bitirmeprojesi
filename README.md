@@ -16,6 +16,15 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
 - Continual training notebook: `colab_notebooks/2_continual_sd_lora_training.ipynb`
 - Local validation: `python scripts/validate_notebook_imports.py`
 
+## Colab Bootstrap Behavior
+
+- Notebook bootstrap cells auto-detect repository root from common `/content` and Drive paths.
+- Optional overrides:
+  - `AADS_REPO_ROOT` or `REPO_ROOT` for explicit repo path.
+  - `AADS_REPO_CLONE_TARGET` for clone destination when auto-clone runs.
+  - `AADS_REPO_URL` for alternate repository URL.
+  - `AADS_DISABLE_AUTO_CLONE=1` to disable auto-clone fallback.
+
 ## Test Commands
 
 ```powershell
