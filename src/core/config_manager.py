@@ -119,7 +119,7 @@ class ConfigurationManager:
             default_values={
                 "training": {
                     "continual": {
-                        "backbone": {"model_name": "facebook/dinov3-giant"},
+                        "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
                         "quantization": {"mode": "int8_hybrid", "strict_backend": True},
                         "adapter": {"target_modules_strategy": "all_linear_transformer"},
                         "fusion": {"layers": [2, 5, 8, 11]},
@@ -435,3 +435,4 @@ def _get_backward_compat_manager():
 
 # Deprecated: use get_config() instead for thread-safe access
 config_manager = property(lambda self: _get_backward_compat_manager())
+

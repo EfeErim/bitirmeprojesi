@@ -47,7 +47,7 @@ def test_continual_trainer_imports() -> bool:
 
         config = ContinualSDLoRAConfig.from_training_config(
             {
-                "backbone": {"model_name": "facebook/dinov3-giant"},
+                "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
                 "quantization": {"mode": "int8_hybrid", "strict_backend": False, "allow_cpu_fallback": True},
                 "adapter": {
                     "target_modules_strategy": "all_linear_transformer",
@@ -153,3 +153,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -37,7 +37,7 @@ def test_int8_loader_fails_when_backend_missing_and_fallback_disabled(monkeypatc
     cfg = HybridINT8Config(mode='int8_hybrid', strict_backend=True, allow_cpu_fallback=False)
 
     with pytest.raises(RuntimeError):
-        load_hybrid_int8_backbone('facebook/dinov3-giant', auto_model_cls=DummyModel, cfg=cfg)
+        load_hybrid_int8_backbone('facebook/dinov3-vitl16-pretrain-lvd1689m', auto_model_cls=DummyModel, cfg=cfg)
 
 
 def test_int8_loader_allows_non_quantized_fallback_when_enabled(monkeypatch):
@@ -46,6 +46,7 @@ def test_int8_loader_allows_non_quantized_fallback_when_enabled(monkeypatch):
     monkeypatch.setattr(q, '_has_module', lambda _: False)
     cfg = HybridINT8Config(mode='int8_hybrid', strict_backend=False, allow_cpu_fallback=True)
 
-    model = load_hybrid_int8_backbone('facebook/dinov3-giant', auto_model_cls=DummyModel, cfg=cfg)
+    model = load_hybrid_int8_backbone('facebook/dinov3-vitl16-pretrain-lvd1689m', auto_model_cls=DummyModel, cfg=cfg)
 
-    assert model['model_name'] == 'facebook/dinov3-giant'
+    assert model['model_name'] == 'facebook/dinov3-vitl16-pretrain-lvd1689m'
+

@@ -13,7 +13,7 @@ class FakeOOD:
 
 
 class FakeConfig:
-    backbone_model_name = 'facebook/dinov3-giant'
+    backbone_model_name = 'facebook/dinov3-vitl16-pretrain-lvd1689m'
     fusion_layers = [2, 5, 8, 11]
     fusion_output_dim = 768
     fusion_dropout = 0.1
@@ -124,3 +124,4 @@ def test_adapter_train_increment_forwards_progress_callback(monkeypatch):
     assert result['status'] == 'trained'
     assert any('batch' in event for event in events)
     assert any('epoch_done' in event for event in events)
+

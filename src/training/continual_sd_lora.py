@@ -54,7 +54,7 @@ PREFERRED_TARGET_TOKEN = (
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
 
-    backbone_model_name: str = "facebook/dinov3-giant"
+    backbone_model_name: str = "facebook/dinov3-vitl16-pretrain-lvd1689m"
     quantization_mode: str = "int8_hybrid"
     target_modules_strategy: str = "all_linear_transformer"
     fusion_layers: List[int] = field(default_factory=lambda: [2, 5, 8, 11])
@@ -119,7 +119,7 @@ class ContinualSDLoRAConfig:
         ood = training_continual.get("ood", {})
 
         config = cls(
-            backbone_model_name=str(backbone.get("model_name", "facebook/dinov3-giant")),
+            backbone_model_name=str(backbone.get("model_name", "facebook/dinov3-vitl16-pretrain-lvd1689m")),
             quantization_mode=str(quantization.get("mode", "int8_hybrid")),
             target_modules_strategy=str(adapter.get("target_modules_strategy", "all_linear_transformer")),
             fusion_layers=[int(v) for v in fusion.get("layers", [2, 5, 8, 11])],
@@ -519,3 +519,4 @@ class ContinualSDLoRATrainer:
             self.fusion.load_state_dict(torch.load(fusion_path, map_location=self.device))  # type: ignore[union-attr]
         self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
         return meta
+

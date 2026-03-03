@@ -1,7 +1,7 @@
 # AADS v6 Overhaul Plan: SD-LoRA-Only Continual Learning Stack
 
 ## Summary
-This overhaul replaces the current 3-phase `DoRA -> SD-LoRA -> CoNeC-LoRA` flow with a single-engine, rehearsal-free continual learning architecture based on **SD-LoRA only**, **frozen DINOv3-giant**, **hybrid INT8 quantization**, **4-stage multi-scale fusion**, and **transformer all-linear adapter targeting**.  
+This overhaul replaces the current 3-phase `DoRA -> SD-LoRA -> CoNeC-LoRA` flow with a single-engine, rehearsal-free continual learning architecture based on **SD-LoRA only**, **frozen DINOv3 ViT-L/16**, **hybrid INT8 quantization**, **4-stage multi-scale fusion**, and **transformer all-linear adapter targeting**.  
 Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 
 ## Public APIs, Interfaces, and Type Changes
@@ -14,7 +14,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
    - `ContinualSDLoRAConfig`
    - `ContinualSDLoRATrainer`
 3. Replace `training.phase1/phase2/phase3` config contract with `training.continual`:
-   - `backbone.model_name` (default `facebook/dinov3-giant`)
+   - `backbone.model_name` (default `facebook/dinov3-vitl16-pretrain-lvd1689m`)
    - `quantization.mode` (`int8_hybrid`)
    - `adapter.target_modules_strategy` (`all_linear_transformer`)
    - `fusion.layers` (`[2,5,8,11]`)
@@ -70,7 +70,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 4. `F4` Wire new OOD config under `training.continual.ood` and remove CoNeC-linked OOD coupling.
 
 ### Phase G: Router/Pipeline Alignment
-1. `G1` Set `SimpleCropRouter` default backbone to `facebook/dinov3-giant` and update related tests/docs.
+1. `G1` Set `SimpleCropRouter` default backbone to `facebook/dinov3-vitl16-pretrain-lvd1689m` and update related tests/docs.
 2. `G2` Update `src/pipeline/independent_multi_crop_pipeline.py` to load v6 adapter artifacts and consume new OOD output keys.
 3. `G3` Keep VLMPipeline routing logic intact unless required by interface break; only adjust integration contracts.
 
@@ -114,7 +114,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 2. Contract gate:
    - Config load/validate must pass with new `training.continual` and fail on 4-bit keys.
 3. Unit behavior gate:
-   - Continual trainer initializes DINOv3-giant frozen backbone + all-linear adapters.
+   - Continual trainer initializes DINOv3 ViT-L/16 frozen backbone + all-linear adapters.
    - Target module resolver includes attention and MLP linear layers, excludes classifier/router heads.
    - Fusion module returns stable fused embeddings across batch sizes.
 4. Quantization gate:
@@ -132,9 +132,10 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 
 ## Assumptions and Defaults (Locked)
 1. Clean break v6: no runtime compatibility wrappers for old Phase 1/3 APIs.
-2. Backbone default is always `facebook/dinov3-giant`.
+2. Backbone default is always `facebook/dinov3-vitl16-pretrain-lvd1689m`.
 3. Quantization rollout is hybrid INT8 first; 4-bit paths are prohibited.
 4. Multi-scale fusion is 4-stage token fusion.
 5. Adapter targeting is transformer all-linear only (excluding classifier/router heads).
 6. OOD is redesigned in this same overhaul, not deferred.
 7. Repo-wide cleanup uses archive-and-redirect policy for v5.5 legacy materials.
+

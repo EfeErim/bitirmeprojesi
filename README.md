@@ -4,7 +4,7 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
 
 ## Runtime Contract
 
-- Backbone: `facebook/dinov3-giant` (frozen)
+- Backbone: `facebook/dinov3-vitl16-pretrain-lvd1689m` (frozen)
 - Quantization: `int8_hybrid`
 - Adapter targeting: `all_linear_transformer`
 - Fusion layers: `[2, 5, 8, 11]`
@@ -40,3 +40,4 @@ v5.5 materials are archived under:
 - `docs/archive/v5_legacy/`
 - `colab_notebooks/archive/v5_legacy/`
 - `src/archive/v5_legacy/`
+

@@ -21,7 +21,7 @@ class IndependentCropAdapter:
     def __init__(
         self,
         crop_name: str,
-        model_name: str = "facebook/dinov3-giant",
+        model_name: str = "facebook/dinov3-vitl16-pretrain-lvd1689m",
         device: str = "cuda",
     ) -> None:
         self.crop_name = str(crop_name)
@@ -256,3 +256,4 @@ class IndependentCropAdapter:
             "class_to_idx": dict(self.class_to_idx),
             "ood_calibration_version": self.ood_calibration_version,
         }
+

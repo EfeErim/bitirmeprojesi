@@ -26,10 +26,12 @@ logger = logging.getLogger(__name__)
 
 class SimpleCropRouter:
     """
-    Simple crop router for routing images to per-crop adapters.
+    Legacy/simple crop router for routing images to per-crop adapters.
+    Not used by the default v6 production pipeline, which uses `VLMPipeline`
+    (SAM3 + BioCLIP-2.5).
     
     Architecture:
-    - Frozen DINOv3-giant backbone for feature extraction
+    - Frozen DINOv3 ViT-L/16 backbone for feature extraction
     - Trainable linear classifier on top
     - Target: >=98% crop classification accuracy
     
@@ -37,7 +39,7 @@ class SimpleCropRouter:
     Once trained, routes images to the appropriate per-crop adapter (Layer 2).
     """
     
-    def __init__(self, crops: List[str], model_name: str = 'facebook/dinov3-giant', device: str = 'cuda'):
+    def __init__(self, crops: List[str], model_name: str = 'facebook/dinov3-vitl16-pretrain-lvd1689m', device: str = 'cuda'):
         """
         Initialize simple crop router.
         
@@ -54,7 +56,7 @@ class SimpleCropRouter:
         logger.info(f"Initializing SimpleCropRouter for {self.num_crops} crops: {crops}")
         logger.info(f"Device: {self.device}")
         
-        # Load frozen DINOv3-giant backbone
+        # Load frozen DINOv3 ViT-L/16 backbone
         logger.info(f"Loading backbone (frozen): {self.model_name}")
         try:
             self.backbone = AutoModel.from_pretrained(self.model_name)
@@ -174,7 +176,7 @@ class SimpleCropRouter:
             # Save best checkpoint
             if val_loader is not None and val_accuracy > self.best_accuracy:
                 self.best_accuracy = val_accuracy
-                logger.info(f"  ✓ New best accuracy: {self.best_accuracy:.2f}%")
+                logger.info(f"  âœ“ New best accuracy: {self.best_accuracy:.2f}%")
             
             # Record history
             self.training_history['epoch'].append(epoch + 1)
@@ -188,7 +190,7 @@ class SimpleCropRouter:
         if val_loader is not None:
             logger.info(f"Best accuracy: {self.best_accuracy:.2f}%")
             if self.best_accuracy < 0.95:
-                logger.warning(f"⚠️  Warning: Accuracy {self.best_accuracy:.2f}% < 95% (target: 98%)")
+                logger.warning(f"âš ï¸  Warning: Accuracy {self.best_accuracy:.2f}% < 95% (target: 98%)")
         logger.info(f"{'='*60}\n")
         
         return self.best_accuracy
@@ -337,4 +339,5 @@ class SimpleCropRouter:
             'best_accuracy': self.best_accuracy,
             'target_accuracy': 0.98
         }
+
 

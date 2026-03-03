@@ -10,7 +10,7 @@ class TestContinualSmoke:
     def test_config_creation(self):
         cfg = ContinualSDLoRAConfig.from_training_config(
             {
-                'backbone': {'model_name': 'facebook/dinov3-giant'},
+                'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
                 'quantization': {'mode': 'int8_hybrid', 'strict_backend': False, 'allow_cpu_fallback': True},
                 'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
                 'fusion': {'layers': [2, 5, 8, 11]},
@@ -21,7 +21,7 @@ class TestContinualSmoke:
 
     def test_add_classes_without_backbone_download(self):
         cfg = ContinualSDLoRAConfig(
-            backbone_model_name='facebook/dinov3-giant',
+            backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
             quantization_mode='int8_hybrid',
             target_modules_strategy='all_linear_transformer',
             fusion_layers=[2],
@@ -39,7 +39,7 @@ class TestContinualSmoke:
 
     def test_predict_payload_shape_with_mocks(self):
         cfg = ContinualSDLoRAConfig(
-            backbone_model_name='facebook/dinov3-giant',
+            backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
             quantization_mode='int8_hybrid',
             target_modules_strategy='all_linear_transformer',
             fusion_layers=[2],
@@ -69,3 +69,4 @@ class TestContinualSmoke:
         result = trainer.predict_with_ood(torch.zeros(1, 3, 224, 224))
         assert result['status'] == 'success'
         assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(result['ood_analysis'].keys())
+

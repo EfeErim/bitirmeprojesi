@@ -21,21 +21,21 @@ class DummyBackbone(nn.Module):
 def test_config_from_training_config_accepts_v6_contract():
     cfg = ContinualSDLoRAConfig.from_training_config(
         {
-            'backbone': {'model_name': 'facebook/dinov3-giant'},
+            'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
             'quantization': {'mode': 'int8_hybrid', 'strict_backend': False, 'allow_cpu_fallback': True},
             'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
             'fusion': {'layers': [2, 5, 8, 11]},
             'device': 'cpu',
         }
     )
-    assert cfg.backbone_model_name == 'facebook/dinov3-giant'
+    assert cfg.backbone_model_name == 'facebook/dinov3-vitl16-pretrain-lvd1689m'
     assert cfg.quantization_mode == 'int8_hybrid'
     assert cfg.target_modules_strategy == 'all_linear_transformer'
 
 
 def test_target_resolver_excludes_classifier_and_router_heads():
     cfg = ContinualSDLoRAConfig(
-        backbone_model_name='facebook/dinov3-giant',
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
         quantization_mode='int8_hybrid',
         target_modules_strategy='all_linear_transformer',
         fusion_layers=[2, 5, 8, 11],
@@ -50,7 +50,7 @@ def test_target_resolver_excludes_classifier_and_router_heads():
 
 def test_add_classes_expands_classifier_shape():
     cfg = ContinualSDLoRAConfig(
-        backbone_model_name='facebook/dinov3-giant',
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
         quantization_mode='int8_hybrid',
         target_modules_strategy='all_linear_transformer',
         fusion_layers=[2],
@@ -69,7 +69,7 @@ def test_add_classes_expands_classifier_shape():
 
 def test_predict_payload_contains_v6_ood_keys():
     cfg = ContinualSDLoRAConfig(
-        backbone_model_name='facebook/dinov3-giant',
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
         quantization_mode='int8_hybrid',
         target_modules_strategy='all_linear_transformer',
         fusion_layers=[2],
@@ -110,7 +110,7 @@ def test_warns_when_peft_is_missing(monkeypatch):
     from src.training import continual_sd_lora as continual_module
 
     cfg = ContinualSDLoRAConfig(
-        backbone_model_name='facebook/dinov3-giant',
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
         quantization_mode='int8_hybrid',
         target_modules_strategy='all_linear_transformer',
         fusion_layers=[2],
@@ -131,7 +131,7 @@ def test_warns_when_peft_is_missing(monkeypatch):
 
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
-        backbone_model_name='facebook/dinov3-giant',
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
         quantization_mode='int8_hybrid',
         target_modules_strategy='all_linear_transformer',
         fusion_layers=[2],
@@ -171,3 +171,4 @@ def test_train_increment_emits_progress_callback_events():
     assert 'batch_loss' in batch_events[0]
     assert 'epoch_progress' in batch_events[0]
     assert 'epoch_loss' in epoch_events[0]
+

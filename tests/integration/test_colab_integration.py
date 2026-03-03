@@ -14,7 +14,7 @@ def test_colab_config_contains_continual_contract():
     cfg = manager.load_all_configs()
 
     continual = cfg['training']['continual']
-    assert continual['backbone']['model_name'] == 'facebook/dinov3-giant'
+    assert continual['backbone']['model_name'] == 'facebook/dinov3-vitl16-pretrain-lvd1689m'
     assert continual['quantization']['mode'] == 'int8_hybrid'
 
 
@@ -22,7 +22,7 @@ def test_continual_config_rejects_low_bit_payload():
     try:
         ContinualSDLoRAConfig.from_training_config(
             {
-                'backbone': {'model_name': 'facebook/dinov3-giant'},
+                'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
                 'quantization': {'mode': 'int8_hybrid'},
                 'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
                 'fusion': {'layers': [2, 5, 8, 11]},
@@ -41,7 +41,7 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
     class FakeTrainer:
         def __init__(self, config):
             self.config = type('Cfg', (), {
-                'backbone_model_name': 'facebook/dinov3-giant',
+                'backbone_model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m',
                 'fusion_layers': [2, 5, 8, 11],
                 'fusion_output_dim': 768,
                 'fusion_dropout': 0.1,
@@ -104,3 +104,4 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
     reloaded = IndependentCropAdapter(crop_name='tomato', device='cpu')
     reloaded.load_adapter(str(save_dir / 'continual_sd_lora_adapter'))
     assert reloaded.is_trained is True
+

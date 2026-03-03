@@ -7,8 +7,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-from src.router import simple_crop_router as router_module
-from src.router.simple_crop_router import SimpleCropRouter
+from src.archive.v5_legacy.router import simple_crop_router as router_module
+from src.archive.v5_legacy.router.simple_crop_router import SimpleCropRouter
 
 
 class _DummyBackbone(nn.Module):
