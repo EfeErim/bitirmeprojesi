@@ -11,6 +11,7 @@ Superseded v6 notebook flow remains archived under `colab_notebooks/archive/v6_s
 
 - Notebook bootstrap auto-detects repository root from common `/content` and Drive paths.
 - If root is still missing, bootstrap can auto-clone the repo.
+- Shared bootstrap helpers now live in `scripts/colab_repo_bootstrap.py` and are consumed by both active notebooks.
 - Optional environment variables:
   - `AADS_REPO_ROOT` or `REPO_ROOT`
   - `AADS_REPO_CLONE_TARGET`

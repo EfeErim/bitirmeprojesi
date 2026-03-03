@@ -14,6 +14,13 @@
 4. Validate dataset path, initialize training engine, run training with live progress.
 5. Calibrate OOD and save adapter outputs.
 
+### Runtime Notes (Current)
+
+- Notebook bootstrap logic is now shared via `scripts/colab_repo_bootstrap.py`.
+- Notebook 2 class alignment now uses `config/plant_taxonomy.json` (`crop_specific_diseases`) instead of hardcoded class maps.
+- Notebook 1 pipeline execution explicitly disables duplicate analyzer routing before full pipeline call.
+- Notebook 2 OOD calibration status widget is displayed explicitly after calibration completes.
+
 ## Superseded Notebook Set
 
 The previous manual stage notebooks are archived/superseded:
