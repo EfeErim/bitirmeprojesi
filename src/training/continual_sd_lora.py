@@ -53,6 +53,43 @@ PREFERRED_TARGET_TOKEN = (
 )
 
 
+def _patch_missing_scb_for_linear8bitlt(model: nn.Module) -> int:
+    """Patch missing `weight.SCB` on bitsandbytes Linear8bitLt modules.
+
+    Some incompatible runtime stacks can surface 8-bit layers whose `weight`
+    object does not expose `SCB`. PEFT k-bit preparation and wrapping paths may
+    access this attribute and fail with `AttributeError` if absent.
+    """
+    try:
+        import bitsandbytes as bnb  # type: ignore
+    except Exception:
+        return 0
+
+    linear8bitlt_cls = getattr(getattr(bnb, "nn", None), "Linear8bitLt", None)
+    if linear8bitlt_cls is None:
+        return 0
+
+    patched = 0
+    for module in model.modules():
+        if not isinstance(module, linear8bitlt_cls):
+            continue
+        weight = getattr(module, "weight", None)
+        if weight is None or hasattr(weight, "SCB"):
+            continue
+        try:
+            setattr(weight, "SCB", None)
+            patched += 1
+        except Exception:
+            continue
+
+    if patched:
+        logger.warning(
+            "Patched missing SCB attributes on %s Linear8bitLt module(s) before PEFT wrapping.",
+            patched,
+        )
+    return patched
+
+
 @dataclass
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
@@ -422,8 +459,10 @@ class ContinualSDLoRATrainer:
         if LoraConfig is None:
             self._raise_missing_peft()
 
-        if self._is_low_bit_loaded_model(model) and prepare_model_for_kbit_training is not None:
-            model = prepare_model_for_kbit_training(model)
+        if self._is_low_bit_loaded_model(model):
+            _patch_missing_scb_for_linear8bitlt(model)
+            if prepare_model_for_kbit_training is not None:
+                model = prepare_model_for_kbit_training(model)
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
         lora_config = LoraConfig(

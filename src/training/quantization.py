@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Optional, Tuple
 import importlib.util
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,24 @@ def _has_module(module_name: str) -> bool:
     return importlib.util.find_spec(module_name) is not None
 
 
+def _parse_version_tuple(value: str) -> Tuple[int, ...]:
+    parts = []
+    for token in str(value).replace("-", ".").split("."):
+        match = re.match(r"^(\d+)", token)
+        if match:
+            parts.append(int(match.group(1)))
+    return tuple(parts) if parts else (0,)
+
+
+def _is_version_at_least(current: str, minimum: str) -> bool:
+    current_parts = list(_parse_version_tuple(current))
+    minimum_parts = list(_parse_version_tuple(minimum))
+    max_len = max(len(current_parts), len(minimum_parts))
+    current_parts.extend([0] * (max_len - len(current_parts)))
+    minimum_parts.extend([0] * (max_len - len(minimum_parts)))
+    return tuple(current_parts) >= tuple(minimum_parts)
+
+
 def _build_bnb_int8_config(cfg: HybridINT8Config):
     from transformers import BitsAndBytesConfig  # lazy import
 
@@ -139,6 +158,20 @@ def load_hybrid_int8_backbone(
         return model_cls.from_pretrained(model_name)
 
     if has_bnb and has_transformers_bnb:
+        import bitsandbytes as bnb  # lazy import
+
+        bnb_version = str(getattr(bnb, "__version__", "0"))
+        required_bnb_version = "0.43.0"
+        if not _is_version_at_least(bnb_version, required_bnb_version):
+            message = (
+                f"bitsandbytes>={required_bnb_version} is required for stable hybrid INT8 + PEFT runtime, "
+                f"but found bitsandbytes=={bnb_version}. Upgrade bitsandbytes and restart runtime."
+            )
+            if cfg.strict_backend and not cfg.allow_cpu_fallback:
+                raise RuntimeError(message)
+            logger.warning("%s Falling back to non-quantized load due to explicit config.", message)
+            return model_cls.from_pretrained(model_name)
+
         quant_config = _build_bnb_int8_config(cfg)
         logger.info("Loading %s with hybrid INT8 (bitsandbytes enabled).", model_name)
         return model_cls.from_pretrained(

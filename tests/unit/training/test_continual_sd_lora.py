@@ -133,6 +133,41 @@ def test_raises_when_peft_is_missing(monkeypatch):
         trainer._apply_lora(backbone, ['transformer.block.0.0'])
 
 
+def test_patch_missing_scb_for_linear8bitlt(monkeypatch):
+    import sys
+    import types
+
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeLinear8bitLt(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.weight = torch.randn(2, 2)
+
+        def forward(self, x):
+            return x
+
+    class FakeQuantizedModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.quant = FakeLinear8bitLt()
+
+        def forward(self, x):
+            return x
+
+    fake_bnb = types.SimpleNamespace(nn=types.SimpleNamespace(Linear8bitLt=FakeLinear8bitLt))
+    monkeypatch.setitem(sys.modules, 'bitsandbytes', fake_bnb)
+
+    model = FakeQuantizedModel()
+    assert not hasattr(model.quant.weight, 'SCB')
+
+    patched = continual_module._patch_missing_scb_for_linear8bitlt(model)
+
+    assert patched == 1
+    assert hasattr(model.quant.weight, 'SCB')
+    assert model.quant.weight.SCB is None
+
+
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
