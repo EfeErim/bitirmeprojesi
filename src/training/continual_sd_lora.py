@@ -484,7 +484,22 @@ class ContinualSDLoRATrainer:
         ).to(self.device)
 
         self.target_modules_resolved = self.resolve_target_modules(self.backbone)
-        adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
+        try:
+            adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
+        except RuntimeError as exc:
+            message = str(exc).lower()
+            if ("scb" not in message and "bitsandbytes" not in message) or not self._is_low_bit_loaded_model(self.backbone):
+                raise
+            logger.warning(
+                "Low-bit LoRA wrapping failed due to SCB/bitsandbytes runtime issue (%s). "
+                "Retrying with non-quantized backbone fallback.",
+                exc,
+            )
+            self.backbone = self._load_non_quantized_backbone().to(self.device)
+            for param in self.backbone.parameters():
+                param.requires_grad = False
+            self.target_modules_resolved = self.resolve_target_modules(self.backbone)
+            adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
         if self._is_low_bit_loaded_model(adapter_model):
             self.adapter_model = adapter_model
         else:
@@ -497,6 +512,12 @@ class ContinualSDLoRATrainer:
             self.config.backbone_model_name,
             len(self.target_modules_resolved),
         )
+
+    def _load_non_quantized_backbone(self) -> nn.Module:
+        if AutoModel is None:
+            raise RuntimeError("transformers AutoModel is unavailable for non-quantized fallback loading.")
+        logger.warning("Loading non-quantized fallback backbone for SCB recovery: %s", self.config.backbone_model_name)
+        return AutoModel.from_pretrained(self.config.backbone_model_name)
 
     def _raise_missing_peft(self) -> None:
         message = (

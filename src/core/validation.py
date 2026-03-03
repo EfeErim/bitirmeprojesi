@@ -17,6 +17,24 @@ MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024
 VALID_IMAGE_FORMATS = {'jpeg', 'png', 'bmp', 'gif', 'tiff'}
 
 
+def _read_image_format(image_bytes: bytes):
+    """Open image bytes and return normalized image format."""
+    image = Image.open(BytesIO(image_bytes))
+    return image.format.lower() if image.format else None
+
+
+def _ensure_supported_image_format(image_format) -> None:
+    """Validate image format against supported formats."""
+    if image_format not in VALID_IMAGE_FORMATS:
+        raise ValueError(f"Invalid image format: {image_format}. Supported formats: {VALID_IMAGE_FORMATS}")
+
+
+def _verify_image_integrity(image_bytes: bytes) -> None:
+    """Verify image integrity without decoding pixel data."""
+    image = Image.open(BytesIO(image_bytes))
+    image.verify()
+
+
 def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
     """
     Validate and decode a base64 image string.
@@ -37,10 +55,8 @@ def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
         
         # Check if valid image format using PIL
         try:
-            image = Image.open(BytesIO(decoded))
-            image_format = image.format.lower() if image.format else None
-            if image_format not in VALID_IMAGE_FORMATS:
-                raise ValueError(f"Invalid image format: {image_format}. Supported formats: {VALID_IMAGE_FORMATS}")
+            image_format = _read_image_format(decoded)
+            _ensure_supported_image_format(image_format)
         except UnidentifiedImageError as e:
             # Normalize message for tests expecting 'Invalid image format' or 'Corrupted image'
             raise ValueError(f"Invalid image format: {str(e)}")
@@ -49,8 +65,7 @@ def validate_base64_image(b64_string: str) -> Tuple[bytes, str]:
         
         # Check image integrity
         try:
-            image = Image.open(BytesIO(decoded))
-            image.verify()  # Verify image integrity
+            _verify_image_integrity(decoded)
         except UnidentifiedImageError as e:
             raise ValueError(f"Invalid image format: {str(e)}")
         except Exception as e:
@@ -83,17 +98,14 @@ def validate_image_file(file: bytes) -> str:
         
         # Check if valid image format using PIL
         try:
-            image = Image.open(BytesIO(file))
-            image_format = image.format.lower() if image.format else None
-            if image_format not in VALID_IMAGE_FORMATS:
-                raise ValueError(f"Invalid image format: {image_format}. Supported formats: {VALID_IMAGE_FORMATS}")
+            image_format = _read_image_format(file)
+            _ensure_supported_image_format(image_format)
         except Exception as e:
             raise ValueError(f"Invalid image data: {str(e)}")
         
         # Check image integrity
         try:
-            image = Image.open(BytesIO(file))
-            image.verify()  # Verify image integrity
+            _verify_image_integrity(file)
         except Exception as e:
             raise ValueError(f"Corrupted image: {str(e)}")
         

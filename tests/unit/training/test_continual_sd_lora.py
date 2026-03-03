@@ -359,3 +359,45 @@ def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
     assert pred['status'] == 'success'
     assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(pred['ood_analysis'].keys())
 
+
+def test_initialize_engine_retries_non_quantized_on_scb_failure(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class QuantizedDummyBackbone(DummyBackbone):
+        is_loaded_in_8bit = True
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, 'load_hybrid_int8_backbone', lambda *_args, **_kwargs: QuantizedDummyBackbone())
+    monkeypatch.setattr(continual_module, 'AutoModel', FakeAutoModel)
+
+    call_counter = {'n': 0}
+
+    def fake_apply(self, model, _targets):
+        call_counter['n'] += 1
+        if call_counter['n'] == 1:
+            raise RuntimeError("SCB missing in bitsandbytes state dict path")
+        return model
+
+    monkeypatch.setattr(ContinualSDLoRATrainer, '_apply_lora', fake_apply)
+
+    cfg = ContinualSDLoRAConfig.from_training_config(
+        {
+            'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
+            'quantization': {'mode': 'int8_hybrid', 'strict_backend': False, 'allow_cpu_fallback': True},
+            'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
+            'fusion': {'layers': [2, 5, 8, 11], 'output_dim': 8},
+            'device': 'cpu',
+        }
+    )
+
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={'healthy': 0})
+
+    assert call_counter['n'] == 2
+    assert trainer.backbone is not None
+    assert not trainer._is_low_bit_loaded_model(trainer.backbone)
+

@@ -8,20 +8,10 @@ Bundle contents:
 
 from __future__ import annotations
 
-import subprocess
 import sys
 from pathlib import Path
 
-
-def run_step(command: list[str], cwd: Path, title: str) -> int:
-    print(f"\n[STEP] {title}")
-    print("[CMD]", " ".join(command))
-    completed = subprocess.run(command, cwd=str(cwd), check=False)
-    if completed.returncode != 0:
-        print(f"[FAIL] {title} (exit={completed.returncode})")
-        return completed.returncode
-    print(f"[OK] {title}")
-    return 0
+from _shared_runner import run_step
 
 
 def main() -> int:
