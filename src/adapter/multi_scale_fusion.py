@@ -72,7 +72,11 @@ class MultiScaleFeatureFusion(nn.Module):
         if not feature_list:
             raise ValueError("feature_list must contain at least one tensor")
 
-        normalized = [_to_2d(feat) for feat in feature_list]
+        projection_weight = self.projections[0].weight
+        normalized = [
+            _to_2d(feat).to(device=projection_weight.device, dtype=projection_weight.dtype)
+            for feat in feature_list
+        ]
         while len(normalized) < self.num_scales:
             normalized.append(normalized[-1])
         active = normalized[: self.num_scales]

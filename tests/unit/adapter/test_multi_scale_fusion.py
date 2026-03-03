@@ -58,6 +58,14 @@ def test_fusion_backward_propagates_gradients():
         assert projection.weight.grad is not None
 
 
+def test_fusion_casts_half_precision_inputs_to_projection_dtype():
+    fusion = MultiScaleFeatureFusion(input_dim=8, output_dim=10, num_scales=4)
+    features = [torch.randn(2, 8, dtype=torch.float16) for _ in range(4)]
+    out = fusion(features)
+    assert out.dtype == fusion.projections[0].weight.dtype
+    assert out.shape == (2, 10)
+
+
 def test_fusion_raises_for_mismatched_input_dim():
     fusion = MultiScaleFeatureFusion(input_dim=8, output_dim=10, num_scales=4)
     bad_features = [torch.randn(2, 7) for _ in range(4)]

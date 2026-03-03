@@ -180,6 +180,37 @@ def test_train_increment_emits_progress_callback_events():
     assert 'epoch_loss' in epoch_events[0]
 
 
+def test_initialize_engine_skips_to_for_low_bit_backbone(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class QuantizedDummyBackbone(DummyBackbone):
+        is_loaded_in_8bit = True
+
+        def to(self, *_args, **_kwargs):
+            raise RuntimeError(".to() should not be called for low-bit loaded models")
+
+    monkeypatch.setattr(continual_module, 'load_hybrid_int8_backbone', lambda *_args, **_kwargs: QuantizedDummyBackbone())
+    monkeypatch.setattr(continual_module, 'AutoModel', object())
+    monkeypatch.setattr(ContinualSDLoRATrainer, '_apply_lora', lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig.from_training_config(
+        {
+            'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
+            'quantization': {'mode': 'int8_hybrid', 'strict_backend': False, 'allow_cpu_fallback': True},
+            'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
+            'fusion': {'layers': [2, 5, 8, 11], 'output_dim': 8},
+            'device': 'cpu',
+        }
+    )
+
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={'healthy': 0})
+
+    assert trainer.backbone is not None
+    assert trainer.classifier is not None
+    assert trainer.classifier.out_features == 1
+
+
 def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
     from src.training import continual_sd_lora as continual_module
 

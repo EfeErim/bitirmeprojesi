@@ -1,14 +1,14 @@
 # V6 Full Repository Audit
 
-Generated at (UTC): `2026-03-03T18:41:54.481452+00:00`
+Generated at (UTC): `2026-03-03T19:01:58.903926+00:00`
 
 ## Baseline Snapshot
 
-- Tracked files: `281`
-- Active files: `194`
+- Tracked files: `282`
+- Active files: `195`
 - Archive files: `87`
-- Coverage rows: `194`
-- Coverage summary: pass=`194` fail=`0` risk=`0` unverified=`0`
+- Coverage rows: `195`
+- Coverage summary: pass=`195` fail=`0` risk=`0` unverified=`0`
 
 ## Confirmed Defects
 
@@ -30,13 +30,13 @@ Generated at (UTC): `2026-03-03T18:41:54.481452+00:00`
 - `notebook_structure`: status=pass returncode=0 duration=0.0s
 - `root_alias_contract`: status=pass returncode=0 duration=0.0s
 - `legacy_token_guard_non_archive`: status=pass returncode=1 duration=0.0s
-- `suite_unit_validation`: status=pass returncode=0 duration=8.3s
-- `notebook_import_validation`: status=pass returncode=0 duration=5.4s
-- `suite_colab_smoke`: status=pass returncode=0 duration=6.6s
-- `markdown_links`: status=pass returncode=0 duration=1.0s
-- `python_sanity_bundle`: status=pass returncode=0 duration=8.9s
-- `suite_unit_colab_integration`: status=pass returncode=0 duration=49.8s
-- `policy_regression_bundle`: status=pass returncode=0 duration=7.8s
+- `suite_unit_validation`: status=pass returncode=0 duration=8.8s
+- `notebook_import_validation`: status=pass returncode=0 duration=5.6s
+- `suite_colab_smoke`: status=pass returncode=0 duration=6.9s
+- `markdown_links`: status=pass returncode=0 duration=1.1s
+- `python_sanity_bundle`: status=pass returncode=0 duration=9.0s
+- `suite_unit_colab_integration`: status=pass returncode=0 duration=82.2s
+- `policy_regression_bundle`: status=pass returncode=0 duration=6.6s
 - `archive_reference_guard`: status=pass returncode=1 duration=0.0s
 
 ## Unverified Areas

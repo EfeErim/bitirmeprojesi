@@ -189,6 +189,27 @@ class ContinualSDLoRATrainer:
             "allow_cpu_fallback": self.config.allow_cpu_quantization_fallback,
         }
 
+    @staticmethod
+    def _is_low_bit_loaded_model(model: nn.Module) -> bool:
+        """Return True when model device placement is already managed by low-bit loader."""
+        candidates = [
+            model,
+            getattr(model, "base_model", None),
+            getattr(getattr(model, "base_model", None), "model", None),
+            getattr(model, "model", None),
+        ]
+        for candidate in candidates:
+            if candidate is None:
+                continue
+            if bool(getattr(candidate, "is_loaded_in_8bit", False)):
+                return True
+            if bool(getattr(candidate, "is_loaded_in_4bit", False)):
+                return True
+            quant_method = str(getattr(candidate, "quantization_method", "")).lower()
+            if "bitsandbytes" in quant_method:
+                return True
+        return False
+
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
         """Load frozen backbone, apply adapters, initialize heads."""
         if class_to_idx:
@@ -208,7 +229,10 @@ class ContinualSDLoRATrainer:
             cfg=int8_cfg,
             strict_model_loading=self.config.strict_model_loading,
         )
-        self.backbone = self.backbone.to(self.device)
+        if self._is_low_bit_loaded_model(self.backbone):
+            logger.info("Backbone is already low-bit loaded; skipping explicit .to(device).")
+        else:
+            self.backbone = self.backbone.to(self.device)
         for param in self.backbone.parameters():
             param.requires_grad = False
 
@@ -222,7 +246,11 @@ class ContinualSDLoRATrainer:
         ).to(self.device)
 
         self.target_modules_resolved = self.resolve_target_modules(self.backbone)
-        self.adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved).to(self.device)
+        adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
+        if self._is_low_bit_loaded_model(adapter_model):
+            self.adapter_model = adapter_model
+        else:
+            self.adapter_model = adapter_model.to(self.device)
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
 
         self._is_initialized = True
