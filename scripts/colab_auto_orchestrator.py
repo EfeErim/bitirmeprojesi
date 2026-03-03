@@ -179,10 +179,8 @@ class CoLabOrchestrator:
 
         notebook_dir = self.repo_path / 'colab_notebooks'
         stages = [
-            (notebook_dir / '1_data_preparation.ipynb', 'STAGE 1: Data Preparation', 1800, False),
-            (notebook_dir / '2_continual_sd_lora_training.ipynb', 'STAGE 2: Continual Training', 5400, False),
-            (notebook_dir / '5_testing_validation.ipynb', 'STAGE 3: Validation', 1800, True),
-            (notebook_dir / '6_performance_monitoring.ipynb', 'STAGE 4: Monitoring', 1800, True),
+            (notebook_dir / '1_crop_router_pipeline.ipynb', 'STAGE 1: Router Pipeline Notebook', 2400, False),
+            (notebook_dir / '2_interactive_adapter_training.ipynb', 'STAGE 2: Interactive Adapter Training Notebook', 7200, False),
         ]
 
         for path, label, timeout, optional in stages:
@@ -202,9 +200,9 @@ class CoLabOrchestrator:
             logger.info("  %s: %.1f minutes", stage, minutes)
         logger.info("  Total Duration: %.1f minutes", total_minutes)
         logger.info("Outputs:")
-        logger.info("  OK: continual_sd_lora_adapter")
-        logger.info("  OK: validation reports")
-        logger.info("  OK: monitoring reports")
+        logger.info("  OK: router diagnostics from notebook 1")
+        logger.info("  OK: continual_sd_lora_adapter from notebook 2")
+        logger.info("  OK: OOD calibration + adapter metadata")
 
 
 def main() -> int:

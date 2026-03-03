@@ -58,6 +58,11 @@ SUITES: dict[str, SuiteConfig] = {
         description='Router policy checks',
         paths=('tests/unit/router',),
     ),
+    'unit/utils': SuiteConfig(
+        name='unit/utils',
+        description='Utility and optimization checks',
+        paths=('tests/unit/utils',),
+    ),
     'colab/smoke': SuiteConfig(
         name='colab/smoke',
         description='Colab continual smoke checks',
@@ -73,7 +78,7 @@ SUITES: dict[str, SuiteConfig] = {
 
 GROUPS = {
     'quick': ('unit/validation', 'unit/training', 'unit/adapter', 'unit/ood'),
-    'unit': ('unit/validation', 'unit/training', 'unit/adapter', 'unit/ood', 'unit/pipeline', 'unit/router'),
+    'unit': ('unit/validation', 'unit/training', 'unit/adapter', 'unit/ood', 'unit/pipeline', 'unit/router', 'unit/utils'),
     'colab': ('colab/smoke',),
     'integration': ('integration/core',),
     'all': tuple(SUITES.keys()),

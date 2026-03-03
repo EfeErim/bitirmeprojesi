@@ -109,6 +109,31 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
     assert loaded.is_trained is True
 
 
+def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
+    adapter.initialize_engine(class_names=['healthy', 'disease_a'])
+
+    save_dir = tmp_path / 'model_dir'
+    adapter.save_adapter(str(save_dir))
+
+    meta_path = save_dir / 'continual_sd_lora_adapter' / 'adapter_meta.json'
+    meta = json.loads(meta_path.read_text(encoding='utf-8'))
+
+    required = {
+        'schema_version',
+        'engine',
+        'backbone',
+        'quantization',
+        'fusion',
+        'class_to_idx',
+        'ood_calibration',
+        'target_modules_resolved',
+    }
+    assert required <= set(meta.keys())
+
+
 def test_adapter_train_increment_forwards_progress_callback(monkeypatch):
     monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
 

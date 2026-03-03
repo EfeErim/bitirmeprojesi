@@ -87,8 +87,8 @@ def main() -> None:
     setup_steps = [
         # 1. Update pip
         ([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], "Upgrade pip"),
-        # 2. Install transformers with SAM3 support
-        ([sys.executable, "-m", "pip", "install", "--upgrade", "transformers>=4.41.0"], "Install transformers (SAM3 support)"),
+        # 2. Install transformers with v6-pinned compatible range
+        ([sys.executable, "-m", "pip", "install", "--upgrade", "transformers>=4.50.0,<5.0.0"], "Install transformers (v6 range)"),
         # 3. Install open_clip for BioCLIP-2.5
         ([sys.executable, "-m", "pip", "install", "open-clip-torch"], "Install open-clip (BioCLIP-2.5)"),
         # 4. Install ultralytics for SAM2.1
@@ -137,10 +137,10 @@ def main() -> None:
    %cd /content/bitirmeprojesi
    %run scripts/validate_notebook_imports.py
 
-3. Start the continual training notebook:
-   Open: colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb
-   Set DATASET_ROOT_INPUT to your class-root dataset path
-   Set RUN_PIPELINE=True when ready
+3. Run the active two-notebook flow:
+   Open: colab_notebooks/1_crop_router_pipeline.ipynb
+   Then: colab_notebooks/2_interactive_adapter_training.ipynb
+   Set dataset root in notebook 2 to your class-root dataset path
 
 4. Optional router-only VLM sanity check:
    %run scripts/colab_vlm_quick_test.py

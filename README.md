@@ -9,6 +9,7 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
 - Adapter targeting: `all_linear_transformer`
 - Fusion layers: `[2, 5, 8, 11]`
 - OOD score: `0.6 * mahalanobis_z + 0.4 * energy_z`
+- Backbone ID verification: confirmed reachable on Hugging Face on `2026-03-03`.
 
 ## Canonical Entrypoints
 

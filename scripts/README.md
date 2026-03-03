@@ -25,6 +25,7 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `colab_setup_dependencies.py` - dependency setup for Colab runtime.
 - `colab_quick_setup.py` - quick environment setup path.
 - `colab_auto_orchestrator.py` - automation helper for multi-stage Colab runs.
+- `colab_repo_bootstrap.py` - shared repo-root resolution and optional auto-clone helpers used by both active notebooks.
 - `download_data_colab.py` - dataset download utilities for Colab.
 
 Notebook bootstrap behavior in `colab_notebooks/`:

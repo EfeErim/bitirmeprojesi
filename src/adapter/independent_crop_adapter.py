@@ -133,11 +133,19 @@ class IndependentCropAdapter:
         """Run continual increment training."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before train_increment().")
-        history = self._trainer.train_increment(
-            train_loader,
-            num_epochs=num_epochs,
-            progress_callback=progress_callback,
-        )
+        train_kwargs: Dict[str, Any] = {}
+        if num_epochs is not None:
+            train_kwargs["num_epochs"] = num_epochs
+        if progress_callback is not None:
+            train_kwargs["progress_callback"] = progress_callback
+
+        try:
+            history = self._trainer.train_increment(train_loader, **train_kwargs)
+        except TypeError:
+            # Backward compatibility for trainer shims that do not accept
+            # progress_callback keyword.
+            train_kwargs.pop("progress_callback", None)
+            history = self._trainer.train_increment(train_loader, **train_kwargs)
         self.is_trained = True
         return {
             "status": "trained",

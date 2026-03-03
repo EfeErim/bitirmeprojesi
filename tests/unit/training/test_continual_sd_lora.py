@@ -16,6 +16,13 @@ class DummyBackbone(nn.Module):
         self.classifier = nn.Linear(8, 2)
         self.config = type('Cfg', (), {'hidden_size': 8})()
 
+    def forward(self, images, output_hidden_states=False):
+        batch = images.shape[0]
+        hidden = torch.randn(batch, 4, 8, device=images.device)
+        if output_hidden_states:
+            return type('Output', (), {'hidden_states': [hidden] * 12})()
+        return type('Output', (), {'last_hidden_state': hidden})()
+
 
 
 def test_config_from_training_config_accepts_v6_contract():
@@ -171,4 +178,45 @@ def test_train_increment_emits_progress_callback_events():
     assert 'batch_loss' in batch_events[0]
     assert 'epoch_progress' in batch_events[0]
     assert 'epoch_loss' in epoch_events[0]
+
+
+def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    def fake_load(*_args, **_kwargs):
+        return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, 'load_hybrid_int8_backbone', fake_load)
+    monkeypatch.setattr(continual_module, 'AutoModel', object())
+    monkeypatch.setattr(ContinualSDLoRATrainer, '_apply_lora', lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig.from_training_config(
+        {
+            'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
+            'quantization': {'mode': 'int8_hybrid', 'strict_backend': True, 'allow_cpu_fallback': True},
+            'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
+            'fusion': {'layers': [2, 5, 8, 11], 'output_dim': 8},
+            'ood': {'threshold_factor': 2.0},
+            'device': 'cpu',
+            'num_epochs': 1,
+        }
+    )
+
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={'healthy': 0})
+    trainer.add_classes(['disease_a'])
+
+    train_loader = [
+        {'images': torch.zeros(2, 3, 8, 8), 'labels': torch.tensor([0, 1], dtype=torch.long)},
+        {'images': torch.zeros(2, 3, 8, 8), 'labels': torch.tensor([1, 0], dtype=torch.long)},
+    ]
+    history = trainer.train_increment(train_loader, num_epochs=1)
+    assert len(history['train_loss']) == 1
+
+    cal = trainer.calibrate_ood(train_loader)
+    assert int(cal['num_classes']) >= 1
+
+    pred = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
+    assert pred['status'] == 'success'
+    assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(pred['ood_analysis'].keys())
 

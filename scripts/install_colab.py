@@ -192,7 +192,7 @@ class ColabInstaller:
             content = "\n".join(
                 [
                     "torch>=2.2.0",
-                    "transformers>=4.40.0",
+                    "transformers>=4.50.0,<5.0.0",
                     "peft>=0.10.0",
                     "accelerate>=0.29.0",
                 ]

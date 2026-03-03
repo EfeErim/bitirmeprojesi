@@ -43,3 +43,64 @@ def test_process_with_adapter_emits_v6_ood_payload():
 
     assert 'ood_analysis' in result
     assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(result['ood_analysis'].keys())
+
+
+def test_process_image_emits_pipeline_contract_keys():
+    cfg = {'router': {'crop_mapping': {'tomato': {}}}}
+    pipeline = IndependentMultiCropPipeline(cfg, device='cpu')
+    pipeline.adapters['tomato'] = DummyAdapter()
+    pipeline.router = type(
+        'Router',
+        (),
+        {
+            'route': staticmethod(lambda _img: ('tomato', 0.91)),
+        },
+    )()
+
+    result = pipeline.process_image(torch.zeros(1, 3, 224, 224))
+
+    assert {
+        'status',
+        'crop',
+        'part',
+        'diagnosis',
+        'confidence',
+        'ood_analysis',
+        'router_confidence',
+        'crop_confidence',
+        'cache_hit',
+    } <= set(result.keys())
+
+
+def test_process_image_sets_adapter_unavailable_error_state():
+    cfg = {'router': {'crop_mapping': {'tomato': {}}}}
+    pipeline = IndependentMultiCropPipeline(cfg, device='cpu')
+    pipeline.router = type(
+        'Router',
+        (),
+        {
+            'route': staticmethod(lambda _img: ('tomato', 0.91)),
+        },
+    )()
+
+    result = pipeline.process_image(torch.zeros(1, 3, 224, 224))
+
+    assert result['status'] == 'error'
+    assert result['error_state'] == 'adapter_unavailable'
+
+
+def test_process_image_sets_unknown_crop_state_when_router_returns_unknown():
+    cfg = {'router': {'crop_mapping': {'tomato': {}}}}
+    pipeline = IndependentMultiCropPipeline(cfg, device='cpu')
+    pipeline.router = type(
+        'Router',
+        (),
+        {
+            'route': staticmethod(lambda _img: ('unknown', 0.2)),
+        },
+    )()
+
+    result = pipeline.process_image(torch.zeros(1, 3, 224, 224))
+
+    assert result['status'] == 'unknown_crop'
+    assert result['error_state'] == 'unknown_crop'

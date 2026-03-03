@@ -1,9 +1,9 @@
 {
-  "generated_at_utc": "2026-03-01T20:23:32.162746+00:00",
+  "generated_at_utc": "2026-03-03T18:13:12.271791+00:00",
   "baseline": {
-    "tracked_total": 272,
-    "active_total": 188,
-    "archive_total": 84
+    "tracked_total": 282,
+    "active_total": 195,
+    "archive_total": 87
   },
   "files": [
     {
@@ -136,20 +136,7 @@
       ]
     },
     {
-      "path": "colab_bootstrap.ipynb",
-      "scope": "active",
-      "extension": ".ipynb",
-      "file_class": "notebook",
-      "owner_surface": "docs/notebooks/scripts",
-      "checks": [
-        "archive_reference_guard",
-        "notebook_structure",
-        "notebook_import_validation",
-        "suite_colab_smoke"
-      ]
-    },
-    {
-      "path": "colab_notebooks/0_AUTO_TRAIN_COMPLETE_PIPELINE.ipynb",
+      "path": "colab_notebooks/1_crop_router_pipeline.ipynb",
       "scope": "active",
       "extension": ".ipynb",
       "file_class": "notebook",
@@ -163,49 +150,7 @@
       ]
     },
     {
-      "path": "colab_notebooks/1_data_preparation.ipynb",
-      "scope": "active",
-      "extension": ".ipynb",
-      "file_class": "notebook",
-      "owner_surface": "docs/notebooks/scripts",
-      "checks": [
-        "archive_reference_guard",
-        "legacy_token_guard_non_archive",
-        "notebook_structure",
-        "notebook_import_validation",
-        "suite_colab_smoke"
-      ]
-    },
-    {
-      "path": "colab_notebooks/2_continual_sd_lora_training.ipynb",
-      "scope": "active",
-      "extension": ".ipynb",
-      "file_class": "notebook",
-      "owner_surface": "docs/notebooks/scripts",
-      "checks": [
-        "archive_reference_guard",
-        "legacy_token_guard_non_archive",
-        "notebook_structure",
-        "notebook_import_validation",
-        "suite_colab_smoke"
-      ]
-    },
-    {
-      "path": "colab_notebooks/5_testing_validation.ipynb",
-      "scope": "active",
-      "extension": ".ipynb",
-      "file_class": "notebook",
-      "owner_surface": "docs/notebooks/scripts",
-      "checks": [
-        "archive_reference_guard",
-        "legacy_token_guard_non_archive",
-        "notebook_structure",
-        "notebook_import_validation",
-        "suite_colab_smoke"
-      ]
-    },
-    {
-      "path": "colab_notebooks/6_performance_monitoring.ipynb",
+      "path": "colab_notebooks/2_interactive_adapter_training.ipynb",
       "scope": "active",
       "extension": ".ipynb",
       "file_class": "notebook",
@@ -239,6 +184,14 @@
       "checks": []
     },
     {
+      "path": "colab_notebooks/archive/v6_superseded_2026-03-02/colab_bootstrap.ipynb",
+      "scope": "archive",
+      "extension": ".ipynb",
+      "file_class": "notebook",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": []
+    },
+    {
       "path": "colab_notebooks/requirements_colab.txt",
       "scope": "active",
       "extension": ".txt",
@@ -247,19 +200,6 @@
       "checks": [
         "archive_reference_guard",
         "legacy_token_guard_non_archive"
-      ]
-    },
-    {
-      "path": "colab_test_upload.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "python_sanity_bundle",
-        "root_alias_contract"
       ]
     },
     {
@@ -840,6 +780,18 @@
       ]
     },
     {
+      "path": "docs/reports/v6/V6_FULL_REPO_AUDIT.md",
+      "scope": "active",
+      "extension": ".md",
+      "file_class": "documentation",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": [
+        "archive_reference_guard",
+        "legacy_token_guard_non_archive",
+        "markdown_links"
+      ]
+    },
+    {
       "path": "docs/user_guide/colab_training_manual.md",
       "scope": "active",
       "extension": ".md",
@@ -859,6 +811,17 @@
       "owner_surface": "tests/ci/meta",
       "checks": [
         "archive_reference_guard"
+      ]
+    },
+    {
+      "path": "plan-aadsV6ArchitectureEvaluation.prompt.md",
+      "scope": "active",
+      "extension": ".md",
+      "file_class": "documentation",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": [
+        "archive_reference_guard",
+        "markdown_links"
       ]
     },
     {
@@ -945,6 +908,36 @@
       "checks": []
     },
     {
+      "path": "plans/v6_repo_audit_command_results.json",
+      "scope": "active",
+      "extension": ".json",
+      "file_class": "configuration",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard"
+      ]
+    },
+    {
+      "path": "plans/v6_repo_audit_coverage.csv",
+      "scope": "active",
+      "extension": ".csv",
+      "file_class": "other",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard"
+      ]
+    },
+    {
+      "path": "plans/v6_repo_audit_manifest.json",
+      "scope": "active",
+      "extension": ".json",
+      "file_class": "configuration",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard"
+      ]
+    },
+    {
       "path": "pytest.ini",
       "scope": "active",
       "extension": ".ini",
@@ -984,6 +977,19 @@
         "archive_reference_guard",
         "legacy_token_guard_non_archive",
         "markdown_links"
+      ]
+    },
+    {
+      "path": "scripts/audit_v6_repo.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": [
+        "archive_reference_guard",
+        "legacy_token_guard_non_archive",
+        "py_compile_batch",
+        "python_sanity_bundle"
       ]
     },
     {
@@ -1644,6 +1650,26 @@
       ]
     },
     {
+      "path": "specs/pipeline-spec.json",
+      "scope": "active",
+      "extension": ".json",
+      "file_class": "configuration",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard"
+      ]
+    },
+    {
+      "path": "specs/router-spec.json",
+      "scope": "active",
+      "extension": ".json",
+      "file_class": "configuration",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard"
+      ]
+    },
+    {
       "path": "src/__init__.py",
       "scope": "active",
       "extension": ".py",
@@ -1705,6 +1731,14 @@
     },
     {
       "path": "src/archive/v5_legacy/evaluation/v55_metrics.py",
+      "scope": "archive",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": []
+    },
+    {
+      "path": "src/archive/v5_legacy/router/simple_crop_router.py",
       "scope": "archive",
       "extension": ".py",
       "file_class": "python",
@@ -2180,6 +2214,20 @@
       ]
     },
     {
+      "path": "src/router/diagnostic_scouting.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "router",
+      "checks": [
+        "archive_reference_guard",
+        "legacy_token_guard_non_archive",
+        "py_compile_batch",
+        "suite_unit_colab_integration",
+        "policy_regression_bundle"
+      ]
+    },
+    {
       "path": "src/router/policy_taxonomy_utils.py",
       "scope": "active",
       "extension": ".py",
@@ -2209,20 +2257,6 @@
     },
     {
       "path": "src/router/roi_pipeline.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "router",
-      "checks": [
-        "archive_reference_guard",
-        "legacy_token_guard_non_archive",
-        "py_compile_batch",
-        "suite_unit_colab_integration",
-        "policy_regression_bundle"
-      ]
-    },
-    {
-      "path": "src/router/simple_crop_router.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
@@ -2380,32 +2414,6 @@
       ]
     },
     {
-      "path": "test_dynamic_taxonomy.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "python_sanity_bundle",
-        "root_alias_contract"
-      ]
-    },
-    {
-      "path": "test_pipeline_final_check.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "python_sanity_bundle",
-        "root_alias_contract"
-      ]
-    },
-    {
       "path": "tests/README.md",
       "scope": "active",
       "extension": ".md",
@@ -2478,6 +2486,14 @@
     },
     {
       "path": "tests/archive/v5_legacy/unit/evaluation/test_evaluation_metrics.py",
+      "scope": "archive",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": []
+    },
+    {
+      "path": "tests/archive/v5_legacy/unit/router/test_router.py",
       "scope": "archive",
       "extension": ".py",
       "file_class": "python",
@@ -2605,6 +2621,18 @@
       ]
     },
     {
+      "path": "tests/integration/test_full_pipeline_v6.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
       "path": "tests/unit/adapter/test_continual_adapter.py",
       "scope": "active",
       "extension": ".py",
@@ -2654,6 +2682,18 @@
     },
     {
       "path": "tests/unit/debugging/test_debugging_monitoring.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/unit/evaluation/test_metrics.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
@@ -2749,6 +2789,54 @@
       ]
     },
     {
+      "path": "tests/unit/router/test_diagnostic_scouting.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/unit/router/test_policy_taxonomy_utils.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/unit/router/test_roi_helpers.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/unit/router/test_roi_pipeline.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
       "path": "tests/unit/router/test_router_comprehensive.py",
       "scope": "active",
       "extension": ".py",
@@ -2809,18 +2897,6 @@
       ]
     },
     {
-      "path": "tests/unit/test_router.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "suite_unit_colab_integration"
-      ]
-    },
-    {
       "path": "tests/unit/training/test_continual_sd_lora.py",
       "scope": "active",
       "extension": ".py",
@@ -2834,6 +2910,18 @@
     },
     {
       "path": "tests/unit/training/test_int8_quantization.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/unit/utils/test_data_loader_training_helpers.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
@@ -2917,6 +3005,18 @@
       ]
     },
     {
+      "path": "tests/unit/validation/test_config_manager_ood_alias.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
       "path": "tests/unit/validation/test_schemas.py",
       "scope": "active",
       "extension": ".py",
@@ -2950,19 +3050,6 @@
         "archive_reference_guard",
         "py_compile_batch",
         "suite_unit_colab_integration"
-      ]
-    },
-    {
-      "path": "validate_notebook_imports.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "python_sanity_bundle",
-        "root_alias_contract"
       ]
     }
   ]

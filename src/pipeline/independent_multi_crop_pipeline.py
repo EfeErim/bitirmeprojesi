@@ -258,6 +258,7 @@ class IndependentMultiCropPipeline:
                 msg = str(e)
                 return {
                     'status': 'error',
+                    'error_state': 'router_unavailable',
                     'message': msg,
                     'crop': None,
                     'crop_confidence': 0.0,
@@ -270,6 +271,10 @@ class IndependentMultiCropPipeline:
                 }
             crop = router_result.get('crop')
             part = router_result.get('part')
+
+            if isinstance(crop, str) and crop.strip().lower() in {'unknown', 'none'}:
+                crop = None
+                part = None
         
         # Adapter step
         # Adapter step
@@ -282,6 +287,7 @@ class IndependentMultiCropPipeline:
                 # No adapter for predicted crop -> not yet trained
                 adapter_result = {
                     'status': 'error',
+                    'error_state': 'adapter_unavailable',
                     'adapter_status': 'no_adapter',
                     'message': f"No adapter available for crop '{crop}'",
                     'diagnosis': None,
@@ -326,6 +332,9 @@ class IndependentMultiCropPipeline:
             'cache_hit': False,
             'status': adapter_result.get('status', 'success')
         }
+
+        if 'error_state' in adapter_result:
+            result['error_state'] = adapter_result.get('error_state')
 
         # Propagate adapter message when present
         if 'message' in adapter_result:
@@ -617,6 +626,7 @@ class IndependentMultiCropPipeline:
         """Handle cases where crop is unknown or unsupported."""
         return {
             'status': 'unknown_crop',
+            'error_state': 'unknown_crop',
             'diagnosis': {
                 'unknown': 1.0
             },

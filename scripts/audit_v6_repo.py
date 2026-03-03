@@ -193,8 +193,12 @@ def checks_for_file(path: str, v55_ref_files: set[str]) -> list[str]:
 def run_internal_py_compile(root: Path, py_files: list[str]) -> tuple[dict, list[dict]]:
     failures: list[dict] = []
     ok = 0
+    skipped_missing = 0
     for rel in py_files:
         full = root / rel
+        if not full.exists():
+            skipped_missing += 1
+            continue
         try:
             source = full.read_text(encoding="utf-8")
             compile(source, rel, "exec")
@@ -217,6 +221,7 @@ def run_internal_py_compile(root: Path, py_files: list[str]) -> tuple[dict, list
             {
                 "py_files": len(py_files),
                 "compiled_ok": ok,
+                "skipped_missing": skipped_missing,
                 "failures": failures,
             },
             indent=2,
