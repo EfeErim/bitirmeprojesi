@@ -6,7 +6,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import json
 import logging
-import warnings
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
@@ -28,9 +27,10 @@ except Exception:  # pragma: no cover - test fallback
     AutoModel = None  # type: ignore[assignment]
 
 try:
-    from peft import LoraConfig, get_peft_model
+    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 except Exception:  # pragma: no cover - test fallback
     LoraConfig = None  # type: ignore[assignment]
+    prepare_model_for_kbit_training = None  # type: ignore[assignment]
 
     def get_peft_model(model: nn.Module, _cfg: Any) -> nn.Module:  # type: ignore[no-redef]
         return model
@@ -410,22 +410,20 @@ class ContinualSDLoRATrainer:
             len(self.target_modules_resolved),
         )
 
-    def _warn_missing_peft_once(self) -> None:
-        if self._peft_warning_emitted:
-            return
+    def _raise_missing_peft(self) -> None:
         message = (
-            "peft is not installed; continuing without LoRA adapter wrapping. "
-            "Training will run in degraded mode (fusion/classifier only). Install `peft` to enable SD-LoRA adapters."
+            "peft is required for SD-LoRA adapter wrapping but is not available. "
+            "Install a compatible `peft` package and retry."
         )
-        logger.warning(message)
-        warnings.warn(message, RuntimeWarning, stacklevel=2)
-        self._peft_warning_emitted = True
+        logger.error(message)
+        raise RuntimeError(message)
 
     def _apply_lora(self, model: nn.Module, target_modules: Sequence[str]) -> nn.Module:
         if LoraConfig is None:
-            self._warn_missing_peft_once()
-            self._adapter_wrapped = False
-            return model
+            self._raise_missing_peft()
+
+        if self._is_low_bit_loaded_model(model) and prepare_model_for_kbit_training is not None:
+            model = prepare_model_for_kbit_training(model)
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
         lora_config = LoraConfig(
@@ -436,18 +434,20 @@ class ContinualSDLoRATrainer:
             bias="none",
         )
         try:
-            wrapped = get_peft_model(model, lora_config)
+            try:
+                wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
+            except TypeError:
+                wrapped = get_peft_model(model, lora_config)
         except Exception as exc:
             message = str(exc).lower()
             if "scb" in message or "bitsandbytes" in message:
-                logger.warning(
-                    "PEFT LoRA wrapping is incompatible with current bitsandbytes runtime (%s). "
-                    "Continuing without adapter wrapping (fusion/classifier-only mode).",
-                    exc,
+                runtime_message = (
+                    "PEFT LoRA wrapping failed due to bitsandbytes runtime incompatibility "
+                    f"({exc}). Refusing degraded fallback; fix bitsandbytes/transformers/CUDA compatibility. "
+                    "Recommended Colab stack: transformers<5, bitsandbytes>=0.43, peft>=0.13, accelerate>=0.24, then restart runtime."
                 )
-                self._adapter_wrapped = False
-                self._warn_missing_peft_once()
-                return model
+                logger.error(runtime_message)
+                raise RuntimeError(runtime_message) from exc
             raise
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
