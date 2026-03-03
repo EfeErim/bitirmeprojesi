@@ -22,7 +22,10 @@ SUITES: dict[str, SuiteConfig] = {
     'unit/validation': SuiteConfig(
         name='unit/validation',
         description='Configuration and schema checks',
-        paths=('tests/unit/validation/test_schemas.py',),
+        paths=(
+            'tests/unit/validation/test_schemas.py',
+            'tests/unit/validation/test_config_manager_ood_alias.py',
+        ),
     ),
     'unit/training': SuiteConfig(
         name='unit/training',
@@ -43,7 +46,7 @@ SUITES: dict[str, SuiteConfig] = {
     'unit/ood': SuiteConfig(
         name='unit/ood',
         description='Continual OOD checks',
-        paths=('tests/unit/ood/test_continual_ood.py',),
+        paths=('tests/unit/ood',),
     ),
     'unit/pipeline': SuiteConfig(
         name='unit/pipeline',

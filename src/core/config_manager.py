@@ -233,6 +233,11 @@ class ConfigurationManager:
                 merged_config = self._apply_env_overrides(merged_config, env_config)
                 logger.info(f"Applied environment overrides for '{self._environment}'")
 
+        # Canonicalize OOD settings: training.continual.ood is authoritative for
+        # continual threshold configuration, while top-level ood remains runtime
+        # compatibility surface for pipeline toggles and metadata.
+        self._normalize_ood_surface(merged_config)
+
         # v6 hard guard: do not allow unsupported low-bit adapter settings.
         from src.training.quantization import assert_no_prohibited_4bit_flags
 
@@ -246,6 +251,54 @@ class ConfigurationManager:
         logger.info("Configuration merge completed")
         
         return merged_config
+
+    def _normalize_ood_surface(self, merged_config: Dict[str, Any]) -> None:
+        """Normalize legacy/top-level OOD keys to the v6 continual contract."""
+        training = merged_config.get("training")
+        if not isinstance(training, dict):
+            training = {}
+            merged_config["training"] = training
+
+        continual = training.get("continual")
+        if not isinstance(continual, dict):
+            continual = {}
+            training["continual"] = continual
+
+        continual_ood = continual.get("ood")
+        if not isinstance(continual_ood, dict):
+            continual_ood = {}
+            continual["ood"] = continual_ood
+
+        top_level_ood = merged_config.get("ood")
+        if not isinstance(top_level_ood, dict):
+            top_level_ood = {}
+            merged_config["ood"] = top_level_ood
+
+        legacy_continual = top_level_ood.get("continual")
+        legacy_threshold = None
+        if isinstance(legacy_continual, dict):
+            legacy_threshold = legacy_continual.get("threshold_factor")
+        if legacy_threshold is None:
+            legacy_threshold = top_level_ood.get("threshold_factor")
+
+        canonical_threshold = continual_ood.get("threshold_factor")
+        if canonical_threshold is None and legacy_threshold is not None:
+            continual_ood["threshold_factor"] = legacy_threshold
+            canonical_threshold = legacy_threshold
+        elif (
+            canonical_threshold is not None
+            and legacy_threshold is not None
+            and float(canonical_threshold) != float(legacy_threshold)
+        ):
+            logger.warning(
+                "OOD threshold mismatch detected between training.continual.ood (%s) "
+                "and top-level ood (%s). Using training.continual.ood.",
+                canonical_threshold,
+                legacy_threshold,
+            )
+
+        if canonical_threshold is not None:
+            top_level_ood["threshold_factor"] = float(canonical_threshold)
     
     def _apply_env_overrides(self, base_config: Dict[str, Any], env_config: Dict[str, Any]) -> Dict[str, Any]:
         """

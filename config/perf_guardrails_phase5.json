@@ -1,7 +1,8 @@
 {
   "meta": {
     "description": "Phase 5 router performance guardrails (CPU deterministic benchmark)",
-    "last_updated": "2026-02-24",
+    "last_updated": "2026-03-03",
+    "pipeline_contract": "Applies to v6 VLMPipeline stage-order benchmarks run by scripts/benchmark_router_phase5.py with mocked model hooks.",
     "variance_note": "Allow moderate runtime noise while detecting material regressions"
   },
   "limits": {

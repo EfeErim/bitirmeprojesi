@@ -1,51 +1,28 @@
 #!/usr/bin/env python3
-"""
-Setup script for AADS-ULoRA v5.5
-"""
+"""Setup script for AADS v6."""
 
-from setuptools import setup, find_packages
 from pathlib import Path
 
-# Read README
+from setuptools import find_packages, setup
+
 readme_file = Path(__file__).parent / "README.md"
 long_description = readme_file.read_text(encoding="utf-8") if readme_file.exists() else ""
 
 setup(
-    name="aads-ulora-v5.5",
-    version="5.5.0",
+    name="aads-v6",
+    version="6.0.0",
     author="Agricultural AI Development Team",
     author_email="contact@aads.com",
-    description="Agricultural AI Development System - ULoRA v5.5",
+    description="Agricultural AI Development System v6 (continual SD-LoRA runtime)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourorg/aads-ulora-v5.5",
-    
-    # Packages
-    packages=[
-        'aads_ulora_v55',
-        'aads_ulora_v55.adapter',
-        'aads_ulora_v55.core',
-        'aads_ulora_v55.dataset',
-        'aads_ulora_v55.debugging',
-        'aads_ulora_v55.evaluation',
-        'aads_ulora_v55.monitoring',
-        'aads_ulora_v55.ood',
-        'aads_ulora_v55.pipeline',
-        'aads_ulora_v55.router',
-        'aads_ulora_v55.training',
-        'aads_ulora_v55.utils',
-        'aads_ulora_v55.visualization'
-    ],
-    package_dir={"aads_ulora_v55": "src"},
-    
-    # Python version
+    url="https://github.com/EfeErim/bitirmeprojesi",
+    packages=find_packages(include=["src", "src.*"]),
     python_requires=">=3.9",
-    
-    # Dependencies
     install_requires=[
         "torch>=2.0.0",
         "torchvision>=0.15.0",
-        "transformers==4.56.0",
+        "transformers>=4.50.0,<5.0.0",
         "peft>=0.8.0",
         "accelerate>=0.20.0",
         "bitsandbytes>=0.41.0",
@@ -59,8 +36,6 @@ setup(
         "matplotlib>=3.7.0",
         "seaborn>=0.12.0",
     ],
-    
-    # Optional dependencies
     extras_require={
         "dev": [
             "pytest>=7.0.0",
@@ -76,18 +51,8 @@ setup(
         ],
         "mobile": [
             "tflite-runtime>=2.13.0",
-        ]
-    },
-    
-    # Entry points
-    entry_points={
-        "console_scripts": [
-            "aads-train=src.training.phase1_training:main",
-            "aads-pipeline=src.pipeline.independent_multi_crop_pipeline:main",
         ],
     },
-    
-    # Classifiers
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
@@ -101,8 +66,6 @@ setup(
         "Topic :: Scientific/Engineering :: Image Recognition",
         "Topic :: Agriculture",
     ],
-    
-    # Keywords
     keywords=[
         "agriculture",
         "crop-disease",

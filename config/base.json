@@ -324,9 +324,14 @@
                },
     "ood":  {
                 "enabled":  true,
-                "method":  "mahalanobis",
+                "method":  "ensemble",
                 "threshold":  0.95,
+                "threshold_factor":  2,
                 "confidence_level":  0.99,
+                "ensemble_weights":  {
+                                         "mahalanobis_z":  0.6,
+                                         "energy_z":  0.4
+                                     },
                 "prototype":  {
                                   "update_rate":  0.1,
                                   "min_samples":  10

@@ -50,8 +50,9 @@ flowchart TD
     START[analyze_image] --> ORDER[Resolve Stage Order]
     ORDER --> ROI[SAM3 ROI Candidate Stage]
     ROI --> CLS[ROI Classification Stage]
-    CLS --> FILTER[ROI Filter + Postprocess]
-    FILTER --> BEST[Best Detection Selection]
+    CLS --> GATE[Open-Set Gate]
+    GATE --> POST[Postprocess]
+    POST --> BEST[Best Detection Selection]
     BEST --> OUTPUT[Crop/Part/Confidence Output]
 ```
 
@@ -60,12 +61,17 @@ flowchart TD
 - Regression guardrails:
   - `tests/unit/router/test_vlm_policy_stage_order.py`
   - `tests/unit/router/test_vlm_strict_loading.py`
+- Performance guardrails:
+  - `scripts/benchmark_router_phase5.py`
+  - `scripts/check_phase5_perf_regression.py`
+  - `config/perf_guardrails_phase5.json`
+  - Scope: deterministic CPU benchmark over v6 stage-order scenarios (`full_pipeline`, `no_postprocess`, `no_open_set_gate`).
 
 ## Config and Contract Anchors
 
 - Runtime config sources:
-  - `config/training_config.json`
-  - `config/router_config.json`
+  - `config/base.json`
+  - `config/colab.json`
 - Canonical contract specs:
   - `specs/adapter-spec.json`
   - `specs/router-spec.json`
