@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -44,6 +45,29 @@ def maybe_clone_repo() -> Optional[Path]:
     if completed.returncode == 0 and is_repo_root(clone_target):
         return clone_target
     return None
+
+
+def install_colab_requirements(req_path: Path, in_colab: bool) -> None:
+    """Install notebook requirements with Colab-safe torch pin handling."""
+    req = Path(req_path)
+    if not req.exists():
+        return
+
+    if not in_colab:
+        subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(req)], check=False)
+        return
+
+    lines = req.read_text(encoding="utf-8").splitlines()
+    filtered: list[str] = []
+    for line in lines:
+        stripped = line.strip().lower()
+        if stripped.startswith("torch") or stripped.startswith("torchvision") or stripped.startswith("torchaudio"):
+            continue
+        filtered.append(line)
+
+    tmp_req = Path("/tmp/aads_colab_requirements_no_torch.txt")
+    tmp_req.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(tmp_req)], check=False)
 
 
 def resolve_repo_root() -> Path:

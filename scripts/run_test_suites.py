@@ -103,6 +103,11 @@ SUITES: dict[str, SuiteConfig] = {
         description='Visualization surface checks',
         paths=('tests/unit/visualization',),
     ),
+    'unit/fixtures': SuiteConfig(
+        name='unit/fixtures',
+        description='Shared fixture module import checks',
+        paths=('tests/fixtures/test_fixtures.py',),
+    ),
     'colab/smoke': SuiteConfig(
         name='colab/smoke',
         description='Colab continual smoke checks',
@@ -121,10 +126,16 @@ SUITES: dict[str, SuiteConfig] = {
         description='Core continual integration checks',
         paths=(
             'tests/integration/test_colab_integration.py',
+            'tests/integration/test_continual_trainer_metric_gates.py',
             'tests/integration/test_full_pipeline_v6.py',
             'tests/integration/test_continual_trainer_real_backbone.py',
         ),
         extra_pytest_args=('--runintegration',),
+    ),
+    'archive/v5_legacy': SuiteConfig(
+        name='archive/v5_legacy',
+        description='Archived legacy test surface (coverage mapping only)',
+        paths=('tests/archive/v5_legacy',),
     ),
 }
 
@@ -145,9 +156,11 @@ GROUPS = {
         'unit/security',
         'unit/utils',
         'unit/visualization',
+        'unit/fixtures',
     ),
     'colab': ('colab/smoke', 'colab/environment'),
     'integration': ('integration/core',),
+    'archive': ('archive/v5_legacy',),
     'all': tuple(SUITES.keys()),
 }
 

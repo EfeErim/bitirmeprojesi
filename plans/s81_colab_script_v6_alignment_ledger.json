@@ -1,0 +1,202 @@
+﻿{
+    "summary":  {
+                    "total_files":  11,
+                    "pass_files":  11,
+                    "fail_files":  0
+                },
+    "files":  [
+                  {
+                      "file":  "scripts/colab_auto_orchestrator.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+                                              {
+                                                  "line":  2,
+                                                  "text":  "\"\"\"AADS v6 Colab auto-orchestrator for continual SD-LoRA workflow.\"\"\""
+                                              },
+                                              {
+                                                  "line":  31,
+                                                  "text":  "\"\"\"Run notebook stages for v6 continual training.\"\"\""
+                                              },
+                                              {
+                                                  "line":  37,
+                                                  "text":  "logger.info(\"AADS v6 Auto-Orchestrator initialized at %s\", self.repo_path)"
+                                              },
+                                              {
+                                                  "line":  167,
+                                                  "text":  "logger.info(\"AADS v6 - Continual Auto-Training Pipeline\")"
+                                              },
+                                              {
+                                                  "line":  204,
+                                                  "text":  "logger.info(\"  OK: continual_sd_lora_adapter from notebook 2\")"
+                                              }
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_interactive_vlm_test.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_quick_setup.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+                                              {
+                                                  "line":  3,
+                                                  "text":  "AADS v6 Colab quick setup snippet."
+                                              },
+                                              {
+                                                  "line":  13,
+                                                  "text":  "print(\"AADS v6 Colab Quick Setup\")"
+                                              }
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_repo_bootstrap.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_setup_dependencies.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+                                              {
+                                                  "line":  3,
+                                                  "text":  "Colab setup script for AADS v6 notebooks and optional router diagnostics."
+                                              },
+                                              {
+                                                  "line":  84,
+                                                  "text":  "print(\" AADS v6 Colab Setup\")"
+                                              },
+                                              {
+                                                  "line":  90,
+                                                  "text":  "# 2. Install transformers with v6-pinned compatible range"
+                                              },
+                                              {
+                                                  "line":  91,
+                                                  "text":  "([sys.executable, \"-m\", \"pip\", \"install\", \"--upgrade\", \"transformers\u003e=4.50.0,\u003c5.0.0\"], \"Install transformers (v6 range)\"),"
+                                              },
+                                              {
+                                                  "line":  141,
+                                                  "text":  "Open: colab_notebooks/1_crop_router_pipeline.ipynb"
+                                              }
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_test_gpu_vlm.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_test_upload.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/colab_vlm_quick_test.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/download_data_colab.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/install_colab.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+                                              {
+                                                  "line":  2,
+                                                  "text":  "\"\"\"Install and bootstrap AADS v6 Colab workspace.\"\"\""
+                                              },
+                                              {
+                                                  "line":  148,
+                                                  "text":  "\u0027title\u0027: \u0027AADS v6 Colab Configuration\u0027,"
+                                              },
+                                              {
+                                                  "line":  149,
+                                                  "text":  "\u0027description\u0027: \u0027Google Colab-optimized configuration for AADS v6 continual runtime\u0027,"
+                                              },
+                                              {
+                                                  "line":  159,
+                                                  "text":  "\u0027continual\u0027: {"
+                                              },
+                                              {
+                                                  "line":  209,
+                                                  "text":  "\u0027src.training.continual_sd_lora\u0027,"
+                                              }
+                                          ]
+                  },
+                  {
+                      "file":  "scripts/validate_notebook_imports.py",
+                      "status":  "PASS",
+                      "stale_reference_hits":  [
+
+                                               ],
+                      "anchor_evidence":  [
+                                              {
+                                                  "line":  2,
+                                                  "text":  "\"\"\"Validate continual notebook/runtime imports for AADS v6.\"\"\""
+                                              },
+                                              {
+                                                  "line":  42,
+                                                  "text":  "def test_continual_trainer_imports() -\u003e bool:"
+                                              },
+                                              {
+                                                  "line":  44,
+                                                  "text":  "print(f\"\\nTesting {gate_label(step_id, \u0027continual trainer imports\u0027)}...\")"
+                                              },
+                                              {
+                                                  "line":  46,
+                                                  "text":  "from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer"
+                                              },
+                                              {
+                                                  "line":  48,
+                                                  "text":  "config = ContinualSDLoRAConfig.from_training_config("
+                                              }
+                                          ]
+                  }
+              ]
+}
