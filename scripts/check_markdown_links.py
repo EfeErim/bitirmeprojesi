@@ -14,6 +14,9 @@ IGNORED_SCHEMES = ("http://", "https://", "mailto:", "tel:")
 DEFAULT_EXCLUDES = {
     ".git",
     ".venv",
+    ".runtime_tmp",
+    ".tmp",
+    ".kilocode",
     "venv",
     "archive",
     "node_modules",

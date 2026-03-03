@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import scipy.stats as stats
 
 from src.ood.dynamic_thresholds import DynamicOODThreshold, AdaptiveThresholdManager, calibrate_thresholds_using_validation
+from src.ood.mahalanobis import MahalanobisDistance
 
 
 class TestDynamicOODThresholdInitialization:
@@ -730,6 +731,40 @@ class TestDynamicOODThresholdEdgeCases:
         # Higher confidence level should produce more conservative (higher) thresholds
         # due to wider confidence intervals
         assert result_99[0] >= result_95[0]
+
+
+class TestMahalanobisDistanceBasics:
+    """Test Mahalanobis helper used by OOD thresholding flows."""
+
+    def test_initialization_contract(self):
+        prototypes = torch.randn(3, 768)
+        class_stds = {
+            0: torch.ones(768) * 0.1,
+            1: torch.ones(768) * 0.2,
+            2: torch.ones(768) * 0.3,
+        }
+        mahalanobis = MahalanobisDistance(prototypes, class_stds)
+
+        assert mahalanobis.num_classes == 3
+        assert mahalanobis.feature_dim == 768
+        assert len(mahalanobis.inv_covariances) == 3
+
+    def test_compute_distance_and_nearest_class(self):
+        prototypes = torch.tensor([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], dtype=torch.float32)
+        class_stds = {
+            0: torch.tensor([0.1, 0.1, 0.1]),
+            1: torch.tensor([0.2, 0.2, 0.2]),
+        }
+        mahalanobis = MahalanobisDistance(prototypes, class_stds)
+
+        features = torch.tensor([[1.1, 0.1, 0.1], [0.1, 1.1, 0.1]])
+        distance = mahalanobis.compute_distance(features[:1], 0)
+        nearest, distances = mahalanobis.get_nearest_class(features)
+
+        assert distance.shape == (1,)
+        assert distance.item() > 0
+        assert distances.shape == (2,)
+        assert nearest.tolist() == [0, 1]
 
 
 if __name__ == '__main__':

@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-03-03T19:01:58.900879+00:00",
+  "generated_at_utc": "2026-03-03T19:09:02.379339+00:00",
   "baseline": {
-    "tracked_total": 282,
-    "active_total": 195,
+    "tracked_total": 283,
+    "active_total": 196,
     "archive_total": 87
   },
   "files": [
@@ -2623,6 +2623,18 @@
     },
     {
       "path": "tests/integration/test_colab_integration.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
+      "path": "tests/integration/test_continual_trainer_real_backbone.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
