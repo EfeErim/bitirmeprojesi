@@ -122,8 +122,21 @@ def load_hybrid_int8_backbone(
     cfg.validate()
     model_cls = auto_model_cls or AutoModel
 
+    import torch
+
     has_bnb = _has_module("bitsandbytes")
     has_transformers_bnb = hasattr(__import__("transformers"), "BitsAndBytesConfig")
+
+    if not torch.cuda.is_available():
+        message = (
+            "Hybrid INT8 backend requires a CUDA-enabled runtime, but torch.cuda.is_available() is False. "
+            "Use a GPU runtime (e.g., Colab A100/T4/L4), or explicitly enable `allow_cpu_fallback` "
+            "for non-quantized test/dev runs."
+        )
+        if cfg.strict_backend and not cfg.allow_cpu_fallback:
+            raise RuntimeError(message)
+        logger.warning("%s Falling back to non-quantized load due to explicit config.", message)
+        return model_cls.from_pretrained(model_name)
 
     if has_bnb and has_transformers_bnb:
         quant_config = _build_bnb_int8_config(cfg)
