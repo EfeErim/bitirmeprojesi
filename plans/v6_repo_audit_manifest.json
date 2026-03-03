@@ -1,8 +1,8 @@
 {
-  "generated_at_utc": "2026-03-03T18:20:45.568198+00:00",
+  "generated_at_utc": "2026-03-03T18:41:54.478634+00:00",
   "baseline": {
-    "tracked_total": 282,
-    "active_total": 195,
+    "tracked_total": 281,
+    "active_total": 194,
     "archive_total": 87
   },
   "files": [
@@ -301,18 +301,6 @@
     },
     {
       "path": "docs/REPO_FILE_RELATIONS.md",
-      "scope": "active",
-      "extension": ".md",
-      "file_class": "documentation",
-      "owner_surface": "docs/notebooks/scripts",
-      "checks": [
-        "archive_reference_guard",
-        "legacy_token_guard_non_archive",
-        "markdown_links"
-      ]
-    },
-    {
-      "path": "docs/REPO_FILE_RELATIONS_DETAILED.md",
       "scope": "active",
       "extension": ".md",
       "file_class": "documentation",
@@ -2766,6 +2754,18 @@
       ]
     },
     {
+      "path": "tests/unit/ood/test_mahalanobis_and_thresholds.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "tests/ci/meta",
+      "checks": [
+        "archive_reference_guard",
+        "py_compile_batch",
+        "suite_unit_colab_integration"
+      ]
+    },
+    {
       "path": "tests/unit/ood/test_ood_comprehensive.py",
       "scope": "active",
       "extension": ".py",
@@ -2899,18 +2899,6 @@
     },
     {
       "path": "tests/unit/security/test_security.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "suite_unit_colab_integration"
-      ]
-    },
-    {
-      "path": "tests/unit/test_ood.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
