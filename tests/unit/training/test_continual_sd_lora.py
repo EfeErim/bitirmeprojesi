@@ -207,6 +207,43 @@ def test_install_linear8bitlt_scb_state_dict_guard(monkeypatch):
     assert layer.calls == 2
 
 
+def test_apply_lora_falls_back_when_prepare_kbit_hits_scb(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
+        quantization_mode='int8_hybrid',
+        target_modules_strategy='all_linear_transformer',
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device='cpu',
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    backbone = DummyBackbone()
+
+    class DummyLoraConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    monkeypatch.setattr(continual_module, 'LoraConfig', DummyLoraConfig)
+    monkeypatch.setattr(continual_module, '_patch_missing_scb_for_linear8bitlt', lambda _m: 0)
+    monkeypatch.setattr(continual_module, '_install_linear8bitlt_scb_state_dict_guard', lambda: True)
+    monkeypatch.setattr(continual_module.ContinualSDLoRATrainer, '_is_low_bit_loaded_model', lambda self, _m: True)
+
+    def fail_prepare(model):
+        raise AttributeError("'Tensor' object has no attribute 'SCB'")
+
+    monkeypatch.setattr(continual_module, 'prepare_model_for_kbit_training', fail_prepare)
+
+    def fake_get_peft_model(model, _cfg):
+        return model
+
+    monkeypatch.setattr(continual_module, 'get_peft_model', fake_get_peft_model)
+
+    wrapped = trainer._apply_lora(backbone, ['transformer.block.0.0'])
+    assert wrapped is backbone
+
+
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',

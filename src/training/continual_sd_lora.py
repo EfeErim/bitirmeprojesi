@@ -510,11 +510,23 @@ class ContinualSDLoRATrainer:
         if LoraConfig is None:
             self._raise_missing_peft()
 
-        if self._is_low_bit_loaded_model(model):
+        low_bit_model = self._is_low_bit_loaded_model(model)
+        if low_bit_model:
             _patch_missing_scb_for_linear8bitlt(model)
             _install_linear8bitlt_scb_state_dict_guard()
             if prepare_model_for_kbit_training is not None:
-                model = prepare_model_for_kbit_training(model)
+                try:
+                    model = prepare_model_for_kbit_training(model)
+                except Exception as exc:
+                    message = str(exc).lower()
+                    if "scb" in message or "bitsandbytes" in message:
+                        logger.warning(
+                            "prepare_model_for_kbit_training failed with SCB/bitsandbytes issue (%s); "
+                            "continuing with direct LoRA wrapping fallback.",
+                            exc,
+                        )
+                    else:
+                        raise
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
         lora_config = LoraConfig(
@@ -525,10 +537,13 @@ class ContinualSDLoRATrainer:
             bias="none",
         )
         try:
-            try:
-                wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
-            except TypeError:
+            if low_bit_model:
                 wrapped = get_peft_model(model, lora_config)
+            else:
+                try:
+                    wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
+                except TypeError:
+                    wrapped = get_peft_model(model, lora_config)
         except Exception as exc:
             message = str(exc).lower()
             if "scb" in message or "bitsandbytes" in message:
