@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-03-03T18:13:12.271791+00:00",
+  "generated_at_utc": "2026-03-03T18:20:45.568198+00:00",
   "baseline": {
     "tracked_total": 282,
     "active_total": 195,
@@ -301,6 +301,18 @@
     },
     {
       "path": "docs/REPO_FILE_RELATIONS.md",
+      "scope": "active",
+      "extension": ".md",
+      "file_class": "documentation",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": [
+        "archive_reference_guard",
+        "legacy_token_guard_non_archive",
+        "markdown_links"
+      ]
+    },
+    {
+      "path": "docs/REPO_FILE_RELATIONS_DETAILED.md",
       "scope": "active",
       "extension": ".md",
       "file_class": "documentation",
@@ -1059,6 +1071,19 @@
     },
     {
       "path": "scripts/colab_quick_setup.py",
+      "scope": "active",
+      "extension": ".py",
+      "file_class": "python",
+      "owner_surface": "docs/notebooks/scripts",
+      "checks": [
+        "archive_reference_guard",
+        "legacy_token_guard_non_archive",
+        "py_compile_batch",
+        "python_sanity_bundle"
+      ]
+    },
+    {
+      "path": "scripts/colab_repo_bootstrap.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",
@@ -2970,30 +2995,6 @@
     },
     {
       "path": "tests/unit/utils/test_optimizations.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "suite_unit_colab_integration"
-      ]
-    },
-    {
-      "path": "tests/unit/utils/verify_optimizations.py",
-      "scope": "active",
-      "extension": ".py",
-      "file_class": "python",
-      "owner_surface": "tests/ci/meta",
-      "checks": [
-        "archive_reference_guard",
-        "py_compile_batch",
-        "suite_unit_colab_integration"
-      ]
-    },
-    {
-      "path": "tests/unit/utils/verify_optimizations_simple.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",

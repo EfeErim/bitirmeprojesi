@@ -1,6 +1,6 @@
 # V6 Full Repository Audit
 
-Generated at (UTC): `2026-03-03T18:13:12.274613+00:00`
+Generated at (UTC): `2026-03-03T18:20:45.571006+00:00`
 
 ## Baseline Snapshot
 
@@ -30,13 +30,13 @@ Generated at (UTC): `2026-03-03T18:13:12.274613+00:00`
 - `notebook_structure`: status=pass returncode=0 duration=0.0s
 - `root_alias_contract`: status=pass returncode=0 duration=0.0s
 - `legacy_token_guard_non_archive`: status=pass returncode=1 duration=0.0s
-- `suite_unit_validation`: status=pass returncode=0 duration=8.1s
-- `notebook_import_validation`: status=pass returncode=0 duration=5.4s
-- `suite_colab_smoke`: status=pass returncode=0 duration=6.7s
+- `suite_unit_validation`: status=pass returncode=0 duration=9.0s
+- `notebook_import_validation`: status=pass returncode=0 duration=5.8s
+- `suite_colab_smoke`: status=pass returncode=0 duration=6.8s
 - `markdown_links`: status=pass returncode=0 duration=1.0s
-- `python_sanity_bundle`: status=pass returncode=0 duration=8.8s
-- `suite_unit_colab_integration`: status=pass returncode=0 duration=50.5s
-- `policy_regression_bundle`: status=pass returncode=0 duration=6.4s
+- `python_sanity_bundle`: status=pass returncode=0 duration=9.0s
+- `suite_unit_colab_integration`: status=pass returncode=0 duration=51.7s
+- `policy_regression_bundle`: status=pass returncode=0 duration=6.6s
 - `archive_reference_guard`: status=pass returncode=1 duration=0.0s
 
 ## Unverified Areas
