@@ -7,9 +7,9 @@
     "confidence_threshold": "config.router.vlm.confidence_threshold",
     "max_detections": "config.router.vlm.max_detections"
   },
-  "fallback_router": {
-    "class": "src.router.simple_crop_router.SimpleCropRouter",
-    "intent": "resource-constrained environments"
+  "archived_router": {
+    "class": "src.archive.v5_legacy.router.simple_crop_router.SimpleCropRouter",
+    "status": "archived_legacy_only"
   },
   "policy_graph": {
     "stage_order": [

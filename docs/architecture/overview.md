@@ -4,7 +4,7 @@
 
 ```mermaid
 flowchart LR
-    INPUT[Input Image] --> ROUTER[VLMPipeline / SimpleCropRouter]
+    INPUT[Input Image] --> ROUTER[VLMPipeline]
     ROUTER --> CROP[Crop + Part Decision]
     CROP --> ADAPTER[IndependentCropAdapter]
     ADAPTER --> TRAINER[ContinualSDLoRATrainer]
@@ -15,7 +15,7 @@ flowchart LR
 ## Runtime Data Flow
 
 1. `src/pipeline/independent_multi_crop_pipeline.py` accepts an image and normalizes input shape.
-2. `src/router/vlm_pipeline.py` (or `src/router/simple_crop_router.py`) predicts crop/part with confidence.
+2. `src/router/vlm_pipeline.py` predicts crop/part with confidence.
 3. Pipeline resolves the matching `src/adapter/independent_crop_adapter.py` instance.
 4. Adapter runs `src/training/continual_sd_lora.py` inference surfaces and returns disease logits/probabilities.
 5. Adapter invokes OOD scoring (`src/ood/continual_ood.py`) and attaches:

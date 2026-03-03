@@ -70,7 +70,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 4. `F4` Wire new OOD config under `training.continual.ood` and remove CoNeC-linked OOD coupling.
 
 ### Phase G: Router/Pipeline Alignment
-1. `G1` Set `SimpleCropRouter` default backbone to `facebook/dinov3-vitl16-pretrain-lvd1689m` and update related tests/docs.
+1. `G1` Historical task (completed): archive `SimpleCropRouter` to `src/archive/v5_legacy/router/` and keep SAM3+BioCLIP `VLMPipeline` as the only active router surface.
 2. `G2` Update `src/pipeline/independent_multi_crop_pipeline.py` to load v6 adapter artifacts and consume new OOD output keys.
 3. `G3` Keep VLMPipeline routing logic intact unless required by interface break; only adjust integration contracts.
 
