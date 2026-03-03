@@ -168,6 +168,45 @@ def test_patch_missing_scb_for_linear8bitlt(monkeypatch):
     assert model.quant.weight.SCB is None
 
 
+def test_install_linear8bitlt_scb_state_dict_guard(monkeypatch):
+    import sys
+    import types
+
+    from src.training import continual_sd_lora as continual_module
+
+    class Weight:
+        pass
+
+    class State:
+        pass
+
+    class FakeLinear8bitLt(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.weight = Weight()
+            self.state = State()
+            self.calls = 0
+
+        def _save_to_state_dict(self, destination, prefix, keep_vars):
+            self.calls += 1
+            if not hasattr(self.weight, 'SCB') and not hasattr(self.state, 'SCB'):
+                raise AttributeError("'Tensor' object has no attribute 'SCB'")
+            destination[prefix + 'ok'] = True
+
+    fake_bnb = types.SimpleNamespace(nn=types.SimpleNamespace(Linear8bitLt=FakeLinear8bitLt))
+    monkeypatch.setitem(sys.modules, 'bitsandbytes', fake_bnb)
+
+    installed = continual_module._install_linear8bitlt_scb_state_dict_guard()
+    assert installed is True
+
+    layer = FakeLinear8bitLt()
+    destination = {}
+    layer._save_to_state_dict(destination, 'x.', False)
+
+    assert destination['x.ok'] is True
+    assert layer.calls == 2
+
+
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',

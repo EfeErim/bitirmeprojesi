@@ -90,6 +90,57 @@ def _patch_missing_scb_for_linear8bitlt(model: nn.Module) -> int:
     return patched
 
 
+def _install_linear8bitlt_scb_state_dict_guard() -> bool:
+    """Install a runtime guard for bitsandbytes Linear8bitLt state_dict saves.
+
+    Some runtime/version combinations can expose 8-bit layers whose weight/state
+    objects do not carry `SCB`. bitsandbytes then raises during
+    `_save_to_state_dict`. This guard retries once after injecting missing
+    placeholders.
+    """
+    try:
+        import bitsandbytes as bnb  # type: ignore
+    except Exception:
+        return False
+
+    linear8bitlt_cls = getattr(getattr(bnb, "nn", None), "Linear8bitLt", None)
+    if linear8bitlt_cls is None:
+        return False
+
+    if getattr(linear8bitlt_cls, "__aads_scb_guard_installed__", False):
+        return True
+
+    original = getattr(linear8bitlt_cls, "_save_to_state_dict", None)
+    if not callable(original):
+        return False
+
+    def _guarded_save_to_state_dict(self: Any, destination: Any, prefix: str, keep_vars: bool) -> None:
+        try:
+            original(self, destination, prefix, keep_vars)
+            return
+        except AttributeError as exc:
+            if "scb" not in str(exc).lower():
+                raise
+            weight = getattr(self, "weight", None)
+            state = getattr(self, "state", None)
+            if weight is not None and not hasattr(weight, "SCB"):
+                try:
+                    setattr(weight, "SCB", None)
+                except Exception:
+                    pass
+            if state is not None and not hasattr(state, "SCB"):
+                try:
+                    setattr(state, "SCB", None)
+                except Exception:
+                    pass
+            original(self, destination, prefix, keep_vars)
+
+    setattr(linear8bitlt_cls, "_save_to_state_dict", _guarded_save_to_state_dict)
+    setattr(linear8bitlt_cls, "__aads_scb_guard_installed__", True)
+    logger.warning("Installed Linear8bitLt SCB state_dict runtime guard.")
+    return True
+
+
 @dataclass
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
@@ -461,6 +512,7 @@ class ContinualSDLoRATrainer:
 
         if self._is_low_bit_loaded_model(model):
             _patch_missing_scb_for_linear8bitlt(model)
+            _install_linear8bitlt_scb_state_dict_guard()
             if prepare_model_for_kbit_training is not None:
                 model = prepare_model_for_kbit_training(model)
 
