@@ -26,6 +26,7 @@ class FakeTrainer:
         self.class_to_idx = {}
         self.target_modules_resolved = ['transformer.block.0.linear']
         self.ood_detector = FakeOOD()
+        self.last_train_kwargs = {}
 
     def initialize_engine(self, class_to_idx=None):
         self.class_to_idx = dict(class_to_idx or {})
@@ -36,11 +37,31 @@ class FakeTrainer:
                 self.class_to_idx[name] = len(self.class_to_idx)
         return dict(self.class_to_idx)
 
-    def train_increment(self, train_loader, num_epochs=None, progress_callback=None):
+    def train_increment(self, train_loader, num_epochs=None, val_loader=None, progress_callback=None, should_stop=None):
+        self.last_train_kwargs = {
+            'num_epochs': num_epochs,
+            'val_loader': val_loader,
+            'progress_callback': progress_callback,
+            'should_stop': should_stop,
+        }
         if progress_callback is not None:
-            progress_callback({'epoch': 1, 'batch': 1, 'total_batches': 1, 'batch_loss': 0.1, 'epoch_progress': 1.0})
-            progress_callback({'epoch_done': 1, 'epoch_loss': 0.1})
-        return {'train_loss': [0.1]}
+            progress_callback({
+                'epoch': 1,
+                'batch': 1,
+                'total_batches': 1,
+                'batch_loss': 0.1,
+                'epoch_progress': 1.0,
+                'global_step': 1,
+                'lr': 0.001,
+                'grad_norm': 0.5,
+                'step_time_sec': 0.01,
+                'samples_per_sec': 100.0,
+                'eta_sec': 0.0,
+                'advisory': '',
+                'severity': 'info',
+            })
+            progress_callback({'epoch_done': 1, 'epoch_loss': 0.1, 'val_loss': 0.2, 'val_accuracy': 0.9})
+        return {'train_loss': [0.1], 'val_loss': [0.2], 'val_accuracy': [0.9], 'stopped_early': False, 'global_step': 1}
 
     def calibrate_ood(self, loader):
         self.ood_detector.calibration_version += 1
@@ -144,4 +165,27 @@ def test_adapter_train_increment_forwards_progress_callback(monkeypatch):
     assert result['status'] == 'trained'
     assert any('batch' in event for event in events)
     assert any('epoch_done' in event for event in events)
+
+
+def test_adapter_train_increment_forwards_validation_loader_and_stop(monkeypatch):
+    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
+    adapter.initialize_engine(class_names=['healthy'])
+
+    train_loader = [{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}]
+    val_loader = [{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}]
+
+    stop_flag = {'value': False}
+    result = adapter.train_increment(
+        train_loader=train_loader,
+        val_loader=val_loader,
+        should_stop=lambda: stop_flag['value'],
+    )
+
+    trainer = adapter._trainer
+    assert trainer is not None
+    assert trainer.last_train_kwargs['val_loader'] is val_loader
+    assert callable(trainer.last_train_kwargs['should_stop'])
+    assert result['history']['val_loss'] == [0.2]
 

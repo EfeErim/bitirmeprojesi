@@ -228,10 +228,116 @@ def test_train_increment_emits_progress_callback_events():
     history = trainer.train_increment(train_loader, num_epochs=1, progress_callback=events.append)
 
     assert len(history["train_loss"]) == 1
+    assert history["stopped_early"] is False
     batch_events = [event for event in events if "batch" in event]
     epoch_events = [event for event in events if "epoch_done" in event]
     assert len(batch_events) == 2
     assert len(epoch_events) == 1
+    assert {"global_step", "lr", "grad_norm", "step_time_sec", "samples_per_sec", "eta_sec"} <= set(batch_events[0].keys())
+
+
+def test_train_increment_reports_validation_metrics():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        num_epochs=1,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    class DummyModule(nn.Module):
+        def forward(self, x, *args, **kwargs):
+            return x
+
+    trainer.adapter_model = DummyModule()
+    trainer.classifier = nn.Linear(4, 2)
+    trainer.fusion = DummyModule()
+
+    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
+    trainer.optimizer = torch.optim.SGD([trainable], lr=0.05)
+    trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
+    trainer.forward_logits = lambda images: torch.zeros(images.shape[0], 2)  # type: ignore[assignment]
+
+    train_loader = [
+        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
+    ]
+    val_loader = [
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.zeros(2, dtype=torch.long)},
+    ]
+
+    events = []
+    history = trainer.train_increment(train_loader, num_epochs=1, val_loader=val_loader, progress_callback=events.append)
+
+    assert len(history["val_loss"]) == 1
+    assert len(history["val_accuracy"]) == 1
+    assert len(history["macro_f1"]) == 1
+    assert len(history["weighted_f1"]) == 1
+    assert len(history["balanced_accuracy"]) == 1
+    assert len(history["generalization_gap"]) == 1
+    assert len(history["per_class_accuracy"]) == 1
+    assert len(history["worst_classes"]) == 1
+    epoch_events = [event for event in events if "epoch_done" in event]
+    assert len(epoch_events) == 1
+    assert "val_loss" in epoch_events[0]
+    assert "val_accuracy" in epoch_events[0]
+    assert "macro_f1" in epoch_events[0]
+    assert "weighted_f1" in epoch_events[0]
+    assert "balanced_accuracy" in epoch_events[0]
+    assert "per_class_accuracy" in epoch_events[0]
+    assert "worst_classes" in epoch_events[0]
+    assert "generalization_gap" in epoch_events[0]
+
+
+def test_train_increment_honors_should_stop_signal():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        num_epochs=2,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    class DummyModule(nn.Module):
+        def forward(self, x, *args, **kwargs):
+            return x
+
+    trainer.adapter_model = DummyModule()
+    trainer.classifier = DummyModule()
+    trainer.fusion = DummyModule()
+
+    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
+    trainer.optimizer = torch.optim.SGD([trainable], lr=0.1)
+    trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
+
+    train_loader = [
+        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
+        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
+    ]
+
+    stop_flag = {"value": False}
+    events = []
+
+    def callback(event):
+        events.append(event)
+        if "batch" in event:
+            stop_flag["value"] = True
+
+    history = trainer.train_increment(
+        train_loader,
+        num_epochs=2,
+        progress_callback=callback,
+        should_stop=lambda: stop_flag["value"],
+    )
+
+    assert history["stopped_early"] is True
+    batch_events = [event for event in events if "batch" in event and not event.get("stop_requested")]
+    stop_events = [event for event in events if event.get("stop_requested")]
+    assert len(batch_events) == 1
+    assert len(stop_events) == 1
 
 
 

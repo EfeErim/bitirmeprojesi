@@ -127,7 +127,9 @@ class IndependentCropAdapter:
         train_loader: Iterable[Dict[str, torch.Tensor]],
         *,
         num_epochs: Optional[int] = None,
+        val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        should_stop: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, Any]:
         """Run continual increment training."""
         if self._trainer is None:
@@ -135,16 +137,34 @@ class IndependentCropAdapter:
         train_kwargs: Dict[str, Any] = {}
         if num_epochs is not None:
             train_kwargs["num_epochs"] = num_epochs
+        if val_loader is not None:
+            train_kwargs["val_loader"] = val_loader
         if progress_callback is not None:
             train_kwargs["progress_callback"] = progress_callback
+        if should_stop is not None:
+            train_kwargs["should_stop"] = should_stop
 
         try:
             history = self._trainer.train_increment(train_loader, **train_kwargs)
         except TypeError:
-            # Backward compatibility for trainer shims that do not accept
-            # progress_callback keyword.
-            train_kwargs.pop("progress_callback", None)
-            history = self._trainer.train_increment(train_loader, **train_kwargs)
+            # Backward compatibility for trainer shims with narrower signatures.
+            fallback_attempts = [
+                ["should_stop"],
+                ["should_stop", "val_loader"],
+                ["should_stop", "val_loader", "progress_callback"],
+            ]
+            history = None
+            for drop_keys in fallback_attempts:
+                downgraded = dict(train_kwargs)
+                for key in drop_keys:
+                    downgraded.pop(key, None)
+                try:
+                    history = self._trainer.train_increment(train_loader, **downgraded)
+                    break
+                except TypeError:
+                    continue
+            if history is None:
+                raise
         self.is_trained = True
         return {
             "status": "trained",
