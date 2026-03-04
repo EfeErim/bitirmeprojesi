@@ -288,7 +288,7 @@ def test_initialize_engine_raises_when_backbone_contains_meta_tensors(monkeypatc
 
     monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
 
-    with pytest.raises(RuntimeError, match="Backbone contains meta tensors"):
+    with pytest.raises(RuntimeError, match="backbone contains meta tensors before device move"):
         trainer.initialize_engine(class_to_idx={"healthy": 0})
 
 
@@ -317,8 +317,93 @@ def test_initialize_engine_raises_when_adapter_contains_meta_tensors(monkeypatch
     monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
     monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, _model, _targets: MetaAdapterModel())
 
-    with pytest.raises(RuntimeError, match="Adapter model contains meta tensors"):
+    with pytest.raises(RuntimeError, match="adapter_model contains meta tensors before device move"):
         trainer.initialize_engine(class_to_idx={"healthy": 0})
+
+
+def test_initialize_engine_allows_dispatch_managed_meta_adapter(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    class DispatchManagedMetaAdapter(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.adapter = nn.Linear(8, 8, device="meta")
+            self.hf_device_map = {"": "cpu"}
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(
+        ContinualSDLoRATrainer,
+        "_apply_lora",
+        lambda self, _model, _targets: DispatchManagedMetaAdapter(),
+    )
+
+    trainer.initialize_engine(class_to_idx={"healthy": 0})
+
+    assert trainer.adapter_model is not None
+    assert trainer.classifier is not None
+    assert trainer.classifier.out_features == 1
+
+
+def test_prepare_module_for_device_skips_dispatch_managed_not_implemented(monkeypatch):
+    class NotImplementedOnTo(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = nn.Linear(8, 8)
+            self.hf_device_map = {"": "cpu"}
+
+        def to(self, *args, **kwargs):
+            raise NotImplementedError("Cannot copy out of meta tensor; no data!")
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    module = NotImplementedOnTo()
+    prepared = trainer._prepare_module_for_device(module, module_name="adapter_model")
+
+    assert prepared is module
+
+
+def test_prepare_module_for_device_re_raises_not_implemented_without_dispatch():
+    class NotImplementedOnTo(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.linear = nn.Linear(8, 8)
+
+        def to(self, *args, **kwargs):
+            raise NotImplementedError("Cannot copy out of meta tensor; no data!")
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    module = NotImplementedOnTo()
+
+    with pytest.raises(NotImplementedError, match="Cannot copy out of meta tensor; no data!"):
+        trainer._prepare_module_for_device(module, module_name="adapter_model")
 
 
 

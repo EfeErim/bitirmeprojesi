@@ -325,13 +325,10 @@ class ContinualSDLoRATrainer:
             raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
 
         loaded_backbone = AutoModel.from_pretrained(self.config.backbone_model_name)
-        if self._module_has_meta_tensors(loaded_backbone):
-            raise RuntimeError(
-                "Backbone contains meta tensors after from_pretrained(). "
-                "This usually indicates external device/offload dispatch. "
-                "Disable meta/offload loading and ensure full weight materialization before initialize_engine()."
-            )
-        self.backbone = loaded_backbone.to(self.device)
+        self.backbone = self._prepare_module_for_device(
+            loaded_backbone,
+            module_name="backbone",
+        )
         for param in self.backbone.parameters():
             param.requires_grad = False
 
@@ -346,13 +343,10 @@ class ContinualSDLoRATrainer:
 
         self.target_modules_resolved = self.resolve_target_modules(self.backbone)
         adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
-        if self._module_has_meta_tensors(adapter_model):
-            raise RuntimeError(
-                "Adapter model contains meta tensors after LoRA wrapping. "
-                "Use a peft version that supports low_cpu_mem_usage=False for get_peft_model() "
-                "or disable external meta/offload loading."
-            )
-        self.adapter_model = adapter_model.to(self.device)
+        self.adapter_model = self._prepare_module_for_device(
+            adapter_model,
+            module_name="adapter_model",
+        )
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
 
         self._is_initialized = True
@@ -373,6 +367,50 @@ class ContinualSDLoRATrainer:
     @staticmethod
     def _module_has_meta_tensors(module: nn.Module) -> bool:
         return any(param.is_meta for param in module.parameters()) or any(buffer.is_meta for buffer in module.buffers())
+
+    @staticmethod
+    def _is_dispatch_managed_module(module: nn.Module) -> bool:
+        if getattr(module, "hf_device_map", None) is not None:
+            return True
+        if hasattr(module, "_hf_hook"):
+            return True
+        for child in module.modules():
+            if child is module:
+                continue
+            if hasattr(child, "_hf_hook"):
+                return True
+        return False
+
+    def _prepare_module_for_device(self, module: nn.Module, module_name: str) -> nn.Module:
+        has_meta_tensors = self._module_has_meta_tensors(module)
+        dispatch_managed = self._is_dispatch_managed_module(module)
+
+        if has_meta_tensors and dispatch_managed:
+            logger.warning(
+                "%s has meta tensors with HF/Accelerate dispatch hooks; skipping explicit .to(%s).",
+                module_name,
+                self.device,
+            )
+            return module
+
+        if has_meta_tensors:
+            raise RuntimeError(
+                f"{module_name} contains meta tensors before device move and is not dispatch-managed. "
+                "Disable meta/offload loading or materialize weights before initialize_engine()."
+            )
+
+        try:
+            return module.to(self.device)
+        except NotImplementedError as exc:
+            if "Cannot copy out of meta tensor; no data!" in str(exc) and self._is_dispatch_managed_module(module):
+                logger.warning(
+                    "%s raised meta tensor NotImplementedError during .to(%s) but is dispatch-managed; "
+                    "leaving module placement unchanged.",
+                    module_name,
+                    self.device,
+                )
+                return module
+            raise
 
     @staticmethod
     def _supports_low_cpu_mem_usage_kwarg() -> bool:
