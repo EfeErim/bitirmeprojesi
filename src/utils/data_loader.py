@@ -5,7 +5,7 @@ Provides dataset classes for crop images, domain shift data, and preprocessing.
 """
 
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union, Sequence
 from collections import OrderedDict
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -107,6 +107,7 @@ class CropDataset(Dataset):
         data_dir: str,
         crop: str,
         split: str = 'train',
+        class_names: Optional[Sequence[str]] = None,
         transform: bool = True,
         target_size: int = 224,
         use_cache: bool = True,
@@ -130,8 +131,12 @@ class CropDataset(Dataset):
         self.target_size = target_size
         self.use_cache = use_cache
         
-        # Define class mapping based on crop
-        self.classes = self._get_crop_classes(crop)
+        # Define class mapping from runtime layout (preferred) with legacy fallback.
+        inferred_classes = [str(name) for name in class_names] if class_names is not None else infer_crop_classes_from_layout(
+            data_dir=str(self.data_dir),
+            crop=self.crop,
+        )
+        self.classes = inferred_classes or self._get_crop_classes(crop)
         self.class_to_idx = {cls: idx for idx, cls in enumerate(self.classes)}
         self.idx_to_class = {idx: cls for cls, idx in self.class_to_idx.items()}
         
@@ -468,6 +473,22 @@ def preprocess_image(
     
     return transform(image)
 
+
+def infer_crop_classes_from_layout(data_dir: str, crop: str) -> List[str]:
+    """Infer class names from crop split folders (continual/val/test)."""
+    crop_root = Path(data_dir) / crop
+    split_roots = [crop_root / split for split in ('continual', 'val', 'test')]
+
+    class_names: set[str] = set()
+    for split_root in split_roots:
+        if not split_root.exists() or not split_root.is_dir():
+            continue
+        for class_dir in split_root.iterdir():
+            if class_dir.is_dir() and class_dir.name:
+                class_names.add(str(class_dir.name))
+
+    return sorted(class_names)
+
 def create_data_loaders(
     data_dir: str,
     crop: str,
@@ -491,12 +512,14 @@ def create_data_loaders(
         Dictionary with 'train', 'val', 'test' DataLoaders
     """
     loaders = {}
+    class_names = infer_crop_classes_from_layout(data_dir=data_dir, crop=crop)
     
     for split in ['train', 'val', 'test']:
         dataset = CropDataset(
             data_dir=data_dir,
             crop=crop,
             split=split,
+            class_names=class_names,
             transform=(split == 'train'),
             use_cache=use_cache,
             cache_size=cache_size
@@ -539,12 +562,14 @@ def create_training_loaders(
 ) -> Dict[str, DataLoader]:
     """Create train/val/test loaders that emit `{'images', 'labels'}` batches."""
     loaders: Dict[str, DataLoader] = {}
+    class_names = infer_crop_classes_from_layout(data_dir=data_dir, crop=crop)
 
     for split in ['train', 'val', 'test']:
         dataset = CropDataset(
             data_dir=data_dir,
             crop=crop,
             split=split,
+            class_names=class_names,
             transform=(split == 'train'),
             use_cache=use_cache,
             cache_size=cache_size
