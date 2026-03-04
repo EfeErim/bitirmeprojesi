@@ -5,6 +5,9 @@ This module is auto-imported by Python.
 By default, invasive monkeypatches are enabled only in pytest runs.
 Use `AADS_ENABLE_RUNTIME_PATCHES=1` to force-enable globally.
 Use `AADS_ENABLE_RUNTIME_PATCHES=0` to disable them.
+If `AADS_ENABLE_RUNTIME_PATCHES` is set to an invalid value, pytest-context
+autodetection is used as a compatibility fallback.
+Use `AADS_TRACE_RUNTIME_PATCH_STATE=1` to emit patch activation diagnostics.
 """
 
 from __future__ import annotations
@@ -38,9 +41,67 @@ def _is_pytest_context() -> bool:
     return "pytest" in argv or "py.test" in argv
 
 
-_ENABLE_PATCHES = _parse_env_bool("AADS_ENABLE_RUNTIME_PATCHES")
-if _ENABLE_PATCHES is None:
-    _ENABLE_PATCHES = _is_pytest_context()
+def _resolve_patch_activation() -> tuple[bool, str, Optional[str], bool]:
+    env_name = "AADS_ENABLE_RUNTIME_PATCHES"
+    raw_value = os.getenv(env_name)
+    explicit = _parse_env_bool(env_name)
+    pytest_context = _is_pytest_context()
+
+    if explicit is True:
+        return True, f"{env_name}=1", raw_value, pytest_context
+    if explicit is False:
+        return False, f"{env_name}=0", raw_value, pytest_context
+
+    if raw_value is not None:
+        warnings.warn(
+            f"Ignoring invalid {env_name} value {raw_value!r}; using pytest-context auto fallback.",
+            RuntimeWarning,
+            stacklevel=1,
+        )
+    return pytest_context, "pytest-context-auto", raw_value, pytest_context
+
+
+_TRACE_PATCH_STATE = _parse_env_bool("AADS_TRACE_RUNTIME_PATCH_STATE") is True
+
+
+def _emit_patch_trace(message: str) -> None:
+    if _TRACE_PATCH_STATE:
+        print(f"[sitecustomize] {message}", file=sys.stderr)
+
+
+_ENABLE_PATCHES, _PATCH_SOURCE, _PATCH_ENV_RAW, _PATCH_PYTEST_CONTEXT = _resolve_patch_activation()
+_RUNTIME_PATCH_STATE: dict[str, object] = {
+    "enabled": _ENABLE_PATCHES,
+    "source": _PATCH_SOURCE,
+    "env_raw": _PATCH_ENV_RAW,
+    "pytest_context": _PATCH_PYTEST_CONTEXT,
+    "sections": [],
+}
+
+
+def _record_patch_section(section: str, active: bool, detail: str = "") -> None:
+    sections = _RUNTIME_PATCH_STATE["sections"]
+    if isinstance(sections, list):
+        sections.append({"section": section, "active": active, "detail": detail})
+
+
+def get_runtime_patch_state() -> dict[str, object]:
+    """Expose runtime patch activation and section-level status for diagnostics."""
+    sections = _RUNTIME_PATCH_STATE.get("sections", [])
+    copied_sections = [dict(item) for item in sections] if isinstance(sections, list) else []
+    return {
+        "enabled": _RUNTIME_PATCH_STATE.get("enabled"),
+        "source": _RUNTIME_PATCH_STATE.get("source"),
+        "env_raw": _RUNTIME_PATCH_STATE.get("env_raw"),
+        "pytest_context": _RUNTIME_PATCH_STATE.get("pytest_context"),
+        "sections": copied_sections,
+    }
+
+
+_emit_patch_trace(
+    f"activation enabled={_ENABLE_PATCHES} source={_PATCH_SOURCE} "
+    f"pytest_context={_PATCH_PYTEST_CONTEXT}"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +171,13 @@ if _ENABLE_PATCHES:
         warnings._add_filter = _patched_add_filter
     warnings.simplefilter = _patched_simplefilter
     _patched_reset_filters()
+    _record_patch_section(
+        "warnings_filters",
+        True,
+        "patched warnings filter entrypoints for duplicate-tolerant behavior",
+    )
+else:
+    _record_patch_section("warnings_filters", False, "runtime patches disabled")
 
 
 # ---------------------------------------------------------------------------
@@ -171,6 +239,7 @@ if _ENABLE_PATCHES:
     tempfile.TemporaryDirectory = _SafeTemporaryDirectory
     shutil.rmtree = _safe_rmtree
 
+    _pytest_cleanup_guard_applied = False
     try:
         import _pytest.pathlib as _pytest_pathlib
 
@@ -183,5 +252,23 @@ if _ENABLE_PATCHES:
                 return None
 
         _pytest_pathlib.cleanup_dead_symlinks = _patched_cleanup_dead_symlinks
+        _pytest_cleanup_guard_applied = True
     except Exception:
         pass
+
+    _record_patch_section(
+        "temp_path_stability",
+        True,
+        "patched tempfile/shutil guards"
+        + (" + pytest cleanup guard" if _pytest_cleanup_guard_applied else ""),
+    )
+else:
+    _record_patch_section("temp_path_stability", False, "runtime patches disabled")
+
+
+for _section_state in get_runtime_patch_state().get("sections", []):
+    if isinstance(_section_state, dict):
+        _emit_patch_trace(
+            f"section={_section_state.get('section')} "
+            f"active={_section_state.get('active')} detail={_section_state.get('detail')}"
+        )

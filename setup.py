@@ -20,12 +20,12 @@ setup(
     packages=find_packages(include=["src", "src.*"]),
     python_requires=">=3.9",
     install_requires=[
-        "torch>=2.0.0",
+        # Keep shared core floors aligned with requirements.txt.
+        "torch>=2.1.0",
         "torchvision>=0.15.0",
         "transformers>=4.50.0,<5.0.0",
-        "peft>=0.8.0",
-        "accelerate>=0.20.0",
-        "bitsandbytes>=0.41.0",
+        "peft>=0.10.0",
+        "accelerate>=0.24.0",
         "numpy>=1.24.0",
         "pandas>=2.0.0",
         "Pillow>=10.0.0",

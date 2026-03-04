@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-AADS v6 is a **plant disease classification system using rehearsal-free continual learning** (SD-LoRA + frozen DINOv3 + INT8 quantization). The v6 overhaul from v5.5 is architecturally well-designed across 10 phases (A–J). The core source modules are implemented and pass all audit gates (188/188 files pass, 0 defects per the V6_FULL_REPO_AUDIT.md). However, there are **concrete issues** in config drift, stale metadata, duplicated code, display bugs, and incomplete cross-references. Below are all subtasks organized by domain.
+AADS v6 is a **plant disease classification system using rehearsal-free continual learning** (SD-LoRA + frozen DINOv3). The v6 overhaul from v5.5 is architecturally well-designed across 10 phases (A–J). The core source modules are implemented and pass all audit gates (188/188 files pass, 0 defects per the V6_FULL_REPO_AUDIT.md). However, there are **concrete issues** in config drift, stale metadata, duplicated code, display bugs, and incomplete cross-references. Below are all subtasks organized by domain.
 
 ---
 
@@ -27,23 +27,23 @@ AADS v6 is a **plant disease classification system using rehearsal-free continua
 
 ### S1.4 — Reconcile `perf_guardrails_phase5.json` with v6 pipeline
 
-- `config/perf_guardrails_phase5.json` defines CPU benchmark latency limits but the relationship to v6's new pipeline path (DINOv3 backbone, INT8, multi-scale fusion) is undocumented
+- `config/perf_guardrails_phase5.json` defines CPU benchmark latency limits but the relationship to v6's new pipeline path (DINOv3 backbone, multi-scale fusion) is undocumented
 - Document whether these thresholds still apply or need recalibration for the v6 engine
 
 ---
 
-## TRACK 2 — Training & Quantization Engine
+## TRACK 2 — Training Engine
 
 ### S2.1 — Validate `ContinualSDLoRATrainer` end-to-end (Phase B)
 
 - `src/training/continual_sd_lora.py` (523 lines) — verify `from_training_config()`, `initialize_engine()`, `add_classes()`, `train_increment()`, `predict()` all work with a real DINOv3-like backbone
 - Cross-check with `specs/adapter-spec.json` targets: accuracy ≥ 0.93, OOD AUROC ≥ 0.92, FPR ≤ 0.05
 
-### S2.2 — Harden INT8 quantization path (Phase C)
+### S2.2 — Harden low-bit guardrails (Phase C)
 
-- `src/training/quantization.py` (147 lines) — the `load_hybrid_int8_backbone()` has a fallback path when backend is missing
-- Verify fail-loud behavior when `fallback_to_non_quantized=False` in strict production mode
+- `src/training/quantization.py` should remain policy-only (4-bit/QLoRA rejection guards)
 - Ensure `find_prohibited_4bit_flags()` catches all config surfaces (base.json, colab.json, notebook-injected configs)
+- Keep trainer backbone path non-quantized and remove stale quantization metadata assumptions
 
 ### S2.3 — Verify multi-scale fusion correctness (Phase D)
 
@@ -57,7 +57,7 @@ AADS v6 is a **plant disease classification system using rehearsal-free continua
 ### S3.1 — Audit `IndependentCropAdapter` lifecycle completeness (Phase E)
 
 - `src/adapter/independent_crop_adapter.py` (260 lines) — verify full `initialize_engine → add_classes → train_increment → calibrate_ood → save_adapter → load_adapter` cycle
-- Cross-check adapter metadata schema (required keys: `schema_version`, `engine`, `backbone`, `quantization`, `fusion`, `class_to_idx`, `ood_calibration`, `target_modules_resolved`) per `specs/adapter-spec.json`
+- Cross-check adapter metadata schema (required keys: `schema_version`, `engine`, `backbone`, `fusion`, `class_to_idx`, `ood_calibration`, `target_modules_resolved`) per `specs/adapter-spec.json`
 
 ### S3.2 — Remove phase-numbering remnants from training lifecycle skill
 
@@ -235,7 +235,7 @@ AADS v6 is a **plant disease classification system using rehearsal-free continua
 | 1 Config | S1.3 | Fix phantom config doc refs | Medium | J |
 | 1 Config | S1.4 | Reconcile perf guardrails | Medium | G |
 | 2 Training | S2.1 | Validate trainer E2E | High | B |
-| 2 Training | S2.2 | Harden INT8 path | High | C |
+| 2 Training | S2.2 | Harden low-bit guardrails | High | C |
 | 2 Training | S2.3 | Expand fusion tests | Medium | D |
 | 3 Adapter | S3.1 | Audit adapter lifecycle | High | E |
 | 3 Adapter | S3.2 | Remove phase refs from skill | Medium | J |

@@ -1,7 +1,7 @@
 # Repository File Relations (v6)
 
 - Training engine: `src/training/continual_sd_lora.py`
-- Quantization guardrails: `src/training/quantization.py`
+- Low-bit policy guardrails: `src/training/quantization.py`
 - Fusion module: `src/adapter/multi_scale_fusion.py`
 - Adapter lifecycle: `src/adapter/independent_crop_adapter.py`
 - OOD engine: `src/ood/continual_ood.py`

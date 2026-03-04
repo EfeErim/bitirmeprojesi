@@ -11,18 +11,16 @@ class TestContinualSmoke:
         cfg = ContinualSDLoRAConfig.from_training_config(
             {
                 'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
-                'quantization': {'mode': 'int8_hybrid', 'strict_backend': False, 'allow_cpu_fallback': True},
                 'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
                 'fusion': {'layers': [2, 5, 8, 11]},
                 'device': 'cpu',
             }
         )
-        assert cfg.quantization_mode == 'int8_hybrid'
+        assert cfg.target_modules_strategy == 'all_linear_transformer'
 
     def test_add_classes_without_backbone_download(self):
         cfg = ContinualSDLoRAConfig(
             backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
-            quantization_mode='int8_hybrid',
             target_modules_strategy='all_linear_transformer',
             fusion_layers=[2],
             fusion_output_dim=8,
@@ -40,7 +38,6 @@ class TestContinualSmoke:
     def test_predict_payload_shape_with_mocks(self):
         cfg = ContinualSDLoRAConfig(
             backbone_model_name='facebook/dinov3-vitl16-pretrain-lvd1689m',
-            quantization_mode='int8_hybrid',
             target_modules_strategy='all_linear_transformer',
             fusion_layers=[2],
             fusion_output_dim=4,

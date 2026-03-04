@@ -15,7 +15,6 @@ def test_colab_config_contains_continual_contract():
 
     continual = cfg['training']['continual']
     assert continual['backbone']['model_name'] == 'facebook/dinov3-vitl16-pretrain-lvd1689m'
-    assert continual['quantization']['mode'] == 'int8_hybrid'
 
 
 def test_continual_config_rejects_low_bit_payload():
@@ -23,7 +22,6 @@ def test_continual_config_rejects_low_bit_payload():
         ContinualSDLoRAConfig.from_training_config(
             {
                 'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
-                'quantization': {'mode': 'int8_hybrid'},
                 'adapter': {'target_modules_strategy': 'all_linear_transformer', 'lora_r': 4, 'lora_alpha': 8},
                 'fusion': {'layers': [2, 5, 8, 11]},
                 'load_in_4bit': True,
@@ -50,10 +48,6 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
             self.class_to_idx = {}
             self.target_modules_resolved = ['transformer.block.0.linear']
             self.ood_detector = type('OOD', (), {'calibration_version': 1})()
-
-        @property
-        def quantization_metadata(self):
-            return {'mode': 'int8_hybrid'}
 
         def initialize_engine(self, class_to_idx=None):
             self.class_to_idx = dict(class_to_idx or {})

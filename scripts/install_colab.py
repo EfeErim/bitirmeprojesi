@@ -158,7 +158,6 @@ class ColabInstaller:
             'training': {
                 'continual': {
                     'backbone': {'model_name': 'facebook/dinov3-vitl16-pretrain-lvd1689m'},
-                    'quantization': {'mode': 'int8_hybrid', 'strict_backend': True, 'allow_cpu_fallback': False},
                     'adapter': {
                         'target_modules_strategy': 'all_linear_transformer',
                         'lora_r': 16,

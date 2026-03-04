@@ -2922,7 +2922,7 @@
       ]
     },
     {
-      "path": "tests/unit/training/test_int8_quantization.py",
+      "path": "tests/unit/training/test_low_bit_guardrails.py",
       "scope": "active",
       "extension": ".py",
       "file_class": "python",

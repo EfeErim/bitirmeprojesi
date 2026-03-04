@@ -27,10 +27,6 @@ class FakeTrainer:
         self.target_modules_resolved = ['transformer.block.0.linear']
         self.ood_detector = FakeOOD()
 
-    @property
-    def quantization_metadata(self):
-        return {'mode': 'int8_hybrid'}
-
     def initialize_engine(self, class_to_idx=None):
         self.class_to_idx = dict(class_to_idx or {})
 
@@ -125,7 +121,6 @@ def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path)
         'schema_version',
         'engine',
         'backbone',
-        'quantization',
         'fusion',
         'class_to_idx',
         'ood_calibration',

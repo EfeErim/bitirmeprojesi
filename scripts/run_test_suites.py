@@ -30,10 +30,10 @@ SUITES: dict[str, SuiteConfig] = {
     ),
     'unit/training': SuiteConfig(
         name='unit/training',
-        description='Continual training and quantization checks',
+        description='Continual training and low-bit guard checks',
         paths=(
             'tests/unit/training/test_continual_sd_lora.py',
-            'tests/unit/training/test_int8_quantization.py',
+            'tests/unit/training/test_low_bit_guardrails.py',
         ),
     ),
     'unit/adapter': SuiteConfig(
@@ -164,6 +164,11 @@ GROUPS = {
     'all': tuple(SUITES.keys()),
 }
 
+# Compatibility aliases for legacy suite names.
+TARGET_ALIASES = {
+    'unit_validation': 'unit/validation',
+}
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Run modular v6 pytest suites.')
@@ -178,13 +183,14 @@ def parse_args() -> argparse.Namespace:
 def expand_targets(raw_targets: list[str]) -> list[SuiteConfig]:
     selected = raw_targets or ['quick']
     ordered: list[str] = []
-    for target in selected:
+    for raw_target in selected:
+        target = TARGET_ALIASES.get(raw_target, raw_target)
         if target in SUITES:
             candidates = [target]
         elif target in GROUPS:
             candidates = list(GROUPS[target])
         else:
-            raise ValueError(f"Unknown suite/group '{target}'")
+            raise ValueError(f"Unknown suite/group '{raw_target}'")
         for item in candidates:
             if item not in ordered:
                 ordered.append(item)

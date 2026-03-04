@@ -25,11 +25,6 @@ def test_continual_trainer_smoke_with_real_hf_backbone():
     config = ContinualSDLoRAConfig.from_training_config(
         {
             "backbone": {"model_name": model_name},
-            "quantization": {
-                "mode": "int8_hybrid",
-                "strict_backend": False,
-                "allow_cpu_fallback": True,
-            },
             "adapter": {
                 "target_modules_strategy": "all_linear_transformer",
                 "lora_r": 4,

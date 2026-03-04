@@ -1,4 +1,5 @@
 # AADS-ULoRA v5.5 Dependencies
+# Canonical core dependency floors (keep setup.py install_requires aligned).
 # Core ML Framework
 torch>=2.1.0
 torchvision>=0.15.0
@@ -6,8 +7,7 @@ torchvision>=0.15.0
 # Transformers and PEFT
 transformers>=4.50.0,<5.0.0
 peft>=0.10.0
-accelerate>=0.20.0
-bitsandbytes>=0.43.0
+accelerate>=0.24.0
 
 # Vision Language Models (VLM Pipeline)
 open-clip-torch>=2.20.0

@@ -350,7 +350,7 @@
         "unit"
       ]
     },
-    "tests/unit/training/test_int8_quantization.py": {
+    "tests/unit/training/test_low_bit_guardrails.py": {
       "suites": [
         "unit/training"
       ],

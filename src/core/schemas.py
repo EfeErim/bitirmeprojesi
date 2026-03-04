@@ -470,15 +470,6 @@ def training_continual_schema() -> Dict[str, Any]:
                                 },
                                 "required": ["model_name"],
                             },
-                            "quantization": {
-                                "type": "object",
-                                "properties": {
-                                    "mode": {"type": "string", "enum": ["int8_hybrid"]},
-                                    "strict_backend": {"type": "boolean"},
-                                    "allow_cpu_fallback": {"type": "boolean"},
-                                },
-                                "required": ["mode"],
-                            },
                             "adapter": {
                                 "type": "object",
                                 "properties": {
@@ -519,7 +510,7 @@ def training_continual_schema() -> Dict[str, Any]:
                             "device": {"type": "string"},
                             "strict_model_loading": {"type": "boolean"},
                         },
-                        "required": ["backbone", "quantization", "adapter", "fusion"],
+                        "required": ["backbone", "adapter", "fusion"],
                     }
                 },
                 "required": ["continual"],

@@ -10,7 +10,7 @@ Standalone DoRA: Exclude this to eliminate algorithmic redundancy. SD-LoRA alrea
 What to Introduce
 Frozen DINOv3 Backbone: Introduce DINOv3 as your base vision encoder. DINOv3 is a highly versatile vision foundation model that produces exceptionally high-quality dense features and spatial representations, allowing it to outperform specialized models across a broad range of settings without requiring the backbone to be fine-tuned.
 
-8-bit (INT8) Quantization (with QAT/Hybrid approaches): Introduce 8-bit quantization instead of 4-bit. Research shows that INT8 quantization introduces a specific noise that acts as an implicit regularizer; this prevents the model from overfitting to new task gradients and actually improves continual learning performance and retention compared to 16-bit precision. For Vision Transformers like DINOv3, using a hybrid quantization technique helps manage activation outliers while reducing latency.
+Non-quantized Backbone Runtime: Use standard non-quantized backbone loading for the continual engine. This avoids runtime fragility from low-bit backend/version mismatches and keeps training behavior stable and reproducible across environments while preserving the strict prohibition on 4-bit settings.
 
 SD-LoRA as the Sole Continual Learning Engine: Rely exclusively on SD-LoRA to manage the addition of new crop diseases. By fixing the directions learned from previous tasks and only updating the magnitude vectors, SD-LoRA converges on an overlapping low-loss region for all learned tasks, allowing for scalable, rehearsal-free class-incremental learning.
 

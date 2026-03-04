@@ -54,12 +54,11 @@ class IndependentCropAdapter:
         continual = config.get("training", {}).get("continual") if isinstance(config.get("training"), dict) else None
         if isinstance(continual, dict):
             normalized = dict(continual)
-        elif "backbone" in config or "quantization" in config or "adapter" in config:
+        elif "backbone" in config or "adapter" in config:
             normalized = config
         else:
             normalized = {
                 "backbone": {"model_name": self.model_name},
-                "quantization": {"mode": "int8_hybrid", "strict_backend": True, "allow_cpu_fallback": False},
                 "adapter": {
                     "target_modules_strategy": "all_linear_transformer",
                     "lora_r": int(config.get("lora_r", 16)),
@@ -195,7 +194,6 @@ class IndependentCropAdapter:
                 "model_name": self._trainer.config.backbone_model_name,
                 "frozen": True,
             },
-            "quantization": self._trainer.quantization_metadata,
             "fusion": {
                 "layers": list(self._trainer.config.fusion_layers),
                 "output_dim": int(self._trainer.config.fusion_output_dim),
@@ -235,7 +233,6 @@ class IndependentCropAdapter:
 
         normalized = {
             "backbone": meta.get("backbone", {"model_name": self.model_name}),
-            "quantization": meta.get("quantization", {"mode": "int8_hybrid"}),
             "adapter": {
                 "target_modules_strategy": "all_linear_transformer",
                 "lora_r": 16,

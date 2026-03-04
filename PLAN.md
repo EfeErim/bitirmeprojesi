@@ -1,7 +1,7 @@
 # AADS v6 Overhaul Plan: SD-LoRA-Only Continual Learning Stack
 
 ## Summary
-This overhaul replaces the current 3-phase `DoRA -> SD-LoRA -> CoNeC-LoRA` flow with a single-engine, rehearsal-free continual learning architecture based on **SD-LoRA only**, **frozen DINOv3 ViT-L/16**, **hybrid INT8 quantization**, **4-stage multi-scale fusion**, and **transformer all-linear adapter targeting**.  
+This overhaul replaces the current 3-phase `DoRA -> SD-LoRA -> CoNeC-LoRA` flow with a single-engine, rehearsal-free continual learning architecture based on **SD-LoRA only**, **frozen DINOv3 ViT-L/16**, **4-stage multi-scale fusion**, and **transformer all-linear adapter targeting**.  
 Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 
 ## Public APIs, Interfaces, and Type Changes
@@ -15,12 +15,11 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
    - `ContinualSDLoRATrainer`
 3. Replace `training.phase1/phase2/phase3` config contract with `training.continual`:
    - `backbone.model_name` (default `facebook/dinov3-vitl16-pretrain-lvd1689m`)
-   - `quantization.mode` (`int8_hybrid`)
    - `adapter.target_modules_strategy` (`all_linear_transformer`)
    - `fusion.layers` (`[2,5,8,11]`)
    - `ood` (new v6 OOD config surface)
 4. Adapter metadata contract (`adapter_meta.json`) moves to v6 schema:
-   - Required keys: `schema_version`, `engine`, `backbone`, `quantization`, `fusion`, `class_to_idx`, `ood_calibration`, `target_modules_resolved`.
+   - Required keys: `schema_version`, `engine`, `backbone`, `fusion`, `class_to_idx`, `ood_calibration`, `target_modules_resolved`.
    - Remove phase-indexed fields (`current_phase`, phase-specific retention fields).
 5. Notebook/script entrypoints move to continual naming:
    - Historical note: prior v6 Colab notebooks are now archived under `colab_notebooks/archive/v6_superseded_2026-03-02/`.
@@ -40,11 +39,11 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 3. `B3` Remove Stable Diffusion-specific semantics from SD-LoRA surfaces and rename docs/comments/types to continual classification semantics.
 4. `B4` Delete or fully retire runtime references to `phase1` and `phase3` trainer modules (clean break).
 
-### Phase C: Hybrid INT8 Quantization Layer
-1. `C1` Add quantization utility module (`src/training/quantization.py`) with hybrid INT8 load path using `bitsandbytes` outlier-aware behavior.
-2. `C2` Integrate INT8 backbone loading into continual trainer and adapter loading; keep adapter/classifier training path numerically stable (mixed precision where needed).
-3. `C3` Add runtime safeguards: if INT8 backend unavailable, fail with explicit actionable error (no silent fallback to 4-bit).
-4. `C4` Persist quantization metadata in adapter manifests and checkpoint outputs.
+### Phase C: Low-Bit Safety Guardrails
+1. `C1` Keep quantization utility module (`src/training/quantization.py`) as policy-only 4-bit/QLoRA rejection guardrails.
+2. `C2` Keep continual trainer backbone loading on standard non-quantized `from_pretrained` path.
+3. `C3` Add runtime safeguards that fail validation on prohibited 4-bit flags (no silent low-bit fallback).
+4. `C4` Keep adapter metadata quantization-free and aligned with v6 schema.
 
 ### Phase D: Multi-Scale Feature Fusion (MAA-like)
 1. `D1` Add `src/adapter/multi_scale_fusion.py` implementing 4-stage token fusion from DINOv3 blocks `[2,5,8,11]`.
@@ -86,7 +85,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
    - `tests/unit/training/test_continual_sd_lora.py`
    - `tests/unit/adapter/test_continual_adapter.py`
    - `tests/unit/ood/test_continual_ood.py`
-   - `tests/unit/training/test_int8_quantization.py`
+   - `tests/unit/training/test_low_bit_guardrails.py`
 2. `I2` Rewrite `tests/colab/test_smoke_training.py` for continual-only entrypoints.
 3. `I3` Rewrite relevant integration tests (`tests/integration/test_colab_integration.py`) to v6 config and lifecycle.
 4. `I4` Add static guard tests ensuring no code/config paths contain DoRA, CoNeC, or 4-bit usage.
@@ -118,8 +117,8 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
    - Target module resolver includes attention and MLP linear layers, excludes classifier/router heads.
    - Fusion module returns stable fused embeddings across batch sizes.
 4. Quantization gate:
-   - INT8 path active in trainer metadata.
-   - Memory footprint improves vs FP16 baseline under same batch/model settings.
+   - Prohibited 4-bit settings are rejected in config/runtime payloads.
+   - Adapter metadata remains quantization-free.
 5. OOD gate:
    - New ensemble OOD scores generated and calibrated.
    - AUROC/FPR targets tracked on validation sets.
@@ -133,7 +132,7 @@ Scope is repo-wide, with legacy v5.5 materials archived and redirected.
 ## Assumptions and Defaults (Locked)
 1. Clean break v6: no runtime compatibility wrappers for old Phase 1/3 APIs.
 2. Backbone default is always `facebook/dinov3-vitl16-pretrain-lvd1689m`.
-3. Quantization rollout is hybrid INT8 first; 4-bit paths are prohibited.
+3. Quantization policy forbids 4-bit paths; runtime uses standard non-quantized backbone loading.
 4. Multi-scale fusion is 4-stage token fusion.
 5. Adapter targeting is transformer all-linear only (excluding classifier/router heads).
 6. OOD is redesigned in this same overhaul, not deferred.

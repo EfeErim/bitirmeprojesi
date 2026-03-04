@@ -15,11 +15,7 @@ from sklearn.metrics import roc_auc_score
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
 from src.ood.continual_ood import ContinualOODDetector
-from src.training.quantization import (
-    HybridINT8Config,
-    assert_no_prohibited_4bit_flags,
-    load_hybrid_int8_backbone,
-)
+from src.training.quantization import assert_no_prohibited_4bit_flags
 
 try:
     from transformers import AutoModel
@@ -27,10 +23,9 @@ except Exception:  # pragma: no cover - test fallback
     AutoModel = None  # type: ignore[assignment]
 
 try:
-    from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
+    from peft import LoraConfig, get_peft_model
 except Exception:  # pragma: no cover - test fallback
     LoraConfig = None  # type: ignore[assignment]
-    prepare_model_for_kbit_training = None  # type: ignore[assignment]
 
     def get_peft_model(model: nn.Module, _cfg: Any) -> nn.Module:  # type: ignore[no-redef]
         return model
@@ -53,100 +48,11 @@ PREFERRED_TARGET_TOKEN = (
 )
 
 
-def _patch_missing_scb_for_linear8bitlt(model: nn.Module) -> int:
-    """Patch missing `weight.SCB` on bitsandbytes Linear8bitLt modules.
-
-    Some incompatible runtime stacks can surface 8-bit layers whose `weight`
-    object does not expose `SCB`. PEFT k-bit preparation and wrapping paths may
-    access this attribute and fail with `AttributeError` if absent.
-    """
-    try:
-        import bitsandbytes as bnb  # type: ignore
-    except Exception:
-        return 0
-
-    linear8bitlt_cls = getattr(getattr(bnb, "nn", None), "Linear8bitLt", None)
-    if linear8bitlt_cls is None:
-        return 0
-
-    patched = 0
-    for module in model.modules():
-        if not isinstance(module, linear8bitlt_cls):
-            continue
-        weight = getattr(module, "weight", None)
-        if weight is None or hasattr(weight, "SCB"):
-            continue
-        try:
-            setattr(weight, "SCB", None)
-            patched += 1
-        except Exception:
-            continue
-
-    if patched:
-        logger.warning(
-            "Patched missing SCB attributes on %s Linear8bitLt module(s) before PEFT wrapping.",
-            patched,
-        )
-    return patched
-
-
-def _install_linear8bitlt_scb_state_dict_guard() -> bool:
-    """Install a runtime guard for bitsandbytes Linear8bitLt state_dict saves.
-
-    Some runtime/version combinations can expose 8-bit layers whose weight/state
-    objects do not carry `SCB`. bitsandbytes then raises during
-    `_save_to_state_dict`. This guard retries once after injecting missing
-    placeholders.
-    """
-    try:
-        import bitsandbytes as bnb  # type: ignore
-    except Exception:
-        return False
-
-    linear8bitlt_cls = getattr(getattr(bnb, "nn", None), "Linear8bitLt", None)
-    if linear8bitlt_cls is None:
-        return False
-
-    if getattr(linear8bitlt_cls, "__aads_scb_guard_installed__", False):
-        return True
-
-    original = getattr(linear8bitlt_cls, "_save_to_state_dict", None)
-    if not callable(original):
-        return False
-
-    def _guarded_save_to_state_dict(self: Any, destination: Any, prefix: str, keep_vars: bool) -> None:
-        try:
-            original(self, destination, prefix, keep_vars)
-            return
-        except AttributeError as exc:
-            if "scb" not in str(exc).lower():
-                raise
-            weight = getattr(self, "weight", None)
-            state = getattr(self, "state", None)
-            if weight is not None and not hasattr(weight, "SCB"):
-                try:
-                    setattr(weight, "SCB", None)
-                except Exception:
-                    pass
-            if state is not None and not hasattr(state, "SCB"):
-                try:
-                    setattr(state, "SCB", None)
-                except Exception:
-                    pass
-            original(self, destination, prefix, keep_vars)
-
-    setattr(linear8bitlt_cls, "_save_to_state_dict", _guarded_save_to_state_dict)
-    setattr(linear8bitlt_cls, "__aads_scb_guard_installed__", True)
-    logger.warning("Installed Linear8bitLt SCB state_dict runtime guard.")
-    return True
-
-
 @dataclass
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
 
     backbone_model_name: str = "facebook/dinov3-vitl16-pretrain-lvd1689m"
-    quantization_mode: str = "int8_hybrid"
     target_modules_strategy: str = "all_linear_transformer"
     fusion_layers: List[int] = field(default_factory=lambda: [2, 5, 8, 11])
     fusion_output_dim: int = 768
@@ -161,14 +67,10 @@ class ContinualSDLoRAConfig:
     batch_size: int = 8
     device: str = "cuda"
     strict_model_loading: bool = False
-    strict_quantization_backend: bool = True
-    allow_cpu_quantization_fallback: bool = False
     ood_threshold_factor: float = 2.0
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
-        if self.quantization_mode.lower() != "int8_hybrid":
-            raise ValueError("v6 requires quantization_mode='int8_hybrid'.")
         if self.target_modules_strategy != "all_linear_transformer":
             raise ValueError("v6 requires target_modules_strategy='all_linear_transformer'.")
         if self.lora_r <= 0 or self.lora_alpha <= 0:
@@ -180,7 +82,6 @@ class ContinualSDLoRAConfig:
         """Return normalized config payload used in metadata persistence."""
         payload = {
             "backbone": {"model_name": self.backbone_model_name},
-            "quantization": {"mode": self.quantization_mode},
             "adapter": {
                 "target_modules_strategy": self.target_modules_strategy,
                 "lora_r": self.lora_r,
@@ -204,14 +105,12 @@ class ContinualSDLoRAConfig:
         """Build from `training.continual` dictionary."""
         assert_no_prohibited_4bit_flags(training_continual)
         backbone = training_continual.get("backbone", {})
-        quantization = training_continual.get("quantization", {})
         adapter = training_continual.get("adapter", {})
         fusion = training_continual.get("fusion", {})
         ood = training_continual.get("ood", {})
 
         config = cls(
             backbone_model_name=str(backbone.get("model_name", "facebook/dinov3-vitl16-pretrain-lvd1689m")),
-            quantization_mode=str(quantization.get("mode", "int8_hybrid")),
             target_modules_strategy=str(adapter.get("target_modules_strategy", "all_linear_transformer")),
             fusion_layers=[int(v) for v in fusion.get("layers", [2, 5, 8, 11])],
             fusion_output_dim=int(fusion.get("output_dim", 768)),
@@ -226,12 +125,9 @@ class ContinualSDLoRAConfig:
             batch_size=int(training_continual.get("batch_size", 8)),
             device=str(training_continual.get("device", "cuda")),
             strict_model_loading=bool(training_continual.get("strict_model_loading", False)),
-            strict_quantization_backend=bool(quantization.get("strict_backend", True)),
-            allow_cpu_quantization_fallback=bool(quantization.get("allow_cpu_fallback", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
             extra={k: v for k, v in training_continual.items() if k not in {
                 "backbone",
-                "quantization",
                 "adapter",
                 "fusion",
                 "ood",
@@ -419,35 +315,6 @@ class ContinualSDLoRATrainer:
         output_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
         return artifact
 
-    @property
-    def quantization_metadata(self) -> Dict[str, Any]:
-        return {
-            "mode": self.config.quantization_mode,
-            "strict_backend": self.config.strict_quantization_backend,
-            "allow_cpu_fallback": self.config.allow_cpu_quantization_fallback,
-        }
-
-    @staticmethod
-    def _is_low_bit_loaded_model(model: nn.Module) -> bool:
-        """Return True when model device placement is already managed by low-bit loader."""
-        candidates = [
-            model,
-            getattr(model, "base_model", None),
-            getattr(getattr(model, "base_model", None), "model", None),
-            getattr(model, "model", None),
-        ]
-        for candidate in candidates:
-            if candidate is None:
-                continue
-            if bool(getattr(candidate, "is_loaded_in_8bit", False)):
-                return True
-            if bool(getattr(candidate, "is_loaded_in_4bit", False)):
-                return True
-            quant_method = str(getattr(candidate, "quantization_method", "")).lower()
-            if "bitsandbytes" in quant_method:
-                return True
-        return False
-
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
         """Load frozen backbone, apply adapters, initialize heads."""
         if class_to_idx:
@@ -456,21 +323,7 @@ class ContinualSDLoRATrainer:
         if AutoModel is None:
             raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
 
-        int8_cfg = HybridINT8Config(
-            mode=self.config.quantization_mode,
-            strict_backend=self.config.strict_quantization_backend,
-            allow_cpu_fallback=self.config.allow_cpu_quantization_fallback,
-        )
-        self.backbone = load_hybrid_int8_backbone(
-            self.config.backbone_model_name,
-            auto_model_cls=AutoModel,
-            cfg=int8_cfg,
-            strict_model_loading=self.config.strict_model_loading,
-        )
-        if self._is_low_bit_loaded_model(self.backbone):
-            logger.info("Backbone is already low-bit loaded; skipping explicit .to(device).")
-        else:
-            self.backbone = self.backbone.to(self.device)
+        self.backbone = AutoModel.from_pretrained(self.config.backbone_model_name).to(self.device)
         for param in self.backbone.parameters():
             param.requires_grad = False
 
@@ -484,26 +337,8 @@ class ContinualSDLoRATrainer:
         ).to(self.device)
 
         self.target_modules_resolved = self.resolve_target_modules(self.backbone)
-        try:
-            adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
-        except RuntimeError as exc:
-            message = str(exc).lower()
-            if ("scb" not in message and "bitsandbytes" not in message) or not self._is_low_bit_loaded_model(self.backbone):
-                raise
-            logger.warning(
-                "Low-bit LoRA wrapping failed due to SCB/bitsandbytes runtime issue (%s). "
-                "Retrying with non-quantized backbone fallback.",
-                exc,
-            )
-            self.backbone = self._load_non_quantized_backbone().to(self.device)
-            for param in self.backbone.parameters():
-                param.requires_grad = False
-            self.target_modules_resolved = self.resolve_target_modules(self.backbone)
-            adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
-        if self._is_low_bit_loaded_model(adapter_model):
-            self.adapter_model = adapter_model
-        else:
-            self.adapter_model = adapter_model.to(self.device)
+        adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
+        self.adapter_model = adapter_model.to(self.device)
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
 
         self._is_initialized = True
@@ -512,12 +347,6 @@ class ContinualSDLoRATrainer:
             self.config.backbone_model_name,
             len(self.target_modules_resolved),
         )
-
-    def _load_non_quantized_backbone(self) -> nn.Module:
-        if AutoModel is None:
-            raise RuntimeError("transformers AutoModel is unavailable for non-quantized fallback loading.")
-        logger.warning("Loading non-quantized fallback backbone for SCB recovery: %s", self.config.backbone_model_name)
-        return AutoModel.from_pretrained(self.config.backbone_model_name)
 
     def _raise_missing_peft(self) -> None:
         message = (
@@ -531,24 +360,6 @@ class ContinualSDLoRATrainer:
         if LoraConfig is None:
             self._raise_missing_peft()
 
-        low_bit_model = self._is_low_bit_loaded_model(model)
-        if low_bit_model:
-            _patch_missing_scb_for_linear8bitlt(model)
-            _install_linear8bitlt_scb_state_dict_guard()
-            if prepare_model_for_kbit_training is not None:
-                try:
-                    model = prepare_model_for_kbit_training(model)
-                except Exception as exc:
-                    message = str(exc).lower()
-                    if "scb" in message or "bitsandbytes" in message:
-                        logger.warning(
-                            "prepare_model_for_kbit_training failed with SCB/bitsandbytes issue (%s); "
-                            "continuing with direct LoRA wrapping fallback.",
-                            exc,
-                        )
-                    else:
-                        raise
-
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
         lora_config = LoraConfig(
             r=self.config.lora_r,
@@ -558,23 +369,10 @@ class ContinualSDLoRATrainer:
             bias="none",
         )
         try:
-            if low_bit_model:
-                wrapped = get_peft_model(model, lora_config)
-            else:
-                try:
-                    wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
-                except TypeError:
-                    wrapped = get_peft_model(model, lora_config)
-        except Exception as exc:
-            message = str(exc).lower()
-            if "scb" in message or "bitsandbytes" in message:
-                runtime_message = (
-                    "PEFT LoRA wrapping failed due to bitsandbytes runtime incompatibility "
-                    f"({exc}). Refusing degraded fallback; fix bitsandbytes/transformers/CUDA compatibility. "
-                    "Recommended Colab stack: transformers<5, bitsandbytes>=0.43, peft>=0.13, accelerate>=0.24, then restart runtime."
-                )
-                logger.error(runtime_message)
-                raise RuntimeError(runtime_message) from exc
+            wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
+        except TypeError:
+            wrapped = get_peft_model(model, lora_config)
+        except Exception:
             raise
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
@@ -780,7 +578,6 @@ class ContinualSDLoRATrainer:
                 "model_name": self.config.backbone_model_name,
                 "frozen": True,
             },
-            "quantization": self.quantization_metadata,
             "fusion": {
                 "layers": self.config.fusion_layers,
                 "output_dim": self.config.fusion_output_dim,

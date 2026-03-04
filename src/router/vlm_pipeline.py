@@ -11,7 +11,7 @@ import os
 import time
 import copy
 from pathlib import Path
-from typing import Dict, Optional, Any, List, Tuple
+from typing import Dict, Optional, Any, List, Tuple, Callable
 from PIL import Image
 import numpy as np
 from src.router.policy_taxonomy_utils import (
@@ -1447,18 +1447,51 @@ class VLMPipeline:
         """
         pil_image, image_size = self._coerce_image_input(image_tensor)
 
-        if self.enabled and self.models_loaded:
-            if self.actual_pipeline == 'sam3':
-                return self._analyze_image_sam3(pil_image, image_size, confidence_threshold, max_detections)
-            if self.actual_pipeline == 'dino':
-                return self._analyze_image_dino(pil_image, image_size, confidence_threshold, max_detections)
-        
-        # Pipeline not ready/enabled
+        if not (self.enabled and self.models_loaded):
+            return self._empty_analysis_result(image_size)
+
+        analyzer = self._resolve_analyzer_for_active_pipeline()
+        if analyzer is None:
+            return self._empty_analysis_result(image_size)
+
+        effective_max_detections = self._resolve_effective_max_detections(max_detections)
+        return analyzer(pil_image, image_size, confidence_threshold, effective_max_detections)
+
+    @staticmethod
+    def _empty_analysis_result(image_size: Tuple[int, int, int]) -> Dict[str, Any]:
+        """Compatibility-safe empty analysis response when runtime pipeline is unavailable."""
         return {
             'detections': [],
             'image_size': image_size,
-            'processing_time_ms': 0.0
+            'processing_time_ms': 0.0,
         }
+
+    def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any]]]:
+        """Resolve analysis function for active pipeline with compatibility-safe fallback controls."""
+        enable_legacy_dino_dispatch = bool(
+            self._policy_value('execution', 'enable_legacy_dino_dispatch', True)
+        )
+
+        analyzers: Dict[str, Callable[..., Dict[str, Any]]] = {
+            'sam3': self._analyze_image_sam3,
+        }
+        if enable_legacy_dino_dispatch:
+            analyzers['dino'] = self._analyze_image_dino
+
+        active_pipeline = str(self.actual_pipeline or '').strip().lower()
+        return analyzers.get(active_pipeline)
+
+    @staticmethod
+    def _resolve_effective_max_detections(max_detections: Optional[int]) -> Optional[int]:
+        """Normalize max detections contract: None/<=0 means no cap."""
+        if max_detections is None:
+            return None
+
+        try:
+            max_det_int = int(max_detections)
+        except Exception:
+            max_det_int = 0
+        return None if max_det_int <= 0 else max_det_int
 
     def _sam3_stage_order(self) -> List[str]:
         """Resolve SAM3 stage execution order from policy graph."""
@@ -1771,14 +1804,7 @@ class VLMPipeline:
         stage_start = time.perf_counter()
         
         effective_threshold = self._resolve_effective_confidence_threshold(confidence_threshold)
-        if max_detections is None:
-            effective_max_detections = None
-        else:
-            try:
-                max_det_int = int(max_detections)
-            except Exception:
-                max_det_int = 0
-            effective_max_detections = None if max_det_int <= 0 else max_det_int
+        effective_max_detections = self._resolve_effective_max_detections(max_detections)
         image_width, image_height = pil_image.size
         stage_timings_ms['preprocess'] = (time.perf_counter() - stage_start) * 1000.0
 
@@ -1920,14 +1946,7 @@ class VLMPipeline:
         start_time = time.perf_counter()
 
         effective_threshold = self._resolve_effective_confidence_threshold(confidence_threshold)
-        if max_detections is None:
-            effective_max_detections = None
-        else:
-            try:
-                max_det_int = int(max_detections)
-            except Exception:
-                max_det_int = 0
-            effective_max_detections = None if max_det_int <= 0 else max_det_int
+        effective_max_detections = self._resolve_effective_max_detections(max_detections)
 
         try:
             dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)

@@ -6,10 +6,6 @@
                      "model_name":  "facebook/dinov3-vitl16-pretrain-lvd1689m",
                      "frozen":  true
                  },
-    "quantization":  {
-                         "mode":  "int8_hybrid",
-                         "strict_backend":  true
-                     },
     "adapter":  {
                     "target_modules_strategy":  "all_linear_transformer",
                     "lora_r":  16,

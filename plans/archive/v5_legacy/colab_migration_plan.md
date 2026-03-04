@@ -300,7 +300,7 @@ torchvision>=0.15.0
 transformers>=4.40.0
 peft>=0.10.0
 accelerate>=0.20.0
-bitsandbytes>=0.41.0
+# NOTE (historical v5): low-bit backend packages were evaluated in legacy experiments.
 
 # Colab-specific
 gdown>=4.7.1
@@ -315,7 +315,7 @@ tensorboard>=2.12.0  # For visualization
 **Potential Challenges & Solutions:**
 | Challenge | Solution |
 |-----------|----------|
-| bitsandbytes installation fails | Use pre-built wheel: `pip install bitsandbytes==0.41.0 --no-deps` then install dependencies manually |
+| Legacy low-bit backend installation fails | Skip optional low-bit backend path in legacy notebook experiments |
 | CUDA version mismatch | Detect CUDA version dynamically; install matching PyTorch wheel |
 | Slow pip installation | Use `pip install --no-cache-dir` or `pip install -q` for quiet mode |
 | Conflicting package versions | Pin exact versions in `requirements_colab.txt` |
@@ -882,7 +882,7 @@ with open('colab_requirements.txt', 'wb') as f:
 | Colab session timeout during long training | High | High | Auto-checkpoint every epoch; resume logic |
 | A100 GPU unavailable (only T4) | Medium | High | Detect GPU type; adjust batch sizes automatically |
 | Drive quota exceeded | Low | High | Check free space before starting; warn user |
-| bitsandbytes installation fails | Medium | Medium | Provide alternative installation methods |
+| Legacy optional low-bit backend fails | Medium | Medium | Use standard non-quantized runtime path |
 | PyTorch version conflicts | Low | High | Pin exact versions; test on fresh Colab |
 | Data corruption on Drive | Low | High | Checksum verification; redundant checkpoints |
 | Colab policy changes (rate limits) | Medium | Medium | Monitor Colab status; have fallback to local runtime |

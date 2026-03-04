@@ -48,7 +48,6 @@ def test_continual_trainer_imports() -> bool:
         config = ContinualSDLoRAConfig.from_training_config(
             {
                 "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
-                "quantization": {"mode": "int8_hybrid", "strict_backend": False, "allow_cpu_fallback": True},
                 "adapter": {
                     "target_modules_strategy": "all_linear_transformer",
                     "lora_r": 4,
@@ -73,7 +72,7 @@ def test_continual_trainer_imports() -> bool:
 
 
 def test_quantization_guard() -> bool:
-    step_id = "INT8_GUARD"
+    step_id = "LOW_BIT_GUARD"
     print(f"\nTesting {gate_label(step_id, '4-bit rejection guard')}...")
     try:
         from src.training.quantization import assert_no_prohibited_4bit_flags
@@ -81,7 +80,7 @@ def test_quantization_guard() -> bool:
         valid_payload = {
             "training": {
                 "continual": {
-                    "quantization": {"mode": "int8_hybrid"}
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"}
                 }
             }
         }
