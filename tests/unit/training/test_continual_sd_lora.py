@@ -164,6 +164,38 @@ def test_apply_lora_avoids_low_cpu_mem_usage_meta_tensors(monkeypatch):
     assert call_kwargs.get("low_cpu_mem_usage") is False
 
 
+def test_apply_lora_without_low_cpu_mem_usage_kwarg_support(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeLoraConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    called = {"count": 0}
+
+    def fake_get_peft_model(model, _cfg):
+        called["count"] += 1
+        return model
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    monkeypatch.setattr(continual_module, "LoraConfig", FakeLoraConfig)
+    monkeypatch.setattr(continual_module, "get_peft_model", fake_get_peft_model)
+
+    model = DummyBackbone()
+    wrapped = trainer._apply_lora(model, ["transformer.block.0.0"])
+
+    assert wrapped is model
+    assert called["count"] == 1
+
+
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
@@ -229,6 +261,64 @@ def test_initialize_engine_with_non_quantized_backbone(monkeypatch):
     assert trainer.backbone is not None
     assert trainer.classifier is not None
     assert trainer.classifier.out_features == 1
+
+
+def test_initialize_engine_raises_when_backbone_contains_meta_tensors(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class MetaBackbone(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.backbone = nn.Linear(8, 8, device="meta")
+            self.config = type("Cfg", (), {"hidden_size": 8})()
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return MetaBackbone()
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+
+    with pytest.raises(RuntimeError, match="Backbone contains meta tensors"):
+        trainer.initialize_engine(class_to_idx={"healthy": 0})
+
+
+def test_initialize_engine_raises_when_adapter_contains_meta_tensors(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    class MetaAdapterModel(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.adapter = nn.Linear(8, 8, device="meta")
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, _model, _targets: MetaAdapterModel())
+
+    with pytest.raises(RuntimeError, match="Adapter model contains meta tensors"):
+        trainer.initialize_engine(class_to_idx={"healthy": 0})
 
 
 

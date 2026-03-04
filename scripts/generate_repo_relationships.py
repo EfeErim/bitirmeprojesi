@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Generate an exhaustive repository file-relationship document."""
+"""Generate repository relationship artifacts.
+
+Governance intent:
+- `docs/REPO_FILE_RELATIONS.md` is the canonical human-maintained summary.
+- `docs/REPO_FILE_RELATIONS_DETAILED.md` is a generated detailed artifact.
+- This script is the canonical owner for generating the detailed artifact.
+"""
 
 from __future__ import annotations
 
@@ -17,6 +23,9 @@ from typing import Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 
 INTERNAL_IMPORT_ROOTS = ("src", "tests", "scripts", "config")
+CANONICAL_RELATIONS_SUMMARY_DOC = "docs/REPO_FILE_RELATIONS.md"
+CANONICAL_RELATIONS_DETAILED_DOC = "docs/REPO_FILE_RELATIONS_DETAILED.md"
+CANONICAL_RELATIONS_JSON_SNAPSHOT = "docs/reports/repository_relationships_snapshot.json"
 LOW_SIGNAL_EXTENSIONS = {".pdf", ".zip", ".log"}
 TEXT_FRIENDLY_EXTENSIONS = {
     ".py",
@@ -115,17 +124,28 @@ class GraphBuilder:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate repository file relationship map.")
+    parser = argparse.ArgumentParser(
+        description=(
+            "Generate repository file relationship map (detailed generated artifact). "
+            f"Human-maintained summary remains {CANONICAL_RELATIONS_SUMMARY_DOC}."
+        )
+    )
     parser.add_argument("--root", default=".", help="Repository root to scan (default: current directory).")
     parser.add_argument(
         "--output",
-        default="docs/REPO_FILE_RELATIONS_DETAILED.md",
-        help="Output markdown path (default: docs/REPO_FILE_RELATIONS_DETAILED.md).",
+        default=CANONICAL_RELATIONS_DETAILED_DOC,
+        help=(
+            "Output markdown path for generated detailed artifact "
+            f"(default: {CANONICAL_RELATIONS_DETAILED_DOC})."
+        ),
     )
     parser.add_argument(
         "--json-output",
         default="",
-        help="Optional JSON snapshot path (default: disabled).",
+        help=(
+            "Optional JSON snapshot path (default: disabled; canonical optional path: "
+            f"{CANONICAL_RELATIONS_JSON_SNAPSHOT})."
+        ),
     )
     parser.add_argument(
         "--exclude-dirs",

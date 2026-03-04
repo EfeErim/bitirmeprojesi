@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import inspect
 import json
 import logging
 from pathlib import Path
@@ -323,7 +324,14 @@ class ContinualSDLoRATrainer:
         if AutoModel is None:
             raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
 
-        self.backbone = AutoModel.from_pretrained(self.config.backbone_model_name).to(self.device)
+        loaded_backbone = AutoModel.from_pretrained(self.config.backbone_model_name)
+        if self._module_has_meta_tensors(loaded_backbone):
+            raise RuntimeError(
+                "Backbone contains meta tensors after from_pretrained(). "
+                "This usually indicates external device/offload dispatch. "
+                "Disable meta/offload loading and ensure full weight materialization before initialize_engine()."
+            )
+        self.backbone = loaded_backbone.to(self.device)
         for param in self.backbone.parameters():
             param.requires_grad = False
 
@@ -338,6 +346,12 @@ class ContinualSDLoRATrainer:
 
         self.target_modules_resolved = self.resolve_target_modules(self.backbone)
         adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
+        if self._module_has_meta_tensors(adapter_model):
+            raise RuntimeError(
+                "Adapter model contains meta tensors after LoRA wrapping. "
+                "Use a peft version that supports low_cpu_mem_usage=False for get_peft_model() "
+                "or disable external meta/offload loading."
+            )
         self.adapter_model = adapter_model.to(self.device)
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
 
@@ -356,6 +370,21 @@ class ContinualSDLoRATrainer:
         logger.error(message)
         raise RuntimeError(message)
 
+    @staticmethod
+    def _module_has_meta_tensors(module: nn.Module) -> bool:
+        return any(param.is_meta for param in module.parameters()) or any(buffer.is_meta for buffer in module.buffers())
+
+    @staticmethod
+    def _supports_low_cpu_mem_usage_kwarg() -> bool:
+        try:
+            signature = inspect.signature(get_peft_model)
+        except (TypeError, ValueError):
+            return False
+
+        if "low_cpu_mem_usage" in signature.parameters:
+            return True
+        return any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
+
     def _apply_lora(self, model: nn.Module, target_modules: Sequence[str]) -> nn.Module:
         if LoraConfig is None:
             self._raise_missing_peft()
@@ -368,12 +397,13 @@ class ContinualSDLoRATrainer:
             target_modules=suffixes,
             bias="none",
         )
-        try:
+
+        supports_low_cpu_mem_usage = self._supports_low_cpu_mem_usage_kwarg()
+        if supports_low_cpu_mem_usage:
             wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=False)
-        except TypeError:
+        else:
             wrapped = get_peft_model(model, lora_config)
-        except Exception:
-            raise
+
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
                 param.requires_grad = True

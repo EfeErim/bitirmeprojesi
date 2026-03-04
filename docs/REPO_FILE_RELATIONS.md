@@ -1,5 +1,20 @@
 # Repository File Relations (v6)
 
+## Governance Model (P2-B)
+
+- Canonical human-maintained summary: `docs/REPO_FILE_RELATIONS.md` (this file).
+- Generated detailed artifact: `docs/REPO_FILE_RELATIONS_DETAILED.md` (generated; do not hand-edit).
+- Canonical generation owner script: `scripts/generate_repo_relationships.py`.
+- Canonical regeneration command:
+
+```bash
+python scripts/generate_repo_relationships.py --output docs/REPO_FILE_RELATIONS_DETAILED.md --json-output docs/reports/repository_relationships_snapshot.json
+```
+
+- Operational guardrail: avoid regenerating the detailed artifact during small governance/documentation updates unless explicitly requested.
+
+## Canonical Active Relationships Summary
+
 - Training engine: `src/training/continual_sd_lora.py`
 - Low-bit policy guardrails: `src/training/quantization.py`
 - Fusion module: `src/adapter/multi_scale_fusion.py`

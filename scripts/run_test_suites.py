@@ -16,6 +16,8 @@ class SuiteConfig:
     description: str
     paths: tuple[str, ...]
     extra_pytest_args: tuple[str, ...] = ()
+    allow_no_tests: bool = False
+    archived: bool = False
 
 
 SUITES: dict[str, SuiteConfig] = {
@@ -107,6 +109,7 @@ SUITES: dict[str, SuiteConfig] = {
         name='unit/fixtures',
         description='Shared fixture module import checks',
         paths=('tests/fixtures/test_fixtures.py',),
+        allow_no_tests=True,
     ),
     'colab/smoke': SuiteConfig(
         name='colab/smoke',
@@ -136,8 +139,30 @@ SUITES: dict[str, SuiteConfig] = {
         name='archive/v5_legacy',
         description='Archived legacy test surface (coverage mapping only)',
         paths=('tests/archive/v5_legacy',),
+        archived=True,
     ),
 }
+
+ACTIVE_V6_ALL = (
+    'unit/validation',
+    'unit/training',
+    'unit/adapter',
+    'unit/adapters',
+    'unit/ood',
+    'unit/dataset',
+    'unit/pipeline',
+    'unit/router',
+    'unit/debugging',
+    'unit/evaluation',
+    'unit/monitoring',
+    'unit/security',
+    'unit/utils',
+    'unit/visualization',
+    'unit/fixtures',
+    'colab/smoke',
+    'colab/environment',
+    'integration/core',
+)
 
 GROUPS = {
     'quick': ('unit/validation', 'unit/training', 'unit/adapter', 'unit/ood'),
@@ -161,12 +186,15 @@ GROUPS = {
     'colab': ('colab/smoke', 'colab/environment'),
     'integration': ('integration/core',),
     'archive': ('archive/v5_legacy',),
-    'all': tuple(SUITES.keys()),
+    'legacy': ('archive/v5_legacy',),
+    'active': ACTIVE_V6_ALL,
+    'all': ACTIVE_V6_ALL,
 }
 
 # Compatibility aliases for legacy suite names.
 TARGET_ALIASES = {
     'unit_validation': 'unit/validation',
+    'legacy/v5': 'archive/v5_legacy',
 }
 
 
@@ -214,6 +242,8 @@ def run_suite(root: Path, suite: SuiteConfig, extra_args: list[str], quiet: bool
         command.append('-q')
     command.extend(extra_args)
     print(f"\n[RUN] {suite.name}")
+    if suite.archived:
+        print('[INFO] Running archived legacy suite (opt-in, excluded from --suite all).')
     print('[CMD]', ' '.join(command))
     return subprocess.run(command, cwd=str(root), check=False).returncode
 
@@ -232,12 +262,20 @@ def main() -> int:
 
     root = Path(__file__).resolve().parents[1]
     failures = []
+    skipped_no_tests = []
     for suite in suites:
         code = run_suite(root, suite, args.pytest_arg, args.quiet_pytest)
+        if code == 5 and suite.allow_no_tests:
+            skipped_no_tests.append(suite.name)
+            print(f'[SKIP] {suite.name}: no tests collected (optional structural suite).')
+            continue
         if code != 0:
             failures.append(suite.name)
             if args.fail_fast:
                 break
+
+    if skipped_no_tests:
+        print(f"\n[SKIPPED - NO TESTS] {', '.join(skipped_no_tests)}")
 
     if failures:
         print(f"\n[FAILED SUITES] {', '.join(failures)}")
