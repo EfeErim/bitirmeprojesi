@@ -563,6 +563,7 @@ def create_training_loaders(
     """Create train/val/test loaders that emit `{'images', 'labels'}` batches."""
     loaders: Dict[str, DataLoader] = {}
     class_names = infer_crop_classes_from_layout(data_dir=data_dir, crop=crop)
+    pin_memory = bool(dataloader_kwargs.pop('pin_memory', True))
 
     for split in ['train', 'val', 'test']:
         dataset = CropDataset(
@@ -580,7 +581,7 @@ def create_training_loaders(
             batch_size=batch_size,
             shuffle=(split == 'train'),
             num_workers=num_workers,
-            pin_memory=True,
+            pin_memory=pin_memory,
             collate_fn=dict_collate_fn,
             **dataloader_kwargs,
         )
