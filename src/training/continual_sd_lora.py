@@ -369,7 +369,7 @@ class ContinualSDLoRATrainer:
             bias="none",
         )
         try:
-            wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=True)
+            wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=False)
         except TypeError:
             wrapped = get_peft_model(model, lora_config)
         except Exception:

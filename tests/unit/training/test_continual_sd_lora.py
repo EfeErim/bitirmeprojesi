@@ -132,6 +132,38 @@ def test_raises_when_peft_is_missing(monkeypatch):
 
 
 
+def test_apply_lora_avoids_low_cpu_mem_usage_meta_tensors(monkeypatch):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeLoraConfig:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    call_kwargs = {}
+
+    def fake_get_peft_model(model, _cfg, **kwargs):
+        call_kwargs.update(kwargs)
+        return model
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    monkeypatch.setattr(continual_module, "LoraConfig", FakeLoraConfig)
+    monkeypatch.setattr(continual_module, "get_peft_model", fake_get_peft_model)
+
+    model = DummyBackbone()
+    wrapped = trainer._apply_lora(model, ["transformer.block.0.0"])
+
+    assert wrapped is model
+    assert call_kwargs.get("low_cpu_mem_usage") is False
+
+
 def test_train_increment_emits_progress_callback_events():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
