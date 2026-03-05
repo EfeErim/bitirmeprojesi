@@ -25,6 +25,9 @@ python scripts/generate_repo_relationships.py --output docs/REPO_FILE_RELATIONS_
 - Router support utilities: `src/router/roi_pipeline.py`, `src/router/roi_helpers.py`, `src/router/policy_taxonomy_utils.py`
 - Colab orchestration: `scripts/colab_auto_orchestrator.py`
 - Colab bootstrap helper: `scripts/colab_repo_bootstrap.py`
+- Colab live telemetry helper: `scripts/colab_live_telemetry.py`
+- Colab checkpoint manager: `scripts/colab_checkpointing.py`
+- Colab notebook artifact/checkpoint helpers: `scripts/colab_notebook_helpers.py`
 - Dataset layout contract checker (notebook 2): `scripts/evaluate_dataset_layout.py`
 - Modular suite runner: `scripts/run_test_suites.py`
 - Integration smoke (real HF backbone, heavy-model marker): `tests/integration/test_continual_trainer_real_backbone.py`

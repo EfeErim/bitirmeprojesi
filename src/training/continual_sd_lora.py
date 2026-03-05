@@ -4,9 +4,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import copy
+from datetime import datetime
 import inspect
 import json
 import logging
+import random
 from pathlib import Path
 import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
@@ -15,8 +18,13 @@ import torch
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score
 
+try:
+    import numpy as np
+except Exception:  # pragma: no cover - optional dependency in some local sandboxes
+    np = None  # type: ignore[assignment]
+
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
-from src.ood.continual_ood import ContinualOODDetector
+from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
 from src.training.quantization import assert_no_prohibited_4bit_flags
 
 try:
@@ -664,19 +672,9 @@ class ContinualSDLoRATrainer:
             "worst_classes": ranked_worst[:3],
         }
 
-    def train_increment(
-        self,
-        train_loader: Iterable[Dict[str, torch.Tensor]],
-        num_epochs: Optional[int] = None,
-        val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
-        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
-        should_stop: Optional[Callable[[], bool]] = None,
-    ) -> Dict[str, Any]:
-        if self.optimizer is None:
-            self.setup_optimizer()
-
-        epochs = int(num_epochs if num_epochs is not None else self.config.num_epochs)
-        history: Dict[str, Any] = {
+    @staticmethod
+    def _history_template() -> Dict[str, Any]:
+        return {
             "train_loss": [],
             "val_loss": [],
             "val_accuracy": [],
@@ -687,12 +685,50 @@ class ContinualSDLoRATrainer:
             "per_class_accuracy": [],
             "worst_classes": [],
         }
+
+    def train_increment(
+        self,
+        train_loader: Iterable[Dict[str, torch.Tensor]],
+        num_epochs: Optional[int] = None,
+        val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
+        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        should_stop: Optional[Callable[[], bool]] = None,
+        resume_state: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        if self.optimizer is None:
+            self.setup_optimizer()
+
+        epochs = int(num_epochs if num_epochs is not None else self.config.num_epochs)
+        history: Dict[str, Any] = self._history_template()
         global_step = 0
+        start_epoch = 0
+        elapsed_before_resume = 0.0
+        if resume_state:
+            resume_history = resume_state.get("history_snapshot", resume_state.get("history", {}))
+            if isinstance(resume_history, dict):
+                for key in history.keys():
+                    value = resume_history.get(key, [])
+                    if isinstance(value, list):
+                        history[key] = list(value)
+            progress = resume_state.get("progress_state", {})
+            if isinstance(progress, dict):
+                start_epoch = max(0, int(progress.get("epoch", 0)))
+                global_step = max(0, int(progress.get("global_step", 0)))
+                elapsed_before_resume = float(progress.get("elapsed_sec", 0.0))
+            if progress_callback is not None:
+                progress_callback(
+                    {
+                        "resume_loaded": True,
+                        "resume_epoch": int(start_epoch),
+                        "global_step": int(global_step),
+                    }
+                )
+
         stopped_early = False
         batch_loss_window: List[float] = []
-        train_started_at = time.perf_counter()
+        train_started_at = time.perf_counter() - max(0.0, elapsed_before_resume)
 
-        for epoch_idx in range(max(1, epochs)):
+        for epoch_idx in range(start_epoch, max(1, epochs)):
             self.adapter_model.train()  # type: ignore[union-attr]
             self.classifier.train()  # type: ignore[union-attr]
             self.fusion.train()  # type: ignore[union-attr]
@@ -776,7 +812,7 @@ class ContinualSDLoRATrainer:
 
             epoch_loss = float(sum(losses) / max(1, len(losses)))
             history["train_loss"].append(epoch_loss)
-            self.current_epoch += 1
+            self.current_epoch = int(epoch_idx + 1)
 
             epoch_payload: Dict[str, Any] = {
                 "epoch_done": epoch_idx + 1,
@@ -824,6 +860,7 @@ class ContinualSDLoRATrainer:
 
         history["stopped_early"] = bool(stopped_early)
         history["global_step"] = int(global_step)
+        history["resume_start_epoch"] = int(start_epoch)
         return history
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
@@ -905,6 +942,175 @@ class ContinualSDLoRATrainer:
             },
         }
 
+    def _serialize_ood_state(self) -> Dict[str, Any]:
+        class_stats: Dict[str, Any] = {}
+        for class_id, stats in self.ood_detector.class_stats.items():
+            class_stats[str(class_id)] = {
+                "mean": stats.mean.detach().cpu().tolist(),
+                "var": stats.var.detach().cpu().tolist(),
+                "mahalanobis_mu": float(stats.mahalanobis_mu),
+                "mahalanobis_sigma": float(stats.mahalanobis_sigma),
+                "energy_mu": float(stats.energy_mu),
+                "energy_sigma": float(stats.energy_sigma),
+                "threshold": float(stats.threshold),
+            }
+        return {
+            "threshold_factor": float(self.ood_detector.threshold_factor),
+            "calibration_version": int(self.ood_detector.calibration_version),
+            "class_stats": class_stats,
+        }
+
+    def _restore_ood_state(self, payload: Dict[str, Any]) -> None:
+        threshold_factor = float(payload.get("threshold_factor", self.config.ood_threshold_factor))
+        self.ood_detector = ContinualOODDetector(threshold_factor=threshold_factor)
+        self.ood_detector.calibration_version = int(payload.get("calibration_version", 0))
+
+        class_stats = payload.get("class_stats", {})
+        if not isinstance(class_stats, dict):
+            return
+        for class_id_raw, stats in class_stats.items():
+            if not isinstance(stats, dict):
+                continue
+            class_id = int(class_id_raw)
+            self.ood_detector.class_stats[class_id] = ClassCalibration(
+                mean=torch.tensor(stats.get("mean", []), dtype=torch.float32),
+                var=torch.tensor(stats.get("var", []), dtype=torch.float32),
+                mahalanobis_mu=float(stats.get("mahalanobis_mu", 0.0)),
+                mahalanobis_sigma=float(stats.get("mahalanobis_sigma", 1.0)),
+                energy_mu=float(stats.get("energy_mu", 0.0)),
+                energy_sigma=float(stats.get("energy_sigma", 1.0)),
+                threshold=float(stats.get("threshold", 0.0)),
+            )
+
+    @staticmethod
+    def _capture_rng_state() -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "torch": torch.get_rng_state(),
+            "python": random.getstate(),
+        }
+        if torch.cuda.is_available():
+            payload["torch_cuda"] = torch.cuda.get_rng_state_all()
+        if np is not None:
+            payload["numpy"] = np.random.get_state()
+        return payload
+
+    @staticmethod
+    def _restore_rng_state(payload: Dict[str, Any]) -> None:
+        if not isinstance(payload, dict):
+            return
+        try:
+            torch_state = payload.get("torch")
+            if torch_state is not None:
+                torch.set_rng_state(torch_state)
+        except Exception:
+            pass
+        try:
+            cuda_state = payload.get("torch_cuda")
+            if cuda_state is not None and torch.cuda.is_available():
+                torch.cuda.set_rng_state_all(cuda_state)
+        except Exception:
+            pass
+        try:
+            python_state = payload.get("python")
+            if python_state is not None:
+                random.setstate(python_state)
+        except Exception:
+            pass
+        try:
+            numpy_state = payload.get("numpy")
+            if numpy_state is not None and np is not None:
+                np.random.set_state(numpy_state)
+        except Exception:
+            pass
+
+    def save_training_checkpoint(
+        self,
+        output_dir: str,
+        *,
+        progress_state: Optional[Dict[str, Any]] = None,
+        history: Optional[Dict[str, Any]] = None,
+        run_id: str = "",
+    ) -> Path:
+        out = Path(output_dir)
+        checkpoint_dir = out / "training_checkpoint"
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
+
+        if self.adapter_model is None or self.classifier is None or self.fusion is None:
+            raise RuntimeError("Cannot save training checkpoint before initialization.")
+
+        payload = {
+            "schema_version": "v6_training_checkpoint",
+            "created_at": datetime.utcnow().isoformat() + "Z",
+            "run_id": str(run_id),
+            "trainer_config": self.config.as_contract_dict(),
+            "class_to_idx": dict(self.class_to_idx),
+            "target_modules_resolved": list(self.target_modules_resolved),
+            "model_state": {
+                "adapter_model": self.adapter_model.state_dict(),
+                "classifier": self.classifier.state_dict(),
+                "fusion": self.fusion.state_dict(),
+            },
+            "optimizer_state": self.optimizer.state_dict() if self.optimizer is not None else None,
+            "ood_state": self._serialize_ood_state(),
+            "progress_state": dict(progress_state or {}),
+            "history_snapshot": copy.deepcopy(dict(history or {})),
+            "rng_state": self._capture_rng_state(),
+        }
+        torch.save(payload, checkpoint_dir / "training_checkpoint.pt")
+
+        meta = {
+            "schema_version": payload["schema_version"],
+            "created_at": payload["created_at"],
+            "run_id": payload["run_id"],
+            "global_step": int((payload["progress_state"] or {}).get("global_step", 0)),
+            "epoch": int((payload["progress_state"] or {}).get("epoch", 0)),
+            "history_keys": sorted((payload["history_snapshot"] or {}).keys()),
+        }
+        (checkpoint_dir / "checkpoint_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        return checkpoint_dir
+
+    def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
+        root = Path(checkpoint_dir)
+        if root.is_dir() and (root / "training_checkpoint").exists():
+            root = root / "training_checkpoint"
+        checkpoint_path = root / "training_checkpoint.pt"
+        if not checkpoint_path.exists():
+            raise FileNotFoundError(f"training_checkpoint.pt not found in {root}")
+
+        payload = torch.load(checkpoint_path, map_location=self.device)
+        class_to_idx = {str(k): int(v) for k, v in (payload.get("class_to_idx", {}) or {}).items()}
+        self.class_to_idx = dict(class_to_idx)
+        self.target_modules_resolved = [str(v) for v in payload.get("target_modules_resolved", [])]
+
+        self.initialize_engine(class_to_idx=self.class_to_idx)
+
+        model_state = payload.get("model_state", {})
+        adapter_state = model_state.get("adapter_model")
+        classifier_state = model_state.get("classifier")
+        fusion_state = model_state.get("fusion")
+
+        if adapter_state is not None and self.adapter_model is not None:
+            self.adapter_model.load_state_dict(adapter_state, strict=False)
+        if classifier_state is not None and self.classifier is not None:
+            self.classifier.load_state_dict(classifier_state)
+        if fusion_state is not None and self.fusion is not None:
+            self.fusion.load_state_dict(fusion_state)
+
+        if self.optimizer is None:
+            self.setup_optimizer()
+        optimizer_state = payload.get("optimizer_state")
+        if optimizer_state is not None and self.optimizer is not None:
+            self.optimizer.load_state_dict(optimizer_state)
+
+        ood_state = payload.get("ood_state")
+        if isinstance(ood_state, dict):
+            self._restore_ood_state(ood_state)
+        self._restore_rng_state(payload.get("rng_state", {}))
+
+        progress_state = payload.get("progress_state", {})
+        self.current_epoch = int(progress_state.get("epoch", 0)) if isinstance(progress_state, dict) else 0
+        return payload
+
     def save_adapter(self, output_dir: str) -> Path:
         out = Path(output_dir)
         adapter_dir = out / "continual_sd_lora_adapter"
@@ -945,4 +1151,3 @@ class ContinualSDLoRATrainer:
             self.fusion.load_state_dict(torch.load(fusion_path, map_location=self.device))  # type: ignore[union-attr]
         self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
         return meta
-

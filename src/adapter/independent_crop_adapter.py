@@ -130,6 +130,7 @@ class IndependentCropAdapter:
         val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
         progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
         should_stop: Optional[Callable[[], bool]] = None,
+        resume_state: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Run continual increment training."""
         if self._trainer is None:
@@ -143,15 +144,19 @@ class IndependentCropAdapter:
             train_kwargs["progress_callback"] = progress_callback
         if should_stop is not None:
             train_kwargs["should_stop"] = should_stop
+        if resume_state is not None:
+            train_kwargs["resume_state"] = resume_state
 
         try:
             history = self._trainer.train_increment(train_loader, **train_kwargs)
         except TypeError:
             # Backward compatibility for trainer shims with narrower signatures.
             fallback_attempts = [
+                ["resume_state"],
                 ["should_stop"],
                 ["should_stop", "val_loader"],
                 ["should_stop", "val_loader", "progress_callback"],
+                ["should_stop", "val_loader", "progress_callback", "resume_state"],
             ]
             history = None
             for drop_keys in fallback_attempts:
@@ -171,6 +176,49 @@ class IndependentCropAdapter:
             "history": history,
             "num_classes": len(self.class_to_idx),
         }
+
+    def save_training_checkpoint(
+        self,
+        checkpoint_dir: str,
+        *,
+        progress_state: Optional[Dict[str, Any]] = None,
+        history: Optional[Dict[str, Any]] = None,
+        run_id: str = "",
+    ) -> Path:
+        """Persist resumable trainer state for fault-tolerant notebook runs."""
+        if self._trainer is None:
+            raise RuntimeError("Adapter is not initialized.")
+        root = Path(checkpoint_dir)
+        return self._trainer.save_training_checkpoint(
+            str(root),
+            progress_state=progress_state,
+            history=history,
+            run_id=run_id,
+        )
+
+    def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
+        """Load resumable trainer state from checkpoint directory."""
+        if self._trainer is None:
+            normalized = {
+                "backbone": {"model_name": self.model_name},
+                "adapter": {
+                    "target_modules_strategy": "all_linear_transformer",
+                    "lora_r": 16,
+                    "lora_alpha": 32,
+                    "lora_dropout": 0.1,
+                },
+                "fusion": {"layers": [2, 5, 8, 11]},
+                "ood": {"threshold_factor": 2.0},
+                "device": str(self.device),
+            }
+            cfg = ContinualSDLoRAConfig.from_training_config(normalized)
+            self._trainer = ContinualSDLoRATrainer(cfg)
+        payload = self._trainer.load_training_checkpoint(checkpoint_dir)
+        class_to_idx = payload.get("class_to_idx", {})
+        if isinstance(class_to_idx, dict):
+            self.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
+        self.is_trained = True
+        return payload
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
         """Calibrate OOD statistics for current classes."""
@@ -281,4 +329,3 @@ class IndependentCropAdapter:
             "class_to_idx": dict(self.class_to_idx),
             "ood_calibration_version": self.ood_calibration_version,
         }
-

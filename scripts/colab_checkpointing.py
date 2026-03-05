@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+"""Checkpoint lifecycle helpers for Colab notebook training."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import json
+import logging
+from pathlib import Path
+import shutil
+from typing import Any, Dict, List, Optional
+
+
+logger = logging.getLogger(__name__)
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+@dataclass
+class CheckpointRecord:
+    name: str
+    path: Path
+    created_at: str
+    global_step: int
+    epoch: int
+    reason: str
+    is_best: bool = False
+    val_loss: Optional[float] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "name": self.name,
+            "path": str(self.path),
+            "created_at": self.created_at,
+            "global_step": int(self.global_step),
+            "epoch": int(self.epoch),
+            "reason": self.reason,
+            "is_best": bool(self.is_best),
+        }
+        if self.val_loss is not None:
+            payload["val_loss"] = float(self.val_loss)
+        return payload
+
+
+class TrainingCheckpointManager:
+    """Manage rolling training checkpoints with latest/best manifests."""
+
+    def __init__(self, root_dir: str | Path, *, retention: int = 3) -> None:
+        self.root_dir = Path(root_dir)
+        self.retention = int(max(1, retention))
+        self.checkpoints_dir = self.root_dir / "checkpoints"
+        self.latest_manifest_path = self.root_dir / "latest_checkpoint.json"
+        self.best_manifest_path = self.root_dir / "best_checkpoint.json"
+        self.index_path = self.root_dir / "checkpoint_index.json"
+        self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
+
+    def _read_json(self, path: Path, default: Any) -> Any:
+        if not path.exists():
+            return default
+        try:
+            return json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return default
+
+    def _write_json(self, path: Path, payload: Any) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def _load_index(self) -> List[Dict[str, Any]]:
+        payload = self._read_json(self.index_path, [])
+        if isinstance(payload, list):
+            return [dict(item) for item in payload if isinstance(item, dict)]
+        return []
+
+    def _store_index(self, rows: List[Dict[str, Any]]) -> None:
+        ordered = sorted(rows, key=lambda row: str(row.get("created_at", "")))
+        self._write_json(self.index_path, ordered)
+
+    def list_checkpoints(self) -> List[Dict[str, Any]]:
+        rows = self._load_index()
+        rows.sort(key=lambda row: str(row.get("created_at", "")), reverse=True)
+        return rows
+
+    def get_latest(self) -> Optional[Dict[str, Any]]:
+        payload = self._read_json(self.latest_manifest_path, None)
+        return dict(payload) if isinstance(payload, dict) else None
+
+    def get_best(self) -> Optional[Dict[str, Any]]:
+        payload = self._read_json(self.best_manifest_path, None)
+        return dict(payload) if isinstance(payload, dict) else None
+
+    def save_checkpoint(
+        self,
+        *,
+        adapter: Any,
+        progress_state: Dict[str, Any],
+        history: Dict[str, Any],
+        reason: str,
+        run_id: str,
+        mark_best: bool = False,
+        val_loss: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        epoch = int(progress_state.get("epoch", 0))
+        global_step = int(progress_state.get("global_step", 0))
+        name = f"ckpt_e{epoch}_s{global_step}_{timestamp}"
+        checkpoint_root = self.checkpoints_dir / name
+        checkpoint_root.mkdir(parents=True, exist_ok=True)
+
+        checkpoint_dir = adapter.save_training_checkpoint(
+            str(checkpoint_root),
+            progress_state=progress_state,
+            history=history,
+            run_id=run_id,
+        )
+        checkpoint_dir = Path(checkpoint_dir)
+
+        record = CheckpointRecord(
+            name=name,
+            path=checkpoint_dir,
+            created_at=_utc_now_iso(),
+            global_step=global_step,
+            epoch=epoch,
+            reason=str(reason),
+            is_best=bool(mark_best),
+            val_loss=(float(val_loss) if val_loss is not None else None),
+        )
+        payload = record.to_dict()
+
+        index_rows = self._load_index()
+        index_rows.append(payload)
+        self._store_index(index_rows)
+
+        self._write_json(self.latest_manifest_path, payload)
+        if mark_best:
+            self._write_json(self.best_manifest_path, payload)
+            best_dir = self.checkpoints_dir / "best"
+            if best_dir.exists():
+                shutil.rmtree(best_dir, ignore_errors=True)
+            shutil.copytree(checkpoint_dir, best_dir)
+        self._prune_old()
+        return payload
+
+    def _prune_old(self) -> None:
+        rows = self._load_index()
+        if not rows:
+            return
+        rows.sort(key=lambda row: str(row.get("created_at", "")), reverse=True)
+        best_path = None
+        best = self.get_best()
+        if best and isinstance(best.get("path"), str):
+            best_path = Path(best["path"]).resolve()
+
+        kept: List[Dict[str, Any]] = []
+        removed: List[Dict[str, Any]] = []
+        rolling_kept = 0
+        for row in rows:
+            row_path = Path(str(row.get("path", "")))
+            resolved = row_path.resolve() if row_path.exists() else row_path
+            is_best = best_path is not None and resolved == best_path
+            if is_best or rolling_kept < self.retention:
+                kept.append(row)
+                if not is_best:
+                    rolling_kept += 1
+            else:
+                removed.append(row)
+
+        for row in removed:
+            row_path = Path(str(row.get("path", "")))
+            try:
+                if row_path.exists():
+                    shutil.rmtree(row_path, ignore_errors=True)
+            except Exception:
+                logger.warning("Failed to prune checkpoint path: %s", row_path)
+        self._store_index(kept)
+
+    def load_checkpoint(self, *, adapter: Any, checkpoint_path: str | Path) -> Dict[str, Any]:
+        loaded = adapter.load_training_checkpoint(str(checkpoint_path))
+        return dict(loaded)
+
+    def load_latest_checkpoint(self, *, adapter: Any) -> Optional[Dict[str, Any]]:
+        latest = self.get_latest()
+        if not latest:
+            return None
+        checkpoint_path = latest.get("path")
+        if not isinstance(checkpoint_path, str) or not checkpoint_path:
+            return None
+        return self.load_checkpoint(adapter=adapter, checkpoint_path=checkpoint_path)
+

@@ -28,6 +28,17 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
   - `AADS_REPO_URL` for alternate repository URL.
   - `AADS_DISABLE_AUTO_CLONE=1` to disable auto-clone fallback.
 
+## Colab Telemetry and Checkpointing
+
+- Active notebooks now write live run telemetry to Drive with local spool fallback:
+  - `events.jsonl`, `runtime.log`, `latest_status.json`, `summary.json`, `artifact_index.json`
+- Default Drive root is `${AADS_DRIVE_LOG_ROOT:-/content/drive/MyDrive/aads_ulora}`.
+- Notebook 2 supports resumable training checkpoints with prompt-based resume controls.
+- Checkpoint cadence defaults:
+  - every epoch
+  - every 200 batches
+  - on training exception
+
 ## Test Commands
 
 ```powershell
@@ -42,4 +53,3 @@ v5.5 materials are archived under:
 - `docs/archive/v5_legacy/`
 - `colab_notebooks/archive/v5_legacy/`
 - `src/archive/v5_legacy/`
-

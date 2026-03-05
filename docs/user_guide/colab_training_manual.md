@@ -17,9 +17,22 @@
 ### Runtime Notes (Current)
 
 - Notebook bootstrap logic is now shared via `scripts/colab_repo_bootstrap.py`.
+- Notebook artifact/checkpoint plumbing is centralized via `scripts/colab_notebook_helpers.py`.
 - Notebook 2 class alignment now uses `config/plant_taxonomy.json` (`crop_specific_diseases`) instead of hardcoded class maps.
 - Notebook 1 pipeline execution explicitly disables duplicate analyzer routing before full pipeline call.
 - Notebook 2 OOD calibration status widget is displayed explicitly after calibration completes.
+
+### Telemetry, Artifacts, and Recovery
+
+- Notebook telemetry is written continuously to Drive with local spool fallback.
+- Default root: `${AADS_DRIVE_LOG_ROOT:-/content/drive/MyDrive/aads_ulora}` under `telemetry/<run_id>/`.
+- Notebook 2 exposes resume controls (`Start fresh` / `Resume latest`) before training.
+- Checkpoints are saved at epoch boundaries, every 200 batches, and on exception.
+- Validation artifacts include:
+  - `classification_report.txt/json`
+  - `confusion_matrix.npy/csv/png`
+  - `confusion_matrix_normalized.png`
+  - per-class metric CSV
 
 ## Superseded Notebook Set
 

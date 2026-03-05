@@ -10,7 +10,8 @@
 
 - Both notebooks include embedded setup cells (repo root resolution, optional Drive mount, dependency install).
 - Notebook 1 supports full VLM router profile selection (`fast`, `balanced`, `calibrated`, `leaf_fruit_production`).
-- Notebook 2 includes dataset validation, live training progress callback visualization, OOD calibration, and adapter save.
+- Notebook 2 includes dataset validation, live training progress callback visualization, OOD calibration, adapter save, resumable checkpoints, and validation artifact export.
+- Both notebooks persist live telemetry and artifact metadata to Drive (with local spool fallback when Drive is temporarily unavailable).
 
 ## Archived Notebook Set (v6 superseded, 2026-03-02)
 

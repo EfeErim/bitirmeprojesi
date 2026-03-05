@@ -26,6 +26,9 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `scripts/colab_quick_setup.py` - quick environment setup path.
 - `scripts/colab_auto_orchestrator.py` - automation helper for multi-stage Colab runs.
 - `scripts/colab_repo_bootstrap.py` - shared repo-root resolution and optional auto-clone helpers used by both active notebooks.
+- `scripts/colab_live_telemetry.py` - live event/log/artifact writer with local spool + Drive synchronization.
+- `scripts/colab_checkpointing.py` - rolling checkpoint manager (latest/best manifests + retention pruning).
+- `scripts/colab_notebook_helpers.py` - reusable notebook artifact/checkpoint helper utilities to keep notebook cells thin.
 - `scripts/download_data_colab.py` - dataset download utilities for Colab.
 
 Notebook bootstrap behavior in `colab_notebooks/`:

@@ -27,6 +27,7 @@ class FakeTrainer:
         self.target_modules_resolved = ['transformer.block.0.linear']
         self.ood_detector = FakeOOD()
         self.last_train_kwargs = {}
+        self.last_checkpoint_payload = {}
 
     def initialize_engine(self, class_to_idx=None):
         self.class_to_idx = dict(class_to_idx or {})
@@ -37,12 +38,13 @@ class FakeTrainer:
                 self.class_to_idx[name] = len(self.class_to_idx)
         return dict(self.class_to_idx)
 
-    def train_increment(self, train_loader, num_epochs=None, val_loader=None, progress_callback=None, should_stop=None):
+    def train_increment(self, train_loader, num_epochs=None, val_loader=None, progress_callback=None, should_stop=None, resume_state=None):
         self.last_train_kwargs = {
             'num_epochs': num_epochs,
             'val_loader': val_loader,
             'progress_callback': progress_callback,
             'should_stop': should_stop,
+            'resume_state': resume_state,
         }
         if progress_callback is not None:
             progress_callback({
@@ -90,6 +92,28 @@ class FakeTrainer:
         meta = json.loads((Path(adapter_dir) / 'adapter_meta.json').read_text(encoding='utf-8'))
         self.class_to_idx = dict(meta.get('class_to_idx', {}))
         return meta
+
+    def save_training_checkpoint(self, output_dir, progress_state=None, history=None, run_id=""):
+        root = Path(output_dir) / 'training_checkpoint'
+        root.mkdir(parents=True, exist_ok=True)
+        payload = {
+            'class_to_idx': dict(self.class_to_idx),
+            'progress_state': dict(progress_state or {}),
+            'history_snapshot': dict(history or {}),
+            'run_id': run_id,
+        }
+        self.last_checkpoint_payload = payload
+        (root / 'training_checkpoint.pt').write_bytes(b'checkpoint')
+        (root / 'checkpoint_meta.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
+        return root
+
+    def load_training_checkpoint(self, checkpoint_dir):
+        root = Path(checkpoint_dir)
+        if (root / 'training_checkpoint').exists():
+            root = root / 'training_checkpoint'
+        payload = json.loads((root / 'checkpoint_meta.json').read_text(encoding='utf-8'))
+        self.class_to_idx = dict(payload.get('class_to_idx', {}))
+        return payload
 
 
 def test_adapter_lifecycle_surface(monkeypatch):
@@ -189,3 +213,20 @@ def test_adapter_train_increment_forwards_validation_loader_and_stop(monkeypatch
     assert callable(trainer.last_train_kwargs['should_stop'])
     assert result['history']['val_loss'] == [0.2]
 
+
+def test_adapter_training_checkpoint_passthrough(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
+    adapter.initialize_engine(class_names=['healthy'])
+
+    payload = adapter.save_training_checkpoint(
+        str(tmp_path / 'ckpt'),
+        progress_state={'epoch': 1, 'global_step': 10},
+        history={'train_loss': [0.1]},
+        run_id='run_1',
+    )
+    assert (payload / 'checkpoint_meta.json').exists()
+
+    loaded = adapter.load_training_checkpoint(str(payload))
+    assert loaded['progress_state']['global_step'] == 10
