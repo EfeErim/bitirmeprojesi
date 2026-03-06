@@ -28,7 +28,6 @@
 - Default root: `${AADS_DRIVE_LOG_ROOT:-/content/drive/MyDrive/aads_ulora}` under `telemetry/<run_id>/`.
 - Notebook 2 exposes resume controls (`Start fresh` / `Resume latest`) before training.
 - Checkpoints are saved at epoch boundaries, every 200 batches, and on exception.
-- Reconnect troubleshooting runbook: `docs/user_guide/colab_reconnect_investigation.md`.
 - Validation artifacts include:
   - `classification_report.txt/json`
   - `confusion_matrix.npy/csv/png`

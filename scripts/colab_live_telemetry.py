@@ -77,12 +77,10 @@ class ColabLiveTelemetry:
         drive_root: Optional[str | Path] = None,
         local_root: Optional[str | Path] = None,
         sync_interval_sec: float = 5.0,
-        heartbeat_sec: float = 15.0,
     ) -> None:
         self.notebook_name = str(notebook_name)
         self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self.sync_interval_sec = float(max(0.5, sync_interval_sec))
-        self.heartbeat_sec = float(max(1.0, heartbeat_sec))
 
         drive_base = Path(
             drive_root
@@ -110,11 +108,8 @@ class ColabLiveTelemetry:
         self._sync_state = _SyncState.from_path(self.local_sync_state_path)
         self._artifact_index: List[Dict[str, Any]] = self._load_artifact_index()
         self._last_sync_attempt = 0.0
-        self._last_heartbeat = 0.0
         self._drive_available = True
         self._sequence = 0
-        self._bg_heartbeat_thread: Optional[threading.Thread] = None
-        self._bg_heartbeat_stop = threading.Event()
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
         self.drive_run_dir.mkdir(parents=True, exist_ok=True)
@@ -156,19 +151,9 @@ class ColabLiveTelemetry:
     def _periodic_sync(self, force: bool = False) -> None:
         now = time.time()
         should_sync = force or (now - self._last_sync_attempt) >= self.sync_interval_sec
-        should_heartbeat = (now - self._last_heartbeat) >= self.heartbeat_sec
         if should_sync:
             self.sync_pending()
             self._last_sync_attempt = now
-        if should_heartbeat:
-            self.emit_event(
-                "heartbeat",
-                {"drive_available": bool(self._drive_available)},
-                phase="heartbeat",
-                level="debug",
-                force_sync=False,
-            )
-            self._last_heartbeat = now
 
     def _append_event_local(self, payload: Dict[str, Any]) -> None:
         _append_line(self.local_events_path, _safe_json(payload))
@@ -349,78 +334,7 @@ class ColabLiveTelemetry:
         except Exception:
             self._drive_available = False
 
-    # ------------------------------------------------------------------
-    # Background heartbeat daemon – keeps the runtime "alive" for Colab's
-    # backend manager even when the Python kernel is blocked inside a long
-    # synchronous call such as adapter.train_increment().
-    # ------------------------------------------------------------------
-
-    def start_background_heartbeat(
-        self,
-        interval_sec: Optional[float] = None,
-        stdout_echo: bool = True,
-    ) -> None:
-        """Launch a daemon thread that keeps the Colab runtime alive.
-
-        The thread prints a brief status line to **stdout** on every tick.
-        This is the primary keep-alive signal: Colab's backend monitors
-        kernel stdout/IOPub activity and will *not* recycle a runtime that
-        is producing output — even when the browser tab is fully closed.
-
-        The thread also persists heartbeat events to local spool + Drive
-        for post-hoc diagnostics.
-
-        Call :meth:`stop_background_heartbeat` (or :meth:`close`) to stop.
-        """
-        if self._bg_heartbeat_thread is not None and self._bg_heartbeat_thread.is_alive():
-            return  # already running
-        self._bg_heartbeat_stop.clear()
-        interval = float(interval_sec or self.heartbeat_sec)
-        _echo = bool(stdout_echo)
-
-        def _heartbeat_loop() -> None:
-            seq = 0
-            while not self._bg_heartbeat_stop.is_set():
-                seq += 1
-                try:
-                    self.emit_event(
-                        "heartbeat",
-                        {"drive_available": bool(self._drive_available), "source": "background_thread"},
-                        phase="heartbeat",
-                        level="debug",
-                        force_sync=True,
-                    )
-                except Exception:
-                    pass  # best-effort; never crash the daemon
-                # --- stdout keep-alive: the line Colab's backend sees ---
-                if _echo:
-                    try:
-                        print(
-                            f"[HEARTBEAT] #{seq} alive  "
-                            f"run={self.run_id}  "
-                            f"drive={'ok' if self._drive_available else 'NO'}",
-                            flush=True,
-                        )
-                    except Exception:
-                        pass
-                self._bg_heartbeat_stop.wait(interval)
-
-        self._bg_heartbeat_thread = threading.Thread(
-            target=_heartbeat_loop, name="TelemetryBackgroundHeartbeat", daemon=True
-        )
-        self._bg_heartbeat_thread.start()
-        logger.debug("Background heartbeat started (interval=%.1fs, stdout_echo=%s)", interval, _echo)
-
-    def stop_background_heartbeat(self) -> None:
-        """Stop the background heartbeat daemon thread."""
-        self._bg_heartbeat_stop.set()
-        if self._bg_heartbeat_thread is not None:
-            self._bg_heartbeat_thread.join(timeout=max(1.0, self.heartbeat_sec + 1.0))
-            self._bg_heartbeat_thread = None
-        logger.debug("Background heartbeat stopped")
-
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
-        self.stop_background_heartbeat()
         summary = {
             "ts": _utc_now_iso(),
             "run_id": self.run_id,

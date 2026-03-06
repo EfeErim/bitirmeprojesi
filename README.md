@@ -33,8 +33,7 @@ AADS v6 is a continual-only SD-LoRA training and inference stack.
 - Active notebooks now write live run telemetry to Drive with local spool fallback:
   - `events.jsonl`, `runtime.log`, `latest_status.json`, `summary.json`, `artifact_index.json`
 - Default Drive root is `${AADS_DRIVE_LOG_ROOT:-/content/drive/MyDrive/aads_ulora}`.
-- Notebook 2 supports resumable training checkpoints with prompt-based resume controls.
-- Notebook 2 reconnect investigation helper: `scripts/colab_reconnect_probe.py` (runbook: `docs/user_guide/colab_reconnect_investigation.md`).
+- Notebook 2 supports resumable training checkpoints.
 - Checkpoint cadence defaults:
   - every epoch
   - every 200 batches

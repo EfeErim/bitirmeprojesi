@@ -29,7 +29,6 @@ This folder contains operational scripts used for setup, testing, and policy che
 - `scripts/colab_live_telemetry.py` - live event/log/artifact writer with local spool + Drive synchronization.
 - `scripts/colab_checkpointing.py` - rolling checkpoint manager (latest/best manifests + retention pruning).
 - `scripts/colab_notebook_helpers.py` - reusable notebook artifact/checkpoint helper utilities to keep notebook cells thin.
-- `scripts/colab_reconnect_probe.py` - reconnect investigation helper for notebook 2 (`Connecting...` diagnosis artifacts and trial timestamps).
 - `scripts/download_data_colab.py` - dataset download utilities for Colab.
 
 Notebook bootstrap behavior in `colab_notebooks/`:

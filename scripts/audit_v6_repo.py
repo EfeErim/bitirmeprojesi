@@ -369,7 +369,7 @@ def main() -> int:
     checks["snapshot_git_diff"] = run_cmd(git_command(root, "diff", "--name-only"), cwd=root, timeout=120)
     checks["snapshot_git_log"] = run_cmd(git_command(root, "log", "--oneline", "-n", "8"), cwd=root, timeout=120)
 
-    v55_scan = run_cmd(
+    v55_scan = run_rg_no_match(
         [
             "rg",
             "-n",
@@ -393,7 +393,7 @@ def main() -> int:
         timeout=240,
     )
     checks["missing_v55_report_reference_scan"] = v55_scan
-    v55_locs = parse_rg_locations(v55_scan["stdout"]) if v55_scan["returncode"] == 0 else []
+    v55_locs = parse_rg_locations(v55_scan["stdout"]) if v55_scan["status"] == "fail" else []
     v55_ref_files = {item["path"] for item in v55_locs}
     missing_v55 = not (root / MISSING_V55_PATH).exists()
     checks["missing_v55_report_reference_check"] = {
@@ -612,11 +612,12 @@ def main() -> int:
 
     risk_id = 1
     if checks["missing_v55_report_reference_check"]["status"] == "fail":
+        v55_locations = [f"{item['path']}:{item['line']}" for item in v55_locs]
         evidence_backed_risks.append(
             {
                 "id": f"RISK-{risk_id:03d}",
                 "severity": "P2",
-                "location": "skills/aads-status-triage/SKILL.md:18",
+                "location": ", ".join(v55_locations) if v55_locations else "unknown:1",
                 "claim": "Active instruction references missing non-archive v55 report path.",
                 "direct_evidence": f"{MISSING_V55_PATH} is missing but referenced by active files.",
                 "missing_proof": "Operational impact outside audit flow is not runtime-proven.",

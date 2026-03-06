@@ -12,7 +12,6 @@ def test_live_telemetry_writes_events_logs_and_artifacts(tmp_path):
         drive_root=drive_root,
         local_root=local_root,
         sync_interval_sec=0.1,
-        heartbeat_sec=1.0,
     )
     telemetry.emit_event("train_batch", {"global_step": 1}, phase="train")
     telemetry.emit_log("batch completed", phase="train", level="info")
@@ -38,7 +37,6 @@ def test_live_telemetry_recovers_after_drive_write_failure(tmp_path, monkeypatch
         drive_root=drive_root,
         local_root=local_root,
         sync_interval_sec=0.1,
-        heartbeat_sec=1.0,
     )
 
     def _fail_sync_events(*args, **kwargs):

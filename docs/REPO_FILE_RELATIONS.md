@@ -28,7 +28,6 @@ python scripts/generate_repo_relationships.py --output docs/REPO_FILE_RELATIONS_
 - Colab live telemetry helper: `scripts/colab_live_telemetry.py`
 - Colab checkpoint manager: `scripts/colab_checkpointing.py`
 - Colab notebook artifact/checkpoint helpers: `scripts/colab_notebook_helpers.py`
-- Colab reconnect investigation helper: `scripts/colab_reconnect_probe.py`
 - Dataset layout contract checker (notebook 2): `scripts/evaluate_dataset_layout.py`
 - Modular suite runner: `scripts/run_test_suites.py`
 - Integration smoke (real HF backbone, heavy-model marker): `tests/integration/test_continual_trainer_real_backbone.py`
