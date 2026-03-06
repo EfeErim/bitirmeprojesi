@@ -7,6 +7,8 @@ import torch
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import ConfigurationManager
 from src.training.continual_sd_lora import ContinualSDLoRAConfig
+from src.training.session import ContinualTrainingSession
+from src.training.types import TrainingCheckpointPayload
 
 
 def test_colab_config_contains_minimal_contract():
@@ -53,6 +55,7 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
             self.class_to_idx = {}
             self.target_modules_resolved = ["transformer.block.0.linear"]
             self.ood_detector = type("OOD", (), {"calibration_version": 1})()
+            self.current_epoch = 0
 
         def initialize_engine(self, class_to_idx=None):
             self.class_to_idx = dict(class_to_idx or {})
@@ -63,8 +66,24 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
                     self.class_to_idx[name] = len(self.class_to_idx)
             return dict(self.class_to_idx)
 
-        def train_increment(self, train_loader, **kwargs):
-            return {"train_loss": [0.1]}
+        def snapshot_training_state(self):
+            return TrainingCheckpointPayload(
+                schema_version="v6_training_checkpoint",
+                created_at="2026-03-07T00:00:00Z",
+                trainer_config={},
+                class_to_idx=dict(self.class_to_idx),
+                target_modules_resolved=list(self.target_modules_resolved),
+                model_state={"adapter_model": {}, "classifier": {}, "fusion": {}},
+                optimizer_state={},
+                ood_state={},
+                rng_state={},
+                current_epoch=int(self.current_epoch),
+            )
+
+        def restore_training_state(self, payload):
+            checkpoint = payload if isinstance(payload, TrainingCheckpointPayload) else TrainingCheckpointPayload.from_dict(payload)
+            self.class_to_idx = dict(checkpoint.class_to_idx)
+            return checkpoint
 
         def calibrate_ood(self, loader):
             return {"num_classes": float(len(self.class_to_idx))}
@@ -95,9 +114,10 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy"])
     adapter.add_classes(["disease_a"])
-    adapter.train_increment(
+    session = adapter.build_training_session(
         train_loader=[{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}]
     )
+    assert isinstance(session, ContinualTrainingSession)
 
     save_dir = tmp_path / "model"
     adapter.save_adapter(str(save_dir))

@@ -95,9 +95,9 @@ def save_notebook_checkpoint(
     *,
     checkpoint_manager: Any,
     adapter: Any,
+    session: Any,
     reason: str,
     event: Dict[str, Any],
-    history_snapshot: Dict[str, Any],
     run_id: str,
     telemetry: Any = None,
     mark_best: bool = False,
@@ -105,16 +105,9 @@ def save_notebook_checkpoint(
 ) -> Optional[Dict[str, Any]]:
     if checkpoint_manager is None:
         return None
-    progress = {
-        "epoch": int(event.get("epoch_done", event.get("epoch", 0))),
-        "batch": int(event.get("batch", 0)),
-        "global_step": int(event.get("global_step", 0)),
-        "elapsed_sec": float(event.get("elapsed_sec", 0.0)),
-    }
     record = checkpoint_manager.save_checkpoint(
         adapter=adapter,
-        progress_state=progress,
-        history=history_snapshot,
+        session=session,
         reason=reason,
         run_id=run_id,
         mark_best=bool(mark_best),

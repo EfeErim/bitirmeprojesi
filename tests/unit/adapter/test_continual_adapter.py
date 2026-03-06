@@ -5,6 +5,8 @@ import torch
 
 from src.adapter import independent_crop_adapter as adapter_module
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
+from src.training.session import ContinualTrainingSession
+from src.training.types import TrainingCheckpointPayload
 
 
 class FakeOOD:
@@ -13,21 +15,24 @@ class FakeOOD:
 
 
 class FakeConfig:
-    backbone_model_name = 'facebook/dinov3-vitl16-pretrain-lvd1689m'
+    backbone_model_name = "facebook/dinov3-vitl16-pretrain-lvd1689m"
     fusion_layers = [2, 5, 8, 11]
     fusion_output_dim = 768
     fusion_dropout = 0.1
-    fusion_gating = 'softmax'
+    fusion_gating = "softmax"
+    num_epochs = 3
+
+    def as_contract_dict(self):
+        return {"backbone": {"model_name": self.backbone_model_name}}
 
 
 class FakeTrainer:
     def __init__(self, config):
         self.config = FakeConfig()
         self.class_to_idx = {}
-        self.target_modules_resolved = ['transformer.block.0.linear']
+        self.target_modules_resolved = ["transformer.block.0.linear"]
         self.ood_detector = FakeOOD()
-        self.last_train_kwargs = {}
-        self.last_checkpoint_payload = {}
+        self.current_epoch = 0
 
     def initialize_engine(self, class_to_idx=None):
         self.class_to_idx = dict(class_to_idx or {})
@@ -38,195 +43,143 @@ class FakeTrainer:
                 self.class_to_idx[name] = len(self.class_to_idx)
         return dict(self.class_to_idx)
 
-    def train_increment(self, train_loader, num_epochs=None, val_loader=None, progress_callback=None, should_stop=None, resume_state=None):
-        self.last_train_kwargs = {
-            'num_epochs': num_epochs,
-            'val_loader': val_loader,
-            'progress_callback': progress_callback,
-            'should_stop': should_stop,
-            'resume_state': resume_state,
-        }
-        if progress_callback is not None:
-            progress_callback({
-                'epoch': 1,
-                'batch': 1,
-                'total_batches': 1,
-                'batch_loss': 0.1,
-                'epoch_progress': 1.0,
-                'global_step': 1,
-                'lr': 0.001,
-                'grad_norm': 0.5,
-                'step_time_sec': 0.01,
-                'samples_per_sec': 100.0,
-                'eta_sec': 0.0,
-                'advisory': '',
-                'severity': 'info',
-            })
-            progress_callback({'epoch_done': 1, 'epoch_loss': 0.1, 'val_loss': 0.2, 'val_accuracy': 0.9})
-        return {'train_loss': [0.1], 'val_loss': [0.2], 'val_accuracy': [0.9], 'stopped_early': False, 'global_step': 1}
+    def snapshot_training_state(self):
+        return TrainingCheckpointPayload(
+            schema_version="v6_training_checkpoint",
+            created_at="2026-03-07T00:00:00Z",
+            trainer_config=self.config.as_contract_dict(),
+            class_to_idx=dict(self.class_to_idx),
+            target_modules_resolved=list(self.target_modules_resolved),
+            model_state={"adapter_model": {}, "classifier": {}, "fusion": {}},
+            optimizer_state={},
+            ood_state={},
+            rng_state={},
+            current_epoch=int(self.current_epoch),
+        )
+
+    def restore_training_state(self, payload):
+        checkpoint = payload if isinstance(payload, TrainingCheckpointPayload) else TrainingCheckpointPayload.from_dict(payload)
+        self.class_to_idx = dict(checkpoint.class_to_idx)
+        self.current_epoch = int(checkpoint.current_epoch)
+        return checkpoint
 
     def calibrate_ood(self, loader):
         self.ood_detector.calibration_version += 1
-        return {'num_classes': float(len(self.class_to_idx))}
+        return {"num_classes": float(len(self.class_to_idx))}
 
     def predict_with_ood(self, image):
         return {
-            'status': 'success',
-            'disease': {'class_index': 0, 'name': 'healthy', 'confidence': 0.9},
-            'ood_analysis': {
-                'ensemble_score': 0.2,
-                'class_threshold': 0.8,
-                'is_ood': False,
-                'calibration_version': self.ood_detector.calibration_version,
+            "status": "success",
+            "disease": {"class_index": 0, "name": "healthy", "confidence": 0.9},
+            "ood_analysis": {
+                "ensemble_score": 0.2,
+                "class_threshold": 0.8,
+                "is_ood": False,
+                "calibration_version": self.ood_detector.calibration_version,
             },
         }
 
     def save_adapter(self, output_dir):
-        root = Path(output_dir) / 'continual_sd_lora_adapter'
+        root = Path(output_dir) / "continual_sd_lora_adapter"
         root.mkdir(parents=True, exist_ok=True)
-        (root / 'classifier.pth').write_bytes(b'')
-        (root / 'fusion.pth').write_bytes(b'')
+        (root / "classifier.pth").write_bytes(b"")
+        (root / "fusion.pth").write_bytes(b"")
         return root
 
     def load_adapter(self, adapter_dir):
-        meta = json.loads((Path(adapter_dir) / 'adapter_meta.json').read_text(encoding='utf-8'))
-        self.class_to_idx = dict(meta.get('class_to_idx', {}))
+        meta = json.loads((Path(adapter_dir) / "adapter_meta.json").read_text(encoding="utf-8"))
+        self.class_to_idx = dict(meta.get("class_to_idx", {}))
         return meta
-
-    def save_training_checkpoint(self, output_dir, progress_state=None, history=None, run_id=""):
-        root = Path(output_dir) / 'training_checkpoint'
-        root.mkdir(parents=True, exist_ok=True)
-        payload = {
-            'class_to_idx': dict(self.class_to_idx),
-            'progress_state': dict(progress_state or {}),
-            'history_snapshot': dict(history or {}),
-            'run_id': run_id,
-        }
-        self.last_checkpoint_payload = payload
-        (root / 'training_checkpoint.pt').write_bytes(b'checkpoint')
-        (root / 'checkpoint_meta.json').write_text(json.dumps(payload, indent=2), encoding='utf-8')
-        return root
-
-    def load_training_checkpoint(self, checkpoint_dir):
-        root = Path(checkpoint_dir)
-        if (root / 'training_checkpoint').exists():
-            root = root / 'training_checkpoint'
-        payload = json.loads((root / 'checkpoint_meta.json').read_text(encoding='utf-8'))
-        self.class_to_idx = dict(payload.get('class_to_idx', {}))
-        return payload
 
 
 def test_adapter_lifecycle_surface(monkeypatch):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
 
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    initialized = adapter.initialize_engine(class_names=['healthy'])
-    assert initialized['status'] == 'initialized'
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    initialized = adapter.initialize_engine(class_names=["healthy"])
+    assert initialized["status"] == "initialized"
 
-    added = adapter.add_classes(['disease_a'])
-    assert added['num_classes'] == 2
-
-    trained = adapter.train_increment(train_loader=[{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}])
-    assert trained['status'] == 'trained'
+    added = adapter.add_classes(["disease_a"])
+    assert added["num_classes"] == 2
 
     pred = adapter.predict_with_ood(torch.zeros(3, 224, 224))
-    assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(pred['ood_analysis'].keys())
+    assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(pred["ood_analysis"].keys())
+
+
+def test_adapter_builds_training_session(monkeypatch):
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+
+    session = adapter.build_training_session(
+        train_loader=[{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}],
+        observers=[],
+        run_id="run_1",
+    )
+
+    assert isinstance(session, ContinualTrainingSession)
+    assert adapter.trainer.class_to_idx == {"healthy": 0}
 
 
 def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
 
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    adapter.initialize_engine(class_names=['healthy', 'disease_a'])
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy", "disease_a"])
 
-    save_dir = tmp_path / 'model_dir'
+    save_dir = tmp_path / "model_dir"
     adapter.save_adapter(str(save_dir))
 
-    loaded = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
-    loaded.load_adapter(str(save_dir / 'continual_sd_lora_adapter'))
+    loaded = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    loaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
 
     assert loaded.class_to_idx
     assert loaded.is_trained is True
 
 
 def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
 
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    adapter.initialize_engine(class_names=['healthy', 'disease_a'])
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy", "disease_a"])
 
-    save_dir = tmp_path / 'model_dir'
+    save_dir = tmp_path / "model_dir"
     adapter.save_adapter(str(save_dir))
 
-    meta_path = save_dir / 'continual_sd_lora_adapter' / 'adapter_meta.json'
-    meta = json.loads(meta_path.read_text(encoding='utf-8'))
+    meta_path = save_dir / "continual_sd_lora_adapter" / "adapter_meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
     required = {
-        'schema_version',
-        'engine',
-        'backbone',
-        'fusion',
-        'class_to_idx',
-        'ood_calibration',
-        'target_modules_resolved',
+        "schema_version",
+        "engine",
+        "backbone",
+        "fusion",
+        "class_to_idx",
+        "ood_calibration",
+        "target_modules_resolved",
     }
     assert required <= set(meta.keys())
 
 
-def test_adapter_train_increment_forwards_progress_callback(monkeypatch):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
-
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    adapter.initialize_engine(class_names=['healthy'])
-
-    events = []
-    result = adapter.train_increment(
-        train_loader=[{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}],
-        progress_callback=events.append,
-    )
-
-    assert result['status'] == 'trained'
-    assert any('batch' in event for event in events)
-    assert any('epoch_done' in event for event in events)
-
-
-def test_adapter_train_increment_forwards_validation_loader_and_stop(monkeypatch):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
-
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    adapter.initialize_engine(class_names=['healthy'])
-
-    train_loader = [{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}]
-    val_loader = [{'images': torch.zeros(1, 3, 224, 224), 'labels': torch.zeros(1, dtype=torch.long)}]
-
-    stop_flag = {'value': False}
-    result = adapter.train_increment(
-        train_loader=train_loader,
-        val_loader=val_loader,
-        should_stop=lambda: stop_flag['value'],
-    )
-
-    trainer = adapter._trainer
-    assert trainer is not None
-    assert trainer.last_train_kwargs['val_loader'] is val_loader
-    assert callable(trainer.last_train_kwargs['should_stop'])
-    assert result['history']['val_loss'] == [0.2]
-
-
 def test_adapter_training_checkpoint_passthrough(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, 'ContinualSDLoRATrainer', FakeTrainer)
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
 
-    adapter = IndependentCropAdapter(crop_name='tomato', device='cpu')
-    adapter.initialize_engine(class_names=['healthy'])
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
 
     payload = adapter.save_training_checkpoint(
-        str(tmp_path / 'ckpt'),
-        progress_state={'epoch': 1, 'global_step': 10},
-        history={'train_loss': [0.1]},
-        run_id='run_1',
+        str(tmp_path / "ckpt"),
+        session_state={
+            "run_id": "run_1",
+            "progress_state": {"epoch": 1, "global_step": 10},
+            "history": {"train_loss": [0.1]},
+        },
+        run_id="run_1",
     )
-    assert (payload / 'checkpoint_meta.json').exists()
+    assert (payload / "checkpoint_meta.json").exists()
 
     loaded = adapter.load_training_checkpoint(str(payload))
-    assert loaded['progress_state']['global_step'] == 10
+    assert loaded["progress_state"]["global_step"] == 10
+    assert loaded["history"]["train_loss"] == [0.1]

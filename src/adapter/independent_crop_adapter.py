@@ -11,6 +11,8 @@ from typing import Any, Callable, Dict, Iterable, Optional
 import torch
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+from src.training.session import ContinualTrainingSession
+from src.training.types import TrainingCheckpointPayload
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,12 @@ class IndependentCropAdapter:
         if self._trainer is None:
             return []
         return list(self._trainer.target_modules_resolved)
+
+    @property
+    def trainer(self) -> ContinualSDLoRATrainer:
+        if self._trainer is None:
+            raise RuntimeError("Adapter is not initialized.")
+        return self._trainer
 
     @property
     def ood_calibration_version(self) -> int:
@@ -119,60 +127,62 @@ class IndependentCropAdapter:
             "class_to_idx": dict(self.class_to_idx),
         }
 
-    def train_increment(
+    def build_training_session(
         self,
         train_loader: Iterable[Dict[str, torch.Tensor]],
         *,
         num_epochs: Optional[int] = None,
         val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
-        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
-        should_stop: Optional[Callable[[], bool]] = None,
+        observers: Optional[list[Callable[[Dict[str, Any]], None]]] = None,
+        stop_policy: Optional[Callable[[], bool]] = None,
         resume_state: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        """Run continual increment training."""
+        run_id: str = "",
+    ) -> ContinualTrainingSession:
+        """Build a training session around the initialized trainer."""
         if self._trainer is None:
-            raise RuntimeError("initialize_engine() must run before train_increment().")
-        train_kwargs: Dict[str, Any] = {}
-        if num_epochs is not None:
-            train_kwargs["num_epochs"] = num_epochs
-        if val_loader is not None:
-            train_kwargs["val_loader"] = val_loader
-        if progress_callback is not None:
-            train_kwargs["progress_callback"] = progress_callback
-        if should_stop is not None:
-            train_kwargs["should_stop"] = should_stop
-        if resume_state is not None:
-            train_kwargs["resume_state"] = resume_state
-
-        history = self._trainer.train_increment(train_loader, **train_kwargs)
-        self.is_trained = True
-        return {
-            "status": "trained",
-            "history": history,
-            "num_classes": len(self.class_to_idx),
-        }
+            raise RuntimeError("initialize_engine() must run before build_training_session().")
+        return ContinualTrainingSession(
+            self._trainer,
+            train_loader,
+            int(num_epochs if num_epochs is not None else self._trainer.config.num_epochs),
+            val_loader=val_loader,
+            observers=observers,
+            stop_policy=stop_policy,
+            resume_state=resume_state,
+            run_id=run_id,
+        )
 
     def save_training_checkpoint(
         self,
         checkpoint_dir: str,
         *,
-        progress_state: Optional[Dict[str, Any]] = None,
-        history: Optional[Dict[str, Any]] = None,
+        session_state: Optional[Dict[str, Any]] = None,
         run_id: str = "",
     ) -> Path:
-        """Persist resumable trainer state for fault-tolerant notebook runs."""
+        """Persist trainer and session state for fault-tolerant notebook runs."""
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
         root = Path(checkpoint_dir)
-        return self._trainer.save_training_checkpoint(
-            str(root),
-            progress_state=progress_state,
-            history=history,
-            run_id=run_id,
-        )
+        checkpoint_dir_path = root / "training_checkpoint"
+        checkpoint_dir_path.mkdir(parents=True, exist_ok=True)
+        trainer_payload = self._trainer.snapshot_training_state()
+        torch.save(trainer_payload.to_dict(), checkpoint_dir_path / "training_checkpoint.pt")
+
+        session_payload = dict(session_state or {})
+        meta = {
+            "schema_version": trainer_payload.schema_version,
+            "created_at": trainer_payload.created_at,
+            "run_id": str(run_id),
+            "current_epoch": int(trainer_payload.current_epoch),
+            "global_step": int(dict(session_payload.get("progress_state", {})).get("global_step", 0)),
+            "epoch": int(dict(session_payload.get("progress_state", {})).get("epoch", 0)),
+        }
+        (checkpoint_dir_path / "session_state.json").write_text(json.dumps(session_payload, indent=2), encoding="utf-8")
+        (checkpoint_dir_path / "checkpoint_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        return checkpoint_dir_path
 
     def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
-        """Load resumable trainer state from checkpoint directory."""
+        """Load resumable trainer and session state from checkpoint directory."""
         if self._trainer is None:
             normalized = {
                 "backbone": {"model_name": self.model_name},
@@ -188,12 +198,26 @@ class IndependentCropAdapter:
             }
             cfg = ContinualSDLoRAConfig.from_training_config(normalized)
             self._trainer = ContinualSDLoRATrainer(cfg)
-        payload = self._trainer.load_training_checkpoint(checkpoint_dir)
-        class_to_idx = payload.get("class_to_idx", {})
+        root = Path(checkpoint_dir)
+        if root.is_dir() and (root / "training_checkpoint").exists():
+            root = root / "training_checkpoint"
+        trainer_payload_raw = torch.load(root / "training_checkpoint.pt", map_location=self.device, weights_only=False)
+        trainer_payload = self._trainer.restore_training_state(TrainingCheckpointPayload.from_dict(trainer_payload_raw))
+        session_path = root / "session_state.json"
+        session_payload = {}
+        if session_path.exists():
+            session_payload = json.loads(session_path.read_text(encoding="utf-8"))
+        class_to_idx = trainer_payload.class_to_idx
         if isinstance(class_to_idx, dict):
             self.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
         self.is_trained = True
-        return payload
+        return {
+            "trainer_state": trainer_payload.to_dict(),
+            "session_state": session_payload,
+            "run_id": str(dict(session_payload).get("run_id", "")),
+            "progress_state": dict(session_payload.get("progress_state", {})) if isinstance(session_payload, dict) else {},
+            "history": dict(session_payload.get("history", {})) if isinstance(session_payload, dict) else {},
+        }
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
         """Calibrate OOD statistics for current classes."""

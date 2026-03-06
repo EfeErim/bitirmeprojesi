@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+from src.training.session import ContinualTrainingSession
 
 
 class IdentityModule(nn.Module):
@@ -36,46 +37,27 @@ def _make_loader(batch_count: int) -> list[dict[str, torch.Tensor]]:
     ]
 
 
-def test_training_checkpoint_roundtrip_preserves_progress_and_history(tmp_path):
+def test_training_snapshot_roundtrip_preserves_current_epoch():
     trainer, _ = _build_minimal_trainer()
-    train_loader = _make_loader(2)
-    history = trainer.train_increment(train_loader, num_epochs=1)
+    trainer.current_epoch = 1
 
-    ckpt_dir = trainer.save_training_checkpoint(
-        str(tmp_path),
-        progress_state={"epoch": 1, "batch": 2, "global_step": int(history["global_step"]), "elapsed_sec": 3.0},
-        history=history,
-        run_id="run_ckpt",
-    )
-    assert (ckpt_dir / "training_checkpoint.pt").exists()
-    assert (ckpt_dir / "checkpoint_meta.json").exists()
+    snapshot = trainer.snapshot_training_state()
 
     resumed, _ = _build_minimal_trainer()
-    payload = resumed.load_training_checkpoint(str(ckpt_dir))
-    assert payload["run_id"] == "run_ckpt"
-    assert payload["progress_state"]["epoch"] == 1
+    payload = resumed.restore_training_state(snapshot)
+
+    assert payload.current_epoch == 1
     assert resumed.current_epoch == 1
+    assert resumed.class_to_idx == {"healthy": 0}
 
 
-def test_resume_state_continues_global_step_and_marks_resume_start_epoch():
+def test_session_snapshot_contains_progress_and_history():
     trainer, _ = _build_minimal_trainer()
-    train_loader = _make_loader(2)
-    resume_state = {
-        "progress_state": {"epoch": 1, "global_step": 7, "elapsed_sec": 2.5},
-        "history_snapshot": {
-            "train_loss": [0.3],
-            "val_loss": [],
-            "val_accuracy": [],
-            "macro_f1": [],
-            "weighted_f1": [],
-            "balanced_accuracy": [],
-            "generalization_gap": [],
-            "per_class_accuracy": [],
-            "worst_classes": [],
-        },
-    }
-    history = trainer.train_increment(train_loader, num_epochs=2, resume_state=resume_state)
-    assert history["global_step"] >= 9
-    assert history["resume_start_epoch"] == 1
-    assert len(history["train_loss"]) >= 2
+    session = ContinualTrainingSession(trainer, _make_loader(2), 1, run_id="run_ckpt")
+    history = session.run()
 
+    payload = session.snapshot_state()
+
+    assert payload["run_id"] == "run_ckpt"
+    assert payload["progress_state"]["global_step"] == history.global_step
+    assert payload["history"]["train_loss"] == history.train_loss

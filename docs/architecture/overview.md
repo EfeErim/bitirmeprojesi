@@ -7,10 +7,19 @@ The repo is intentionally narrow.
 - `colab_notebooks/2_interactive_adapter_training.ipynb`
 - `src/adapter/independent_crop_adapter.py`
 - `src/training/continual_sd_lora.py`
+- `src/training/session.py`
+- `src/training/validation.py`
+- `src/training/types.py`
 - `scripts/colab_checkpointing.py`
 - `scripts/colab_live_telemetry.py`
 
-Notebook 2 validates dataset layout, creates per-crop loaders, trains one crop adapter, calibrates OOD, and saves assets to `models/adapters/<crop>/continual_sd_lora_adapter/`.
+Training is split into three layers:
+
+1. `ContinualSDLoRATrainer` owns model initialization, LoRA wrapping, optimizer setup, batch stepping, snapshot/restore, OOD calibration, and adapter save/load.
+2. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, stop checks, observer events, and history accumulation.
+3. `evaluate_model(...)` computes validation metrics outside the trainer loop.
+
+Notebook 2 validates dataset layout, creates per-crop loaders, builds a session around one crop adapter trainer, calibrates OOD, and saves assets to `models/adapters/<crop>/continual_sd_lora_adapter/`.
 
 ## Inference
 

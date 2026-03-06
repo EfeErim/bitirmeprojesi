@@ -46,6 +46,8 @@ def test_continual_trainer_imports() -> bool:
     print(f"\nTesting {gate_label(step_id, 'continual trainer imports')}...")
     try:
         from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+        from src.training.session import ContinualTrainingSession
+        from src.training.validation import evaluate_model
 
         config = ContinualSDLoRAConfig.from_training_config(
             {
@@ -63,9 +65,13 @@ def test_continual_trainer_imports() -> bool:
         trainer = ContinualSDLoRATrainer(config)
         assert hasattr(trainer, "initialize_engine")
         assert hasattr(trainer, "add_classes")
-        assert hasattr(trainer, "train_increment")
+        assert hasattr(trainer, "train_batch")
+        assert hasattr(trainer, "snapshot_training_state")
+        assert hasattr(trainer, "restore_training_state")
         assert hasattr(trainer, "save_adapter")
         assert hasattr(trainer, "load_adapter")
+        assert ContinualTrainingSession is not None
+        assert callable(evaluate_model)
 
         print(f"PASS {gate_label(step_id, 'Continual trainer surface imported and validated')}")
         return True
@@ -113,7 +119,7 @@ def test_adapter_surface() -> bool:
         adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
         assert hasattr(adapter, "initialize_engine")
         assert hasattr(adapter, "add_classes")
-        assert hasattr(adapter, "train_increment")
+        assert hasattr(adapter, "build_training_session")
         assert hasattr(adapter, "save_adapter")
         assert hasattr(adapter, "load_adapter")
 

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-import copy
 from datetime import datetime
 import inspect
 import json
@@ -12,7 +11,7 @@ import logging
 import random
 from pathlib import Path
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import torch
 import torch.nn as nn
@@ -26,6 +25,7 @@ except Exception:  # pragma: no cover - optional dependency in some local sandbo
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
 from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
 from src.training.quantization import assert_no_prohibited_4bit_flags
+from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
 try:
     from transformers import AutoModel
@@ -558,6 +558,22 @@ class ContinualSDLoRATrainer:
         logits = self.forward_logits(images)
         return nn.functional.cross_entropy(logits, labels)
 
+    def set_train_mode(self) -> None:
+        if self.adapter_model is not None:
+            self.adapter_model.train()
+        if self.classifier is not None:
+            self.classifier.train()
+        if self.fusion is not None:
+            self.fusion.train()
+
+    def set_eval_mode(self) -> None:
+        if self.adapter_model is not None:
+            self.adapter_model.eval()
+        if self.classifier is not None:
+            self.classifier.eval()
+        if self.fusion is not None:
+            self.fusion.eval()
+
     def _compute_grad_norm(self) -> float:
         if self.optimizer is None:
             return 0.0
@@ -577,303 +593,33 @@ class ContinualSDLoRATrainer:
             return 0.0
         return float(total_norm_sq ** 0.5)
 
-    def _evaluate_loader(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Optional[Dict[str, Any]]:
-        if self.classifier is None:
-            return None
-
-        self.adapter_model.eval()  # type: ignore[union-attr]
-        self.classifier.eval()  # type: ignore[union-attr]
-        self.fusion.eval()  # type: ignore[union-attr]
-
-        total_loss = 0.0
-        total_samples = 0
-        total_correct = 0
-        all_labels: List[torch.Tensor] = []
-        all_preds: List[torch.Tensor] = []
-
-        with torch.no_grad():
-            for batch in loader:
-                images = batch["images"].to(self.device)
-                labels = batch["labels"].to(self.device)
-                logits = self.forward_logits(images)
-                loss = nn.functional.cross_entropy(logits, labels)
-
-                batch_size = int(labels.shape[0])
-                total_loss += float(loss.item()) * float(batch_size)
-                total_samples += batch_size
-
-                predictions = torch.argmax(logits, dim=1)
-                total_correct += int((predictions == labels).sum().item())
-                all_labels.append(labels.detach().cpu())
-                all_preds.append(predictions.detach().cpu())
-
-        if total_samples <= 0:
-            return None
-
-        val_loss = float(total_loss / max(1, total_samples))
-        val_accuracy = float(total_correct / max(1, total_samples))
-
-        labels = torch.cat(all_labels, dim=0) if all_labels else torch.empty(0, dtype=torch.long)
-        preds = torch.cat(all_preds, dim=0) if all_preds else torch.empty(0, dtype=torch.long)
-
-        num_classes = max(1, int(getattr(self.classifier, "out_features", 1)))
-        if labels.numel() > 0:
-            confusion = torch.zeros((num_classes, num_classes), dtype=torch.long)
-            for label, pred in zip(labels.tolist(), preds.tolist()):
-                if 0 <= label < num_classes and 0 <= pred < num_classes:
-                    confusion[label, pred] += 1
-        else:
-            confusion = torch.zeros((num_classes, num_classes), dtype=torch.long)
-
-        tp = confusion.diag().to(torch.float32)
-        support = confusion.sum(dim=1).to(torch.float32)
-        predicted_support = confusion.sum(dim=0).to(torch.float32)
-
-        precision = torch.zeros_like(tp)
-        recall = torch.zeros_like(tp)
-        precision_mask = predicted_support > 0
-        recall_mask = support > 0
-        precision[precision_mask] = tp[precision_mask] / predicted_support[precision_mask]
-        recall[recall_mask] = tp[recall_mask] / support[recall_mask]
-
-        f1 = torch.zeros_like(tp)
-        denom = precision + recall
-        valid_f1 = denom > 0
-        f1[valid_f1] = (2.0 * precision[valid_f1] * recall[valid_f1]) / denom[valid_f1]
-
-        supported_class_mask = support > 0
-        if bool(supported_class_mask.any().item()):
-            macro_f1 = float(f1[supported_class_mask].mean().item())
-            balanced_accuracy = float(recall[supported_class_mask].mean().item())
-        else:
-            macro_f1 = 0.0
-            balanced_accuracy = 0.0
-
-        weighted_f1 = float((f1 * support).sum().item() / max(1.0, float(support.sum().item())))
-
-        idx_to_class = {idx: name for name, idx in self.class_to_idx.items()}
-        per_class_accuracy: Dict[str, float] = {}
-        per_class_support: Dict[str, int] = {}
-        for class_index in range(num_classes):
-            class_name = str(idx_to_class.get(class_index, class_index))
-            per_class_accuracy[class_name] = float(recall[class_index].item()) if bool(recall_mask[class_index].item()) else 0.0
-            per_class_support[class_name] = int(support[class_index].item())
-
-        ranked_worst = sorted(
-            [
-                {
-                    "class_name": class_name,
-                    "class_index": int(class_index),
-                    "accuracy": float(per_class_accuracy[class_name]),
-                    "support": int(per_class_support[class_name]),
-                }
-                for class_index, class_name in [(idx, str(idx_to_class.get(idx, idx))) for idx in range(num_classes)]
-                if per_class_support[class_name] > 0
-            ],
-            key=lambda item: (item["accuracy"], -item["support"], item["class_name"]),
-        )
-
-        return {
-            "val_loss": val_loss,
-            "val_accuracy": val_accuracy,
-            "macro_f1": macro_f1,
-            "weighted_f1": weighted_f1,
-            "balanced_accuracy": balanced_accuracy,
-            "per_class_accuracy": per_class_accuracy,
-            "per_class_support": per_class_support,
-            "worst_classes": ranked_worst[:3],
-        }
-
-    @staticmethod
-    def _history_template() -> Dict[str, Any]:
-        return {
-            "train_loss": [],
-            "val_loss": [],
-            "val_accuracy": [],
-            "macro_f1": [],
-            "weighted_f1": [],
-            "balanced_accuracy": [],
-            "generalization_gap": [],
-            "per_class_accuracy": [],
-            "worst_classes": [],
-        }
-
-    def train_increment(
-        self,
-        train_loader: Iterable[Dict[str, torch.Tensor]],
-        num_epochs: Optional[int] = None,
-        val_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
-        progress_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
-        should_stop: Optional[Callable[[], bool]] = None,
-        resume_state: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+    def train_batch(self, batch: Dict[str, torch.Tensor]) -> TrainBatchStats:
         if self.optimizer is None:
             self.setup_optimizer()
+        if self.optimizer is None:
+            raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
+        self.set_train_mode()
+        step_started_at = time.perf_counter()
+        self.optimizer.zero_grad()
+        loss = self.training_step(batch)
+        loss.backward()
+        grad_norm = self._compute_grad_norm()
+        self.optimizer.step()
 
-        epochs = int(num_epochs if num_epochs is not None else self.config.num_epochs)
-        history: Dict[str, Any] = self._history_template()
-        global_step = 0
-        start_epoch = 0
-        elapsed_before_resume = 0.0
-        if resume_state:
-            resume_history = resume_state.get("history_snapshot", resume_state.get("history", {}))
-            if isinstance(resume_history, dict):
-                for key in history.keys():
-                    value = resume_history.get(key, [])
-                    if isinstance(value, list):
-                        history[key] = list(value)
-            progress = resume_state.get("progress_state", {})
-            if isinstance(progress, dict):
-                start_epoch = max(0, int(progress.get("epoch", 0)))
-                global_step = max(0, int(progress.get("global_step", 0)))
-                elapsed_before_resume = float(progress.get("elapsed_sec", 0.0))
-            if progress_callback is not None:
-                progress_callback(
-                    {
-                        "resume_loaded": True,
-                        "resume_epoch": int(start_epoch),
-                        "global_step": int(global_step),
-                    }
-                )
-
-        stopped_early = False
-        batch_loss_window: List[float] = []
-        train_started_at = time.perf_counter() - max(0.0, elapsed_before_resume)
-
-        for epoch_idx in range(start_epoch, max(1, epochs)):
-            self.adapter_model.train()  # type: ignore[union-attr]
-            self.classifier.train()  # type: ignore[union-attr]
-            self.fusion.train()  # type: ignore[union-attr]
-            losses: List[float] = []
-            total_batches = len(train_loader) if hasattr(train_loader, "__len__") else 0
-            for batch_idx, batch in enumerate(train_loader):
-                step_started_at = time.perf_counter()
-                self.optimizer.zero_grad()
-                loss = self.training_step(batch)
-                loss.backward()
-                grad_norm = self._compute_grad_norm()
-                self.optimizer.step()
-
-                batch_loss = float(loss.item())
-                losses.append(batch_loss)
-                batch_loss_window.append(batch_loss)
-                if len(batch_loss_window) > 8:
-                    batch_loss_window = batch_loss_window[-8:]
-
-                global_step += 1
-                step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
-                batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
-                if batch_size <= 0 and isinstance(batch, dict) and "images" in batch:
-                    batch_size = int(batch["images"].shape[0])
-                samples_per_sec = float(batch_size / step_time_sec) if batch_size > 0 else 0.0
-                elapsed = float(time.perf_counter() - train_started_at)
-                total_batches_planned = max(1, epochs * max(1, total_batches))
-                processed_batches = max(1, ((epoch_idx) * max(1, total_batches)) + (batch_idx + 1))
-                eta_sec = float((elapsed / processed_batches) * max(0, total_batches_planned - processed_batches))
-
-                lr_value = float(self.optimizer.param_groups[0].get("lr", self.config.learning_rate))
-
-                advisory = ""
-                severity = "info"
-                if not torch.isfinite(loss).item():
-                    advisory = "Loss became non-finite (NaN/Inf). Consider stopping this run."
-                    severity = "critical"
-                elif grad_norm > 1000.0:
-                    advisory = f"Gradient norm is very high ({grad_norm:.2f}). Training may be unstable."
-                    severity = "warning"
-                elif len(batch_loss_window) >= 5:
-                    baseline = sum(batch_loss_window[:-1]) / max(1, len(batch_loss_window) - 1)
-                    if baseline > 0 and batch_loss > (baseline * 1.6):
-                        advisory = "Batch loss spiked above recent trend. Monitor closely."
-                        severity = "warning"
-
-                if progress_callback is not None:
-                    callback_payload = {
-                        "epoch": epoch_idx + 1,
-                        "batch": batch_idx + 1,
-                        "total_batches": int(total_batches),
-                        "batch_loss": batch_loss,
-                        "epoch_progress": float((batch_idx + 1) / max(1, total_batches)),
-                        "global_step": int(global_step),
-                        "lr": lr_value,
-                        "grad_norm": float(grad_norm),
-                        "step_time_sec": step_time_sec,
-                        "samples_per_sec": samples_per_sec,
-                        "elapsed_sec": elapsed,
-                        "eta_sec": eta_sec,
-                        "advisory": advisory,
-                        "severity": severity,
-                    }
-                    progress_callback(callback_payload)
-
-                if should_stop is not None and bool(should_stop()):
-                    stopped_early = True
-                    if progress_callback is not None:
-                        progress_callback(
-                            {
-                                "stop_requested": True,
-                                "epoch": epoch_idx + 1,
-                                "batch": batch_idx + 1,
-                                "global_step": int(global_step),
-                            }
-                        )
-                    break
-
-            if not losses:
-                break
-
-            epoch_loss = float(sum(losses) / max(1, len(losses)))
-            history["train_loss"].append(epoch_loss)
-            self.current_epoch = int(epoch_idx + 1)
-
-            epoch_payload: Dict[str, Any] = {
-                "epoch_done": epoch_idx + 1,
-                "epoch_loss": epoch_loss,
-                "global_step": int(global_step),
-                "stopped_early": bool(stopped_early),
-            }
-
-            if val_loader is not None:
-                validation_metrics = self._evaluate_loader(val_loader)
-                if validation_metrics is not None:
-                    history["val_loss"].append(float(validation_metrics["val_loss"]))
-                    history["val_accuracy"].append(float(validation_metrics["val_accuracy"]))
-                    history["macro_f1"].append(float(validation_metrics.get("macro_f1", 0.0)))
-                    history["weighted_f1"].append(float(validation_metrics.get("weighted_f1", 0.0)))
-                    history["balanced_accuracy"].append(float(validation_metrics.get("balanced_accuracy", 0.0)))
-                    history["per_class_accuracy"].append(dict(validation_metrics.get("per_class_accuracy", {})))
-                    history["worst_classes"].append(list(validation_metrics.get("worst_classes", [])))
-
-                    generalization_gap = float(validation_metrics["val_loss"] - epoch_loss)
-                    history["generalization_gap"].append(generalization_gap)
-
-                    validation_metrics["generalization_gap"] = generalization_gap
-                    if generalization_gap > 0.5:
-                        validation_metrics["epoch_advisory"] = (
-                            f"Validation loss is notably above training loss (gap={generalization_gap:.3f}). "
-                            "Potential overfitting."
-                        )
-                        validation_metrics["epoch_severity"] = "warning"
-                    else:
-                        validation_metrics["epoch_advisory"] = ""
-                        validation_metrics["epoch_severity"] = "info"
-
-                    epoch_payload.update(validation_metrics)
-
-                self.adapter_model.train()  # type: ignore[union-attr]
-                self.classifier.train()  # type: ignore[union-attr]
-                self.fusion.train()  # type: ignore[union-attr]
-
-            if progress_callback is not None:
-                progress_callback(epoch_payload)
-
-            if stopped_early:
-                break
-
-        history["stopped_early"] = bool(stopped_early)
-        history["global_step"] = int(global_step)
-        history["resume_start_epoch"] = int(start_epoch)
-        return history
+        step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
+        batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
+        if batch_size <= 0 and isinstance(batch, dict) and "images" in batch:
+            batch_size = int(batch["images"].shape[0])
+        samples_per_sec = float(batch_size / step_time_sec) if batch_size > 0 else 0.0
+        lr_value = float(self.optimizer.param_groups[0].get("lr", self.config.learning_rate))
+        return TrainBatchStats(
+            loss=float(loss.item()),
+            lr=lr_value,
+            grad_norm=float(grad_norm),
+            step_time_sec=step_time_sec,
+            samples_per_sec=samples_per_sec,
+            batch_size=int(batch_size),
+        )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
         feats: List[torch.Tensor] = []
@@ -1035,64 +781,35 @@ class ContinualSDLoRATrainer:
         except Exception:
             pass
 
-    def save_training_checkpoint(
-        self,
-        output_dir: str,
-        *,
-        progress_state: Optional[Dict[str, Any]] = None,
-        history: Optional[Dict[str, Any]] = None,
-        run_id: str = "",
-    ) -> Path:
-        out = Path(output_dir)
-        checkpoint_dir = out / "training_checkpoint"
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)
-
+    def snapshot_training_state(self) -> TrainingCheckpointPayload:
         if self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("Cannot save training checkpoint before initialization.")
-
-        payload = {
-            "schema_version": "v6_training_checkpoint",
-            "created_at": datetime.utcnow().isoformat() + "Z",
-            "run_id": str(run_id),
-            "trainer_config": self.config.as_contract_dict(),
-            "class_to_idx": dict(self.class_to_idx),
-            "target_modules_resolved": list(self.target_modules_resolved),
-            "model_state": {
+            raise RuntimeError("Cannot snapshot training state before initialization.")
+        return TrainingCheckpointPayload(
+            schema_version="v6_training_checkpoint",
+            created_at=datetime.utcnow().isoformat() + "Z",
+            trainer_config=self.config.as_contract_dict(),
+            class_to_idx=dict(self.class_to_idx),
+            target_modules_resolved=list(self.target_modules_resolved),
+            model_state={
                 "adapter_model": self.adapter_model.state_dict(),
                 "classifier": self.classifier.state_dict(),
                 "fusion": self.fusion.state_dict(),
             },
-            "optimizer_state": self.optimizer.state_dict() if self.optimizer is not None else None,
-            "ood_state": self._serialize_ood_state(),
-            "progress_state": dict(progress_state or {}),
-            "history_snapshot": copy.deepcopy(dict(history or {})),
-            "rng_state": self._capture_rng_state(),
-        }
-        torch.save(payload, checkpoint_dir / "training_checkpoint.pt")
+            optimizer_state=self.optimizer.state_dict() if self.optimizer is not None else None,
+            ood_state=self._serialize_ood_state(),
+            rng_state=self._capture_rng_state(),
+            current_epoch=int(self.current_epoch),
+        )
 
-        meta = {
-            "schema_version": payload["schema_version"],
-            "created_at": payload["created_at"],
-            "run_id": payload["run_id"],
-            "global_step": int((payload["progress_state"] or {}).get("global_step", 0)),
-            "epoch": int((payload["progress_state"] or {}).get("epoch", 0)),
-            "history_keys": sorted((payload["history_snapshot"] or {}).keys()),
-        }
-        (checkpoint_dir / "checkpoint_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
-        return checkpoint_dir
-
-    def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
-        root = Path(checkpoint_dir)
-        if root.is_dir() and (root / "training_checkpoint").exists():
-            root = root / "training_checkpoint"
-        checkpoint_path = root / "training_checkpoint.pt"
-        if not checkpoint_path.exists():
-            raise FileNotFoundError(f"training_checkpoint.pt not found in {root}")
-
-        payload = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
-        class_to_idx = {str(k): int(v) for k, v in (payload.get("class_to_idx", {}) or {}).items()}
+    def restore_training_state(self, payload: TrainingCheckpointPayload | Dict[str, Any]) -> TrainingCheckpointPayload:
+        checkpoint = (
+            payload
+            if isinstance(payload, TrainingCheckpointPayload)
+            else TrainingCheckpointPayload.from_dict(payload)
+        )
+        class_to_idx = {str(k): int(v) for k, v in checkpoint.class_to_idx.items()}
         self.class_to_idx = dict(class_to_idx)
-        self.target_modules_resolved = [str(v) for v in payload.get("target_modules_resolved", [])]
+        self.target_modules_resolved = [str(v) for v in checkpoint.target_modules_resolved]
 
         needs_initialize = self.adapter_model is None or self.classifier is None or self.fusion is None
         if needs_initialize:
@@ -1100,7 +817,7 @@ class ContinualSDLoRATrainer:
         else:
             self._is_initialized = True
 
-        model_state = payload.get("model_state", {})
+        model_state = checkpoint.model_state
         adapter_state = model_state.get("adapter_model")
         classifier_state = model_state.get("classifier")
         fusion_state = model_state.get("fusion")
@@ -1114,18 +831,16 @@ class ContinualSDLoRATrainer:
 
         if self.optimizer is None:
             self.setup_optimizer()
-        optimizer_state = payload.get("optimizer_state")
+        optimizer_state = checkpoint.optimizer_state
         if optimizer_state is not None and self.optimizer is not None:
             self.optimizer.load_state_dict(optimizer_state)
 
-        ood_state = payload.get("ood_state")
+        ood_state = checkpoint.ood_state
         if isinstance(ood_state, dict):
             self._restore_ood_state(ood_state)
-        self._restore_rng_state(payload.get("rng_state", {}))
-
-        progress_state = payload.get("progress_state", {})
-        self.current_epoch = int(progress_state.get("epoch", 0)) if isinstance(progress_state, dict) else 0
-        return payload
+        self._restore_rng_state(checkpoint.rng_state)
+        self.current_epoch = int(checkpoint.current_epoch)
+        return checkpoint
 
     def save_adapter(self, output_dir: str) -> Path:
         out = Path(output_dir)

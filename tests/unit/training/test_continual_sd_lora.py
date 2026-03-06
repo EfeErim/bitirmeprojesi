@@ -24,7 +24,6 @@ class DummyBackbone(nn.Module):
         return type("Output", (), {"last_hidden_state": hidden})()
 
 
-
 def test_config_from_training_config_accepts_v6_contract():
     cfg = ContinualSDLoRAConfig.from_training_config(
         {
@@ -36,7 +35,6 @@ def test_config_from_training_config_accepts_v6_contract():
     )
     assert cfg.backbone_model_name == "facebook/dinov3-vitl16-pretrain-lvd1689m"
     assert cfg.target_modules_strategy == "all_linear_transformer"
-
 
 
 def test_target_resolver_excludes_classifier_and_router_heads():
@@ -51,7 +49,6 @@ def test_target_resolver_excludes_classifier_and_router_heads():
     assert names
     assert all("classifier" not in n.lower() for n in names)
     assert all("router" not in n.lower() for n in names)
-
 
 
 def test_add_classes_expands_classifier_shape():
@@ -72,7 +69,6 @@ def test_add_classes_expands_classifier_shape():
     assert trainer.classifier.out_features == 3
 
 
-
 def test_predict_payload_contains_v6_ood_keys():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
@@ -91,11 +87,7 @@ def test_predict_payload_contains_v6_ood_keys():
     trainer.adapter_model = DummyModule()
     trainer.fusion = DummyModule()
     trainer.classifier = nn.Linear(4, 1)
-
-    def fake_encode(images):
-        return torch.zeros(images.shape[0], 4)
-
-    trainer.encode = fake_encode  # type: ignore[assignment]
+    trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
     trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
         "mahalanobis_z": torch.tensor([0.1]),
         "energy_z": torch.tensor([0.2]),
@@ -111,7 +103,6 @@ def test_predict_payload_contains_v6_ood_keys():
     assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(result["ood_analysis"].keys())
 
 
-
 def test_raises_when_peft_is_missing(monkeypatch):
     from src.training import continual_sd_lora as continual_module
 
@@ -123,13 +114,11 @@ def test_raises_when_peft_is_missing(monkeypatch):
         device="cpu",
     )
     trainer = ContinualSDLoRATrainer(cfg)
-    backbone = DummyBackbone()
 
     monkeypatch.setattr(continual_module, "LoraConfig", None)
 
     with pytest.raises(RuntimeError, match="peft is required for SD-LoRA adapter wrapping"):
-        trainer._apply_lora(backbone, ["transformer.block.0.0"])
-
+        trainer._apply_lora(DummyBackbone(), ["transformer.block.0.0"])
 
 
 def test_apply_lora_avoids_low_cpu_mem_usage_meta_tensors(monkeypatch):
@@ -157,10 +146,9 @@ def test_apply_lora_avoids_low_cpu_mem_usage_meta_tensors(monkeypatch):
     monkeypatch.setattr(continual_module, "LoraConfig", FakeLoraConfig)
     monkeypatch.setattr(continual_module, "get_peft_model", fake_get_peft_model)
 
-    model = DummyBackbone()
-    wrapped = trainer._apply_lora(model, ["transformer.block.0.0"])
+    wrapped = trainer._apply_lora(DummyBackbone(), ["transformer.block.0.0"])
 
-    assert wrapped is model
+    assert isinstance(wrapped, DummyBackbone)
     assert call_kwargs.get("low_cpu_mem_usage") is False
 
 
@@ -189,21 +177,19 @@ def test_apply_lora_without_low_cpu_mem_usage_kwarg_support(monkeypatch):
     monkeypatch.setattr(continual_module, "LoraConfig", FakeLoraConfig)
     monkeypatch.setattr(continual_module, "get_peft_model", fake_get_peft_model)
 
-    model = DummyBackbone()
-    wrapped = trainer._apply_lora(model, ["transformer.block.0.0"])
+    wrapped = trainer._apply_lora(DummyBackbone(), ["transformer.block.0.0"])
 
-    assert wrapped is model
+    assert isinstance(wrapped, DummyBackbone)
     assert called["count"] == 1
 
 
-def test_train_increment_emits_progress_callback_events():
+def test_train_batch_emits_step_metrics():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
         target_modules_strategy="all_linear_transformer",
         fusion_layers=[2],
         fusion_output_dim=4,
         device="cpu",
-        num_epochs=1,
     )
     trainer = ContinualSDLoRATrainer(cfg)
 
@@ -219,126 +205,15 @@ def test_train_increment_emits_progress_callback_events():
     trainer.optimizer = torch.optim.SGD([trainable], lr=0.1)
     trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
 
-    train_loader = [
-        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
-        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
-    ]
-
-    events = []
-    history = trainer.train_increment(train_loader, num_epochs=1, progress_callback=events.append)
-
-    assert len(history["train_loss"]) == 1
-    assert history["stopped_early"] is False
-    batch_events = [event for event in events if "batch" in event]
-    epoch_events = [event for event in events if "epoch_done" in event]
-    assert len(batch_events) == 2
-    assert len(epoch_events) == 1
-    assert {"global_step", "lr", "grad_norm", "step_time_sec", "samples_per_sec", "eta_sec"} <= set(batch_events[0].keys())
-
-
-def test_train_increment_reports_validation_metrics():
-    cfg = ContinualSDLoRAConfig(
-        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
-        target_modules_strategy="all_linear_transformer",
-        fusion_layers=[2],
-        fusion_output_dim=4,
-        device="cpu",
-        num_epochs=1,
-    )
-    trainer = ContinualSDLoRATrainer(cfg)
-
-    class DummyModule(nn.Module):
-        def forward(self, x, *args, **kwargs):
-            return x
-
-    trainer.adapter_model = DummyModule()
-    trainer.classifier = nn.Linear(4, 2)
-    trainer.fusion = DummyModule()
-
-    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
-    trainer.optimizer = torch.optim.SGD([trainable], lr=0.05)
-    trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
-    trainer.forward_logits = lambda images: torch.zeros(images.shape[0], 2)  # type: ignore[assignment]
-
-    train_loader = [
-        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
-    ]
-    val_loader = [
-        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.zeros(2, dtype=torch.long)},
-    ]
-
-    events = []
-    history = trainer.train_increment(train_loader, num_epochs=1, val_loader=val_loader, progress_callback=events.append)
-
-    assert len(history["val_loss"]) == 1
-    assert len(history["val_accuracy"]) == 1
-    assert len(history["macro_f1"]) == 1
-    assert len(history["weighted_f1"]) == 1
-    assert len(history["balanced_accuracy"]) == 1
-    assert len(history["generalization_gap"]) == 1
-    assert len(history["per_class_accuracy"]) == 1
-    assert len(history["worst_classes"]) == 1
-    epoch_events = [event for event in events if "epoch_done" in event]
-    assert len(epoch_events) == 1
-    assert "val_loss" in epoch_events[0]
-    assert "val_accuracy" in epoch_events[0]
-    assert "macro_f1" in epoch_events[0]
-    assert "weighted_f1" in epoch_events[0]
-    assert "balanced_accuracy" in epoch_events[0]
-    assert "per_class_accuracy" in epoch_events[0]
-    assert "worst_classes" in epoch_events[0]
-    assert "generalization_gap" in epoch_events[0]
-
-
-def test_train_increment_honors_should_stop_signal():
-    cfg = ContinualSDLoRAConfig(
-        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
-        target_modules_strategy="all_linear_transformer",
-        fusion_layers=[2],
-        fusion_output_dim=4,
-        device="cpu",
-        num_epochs=2,
-    )
-    trainer = ContinualSDLoRATrainer(cfg)
-
-    class DummyModule(nn.Module):
-        def forward(self, x, *args, **kwargs):
-            return x
-
-    trainer.adapter_model = DummyModule()
-    trainer.classifier = DummyModule()
-    trainer.fusion = DummyModule()
-
-    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
-    trainer.optimizer = torch.optim.SGD([trainable], lr=0.1)
-    trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
-
-    train_loader = [
-        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
-        {"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)},
-    ]
-
-    stop_flag = {"value": False}
-    events = []
-
-    def callback(event):
-        events.append(event)
-        if "batch" in event:
-            stop_flag["value"] = True
-
-    history = trainer.train_increment(
-        train_loader,
-        num_epochs=2,
-        progress_callback=callback,
-        should_stop=lambda: stop_flag["value"],
+    stats = trainer.train_batch(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.zeros(2, dtype=torch.long)}
     )
 
-    assert history["stopped_early"] is True
-    batch_events = [event for event in events if "batch" in event and not event.get("stop_requested")]
-    stop_events = [event for event in events if event.get("stop_requested")]
-    assert len(batch_events) == 1
-    assert len(stop_events) == 1
-
+    assert stats.loss > 0.0
+    assert stats.lr == pytest.approx(0.1)
+    assert stats.grad_norm > 0.0
+    assert stats.batch_size == 2
+    assert stats.step_time_sec >= 0.0
 
 
 def test_initialize_engine_with_non_quantized_backbone(monkeypatch):
@@ -464,7 +339,7 @@ def test_initialize_engine_allows_dispatch_managed_meta_adapter(monkeypatch):
     assert trainer.classifier.out_features == 1
 
 
-def test_prepare_module_for_device_skips_dispatch_managed_not_implemented(monkeypatch):
+def test_prepare_module_for_device_skips_dispatch_managed_not_implemented():
     class NotImplementedOnTo(nn.Module):
         def __init__(self):
             super().__init__()
@@ -482,11 +357,9 @@ def test_prepare_module_for_device_skips_dispatch_managed_not_implemented(monkey
         device="cpu",
     )
     trainer = ContinualSDLoRATrainer(cfg)
-
     module = NotImplementedOnTo()
-    prepared = trainer._prepare_module_for_device(module, module_name="adapter_model")
 
-    assert prepared is module
+    assert trainer._prepare_module_for_device(module, module_name="adapter_model") is module
 
 
 def test_prepare_module_for_device_re_raises_not_implemented_without_dispatch():
@@ -506,11 +379,9 @@ def test_prepare_module_for_device_re_raises_not_implemented_without_dispatch():
         device="cpu",
     )
     trainer = ContinualSDLoRATrainer(cfg)
-    module = NotImplementedOnTo()
 
     with pytest.raises(NotImplementedError, match="Cannot copy out of meta tensor; no data!"):
-        trainer._prepare_module_for_device(module, module_name="adapter_model")
-
+        trainer._prepare_module_for_device(NotImplementedOnTo(), module_name="adapter_model")
 
 
 def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
@@ -539,14 +410,16 @@ def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
     trainer.initialize_engine(class_to_idx={"healthy": 0})
     trainer.add_classes(["disease_a"])
 
-    train_loader = [
+    for batch in [
         {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)},
         {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([1, 0], dtype=torch.long)},
-    ]
-    history = trainer.train_increment(train_loader, num_epochs=1)
-    assert len(history["train_loss"]) == 1
+    ]:
+        stats = trainer.train_batch(batch)
+        assert stats.loss >= 0.0
 
-    cal = trainer.calibrate_ood(train_loader)
+    cal = trainer.calibrate_ood(
+        [{"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}]
+    )
     assert int(cal["num_classes"]) >= 1
 
     pred = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))

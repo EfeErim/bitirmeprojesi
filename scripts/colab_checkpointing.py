@@ -96,13 +96,14 @@ class TrainingCheckpointManager:
         self,
         *,
         adapter: Any,
-        progress_state: Dict[str, Any],
-        history: Dict[str, Any],
+        session: Any,
         reason: str,
         run_id: str,
         mark_best: bool = False,
         val_loss: Optional[float] = None,
     ) -> Dict[str, Any]:
+        session_state = session.snapshot_state()
+        progress_state = dict(session_state.get("progress_state", {}))
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         epoch = int(progress_state.get("epoch", 0))
         global_step = int(progress_state.get("global_step", 0))
@@ -112,8 +113,7 @@ class TrainingCheckpointManager:
 
         checkpoint_dir = adapter.save_training_checkpoint(
             str(checkpoint_root),
-            progress_state=progress_state,
-            history=history,
+            session_state=session_state,
             run_id=run_id,
         )
         checkpoint_dir = Path(checkpoint_dir)
@@ -189,4 +189,3 @@ class TrainingCheckpointManager:
         if not isinstance(checkpoint_path, str) or not checkpoint_path:
             return None
         return self.load_checkpoint(adapter=adapter, checkpoint_path=checkpoint_path)
-
