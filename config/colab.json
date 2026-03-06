@@ -46,7 +46,18 @@
                                      "progress_bar":  true,
                                      "log_interval":  10,
                                      "tensorboard":  false
-                                 }
+                                 },
+                  "session_resilience":  {
+                                             "background_heartbeat_enabled":  true,
+                                             "heartbeat_interval_sec":  30,
+                                             "checkpoint_on_exception":  true,
+                                             "stdout_progress_enabled":  true,
+                                             "stdout_progress_batch_interval":  50,
+                                             "js_keepalive_enabled":  true,
+                                             "js_keepalive_interval_sec":  60,
+                                             "reconnect_probe_enabled":  true,
+                                             "reconnect_probe_interval_sec":  15
+                                         }
               },
     "api":  {
                 "host":  "0.0.0.0",

@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 import shutil
+import threading
 import time
 from typing import Any, Dict, List, Optional
 
@@ -112,6 +113,8 @@ class ColabLiveTelemetry:
         self._last_heartbeat = 0.0
         self._drive_available = True
         self._sequence = 0
+        self._bg_heartbeat_thread: Optional[threading.Thread] = None
+        self._bg_heartbeat_stop = threading.Event()
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
         self.drive_run_dir.mkdir(parents=True, exist_ok=True)
@@ -346,7 +349,55 @@ class ColabLiveTelemetry:
         except Exception:
             self._drive_available = False
 
+    # ------------------------------------------------------------------
+    # Background heartbeat daemon – keeps the runtime "alive" for Colab's
+    # backend manager even when the Python kernel is blocked inside a long
+    # synchronous call such as adapter.train_increment().
+    # ------------------------------------------------------------------
+
+    def start_background_heartbeat(self, interval_sec: Optional[float] = None) -> None:
+        """Launch a daemon thread that emits lightweight heartbeat events.
+
+        The thread runs independently of the main thread so heartbeats
+        continue even when the kernel is busy with a blocking training
+        call.  Call :meth:`stop_background_heartbeat` (or :meth:`close`)
+        to terminate it.
+        """
+        if self._bg_heartbeat_thread is not None and self._bg_heartbeat_thread.is_alive():
+            return  # already running
+        self._bg_heartbeat_stop.clear()
+        interval = float(interval_sec or self.heartbeat_sec)
+
+        def _heartbeat_loop() -> None:
+            while not self._bg_heartbeat_stop.is_set():
+                try:
+                    self.emit_event(
+                        "heartbeat",
+                        {"drive_available": bool(self._drive_available), "source": "background_thread"},
+                        phase="heartbeat",
+                        level="debug",
+                        force_sync=True,
+                    )
+                except Exception:
+                    pass  # best-effort; never crash the daemon
+                self._bg_heartbeat_stop.wait(interval)
+
+        self._bg_heartbeat_thread = threading.Thread(
+            target=_heartbeat_loop, name="TelemetryBackgroundHeartbeat", daemon=True
+        )
+        self._bg_heartbeat_thread.start()
+        logger.debug("Background heartbeat started (interval=%.1fs)", interval)
+
+    def stop_background_heartbeat(self) -> None:
+        """Stop the background heartbeat daemon thread."""
+        self._bg_heartbeat_stop.set()
+        if self._bg_heartbeat_thread is not None:
+            self._bg_heartbeat_thread.join(timeout=max(1.0, self.heartbeat_sec + 1.0))
+            self._bg_heartbeat_thread = None
+        logger.debug("Background heartbeat stopped")
+
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
+        self.stop_background_heartbeat()
         summary = {
             "ts": _utc_now_iso(),
             "run_id": self.run_id,
