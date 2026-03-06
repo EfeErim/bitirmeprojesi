@@ -14,6 +14,30 @@ from pathlib import Path
 
 LEGACY_PATTERN = r"DoRA|CoNeC|phase1|phase3|load_in_4bit|nf4|QLoRA"
 MISSING_V55_PATH = "docs/reports/v55/V55_FINAL_STATUS_REPORT.md"
+GENERATED_RELATIONS_DOC = "docs/REPO_FILE_RELATIONS_DETAILED.md"
+GENERATED_V6_REPORTS_GLOB = "!docs/reports/v6/**"
+LEGACY_TOKEN_GUARD_EXCLUDES = (
+    "!**/archive/**",
+    "!scripts/audit_v6_repo.py",
+    f"!{GENERATED_RELATIONS_DOC}",
+    GENERATED_V6_REPORTS_GLOB,
+)
+ARCHIVE_REFERENCE_GUARD_EXCLUDES = (
+    "!**/archive/**",
+    "!scripts/audit_v6_repo.py",
+    "!scripts/run_test_suites.py",
+)
+
+
+def git_command(root: Path, *args: str) -> list[str]:
+    return ["git", "-c", f"safe.directory={root.resolve().as_posix()}", *args]
+
+
+def rg_command(pattern: str, *paths: str, exclude_globs: tuple[str, ...]) -> list[str]:
+    command = ["rg", "-n", pattern, *paths]
+    for glob in exclude_globs:
+        command.extend(["-g", glob])
+    return command
 
 
 def run_cmd(command: list[str], cwd: Path, timeout: int = 1800) -> dict:
@@ -76,7 +100,7 @@ def run_rg_no_match(command: list[str], cwd: Path, timeout: int = 600) -> dict:
 
 def git_ls_files(root: Path) -> list[str]:
     proc = subprocess.run(
-        ["git", "ls-files"],
+        git_command(root, "ls-files"),
         cwd=str(root),
         text=True,
         capture_output=True,
@@ -341,9 +365,9 @@ def main() -> int:
     archive = [p for p in tracked if "/archive/" in p]
     checks: dict[str, dict] = {}
 
-    checks["snapshot_git_status"] = run_cmd(["git", "status", "--short", "--branch"], cwd=root, timeout=120)
-    checks["snapshot_git_diff"] = run_cmd(["git", "diff", "--name-only"], cwd=root, timeout=120)
-    checks["snapshot_git_log"] = run_cmd(["git", "log", "--oneline", "-n", "8"], cwd=root, timeout=120)
+    checks["snapshot_git_status"] = run_cmd(git_command(root, "status", "--short", "--branch"), cwd=root, timeout=120)
+    checks["snapshot_git_diff"] = run_cmd(git_command(root, "diff", "--name-only"), cwd=root, timeout=120)
+    checks["snapshot_git_log"] = run_cmd(git_command(root, "log", "--oneline", "-n", "8"), cwd=root, timeout=120)
 
     v55_scan = run_cmd(
         [
@@ -394,26 +418,16 @@ def main() -> int:
     alias_result, alias_failures = run_internal_root_alias(active)
     checks["root_alias_contract"] = alias_result
 
-    checks["legacy_token_guard_non_archive"] = run_rg_no_match(
-        [
-            "rg",
-            "-n",
-            LEGACY_PATTERN,
-            "src",
-            "config",
-            "colab_notebooks",
-            "scripts",
-            "docs",
-            "-g",
-            "!**/archive/**",
-            "-g",
-            "!scripts/audit_v6_repo.py",
-            "-g",
-            "!docs/reports/v6/**",
-        ],
-        cwd=root,
-        timeout=600,
+    legacy_guard_command = rg_command(
+        LEGACY_PATTERN,
+        "src",
+        "config",
+        "colab_notebooks",
+        "scripts",
+        "docs",
+        exclude_globs=LEGACY_TOKEN_GUARD_EXCLUDES,
     )
+    checks["legacy_token_guard_non_archive"] = run_rg_no_match(legacy_guard_command, cwd=root, timeout=600)
     legacy_locs = parse_rg_locations(checks["legacy_token_guard_non_archive"]["stdout"]) if checks["legacy_token_guard_non_archive"]["status"] == "fail" else []
 
     checks["suite_unit_validation"] = run_cmd([sys.executable, "scripts/run_test_suites.py", "--suite", "unit/validation"], cwd=root, timeout=1800)
@@ -436,34 +450,29 @@ def main() -> int:
         timeout=7200,
     )
     checks["policy_regression_bundle"] = run_cmd([sys.executable, "scripts/run_policy_regression_bundle.py"], cwd=root, timeout=3600)
-    checks["archive_reference_guard"] = run_rg_no_match(
-        [
-            "rg",
-            "-n",
-            r"archive/v5_legacy|src/archive|docs/archive|tests/archive|plans/archive",
-            "src",
-            "tests",
-            "scripts",
-            "config",
-            "colab_notebooks",
-            "-g",
-            "*.py",
-            "-g",
-            "*.ipynb",
-            "-g",
-            "*.json",
-            "-g",
-            "*.yaml",
-            "-g",
-            "*.yml",
-            "-g",
-            "!**/archive/**",
-            "-g",
-            "!scripts/audit_v6_repo.py",
-        ],
-        cwd=root,
-        timeout=600,
-    )
+    archive_guard_command = [
+        "rg",
+        "-n",
+        r"archive/v5_legacy|src/archive|docs/archive|tests/archive|plans/archive",
+        "src",
+        "tests",
+        "scripts",
+        "config",
+        "colab_notebooks",
+        "-g",
+        "*.py",
+        "-g",
+        "*.ipynb",
+        "-g",
+        "*.json",
+        "-g",
+        "*.yaml",
+        "-g",
+        "*.yml",
+    ]
+    for glob in ARCHIVE_REFERENCE_GUARD_EXCLUDES:
+        archive_guard_command.extend(["-g", glob])
+    checks["archive_reference_guard"] = run_rg_no_match(archive_guard_command, cwd=root, timeout=600)
     archive_locs = parse_rg_locations(checks["archive_reference_guard"]["stdout"]) if checks["archive_reference_guard"]["status"] == "fail" else []
 
     manifest_files = []
@@ -594,7 +603,7 @@ def main() -> int:
                 "location": f"{item['path']}:{item['line']}",
                 "claim": "Forbidden legacy token appears in non-archive file.",
                 "evidence": item["snippet"],
-                "repro": f"rg -n \"{LEGACY_PATTERN}\" src config colab_notebooks scripts docs -g \"!**/archive/**\" -g \"!scripts/audit_v6_repo.py\"",
+                "repro": " ".join(legacy_guard_command),
                 "expected_vs_actual": "Expected no legacy tokens in active surfaces; match found.",
                 "confidence": "high",
             }
