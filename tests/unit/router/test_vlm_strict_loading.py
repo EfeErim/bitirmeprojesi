@@ -40,7 +40,6 @@ def test_strict_loading_requires_model_ids():
                 'strict_model_loading': True,
                 'model_source': 'huggingface',
                 'model_ids': {
-                    'grounding_dino': 'invalid/grounding-dino',
                     'sam': 'invalid/sam',
                     'bioclip': 'invalid/bioclip'
                 }
@@ -51,7 +50,7 @@ def test_strict_loading_requires_model_ids():
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
 
-    pipeline._load_grounding_dino = lambda model_id: (_ for _ in ()).throw(ValueError('bad grounding dino id'))
+    pipeline._load_sam = lambda model_id: (_ for _ in ()).throw(ValueError('bad sam id'))
 
     with pytest.raises(RuntimeError, match='Strict VLM model loading failed'):
         pipeline.load_models()
@@ -68,7 +67,6 @@ def test_non_strict_loading_falls_back_to_placeholder():
                 'strict_model_loading': False,
                 'model_source': 'huggingface',
                 'model_ids': {
-                    'grounding_dino': 'invalid/grounding-dino',
                     'sam': 'invalid/sam',
                     'bioclip': 'invalid/bioclip'
                 }
@@ -79,15 +77,34 @@ def test_non_strict_loading_falls_back_to_placeholder():
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
 
-    pipeline._load_grounding_dino = lambda model_id: (_ for _ in ()).throw(ValueError('bad grounding dino id'))
+    pipeline._load_sam = lambda model_id: (_ for _ in ()).throw(ValueError('bad sam id'))
 
     pipeline.load_models()
 
     # Models should remain None (not placeholder strings) - inspired by reference implementation
     assert pipeline.models_loaded is False
-    assert pipeline.grounding_dino is None
     assert pipeline.sam_model is None
     assert pipeline.bioclip is None
+
+
+def test_analyzer_resolution_is_sam3_only():
+    config = {
+        'vlm_enabled': True,
+        'router': {
+            'vlm': {
+                'enabled': True,
+            }
+        }
+    }
+
+    with patch('torch.cuda.is_available', return_value=False):
+        pipeline = VLMPipeline(config=config, device='cpu')
+
+    pipeline.actual_pipeline = 'dino'
+    assert pipeline._resolve_analyzer_for_active_pipeline() is None
+
+    pipeline.actual_pipeline = 'sam3'
+    assert pipeline._resolve_analyzer_for_active_pipeline() == pipeline._analyze_image_sam3
 
 
 def test_strict_loading_with_models_runs_inference():
@@ -104,7 +121,6 @@ def test_strict_loading_with_models_runs_inference():
                 'strict_model_loading': True,
                 'model_source': 'huggingface',
                 'model_ids': {
-                    'grounding_dino': 'fake-grounding-dino',
                     'sam': 'fake-sam',
                     'bioclip': 'fake-bioclip'
                 },
@@ -120,18 +136,23 @@ def test_strict_loading_with_models_runs_inference():
     with patch('torch.cuda.is_available', return_value=False):
         pipeline = VLMPipeline(config=config, device='cpu')
 
-    pipeline._load_grounding_dino = lambda model_id: (fake_processor, fake_model)
     pipeline._load_sam = lambda model_id: (fake_processor, fake_model)
     pipeline._load_clip_like_model = lambda model_id: (fake_processor, fake_model)
     pipeline.load_models()
 
-    pipeline._run_grounding_dino = lambda image: {
+    pipeline._analyze_image_sam3 = lambda pil_image, image_size, confidence_threshold=0.8, max_detections=None: {
         'detections': [
-            {'label': 'tomato leaf', 'score': 0.97, 'bbox': [0.0, 0.0, 100.0, 100.0], 'crop_guess': 'tomato', 'part_guess': 'leaf'}
-        ]
+            {
+                'crop': 'tomato',
+                'part': 'leaf',
+                'crop_confidence': 0.95,
+                'part_confidence': 0.90,
+                'bbox': [0.0, 0.0, 100.0, 100.0],
+            }
+        ],
+        'image_size': image_size,
+        'processing_time_ms': 1.0,
     }
-    pipeline._clip_score_labels = lambda image, labels, label_type='generic': (labels[0], 0.95)
-    pipeline._run_sam_mask = lambda image, bbox: None
 
     result = pipeline.analyze_image(torch.rand(3, 224, 224))
     detection = result['detections'][0]

@@ -33,14 +33,47 @@ from src.router.roi_helpers import (
     bbox_area_ratio,
     bbox_iou,
     suppress_overlapping_detections,
-    select_best_detection,
-    unique_nonempty,
 )
 from src.router.roi_pipeline import (
     collect_sam3_roi_candidates,
     classify_sam3_roi_candidate,
     run_sam3_roi_classification_stage,
 )
+from src.router.runtime_settings import (
+    resolve_sam3_stage_order,
+    build_sam3_runtime_settings,
+)
+from src.router.analysis_results import (
+    init_sam3_stage_timings,
+    summarize_sam3_stage_timings,
+    build_sam3_analysis_result,
+)
+from src.router.confidence_utils import (
+    resolve_effective_confidence_threshold,
+    passes_open_set_gate,
+)
+from src.router.sam3_output_utils import (
+    normalize_sam3_results,
+    sam3_error_result,
+)
+from src.router.batch_output_utils import analysis_to_batch_item
+from src.router.pipeline_flow_utils import (
+    build_process_image_response,
+    empty_analysis_result,
+    resolve_active_analyzer,
+    resolve_effective_max_detections,
+)
+from src.router.compatibility_utils import compatible_parts_for_crop
+from src.router.prompt_clip_utils import (
+    crop_prompt_aliases,
+    build_prompt_ensemble,
+    build_prompt_batch,
+    open_set_unknown_prompts,
+    aggregate_prompt_logits,
+    get_clip_logit_scale,
+    get_prompt_templates_for_type,
+)
+from src.router.dependency_utils import check_vlm_dependencies
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +95,8 @@ class VLMPipeline:
         self.policy_graph: Dict[str, Dict[str, Any]] = {}
         self.set_runtime_profile(self._resolve_requested_profile(), suppress_warning=True)
         
-        # Pipeline mode is SAM3-only (legacy values are ignored)
+        # Pipeline mode is SAM3-only
         self.pipeline_mode = 'sam3'
-        self.fallback_attempted = False
         self.actual_pipeline = None  # Will be set to 'sam3' after load_models
         
         # Backwards-compatible flat keys
@@ -88,13 +120,11 @@ class VLMPipeline:
         self.model_source = config.get('vlm_model_source', self.vlm_config.get('model_source', 'huggingface'))
 
         defaults = {
-            'grounding_dino': 'IDEA-Research/grounding-dino-base',
             'sam': 'facebook/sam3',
             'bioclip': 'imageomics/bioclip-2.5-vith14'
         }
         configured_ids = self.vlm_config.get('model_ids', {}) if isinstance(self.vlm_config.get('model_ids', {}), dict) else {}
         self.model_ids = {
-            'grounding_dino': configured_ids.get('grounding_dino', defaults['grounding_dino']),
             'sam': configured_ids.get('sam', defaults['sam']),
             'bioclip': configured_ids.get('bioclip', defaults['bioclip'])
         }
@@ -147,10 +177,6 @@ class VLMPipeline:
                 normalized_parts = [str(part).strip().lower() for part in parts if str(part).strip()]
                 if normalized_crop and normalized_parts:
                     self.crop_part_compatibility[normalized_crop] = normalized_parts
-        
-        # DINO-specific model placeholders
-        self.grounding_dino = None
-        self.grounding_dino_processor = None
         
         # SAM model placeholders
         self.sam_model = None
@@ -225,48 +251,22 @@ class VLMPipeline:
 
     def _compatible_parts_for_crop(self, crop_label: str) -> List[str]:
         """Return configured compatible parts for a crop, filtered to active part labels."""
-        if not crop_label:
-            return []
-
-        crop_key = str(crop_label).strip().lower()
-        allowed_parts = self.crop_part_compatibility.get(crop_key, [])
-        if not allowed_parts:
-            return []
-
-        part_labels_by_lower = {str(label).strip().lower(): label for label in self.part_labels}
-        compatible = [part_labels_by_lower[part] for part in allowed_parts if part in part_labels_by_lower]
-        return compatible
+        return compatible_parts_for_crop(crop_label, self.crop_part_compatibility, self.part_labels)
 
     @staticmethod
     def _check_dependencies():
         """Check for required dependencies and provide installation hints."""
-        missing_deps = []
-        
-        # Check transformers version for SAM3 support
-        try:
-            import transformers
-            version = transformers.__version__
-            major, minor, patch = map(int, version.split('.')[:3])
-            if (major, minor) < (4, 41):
-                logger.warning(f"transformers {version} may not have SAM3. Recommend >=4.41.0. Install: !pip install transformers --upgrade")
-        except Exception as e:
-            logger.warning(f"Could not check transformers version: {e}")
-        
-        # Check for optional dependencies
-        optional_packages = {
-            'open_clip': 'open-clip-torch',
-        }
-        
-        for package_name, pip_name in optional_packages.items():
-            try:
-                __import__(package_name)
-            except ImportError:
-                missing_deps.append(pip_name)
-        
+        diagnostics = check_vlm_dependencies()
+        transformers_warning = diagnostics.get('transformers_warning')
+        if transformers_warning:
+            logger.warning(transformers_warning)
+
+        missing_deps = diagnostics.get('missing_deps', [])
         if missing_deps:
-            install_cmd = f"!pip install {' '.join(missing_deps)}"
             logger.warning(f"Missing optional dependencies: {', '.join(missing_deps)}")
-            logger.warning(f"Install in Colab cell: {install_cmd}")
+            install_cmd = diagnostics.get('install_command')
+            if install_cmd:
+                logger.warning(f"Install in Colab cell: {install_cmd}")
 
     def load_models(self):
         """Load SAM3 + BioCLIP-2.5 models (fallback disabled)."""
@@ -299,12 +299,7 @@ class VLMPipeline:
             logger.info("Loading SAM3 + BioCLIP-2.5 pipeline...")
             logger.info("Note: First run downloads ~1-2 GB. This may take 2-5 minutes...")
             self._load_sam3_bioclip25()
-            sam_id = str(self.model_ids.get('sam', ''))
-            bioclip_id = str(self.model_ids.get('bioclip', ''))
-            if sam_id.startswith('fake-') or bioclip_id.startswith('fake-'):
-                self.actual_pipeline = 'dino'
-            else:
-                self.actual_pipeline = 'sam3'
+            self.actual_pipeline = 'sam3'
             self.models_loaded = True
             logger.info(f"✅ SAM3 + BioCLIP-2.5 loaded successfully (pipeline={self.actual_pipeline})")
             
@@ -373,23 +368,13 @@ class VLMPipeline:
 
         return bool(
             self.models_loaded
-            and self.actual_pipeline in {'sam3', 'dino'}
+            and self.actual_pipeline == 'sam3'
             and self.sam_model is not None
             and self.sam_processor is not None
             and self.bioclip is not None
             and self.bioclip_processor is not None
-            and (self.sam_backend == 'sam3' or self.actual_pipeline == 'dino')
+            and self.sam_backend == 'sam3'
         )
-
-    def _load_grounding_dino(self, model_id: str):
-        """Load GroundingDINO model and processor."""
-        from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
-
-        processor = AutoProcessor.from_pretrained(model_id)
-        model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
-        model = model.to(self.device)
-        model.eval()
-        return processor, model
 
     def _load_sam(self, model_id: str):
         """Load SAM model and processor."""
@@ -470,79 +455,15 @@ class VLMPipeline:
     @staticmethod
     def _crop_prompt_aliases() -> Dict[str, List[str]]:
         """Return crop prompt aliases including scientific names where available."""
-        return {
-            'tomato': ['tomato', 'Solanum lycopersicum'],
-            'potato': ['potato', 'Solanum tuberosum'],
-            'grape': ['grape', 'Vitis vinifera'],
-            'strawberry': ['strawberry', 'Fragaria × ananassa'],
-        }
+        return crop_prompt_aliases()
 
     def _build_prompt_ensemble(self, label: str, label_type: str) -> List[str]:
         """Build multiple prompt variants for a single semantic class label."""
-        label_text = str(label).strip()
-        if not label_text:
-            return []
-
-        # Use configurable templates if available, otherwise fallback to defaults
-        custom_templates = self.vlm_config.get('prompt_templates', {}).get(label_type, [])
-        
-        if label_type == 'part':
-            if custom_templates:
-                templates = custom_templates
-            else:
-                templates = [
-                    "a photo of a plant {term}",
-                    "a close-up photo of a plant {term}",
-                    "a macro photo of a plant {term}",
-                    "a {term} with damage",
-                    "a {term} with disease",
-                    "a diseased plant {term}",
-                ]
-            base_terms = [label_text]
-        else:
-            aliases = self._crop_prompt_aliases()
-            alias_terms = aliases.get(label_text.lower(), [label_text])
-            base_terms = [term for term in [label_text, *alias_terms] if isinstance(term, str) and term.strip()]
-            
-            if custom_templates:
-                templates = custom_templates
-            else:
-                templates = [
-                    "a photo of {term}",
-                    "a close-up photo of {term}",
-                    "a macro photo of {term}",
-                    "an image of {term}",
-                    "a {term} crop",
-                    "a {term} plant",
-                    "a {term} with disease",
-                    "a diseased {term}",
-                ]
-
-        prompts: List[str] = []
-        seen = set()
-        for term in base_terms:
-            clean_term = term.strip()
-            for template in templates:
-                prompt = template.format(term=clean_term)
-                key = prompt.lower()
-                if key not in seen:
-                    seen.add(key)
-                    prompts.append(prompt)
-        return prompts
+        return build_prompt_ensemble(label=label, label_type=label_type, vlm_config=self.vlm_config)
 
     def _build_prompt_batch(self, labels: List[str], label_type: str) -> Tuple[List[str], List[int]]:
         """Build prompt list and class index mapping for class-level aggregation."""
-        prompt_texts: List[str] = []
-        prompt_to_class: List[int] = []
-
-        for class_index, label in enumerate(labels):
-            class_prompts = self._build_prompt_ensemble(label, label_type=label_type)
-            if not class_prompts:
-                class_prompts = [str(label)]
-            prompt_texts.extend(class_prompts)
-            prompt_to_class.extend([class_index] * len(class_prompts))
-
-        return prompt_texts, prompt_to_class
+        return build_prompt_batch(labels=labels, label_type=label_type, vlm_config=self.vlm_config)
 
     @staticmethod
     def _open_set_unknown_prompts(label_type: str, known_labels: Optional[List[str]] = None) -> List[str]:
@@ -551,58 +472,17 @@ class VLMPipeline:
         Uses truly out-of-domain examples to create a distinct visual concept
         for what is NOT a target crop/part, preventing false positives.
         """
-        if label_type == 'part':
-            return [
-                "a photo of a rock or stone",
-                "a photo of water or liquid",
-                "a photo of a building or concrete",
-                "a photo of an animal or insect",
-            ]
-
-        # For crops: use objects/materials completely outside agricultural domain
-        return [
-            "a photo of a rock or stone",
-            "a photo of water or liquid surface",
-            "a photo of soil or dirt only",
-            "a photo of a building or concrete",
-            "a photo of an unrelated object",
-        ]
+        return open_set_unknown_prompts(label_type=label_type, known_labels=known_labels)
 
     @staticmethod
     def _aggregate_prompt_logits(logits: torch.Tensor, prompt_to_class: List[int], num_classes: int) -> torch.Tensor:
         """Aggregate prompt-level logits into class-level logits using max pooling."""
-        if logits.ndim == 2:
-            logits = logits.squeeze(0)
-
-        class_logits = torch.full(
-            (num_classes,),
-            float('-inf'),
-            device=logits.device,
-            dtype=logits.dtype,
-        )
-
-        for prompt_index, class_index in enumerate(prompt_to_class):
-            class_logits[class_index] = torch.maximum(class_logits[class_index], logits[prompt_index])
-
-        return class_logits.unsqueeze(0)
+        return aggregate_prompt_logits(logits, prompt_to_class, num_classes)
 
     @staticmethod
     def _get_clip_logit_scale(model: Any) -> float:
         """Get CLIP logit scale (temperature inverse) with safe fallback."""
-        logit_scale_attr = getattr(model, 'logit_scale', None)
-        if logit_scale_attr is None:
-            return 1.0
-
-        try:
-            if torch.is_tensor(logit_scale_attr):
-                scale_value = logit_scale_attr.detach().float().squeeze().exp().item()
-            elif hasattr(logit_scale_attr, 'data') and torch.is_tensor(logit_scale_attr.data):
-                scale_value = logit_scale_attr.data.detach().float().squeeze().exp().item()
-            else:
-                scale_value = float(logit_scale_attr)
-            return max(1.0, min(scale_value, 100.0))
-        except Exception:
-            return 1.0
+        return get_clip_logit_scale(model)
 
     @staticmethod
     def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
@@ -943,16 +823,6 @@ class VLMPipeline:
 
         return adjusted
 
-    @staticmethod
-    def _select_best_detection(detections: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-        """Select best detection by score, fallback to first detection."""
-        return select_best_detection(detections)
-
-    @staticmethod
-    def _unique_nonempty(values: List[Optional[str]]) -> List[str]:
-        """Return order-preserving unique non-empty strings."""
-        return unique_nonempty(values)
-
     def _classify_with_prompt_ensemble(
         self, 
         image: Image.Image, 
@@ -977,16 +847,7 @@ class VLMPipeline:
 
     def _get_prompt_templates_for_type(self, label_type: str) -> List[str]:
         """Get dynamic prompt templates from config."""
-        templates_cfg = self.vlm_config.get('prompt_templates', {})
-        if not isinstance(templates_cfg, dict):
-            templates_cfg = {}
-
-        label_templates = templates_cfg.get(label_type, templates_cfg.get('default', []))
-        if not isinstance(label_templates, list):
-            label_templates = []
-
-        cleaned_templates = [str(template).strip() for template in label_templates if str(template).strip()]
-        return cleaned_templates if cleaned_templates else ["{term}"]
+        return get_prompt_templates_for_type(self.vlm_config, label_type)
 
     def _clip_score_labels_ensemble(
         self, 
@@ -1282,133 +1143,6 @@ class VLMPipeline:
         label = labels[class_index] if class_index < len(labels) else 'unknown'
         return label, confidence
 
-    def _run_grounding_dino(self, image: Image.Image, threshold: Optional[float] = None) -> Dict[str, Any]:
-        """Run GroundingDINO detection for crop/part prompts.
-        
-        Strategy:
-        - With dynamic taxonomy (many labels): use generic prompts for detection,
-          let BioCLIP do fine-grained classification
-        - With specific labels (few crops): use those specific prompts
-        """
-        threshold_value = float(self.confidence_threshold if threshold is None else threshold)
-        
-        if self.use_dynamic_taxonomy or len(self.crop_labels) > 20:
-            # Use generic prompts when we have many possible labels
-            # GroundingDINO works better with fewer, generic prompts
-            prompt_labels = [
-                'plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part',
-                'flower', 'fruit', 'stem', 'whole plant'
-            ]
-        else:
-            # Use specific prompts when we have few targeted crops
-            prompt_labels = self.crop_labels + self.part_labels
-            # Add generic fallbacks
-            generic_prompts = ['plant', 'leaf', 'plant leaf', 'green leaf', 'crop', 'plant part']
-            prompt_labels = prompt_labels + generic_prompts
-        
-        if not prompt_labels:
-            return {'detections': []}
-
-        text_prompt = '. '.join(prompt_labels) + '.'
-        inputs = self.grounding_dino_processor(images=image, text=text_prompt, return_tensors='pt')
-        inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in inputs.items()}
-
-        with torch.no_grad():
-            outputs = self.grounding_dino(**inputs)
-
-        target_sizes = [image.size[::-1]]
-        input_ids = inputs.get('input_ids')
-        if input_ids is None:
-            raise RuntimeError('GroundingDINO processor did not return input_ids needed for post-processing')
-
-        # Try new API first (transformers >= 4.50), fallback to old API
-        try:
-            # New API: no threshold parameters in post_process
-            results = self.grounding_dino_processor.post_process_grounded_object_detection(
-                outputs,
-                input_ids,
-                target_sizes=target_sizes,
-            )
-        except TypeError:
-            # Old API: threshold parameters accepted
-            results = self.grounding_dino_processor.post_process_grounded_object_detection(
-                outputs,
-                input_ids,
-                box_threshold=threshold_value,
-                text_threshold=threshold_value,
-                target_sizes=target_sizes,
-            )
-
-        result = results[0] if results else {'boxes': [], 'scores': [], 'labels': []}
-        detections = []
-        
-        # Apply threshold filtering manually for new API
-        for box, score, label in zip(result.get('boxes', []), result.get('scores', []), result.get('labels', [])):
-            score_val = float(score) if torch.is_tensor(score) else float(score)
-            
-            # Filter by confidence threshold
-            if score_val < threshold_value:
-                continue
-                
-            box_xyxy = [float(x) for x in box.tolist()]
-            label_text = str(label).lower()
-            crop_guess = next((c for c in self.crop_labels if c.lower() in label_text), None)
-            part_guess = next((p for p in self.part_labels if p.lower() in label_text), None)
-            if part_guess is None and crop_guess is None:
-                part_guess = str(label).strip().lower()
-            detections.append({
-                'label': str(label),
-                'score': score_val,
-                'bbox': box_xyxy,
-                'crop_guess': crop_guess,
-                'part_guess': part_guess,
-            })
-        return {'detections': detections}
-
-    def _run_sam_mask(self, image: Image.Image, bbox: Optional[List[float]]) -> Optional[List[List[float]]]:
-        """Run SAM segmentation on the best box; returns small mask preview."""
-        if bbox is None:
-            return None
-        try:
-            if self.sam_backend == 'ultralytics':
-                image_np = np.array(image.convert('RGB'))
-                xyxy = [float(v) for v in bbox]
-                try:
-                    results = self.sam_model(image_np, bboxes=[xyxy], verbose=False)
-                except Exception:
-                    results = self.sam_model.predict(image_np, bboxes=[xyxy], verbose=False)
-
-                if not results:
-                    return None
-                first = results[0]
-                masks = getattr(first, 'masks', None)
-                if masks is None:
-                    return None
-                mask_data = getattr(masks, 'data', None)
-                if mask_data is None or len(mask_data) == 0:
-                    return None
-                mask_np = mask_data[0].detach().cpu().numpy().astype(np.float32)
-                reduced = mask_np[::8, ::8]
-                return reduced.tolist()
-
-            input_boxes = [[[bbox]]]
-            sam_inputs = self.sam_processor(images=image, input_boxes=input_boxes, return_tensors='pt')
-            sam_inputs = {k: v.to(self.device) if hasattr(v, 'to') else v for k, v in sam_inputs.items()}
-            with torch.no_grad():
-                sam_outputs = self.sam_model(**sam_inputs)
-            masks = self.sam_processor.image_processor.post_process_masks(
-                sam_outputs.pred_masks.cpu(),
-                sam_inputs['original_sizes'].cpu(),
-                sam_inputs['reshaped_input_sizes'].cpu(),
-            )
-            if not masks:
-                return None
-            mask_np = masks[0][0][0].numpy().astype(np.float32)
-            reduced = mask_np[::8, ::8]
-            return reduced.tolist()
-        except Exception:
-            return None
-
     def process_image(self, image_tensor: torch.Tensor) -> Dict[str, Any]:
         """High-level processing entrypoint expected by tests.
 
@@ -1417,16 +1151,7 @@ class VLMPipeline:
         'diagnostic_scouting'.
         """
         analysis = self.analyze_image(image_tensor)
-        # If explicitly enabled, report diagnostic_scouting scenario for tests
-        if getattr(self, 'enabled', False):
-            scenario = 'diagnostic_scouting'
-        else:
-            scenario = 'single_detection' if len(analysis.get('detections', [])) == 1 else 'multiple'
-        return {
-            'status': 'ok',
-            'scenario': scenario,
-            'analysis': analysis
-        }
+        return build_process_image_response(analysis, enabled=bool(getattr(self, 'enabled', False)))
 
     def analyze_image(
         self,
@@ -1460,88 +1185,32 @@ class VLMPipeline:
     @staticmethod
     def _empty_analysis_result(image_size: Tuple[int, int, int]) -> Dict[str, Any]:
         """Compatibility-safe empty analysis response when runtime pipeline is unavailable."""
-        return {
-            'detections': [],
-            'image_size': image_size,
-            'processing_time_ms': 0.0,
-        }
+        return empty_analysis_result(image_size)
 
     def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any]]]:
-        """Resolve analysis function for active pipeline with compatibility-safe fallback controls."""
-        enable_legacy_dino_dispatch = bool(
-            self._policy_value('execution', 'enable_legacy_dino_dispatch', True)
-        )
-
+        """Resolve analysis function for active pipeline."""
         analyzers: Dict[str, Callable[..., Dict[str, Any]]] = {
             'sam3': self._analyze_image_sam3,
         }
-        if enable_legacy_dino_dispatch:
-            analyzers['dino'] = self._analyze_image_dino
-
-        active_pipeline = str(self.actual_pipeline or '').strip().lower()
-        return analyzers.get(active_pipeline)
+        return resolve_active_analyzer(self.actual_pipeline, analyzers)
 
     @staticmethod
     def _resolve_effective_max_detections(max_detections: Optional[int]) -> Optional[int]:
         """Normalize max detections contract: None/<=0 means no cap."""
-        if max_detections is None:
-            return None
-
-        try:
-            max_det_int = int(max_detections)
-        except Exception:
-            max_det_int = 0
-        return None if max_det_int <= 0 else max_det_int
+        return resolve_effective_max_detections(max_detections)
 
     def _sam3_stage_order(self) -> List[str]:
         """Resolve SAM3 stage execution order from policy graph."""
-        default_order = ['roi_filter', 'roi_classification', 'open_set_gate', 'postprocess']
-        configured = self._policy_value('execution', 'sam3_stage_order', default_order)
-        if not isinstance(configured, list):
-            return default_order
-
-        allowed = {'roi_filter', 'roi_classification', 'open_set_gate', 'postprocess'}
-        ordered: List[str] = []
-        for stage_name in configured:
-            normalized = str(stage_name).strip()
-            if normalized in allowed and normalized not in ordered:
-                ordered.append(normalized)
-        return ordered or default_order
+        return resolve_sam3_stage_order(self._policy_value)
 
     def _resolve_effective_confidence_threshold(self, confidence_threshold: float) -> float:
         """Resolve profile/policy-adjusted confidence threshold with optional clamps."""
-        base_threshold = max(0.0, min(1.0, float(confidence_threshold)))
-
-        multiplier_raw = self._policy_value('execution', 'confidence_threshold_multiplier', 1.0)
-        try:
-            multiplier = float(multiplier_raw)
-        except Exception:
-            multiplier = 1.0
-        multiplier = max(0.0, multiplier)
-
-        adjusted = base_threshold * multiplier
-
-        min_raw = self._policy_value('execution', 'confidence_threshold_min', 0.0)
-        max_raw = self._policy_value('execution', 'confidence_threshold_max', 1.0)
-        try:
-            min_threshold = float(min_raw)
-        except Exception:
-            min_threshold = 0.0
-        try:
-            max_threshold = float(max_raw)
-        except Exception:
-            max_threshold = 1.0
-
-        min_threshold = max(0.0, min(1.0, min_threshold))
-        max_threshold = max(min_threshold, min(1.0, max_threshold))
-        return max(min_threshold, min(max_threshold, adjusted))
+        return resolve_effective_confidence_threshold(confidence_threshold, self._policy_value)
 
     @staticmethod
     def _passes_open_set_gate(crop_label: str, crop_confidence: float, min_confidence: float) -> bool:
         """Evaluate open-set acceptance for a classified detection."""
-        if str(crop_label).strip().lower() == 'unknown':
-            return False
-        return float(crop_confidence) >= float(min_confidence)
+        return passes_open_set_gate(crop_label, crop_confidence, min_confidence)
 
     def _postprocess_sam3_detections(
         self,
@@ -1566,125 +1235,7 @@ class VLMPipeline:
 
     def _build_sam3_runtime_settings(self, effective_threshold: float) -> Dict[str, Any]:
         """Collect policy-controlled runtime settings for SAM3 analysis."""
-        settings: Dict[str, Any] = {}
-        settings['sam3_threshold'] = float(self._policy_value('roi_filter', 'sam3_mask_threshold', 0.60))
-        settings['min_box_area_ratio'] = float(self._policy_value('roi_filter', 'min_box_area_ratio', 0.001))
-        settings['min_box_side_px'] = float(self._policy_value('roi_filter', 'min_box_side_px', 10))
-        settings['classification_min_confidence'] = max(
-            float(self._policy_value('crop_evidence', 'classification_min_confidence', 0.20)),
-            float(effective_threshold),
-        )
-        settings['detection_nms_iou_threshold'] = float(self._policy_value('dedupe', 'detection_nms_iou_threshold', 0.75))
-        settings['detection_nms_same_crop_only'] = bool(self._policy_value('dedupe', 'detection_nms_same_crop_only', True))
-        settings['conditioned_part_weight'] = max(
-            0.0,
-            min(1.0, float(self._policy_value('compatibility_fusion', 'conditioned_part_weight', 0.45))),
-        )
-        settings['generic_part_penalty'] = float(self._policy_value('part_resolution', 'generic_part_penalty', 0.78))
-
-        generic_part_labels_raw = self._policy_value(
-            'part_resolution',
-            'generic_part_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant'],
-        )
-        settings['generic_part_labels'] = (
-            [str(label) for label in generic_part_labels_raw]
-            if isinstance(generic_part_labels_raw, list)
-            else ['whole plant', 'whole', 'plant', 'entire plant']
-        )
-
-        settings['specific_part_override_ratio'] = float(self._policy_value('part_resolution', 'specific_part_override_ratio', 0.45))
-        settings['specific_part_min_confidence'] = float(self._policy_value('part_resolution', 'specific_part_min_confidence', 0.12))
-
-        preferred_part_labels_raw = self._policy_value('part_resolution', 'preferred_part_labels', ['leaf'])
-        settings['preferred_part_labels'] = (
-            [str(label) for label in preferred_part_labels_raw]
-            if isinstance(preferred_part_labels_raw, list)
-            else ['leaf']
-        )
-        settings['preferred_part_override_ratio'] = float(self._policy_value('part_resolution', 'preferred_part_override_ratio', 0.50))
-
-        settings['leaf_override_enabled'] = bool(self._policy_value('part_resolution', 'leaf_override_enabled', True))
-        settings['leaf_override_label'] = str(self._policy_value('part_resolution', 'leaf_override_label', 'leaf'))
-
-        leaf_override_target_raw = self._policy_value(
-            'part_resolution',
-            'leaf_override_target_labels',
-            ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'],
-        )
-        settings['leaf_override_target_labels'] = (
-            [str(label) for label in leaf_override_target_raw]
-            if isinstance(leaf_override_target_raw, list)
-            else ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
-        )
-
-        settings['leaf_override_ratio'] = float(self._policy_value('part_resolution', 'leaf_override_ratio', 0.35))
-        settings['leaf_override_min_confidence'] = float(self._policy_value('part_resolution', 'leaf_override_min_confidence', 0.10))
-        settings['leaf_override_min_area_ratio'] = float(self._policy_value('part_resolution', 'leaf_override_min_area_ratio', 0.02))
-        settings['leaf_override_aspect_min'] = float(self._policy_value('part_resolution', 'leaf_override_aspect_min', 0.30))
-        settings['leaf_override_aspect_max'] = float(self._policy_value('part_resolution', 'leaf_override_aspect_max', 3.20))
-
-        settings['leaf_visual_override_enabled'] = bool(self._policy_value('part_resolution', 'leaf_visual_override_enabled', True))
-        settings['leaf_visual_likeness_threshold'] = float(self._policy_value('part_resolution', 'leaf_visual_likeness_threshold', 0.44))
-        settings['leaf_visual_green_min'] = float(self._policy_value('part_resolution', 'leaf_visual_green_min', 0.12))
-        settings['leaf_visual_force_generic'] = bool(self._policy_value('part_resolution', 'leaf_visual_force_generic', True))
-        settings['leaf_visual_force_without_leaf_score'] = bool(self._policy_value('part_resolution', 'leaf_visual_force_without_leaf_score', True))
-        settings['leaf_visual_force_conf_floor'] = float(self._policy_value('part_resolution', 'leaf_visual_force_conf_floor', 0.16))
-        settings['leaf_visual_force_part_factor'] = float(self._policy_value('part_resolution', 'leaf_visual_force_part_factor', 0.65))
-
-        leaf_non_foliar_labels_raw = self._policy_value(
-            'part_resolution',
-            'leaf_non_foliar_part_labels',
-            ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel'],
-        )
-        settings['leaf_non_foliar_part_labels'] = (
-            [str(label) for label in leaf_non_foliar_labels_raw]
-            if isinstance(leaf_non_foliar_labels_raw, list)
-            else ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
-        )
-
-        settings['leaf_part_rebalance_enabled'] = bool(self._policy_value('part_resolution', 'leaf_part_rebalance_enabled', True))
-        settings['leaf_part_rebalance_threshold'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_threshold', 0.34))
-        settings['leaf_part_rebalance_penalty'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_penalty', 0.55))
-        settings['leaf_part_rebalance_boost'] = float(self._policy_value('part_resolution', 'leaf_part_rebalance_boost', 1.35))
-
-        max_rois_raw = self._policy_value('roi_filter', 'max_rois_for_classification', 0)
-        try:
-            max_rois = int(max_rois_raw)
-        except Exception:
-            max_rois = 0
-        settings['max_rois_for_classification'] = None if max_rois <= 0 else max_rois
-
-        ensemble_config = self.vlm_config.get('ensemble_config', {})
-        crop_num_prompts_raw = self._policy_value('crop_evidence', 'crop_num_prompts', ensemble_config.get('crop_num_prompts', None))
-        part_num_prompts_raw = self._policy_value('part_evidence', 'part_num_prompts', ensemble_config.get('part_num_prompts', None))
-
-        try:
-            settings['crop_num_prompts'] = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
-        except Exception:
-            settings['crop_num_prompts'] = None
-        try:
-            settings['part_num_prompts'] = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
-        except Exception:
-            settings['part_num_prompts'] = None
-
-        quality_weights = self.vlm_config.get('quality_score_weights', {})
-        settings['weight_crop'] = float(quality_weights.get('crop_confidence', 0.65))
-        settings['weight_part'] = float(quality_weights.get('part_confidence', 0.20))
-        settings['weight_sam3'] = float(quality_weights.get('sam3_score', 0.15))
-
-        # Leaf/fruit focus mode settings
-        settings['focus_part_mode_enabled'] = bool(self._policy_value('focus_mode', 'focus_part_mode_enabled', False))
-        focus_parts_raw = self._policy_value('focus_mode', 'focus_parts', ['leaf'])
-        settings['focus_parts'] = (
-            [str(label) for label in focus_parts_raw]
-            if isinstance(focus_parts_raw, list)
-            else ['leaf']
-        )
-        settings['focus_min_confidence_fallback'] = float(self._policy_value('focus_mode', 'focus_min_confidence_fallback', 0.50))
-        settings['focus_fallback_enabled'] = bool(self._policy_value('focus_mode', 'focus_fallback_enabled', True))
-        
-        return settings
+        return build_sam3_runtime_settings(self._policy_value, self.vlm_config, effective_threshold)
 
     def _collect_sam3_roi_candidates(
         self,
@@ -1794,13 +1345,7 @@ class VLMPipeline:
         import time
         start_time = time.perf_counter()
         timing_logs_enabled = bool(self.vlm_config.get('timing_logs_enabled', True))
-        stage_timings_ms: Dict[str, float] = {
-            'preprocess': 0.0,
-            'sam3_inference': 0.0,
-            'roi_total': 0.0,
-            'roi_classification': 0.0,
-            'postprocess': 0.0,
-        }
+        stage_timings_ms = init_sam3_stage_timings()
         stage_start = time.perf_counter()
         
         effective_threshold = self._resolve_effective_confidence_threshold(confidence_threshold)
@@ -1865,17 +1410,7 @@ class VLMPipeline:
         stage_timings_ms['postprocess'] = (time.perf_counter() - stage_start) * 1000.0
         
         elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-        avg_roi_ms = (stage_timings_ms['roi_total'] / roi_seen) if roi_seen > 0 else 0.0
-        avg_classification_ms = (stage_timings_ms['roi_classification'] / roi_classification_calls) if roi_classification_calls > 0 else 0.0
-        stage_summary = {
-            'preprocess': round(stage_timings_ms['preprocess'], 2),
-            'sam3_inference': round(stage_timings_ms['sam3_inference'], 2),
-            'roi_total': round(stage_timings_ms['roi_total'], 2),
-            'roi_classification': round(stage_timings_ms['roi_classification'], 2),
-            'postprocess': round(stage_timings_ms['postprocess'], 2),
-            'avg_roi': round(avg_roi_ms, 2),
-            'avg_classification_call': round(avg_classification_ms, 2),
-        }
+        stage_summary = summarize_sam3_stage_timings(stage_timings_ms, roi_seen, roi_classification_calls)
 
         if timing_logs_enabled:
             logger.info(
@@ -1888,22 +1423,17 @@ class VLMPipeline:
                 roi_kept,
             )
 
-        return {
-            'detections': detections,
-            'image_size': image_size,
-            'processing_time_ms': elapsed_ms,
-            'stage_timings_ms': stage_summary,
-            'roi_stats': {
-                'seen': roi_seen,
-                'retained': roi_kept,
-                'classification_calls': roi_classification_calls,
-            },
-            'pipeline_type': 'sam3_bioclip25',
-            'sam3_instances': mask_count,
-            'sam3_threshold': sam3_threshold,
-            'sam3_instances_raw': mask_count,
-            'sam3_instances_retained': len(detections),
-        }
+        return build_sam3_analysis_result(
+            detections=detections,
+            image_size=image_size,
+            elapsed_ms=elapsed_ms,
+            stage_summary=stage_summary,
+            roi_seen=roi_seen,
+            roi_kept=roi_kept,
+            roi_classification_calls=roi_classification_calls,
+            mask_count=mask_count,
+            sam3_threshold=sam3_threshold,
+        )
     
     def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
         """Run SAM3 instance segmentation with text prompt."""
@@ -1920,88 +1450,12 @@ class VLMPipeline:
                 mask_threshold=threshold,
                 target_sizes=inputs.get("original_sizes").tolist()
             )[0]
-            
-            masks = results.get('masks', torch.tensor([]))
-            boxes = results.get('boxes', torch.tensor([]))
-            scores = results.get('scores', torch.tensor([]))
-            
-            return {
-                'masks': masks if len(masks.shape) > 0 else [],
-                'boxes': boxes if len(boxes.shape) > 0 else [],
-                'scores': scores if len(scores.shape) > 0 else []
-            }
+
+            return normalize_sam3_results(results, empty_tensor_factory=lambda: torch.tensor([]))
         except Exception as e:
             logger.error(f"SAM3 inference failed: {e}")
-            return {'masks': [], 'boxes': [], 'scores': [], 'error': str(e)}
+            return sam3_error_result(e)
     
-    def _analyze_image_dino(
-        self,
-        pil_image: Image.Image,
-        image_size: Tuple[int, int, int],
-        confidence_threshold: float = 0.8,
-        max_detections: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """Analyze using DINO + SAM2 + BioCLIP-2 pipeline (fallback)."""
-        import time
-        start_time = time.perf_counter()
-
-        effective_threshold = self._resolve_effective_confidence_threshold(confidence_threshold)
-        effective_max_detections = self._resolve_effective_max_detections(max_detections)
-
-        try:
-            dino_out = self._run_grounding_dino(pil_image, threshold=effective_threshold)
-        except TypeError:
-            dino_out = self._run_grounding_dino(pil_image)
-        detections = dino_out.get('detections', [])
-        best_det = self._select_best_detection(detections)
-
-        best_bbox = best_det.get('bbox') if best_det else [0, 0, 100, 100]
-        roi_image = self._extract_roi(pil_image, best_bbox)
-
-        candidate_crops = self._unique_nonempty([det.get('crop_guess') for det in detections])
-        candidate_parts = self._unique_nonempty([det.get('part_guess') for det in detections])
-
-        if candidate_crops:
-            crop_label, crop_conf = self._clip_score_labels(roi_image, candidate_crops, label_type='crop')
-        else:
-            crop_label, crop_conf = 'unknown', 0.0
-
-        part_label, part_conf = self._classify_with_prompt_ensemble(roi_image, 'part')
-
-        if best_det and best_det.get('part_guess'):
-            part_label = best_det.get('part_guess')
-            part_conf = max(part_conf, float(best_det.get('score', 0.0)))
-
-        if candidate_parts and part_label == 'unknown':
-            dino_part = candidate_parts[0]
-            part_label = dino_part
-            part_conf = max(part_conf, float(best_det.get('score', 0.0)) if best_det else 0.0)
-
-        if crop_label != 'unknown' and best_det and float(best_det.get('score', 0.0)) < effective_threshold:
-            crop_label, crop_conf = 'unknown', min(crop_conf, float(best_det.get('score', 0.0)))
-        best_mask = self._run_sam_mask(pil_image, best_bbox)
-
-        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-        return {
-            'detections': [
-                {
-                    'crop': crop_label,
-                    'part': part_label,
-                    'crop_confidence': crop_conf,
-                    'disease': None,
-                    'disease_confidence': 0.0,
-                    'bbox': best_bbox,
-                    'mask': best_mask,
-                    'part_confidence': part_conf,
-                    'grounding_label': best_det.get('label') if best_det else None
-                }
-            ],
-            'image_size': image_size,
-            'processing_time_ms': elapsed_ms,
-            'raw_detections': detections[:effective_max_detections] if effective_max_detections is not None else detections,
-            'pipeline_type': 'dino_sam2_bioclip2'
-        }
-
     def route_batch(self, batch: torch.Tensor) -> Tuple[List[Dict], List[float]]:
         """Process a batch of images through the VLM pipeline.
         
@@ -2020,20 +1474,10 @@ class VLMPipeline:
         for i in range(batch_size):
             image_tensor = batch[i]
             analysis = self.analyze_image(image_tensor)
-            
-            # Extract crop info and confidence
-            if analysis.get('detections'):
-                # Use first detection for this image
-                detection = analysis['detections'][0]
-                crops_out.append({
-                    'crop': detection.get('crop', 'unknown'),
-                    'part': detection.get('part', 'unknown'),
-                    'bbox': detection.get('bbox', [0, 0, 0, 0])
-                })
-                confs.append(detection.get('crop_confidence', 0.0))
-            else:
-                crops_out.append({'crop': 'unknown', 'part': 'unknown', 'bbox': [0, 0, 0, 0]})
-                confs.append(0.0)
+
+            crop_item, confidence = analysis_to_batch_item(analysis)
+            crops_out.append(crop_item)
+            confs.append(confidence)
         
         return crops_out, confs
 
