@@ -355,21 +355,33 @@ class ColabLiveTelemetry:
     # synchronous call such as adapter.train_increment().
     # ------------------------------------------------------------------
 
-    def start_background_heartbeat(self, interval_sec: Optional[float] = None) -> None:
-        """Launch a daemon thread that emits lightweight heartbeat events.
+    def start_background_heartbeat(
+        self,
+        interval_sec: Optional[float] = None,
+        stdout_echo: bool = True,
+    ) -> None:
+        """Launch a daemon thread that keeps the Colab runtime alive.
 
-        The thread runs independently of the main thread so heartbeats
-        continue even when the kernel is busy with a blocking training
-        call.  Call :meth:`stop_background_heartbeat` (or :meth:`close`)
-        to terminate it.
+        The thread prints a brief status line to **stdout** on every tick.
+        This is the primary keep-alive signal: Colab's backend monitors
+        kernel stdout/IOPub activity and will *not* recycle a runtime that
+        is producing output — even when the browser tab is fully closed.
+
+        The thread also persists heartbeat events to local spool + Drive
+        for post-hoc diagnostics.
+
+        Call :meth:`stop_background_heartbeat` (or :meth:`close`) to stop.
         """
         if self._bg_heartbeat_thread is not None and self._bg_heartbeat_thread.is_alive():
             return  # already running
         self._bg_heartbeat_stop.clear()
         interval = float(interval_sec or self.heartbeat_sec)
+        _echo = bool(stdout_echo)
 
         def _heartbeat_loop() -> None:
+            seq = 0
             while not self._bg_heartbeat_stop.is_set():
+                seq += 1
                 try:
                     self.emit_event(
                         "heartbeat",
@@ -380,13 +392,24 @@ class ColabLiveTelemetry:
                     )
                 except Exception:
                     pass  # best-effort; never crash the daemon
+                # --- stdout keep-alive: the line Colab's backend sees ---
+                if _echo:
+                    try:
+                        print(
+                            f"[HEARTBEAT] #{seq} alive  "
+                            f"run={self.run_id}  "
+                            f"drive={'ok' if self._drive_available else 'NO'}",
+                            flush=True,
+                        )
+                    except Exception:
+                        pass
                 self._bg_heartbeat_stop.wait(interval)
 
         self._bg_heartbeat_thread = threading.Thread(
             target=_heartbeat_loop, name="TelemetryBackgroundHeartbeat", daemon=True
         )
         self._bg_heartbeat_thread.start()
-        logger.debug("Background heartbeat started (interval=%.1fs)", interval)
+        logger.debug("Background heartbeat started (interval=%.1fs, stdout_echo=%s)", interval, _echo)
 
     def stop_background_heartbeat(self) -> None:
         """Stop the background heartbeat daemon thread."""
