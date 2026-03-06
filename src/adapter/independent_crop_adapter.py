@@ -33,7 +33,6 @@ class IndependentCropAdapter:
         self.class_to_idx: Dict[str, int] = {}
         self.is_trained = False
         self._trainer: Optional[ContinualSDLoRATrainer] = None
-        self._last_config: Dict[str, Any] = {}
 
         logger.info("IndependentCropAdapter initialized for %s on %s", self.crop_name, self.device)
 
@@ -97,8 +96,6 @@ class IndependentCropAdapter:
             self.class_to_idx = {str(name): idx for idx, name in enumerate(class_names)}
 
         continual_dict = self._normalize_continual_config(config)
-        self._last_config = continual_dict
-
         trainer_config = ContinualSDLoRAConfig.from_training_config(continual_dict)
         self._trainer = ContinualSDLoRATrainer(trainer_config)
         self._trainer.initialize_engine(class_to_idx=self.class_to_idx)
@@ -147,29 +144,7 @@ class IndependentCropAdapter:
         if resume_state is not None:
             train_kwargs["resume_state"] = resume_state
 
-        try:
-            history = self._trainer.train_increment(train_loader, **train_kwargs)
-        except TypeError:
-            # Backward compatibility for trainer shims with narrower signatures.
-            fallback_attempts = [
-                ["resume_state"],
-                ["should_stop"],
-                ["should_stop", "val_loader"],
-                ["should_stop", "val_loader", "progress_callback"],
-                ["should_stop", "val_loader", "progress_callback", "resume_state"],
-            ]
-            history = None
-            for drop_keys in fallback_attempts:
-                downgraded = dict(train_kwargs)
-                for key in drop_keys:
-                    downgraded.pop(key, None)
-                try:
-                    history = self._trainer.train_increment(train_loader, **downgraded)
-                    break
-                except TypeError:
-                    continue
-            if history is None:
-                raise
+        history = self._trainer.train_increment(train_loader, **train_kwargs)
         self.is_trained = True
         return {
             "status": "trained",
@@ -275,7 +250,7 @@ class IndependentCropAdapter:
             "target_modules_resolved": list(self.target_modules_resolved),
         }
 
-    def save_adapter(self, checkpoint_dir: str) -> None:
+    def save_adapter(self, checkpoint_dir: str) -> Path:
         """Persist adapter assets with v6 metadata schema."""
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
@@ -284,6 +259,7 @@ class IndependentCropAdapter:
         asset_dir = self._trainer.save_adapter(str(root))
         metadata = self._metadata_payload()
         (asset_dir / "adapter_meta.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        return asset_dir
 
     def load_adapter(self, checkpoint_dir: str) -> None:
         """Load adapter assets and metadata from disk."""

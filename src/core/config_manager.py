@@ -1,490 +1,131 @@
 #!/usr/bin/env python3
-"""
-Configuration Management System for AADS-ULoRA
-Provides centralized loading, validation, and management of all configuration files.
-"""
+"""Minimal JSON config loader for the slimmed training + inference repo."""
+
+from __future__ import annotations
 
 import json
 import logging
-import threading
 from pathlib import Path
-from typing import Dict, Any, Optional
-from .configuration_validator import config_validator, ConfigurationError
+from threading import RLock
+from typing import Any, Dict, Optional
+
+from src.training.quantization import assert_no_prohibited_4bit_flags
 
 logger = logging.getLogger(__name__)
 
 
+def _read_json(path: Path) -> Dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError(f"Expected object JSON in {path}")
+    return payload
+
+
+def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
 class ConfigurationManager:
-    """
-    Centralized configuration management system.
-    Handles loading, validation, and merging of configuration files.
-    """
+    """Load `config/base.json` and optionally merge `config/<environment>.json`."""
 
-    # Class-level variable to track if schemas have been registered (singleton pattern)
-    _schemas_registered: bool = False
-    _schema_registration_lock = threading.RLock()
-
-    def __init__(self, config_dir: str = "config", environment: str = None):
+    def __init__(self, config_dir: str = "config", environment: Optional[str] = None) -> None:
         self.config_dir = Path(config_dir)
-        self._configs: Dict[str, Dict[str, Any]] = {}
-        self._validated_configs: Dict[str, Dict[str, Any]] = {}
-        self._base_config: Optional[Dict[str, Any]] = None
         self._environment = environment
+        self._base_config: Optional[Dict[str, Any]] = None
+        self._merged_config: Optional[Dict[str, Any]] = None
 
-        # Register all schemas (only once, regardless of instance count)
-        self._register_schemas_once()
-
-    @classmethod
-    def _register_schemas_once(cls):
-        """
-        Register all configuration schemas with the validator.
-        Uses class-level lock to ensure schemas are registered only once,
-        regardless of how many ConfigurationManager instances are created.
-        """
-        if cls._schemas_registered:
-            return  # Already registered, skip
-
-        with cls._schema_registration_lock:
-            # Double-check after acquiring lock (prevents race condition)
-            if cls._schemas_registered:
-                return
-
-            cls._register_schemas()
-            cls._schemas_registered = True
-            logger.info("Configuration schemas registered (singleton)")
-
-    @classmethod
-    def _register_schemas(cls):
-        """Register all configuration schemas with the validator."""
-        from .schemas import (
-            router_schema,
-            ood_schema,
-            monitoring_schema,
-            security_schema,
-            training_continual_schema,
-        )
-        
-        # Register each schema (call functions to get actual schemas)
-        config_validator.register_schema(
-            "router",
-            router_schema(),
-            default_values={
-                "enabled": True,
-                "type": "enhanced",
-                "strategy": "vlm_based",
-                "fallback_strategy": "best_available",
-                "confidence_threshold": 0.7,
-                "max_retries": 3,
-                "timeout_ms": 5000
-            }
-        )
-        
-        config_validator.register_schema(
-            "ood",
-            ood_schema(),
-            default_values={
-                "enabled": True,
-                "method": "mahalanobis",
-                "threshold": 0.95,
-                "confidence_level": 0.99
-            }
-        )
-        
-        config_validator.register_schema(
-            "monitoring",
-            monitoring_schema(),
-            default_values={
-                "enabled": True,
-                "prometheus": {"enabled": True, "port": 9090},
-                "logging": {"format": "json", "rotate": True},
-                "metrics": {"enabled": True},
-                "health": {"enabled": True, "detailed": True}
-            }
-        )
-        
-        config_validator.register_schema(
-            "security",
-            security_schema(),
-            default_values={
-                "api_key_required": False,
-                "rate_limit": {"enabled": True, "requests_per_minute": 100},
-                "cors": {"allow_origins": ["*"]},
-                "input_validation": {"max_request_size_mb": 10}
-            }
-        )
-
-        config_validator.register_schema(
-            "training_continual",
-            training_continual_schema(),
-            default_values={
-                "training": {
-                    "continual": {
-                        "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
-                        "adapter": {"target_modules_strategy": "all_linear_transformer"},
-                        "fusion": {"layers": [2, 5, 8, 11]},
-                    }
-                }
-            },
-        )
-        
-        logger.info("All configuration schemas registered")
-    
     def load_base_config(self) -> Dict[str, Any]:
-        """Load the base configuration file."""
         base_path = self.config_dir / "base.json"
-        try:
-            with open(base_path, 'r') as f:
-                self._base_config = json.load(f)
-            logger.info(f"Loaded base configuration from {base_path}")
-            return self._base_config
-        except Exception as e:
-            logger.error(f"Failed to load base configuration: {e}")
-            raise ConfigurationError(f"Base configuration loading failed: {e}")
-    
-    def load_config_file(self, filename: str, schema_name: str = None) -> Dict[str, Any]:
-        """
-        Load and optionally validate a configuration file.
-        
-        Args:
-            filename: Name of the config file
-            schema_name: Optional schema name for validation
-            
-        Returns:
-            Configuration dictionary
-        """
+        self._base_config = _read_json(base_path)
+        return dict(self._base_config)
+
+    def load_config_file(self, filename: str, schema_name: Optional[str] = None) -> Dict[str, Any]:
         config_path = self.config_dir / filename
-        
         if not config_path.exists():
-            logger.warning(f"Configuration file not found: {config_path}")
             return {}
-        
-        try:
-            with open(config_path, 'r') as f:
-                config = json.load(f)
+        payload = _read_json(config_path)
+        if schema_name and schema_name not in payload:
+            return {schema_name: payload}
+        return payload
 
-            # Validate if schema provided.
-            # Accept both wrapped format {"router": {...}} and legacy unwrapped {...}.
-            if schema_name:
-                is_wrapped = isinstance(config, dict) and schema_name in config
-                candidate = config if is_wrapped else {schema_name: config}
-                validated_wrapper = config_validator.validate(schema_name, candidate)
-                validated_section = validated_wrapper.get(schema_name, {})
-                config = {schema_name: validated_section}
-                logger.info(f"Validated {filename} against schema '{schema_name}'")
-            
-            self._configs[filename] = config
-            return config
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Invalid JSON in {config_path}: {e}")
-            raise ConfigurationError(f"Configuration file {filename} is invalid JSON: {e}")
-        except ConfigurationError as e:
-            logger.error(f"Validation failed for {filename}: {e}")
-            raise
-    
+    def get_environment_config(self, env: str) -> Dict[str, Any]:
+        if not env:
+            return {}
+        env_path = self.config_dir / f"{env}.json"
+        if not env_path.exists():
+            return {}
+        return _read_json(env_path)
+
     def load_all_configs(self) -> Dict[str, Any]:
-        """
-        Load all configuration files and merge them into a single configuration.
-        
-        Returns:
-            Complete merged configuration
-        """
-        # Load base config first
-        if not self._base_config:
-            self.load_base_config()
-        
-        # Load optional legacy split configs if present.
-        # Canonical runtime model uses base.json + optional <environment>.json.
-        config_files = [
-            ("router-config.json", "router"),
-            ("ood-config.json", "ood"),
-            ("monitoring-config.json", "monitoring"),
-            ("security-config.json", "security")
-        ]
-        
-        for filename, schema_name in config_files:
-            config_path = self.config_dir / filename
-            if not config_path.exists():
-                continue
-            try:
-                self.load_config_file(filename, schema_name)
-            except ConfigurationError as e:
-                logger.warning(f"Failed to load {filename}: {e}. Using defaults.")
-        
-        # Merge configurations
-        merged_config = self._base_config.copy()
-        
-        # Merge each config file into the base
-        for config_name, config_data in self._configs.items():
-            # Extract the top-level key from each config file
-            for key, value in config_data.items():
-                if key not in merged_config:
-                    merged_config[key] = {}
-                if isinstance(value, dict) and isinstance(merged_config.get(key), dict):
-                    merged_config[key].update(value)
-                else:
-                    merged_config[key] = value
-        
-        # Apply environment-specific overrides if environment is set
+        merged = self.load_base_config()
         if self._environment:
-            env_config = self.get_environment_config(self._environment)
-            if env_config:
-                merged_config = self._apply_env_overrides(merged_config, env_config)
-                logger.info(f"Applied environment overrides for '{self._environment}'")
+            merged = _deep_merge(merged, self.get_environment_config(self._environment))
+        self._normalize_ood_surface(merged)
+        assert_no_prohibited_4bit_flags(merged)
+        self._merged_config = merged
+        return dict(merged)
 
-        # Canonicalize OOD settings: training.continual.ood is authoritative for
-        # continual threshold configuration, while top-level ood remains runtime
-        # compatibility surface for pipeline toggles and metadata.
-        self._normalize_ood_surface(merged_config)
+    def reload_config(self) -> Dict[str, Any]:
+        self._base_config = None
+        self._merged_config = None
+        return self.load_all_configs()
 
-        # v6 hard guard: do not allow unsupported low-bit adapter settings.
-        from src.training.quantization import assert_no_prohibited_4bit_flags
+    def get_config(self, key: str, default: Any = None) -> Any:
+        config = self._merged_config if self._merged_config is not None else self.load_all_configs()
+        current: Any = config
+        for part in key.split("."):
+            if not isinstance(current, dict) or part not in current:
+                return default
+            current = current[part]
+        return current
 
-        assert_no_prohibited_4bit_flags(merged_config)
-
-        # Validate continual training contract when training section is present.
-        if "training" in merged_config:
-            config_validator.validate("training_continual", merged_config, allow_extra_fields=True)
-        
-        self._validated_configs["merged"] = merged_config
-        logger.info("Configuration merge completed")
-        
-        return merged_config
+    def validate_merged_config(self) -> bool:
+        config = self._merged_config if self._merged_config is not None else self.load_all_configs()
+        required = ("training", "router", "ood")
+        if any(section not in config for section in required):
+            return False
+        continual = config.get("training", {}).get("continual")
+        return isinstance(continual, dict)
 
     def _normalize_ood_surface(self, merged_config: Dict[str, Any]) -> None:
-        """Normalize legacy/top-level OOD keys to the v6 continual contract."""
-        training = merged_config.get("training")
-        if not isinstance(training, dict):
-            training = {}
-            merged_config["training"] = training
+        training = merged_config.setdefault("training", {})
+        continual = training.setdefault("continual", {})
+        continual_ood = continual.setdefault("ood", {})
+        top_level_ood = merged_config.setdefault("ood", {})
 
-        continual = training.get("continual")
-        if not isinstance(continual, dict):
-            continual = {}
-            training["continual"] = continual
-
-        continual_ood = continual.get("ood")
-        if not isinstance(continual_ood, dict):
-            continual_ood = {}
-            continual["ood"] = continual_ood
-
-        top_level_ood = merged_config.get("ood")
-        if not isinstance(top_level_ood, dict):
-            top_level_ood = {}
-            merged_config["ood"] = top_level_ood
-
-        legacy_continual = top_level_ood.get("continual")
-        legacy_threshold = None
-        if isinstance(legacy_continual, dict):
-            legacy_threshold = legacy_continual.get("threshold_factor")
-        if legacy_threshold is None:
-            legacy_threshold = top_level_ood.get("threshold_factor")
-
+        legacy_threshold = top_level_ood.get("threshold_factor")
         canonical_threshold = continual_ood.get("threshold_factor")
-        if canonical_threshold is None and legacy_threshold is not None:
-            continual_ood["threshold_factor"] = legacy_threshold
-            canonical_threshold = legacy_threshold
-        elif (
-            canonical_threshold is not None
-            and legacy_threshold is not None
-            and float(canonical_threshold) != float(legacy_threshold)
-        ):
-            logger.warning(
-                "OOD threshold mismatch detected between training.continual.ood (%s) "
-                "and top-level ood (%s). Using training.continual.ood.",
-                canonical_threshold,
-                legacy_threshold,
-            )
 
+        if canonical_threshold is None and legacy_threshold is not None:
+            continual_ood["threshold_factor"] = float(legacy_threshold)
+            canonical_threshold = float(legacy_threshold)
         if canonical_threshold is not None:
             top_level_ood["threshold_factor"] = float(canonical_threshold)
-    
-    def _apply_env_overrides(self, base_config: Dict[str, Any], env_config: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Apply environment-specific overrides to base configuration.
-        
-        Args:
-            base_config: Base merged configuration
-            env_config: Environment-specific configuration
-            
-        Returns:
-            Configuration with environment overrides applied
-        """
-        result = base_config.copy()
-        
-        for key, value in env_config.items():
-            if key == "version" or key == "description":
-                # Skip metadata fields
-                continue
-            
-            if key not in result:
-                result[key] = value
-            elif isinstance(value, dict) and isinstance(result[key], dict):
-                # Deep merge for nested dictionaries
-                result[key] = self._deep_merge_dicts(result[key], value)
-            else:
-                # Override with environment value
-                result[key] = value
-        
-        return result
-    
-    def _deep_merge_dicts(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Deep merge two dictionaries.
-        
-        Args:
-            base: Base dictionary
-            override: Override dictionary
-            
-        Returns:
-            Merged dictionary
-        """
-        result = base.copy()
-        for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
-                result[key] = self._deep_merge_dicts(result[key], value)
-            else:
-                result[key] = value
-        return result
-    
-    def get_config(self, key: str, default: Any = None) -> Any:
-        """Get a configuration value by key (dot notation supported)."""
-        config = self._validated_configs.get("merged", {})
-        
-        if '.' in key:
-            # Support dot notation for nested access
-            parts = key.split('.')
-            current = config
-            for part in parts:
-                if isinstance(current, dict) and part in current:
-                    current = current[part]
-                else:
-                    return default
-            return current
-        
-        return config.get(key, default)
-    
-    def validate_merged_config(self) -> bool:
-        """Validate the complete merged configuration."""
-        try:
-            # Custom validation rules can be added here
-            config = self._validated_configs.get("merged", {})
-            
-            # v6 runtime requires continual training contract in merged config.
-            required_sections = ['router', 'ood', 'training']
-            missing_sections = []
-            for section in required_sections:
-                if section not in config:
-                    logger.warning(f"Missing required configuration section: {section}")
-                    missing_sections.append(section)
-            if missing_sections:
-                logger.error(
-                    "Merged configuration validation failed. Missing sections: %s",
-                    ", ".join(missing_sections),
-                )
-                return False
-
-            continual = config.get("training", {}).get("continual")
-            if not isinstance(continual, dict):
-                logger.error("Merged configuration validation failed. Missing 'training.continual'.")
-                return False
-            
-            logger.info("Merged configuration validation passed")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Merged configuration validation failed: {e}")
-            return False
-    
-    def reload_config(self):
-        """Reload all configuration files."""
-        self._configs.clear()
-        self._validated_configs.clear()
-        self._base_config = None
-        logger.info("Configuration cleared for reload")
-        return self.load_all_configs()
-    
-    def get_environment_config(self, env: str) -> Dict[str, Any]:
-        """Load environment-specific configuration."""
-        env_config_path = self.config_dir / f"{env}.json"
-        
-        if not env_config_path.exists():
-            logger.warning(f"Environment configuration not found: {env_config_path}")
-            return {}
-        
-        try:
-            with open(env_config_path, 'r') as f:
-                env_config = json.load(f)
-            
-            # Environment configs override base settings
-            return env_config
-            
-        except Exception as e:
-            logger.error(f"Failed to load environment config {env}: {e}")
-            return {}
 
 
-# Thread-safe global configuration manager with RLock
-_config_lock = threading.RLock()
-_config_manager: Optional[ConfigurationManager] = None
+_CONFIG_LOCK = RLock()
+_CONFIG_CACHE: Dict[tuple[str, Optional[str]], ConfigurationManager] = {}
 
 
-def _get_config_manager(environment: str = None) -> ConfigurationManager:
-    """
-    Get thread-safe configuration manager instance (lazy initialization).
-
-    Args:
-        environment: Optional environment name
-
-    Returns:
-        Thread-safe ConfigurationManager instance
-    """
-    global _config_manager
-
-    with _config_lock:
-        if _config_manager is None:
-            _config_manager = ConfigurationManager(environment=environment)
-        elif environment and environment != _config_manager._environment:
-            # Reinitialize with new environment (only if environment actually changed)
-            _config_manager = ConfigurationManager(environment=environment)
-
-        return _config_manager
+def _get_manager(config_dir: str = "config", environment: Optional[str] = None) -> ConfigurationManager:
+    key = (str(Path(config_dir)), environment)
+    with _CONFIG_LOCK:
+        manager = _CONFIG_CACHE.get(key)
+        if manager is None:
+            manager = ConfigurationManager(config_dir=config_dir, environment=environment)
+            _CONFIG_CACHE[key] = manager
+        return manager
 
 
-def get_config(environment: str = None) -> Dict[str, Any]:
-    """
-    Get the complete merged configuration (thread-safe).
-
-    Args:
-        environment: Optional environment name to apply overrides
-
-    Returns:
-        Complete merged configuration
-    """
-    config_mgr = _get_config_manager(environment)
-
-    if "merged" not in config_mgr._validated_configs:
-        return config_mgr.load_all_configs()
-    return config_mgr._validated_configs["merged"]
+def get_config(environment: Optional[str] = None, config_dir: str = "config") -> Dict[str, Any]:
+    return _get_manager(config_dir=config_dir, environment=environment).load_all_configs()
 
 
-def reload_configuration(environment: str = None):
-    """
-    Reload configuration (useful for hot-reloading, thread-safe).
-
-    Args:
-        environment: Optional environment name to reload with
-    """
-    config_mgr = _get_config_manager(environment)
-    return config_mgr.reload_config()
-
-
-# For backward compatibility, keep global reference but access through function
-def _get_backward_compat_manager():
-    """Get config manager for backward compatibility."""
-    return _get_config_manager()
-
-
-# Deprecated: use get_config() instead for thread-safe access
-config_manager = property(lambda self: _get_backward_compat_manager())
-
+def reload_configuration(environment: Optional[str] = None, config_dir: str = "config") -> Dict[str, Any]:
+    return _get_manager(config_dir=config_dir, environment=environment).reload_config()

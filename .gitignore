@@ -1,43 +1,32 @@
-# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
 .venv/
-ENV/
-build/
-develop-eggs/
+.pytest_cache/
+.ipynb_checkpoints/
+.runtime_tmp/
+.tmp*/
+.tmp*
+.coverage
+htmlcov/
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+build/
 *.egg-info/
-.installed.cfg
-*.egg
-
-# IDE
+.env
+.env.local
+.env.*.local
 .vscode/
 .idea/
-*.swp
-*.swo
-*~
-
-# OS
+Desktop.ini
+desktop.ini
 .DS_Store
 Thumbs.db
-
-# Project specific
-.tmp.driveupload/
-.tmp.drivedownload/
+checkpoints/
+outputs/
+logs/
+runs/
+wandb/
+tensorboard/
+models/
 data/archive.zip
 data/*.xlsx
 data/*.csv
@@ -45,105 +34,14 @@ data/*.json
 data/images/
 data/processed/
 data/splits/
-models/
-checkpoints/
-runs/
-outputs/
-logs/
+data/metadata.json
 *.pth
 *.pt
 *.pkl
 *.pickle
 *.h5
 *.hdf5
-
-# Temporary files
+*.pdf
 *.tmp
 *.temp
-.cache/
-temp/
-.runtime_tmp/
-.tmp_*/
-.tmp*
-pytest-cache-files-*/
-
-# Google Drive
-.gdrive/
-GoogleDrive/
-
-# Testing
-.pytest_cache/
-config/.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-!colab_bootstrap.ipynb
 !colab_notebooks/*.ipynb
-
-# Node (if any)
-node_modules/
-npm-debug.log*
-
-# Mobile build
-mobile/android/.gradle/
-mobile/android/build/
-mobile/android/app/build/
-mobile/android/local.properties
-*.apk
-*.aab
-
-# API
-api/.venv/
-api/__pycache__/
-
-# Dataset preparation outputs (generated)
-data/processed/
-data/splits/
-data/metadata.json
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Secrets
-secrets/
-credentials/
-*.key
-*.pem
-
-# Backup files
-*.bak
-*.backup
-*.orig
-
-# Logs
-*.log
-logs/
-
-# Wandb
-wandb/
-
-# Tensorboard
-tensorboard/
-
-# Misc
-.DS_Store
-._.DS_Store
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Desktop.ini
-desktop.ini
-aads_ulora_v5.5.egg-info/
-src/aads_ulora_v5.5.egg-info/
-
-# Documentation PDFs (large files - keep local, don't push to Git)
-documents/**/*.pdf
-eski döküman/**/*.pdf
-lit review/**/*.pdf
-*.pdf

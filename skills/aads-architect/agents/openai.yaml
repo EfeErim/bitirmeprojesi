@@ -1,4 +1,0 @@
-interface:
-  display_name: "AADS Architect"
-  short_description: "Design contract-safe architecture and migrations"
-  default_prompt: "Use $aads-architect to define a migration-safe design with explicit interface deltas, compatibility classes, and validation criteria."

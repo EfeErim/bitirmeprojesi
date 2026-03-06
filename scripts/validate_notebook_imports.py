@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate continual notebook/runtime imports for AADS v6."""
+"""Validate the two supported surfaces: Colab training helpers and router inference runtime."""
 
 from __future__ import annotations
 
@@ -26,21 +26,23 @@ def gate_label(step_id: str, name: str) -> str:
     return f"[{step_id}] {name}"
 
 
-def test_dataset_imports() -> bool:
-    step_id = "DATA_IMPORTS"
-    print(f"Testing {gate_label(step_id, 'dataset imports')}...")
+def test_config_surface() -> bool:
+    step_id = "CONFIG"
+    print(f"Testing {gate_label(step_id, 'minimal config load')}...")
     try:
-        from src.dataset.colab_datasets import ColabCropDataset, ColabDomainShiftDataset
-        _ = (ColabCropDataset, ColabDomainShiftDataset)
-        print(f"PASS {gate_label(step_id, 'Dataset classes imported successfully')}")
+        from src.core.config_manager import ConfigurationManager
+
+        cfg = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()
+        assert {"training", "router", "ood", "colab", "inference"} <= set(cfg.keys())
+        print(f"PASS {gate_label(step_id, 'Configuration loaded successfully')}")
         return True
     except Exception as exc:
-        print(f"FAIL {gate_label(step_id, f'Dataset import failed: {exc}')}")
+        print(f"FAIL {gate_label(step_id, f'Configuration load failed: {exc}')}")
         return False
 
 
 def test_continual_trainer_imports() -> bool:
-    step_id = "CONTINUAL_IMPORT"
+    step_id = "TRAINING"
     print(f"\nTesting {gate_label(step_id, 'continual trainer imports')}...")
     try:
         from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
@@ -54,6 +56,7 @@ def test_continual_trainer_imports() -> bool:
                     "lora_alpha": 8,
                 },
                 "fusion": {"layers": [2, 5, 8, 11]},
+                "ood": {"threshold_factor": 2.0},
                 "device": "cpu",
             }
         )
@@ -121,16 +124,66 @@ def test_adapter_surface() -> bool:
         return False
 
 
+def test_runtime_surface() -> bool:
+    step_id = "INFERENCE"
+    print(f"\nTesting {gate_label(step_id, 'router runtime surface')}...")
+    try:
+        from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+
+        runtime = RouterAdapterRuntime(
+            config={
+                "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+                "training": {
+                    "continual": {
+                        "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                        "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                        "fusion": {"layers": [2, 5, 8, 11]},
+                        "ood": {"threshold_factor": 2.0},
+                    }
+                },
+                "ood": {"threshold_factor": 2.0},
+                "inference": {"adapter_root": "models/adapters", "target_size": 224},
+            },
+            device="cpu",
+        )
+        assert hasattr(runtime, "load_router")
+        assert hasattr(runtime, "load_adapter")
+        assert hasattr(runtime, "predict")
+        print(f"PASS {gate_label(step_id, 'Router runtime surface available')}")
+        return True
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Router runtime test failed: {exc}')}")
+        return False
+
+
+def test_colab_helpers() -> bool:
+    step_id = "COLAB"
+    print(f"\nTesting {gate_label(step_id, 'colab support helpers')}...")
+    try:
+        from scripts.colab_checkpointing import TrainingCheckpointManager
+        from scripts.colab_live_telemetry import ColabLiveTelemetry
+        from scripts.evaluate_dataset_layout import evaluate_layout
+
+        _ = (TrainingCheckpointManager, ColabLiveTelemetry, evaluate_layout)
+        print(f"PASS {gate_label(step_id, 'Colab helper surfaces imported successfully')}")
+        return True
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Colab helper import failed: {exc}')}")
+        return False
+
+
 def main() -> int:
     print("=" * 60)
-    print("AADS v6 Notebook Import Validation")
+    print("AADS v6 Minimal Surface Validation")
     print("=" * 60)
 
     results = [
-        ("Dataset Imports", test_dataset_imports()),
+        ("Minimal Config", test_config_surface()),
         ("Continual Trainer", test_continual_trainer_imports()),
         ("Quantization Guard", test_quantization_guard()),
         ("Adapter Lifecycle", test_adapter_surface()),
+        ("Router Runtime", test_runtime_surface()),
+        ("Colab Helpers", test_colab_helpers()),
     ]
 
     print("\n" + "=" * 60)
@@ -152,4 +205,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

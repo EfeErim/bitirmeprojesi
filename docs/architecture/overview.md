@@ -1,78 +1,26 @@
-# AADS v6 Architecture Overview
+# Architecture
 
-## Component Diagram
+The repo is intentionally narrow.
 
-```mermaid
-flowchart LR
-    INPUT[Input Image] --> ROUTER[VLMPipeline]
-    ROUTER --> CROP[Crop + Part Decision]
-    CROP --> ADAPTER[IndependentCropAdapter]
-    ADAPTER --> TRAINER[ContinualSDLoRATrainer]
-    TRAINER --> OOD[ContinualOODDetector]
-    OOD --> RESULT[Diagnosis + OOD Analysis]
-```
+## Training
 
-## Runtime Data Flow
+- `colab_notebooks/2_interactive_adapter_training.ipynb`
+- `src/adapter/independent_crop_adapter.py`
+- `src/training/continual_sd_lora.py`
+- `scripts/colab_checkpointing.py`
+- `scripts/colab_live_telemetry.py`
 
-1. `src/pipeline/independent_multi_crop_pipeline.py` accepts an image and normalizes input shape.
-2. `src/router/vlm_pipeline.py` predicts crop/part with confidence.
-3. Pipeline resolves the matching `src/adapter/independent_crop_adapter.py` instance.
-4. Adapter runs `src/training/continual_sd_lora.py` inference surfaces and returns disease logits/probabilities.
-5. Adapter invokes OOD scoring (`src/ood/continual_ood.py`) and attaches:
-   - `ensemble_score`
-   - `class_threshold`
-   - `is_ood`
-   - `calibration_version`
-6. Pipeline emits a unified response payload with router confidence, diagnosis, and OOD analysis.
+Notebook 2 validates dataset layout, creates per-crop loaders, trains one crop adapter, calibrates OOD, and saves assets to `models/adapters/<crop>/continual_sd_lora_adapter/`.
 
-## OOD Architecture
+## Inference
 
-```mermaid
-flowchart TD
-    FEAT[Encoded Features] --> MAH[Mahalanobis Z]
-    FEAT --> ENG[Energy Z]
-    MAH --> ENS[Weighted Ensemble]
-    ENG --> ENS
-    ENS --> THR[Per-Class Threshold]
-    THR --> FLAG{is_ood?}
-    FLAG -->|true| OODR[OOD Result]
-    FLAG -->|false| IDR[In-Distribution Result]
-```
+- `src/pipeline/router_adapter_runtime.py`
+- `src/router/vlm_pipeline.py`
+- `scripts/colab_router_adapter_inference.py`
+- `colab_notebooks/1_router_adapter_inference.ipynb`
 
-- Score contract: `0.6 * mahalanobis_z + 0.4 * energy_z`
-- Calibration state is versioned and persisted in adapter metadata.
-- Threshold handling lives in `src/ood/dynamic_thresholds.py` and `src/ood/continual_ood.py`.
+Inference is one path only:
 
-## Policy Graph (Router Stage Ordering)
-
-```mermaid
-flowchart TD
-    START[analyze_image] --> ORDER[Resolve Stage Order]
-    ORDER --> ROI[SAM3 ROI Candidate Stage]
-    ROI --> CLS[ROI Classification Stage]
-    CLS --> GATE[Open-Set Gate]
-    GATE --> POST[Postprocess]
-    POST --> BEST[Best Detection Selection]
-    BEST --> OUTPUT[Crop/Part/Confidence Output]
-```
-
-- Stage order and profile behavior are defined in `src/router/vlm_pipeline.py`.
-- Policy/taxonomy normalization helpers are in `src/router/policy_taxonomy_utils.py`.
-- Regression guardrails:
-  - `tests/unit/router/test_vlm_policy_stage_order.py`
-  - `tests/unit/router/test_vlm_strict_loading.py`
-- Performance guardrails:
-  - `scripts/benchmark_router_phase5.py`
-  - `scripts/check_phase5_perf_regression.py`
-  - `config/perf_guardrails_phase5.json`
-  - Scope: deterministic CPU benchmark over v6 stage-order scenarios (`full_pipeline`, `no_postprocess`, `no_open_set_gate`).
-
-## Config and Contract Anchors
-
-- Runtime config sources:
-  - `config/base.json`
-  - `config/colab.json`
-- Canonical contract specs:
-  - `specs/adapter-spec.json`
-  - `specs/router-spec.json`
-  - `specs/pipeline-spec.json`
+1. Router resolves the crop.
+2. Runtime loads that crop adapter lazily.
+3. Adapter returns diagnosis and OOD payload.

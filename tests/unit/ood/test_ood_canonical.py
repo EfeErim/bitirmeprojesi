@@ -1,12 +1,8 @@
-"""Canonical OOD unit suite consolidating continual and dynamic threshold checks."""
+"""Minimal OOD contract tests for the kept continual detector."""
 
-import numpy as np
-import pytest
 import torch
-from unittest.mock import MagicMock
 
 from src.ood.continual_ood import ContinualOODDetector
-from src.ood.dynamic_thresholds import DynamicOODThreshold, calibrate_thresholds_using_validation
 
 
 def test_continual_ood_calibration_and_score_contract():
@@ -44,65 +40,3 @@ def test_continual_ood_unknown_class_safe_defaults():
     assert torch.all(out["ensemble_score"] == 0.0)
     assert torch.isinf(out["class_threshold"]).all()
     assert torch.equal(out["is_ood"], torch.tensor([False, False, False, False]))
-
-
-def test_dynamic_threshold_validation_metrics_shape():
-    threshold = DynamicOODThreshold()
-    thresholds = {0: 25.0}
-
-    val_loader = MagicMock()
-    val_loader.__iter__.return_value = []
-    val_loader.__len__.return_value = 0
-
-    model = MagicMock()
-    model.eval = MagicMock()
-
-    mahalanobis = MagicMock()
-    mahalanobis.compute_distance = MagicMock(return_value=torch.tensor(10.0))
-
-    metrics = threshold.validate_thresholds(thresholds, val_loader, model, mahalanobis)
-
-    assert {
-        "false_positive_rate",
-        "true_negative_rate",
-        "total_in_dist_samples",
-        "num_classes_tested",
-    } <= set(metrics.keys())
-
-
-def test_calibrate_thresholds_using_validation_target_fpr_percentile_behavior():
-    distances = np.random.normal(10.0, 1.0, 100)
-
-    model = MagicMock()
-    model.eval = MagicMock()
-
-    val_loader = MagicMock()
-
-    def _iter():
-        batch_size = 20
-        for i in range(0, 100, batch_size):
-            images = torch.randn(batch_size, 3, 224, 224)
-            labels = torch.zeros(batch_size, dtype=torch.long)
-            for j in range(batch_size):
-                images[j, 0, 0, 0] = float(distances[i + j])
-            yield images, labels
-
-    val_loader.__iter__.return_value = _iter()
-    val_loader.__len__.return_value = 5
-
-    mahalanobis = MagicMock()
-    mahalanobis.compute_distance = lambda features, class_idx: torch.tensor(float(features[0, 0, 0, 0].item()))
-
-    thresholds = calibrate_thresholds_using_validation(
-        model=model,
-        val_loader=val_loader,
-        mahalanobis=mahalanobis,
-        target_fpr=0.10,
-        device="cpu",
-        min_samples=10,
-    )
-
-    expected_90th = np.percentile(distances, 90)
-    assert 0 in thresholds
-    assert abs(thresholds[0] - expected_90th) < 2.0
-

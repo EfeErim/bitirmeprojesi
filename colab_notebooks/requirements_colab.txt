@@ -1,3 +1,1 @@
-# Mirror of canonical Colab dependencies.
-# Keep this file for notebook compatibility paths.
 -r ../requirements_colab.txt

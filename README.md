@@ -1,55 +1,39 @@
 # AADS v6
 
-AADS v6 is a continual-only SD-LoRA training and inference stack.
+This repo now keeps only two supported flows:
 
-## Runtime Contract
+- `colab_notebooks/2_interactive_adapter_training.ipynb` for Colab training
+- `colab_notebooks/1_router_adapter_inference.ipynb` or `scripts/colab_router_adapter_inference.py` for router-driven inference
 
-- Backbone: `facebook/dinov3-vitl16-pretrain-lvd1689m` (frozen)
-- Backbone loading: standard non-quantized `from_pretrained` path
-- Low-bit policy: 4-bit/QLoRA-style settings are rejected by validation guards
-- Adapter targeting: `all_linear_transformer`
-- Fusion layers: `[2, 5, 8, 11]`
-- OOD score: `0.6 * mahalanobis_z + 0.4 * energy_z`
-- Backbone ID verification: confirmed reachable on Hugging Face on `2026-03-03`.
+The inference runtime is `src/pipeline/router_adapter_runtime.py`. The training runtime is `src/training/continual_sd_lora.py` plus `src/adapter/independent_crop_adapter.py`.
 
-## Canonical Entrypoints
+## Quick Start
 
-- Colab Notebook 1 (router pipeline): `colab_notebooks/1_crop_router_pipeline.ipynb`
-- Colab Notebook 2 (interactive adapter training): `colab_notebooks/2_interactive_adapter_training.ipynb`
-- Superseded notebook archive: `colab_notebooks/archive/v6_superseded_2026-03-02/`
-- Local validation: `python scripts/validate_notebook_imports.py`
-
-## Colab Bootstrap Behavior
-
-- Notebook bootstrap cells auto-detect repository root from common `/content` and Drive paths.
-- Optional overrides:
-  - `AADS_REPO_ROOT` or `REPO_ROOT` for explicit repo path.
-  - `AADS_REPO_CLONE_TARGET` for clone destination when auto-clone runs.
-  - `AADS_REPO_URL` for alternate repository URL.
-  - `AADS_DISABLE_AUTO_CLONE=1` to disable auto-clone fallback.
-
-## Colab Telemetry and Checkpointing
-
-- Active notebooks now write live run telemetry to Drive with local spool fallback:
-  - `events.jsonl`, `runtime.log`, `latest_status.json`, `summary.json`, `artifact_index.json`
-- Default Drive root is `${AADS_DRIVE_LOG_ROOT:-/content/drive/MyDrive/aads_ulora}`.
-- Notebook 2 supports resumable training checkpoints.
-- Checkpoint cadence defaults:
-  - every epoch
-  - every 200 batches
-  - on training exception
-
-## Test Commands
+Install minimal local dependencies:
 
 ```powershell
-python scripts/run_test_suites.py --suite unit --suite colab --suite integration/core
-python scripts/check_markdown_links.py --root .
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-## Legacy Archive
+Run the lightweight validation surface:
 
-v5.5 materials are archived under:
+```powershell
+python scripts/validate_notebook_imports.py
+pytest tests/unit tests/colab/test_smoke_training.py -q
+pytest tests/integration -q --runintegration
+```
 
-- `docs/archive/v5_legacy/`
-- `colab_notebooks/archive/v5_legacy/`
-- `src/archive/v5_legacy/`
+## Colab
+
+- Root Colab dependencies live in `requirements_colab.txt`
+- Notebook bootstrap helpers live in `scripts/colab_repo_bootstrap.py`
+- Telemetry and checkpoints live in `scripts/colab_live_telemetry.py` and `scripts/colab_checkpointing.py`
+
+## Adapter Layout
+
+Inference expects adapters under:
+
+```text
+models/adapters/<crop>/continual_sd_lora_adapter/
+```

@@ -43,7 +43,11 @@ except Exception:  # pragma: no cover - test fallback
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_ADAPTER_SPEC = Path("specs/adapter-spec.json")
+_DEFAULT_PLAN_TARGETS = {
+    "accuracy": 0.93,
+    "ood_auroc": 0.92,
+    "ood_false_positive_rate": 0.05,
+}
 
 EXCLUDED_TARGET_TOKEN = ("classifier", "router", "head", "pooler")
 PREFERRED_TARGET_TOKEN = (
@@ -180,14 +184,22 @@ class ContinualSDLoRATrainer:
 
     @staticmethod
     def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
-        """Load adapter plan targets from specs/adapter-spec.json."""
-        resolved = Path(spec_path) if spec_path is not None else _DEFAULT_ADAPTER_SPEC
+        """Load optional metric targets, falling back to hardcoded defaults."""
+        if spec_path is None:
+            return dict(_DEFAULT_PLAN_TARGETS)
+
+        resolved = Path(spec_path)
+        if not resolved.exists():
+            return dict(_DEFAULT_PLAN_TARGETS)
+
         payload = json.loads(resolved.read_text(encoding="utf-8"))
         targets = payload.get("targets", {}) if isinstance(payload, dict) else {}
         return {
-            "accuracy": float(targets.get("continual_accuracy", 0.93)),
-            "ood_auroc": float(targets.get("ood_auroc", 0.92)),
-            "ood_false_positive_rate": float(targets.get("ood_false_positive_rate", 0.05)),
+            "accuracy": float(targets.get("continual_accuracy", _DEFAULT_PLAN_TARGETS["accuracy"])),
+            "ood_auroc": float(targets.get("ood_auroc", _DEFAULT_PLAN_TARGETS["ood_auroc"])),
+            "ood_false_positive_rate": float(
+                targets.get("ood_false_positive_rate", _DEFAULT_PLAN_TARGETS["ood_false_positive_rate"])
+            ),
         }
 
     @staticmethod
@@ -1077,12 +1089,16 @@ class ContinualSDLoRATrainer:
         if not checkpoint_path.exists():
             raise FileNotFoundError(f"training_checkpoint.pt not found in {root}")
 
-        payload = torch.load(checkpoint_path, map_location=self.device)
+        payload = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
         class_to_idx = {str(k): int(v) for k, v in (payload.get("class_to_idx", {}) or {}).items()}
         self.class_to_idx = dict(class_to_idx)
         self.target_modules_resolved = [str(v) for v in payload.get("target_modules_resolved", [])]
 
-        self.initialize_engine(class_to_idx=self.class_to_idx)
+        needs_initialize = self.adapter_model is None or self.classifier is None or self.fusion is None
+        if needs_initialize:
+            self.initialize_engine(class_to_idx=self.class_to_idx)
+        else:
+            self._is_initialized = True
 
         model_state = payload.get("model_state", {})
         adapter_state = model_state.get("adapter_model")

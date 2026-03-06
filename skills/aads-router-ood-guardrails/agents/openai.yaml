@@ -1,4 +1,0 @@
-interface:
-  display_name: "AADS Router and OOD Guardrails"
-  short_description: "Router/OOD updates with policy and perf guardrails"
-  default_prompt: "Use $aads-router-ood-guardrails to update router or OOD behavior while preserving stage-order invariants, policy profiles, and Phase 5 performance limits."

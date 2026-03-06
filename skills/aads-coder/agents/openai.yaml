@@ -1,4 +1,0 @@
-interface:
-  display_name: "AADS Coder"
-  short_description: "Implement scoped changes with module-aware validation"
-  default_prompt: "Use $aads-coder to implement this request with minimal blast radius and run the correct module-specific validation gates."
