@@ -30,11 +30,53 @@ def test_config_from_training_config_accepts_v6_contract():
             "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
             "adapter": {"target_modules_strategy": "all_linear_transformer", "lora_r": 4, "lora_alpha": 8},
             "fusion": {"layers": [2, 5, 8, 11]},
+            "optimization": {"grad_accumulation_steps": 2, "scheduler": {"name": "linear"}},
+            "evaluation": {"best_metric": "macro_f1"},
             "device": "cpu",
         }
     )
     assert cfg.backbone_model_name == "facebook/dinov3-vitl16-pretrain-lvd1689m"
     assert cfg.target_modules_strategy == "all_linear_transformer"
+    assert cfg.grad_accumulation_steps == 2
+    assert cfg.scheduler_name == "linear"
+    assert cfg.evaluation_best_metric == "macro_f1"
+
+
+def test_as_contract_dict_emits_normalized_training_surface():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        device="cpu",
+        seed=7,
+        grad_accumulation_steps=2,
+        scheduler_name="linear",
+        evaluation_best_metric="macro_f1",
+    )
+
+    payload = cfg.as_contract_dict()
+
+    assert payload["seed"] == 7
+    assert payload["optimization"]["grad_accumulation_steps"] == 2
+    assert payload["optimization"]["scheduler"]["name"] == "linear"
+    assert payload["evaluation"]["best_metric"] == "macro_f1"
+
+
+def test_trainer_seed_configuration_is_repeatable():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        device="cpu",
+        seed=123,
+    )
+
+    _ = ContinualSDLoRATrainer(cfg)
+    first = torch.rand(2)
+    _ = ContinualSDLoRATrainer(cfg)
+    second = torch.rand(2)
+
+    assert torch.equal(first, second)
 
 
 def test_target_resolver_excludes_classifier_and_router_heads():
@@ -425,3 +467,45 @@ def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
     pred = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
     assert pred["status"] == "success"
     assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(pred["ood_analysis"].keys())
+
+
+def test_save_and_load_adapter_roundtrip_restores_raw_adapter_weights(monkeypatch, tmp_path):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={"healthy": 0})
+    assert trainer.adapter_model is not None
+    assert trainer.classifier is not None
+    assert trainer.fusion is not None
+
+    first_weight_name, first_weight = next(iter(trainer.adapter_model.state_dict().items()))
+    trainer.classifier.weight.data.fill_(0.25)
+    trainer.fusion.projections[0].weight.data.fill_(0.5)
+
+    save_dir = tmp_path / "adapter"
+    trainer.save_adapter(str(save_dir))
+
+    reloaded = ContinualSDLoRATrainer(cfg)
+    reloaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
+
+    assert reloaded.adapter_model is not None
+    assert reloaded.classifier is not None
+    assert reloaded.fusion is not None
+    assert torch.equal(reloaded.adapter_model.state_dict()[first_weight_name], first_weight)
+    assert torch.allclose(reloaded.classifier.weight, torch.full_like(reloaded.classifier.weight, 0.25))
+    assert torch.allclose(reloaded.fusion.projections[0].weight, torch.full_like(reloaded.fusion.projections[0].weight, 0.5))

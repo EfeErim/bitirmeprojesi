@@ -3,11 +3,14 @@
 
 from __future__ import annotations
 
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from datetime import datetime
+import hashlib
 import inspect
 import json
 import logging
+import math
 import random
 from pathlib import Path
 import time
@@ -33,9 +36,10 @@ except Exception:  # pragma: no cover - test fallback
     AutoModel = None  # type: ignore[assignment]
 
 try:
-    from peft import LoraConfig, get_peft_model
+    from peft import LoraConfig, PeftModel, get_peft_model
 except Exception:  # pragma: no cover - test fallback
     LoraConfig = None  # type: ignore[assignment]
+    PeftModel = None  # type: ignore[assignment]
 
     def get_peft_model(model: nn.Module, _cfg: Any) -> nn.Module:  # type: ignore[no-redef]
         return model
@@ -82,6 +86,24 @@ class ContinualSDLoRAConfig:
     device: str = "cuda"
     strict_model_loading: bool = False
     ood_threshold_factor: float = 2.0
+    seed: int = 42
+    deterministic: bool = False
+    grad_accumulation_steps: int = 1
+    max_grad_norm: float = 0.0
+    mixed_precision: str = "auto"
+    label_smoothing: float = 0.0
+    scheduler_name: str = "none"
+    scheduler_warmup_ratio: float = 0.0
+    scheduler_min_lr: float = 0.0
+    scheduler_step_on: str = "batch"
+    early_stopping_enabled: bool = False
+    early_stopping_metric: str = "val_loss"
+    early_stopping_mode: str = "min"
+    early_stopping_patience: int = 3
+    early_stopping_min_delta: float = 0.0
+    evaluation_best_metric: str = "val_loss"
+    evaluation_emit_ood_gate: bool = True
+    evaluation_require_ood_for_gate: bool = False
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
@@ -91,6 +113,24 @@ class ContinualSDLoRAConfig:
             raise ValueError("lora_r and lora_alpha must be positive.")
         if not self.fusion_layers:
             raise ValueError("fusion_layers must not be empty.")
+        if self.grad_accumulation_steps <= 0:
+            raise ValueError("grad_accumulation_steps must be positive.")
+        if self.max_grad_norm < 0.0:
+            raise ValueError("max_grad_norm must be non-negative.")
+        if self.label_smoothing < 0.0:
+            raise ValueError("label_smoothing must be non-negative.")
+        if self.mixed_precision not in {"off", "auto", "fp16", "bf16"}:
+            raise ValueError("mixed_precision must be one of: off, auto, fp16, bf16.")
+        if self.scheduler_name not in {"none", "linear", "cosine"}:
+            raise ValueError("scheduler.name must be one of: none, linear, cosine.")
+        if self.scheduler_step_on not in {"batch", "epoch"}:
+            raise ValueError("scheduler.step_on must be 'batch' or 'epoch'.")
+        if self.early_stopping_mode not in {"min", "max"}:
+            raise ValueError("early_stopping.mode must be 'min' or 'max'.")
+        if self.early_stopping_patience < 0:
+            raise ValueError("early_stopping.patience must be non-negative.")
+        if self.early_stopping_min_delta < 0.0:
+            raise ValueError("early_stopping.min_delta must be non-negative.")
 
     def as_contract_dict(self) -> Dict[str, Any]:
         """Return normalized config payload used in metadata persistence."""
@@ -109,9 +149,41 @@ class ContinualSDLoRAConfig:
                 "gating": self.fusion_gating,
             },
             "ood": {"threshold_factor": self.ood_threshold_factor},
+            "learning_rate": self.learning_rate,
+            "weight_decay": self.weight_decay,
+            "num_epochs": self.num_epochs,
+            "batch_size": self.batch_size,
+            "device": self.device,
+            "strict_model_loading": self.strict_model_loading,
+            "seed": self.seed,
+            "deterministic": self.deterministic,
+            "optimization": {
+                "grad_accumulation_steps": self.grad_accumulation_steps,
+                "max_grad_norm": self.max_grad_norm,
+                "mixed_precision": self.mixed_precision,
+                "label_smoothing": self.label_smoothing,
+                "scheduler": {
+                    "name": self.scheduler_name,
+                    "warmup_ratio": self.scheduler_warmup_ratio,
+                    "min_lr": self.scheduler_min_lr,
+                    "step_on": self.scheduler_step_on,
+                },
+            },
+            "early_stopping": {
+                "enabled": self.early_stopping_enabled,
+                "metric": self.early_stopping_metric,
+                "mode": self.early_stopping_mode,
+                "patience": self.early_stopping_patience,
+                "min_delta": self.early_stopping_min_delta,
+            },
+            "evaluation": {
+                "best_metric": self.evaluation_best_metric,
+                "emit_ood_gate": self.evaluation_emit_ood_gate,
+                "require_ood_for_gate": self.evaluation_require_ood_for_gate,
+            },
         }
         if self.extra:
-            payload["extra"] = dict(self.extra)
+            payload.update(dict(self.extra))
         return payload
 
     @classmethod
@@ -122,6 +194,10 @@ class ContinualSDLoRAConfig:
         adapter = training_continual.get("adapter", {})
         fusion = training_continual.get("fusion", {})
         ood = training_continual.get("ood", {})
+        optimization = training_continual.get("optimization", {})
+        scheduler = optimization.get("scheduler", {}) if isinstance(optimization, dict) else {}
+        early_stopping = training_continual.get("early_stopping", {})
+        evaluation = training_continual.get("evaluation", {})
 
         config = cls(
             backbone_model_name=str(backbone.get("model_name", "facebook/dinov3-vitl16-pretrain-lvd1689m")),
@@ -140,17 +216,45 @@ class ContinualSDLoRAConfig:
             device=str(training_continual.get("device", "cuda")),
             strict_model_loading=bool(training_continual.get("strict_model_loading", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
+            seed=int(training_continual.get("seed", 42)),
+            deterministic=bool(training_continual.get("deterministic", False)),
+            grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 1)),
+            max_grad_norm=float(optimization.get("max_grad_norm", 0.0)),
+            mixed_precision=str(optimization.get("mixed_precision", "auto")),
+            label_smoothing=float(optimization.get("label_smoothing", 0.0)),
+            scheduler_name=str(scheduler.get("name", "none")),
+            scheduler_warmup_ratio=float(scheduler.get("warmup_ratio", 0.0)),
+            scheduler_min_lr=float(scheduler.get("min_lr", 0.0)),
+            scheduler_step_on=str(scheduler.get("step_on", "batch")),
+            early_stopping_enabled=bool(early_stopping.get("enabled", False)),
+            early_stopping_metric=str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss"))),
+            early_stopping_mode=str(
+                early_stopping.get(
+                    "mode",
+                    "min" if str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss"))) in {"val_loss", "generalization_gap"} else "max",
+                )
+            ),
+            early_stopping_patience=int(early_stopping.get("patience", 3)),
+            early_stopping_min_delta=float(early_stopping.get("min_delta", 0.0)),
+            evaluation_best_metric=str(evaluation.get("best_metric", "val_loss")),
+            evaluation_emit_ood_gate=bool(evaluation.get("emit_ood_gate", True)),
+            evaluation_require_ood_for_gate=bool(evaluation.get("require_ood_for_gate", False)),
             extra={k: v for k, v in training_continual.items() if k not in {
                 "backbone",
                 "adapter",
                 "fusion",
                 "ood",
+                "optimization",
+                "early_stopping",
+                "evaluation",
                 "learning_rate",
                 "weight_decay",
                 "num_epochs",
                 "batch_size",
                 "device",
                 "strict_model_loading",
+                "seed",
+                "deterministic",
             }},
         )
         config.validate()
@@ -172,15 +276,125 @@ class ContinualSDLoRATrainer:
         self.classifier: Optional[nn.Module] = None
         self.fusion: Optional[MultiScaleFeatureFusion] = None
         self.optimizer: Optional[torch.optim.Optimizer] = None
+        self.scheduler: Optional[torch.optim.lr_scheduler._LRScheduler | torch.optim.lr_scheduler.LRScheduler] = None
+        self.scaler = torch.cuda.amp.GradScaler(enabled=False)
         self.current_epoch = 0
+        self.optimizer_steps = 0
         self.class_to_idx: Dict[str, int] = {}
         self.target_modules_resolved: List[str] = []
         self.ood_detector = ContinualOODDetector(threshold_factor=self.config.ood_threshold_factor)
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
+        self._config_hash = self._compute_config_hash(self._contract)
         self._peft_available = LoraConfig is not None
         self._adapter_wrapped = False
         self._peft_warning_emitted = False
+        self._planned_scheduler_steps = 0
+        self._planned_epochs = int(max(1, self.config.num_epochs))
+        self._accumulation_counter = 0
+        self.best_metric_state: Dict[str, Any] = {}
+        self._configure_runtime_reproducibility()
+
+    @staticmethod
+    def _compute_config_hash(contract: Dict[str, Any]) -> str:
+        serialized = json.dumps(contract, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+    def _configure_runtime_reproducibility(self) -> None:
+        seed = int(self.config.seed)
+        random.seed(seed)
+        torch.manual_seed(seed)
+        if np is not None:
+            np.random.seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(seed)
+
+        if self.config.deterministic:
+            try:
+                torch.use_deterministic_algorithms(True)
+            except Exception:
+                pass
+            if hasattr(torch.backends, "cudnn"):
+                torch.backends.cudnn.deterministic = True
+                torch.backends.cudnn.benchmark = False
+
+    def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
+        epochs = int(max(1, num_epochs if num_epochs is not None else self.config.num_epochs))
+        self._planned_epochs = epochs
+        optimizer_steps = max(
+            1,
+            math.ceil((max(1, int(total_batches)) * epochs) / max(1, int(self.config.grad_accumulation_steps))),
+        )
+        if self.config.scheduler_step_on == "epoch":
+            optimizer_steps = epochs
+        self._planned_scheduler_steps = int(optimizer_steps)
+        if self.optimizer is not None:
+            self._ensure_scheduler()
+
+    def _resolve_amp_dtype(self) -> Optional[torch.dtype]:
+        if self.device.type != "cuda":
+            return None
+        mode = str(self.config.mixed_precision).lower()
+        if mode == "off":
+            return None
+        if mode == "bf16":
+            return torch.bfloat16
+        if mode == "fp16":
+            return torch.float16
+        if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
+            return torch.bfloat16
+        return torch.float16
+
+    def _autocast_context(self) -> Any:
+        dtype = self._resolve_amp_dtype()
+        if dtype is None:
+            return nullcontext()
+        return torch.autocast(device_type=self.device.type, dtype=dtype)
+
+    def _amp_scaler_enabled(self) -> bool:
+        return self._resolve_amp_dtype() == torch.float16 and self.device.type == "cuda"
+
+    def _ensure_scheduler(self) -> None:
+        if self.optimizer is None or self.scheduler is not None or self.config.scheduler_name == "none":
+            return
+
+        total_units = max(
+            1,
+            int(self._planned_scheduler_steps if self._planned_scheduler_steps > 0 else self._planned_epochs),
+        )
+        if self.config.scheduler_name == "linear":
+            warmup_steps = int(max(0, round(total_units * float(self.config.scheduler_warmup_ratio))))
+            min_lr_scale = (
+                float(self.config.scheduler_min_lr) / float(self.config.learning_rate)
+                if self.config.learning_rate > 0
+                else 0.0
+            )
+            min_lr_scale = max(0.0, min(1.0, min_lr_scale))
+
+            def _lr_lambda(step_idx: int) -> float:
+                step = int(max(0, step_idx))
+                if warmup_steps > 0 and step < warmup_steps:
+                    return float(step + 1) / float(max(1, warmup_steps))
+                remaining = max(1, total_units - warmup_steps)
+                progress = float(step - warmup_steps) / float(remaining)
+                progress = max(0.0, min(1.0, progress))
+                return max(min_lr_scale, 1.0 - progress * (1.0 - min_lr_scale))
+
+            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=_lr_lambda)
+            return
+
+        if self.config.scheduler_name == "cosine":
+            eta_min = float(self.config.scheduler_min_lr)
+            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                self.optimizer,
+                T_max=total_units,
+                eta_min=eta_min,
+            )
+
+    def _step_scheduler(self) -> None:
+        if self.scheduler is None:
+            return
+        self.scheduler.step()
 
     @staticmethod
     def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
@@ -371,6 +585,11 @@ class ContinualSDLoRATrainer:
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
 
         self._is_initialized = True
+        self.optimizer = None
+        self.scheduler = None
+        self.scaler = torch.cuda.amp.GradScaler(enabled=self._amp_scaler_enabled())
+        self.optimizer_steps = 0
+        self._accumulation_counter = 0
         logger.info(
             "Continual engine initialized: backbone=%s, targets=%s",
             self.config.backbone_model_name,
@@ -520,6 +739,9 @@ class ContinualSDLoRATrainer:
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
+        self.scaler = torch.cuda.amp.GradScaler(enabled=self._amp_scaler_enabled())
+        self._ensure_scheduler()
+        self.optimizer.zero_grad(set_to_none=True)
 
     def _extract_hidden_states(self, images: torch.Tensor) -> Sequence[torch.Tensor]:
         if self.adapter_model is None:
@@ -555,8 +777,13 @@ class ContinualSDLoRATrainer:
             raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
         images = batch["images"].to(self.device)
         labels = batch["labels"].to(self.device)
-        logits = self.forward_logits(images)
-        return nn.functional.cross_entropy(logits, labels)
+        with self._autocast_context():
+            logits = self.forward_logits(images)
+            return nn.functional.cross_entropy(
+                logits,
+                labels,
+                label_smoothing=float(self.config.label_smoothing),
+            )
 
     def set_train_mode(self) -> None:
         if self.adapter_model is not None:
@@ -600,11 +827,43 @@ class ContinualSDLoRATrainer:
             raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
         self.set_train_mode()
         step_started_at = time.perf_counter()
-        self.optimizer.zero_grad()
+        accumulation_steps = int(max(1, self.config.grad_accumulation_steps))
+        if self._accumulation_counter == 0:
+            self.optimizer.zero_grad(set_to_none=True)
+
         loss = self.training_step(batch)
-        loss.backward()
+        if not torch.isfinite(loss).item():
+            raise RuntimeError("Non-finite training loss encountered.")
+
+        raw_loss_value = float(loss.detach().item())
+        scaled_loss = loss / float(accumulation_steps)
+        if self.scaler.is_enabled():
+            self.scaler.scale(scaled_loss).backward()
+        else:
+            scaled_loss.backward()
+
+        self._accumulation_counter += 1
+        should_step = self._accumulation_counter >= accumulation_steps
         grad_norm = self._compute_grad_norm()
-        self.optimizer.step()
+        if should_step:
+            if self.scaler.is_enabled():
+                self.scaler.unscale_(self.optimizer)
+            if self.config.max_grad_norm > 0.0:
+                torch.nn.utils.clip_grad_norm_(
+                    [param for group in self.optimizer.param_groups for param in group.get("params", []) if param is not None],
+                    max_norm=float(self.config.max_grad_norm),
+                )
+            grad_norm = self._compute_grad_norm()
+            if self.scaler.is_enabled():
+                self.scaler.step(self.optimizer)
+                self.scaler.update()
+            else:
+                self.optimizer.step()
+            self.optimizer_steps += 1
+            if self.config.scheduler_step_on == "batch":
+                self._step_scheduler()
+            self.optimizer.zero_grad(set_to_none=True)
+            self._accumulation_counter = 0
 
         step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
         batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
@@ -613,12 +872,15 @@ class ContinualSDLoRATrainer:
         samples_per_sec = float(batch_size / step_time_sec) if batch_size > 0 else 0.0
         lr_value = float(self.optimizer.param_groups[0].get("lr", self.config.learning_rate))
         return TrainBatchStats(
-            loss=float(loss.item()),
+            loss=raw_loss_value,
             lr=lr_value,
             grad_norm=float(grad_norm),
             step_time_sec=step_time_sec,
             samples_per_sec=samples_per_sec,
             batch_size=int(batch_size),
+            accumulation_step=int(self._accumulation_counter if self._accumulation_counter > 0 else accumulation_steps),
+            optimizer_steps=int(self.optimizer_steps),
+            optimizer_step_applied=bool(should_step),
         )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
@@ -680,6 +942,8 @@ class ContinualSDLoRATrainer:
         return {
             "schema_version": "v6",
             "engine": "continual_sd_lora",
+            "trainer_config": self.config.as_contract_dict(),
+            "config_hash": self._config_hash,
             "backbone": {
                 "model_name": self.config.backbone_model_name,
                 "frozen": True,
@@ -692,6 +956,7 @@ class ContinualSDLoRATrainer:
             },
             "class_to_idx": self.class_to_idx,
             "ood_calibration": {"version": self.ood_detector.calibration_version},
+            "ood_state": self._serialize_ood_state(),
             "target_modules_resolved": list(self.target_modules_resolved),
             "adapter_runtime": {
                 "peft_available": bool(self._peft_available),
@@ -788,6 +1053,7 @@ class ContinualSDLoRATrainer:
             schema_version="v6_training_checkpoint",
             created_at=datetime.utcnow().isoformat() + "Z",
             trainer_config=self.config.as_contract_dict(),
+            config_hash=self._config_hash,
             class_to_idx=dict(self.class_to_idx),
             target_modules_resolved=list(self.target_modules_resolved),
             model_state={
@@ -796,9 +1062,13 @@ class ContinualSDLoRATrainer:
                 "fusion": self.fusion.state_dict(),
             },
             optimizer_state=self.optimizer.state_dict() if self.optimizer is not None else None,
+            scheduler_state=self.scheduler.state_dict() if self.scheduler is not None else None,
+            scaler_state=self.scaler.state_dict() if self.scaler.is_enabled() else None,
             ood_state=self._serialize_ood_state(),
             rng_state=self._capture_rng_state(),
+            best_metric_state=dict(self.best_metric_state),
             current_epoch=int(self.current_epoch),
+            optimizer_steps=int(self.optimizer_steps),
         )
 
     def restore_training_state(self, payload: TrainingCheckpointPayload | Dict[str, Any]) -> TrainingCheckpointPayload:
@@ -834,12 +1104,22 @@ class ContinualSDLoRATrainer:
         optimizer_state = checkpoint.optimizer_state
         if optimizer_state is not None and self.optimizer is not None:
             self.optimizer.load_state_dict(optimizer_state)
+        scheduler_state = checkpoint.scheduler_state
+        if scheduler_state is not None:
+            self._ensure_scheduler()
+            if self.scheduler is not None:
+                self.scheduler.load_state_dict(scheduler_state)
+        scaler_state = checkpoint.scaler_state
+        if scaler_state is not None and self.scaler.is_enabled():
+            self.scaler.load_state_dict(scaler_state)
 
         ood_state = checkpoint.ood_state
         if isinstance(ood_state, dict):
             self._restore_ood_state(ood_state)
         self._restore_rng_state(checkpoint.rng_state)
         self.current_epoch = int(checkpoint.current_epoch)
+        self.optimizer_steps = int(checkpoint.optimizer_steps)
+        self.best_metric_state = dict(checkpoint.best_metric_state)
         return checkpoint
 
     def save_adapter(self, output_dir: str) -> Path:
@@ -874,11 +1154,22 @@ class ContinualSDLoRATrainer:
         self.target_modules_resolved = [str(v) for v in meta.get("target_modules_resolved", [])]
 
         self.initialize_engine(class_to_idx=self.class_to_idx)
+        adapter_config_path = root / "adapter_config.json"
+        if adapter_config_path.exists() and PeftModel is not None and self.backbone is not None:
+            loaded_adapter = PeftModel.from_pretrained(self.backbone, str(root), is_trainable=False)
+            self.adapter_model = self._prepare_module_for_device(loaded_adapter, module_name="adapter_model")
+            self._adapter_wrapped = True
+        elif (root / "adapter_model.pt").exists() and self.adapter_model is not None:
+            self.adapter_model.load_state_dict(torch.load(root / "adapter_model.pt", map_location=self.device), strict=False)
         classifier_path = root / "classifier.pth"
         fusion_path = root / "fusion.pth"
         if classifier_path.exists():
             self.classifier.load_state_dict(torch.load(classifier_path, map_location=self.device))  # type: ignore[union-attr]
         if fusion_path.exists():
             self.fusion.load_state_dict(torch.load(fusion_path, map_location=self.device))  # type: ignore[union-attr]
-        self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
+        ood_state = meta.get("ood_state", {})
+        if isinstance(ood_state, dict) and ood_state:
+            self._restore_ood_state(ood_state)
+        else:
+            self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
         return meta

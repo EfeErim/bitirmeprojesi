@@ -8,9 +8,13 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
+
+from src.training.continual_sd_lora import ContinualSDLoRATrainer
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
@@ -23,7 +27,8 @@ def _artifact_dir(root: Path, *parts: str) -> Path:
 
 def build_history_snapshot(
     *,
-    state_history: Optional[Dict[str, Any]],
+    state_history: Optional[Dict[str, Any]] = None,
+    session_history: Optional[Dict[str, Any]] = None,
     train_loss_curve: List[float],
     val_loss_curve: List[float],
     val_acc_curve: List[float],
@@ -32,6 +37,12 @@ def build_history_snapshot(
     balanced_acc_curve: List[float],
     gap_curve: List[float],
 ) -> Dict[str, Any]:
+    if session_history:
+        merged = dict(session_history)
+        merged.setdefault("per_class_accuracy", list((state_history or {}).get("per_class_accuracy", [])))
+        merged.setdefault("worst_classes", list((state_history or {}).get("worst_classes", [])))
+        return merged
+
     baseline = state_history or {}
     return {
         "train_loss": list(train_loss_curve),
@@ -97,7 +108,6 @@ def save_notebook_checkpoint(
     adapter: Any,
     session: Any,
     reason: str,
-    event: Dict[str, Any],
     run_id: str,
     telemetry: Any = None,
     mark_best: bool = False,
@@ -125,6 +135,11 @@ def persist_validation_artifacts(
     y_pred: List[int],
     classes: List[str],
     telemetry: Any = None,
+    gate_targets: Optional[Dict[str, float]] = None,
+    require_ood: bool = False,
+    ood_labels: Optional[List[int]] = None,
+    ood_scores: Optional[List[float]] = None,
+    context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     report_text = classification_report(y_true, y_pred, target_names=classes, zero_division=0)
     report_dict = classification_report(y_true, y_pred, target_names=classes, zero_division=0, output_dict=True)
@@ -138,6 +153,7 @@ def persist_validation_artifacts(
     confusion_csv = output_dir / "confusion_matrix.csv"
     confusion_png = output_dir / "confusion_matrix.png"
     confusion_norm_png = output_dir / "confusion_matrix_normalized.png"
+    metric_gate_json = output_dir / "metric_gate.json"
 
     report_txt.write_text(report_text, encoding="utf-8")
     report_json.write_text(json.dumps(report_dict, indent=2), encoding="utf-8")
@@ -177,11 +193,28 @@ def persist_validation_artifacts(
         telemetry.copy_artifact_file(confusion_png, "validation/confusion_matrix.png")
         telemetry.copy_artifact_file(confusion_norm_png, "validation/confusion_matrix_normalized.png")
 
+    metrics = ContinualSDLoRATrainer.compute_plan_metrics(
+        y_true=y_true,
+        y_pred=y_pred,
+        ood_labels=ood_labels,
+        ood_scores=ood_scores,
+    )
+    metric_gate = ContinualSDLoRATrainer.write_plan_metric_artifact(
+        output_path=metric_gate_json,
+        metrics=metrics,
+        targets=gate_targets,
+        require_ood=require_ood,
+        context=dict(context or {"num_classes": len(classes)}),
+    )
+    if telemetry is not None:
+        telemetry.copy_artifact_file(metric_gate_json, "validation/metric_gate.json")
+
     return {
         "report_text": report_text,
         "report_dict": report_dict,
         "cm": cm,
         "cm_norm": cm_norm,
+        "metric_gate": metric_gate,
         "paths": {
             "report_txt": report_txt,
             "report_json": report_json,
@@ -189,5 +222,6 @@ def persist_validation_artifacts(
             "cm_csv": confusion_csv,
             "cm_png": confusion_png,
             "cm_norm_png": confusion_norm_png,
+            "metric_gate_json": metric_gate_json,
         },
     }

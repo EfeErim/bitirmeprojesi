@@ -14,6 +14,9 @@ class TrainBatchStats:
     step_time_sec: float
     samples_per_sec: float
     batch_size: int
+    accumulation_step: int = 1
+    optimizer_steps: int = 0
+    optimizer_step_applied: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -25,6 +28,7 @@ class TrainingProgressState:
     batch: int = 0
     total_batches: int = 0
     global_step: int = 0
+    optimizer_steps: int = 0
     elapsed_sec: float = 0.0
     eta_sec: float = 0.0
     resume_start_epoch: int = 0
@@ -36,6 +40,7 @@ class TrainingProgressState:
             "batch": int(self.batch),
             "total_batches": int(self.total_batches),
             "global_step": int(self.global_step),
+            "optimizer_steps": int(self.optimizer_steps),
             "elapsed_sec": float(self.elapsed_sec),
             "eta_sec": float(self.eta_sec),
             "resume_start_epoch": int(self.resume_start_epoch),
@@ -50,6 +55,7 @@ class TrainingProgressState:
             batch=int(data.get("batch", 0)),
             total_batches=int(data.get("total_batches", 0)),
             global_step=int(data.get("global_step", 0)),
+            optimizer_steps=int(data.get("optimizer_steps", data.get("global_step", 0))),
             elapsed_sec=float(data.get("elapsed_sec", 0.0)),
             eta_sec=float(data.get("eta_sec", 0.0)),
             resume_start_epoch=int(data.get("resume_start_epoch", data.get("epoch", 0) if data else 0)),
@@ -121,10 +127,14 @@ class TrainingHistory:
     worst_classes: List[List[Dict[str, Any]]] = field(default_factory=list)
     stopped_early: bool = False
     global_step: int = 0
+    optimizer_steps: int = 0
     resume_start_epoch: int = 0
+    best_metric_name: str = ""
+    best_metric_value: Optional[float] = None
+    best_epoch: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        payload: Dict[str, Any] = {
             "train_loss": list(self.train_loss),
             "val_loss": list(self.val_loss),
             "val_accuracy": list(self.val_accuracy),
@@ -136,12 +146,19 @@ class TrainingHistory:
             "worst_classes": [[dict(row) for row in group] for group in self.worst_classes],
             "stopped_early": bool(self.stopped_early),
             "global_step": int(self.global_step),
+            "optimizer_steps": int(self.optimizer_steps),
             "resume_start_epoch": int(self.resume_start_epoch),
+            "best_metric_name": str(self.best_metric_name),
+            "best_epoch": int(self.best_epoch),
         }
+        if self.best_metric_value is not None:
+            payload["best_metric_value"] = float(self.best_metric_value)
+        return payload
 
     @classmethod
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "TrainingHistory":
         data = dict(payload or {})
+        best_metric_value = data.get("best_metric_value")
         return cls(
             train_loss=[float(v) for v in list(data.get("train_loss", []))],
             val_loss=[float(v) for v in list(data.get("val_loss", []))],
@@ -162,7 +179,11 @@ class TrainingHistory:
             ],
             stopped_early=bool(data.get("stopped_early", False)),
             global_step=int(data.get("global_step", 0)),
+            optimizer_steps=int(data.get("optimizer_steps", data.get("global_step", 0))),
             resume_start_epoch=int(data.get("resume_start_epoch", 0)),
+            best_metric_name=str(data.get("best_metric_name", "")),
+            best_metric_value=(None if best_metric_value is None else float(best_metric_value)),
+            best_epoch=int(data.get("best_epoch", 0)),
         )
 
     def append_validation(self, report: ValidationReport) -> None:
@@ -188,20 +209,30 @@ class TrainingCheckpointPayload:
     optimizer_state: Optional[Dict[str, Any]]
     ood_state: Dict[str, Any]
     rng_state: Dict[str, Any]
+    config_hash: str = ""
+    scheduler_state: Optional[Dict[str, Any]] = None
+    scaler_state: Optional[Dict[str, Any]] = None
+    best_metric_state: Dict[str, Any] = field(default_factory=dict)
     current_epoch: int = 0
+    optimizer_steps: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "schema_version": str(self.schema_version),
             "created_at": str(self.created_at),
             "trainer_config": dict(self.trainer_config),
+            "config_hash": str(self.config_hash),
             "class_to_idx": {str(k): int(v) for k, v in self.class_to_idx.items()},
             "target_modules_resolved": [str(v) for v in self.target_modules_resolved],
             "model_state": dict(self.model_state),
             "optimizer_state": self.optimizer_state,
+            "scheduler_state": self.scheduler_state,
+            "scaler_state": self.scaler_state,
             "ood_state": dict(self.ood_state),
             "rng_state": dict(self.rng_state),
+            "best_metric_state": dict(self.best_metric_state),
             "current_epoch": int(self.current_epoch),
+            "optimizer_steps": int(self.optimizer_steps),
         }
 
     @classmethod
@@ -211,11 +242,16 @@ class TrainingCheckpointPayload:
             schema_version=str(data.get("schema_version", "v6_training_checkpoint")),
             created_at=str(data.get("created_at", "")),
             trainer_config=dict(data.get("trainer_config", {})),
+            config_hash=str(data.get("config_hash", "")),
             class_to_idx={str(k): int(v) for k, v in dict(data.get("class_to_idx", {})).items()},
             target_modules_resolved=[str(v) for v in list(data.get("target_modules_resolved", []))],
             model_state=dict(data.get("model_state", {})),
             optimizer_state=data.get("optimizer_state"),
+            scheduler_state=data.get("scheduler_state"),
+            scaler_state=data.get("scaler_state"),
             ood_state=dict(data.get("ood_state", {})),
             rng_state=dict(data.get("rng_state", {})),
+            best_metric_state=dict(data.get("best_metric_state", {})),
             current_epoch=int(data.get("current_epoch", 0)),
+            optimizer_steps=int(data.get("optimizer_steps", 0)),
         )

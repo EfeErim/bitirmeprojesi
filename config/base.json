@@ -24,7 +24,40 @@
       "num_epochs": 1,
       "batch_size": 8,
       "device": "cuda",
-      "strict_model_loading": false
+      "strict_model_loading": false,
+      "seed": 42,
+      "deterministic": false,
+      "optimization": {
+        "grad_accumulation_steps": 1,
+        "max_grad_norm": 0.0,
+        "mixed_precision": "auto",
+        "label_smoothing": 0.0,
+        "scheduler": {
+          "name": "none",
+          "warmup_ratio": 0.0,
+          "min_lr": 0.0,
+          "step_on": "batch"
+        }
+      },
+      "data": {
+        "sampler": "shuffle",
+        "loader_error_policy": "tolerant",
+        "target_size": 224,
+        "cache_size": 1000,
+        "validate_images_on_init": true
+      },
+      "early_stopping": {
+        "enabled": false,
+        "metric": "val_loss",
+        "mode": "min",
+        "patience": 3,
+        "min_delta": 0.0
+      },
+      "evaluation": {
+        "best_metric": "val_loss",
+        "emit_ood_gate": true,
+        "require_ood_for_gate": false
+      }
     }
   },
   "router": {

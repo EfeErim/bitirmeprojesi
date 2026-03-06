@@ -1,6 +1,13 @@
 from pathlib import Path
 
+from PIL import Image
+
 from src.utils.data_loader import CropDataset, infer_crop_classes_from_layout
+
+
+def _write_image(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (4, 4), color=(255, 0, 0)).save(path)
 
 
 def test_infer_crop_classes_from_layout_reads_split_dirs(tmp_path: Path):
@@ -29,9 +36,8 @@ def test_crop_dataset_uses_inferred_classes_for_custom_crop_name(tmp_path: Path)
 
     for cls, count in class_to_count.items():
         cls_dir = root / crop / "val" / cls
-        cls_dir.mkdir(parents=True, exist_ok=True)
         for i in range(count):
-            (cls_dir / f"img_{i}.jpg").write_bytes(b"x")
+            _write_image(cls_dir / f"img_{i}.jpg")
 
     dataset = CropDataset(
         data_dir=str(root),

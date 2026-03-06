@@ -167,10 +167,11 @@ def test_colab_helpers() -> bool:
     print(f"\nTesting {gate_label(step_id, 'colab support helpers')}...")
     try:
         from scripts.colab_checkpointing import TrainingCheckpointManager
+        from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
         from scripts.colab_live_telemetry import ColabLiveTelemetry
         from scripts.evaluate_dataset_layout import evaluate_layout
 
-        _ = (TrainingCheckpointManager, ColabLiveTelemetry, evaluate_layout)
+        _ = (TrainingCheckpointManager, prepare_runtime_dataset_layout, ColabLiveTelemetry, evaluate_layout)
         print(f"PASS {gate_label(step_id, 'Colab helper surfaces imported successfully')}")
         return True
     except Exception as exc:

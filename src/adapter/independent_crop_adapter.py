@@ -56,6 +56,15 @@ class IndependentCropAdapter:
             return 0
         return int(self._trainer.ood_detector.calibration_version)
 
+    def parameters(self):
+        if self._trainer is None:
+            return iter(())
+        modules = [self._trainer.adapter_model, self._trainer.classifier, self._trainer.fusion]
+        for module in modules:
+            if module is None:
+                continue
+            yield from module.parameters()
+
     def _normalize_continual_config(self, config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         config = dict(config or {})
         continual = config.get("training", {}).get("continual") if isinstance(config.get("training"), dict) else None
@@ -137,6 +146,8 @@ class IndependentCropAdapter:
         stop_policy: Optional[Callable[[], bool]] = None,
         resume_state: Optional[Dict[str, Any]] = None,
         run_id: str = "",
+        checkpoint_every_n_steps: int = 0,
+        checkpoint_on_exception: bool = False,
     ) -> ContinualTrainingSession:
         """Build a training session around the initialized trainer."""
         if self._trainer is None:
@@ -150,6 +161,8 @@ class IndependentCropAdapter:
             stop_policy=stop_policy,
             resume_state=resume_state,
             run_id=run_id,
+            checkpoint_every_n_steps=checkpoint_every_n_steps,
+            checkpoint_on_exception=checkpoint_on_exception,
         )
 
     def save_training_checkpoint(
@@ -183,26 +196,30 @@ class IndependentCropAdapter:
 
     def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
         """Load resumable trainer and session state from checkpoint directory."""
-        if self._trainer is None:
-            normalized = {
-                "backbone": {"model_name": self.model_name},
-                "adapter": {
-                    "target_modules_strategy": "all_linear_transformer",
-                    "lora_r": 16,
-                    "lora_alpha": 32,
-                    "lora_dropout": 0.1,
-                },
-                "fusion": {"layers": [2, 5, 8, 11]},
-                "ood": {"threshold_factor": 2.0},
-                "device": str(self.device),
-            }
-            cfg = ContinualSDLoRAConfig.from_training_config(normalized)
-            self._trainer = ContinualSDLoRATrainer(cfg)
         root = Path(checkpoint_dir)
         if root.is_dir() and (root / "training_checkpoint").exists():
             root = root / "training_checkpoint"
         trainer_payload_raw = torch.load(root / "training_checkpoint.pt", map_location=self.device, weights_only=False)
-        trainer_payload = self._trainer.restore_training_state(TrainingCheckpointPayload.from_dict(trainer_payload_raw))
+        trainer_payload = TrainingCheckpointPayload.from_dict(trainer_payload_raw)
+        if self._trainer is None:
+            normalized = dict(trainer_payload.trainer_config or {})
+            if not normalized:
+                normalized = {
+                    "backbone": {"model_name": self.model_name},
+                    "adapter": {
+                        "target_modules_strategy": "all_linear_transformer",
+                        "lora_r": 16,
+                        "lora_alpha": 32,
+                        "lora_dropout": 0.1,
+                    },
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                    "ood": {"threshold_factor": 2.0},
+                    "device": str(self.device),
+                }
+            normalized["device"] = str(normalized.get("device", str(self.device)))
+            cfg = ContinualSDLoRAConfig.from_training_config(normalized)
+            self._trainer = ContinualSDLoRATrainer(cfg)
+        trainer_payload = self._trainer.restore_training_state(trainer_payload)
         session_path = root / "session_state.json"
         session_payload = {}
         if session_path.exists():
@@ -217,6 +234,7 @@ class IndependentCropAdapter:
             "run_id": str(dict(session_payload).get("run_id", "")),
             "progress_state": dict(session_payload.get("progress_state", {})) if isinstance(session_payload, dict) else {},
             "history": dict(session_payload.get("history", {})) if isinstance(session_payload, dict) else {},
+            "best_metric_state": dict(session_payload.get("best_metric_state", {})) if isinstance(session_payload, dict) else {},
         }
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
@@ -254,9 +272,19 @@ class IndependentCropAdapter:
     def _metadata_payload(self) -> Dict[str, Any]:
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
+        ood_state = (
+            self._trainer._serialize_ood_state()  # type: ignore[attr-defined]
+            if hasattr(self._trainer, "_serialize_ood_state")
+            else {
+                "threshold_factor": 2.0,
+                "calibration_version": self.ood_calibration_version,
+                "class_stats": {},
+            }
+        )
         return {
             "schema_version": self.schema_version,
             "engine": self.engine,
+            "trainer_config": self._trainer.config.as_contract_dict(),
             "backbone": {
                 "model_name": self._trainer.config.backbone_model_name,
                 "frozen": True,
@@ -271,6 +299,7 @@ class IndependentCropAdapter:
             "ood_calibration": {
                 "version": self.ood_calibration_version,
             },
+            "ood_state": ood_state,
             "target_modules_resolved": list(self.target_modules_resolved),
         }
 
@@ -281,8 +310,10 @@ class IndependentCropAdapter:
 
         root = Path(checkpoint_dir)
         asset_dir = self._trainer.save_adapter(str(root))
-        metadata = self._metadata_payload()
-        (asset_dir / "adapter_meta.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+        meta_path = asset_dir / "adapter_meta.json"
+        if not meta_path.exists():
+            metadata = self._metadata_payload()
+            meta_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
         return asset_dir
 
     def load_adapter(self, checkpoint_dir: str) -> None:
@@ -299,18 +330,21 @@ class IndependentCropAdapter:
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         self.class_to_idx = {str(k): int(v) for k, v in meta.get("class_to_idx", {}).items()}
 
-        normalized = {
-            "backbone": meta.get("backbone", {"model_name": self.model_name}),
-            "adapter": {
-                "target_modules_strategy": "all_linear_transformer",
-                "lora_r": 16,
-                "lora_alpha": 32,
-                "lora_dropout": 0.1,
-            },
-            "fusion": meta.get("fusion", {"layers": [2, 5, 8, 11]}),
-            "ood": {"threshold_factor": 2.0},
-            "device": str(self.device),
-        }
+        normalized = dict(meta.get("trainer_config", {}))
+        if not normalized:
+            normalized = {
+                "backbone": meta.get("backbone", {"model_name": self.model_name}),
+                "adapter": {
+                    "target_modules_strategy": "all_linear_transformer",
+                    "lora_r": 16,
+                    "lora_alpha": 32,
+                    "lora_dropout": 0.1,
+                },
+                "fusion": meta.get("fusion", {"layers": [2, 5, 8, 11]}),
+                "ood": {"threshold_factor": 2.0},
+                "device": str(self.device),
+            }
+        normalized["device"] = str(normalized.get("device", str(self.device)))
 
         cfg = ContinualSDLoRAConfig.from_training_config(normalized)
         self._trainer = ContinualSDLoRATrainer(cfg)

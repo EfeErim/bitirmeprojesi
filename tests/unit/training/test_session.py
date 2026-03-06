@@ -113,3 +113,41 @@ def test_session_honors_stop_policy():
     event_types = [event["event_type"] for event in events]
     assert event_types.count("batch_end") == 1
     assert "stop_requested" in event_types
+
+
+def test_session_batch_event_exposes_loss_and_checkpoint_request():
+    trainer, _ = _build_minimal_trainer()
+    events = []
+    session = ContinualTrainingSession(
+        trainer,
+        _make_loader(2),
+        1,
+        observers=[events.append],
+        checkpoint_every_n_steps=1,
+    )
+
+    session.run()
+
+    batch_events = [event for event in events if event["event_type"] == "batch_end"]
+    assert batch_events
+    assert "loss" in batch_events[0]["payload"]
+    assert "batch_loss" not in batch_events[0]["payload"]
+
+    checkpoint_events = [event for event in events if event["event_type"] == "checkpoint_requested"]
+    assert checkpoint_events
+    assert checkpoint_events[0]["payload"]["reason"] == "batch_interval"
+
+
+def test_session_snapshot_includes_best_metric_state():
+    trainer, _ = _build_minimal_trainer()
+    session = ContinualTrainingSession(
+        trainer,
+        _make_loader(1),
+        1,
+        val_loader=_make_loader(1),
+    )
+
+    session.run()
+    snapshot = session.snapshot_state()
+
+    assert "best_metric_state" in snapshot
