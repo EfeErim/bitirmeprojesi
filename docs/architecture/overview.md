@@ -61,26 +61,39 @@ OOD behavior is part of the canonical adapter runtime, not a separate model fami
 
 The current production path works like this:
 
-1. Train the adapter on all known classes.
+1. Train the adapter on all known classes (optionally with BER loss wrapping CE).
 2. Run OOD calibration on known-class data after training.
-3. Persist per-class calibration statistics with the adapter.
-4. During inference, score the predicted class with an ensemble OOD detector.
+3. Persist per-class and detector-level calibration statistics with the adapter.
+4. During inference, score the predicted class with an ensemble OOD detector and optional conformal set output.
 
-The detector combines two signals:
+The detector base ensemble combines two signals:
 
 - Mahalanobis distance in fused feature space, normalized as a z-score per class
 - energy score from classifier logits, also normalized as a z-score per class
 
-The runtime ensemble is `0.6 * mahalanobis_z + 0.4 * energy_z`. Each class gets its own threshold derived from the calibrated ensemble distribution, and inference marks a sample as OOD when the ensemble score exceeds that class threshold.
+The runtime ensemble is `0.6 * mahalanobis_z + 0.4 * energy_z`. Each class gets its own threshold derived from the calibrated ensemble distribution.
+
+Extended OOD stack details:
+
+- Radially scaled L2 normalization can auto-tune $\beta$ during calibration and normalize features before Mahalanobis statistics are estimated.
+- SURE+ double scoring computes semantic OOD score (ensemble-based) and confidence rejection score (`1 - max softmax`), then applies calibrated percentile thresholds.
+- Conformal prediction calibrates a global nonconformity quantile $\hat{q}$ and produces `conformal_set` at inference time.
+- BER (Bi-directional Energy Regularization) is training-only and applies separate old/new energy penalties via a composable loss wrapper.
+
+When SURE+ is enabled, the final OOD decision uses combined semantic/confidence rejection; conformal output is returned as an additional prediction-set field, not as a replacement for top-1 diagnosis.
 
 The relevant repo mapping is:
 
 - detector logic: `src/ood/continual_ood.py`
+- BER loss wrapper: `src/training/ber_loss.py`
+- radial normalization: `src/ood/radial_normalization.py`
+- SURE+ scoring: `src/ood/sure_scoring.py`
+- conformal prediction: `src/ood/conformal_prediction.py`
 - streamed calibration: `src/training/services/ood_calibration.py`
 - OOD metric computation and gate checks: `src/training/services/metrics.py`
 - inference payload normalization: `src/pipeline/inference_payloads.py`
 
-Experimental ideas that are intentionally not part of the canonical path are tracked separately. The current repository note for held-out-class OOD benchmarking lives in [experimental_leave_one_class_out_ood.md](/d:/bitirme projesi/docs/architecture/experimental_leave_one_class_out_ood.md).
+Experimental ideas that are intentionally not part of the canonical path are tracked separately. The current repository note for held-out-class OOD benchmarking lives in [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md).
 
 Output locations are surface-specific:
 

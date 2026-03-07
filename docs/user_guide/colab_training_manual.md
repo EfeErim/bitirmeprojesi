@@ -36,6 +36,10 @@ Normalized training controls live in `training.continual`:
 - `optimization.label_smoothing`
 - `optimization.scheduler`
 - `ood.threshold_factor`
+- `ood.ber_enabled`, `ood.ber_lambda_old`, `ood.ber_lambda_new`
+- `ood.radial_l2_enabled`, `ood.radial_beta_range`, `ood.radial_beta_steps`
+- `ood.sure_enabled`, `ood.sure_semantic_percentile`, `ood.sure_confidence_percentile`
+- `ood.conformal_enabled`, `ood.conformal_alpha`
 - `early_stopping`
 - `evaluation.best_metric`
 - `evaluation.emit_ood_gate`
@@ -74,6 +78,12 @@ Calibration stores per-class:
 - fused-feature mean and variance for Mahalanobis scoring
 - logit energy mean and standard deviation
 - ensemble threshold derived from the calibrated score distribution
+- SURE+ semantic and confidence thresholds (when enabled)
+
+Detector-level calibration also stores:
+
+- calibrated radial normalization $\beta$ (when enabled)
+- conformal nonconformity quantile $\hat{q}$ (when enabled)
 
 Inference then returns both the predicted class and an OOD payload built from:
 
@@ -83,7 +93,19 @@ Inference then returns both the predicted class and an OOD payload built from:
 - `class_threshold`
 - `is_ood`
 
-The notebook user usually only needs to tune `training.continual.ood.threshold_factor` and decide whether validation gates should require OOD metrics through `training.continual.evaluation.require_ood_for_gate`.
+When enabled, payloads additionally include:
+
+- `radial_beta`
+- `sure_semantic_score`, `sure_confidence_score`
+- `sure_semantic_ood`, `sure_confidence_reject`
+- `conformal_set`, `conformal_set_size`, `conformal_coverage`
+
+Typical tuning order for notebook users:
+
+1. Set `training.continual.ood.threshold_factor` for baseline sensitivity.
+2. Enable/disable SURE+ and adjust `sure_semantic_percentile` / `sure_confidence_percentile`.
+3. Enable conformal prediction and set `conformal_alpha` for target coverage level.
+4. Enable BER when continual old/new class energy separation needs stabilization.
 
 ## Outputs
 

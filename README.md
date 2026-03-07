@@ -26,11 +26,21 @@ The training engine is a continual SD-LoRA adapter pipeline:
 The same adapter bundle also carries the runtime OOD state:
 
 - OOD calibration is run after normal training on the known classes
-- per-class calibration stores feature mean/variance plus energy statistics
-- inference scores each prediction with a weighted ensemble of Mahalanobis z-score and energy z-score
-- a class-specific threshold decides whether the sample is treated as OOD
+- optional Bi-directional Energy Regularization (BER) can be applied during training as an additive loss wrapper
+- radial L2 feature normalization can auto-tune a calibration-time $\beta$ and rescale features before OOD stats are computed
+- per-class calibration stores feature mean/variance, energy statistics, and SURE+ thresholds
+- inference scores each prediction with a weighted ensemble of Mahalanobis z-score and energy z-score, then applies SURE+ semantic/confidence rejection
+- optional split conformal prediction adds a set-valued guarantee (`conformal_set`) in addition to the top-1 diagnosis
+- class-specific thresholds and SURE+/conformal calibration artifacts are persisted with the adapter
 
 The architecture guide expands these details in `docs/architecture/overview.md`, and the experimental OOD evaluation note lives in `docs/architecture/experimental_leave_one_class_out_ood.md`.
+
+Key controls are under `training.continual.ood` in `config/base.json`, including:
+
+- `ber_enabled`, `ber_lambda_old`, `ber_lambda_new`
+- `radial_l2_enabled`, `radial_beta_range`, `radial_beta_steps`
+- `sure_enabled`, `sure_semantic_percentile`, `sure_confidence_percentile`
+- `conformal_enabled`, `conformal_alpha`
 
 ## Quick Start
 
