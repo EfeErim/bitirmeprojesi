@@ -48,6 +48,7 @@ def test_continual_trainer_imports() -> bool:
         from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
         from src.training.session import ContinualTrainingSession
         from src.training.validation import evaluate_model
+        from src.workflows import TrainingWorkflow
 
         config = ContinualSDLoRAConfig.from_training_config(
             {
@@ -71,6 +72,7 @@ def test_continual_trainer_imports() -> bool:
         assert hasattr(trainer, "save_adapter")
         assert hasattr(trainer, "load_adapter")
         assert ContinualTrainingSession is not None
+        assert TrainingWorkflow is not None
         assert callable(evaluate_model)
 
         print(f"PASS {gate_label(step_id, 'Continual trainer surface imported and validated')}")
@@ -135,6 +137,7 @@ def test_runtime_surface() -> bool:
     print(f"\nTesting {gate_label(step_id, 'router runtime surface')}...")
     try:
         from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+        from src.workflows import InferenceWorkflow
 
         runtime = RouterAdapterRuntime(
             config={
@@ -155,6 +158,7 @@ def test_runtime_surface() -> bool:
         assert hasattr(runtime, "load_router")
         assert hasattr(runtime, "load_adapter")
         assert hasattr(runtime, "predict")
+        assert InferenceWorkflow is not None
         print(f"PASS {gate_label(step_id, 'Router runtime surface available')}")
         return True
     except Exception as exc:

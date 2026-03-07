@@ -3,47 +3,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-import json
 import logging
-from pathlib import Path
 import shutil
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.shared.contracts import CheckpointRecord
+from src.shared.json_utils import read_json, write_json
 
 logger = logging.getLogger(__name__)
 
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-@dataclass
-class CheckpointRecord:
-    name: str
-    path: Path
-    created_at: str
-    global_step: int
-    epoch: int
-    reason: str
-    is_best: bool = False
-    val_loss: Optional[float] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        payload: Dict[str, Any] = {
-            "name": self.name,
-            "path": str(self.path),
-            "created_at": self.created_at,
-            "global_step": int(self.global_step),
-            "epoch": int(self.epoch),
-            "reason": self.reason,
-            "is_best": bool(self.is_best),
-        }
-        if self.val_loss is not None:
-            payload["val_loss"] = float(self.val_loss)
-        return payload
-
 
 class TrainingCheckpointManager:
     """Manage rolling training checkpoints with latest/best manifests."""
@@ -58,16 +31,13 @@ class TrainingCheckpointManager:
         self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
 
     def _read_json(self, path: Path, default: Any) -> Any:
-        if not path.exists():
-            return default
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            return read_json(path, default=default)
         except Exception:
             return default
 
     def _write_json(self, path: Path, payload: Any) -> None:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        write_json(path, payload, ensure_ascii=False)
 
     def _load_index(self) -> List[Dict[str, Any]]:
         payload = self._read_json(self.index_path, [])

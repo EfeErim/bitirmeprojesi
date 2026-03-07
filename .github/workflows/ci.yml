@@ -26,8 +26,46 @@ jobs:
       - name: Validate notebook/runtime imports
         run: python scripts/validate_notebook_imports.py
 
+      - name: Run static checks
+        run: |
+          ruff check \
+            scripts/benchmark_surfaces.py \
+            scripts/colab_checkpointing.py \
+            scripts/colab_dataset_layout.py \
+            scripts/colab_live_telemetry.py \
+            scripts/colab_notebook_helpers.py \
+            scripts/colab_router_adapter_inference.py \
+            scripts/validate_notebook_imports.py \
+            src/shared \
+            src/data \
+            src/training/services \
+            src/workflows \
+            src/pipeline/router_adapter_runtime.py \
+            src/pipeline/inference_payloads.py \
+            src/adapter/independent_crop_adapter.py \
+            src/core/config_manager.py \
+            src/utils/data_loader.py \
+            tests/unit/shared \
+            tests/unit/workflows \
+            tests/unit/adapter/test_continual_adapter.py \
+            tests/unit/pipeline/test_router_adapter_runtime.py
+          mypy --follow-imports skip \
+            src/shared \
+            src/data \
+            src/training/services \
+            src/workflows \
+            src/pipeline/router_adapter_runtime.py \
+            src/pipeline/inference_payloads.py \
+            src/adapter/independent_crop_adapter.py \
+            src/core/config_manager.py \
+            src/utils/data_loader.py \
+            scripts/benchmark_surfaces.py
+
       - name: Run unit tests
         run: pytest tests/unit tests/colab/test_smoke_training.py -q
 
       - name: Run integration tests
         run: pytest tests/integration -q --runintegration
+
+      - name: Capture orchestration benchmarks
+        run: python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json

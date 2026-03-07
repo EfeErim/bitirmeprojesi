@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from PIL import Image
 
-from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+from src.workflows import InferenceWorkflow
 
 
 def run_inference(
@@ -22,9 +22,9 @@ def run_inference(
     adapter_root: Optional[str | Path] = None,
     device: str = "cuda",
 ) -> Dict[str, Any]:
-    runtime = RouterAdapterRuntime(environment=config_env, adapter_root=adapter_root, device=device)
+    workflow = InferenceWorkflow(environment=config_env, adapter_root=adapter_root, device=device)
     image = Image.open(image_path).convert("RGB")
-    return runtime.predict(image, crop_hint=crop_hint, part_hint=part_hint, return_ood=True)
+    return workflow.predict(image, crop_hint=crop_hint, part_hint=part_hint, return_ood=True)
 
 
 def main() -> int:

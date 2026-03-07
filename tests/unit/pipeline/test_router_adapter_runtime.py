@@ -3,6 +3,7 @@ from pathlib import Path
 from PIL import Image
 
 from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+from src.shared.contracts import InferenceResult
 
 
 class FakeRouter:
@@ -148,3 +149,27 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
 
     assert result["status"] == "unknown_crop"
     assert result["crop"] is None
+
+
+def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
+
+    assert isinstance(result, InferenceResult)
+    assert result.status == "success"
+    assert result.ood_analysis is not None

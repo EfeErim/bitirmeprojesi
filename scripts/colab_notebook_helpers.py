@@ -4,17 +4,18 @@
 from __future__ import annotations
 
 import csv
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 
-from src.training.continual_sd_lora import ContinualSDLoRATrainer
+from src.shared.artifacts import ArtifactStore
+from src.training.services import compute_plan_metrics, write_plan_metric_artifact
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
@@ -57,12 +58,18 @@ def build_history_snapshot(
     }
 
 
-def persist_training_history_artifacts(*, root: Path, history_snapshot: Dict[str, Any], telemetry: Any = None) -> Dict[str, Path]:
+def persist_training_history_artifacts(
+    *,
+    root: Path,
+    history_snapshot: Dict[str, Any],
+    telemetry: Any = None,
+) -> Dict[str, Path]:
     train_dir = _artifact_dir(root, "training")
-    history_json = train_dir / "history.json"
-    history_csv = train_dir / "history.csv"
+    store = ArtifactStore(train_dir)
+    history_json = store.resolve("history.json")
+    history_csv = store.resolve("history.csv")
 
-    history_json.write_text(json.dumps(history_snapshot, indent=2), encoding="utf-8")
+    store.write_json("history.json", history_snapshot)
 
     keys = [
         "train_loss",
@@ -147,6 +154,7 @@ def persist_validation_artifacts(
     cm_norm = cm.astype(float) / np.clip(cm.sum(axis=1, keepdims=True), 1.0, None)
 
     output_dir = _artifact_dir(root, "validation")
+    store = ArtifactStore(output_dir)
     report_txt = output_dir / "classification_report.txt"
     report_json = output_dir / "classification_report.json"
     per_class_csv = output_dir / "per_class_metrics.csv"
@@ -155,8 +163,8 @@ def persist_validation_artifacts(
     confusion_norm_png = output_dir / "confusion_matrix_normalized.png"
     metric_gate_json = output_dir / "metric_gate.json"
 
-    report_txt.write_text(report_text, encoding="utf-8")
-    report_json.write_text(json.dumps(report_dict, indent=2), encoding="utf-8")
+    store.write_text("classification_report.txt", report_text)
+    store.write_json("classification_report.json", report_dict)
     np.savetxt(confusion_csv, cm, delimiter=",", fmt="%d")
 
     with per_class_csv.open("w", encoding="utf-8", newline="") as handle:
@@ -164,7 +172,15 @@ def persist_validation_artifacts(
         writer.writerow(["class", "precision", "recall", "f1-score", "support"])
         for class_name in classes:
             row = report_dict.get(class_name, {})
-            writer.writerow([class_name, row.get("precision", 0.0), row.get("recall", 0.0), row.get("f1-score", 0.0), row.get("support", 0)])
+            writer.writerow(
+                [
+                    class_name,
+                    row.get("precision", 0.0),
+                    row.get("recall", 0.0),
+                    row.get("f1-score", 0.0),
+                    row.get("support", 0),
+                ]
+            )
 
     for matrix, path, title, normalize in (
         (cm, confusion_png, "Validation Confusion Matrix", False),
@@ -193,13 +209,13 @@ def persist_validation_artifacts(
         telemetry.copy_artifact_file(confusion_png, "validation/confusion_matrix.png")
         telemetry.copy_artifact_file(confusion_norm_png, "validation/confusion_matrix_normalized.png")
 
-    metrics = ContinualSDLoRATrainer.compute_plan_metrics(
+    metrics = compute_plan_metrics(
         y_true=y_true,
         y_pred=y_pred,
         ood_labels=ood_labels,
         ood_scores=ood_scores,
     )
-    metric_gate = ContinualSDLoRATrainer.write_plan_metric_artifact(
+    metric_gate = write_plan_metric_artifact(
         output_path=metric_gate_json,
         metrics=metrics,
         targets=gate_targets,

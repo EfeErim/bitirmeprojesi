@@ -11,6 +11,13 @@ from PIL import Image
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
+from src.pipeline.inference_payloads import (
+    best_detection_from_analysis,
+    build_adapter_unavailable_result,
+    build_success_result,
+    build_unknown_crop_result,
+)
+from src.shared.contracts import InferenceResult
 from src.utils.data_loader import preprocess_image
 
 
@@ -75,27 +82,15 @@ class RouterAdapterRuntime:
     def _route(self, image: Any) -> Dict[str, Any]:
         router = self.load_router()
         analysis = router.analyze_image(image)
-        detections = analysis.get("detections", []) if isinstance(analysis, dict) else []
-        if not detections:
-            return {}
-        return max(detections, key=lambda item: float(item.get("crop_confidence", 0.0)))
+        return best_detection_from_analysis(analysis)
 
-    @staticmethod
-    def _default_ood(*, is_ood: bool) -> Dict[str, Any]:
-        return {
-            "ensemble_score": 1.0 if is_ood else 0.0,
-            "class_threshold": 1.0 if is_ood else 0.0,
-            "is_ood": bool(is_ood),
-            "calibration_version": 0,
-        }
-
-    def predict(
+    def predict_result(
         self,
         image: Any,
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> InferenceResult:
         prepared_image = self._coerce_image(image)
         crop_name = str(crop_hint).strip().lower() if crop_hint else None
         part_name = str(part_hint).strip().lower() if part_hint else None
@@ -108,55 +103,43 @@ class RouterAdapterRuntime:
             router_confidence = float(detection.get("crop_confidence", 0.0))
 
         if not crop_name or crop_name == "unknown":
-            payload = {
-                "status": "unknown_crop",
-                "crop": None,
-                "part": part_name,
-                "router_confidence": float(router_confidence),
-                "diagnosis": None,
-                "confidence": 0.0,
-                "message": "Router could not resolve a supported crop.",
-            }
-            if return_ood:
-                payload["ood_analysis"] = self._default_ood(is_ood=True)
-            return payload
+            return build_unknown_crop_result(
+                part_name=part_name,
+                router_confidence=router_confidence,
+                include_ood=return_ood,
+            )
 
         try:
             adapter = self.load_adapter(crop_name)
         except FileNotFoundError as exc:
-            payload = {
-                "status": "adapter_unavailable",
-                "crop": crop_name,
-                "part": part_name,
-                "router_confidence": float(router_confidence),
-                "diagnosis": None,
-                "confidence": 0.0,
-                "message": str(exc),
-            }
-            if return_ood:
-                payload["ood_analysis"] = self._default_ood(is_ood=False)
-            return payload
+            return build_adapter_unavailable_result(
+                crop_name=crop_name,
+                part_name=part_name,
+                router_confidence=router_confidence,
+                message=str(exc),
+                include_ood=return_ood,
+            )
 
         image_tensor = preprocess_image(prepared_image, target_size=self.target_size)
         result = adapter.predict_with_ood(image_tensor)
-        disease = result.get("disease", {}) if isinstance(result, dict) else {}
-        raw_ood = result.get("ood_analysis", {}) if isinstance(result, dict) else {}
-        ood_payload = {
-            "ensemble_score": float(raw_ood.get("ensemble_score", 0.0)),
-            "class_threshold": float(raw_ood.get("class_threshold", 0.0)),
-            "is_ood": bool(raw_ood.get("is_ood", False)),
-            "calibration_version": int(raw_ood.get("calibration_version", 0)),
-        }
+        return build_success_result(
+            crop_name=crop_name,
+            part_name=part_name,
+            router_confidence=router_confidence,
+            result=result,
+            include_ood=return_ood,
+        )
 
-        payload = {
-            "status": str(result.get("status", "success")),
-            "crop": crop_name,
-            "part": part_name,
-            "router_confidence": float(router_confidence),
-            "diagnosis": disease.get("name"),
-            "diagnosis_index": disease.get("class_index"),
-            "confidence": float(disease.get("confidence", 0.0)),
-        }
-        if return_ood:
-            payload["ood_analysis"] = ood_payload
-        return payload
+    def predict(
+        self,
+        image: Any,
+        crop_hint: Optional[str] = None,
+        part_hint: Optional[str] = None,
+        return_ood: bool = True,
+    ) -> Dict[str, Any]:
+        return self.predict_result(
+            image,
+            crop_hint=crop_hint,
+            part_hint=part_hint,
+            return_ood=return_ood,
+        ).to_dict(include_ood=return_ood)

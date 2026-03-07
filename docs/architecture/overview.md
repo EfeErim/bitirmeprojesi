@@ -5,22 +5,25 @@ The repo is intentionally narrow.
 ## Training
 
 - `colab_notebooks/2_interactive_adapter_training.ipynb`
+- `src/workflows/training.py`
 - `src/adapter/independent_crop_adapter.py`
 - `src/training/continual_sd_lora.py`
 - `src/training/session.py`
 - `src/training/validation.py`
 - `src/training/types.py`
+- `src/data/`
 - `src/utils/data_loader.py`
 - `scripts/colab_checkpointing.py`
 - `scripts/colab_dataset_layout.py`
 - `scripts/colab_live_telemetry.py`
 - `scripts/colab_notebook_helpers.py`
 
-Training is split into three layers:
+Training is split into four layers:
 
-1. `ContinualSDLoRATrainer` owns model initialization, LoRA wrapping, optimizer setup, batch stepping, snapshot/restore, OOD calibration, and adapter save/load.
-2. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, checkpoint requests, best-metric updates, early stopping, observer events, and history accumulation.
-3. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact.
+1. `TrainingWorkflow.run(...)` is the canonical orchestration entrypoint for the supported adapter-training flow.
+2. `ContinualSDLoRATrainer` owns model initialization, LoRA wrapping, optimizer setup, batch stepping, snapshot/restore, OOD calibration, and adapter save/load, while `src/training/services/` holds shared metric/runtime/persistence helpers.
+3. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, checkpoint requests, best-metric updates, early stopping, observer events, and history accumulation.
+4. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact.
 
 Notebook 2 now uses a two-stage dataset contract:
 
@@ -33,13 +36,16 @@ Checkpoint payloads persist the normalized trainer contract, optimizer state, sc
 
 ## Inference
 
+- `src/workflows/inference.py`
 - `src/pipeline/router_adapter_runtime.py`
+- `src/pipeline/inference_payloads.py`
 - `src/router/vlm_pipeline.py`
 - `scripts/colab_router_adapter_inference.py`
 - `colab_notebooks/1_router_adapter_inference.ipynb`
 
 Inference is one path only:
 
-1. Router resolves the crop.
-2. Runtime loads that crop adapter lazily.
-3. Adapter returns diagnosis and OOD payload.
+1. `InferenceWorkflow.predict(...)` is the canonical entrypoint.
+2. Router resolves the crop.
+3. Runtime loads that crop adapter lazily.
+4. Adapter returns diagnosis and OOD payload through a typed inference contract.

@@ -58,7 +58,11 @@ class FakeTrainer:
         )
 
     def restore_training_state(self, payload):
-        checkpoint = payload if isinstance(payload, TrainingCheckpointPayload) else TrainingCheckpointPayload.from_dict(payload)
+        checkpoint = (
+            payload
+            if isinstance(payload, TrainingCheckpointPayload)
+            else TrainingCheckpointPayload.from_dict(payload)
+        )
         self.class_to_idx = dict(checkpoint.class_to_idx)
         self.current_epoch = int(checkpoint.current_epoch)
         return checkpoint
@@ -120,6 +124,21 @@ def test_adapter_builds_training_session(monkeypatch):
 
     assert isinstance(session, ContinualTrainingSession)
     assert adapter.trainer.class_to_idx == {"healthy": 0}
+
+
+def test_adapter_builds_training_session_without_num_epochs_on_trainer_config(monkeypatch):
+    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+    adapter.trainer.config = type("Cfg", (), {})()
+
+    session = adapter.build_training_session(
+        train_loader=[{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}],
+    )
+
+    assert isinstance(session, ContinualTrainingSession)
+    assert session.num_epochs == 1
 
 
 def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):

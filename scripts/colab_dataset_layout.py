@@ -3,12 +3,12 @@
 
 from __future__ import annotations
 
-import json
 import random
 import shutil
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from src.shared.json_utils import read_json, write_json
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 
@@ -115,7 +115,7 @@ def prepare_runtime_dataset_layout(
 
     if crop_root.exists() and split_manifest_path.exists():
         try:
-            if json.loads(split_manifest_path.read_text(encoding="utf-8")) == source_manifest:
+            if read_json(split_manifest_path, default={}) == source_manifest:
                 return runtime_dataset_root
         except Exception:
             pass
@@ -152,7 +152,6 @@ def prepare_runtime_dataset_layout(
             for source_path in files:
                 shutil.copy2(source_path, dst_dir / source_path.name)
 
-    body = json.dumps(source_manifest, indent=2, ensure_ascii=False)
-    split_manifest_path.write_text(body, encoding="utf-8")
-    legacy_manifest_path.write_text(body, encoding="utf-8")
+    write_json(split_manifest_path, source_manifest, ensure_ascii=False)
+    write_json(legacy_manifest_path, source_manifest, ensure_ascii=False)
     return runtime_dataset_root

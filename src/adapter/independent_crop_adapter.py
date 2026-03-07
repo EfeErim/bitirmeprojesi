@@ -3,14 +3,16 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional
 
 import torch
 
+from src.shared.contracts import AdapterMetadata
+from src.shared.json_utils import read_json_dict, write_json
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+from src.training.services import resolve_session_num_epochs
 from src.training.session import ContinualTrainingSession
 from src.training.types import TrainingCheckpointPayload
 
@@ -152,10 +154,11 @@ class IndependentCropAdapter:
         """Build a training session around the initialized trainer."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before build_training_session().")
+        resolved_epochs = resolve_session_num_epochs(self._trainer.config, num_epochs)
         return ContinualTrainingSession(
             self._trainer,
             train_loader,
-            int(num_epochs if num_epochs is not None else self._trainer.config.num_epochs),
+            resolved_epochs,
             val_loader=val_loader,
             observers=observers,
             stop_policy=stop_policy,
@@ -190,8 +193,8 @@ class IndependentCropAdapter:
             "global_step": int(dict(session_payload.get("progress_state", {})).get("global_step", 0)),
             "epoch": int(dict(session_payload.get("progress_state", {})).get("epoch", 0)),
         }
-        (checkpoint_dir_path / "session_state.json").write_text(json.dumps(session_payload, indent=2), encoding="utf-8")
-        (checkpoint_dir_path / "checkpoint_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        write_json(checkpoint_dir_path / "session_state.json", session_payload)
+        write_json(checkpoint_dir_path / "checkpoint_meta.json", meta)
         return checkpoint_dir_path
 
     def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
@@ -223,7 +226,7 @@ class IndependentCropAdapter:
         session_path = root / "session_state.json"
         session_payload = {}
         if session_path.exists():
-            session_payload = json.loads(session_path.read_text(encoding="utf-8"))
+            session_payload = read_json_dict(session_path)
         class_to_idx = trainer_payload.class_to_idx
         if isinstance(class_to_idx, dict):
             self.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
@@ -232,9 +235,13 @@ class IndependentCropAdapter:
             "trainer_state": trainer_payload.to_dict(),
             "session_state": session_payload,
             "run_id": str(dict(session_payload).get("run_id", "")),
-            "progress_state": dict(session_payload.get("progress_state", {})) if isinstance(session_payload, dict) else {},
+            "progress_state": (
+                dict(session_payload.get("progress_state", {})) if isinstance(session_payload, dict) else {}
+            ),
             "history": dict(session_payload.get("history", {})) if isinstance(session_payload, dict) else {},
-            "best_metric_state": dict(session_payload.get("best_metric_state", {})) if isinstance(session_payload, dict) else {},
+            "best_metric_state": (
+                dict(session_payload.get("best_metric_state", {})) if isinstance(session_payload, dict) else {}
+            ),
         }
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
@@ -272,6 +279,11 @@ class IndependentCropAdapter:
     def _metadata_payload(self) -> Dict[str, Any]:
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
+        trainer_config = (
+            self._trainer.config.as_contract_dict()
+            if hasattr(self._trainer.config, "as_contract_dict")
+            else {"backbone": {"model_name": getattr(self._trainer.config, "backbone_model_name", self.model_name)}}
+        )
         ood_state = (
             self._trainer._serialize_ood_state()  # type: ignore[attr-defined]
             if hasattr(self._trainer, "_serialize_ood_state")
@@ -281,27 +293,25 @@ class IndependentCropAdapter:
                 "class_stats": {},
             }
         )
-        return {
-            "schema_version": self.schema_version,
-            "engine": self.engine,
-            "trainer_config": self._trainer.config.as_contract_dict(),
-            "backbone": {
+        return AdapterMetadata(
+            schema_version=self.schema_version,
+            engine=self.engine,
+            trainer_config=trainer_config,
+            backbone={
                 "model_name": self._trainer.config.backbone_model_name,
                 "frozen": True,
             },
-            "fusion": {
+            fusion={
                 "layers": list(self._trainer.config.fusion_layers),
                 "output_dim": int(self._trainer.config.fusion_output_dim),
                 "dropout": float(self._trainer.config.fusion_dropout),
                 "gating": str(self._trainer.config.fusion_gating),
             },
-            "class_to_idx": dict(self.class_to_idx),
-            "ood_calibration": {
-                "version": self.ood_calibration_version,
-            },
-            "ood_state": ood_state,
-            "target_modules_resolved": list(self.target_modules_resolved),
-        }
+            class_to_idx=dict(self.class_to_idx),
+            ood_calibration={"version": self.ood_calibration_version},
+            ood_state=ood_state,
+            target_modules_resolved=list(self.target_modules_resolved),
+        ).to_dict()
 
     def save_adapter(self, checkpoint_dir: str) -> Path:
         """Persist adapter assets with v6 metadata schema."""
@@ -313,7 +323,7 @@ class IndependentCropAdapter:
         meta_path = asset_dir / "adapter_meta.json"
         if not meta_path.exists():
             metadata = self._metadata_payload()
-            meta_path.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+            write_json(meta_path, metadata)
         return asset_dir
 
     def load_adapter(self, checkpoint_dir: str) -> None:
@@ -327,20 +337,20 @@ class IndependentCropAdapter:
         if not meta_path.exists():
             raise FileNotFoundError(f"adapter_meta.json not found in {asset_dir}")
 
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-        self.class_to_idx = {str(k): int(v) for k, v in meta.get("class_to_idx", {}).items()}
+        meta = AdapterMetadata.from_dict(read_json_dict(meta_path))
+        self.class_to_idx = dict(meta.class_to_idx)
 
-        normalized = dict(meta.get("trainer_config", {}))
+        normalized = dict(meta.trainer_config)
         if not normalized:
             normalized = {
-                "backbone": meta.get("backbone", {"model_name": self.model_name}),
+                "backbone": dict(meta.backbone or {"model_name": self.model_name}),
                 "adapter": {
                     "target_modules_strategy": "all_linear_transformer",
                     "lora_r": 16,
                     "lora_alpha": 32,
                     "lora_dropout": 0.1,
                 },
-                "fusion": meta.get("fusion", {"layers": [2, 5, 8, 11]}),
+                "fusion": dict(meta.fusion or {"layers": [2, 5, 8, 11]}),
                 "ood": {"threshold_factor": 2.0},
                 "device": str(self.device),
             }

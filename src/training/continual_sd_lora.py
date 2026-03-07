@@ -3,22 +3,17 @@
 
 from __future__ import annotations
 
-from contextlib import nullcontext
-from dataclasses import dataclass, field
-from datetime import datetime
-import hashlib
 import inspect
-import json
 import logging
 import math
-import random
-from pathlib import Path
 import time
+from dataclasses import dataclass, field
+from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import torch
 import torch.nn as nn
-from sklearn.metrics import roc_auc_score
 
 try:
     import numpy as np
@@ -26,8 +21,25 @@ except Exception:  # pragma: no cover - optional dependency in some local sandbo
     np = None  # type: ignore[assignment]
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
-from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
+from src.ood.continual_ood import ContinualOODDetector
+from src.shared.json_utils import read_json_dict, write_json
 from src.training.quantization import assert_no_prohibited_4bit_flags
+from src.training.services import (
+    autocast_context,
+    build_adapter_metadata,
+    build_grad_scaler,
+    capture_rng_state,
+    compute_config_hash,
+    compute_plan_metrics,
+    configure_runtime_reproducibility,
+    load_plan_targets,
+    resolve_amp_dtype,
+    restore_ood_state,
+    restore_rng_state,
+    serialize_ood_state,
+    validate_plan_metrics,
+    write_plan_metric_artifact,
+)
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
 try:
@@ -46,12 +58,6 @@ except Exception:  # pragma: no cover - test fallback
 
 
 logger = logging.getLogger(__name__)
-
-_DEFAULT_PLAN_TARGETS = {
-    "accuracy": 0.93,
-    "ood_auroc": 0.92,
-    "ood_false_positive_rate": 0.05,
-}
 
 EXCLUDED_TARGET_TOKEN = ("classifier", "router", "head", "pooler")
 PREFERRED_TARGET_TOKEN = (
@@ -231,7 +237,12 @@ class ContinualSDLoRAConfig:
             early_stopping_mode=str(
                 early_stopping.get(
                     "mode",
-                    "min" if str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss"))) in {"val_loss", "generalization_gap"} else "max",
+                    (
+                        "min"
+                        if str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss")))
+                        in {"val_loss", "generalization_gap"}
+                        else "max"
+                    ),
                 )
             ),
             early_stopping_patience=int(early_stopping.get("patience", 3)),
@@ -277,7 +288,7 @@ class ContinualSDLoRATrainer:
         self.fusion: Optional[MultiScaleFeatureFusion] = None
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.scheduler: Optional[torch.optim.lr_scheduler._LRScheduler | torch.optim.lr_scheduler.LRScheduler] = None
-        self.scaler = torch.cuda.amp.GradScaler(enabled=False)
+        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
         self.current_epoch = 0
         self.optimizer_steps = 0
         self.class_to_idx: Dict[str, int] = {}
@@ -297,26 +308,10 @@ class ContinualSDLoRATrainer:
 
     @staticmethod
     def _compute_config_hash(contract: Dict[str, Any]) -> str:
-        serialized = json.dumps(contract, sort_keys=True, separators=(",", ":"))
-        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+        return compute_config_hash(contract)
 
     def _configure_runtime_reproducibility(self) -> None:
-        seed = int(self.config.seed)
-        random.seed(seed)
-        torch.manual_seed(seed)
-        if np is not None:
-            np.random.seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(seed)
-
-        if self.config.deterministic:
-            try:
-                torch.use_deterministic_algorithms(True)
-            except Exception:
-                pass
-            if hasattr(torch.backends, "cudnn"):
-                torch.backends.cudnn.deterministic = True
-                torch.backends.cudnn.benchmark = False
+        configure_runtime_reproducibility(self.config, np_module=np)
 
     def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
         epochs = int(max(1, num_epochs if num_epochs is not None else self.config.num_epochs))
@@ -332,27 +327,13 @@ class ContinualSDLoRATrainer:
             self._ensure_scheduler()
 
     def _resolve_amp_dtype(self) -> Optional[torch.dtype]:
-        if self.device.type != "cuda":
-            return None
-        mode = str(self.config.mixed_precision).lower()
-        if mode == "off":
-            return None
-        if mode == "bf16":
-            return torch.bfloat16
-        if mode == "fp16":
-            return torch.float16
-        if torch.cuda.is_available() and getattr(torch.cuda, "is_bf16_supported", lambda: False)():
-            return torch.bfloat16
-        return torch.float16
+        return resolve_amp_dtype(self.device, self.config.mixed_precision)
 
     def _autocast_context(self) -> Any:
-        dtype = self._resolve_amp_dtype()
-        if dtype is None:
-            return nullcontext()
-        return torch.autocast(device_type=self.device.type, dtype=dtype)
+        return autocast_context(self.device, self.config.mixed_precision)
 
     def _amp_scaler_enabled(self) -> bool:
-        return self._resolve_amp_dtype() == torch.float16 and self.device.type == "cuda"
+        return self.scaler.is_enabled()
 
     def _ensure_scheduler(self) -> None:
         if self.optimizer is None or self.scheduler is not None or self.config.scheduler_name == "none":
@@ -398,23 +379,7 @@ class ContinualSDLoRATrainer:
 
     @staticmethod
     def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
-        """Load optional metric targets, falling back to hardcoded defaults."""
-        if spec_path is None:
-            return dict(_DEFAULT_PLAN_TARGETS)
-
-        resolved = Path(spec_path)
-        if not resolved.exists():
-            return dict(_DEFAULT_PLAN_TARGETS)
-
-        payload = json.loads(resolved.read_text(encoding="utf-8"))
-        targets = payload.get("targets", {}) if isinstance(payload, dict) else {}
-        return {
-            "accuracy": float(targets.get("continual_accuracy", _DEFAULT_PLAN_TARGETS["accuracy"])),
-            "ood_auroc": float(targets.get("ood_auroc", _DEFAULT_PLAN_TARGETS["ood_auroc"])),
-            "ood_false_positive_rate": float(
-                targets.get("ood_false_positive_rate", _DEFAULT_PLAN_TARGETS["ood_false_positive_rate"])
-            ),
-        }
+        return load_plan_targets(spec_path)
 
     @staticmethod
     def compute_plan_metrics(
@@ -424,46 +389,12 @@ class ContinualSDLoRATrainer:
         ood_labels: Optional[Sequence[int]] = None,
         ood_scores: Optional[Sequence[float]] = None,
     ) -> Dict[str, Optional[float]]:
-        """Compute plan metrics in a deterministic and serializable structure."""
-        if len(y_true) == 0:
-            raise ValueError("y_true must not be empty")
-        if len(y_true) != len(y_pred):
-            raise ValueError("y_true and y_pred must have same length")
-
-        y_true_t = torch.tensor(list(y_true), dtype=torch.long)
-        y_pred_t = torch.tensor(list(y_pred), dtype=torch.long)
-        accuracy = float((y_true_t == y_pred_t).float().mean().item())
-
-        ood_auroc: Optional[float] = None
-        ood_fpr: Optional[float] = None
-        ood_total: int = 0
-        in_dist_total: int = 0
-        if ood_labels is not None and ood_scores is not None:
-            if len(ood_labels) != len(ood_scores):
-                raise ValueError("ood_labels and ood_scores must have same length")
-            if len(ood_labels) > 0:
-                labels_t = torch.tensor(list(ood_labels), dtype=torch.long)
-                scores_t = torch.tensor(list(ood_scores), dtype=torch.float32)
-                ood_total = int((labels_t == 1).sum().item())
-                in_dist_total = int((labels_t == 0).sum().item())
-                if ood_total > 0 and in_dist_total > 0:
-                    try:
-                        ood_auroc = float(roc_auc_score(labels_t.cpu().numpy(), scores_t.cpu().numpy()))
-                    except Exception:
-                        ood_auroc = None
-                    in_scores = scores_t[labels_t == 0]
-                    if in_scores.numel() > 0:
-                        threshold = torch.quantile(in_scores, 0.95)
-                        ood_fpr = float((in_scores > threshold).float().mean().item())
-
-        return {
-            "accuracy": accuracy,
-            "ood_auroc": ood_auroc,
-            "ood_false_positive_rate": ood_fpr,
-            "classification_samples": int(y_true_t.numel()),
-            "ood_samples": ood_total,
-            "in_distribution_samples": in_dist_total,
-        }
+        return compute_plan_metrics(
+            y_true=y_true,
+            y_pred=y_pred,
+            ood_labels=ood_labels,
+            ood_scores=ood_scores,
+        )
 
     @classmethod
     def validate_plan_metrics(
@@ -473,61 +404,7 @@ class ContinualSDLoRATrainer:
         *,
         require_ood: bool = False,
     ) -> Dict[str, Any]:
-        """Evaluate pass/fail against adapter plan targets with explicit gating conditions."""
-        target_values = dict(targets or cls.load_plan_targets())
-
-        checks: Dict[str, Dict[str, Any]] = {}
-
-        acc_value = metrics.get("accuracy")
-        checks["accuracy"] = {
-            "value": acc_value,
-            "target": target_values["accuracy"],
-            "operator": ">=",
-            "asserted": acc_value is not None,
-            "passed": bool(acc_value is not None and float(acc_value) >= float(target_values["accuracy"])),
-        }
-
-        auroc_value = metrics.get("ood_auroc")
-        checks["ood_auroc"] = {
-            "value": auroc_value,
-            "target": target_values["ood_auroc"],
-            "operator": ">=",
-            "asserted": auroc_value is not None,
-            "passed": bool(auroc_value is not None and float(auroc_value) >= float(target_values["ood_auroc"])),
-        }
-
-        fpr_value = metrics.get("ood_false_positive_rate")
-        checks["ood_false_positive_rate"] = {
-            "value": fpr_value,
-            "target": target_values["ood_false_positive_rate"],
-            "operator": "<=",
-            "asserted": fpr_value is not None,
-            "passed": bool(fpr_value is not None and float(fpr_value) <= float(target_values["ood_false_positive_rate"])),
-        }
-
-        missing_checks = [name for name, detail in checks.items() if not detail["asserted"]]
-        if require_ood:
-            gating_status = "failed" if missing_checks else "ready"
-            gating_reason = "missing_required_metrics" if missing_checks else "all_required_metrics_present"
-        else:
-            gating_status = "soft" if missing_checks else "ready"
-            gating_reason = "missing_optional_metrics" if missing_checks else "all_metrics_present"
-
-        all_asserted_passed = all(detail["passed"] for detail in checks.values() if detail["asserted"])
-        hard_fail = require_ood and bool(missing_checks)
-        passed = bool(all_asserted_passed and not hard_fail)
-
-        return {
-            "passed": passed,
-            "require_ood": bool(require_ood),
-            "targets": target_values,
-            "checks": checks,
-            "gating": {
-                "status": gating_status,
-                "reason": gating_reason,
-                "missing_metrics": missing_checks,
-            },
-        }
+        return validate_plan_metrics(metrics, targets, require_ood=require_ood)
 
     @classmethod
     def write_plan_metric_artifact(
@@ -539,17 +416,13 @@ class ContinualSDLoRATrainer:
         require_ood: bool = False,
         context: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Persist a deterministic metric artifact used for explicit gating."""
-        evaluation = cls.validate_plan_metrics(metrics, targets, require_ood=require_ood)
-        artifact = {
-            "schema_version": "v6_plan_metric_gate",
-            "metrics": metrics,
-            "evaluation": evaluation,
-            "context": dict(context or {}),
-        }
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
-        return artifact
+        return write_plan_metric_artifact(
+            output_path=output_path,
+            metrics=metrics,
+            targets=targets,
+            require_ood=require_ood,
+            context=context,
+        )
 
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
         """Load frozen backbone, apply adapters, initialize heads."""
@@ -587,7 +460,7 @@ class ContinualSDLoRATrainer:
         self._is_initialized = True
         self.optimizer = None
         self.scheduler = None
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self._amp_scaler_enabled())
+        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
         self.optimizer_steps = 0
         self._accumulation_counter = 0
         logger.info(
@@ -739,7 +612,7 @@ class ContinualSDLoRATrainer:
             lr=self.config.learning_rate,
             weight_decay=self.config.weight_decay,
         )
-        self.scaler = torch.cuda.amp.GradScaler(enabled=self._amp_scaler_enabled())
+        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
         self._ensure_scheduler()
         self.optimizer.zero_grad(set_to_none=True)
 
@@ -849,8 +722,14 @@ class ContinualSDLoRATrainer:
             if self.scaler.is_enabled():
                 self.scaler.unscale_(self.optimizer)
             if self.config.max_grad_norm > 0.0:
+                params = [
+                    param
+                    for group in self.optimizer.param_groups
+                    for param in group.get("params", [])
+                    if param is not None
+                ]
                 torch.nn.utils.clip_grad_norm_(
-                    [param for group in self.optimizer.param_groups for param in group.get("params", []) if param is not None],
+                    params,
                     max_norm=float(self.config.max_grad_norm),
                 )
             grad_norm = self._compute_grad_norm()
@@ -939,112 +818,39 @@ class ContinualSDLoRATrainer:
         }
 
     def _metadata_payload(self) -> Dict[str, Any]:
-        return {
-            "schema_version": "v6",
-            "engine": "continual_sd_lora",
-            "trainer_config": self.config.as_contract_dict(),
-            "config_hash": self._config_hash,
-            "backbone": {
-                "model_name": self.config.backbone_model_name,
-                "frozen": True,
-            },
-            "fusion": {
-                "layers": self.config.fusion_layers,
-                "output_dim": self.config.fusion_output_dim,
-                "dropout": self.config.fusion_dropout,
-                "gating": self.config.fusion_gating,
-            },
-            "class_to_idx": self.class_to_idx,
-            "ood_calibration": {"version": self.ood_detector.calibration_version},
-            "ood_state": self._serialize_ood_state(),
-            "target_modules_resolved": list(self.target_modules_resolved),
-            "adapter_runtime": {
-                "peft_available": bool(self._peft_available),
-                "adapter_wrapped": bool(self._adapter_wrapped),
-                "degraded_without_peft": bool(not self._adapter_wrapped),
-            },
-        }
+        return build_adapter_metadata(
+            schema_version="v6",
+            engine="continual_sd_lora",
+            trainer_config=self.config.as_contract_dict(),
+            config_hash=self._config_hash,
+            backbone_model_name=self.config.backbone_model_name,
+            fusion_layers=list(self.config.fusion_layers),
+            fusion_output_dim=self.config.fusion_output_dim,
+            fusion_dropout=self.config.fusion_dropout,
+            fusion_gating=self.config.fusion_gating,
+            class_to_idx=dict(self.class_to_idx),
+            target_modules_resolved=list(self.target_modules_resolved),
+            ood_detector=self.ood_detector,
+            peft_available=bool(self._peft_available),
+            adapter_wrapped=bool(self._adapter_wrapped),
+        ).to_dict()
 
     def _serialize_ood_state(self) -> Dict[str, Any]:
-        class_stats: Dict[str, Any] = {}
-        for class_id, stats in self.ood_detector.class_stats.items():
-            class_stats[str(class_id)] = {
-                "mean": stats.mean.detach().cpu().tolist(),
-                "var": stats.var.detach().cpu().tolist(),
-                "mahalanobis_mu": float(stats.mahalanobis_mu),
-                "mahalanobis_sigma": float(stats.mahalanobis_sigma),
-                "energy_mu": float(stats.energy_mu),
-                "energy_sigma": float(stats.energy_sigma),
-                "threshold": float(stats.threshold),
-            }
-        return {
-            "threshold_factor": float(self.ood_detector.threshold_factor),
-            "calibration_version": int(self.ood_detector.calibration_version),
-            "class_stats": class_stats,
-        }
+        return serialize_ood_state(self.ood_detector)
 
     def _restore_ood_state(self, payload: Dict[str, Any]) -> None:
-        threshold_factor = float(payload.get("threshold_factor", self.config.ood_threshold_factor))
-        self.ood_detector = ContinualOODDetector(threshold_factor=threshold_factor)
-        self.ood_detector.calibration_version = int(payload.get("calibration_version", 0))
-
-        class_stats = payload.get("class_stats", {})
-        if not isinstance(class_stats, dict):
-            return
-        for class_id_raw, stats in class_stats.items():
-            if not isinstance(stats, dict):
-                continue
-            class_id = int(class_id_raw)
-            self.ood_detector.class_stats[class_id] = ClassCalibration(
-                mean=torch.tensor(stats.get("mean", []), dtype=torch.float32),
-                var=torch.tensor(stats.get("var", []), dtype=torch.float32),
-                mahalanobis_mu=float(stats.get("mahalanobis_mu", 0.0)),
-                mahalanobis_sigma=float(stats.get("mahalanobis_sigma", 1.0)),
-                energy_mu=float(stats.get("energy_mu", 0.0)),
-                energy_sigma=float(stats.get("energy_sigma", 1.0)),
-                threshold=float(stats.get("threshold", 0.0)),
-            )
+        self.ood_detector = restore_ood_state(
+            payload,
+            default_threshold_factor=self.config.ood_threshold_factor,
+        )
 
     @staticmethod
     def _capture_rng_state() -> Dict[str, Any]:
-        payload: Dict[str, Any] = {
-            "torch": torch.get_rng_state(),
-            "python": random.getstate(),
-        }
-        if torch.cuda.is_available():
-            payload["torch_cuda"] = torch.cuda.get_rng_state_all()
-        if np is not None:
-            payload["numpy"] = np.random.get_state()
-        return payload
+        return capture_rng_state(np_module=np)
 
     @staticmethod
     def _restore_rng_state(payload: Dict[str, Any]) -> None:
-        if not isinstance(payload, dict):
-            return
-        try:
-            torch_state = payload.get("torch")
-            if torch_state is not None:
-                torch.set_rng_state(torch_state)
-        except Exception:
-            pass
-        try:
-            cuda_state = payload.get("torch_cuda")
-            if cuda_state is not None and torch.cuda.is_available():
-                torch.cuda.set_rng_state_all(cuda_state)
-        except Exception:
-            pass
-        try:
-            python_state = payload.get("python")
-            if python_state is not None:
-                random.setstate(python_state)
-        except Exception:
-            pass
-        try:
-            numpy_state = payload.get("numpy")
-            if numpy_state is not None and np is not None:
-                np.random.set_state(numpy_state)
-        except Exception:
-            pass
+        restore_rng_state(payload, np_module=np)
 
     def snapshot_training_state(self) -> TrainingCheckpointPayload:
         if self.adapter_model is None or self.classifier is None or self.fusion is None:
@@ -1139,7 +945,7 @@ class ContinualSDLoRATrainer:
         torch.save(self.fusion.state_dict(), adapter_dir / "fusion.pth")
 
         meta = self._metadata_payload()
-        (adapter_dir / "adapter_meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+        write_json(adapter_dir / "adapter_meta.json", meta)
         return adapter_dir
 
     def load_adapter(self, adapter_dir: str) -> Dict[str, Any]:
@@ -1149,7 +955,7 @@ class ContinualSDLoRATrainer:
         meta_path = root / "adapter_meta.json"
         if not meta_path.exists():
             raise FileNotFoundError(f"adapter_meta.json not found in {root}")
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        meta = read_json_dict(meta_path)
         self.class_to_idx = {str(k): int(v) for k, v in meta.get("class_to_idx", {}).items()}
         self.target_modules_resolved = [str(v) for v in meta.get("target_modules_resolved", [])]
 
@@ -1160,7 +966,8 @@ class ContinualSDLoRATrainer:
             self.adapter_model = self._prepare_module_for_device(loaded_adapter, module_name="adapter_model")
             self._adapter_wrapped = True
         elif (root / "adapter_model.pt").exists() and self.adapter_model is not None:
-            self.adapter_model.load_state_dict(torch.load(root / "adapter_model.pt", map_location=self.device), strict=False)
+            adapter_state = torch.load(root / "adapter_model.pt", map_location=self.device)
+            self.adapter_model.load_state_dict(adapter_state, strict=False)
         classifier_path = root / "classifier.pth"
         fusion_path = root / "fusion.pth"
         if classifier_path.exists():

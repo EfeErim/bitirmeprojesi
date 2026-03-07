@@ -1,0 +1,124 @@
+"""DataLoader assembly helpers."""
+
+from __future__ import annotations
+
+import random
+from collections import Counter
+from typing import Any, Callable, Dict, List
+
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, WeightedRandomSampler
+
+from .datasets import CropDataset, infer_crop_classes_from_layout
+
+VALID_SAMPLERS = {"shuffle", "weighted"}
+
+
+def seed_worker_factory(base_seed: int) -> Any:
+    def _seed_worker(worker_id: int) -> None:
+        worker_seed = int(base_seed) + int(worker_id)
+        random.seed(worker_seed)
+        np.random.seed(worker_seed % (2**32 - 1))
+        torch.manual_seed(worker_seed)
+
+    return _seed_worker
+
+
+def dict_collate_fn(batch: List[tuple[torch.Tensor, int]]) -> Dict[str, torch.Tensor]:
+    if not batch:
+        return {"images": torch.empty(0), "labels": torch.empty(0, dtype=torch.long)}
+    images, labels = zip(*batch)
+    return {
+        "images": torch.stack(list(images), dim=0),
+        "labels": torch.tensor(labels, dtype=torch.long),
+    }
+
+
+def build_weighted_sampler(dataset: CropDataset, seed: int) -> WeightedRandomSampler:
+    counts = Counter(dataset.labels)
+    weights = [1.0 / float(counts[label]) for label in dataset.labels]
+    generator = torch.Generator()
+    generator.manual_seed(int(seed))
+    return WeightedRandomSampler(
+        weights=torch.tensor(weights, dtype=torch.double),
+        num_samples=len(weights),
+        replacement=True,
+        generator=generator,
+    )
+
+
+def create_training_loaders(
+    data_dir: str,
+    crop: str,
+    batch_size: int = 32,
+    num_workers: int = 4,
+    use_cache: bool = True,
+    cache_size: int = 1000,
+    target_size: int = 224,
+    error_policy: str = "tolerant",
+    sampler: str = "shuffle",
+    seed: int = 42,
+    validate_images_on_init: bool = True,
+    *,
+    dataset_cls: type[CropDataset] = CropDataset,
+    infer_classes_fn: Callable[[str, str], List[str]] = infer_crop_classes_from_layout,
+    collate_fn: Callable[[List[tuple[torch.Tensor, int]]], Dict[str, torch.Tensor]] = dict_collate_fn,
+    sampler_builder: Callable[[CropDataset, int], WeightedRandomSampler] = build_weighted_sampler,
+    worker_seed_factory: Callable[[int], Any] = seed_worker_factory,
+    **dataloader_kwargs: Any,
+) -> Dict[str, DataLoader]:
+    sampler_name = str(sampler).strip().lower()
+    if sampler_name not in VALID_SAMPLERS:
+        raise ValueError(f"Unsupported sampler: {sampler}")
+
+    class_names = infer_classes_fn(data_dir, crop)
+    pin_memory = bool(dataloader_kwargs.pop("pin_memory", True))
+    persistent_workers = bool(dataloader_kwargs.pop("persistent_workers", num_workers > 0))
+    prefetch_factor = dataloader_kwargs.pop("prefetch_factor", None)
+
+    loaders: Dict[str, DataLoader] = {}
+    worker_init_fn = worker_seed_factory(int(seed))
+    for split in ("train", "val", "test"):
+        dataset = dataset_cls(
+            data_dir=data_dir,
+            crop=crop,
+            split=split,
+            class_names=class_names,
+            transform=(split == "train"),
+            target_size=target_size,
+            use_cache=use_cache,
+            cache_size=cache_size,
+            error_policy=error_policy,
+            validate_images_on_init=validate_images_on_init,
+        )
+        loader_generator = torch.Generator()
+        loader_generator.manual_seed(int(seed) + (0 if split == "train" else 10 if split == "val" else 20))
+
+        split_sampler = None
+        shuffle = split == "train"
+        if split == "train" and sampler_name == "weighted" and len(dataset) > 0:
+            split_sampler = sampler_builder(dataset, int(seed))
+            shuffle = False
+
+        extra_kwargs = dict(dataloader_kwargs)
+        if num_workers <= 0:
+            extra_kwargs.pop("prefetch_factor", None)
+            persistent_workers = False
+        elif prefetch_factor is not None:
+            extra_kwargs["prefetch_factor"] = int(prefetch_factor)
+
+        loaders[split] = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=shuffle if split_sampler is None else False,
+            sampler=split_sampler,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            persistent_workers=persistent_workers if num_workers > 0 else False,
+            collate_fn=collate_fn,
+            worker_init_fn=worker_init_fn,
+            generator=loader_generator,
+            **extra_kwargs,
+        )
+    return loaders

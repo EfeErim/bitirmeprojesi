@@ -3,32 +3,23 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 from threading import RLock
 from typing import Any, Dict, Optional
 
+from src.shared.json_utils import deep_merge, read_json_dict
 from src.training.quantization import assert_no_prohibited_4bit_flags
 
 logger = logging.getLogger(__name__)
 
 
 def _read_json(path: Path) -> Dict[str, Any]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"Expected object JSON in {path}")
-    return payload
+    return read_json_dict(path)
 
 
 def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
-    merged = dict(base)
-    for key, value in override.items():
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = _deep_merge(merged[key], value)
-        else:
-            merged[key] = value
-    return merged
+    return deep_merge(base, override)
 
 
 class ConfigurationManager:
@@ -159,7 +150,9 @@ class ConfigurationManager:
         colab_training["num_workers"] = int(colab_training.get("num_workers", 2))
         colab_training["pin_memory"] = bool(colab_training.get("pin_memory", True))
         colab_training["stdout_progress_batch_interval"] = int(colab_training.get("stdout_progress_batch_interval", 50))
-        colab_training["checkpoint_every_n_steps"] = int(checkpoint_every_n_steps if checkpoint_every_n_steps is not None else 200)
+        colab_training["checkpoint_every_n_steps"] = int(
+            checkpoint_every_n_steps if checkpoint_every_n_steps is not None else 200
+        )
         colab_training["checkpoint_interval"] = int(colab_training["checkpoint_every_n_steps"])
         colab_training["checkpoint_on_exception"] = bool(colab_training.get("checkpoint_on_exception", True))
 
