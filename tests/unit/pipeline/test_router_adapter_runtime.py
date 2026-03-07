@@ -173,3 +173,45 @@ def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     assert isinstance(result, InferenceResult)
     assert result.status == "success"
     assert result.ood_analysis is not None
+
+
+def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class OrderedRouter(FakeRouter):
+        def analyze_image(self, image):
+            return {
+                "detections": [
+                    {
+                        "crop": "tomato",
+                        "part": "leaf",
+                        "crop_confidence": 0.61,
+                    },
+                    {
+                        "crop": "potato",
+                        "part": "leaf",
+                        "crop_confidence": 0.95,
+                    },
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: OrderedRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "success"
+    assert result["crop"] == "tomato"
+    assert result["router_confidence"] == 0.61

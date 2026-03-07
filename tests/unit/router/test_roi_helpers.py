@@ -1,6 +1,13 @@
+import numpy as np
 import pytest
+import torch
 
-from src.router.roi_helpers import bbox_iou, select_best_detection, suppress_overlapping_detections
+from src.router.roi_helpers import (
+    bbox_iou,
+    coerce_image_input,
+    select_best_detection,
+    suppress_overlapping_detections,
+)
 
 
 def test_bbox_iou_returns_expected_overlap():
@@ -50,3 +57,17 @@ def test_select_best_detection_by_score():
 
 def test_select_best_detection_returns_none_for_empty_input():
     assert select_best_detection([]) is None
+
+
+def test_coerce_image_input_scales_normalized_numpy_float_images():
+    pil_image, image_size = coerce_image_input(np.full((4, 4, 3), 0.5, dtype=np.float32))
+
+    assert image_size == (3, 4, 4)
+    assert pil_image.getpixel((0, 0)) in {(127, 127, 127), (128, 128, 128)}
+
+
+def test_coerce_image_input_normalizes_batched_tensor_shape():
+    pil_image, image_size = coerce_image_input(torch.zeros(2, 3, 4, 5))
+
+    assert image_size == (3, 4, 5)
+    assert pil_image.size == (5, 4)

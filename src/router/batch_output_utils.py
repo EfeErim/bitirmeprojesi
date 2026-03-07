@@ -1,11 +1,12 @@
 from typing import Any, Dict, Tuple
 
+from src.pipeline.inference_payloads import best_detection_from_analysis
 
-def analysis_to_batch_item(analysis: Dict[str, Any]) -> Tuple[Dict[str, Any], float]:
+
+def analysis_to_batch_item(analysis: Any) -> Tuple[Dict[str, Any], float]:
     """Map analysis payload to route_batch item contract (crop dict + confidence)."""
-    detections = analysis.get('detections') if isinstance(analysis, dict) else None
-    if detections:
-        detection = detections[0]
+    detection = best_detection_from_analysis(analysis)
+    if detection:
         return (
             {
                 'crop': detection.get('crop', 'unknown'),

@@ -8,10 +8,11 @@ from src.shared.contracts import InferenceResult, OODAnalysis
 
 
 def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
+    """Return the runtime-selected primary detection from an analysis payload."""
     detections = analysis.get("detections", []) if isinstance(analysis, dict) else []
     if not detections:
         return {}
-    return max(detections, key=lambda item: float(item.get("crop_confidence", 0.0)))
+    return detections[0]
 
 
 def build_default_ood(*, is_ood: bool) -> OODAnalysis:

@@ -154,7 +154,11 @@ def test_route_batch_preserves_order_and_uses_batched_runtime(monkeypatch):
     ]
 
     monkeypatch.setattr(sam3_runtime, "analyze_sam3_batch", lambda runtime, batch: analyses)
-    monkeypatch.setattr(pipeline, "analyze_image", lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("per-image path should not run")))
+    monkeypatch.setattr(
+        pipeline,
+        "analyze_image",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("per-image path should not run")),
+    )
 
     crops_out, confs = pipeline.route_batch(torch.zeros(3, 3, 8, 8))
 
@@ -176,7 +180,11 @@ def test_analyze_sam3_batch_reduces_sam_call_count_under_batch_support(monkeypat
         return [{"masks": [], "boxes": [], "scores": []} for _ in images]
 
     monkeypatch.setattr(pipeline, "_run_sam3_batch", fake_run_sam3_batch)
-    monkeypatch.setattr(sam3_runtime, "analyze_sam3_image", lambda *_args, **_kwargs: fallback_calls.__setitem__("count", fallback_calls["count"] + 1))
+    monkeypatch.setattr(
+        sam3_runtime,
+        "analyze_sam3_image",
+        lambda *_args, **_kwargs: fallback_calls.__setitem__("count", fallback_calls["count"] + 1),
+    )
 
     results = sam3_runtime.analyze_sam3_batch(pipeline, torch.zeros(5, 3, 8, 8))
 
@@ -221,3 +229,30 @@ def test_analyze_sam3_batch_falls_back_per_chunk_when_batched_sam3_is_unsupporte
     assert len(results) == 3
     assert [result["detections"][0]["crop"] for result in results] == ["crop_0", "crop_1", "crop_2"]
     assert calls["count"] == 3
+
+
+def test_set_runtime_profile_refreshes_profile_derived_controls():
+    pipeline = VLMPipeline(
+        config={
+            "router": {
+                "vlm": {
+                    "enabled": True,
+                    "open_set_enabled": False,
+                    "profiles": {
+                        "disabled": {"enabled": False},
+                        "open_set": {"open_set_enabled": True},
+                    },
+                },
+            },
+        },
+        device="cpu",
+    )
+
+    assert pipeline.enabled is True
+    assert pipeline.open_set_enabled is False
+
+    assert pipeline.set_runtime_profile("disabled") is True
+    assert pipeline.enabled is False
+
+    assert pipeline.set_runtime_profile("open_set") is True
+    assert pipeline.open_set_enabled is True

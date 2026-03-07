@@ -24,8 +24,8 @@ __all__ = [
 ]
 
 
-def tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
-    """Convert CHW/NCHW tensor image to RGB PIL image."""
+def _prepare_tensor_image(image_tensor: torch.Tensor) -> torch.Tensor:
+    """Normalize tensor layout into CPU CHW with 3 channels."""
     tensor = image_tensor.detach().cpu()
 
     if tensor.ndim == 4:
@@ -41,26 +41,64 @@ def tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
     elif tensor.shape[0] != 3:
         raise ValueError(f"Expected 1 or 3 channels, got {tensor.shape[0]}")
 
-    tensor_min = float(tensor.min())
-    tensor_max = float(tensor.max())
+    return tensor
+
+
+def _normalize_tensor_for_pil(tensor: torch.Tensor) -> torch.Tensor:
+    """Convert common tensor image ranges into [0, 1] float data."""
+    normalized = tensor.to(torch.float32)
+    tensor_min = float(normalized.min())
+    tensor_max = float(normalized.max())
 
     if tensor_max <= 1.0 and tensor_min >= 0.0:
-        normalized = tensor
-    else:
-        normalized = tensor.clone()
-        if tensor_min < 0.0:
-            normalized = (normalized + 1.0) / 2.0
-        normalized = normalized.clamp(0.0, 1.0)
+        return normalized
+    if tensor_max <= 1.0 and tensor_min >= -1.0:
+        return ((normalized + 1.0) / 2.0).clamp(0.0, 1.0)
+    if tensor_max <= 255.0 and tensor_min >= 0.0:
+        return (normalized / 255.0).clamp(0.0, 1.0)
+    if tensor_min < 0.0:
+        return ((normalized.clamp(-1.0, 1.0) + 1.0) / 2.0).clamp(0.0, 1.0)
+    return (normalized.clamp(0.0, 255.0) / 255.0).clamp(0.0, 1.0)
 
+
+def _pil_from_tensor_image(tensor: torch.Tensor) -> Image.Image:
+    normalized = _normalize_tensor_for_pil(tensor)
     uint8_img = (normalized * 255.0).to(torch.uint8).permute(1, 2, 0).numpy()
     return Image.fromarray(uint8_img)
+
+
+def _tensor_image_size(tensor: torch.Tensor) -> Tuple[int, int, int]:
+    channels, height, width = tensor.shape
+    return int(channels), int(height), int(width)
+
+
+def _tensor_from_numpy_image(image_array: np.ndarray) -> torch.Tensor:
+    arr = image_array
+    if arr.ndim == 2:
+        arr = np.stack([arr] * 3, axis=-1)
+    if arr.ndim != 3:
+        raise ValueError(f"Unsupported ndarray shape for image input: {arr.shape}")
+
+    if arr.shape[0] in {1, 3} and arr.shape[-1] not in {1, 3}:
+        chw = arr
+    elif arr.shape[-1] in {1, 3}:
+        chw = np.transpose(arr, (2, 0, 1))
+    else:
+        raise ValueError(f"Unsupported ndarray channel layout for image input: {arr.shape}")
+
+    return torch.from_numpy(np.ascontiguousarray(chw))
+
+
+def tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
+    """Convert CHW/NCHW tensor image to RGB PIL image."""
+    return _pil_from_tensor_image(_prepare_tensor_image(image_tensor))
 
 
 def coerce_image_input(image_input: Any) -> Tuple[Image.Image, Tuple[int, int, int]]:
     """Normalize supported image input into RGB PIL image and size tuple."""
     if isinstance(image_input, torch.Tensor):
-        pil = tensor_to_pil(image_input)
-        return pil, tuple(image_input.shape)
+        tensor = _prepare_tensor_image(image_input)
+        return _pil_from_tensor_image(tensor), _tensor_image_size(tensor)
 
     if isinstance(image_input, (str, Path)):
         pil = Image.open(str(image_input)).convert('RGB')
@@ -73,18 +111,8 @@ def coerce_image_input(image_input: Any) -> Tuple[Image.Image, Tuple[int, int, i
         return pil, (3, height, width)
 
     if isinstance(image_input, np.ndarray):
-        arr = image_input
-        if arr.ndim == 3 and arr.shape[0] in {1, 3} and arr.shape[-1] not in {1, 3}:
-            arr = np.transpose(arr, (1, 2, 0))
-        if arr.ndim == 2:
-            arr = np.stack([arr] * 3, axis=-1)
-        if arr.ndim != 3:
-            raise ValueError(f"Unsupported ndarray shape for image input: {arr.shape}")
-        if arr.dtype != np.uint8:
-            arr = np.clip(arr, 0, 255).astype(np.uint8)
-        pil = Image.fromarray(arr).convert('RGB')
-        height, width = arr.shape[:2]
-        return pil, (3, height, width)
+        tensor = _prepare_tensor_image(_tensor_from_numpy_image(image_input))
+        return _pil_from_tensor_image(tensor), _tensor_image_size(tensor)
 
     raise TypeError(
         f"Unsupported image_input type: {type(image_input).__name__}. "

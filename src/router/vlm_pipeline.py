@@ -15,14 +15,6 @@ from PIL import Image
 from src.router import clip_runtime, sam3_runtime
 from src.router.batch_output_utils import analysis_to_batch_item
 from src.router.dependency_utils import check_vlm_dependencies
-from src.router.heuristics import (
-    apply_generic_part_penalty,
-    apply_leaf_like_override,
-    compute_leaf_likeness,
-    rebalance_part_scores_for_leaf_like_roi,
-    select_best_crop_with_fallback,
-    select_part_label_with_specificity,
-)
 from src.router.pipeline_flow_utils import (
     build_process_image_response,
     empty_analysis_result,
@@ -81,43 +73,7 @@ class VLMPipeline:
         self.pipeline_mode = 'sam3'
         self.actual_pipeline: Optional[str] = None  # Will be set to 'sam3' after load_models
         
-        # Backwards-compatible flat keys
-        self.enabled = config.get('vlm_enabled', self.vlm_config.get('enabled', False))
-        self.confidence_threshold = config.get(
-            'vlm_confidence_threshold',
-            self.vlm_config.get('confidence_threshold', 0.7),
-        )
-        configured_max = config.get('vlm_max_detections', self.vlm_config.get('max_detections', 0))
-        configured_max_int = _coerce_non_negative_int(configured_max, default=0)
-        self.max_detections = None if configured_max_int <= 0 else configured_max_int
-        self.open_set_enabled = config.get('vlm_open_set_enabled', self.vlm_config.get('open_set_enabled', True))
-        self.open_set_min_confidence = _coerce_float(
-            config.get('vlm_open_set_min_confidence', self.vlm_config.get('open_set_min_confidence', 0.55)),
-            0.55,
-        )
-        self.open_set_margin = _coerce_float(
-            config.get('vlm_open_set_margin', self.vlm_config.get('open_set_margin', 0.10)),
-            0.10,
-        )
-        strict_from_env = (
-            str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
-        )
-        self.strict_model_loading = config.get(
-            'vlm_strict_model_loading',
-            self.vlm_config.get('strict_model_loading', strict_from_env),
-        )
-        self.model_source = config.get('vlm_model_source', self.vlm_config.get('model_source', 'huggingface'))
-
-        defaults = {
-            'sam': 'facebook/sam3',
-            'bioclip': 'imageomics/bioclip-2.5-vith14'
-        }
-        raw_model_ids = self.vlm_config.get('model_ids', {})
-        configured_ids = raw_model_ids if isinstance(raw_model_ids, dict) else {}
-        self.model_ids = {
-            'sam': configured_ids.get('sam', defaults['sam']),
-            'bioclip': configured_ids.get('bioclip', defaults['bioclip'])
-        }
+        self._refresh_runtime_controls()
 
         # Dynamic taxonomy support
         self.use_dynamic_taxonomy = self.vlm_config.get('use_dynamic_taxonomy', False)
@@ -206,6 +162,51 @@ class VLMPipeline:
         """Refresh merged policy graph from defaults + configuration."""
         self.policy_graph = build_policy_graph(self.vlm_config)
 
+    def _refresh_runtime_controls(self) -> None:
+        """Refresh config-derived runtime controls after profile changes."""
+        self.enabled = self.config.get('vlm_enabled', self.vlm_config.get('enabled', False))
+        self.confidence_threshold = self.config.get(
+            'vlm_confidence_threshold',
+            self.vlm_config.get('confidence_threshold', 0.7),
+        )
+        configured_max = self.config.get('vlm_max_detections', self.vlm_config.get('max_detections', 0))
+        configured_max_int = _coerce_non_negative_int(configured_max, default=0)
+        self.max_detections = None if configured_max_int <= 0 else configured_max_int
+        self.open_set_enabled = self.config.get(
+            'vlm_open_set_enabled',
+            self.vlm_config.get('open_set_enabled', True),
+        )
+        self.open_set_min_confidence = _coerce_float(
+            self.config.get('vlm_open_set_min_confidence', self.vlm_config.get('open_set_min_confidence', 0.55)),
+            0.55,
+        )
+        self.open_set_margin = _coerce_float(
+            self.config.get('vlm_open_set_margin', self.vlm_config.get('open_set_margin', 0.10)),
+            0.10,
+        )
+        strict_from_env = (
+            str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
+        )
+        self.strict_model_loading = self.config.get(
+            'vlm_strict_model_loading',
+            self.vlm_config.get('strict_model_loading', strict_from_env),
+        )
+        self.model_source = self.config.get(
+            'vlm_model_source',
+            self.vlm_config.get('model_source', 'huggingface'),
+        )
+
+        defaults = {
+            'sam': 'facebook/sam3',
+            'bioclip': 'imageomics/bioclip-2.5-vith14',
+        }
+        raw_model_ids = self.vlm_config.get('model_ids', {})
+        configured_ids = raw_model_ids if isinstance(raw_model_ids, dict) else {}
+        self.model_ids = {
+            'sam': configured_ids.get('sam', defaults['sam']),
+            'bioclip': configured_ids.get('bioclip', defaults['bioclip']),
+        }
+
     def set_runtime_profile(self, profile_name: Optional[str], suppress_warning: bool = False) -> bool:
         """Apply named runtime profile to VLM config. Returns True if a profile was applied."""
         self.vlm_config, self.active_profile, applied = apply_runtime_profile(
@@ -214,6 +215,9 @@ class VLMPipeline:
             suppress_warning=suppress_warning,
         )
         self._refresh_policy_graph()
+        self._refresh_runtime_controls()
+        if hasattr(self, '_open_clip_text_embedding_cache'):
+            self._open_clip_text_embedding_cache.clear()
         return applied
 
     def _policy_value(self, stage: str, key: str, default: Any) -> Any:
