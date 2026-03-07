@@ -21,3 +21,4 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["optimization"]["scheduler"]["name"] == "none"
     assert continual["evaluation"]["best_metric"] == "val_loss"
     assert continual["data"]["loader_error_policy"] == "tolerant"
+    assert continual["data"]["validate_images_on_init"] is False

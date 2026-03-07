@@ -23,7 +23,10 @@
       "num_epochs": 3,
       "batch_size": 8,
       "device": "cuda",
-      "strict_model_loading": true
+      "strict_model_loading": true,
+      "data": {
+        "validate_images_on_init": false
+      }
     }
   },
   "router": {
