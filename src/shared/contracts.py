@@ -15,6 +15,17 @@ class OODAnalysis:
     calibration_version: int = 0
     mahalanobis_z: Optional[float] = None
     energy_z: Optional[float] = None
+    # --- Radially Scaled L2 Normalization ---
+    radial_beta: Optional[float] = None
+    # --- SURE+ Double Scoring ---
+    sure_semantic_score: Optional[float] = None
+    sure_confidence_score: Optional[float] = None
+    sure_semantic_ood: Optional[bool] = None
+    sure_confidence_reject: Optional[bool] = None
+    # --- Conformal Prediction ---
+    conformal_set: Optional[List[str]] = None
+    conformal_coverage: Optional[float] = None
+    conformal_set_size: Optional[int] = None
 
     def to_dict(self) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -27,11 +38,28 @@ class OODAnalysis:
             payload["mahalanobis_z"] = float(self.mahalanobis_z)
         if self.energy_z is not None:
             payload["energy_z"] = float(self.energy_z)
+        if self.radial_beta is not None:
+            payload["radial_beta"] = float(self.radial_beta)
+        if self.sure_semantic_score is not None:
+            payload["sure_semantic_score"] = float(self.sure_semantic_score)
+        if self.sure_confidence_score is not None:
+            payload["sure_confidence_score"] = float(self.sure_confidence_score)
+        if self.sure_semantic_ood is not None:
+            payload["sure_semantic_ood"] = bool(self.sure_semantic_ood)
+        if self.sure_confidence_reject is not None:
+            payload["sure_confidence_reject"] = bool(self.sure_confidence_reject)
+        if self.conformal_set is not None:
+            payload["conformal_set"] = list(self.conformal_set)
+        if self.conformal_coverage is not None:
+            payload["conformal_coverage"] = float(self.conformal_coverage)
+        if self.conformal_set_size is not None:
+            payload["conformal_set_size"] = int(self.conformal_set_size)
         return payload
 
     @classmethod
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "OODAnalysis":
         data = dict(payload or {})
+        conformal_set_raw = data.get("conformal_set")
         return cls(
             ensemble_score=float(data.get("ensemble_score", 0.0)),
             class_threshold=float(data.get("class_threshold", 0.0)),
@@ -41,6 +69,36 @@ class OODAnalysis:
                 None if data.get("mahalanobis_z") is None else float(data.get("mahalanobis_z", 0.0))
             ),
             energy_z=None if data.get("energy_z") is None else float(data.get("energy_z", 0.0)),
+            radial_beta=(
+                None if data.get("radial_beta") is None else float(data.get("radial_beta", 0.0))
+            ),
+            sure_semantic_score=(
+                None if data.get("sure_semantic_score") is None
+                else float(data.get("sure_semantic_score", 0.0))
+            ),
+            sure_confidence_score=(
+                None if data.get("sure_confidence_score") is None
+                else float(data.get("sure_confidence_score", 0.0))
+            ),
+            sure_semantic_ood=(
+                None if data.get("sure_semantic_ood") is None
+                else bool(data.get("sure_semantic_ood", False))
+            ),
+            sure_confidence_reject=(
+                None if data.get("sure_confidence_reject") is None
+                else bool(data.get("sure_confidence_reject", False))
+            ),
+            conformal_set=(
+                None if conformal_set_raw is None else [str(c) for c in conformal_set_raw]
+            ),
+            conformal_coverage=(
+                None if data.get("conformal_coverage") is None
+                else float(data.get("conformal_coverage", 0.0))
+            ),
+            conformal_set_size=(
+                None if data.get("conformal_set_size") is None
+                else int(data.get("conformal_set_size", 0))
+            ),
         )
 
 
@@ -55,6 +113,7 @@ class InferenceResult:
     confidence: float = 0.0
     message: str = ""
     ood_analysis: Optional[OODAnalysis] = None
+    conformal_set: Optional[List[str]] = None
 
     def to_dict(self, *, include_ood: bool = True) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -71,12 +130,15 @@ class InferenceResult:
             payload["message"] = str(self.message)
         if include_ood and self.ood_analysis is not None:
             payload["ood_analysis"] = self.ood_analysis.to_dict()
+        if self.conformal_set is not None:
+            payload["conformal_set"] = list(self.conformal_set)
         return payload
 
     @classmethod
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "InferenceResult":
         data = dict(payload or {})
         diagnosis_index = data.get("diagnosis_index")
+        conformal_set_raw = data.get("conformal_set")
         return cls(
             status=str(data.get("status", "unknown")),
             crop=data.get("crop"),
@@ -90,6 +152,9 @@ class InferenceResult:
                 OODAnalysis.from_dict(data.get("ood_analysis"))
                 if data.get("ood_analysis") is not None
                 else None
+            ),
+            conformal_set=(
+                None if conformal_set_raw is None else [str(c) for c in conformal_set_raw]
             ),
         )
 

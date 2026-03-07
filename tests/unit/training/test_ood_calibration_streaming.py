@@ -76,7 +76,18 @@ def test_streamed_calibration_matches_materialized_reference_within_tolerance():
     all_labels = torch.cat([batch["labels"] for batch in loader], dim=0)
     all_logits = trainer.classifier(all_features)
 
-    reference = ContinualOODDetector(threshold_factor=trainer.config.ood_threshold_factor)
+    cfg = trainer.config
+    reference = ContinualOODDetector(
+        threshold_factor=cfg.ood_threshold_factor,
+        radial_l2_enabled=cfg.radial_l2_enabled,
+        radial_beta_range=(cfg.radial_beta_min, cfg.radial_beta_max),
+        radial_beta_steps=cfg.radial_beta_steps,
+        sure_enabled=cfg.sure_enabled,
+        sure_semantic_percentile=cfg.sure_semantic_percentile,
+        sure_confidence_percentile=cfg.sure_confidence_percentile,
+        conformal_enabled=cfg.conformal_enabled,
+        conformal_alpha=cfg.conformal_alpha,
+    )
     reference.calibrate(features=all_features, logits=all_logits, labels=all_labels)
 
     calibration = trainer.calibrate_ood(loader)

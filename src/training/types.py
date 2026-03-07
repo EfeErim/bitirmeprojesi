@@ -17,6 +17,10 @@ class TrainBatchStats:
     accumulation_step: int = 1
     optimizer_steps: int = 0
     optimizer_step_applied: bool = True
+    # --- BER loss components (None when BER is disabled) ---
+    ber_ce_loss: Optional[float] = None
+    ber_old_loss: Optional[float] = None
+    ber_new_loss: Optional[float] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

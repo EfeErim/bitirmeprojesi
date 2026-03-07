@@ -20,6 +20,7 @@ except Exception:  # pragma: no cover - optional dependency in some local sandbo
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
 from src.ood.continual_ood import ContinualOODDetector
+from src.training.ber_loss import BERLoss
 from src.training.quantization import assert_no_prohibited_4bit_flags
 from src.training.services.persistence import (
     build_trainer_metadata_payload,
@@ -119,6 +120,22 @@ class ContinualSDLoRAConfig:
     evaluation_best_metric: str = "val_loss"
     evaluation_emit_ood_gate: bool = True
     evaluation_require_ood_for_gate: bool = False
+    # --- Bi-directional Energy Regularization (BER) ---
+    ber_enabled: bool = False
+    ber_lambda_old: float = 0.1
+    ber_lambda_new: float = 0.1
+    # --- Radially Scaled L2 Normalization ---
+    radial_l2_enabled: bool = True
+    radial_beta_min: float = 0.5
+    radial_beta_max: float = 2.0
+    radial_beta_steps: int = 16
+    # --- SURE+ Double Scoring ---
+    sure_enabled: bool = True
+    sure_semantic_percentile: float = 95.0
+    sure_confidence_percentile: float = 90.0
+    # --- Conformal Prediction ---
+    conformal_enabled: bool = True
+    conformal_alpha: float = 0.05
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
@@ -146,6 +163,20 @@ class ContinualSDLoRAConfig:
             raise ValueError("early_stopping.patience must be non-negative.")
         if self.early_stopping_min_delta < 0.0:
             raise ValueError("early_stopping.min_delta must be non-negative.")
+        if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
+            raise ValueError("BER lambda values must be non-negative.")
+        if self.radial_beta_min <= 0.0 or self.radial_beta_max <= 0.0:
+            raise ValueError("Radial beta range values must be positive.")
+        if self.radial_beta_min >= self.radial_beta_max:
+            raise ValueError("radial_beta_min must be less than radial_beta_max.")
+        if self.radial_beta_steps < 2:
+            raise ValueError("radial_beta_steps must be at least 2.")
+        if not (0.0 < self.conformal_alpha < 1.0):
+            raise ValueError("conformal_alpha must be in (0, 1).")
+        if not (0.0 < self.sure_semantic_percentile <= 100.0):
+            raise ValueError("sure_semantic_percentile must be in (0, 100].")
+        if not (0.0 < self.sure_confidence_percentile <= 100.0):
+            raise ValueError("sure_confidence_percentile must be in (0, 100].")
 
     def as_contract_dict(self) -> Dict[str, Any]:
         """Return normalized config payload used in metadata persistence."""
@@ -163,7 +194,20 @@ class ContinualSDLoRAConfig:
                 "dropout": self.fusion_dropout,
                 "gating": self.fusion_gating,
             },
-            "ood": {"threshold_factor": self.ood_threshold_factor},
+            "ood": {
+                "threshold_factor": self.ood_threshold_factor,
+                "ber_enabled": self.ber_enabled,
+                "ber_lambda_old": self.ber_lambda_old,
+                "ber_lambda_new": self.ber_lambda_new,
+                "radial_l2_enabled": self.radial_l2_enabled,
+                "radial_beta_range": [self.radial_beta_min, self.radial_beta_max],
+                "radial_beta_steps": self.radial_beta_steps,
+                "sure_enabled": self.sure_enabled,
+                "sure_semantic_percentile": self.sure_semantic_percentile,
+                "sure_confidence_percentile": self.sure_confidence_percentile,
+                "conformal_enabled": self.conformal_enabled,
+                "conformal_alpha": self.conformal_alpha,
+            },
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
             "num_epochs": self.num_epochs,
@@ -231,6 +275,18 @@ class ContinualSDLoRAConfig:
             device=str(training_continual.get("device", "cuda")),
             strict_model_loading=bool(training_continual.get("strict_model_loading", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
+            ber_enabled=bool(ood.get("ber_enabled", False)),
+            ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
+            ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
+            radial_l2_enabled=bool(ood.get("radial_l2_enabled", True)),
+            radial_beta_min=float(ood.get("radial_beta_range", [0.5, 2.0])[0]),
+            radial_beta_max=float(ood.get("radial_beta_range", [0.5, 2.0])[1]),
+            radial_beta_steps=int(ood.get("radial_beta_steps", 16)),
+            sure_enabled=bool(ood.get("sure_enabled", True)),
+            sure_semantic_percentile=float(ood.get("sure_semantic_percentile", 95.0)),
+            sure_confidence_percentile=float(ood.get("sure_confidence_percentile", 90.0)),
+            conformal_enabled=bool(ood.get("conformal_enabled", True)),
+            conformal_alpha=float(ood.get("conformal_alpha", 0.05)),
             seed=int(training_continual.get("seed", 42)),
             deterministic=bool(training_continual.get("deterministic", False)),
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 1)),
@@ -302,7 +358,18 @@ class ContinualSDLoRATrainer:
         self.optimizer_steps = 0
         self.class_to_idx: Dict[str, int] = {}
         self.target_modules_resolved: List[str] = []
-        self.ood_detector = ContinualOODDetector(threshold_factor=self.config.ood_threshold_factor)
+        self.ood_detector = ContinualOODDetector(
+            threshold_factor=self.config.ood_threshold_factor,
+            radial_l2_enabled=self.config.radial_l2_enabled,
+            radial_beta_range=(self.config.radial_beta_min, self.config.radial_beta_max),
+            radial_beta_steps=self.config.radial_beta_steps,
+            sure_enabled=self.config.sure_enabled,
+            sure_semantic_percentile=self.config.sure_semantic_percentile,
+            sure_confidence_percentile=self.config.sure_confidence_percentile,
+            conformal_enabled=self.config.conformal_enabled,
+            conformal_alpha=self.config.conformal_alpha,
+        )
+        self.ber_loss: Optional[BERLoss] = None
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
         self._config_hash = compute_config_hash(self._contract)
@@ -367,6 +434,16 @@ class ContinualSDLoRATrainer:
             module_name="adapter_model",
         )
         self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
+
+        # Initialize BER loss if enabled
+        if self.config.ber_enabled:
+            self.ber_loss = BERLoss(
+                lambda_old=self.config.ber_lambda_old,
+                lambda_new=self.config.ber_lambda_new,
+                num_old_classes=0,  # First task: no old classes
+            ).to(self.device)
+        else:
+            self.ber_loss = None
 
         self._is_initialized = True
         self.optimizer = None
@@ -495,10 +572,16 @@ class ContinualSDLoRATrainer:
 
     def add_classes(self, new_class_names: Iterable[str]) -> Dict[str, int]:
         """Add new classes and expand classifier output."""
+        num_old = len(self.class_to_idx)
         for name in new_class_names:
             if name not in self.class_to_idx:
                 self.class_to_idx[name] = len(self.class_to_idx)
         self._refresh_class_index_cache()
+
+        # Update BER boundary for incremental learning
+        if self.ber_loss is not None:
+            self.ber_loss.num_old_classes = num_old
+
         if self.classifier is None:
             return dict(self.class_to_idx)
 
@@ -555,6 +638,13 @@ class ContinualSDLoRATrainer:
         labels = batch["labels"].to(self.device)
         with autocast_context(self.device, self.config.mixed_precision):
             logits = self.forward_logits(images)
+            if self.ber_loss is not None:
+                total_loss, self._last_ber_components = self.ber_loss(
+                    logits,
+                    labels,
+                    label_smoothing=float(self.config.label_smoothing),
+                )
+                return total_loss
             return nn.functional.cross_entropy(
                 logits,
                 labels,
@@ -632,6 +722,9 @@ class ContinualSDLoRATrainer:
             accumulation_steps=accumulation_steps,
             optimizer_steps=self.optimizer_steps,
             optimizer_step_applied=bool(should_step),
+            ber_ce_loss=getattr(self, "_last_ber_components", {}).get("ce") if self.ber_loss is not None else None,
+            ber_old_loss=getattr(self, "_last_ber_components", {}).get("ber_old") if self.ber_loss is not None else None,
+            ber_new_loss=getattr(self, "_last_ber_components", {}).get("ber_new") if self.ber_loss is not None else None,
         )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
@@ -653,6 +746,37 @@ class ContinualSDLoRATrainer:
         if self._class_index_cache_stale():
             self._refresh_class_index_cache()
         predicted_idx = int(indices[0].item()) if indices.numel() else 0
+
+        ood_analysis: Dict[str, Any] = {
+            "ensemble_score": float(ood["ensemble_score"][0].item()),
+            "class_threshold": float(ood["class_threshold"][0].item()),
+            "is_ood": bool(ood["is_ood"][0].item()),
+            "mahalanobis_z": float(ood["mahalanobis_z"][0].item()),
+            "energy_z": float(ood["energy_z"][0].item()),
+            "calibration_version": int(ood["calibration_version"][0].item()),
+        }
+
+        # Radial beta
+        if self.ood_detector.radial_beta is not None:
+            ood_analysis["radial_beta"] = float(self.ood_detector.radial_beta)
+
+        # SURE+ fields
+        if self.ood_detector.sure_enabled and "sure_semantic_score" in ood:
+            ood_analysis["sure_semantic_score"] = float(ood["sure_semantic_score"][0].item())
+            ood_analysis["sure_confidence_score"] = float(ood["sure_confidence_score"][0].item())
+            ood_analysis["sure_semantic_ood"] = bool(ood["sure_semantic_ood"][0].item())
+            ood_analysis["sure_confidence_reject"] = bool(ood["sure_confidence_reject"][0].item())
+
+        # Conformal prediction set
+        if self.ood_detector.conformal_enabled:
+            with torch.no_grad():
+                conformal_set = self.ood_detector.build_conformal_set(
+                    features[0], logits[0], self._idx_to_class
+                )
+            ood_analysis["conformal_set"] = conformal_set
+            ood_analysis["conformal_set_size"] = len(conformal_set)
+            ood_analysis["conformal_coverage"] = 1.0 - self.ood_detector.conformal_alpha
+
         return {
             "status": "success",
             "disease": {
@@ -660,14 +784,7 @@ class ContinualSDLoRATrainer:
                 "name": self._idx_to_class.get(predicted_idx, str(predicted_idx)),
                 "confidence": float(confidence[0].item()) if confidence.numel() else 0.0,
             },
-            "ood_analysis": {
-                "ensemble_score": float(ood["ensemble_score"][0].item()),
-                "class_threshold": float(ood["class_threshold"][0].item()),
-                "is_ood": bool(ood["is_ood"][0].item()),
-                "mahalanobis_z": float(ood["mahalanobis_z"][0].item()),
-                "energy_z": float(ood["energy_z"][0].item()),
-                "calibration_version": int(ood["calibration_version"][0].item()),
-            },
+            "ood_analysis": ood_analysis,
         }
 
     def _metadata_payload(self) -> Dict[str, Any]:

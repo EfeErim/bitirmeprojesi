@@ -100,6 +100,20 @@ class ConfigurationManager:
         if canonical_threshold is not None:
             top_level_ood["threshold_factor"] = float(canonical_threshold)
 
+        # Sync extended OOD flags between top-level and continual
+        for key in (
+            "radial_l2_enabled", "sure_enabled", "conformal_enabled", "conformal_alpha",
+            "ber_enabled", "ber_lambda_old", "ber_lambda_new",
+            "radial_beta_range", "radial_beta_steps",
+            "sure_semantic_percentile", "sure_confidence_percentile",
+        ):
+            top_val = top_level_ood.get(key)
+            cont_val = continual_ood.get(key)
+            if cont_val is None and top_val is not None:
+                continual_ood[key] = top_val
+            elif cont_val is not None:
+                top_level_ood[key] = cont_val
+
     def _normalize_training_surface(self, merged_config: Dict[str, Any]) -> None:
         training = merged_config.setdefault("training", {})
         continual = training.setdefault("continual", {})

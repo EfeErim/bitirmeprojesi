@@ -14,6 +14,8 @@ DEFAULT_PLAN_TARGETS = {
     "accuracy": 0.93,
     "ood_auroc": 0.92,
     "ood_false_positive_rate": 0.05,
+    "sure_ds_f1": 0.90,
+    "conformal_empirical_coverage": 0.95,
 }
 
 
@@ -42,6 +44,9 @@ def compute_plan_metrics(
     y_pred: Sequence[int],
     ood_labels: Optional[Sequence[int]] = None,
     ood_scores: Optional[Sequence[float]] = None,
+    sure_ds_f1: Optional[float] = None,
+    conformal_empirical_coverage: Optional[float] = None,
+    conformal_avg_set_size: Optional[float] = None,
 ) -> Dict[str, Optional[float]]:
     if len(y_true) == 0:
         raise ValueError("y_true must not be empty")
@@ -81,6 +86,9 @@ def compute_plan_metrics(
         "classification_samples": int(y_true_t.numel()),
         "ood_samples": int(ood_total),
         "in_distribution_samples": int(in_dist_total),
+        "sure_ds_f1": sure_ds_f1,
+        "conformal_empirical_coverage": conformal_empirical_coverage,
+        "conformal_avg_set_size": conformal_avg_set_size,
     }
 
 
@@ -118,6 +126,28 @@ def validate_plan_metrics(
         "operator": "<=",
         "asserted": fpr_value is not None,
         "passed": bool(fpr_value is not None and float(fpr_value) <= float(target_values["ood_false_positive_rate"])),
+    }
+
+    # SURE+ DS-F1 (soft gate)
+    ds_f1_value = metrics.get("sure_ds_f1")
+    ds_f1_target = target_values.get("sure_ds_f1", 0.90)
+    checks["sure_ds_f1"] = {
+        "value": ds_f1_value,
+        "target": ds_f1_target,
+        "operator": ">=",
+        "asserted": ds_f1_value is not None,
+        "passed": bool(ds_f1_value is not None and float(ds_f1_value) >= float(ds_f1_target)),
+    }
+
+    # Conformal empirical coverage (soft gate)
+    coverage_value = metrics.get("conformal_empirical_coverage")
+    coverage_target = target_values.get("conformal_empirical_coverage", 0.95)
+    checks["conformal_empirical_coverage"] = {
+        "value": coverage_value,
+        "target": coverage_target,
+        "operator": ">=",
+        "asserted": coverage_value is not None,
+        "passed": bool(coverage_value is not None and float(coverage_value) >= float(coverage_target)),
     }
 
     missing_checks = [name for name, detail in checks.items() if not detail["asserted"]]

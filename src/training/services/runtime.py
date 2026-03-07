@@ -222,6 +222,9 @@ def build_train_batch_stats(
     accumulation_steps: int,
     optimizer_steps: int,
     optimizer_step_applied: bool,
+    ber_ce_loss: float | None = None,
+    ber_old_loss: float | None = None,
+    ber_new_loss: float | None = None,
 ) -> TrainBatchStats:
     step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
     batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
@@ -239,4 +242,7 @@ def build_train_batch_stats(
         accumulation_step=int(accumulation_counter if accumulation_counter > 0 else accumulation_steps),
         optimizer_steps=int(optimizer_steps),
         optimizer_step_applied=bool(optimizer_step_applied),
+        ber_ce_loss=ber_ce_loss,
+        ber_old_loss=ber_old_loss,
+        ber_new_loss=ber_new_loss,
     )

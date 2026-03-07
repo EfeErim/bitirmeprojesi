@@ -33,12 +33,26 @@ def serialize_ood_state(ood_detector: ContinualOODDetector) -> Dict[str, Any]:
             "energy_mu": float(stats.energy_mu),
             "energy_sigma": float(stats.energy_sigma),
             "threshold": float(stats.threshold),
+            "sure_semantic_threshold": float(stats.sure_semantic_threshold),
+            "sure_confidence_threshold": float(stats.sure_confidence_threshold),
         }
-    return {
+    payload: Dict[str, Any] = {
         "threshold_factor": float(ood_detector.threshold_factor),
         "calibration_version": int(ood_detector.calibration_version),
         "class_stats": class_stats,
+        # Extended OOD state
+        "radial_l2_enabled": bool(ood_detector.radial_l2_enabled),
+        "radial_beta": float(ood_detector.radial_beta) if ood_detector.radial_beta is not None else None,
+        "radial_beta_range": list(ood_detector.radial_beta_range),
+        "radial_beta_steps": int(ood_detector.radial_beta_steps),
+        "sure_enabled": bool(ood_detector.sure_enabled),
+        "sure_semantic_percentile": float(ood_detector.sure_semantic_percentile),
+        "sure_confidence_percentile": float(ood_detector.sure_confidence_percentile),
+        "conformal_enabled": bool(ood_detector.conformal_enabled),
+        "conformal_alpha": float(ood_detector.conformal_alpha),
+        "conformal_qhat": float(ood_detector.conformal_qhat) if ood_detector.conformal_qhat is not None else None,
     }
+    return payload
 
 
 def restore_ood_state(
@@ -47,8 +61,27 @@ def restore_ood_state(
     default_threshold_factor: float,
 ) -> ContinualOODDetector:
     threshold_factor = float(payload.get("threshold_factor", default_threshold_factor))
-    detector = ContinualOODDetector(threshold_factor=threshold_factor)
+
+    # Restore extended flags with backward-compatible defaults
+    radial_beta_range_raw = payload.get("radial_beta_range", [0.5, 2.0])
+    detector = ContinualOODDetector(
+        threshold_factor=threshold_factor,
+        radial_l2_enabled=bool(payload.get("radial_l2_enabled", False)),
+        radial_beta_range=(float(radial_beta_range_raw[0]), float(radial_beta_range_raw[1])),
+        radial_beta_steps=int(payload.get("radial_beta_steps", 16)),
+        sure_enabled=bool(payload.get("sure_enabled", False)),
+        sure_semantic_percentile=float(payload.get("sure_semantic_percentile", 95.0)),
+        sure_confidence_percentile=float(payload.get("sure_confidence_percentile", 90.0)),
+        conformal_enabled=bool(payload.get("conformal_enabled", False)),
+        conformal_alpha=float(payload.get("conformal_alpha", 0.05)),
+    )
     detector.calibration_version = int(payload.get("calibration_version", 0))
+
+    # Restore radial beta and conformal qhat
+    radial_beta = payload.get("radial_beta")
+    detector.radial_beta = float(radial_beta) if radial_beta is not None else None
+    conformal_qhat = payload.get("conformal_qhat")
+    detector.conformal_qhat = float(conformal_qhat) if conformal_qhat is not None else None
 
     class_stats = payload.get("class_stats", {})
     if not isinstance(class_stats, dict):
@@ -65,6 +98,8 @@ def restore_ood_state(
             energy_mu=float(stats.get("energy_mu", 0.0)),
             energy_sigma=float(stats.get("energy_sigma", 1.0)),
             threshold=float(stats.get("threshold", 0.0)),
+            sure_semantic_threshold=float(stats.get("sure_semantic_threshold", 0.0)),
+            sure_confidence_threshold=float(stats.get("sure_confidence_threshold", 0.0)),
         )
     return detector
 

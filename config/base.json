@@ -17,7 +17,18 @@
         "gating": "softmax"
       },
       "ood": {
-        "threshold_factor": 2.0
+        "threshold_factor": 2.0,
+        "ber_enabled": false,
+        "ber_lambda_old": 0.1,
+        "ber_lambda_new": 0.1,
+        "radial_l2_enabled": true,
+        "radial_beta_range": [0.5, 2.0],
+        "radial_beta_steps": 16,
+        "sure_enabled": true,
+        "sure_semantic_percentile": 95.0,
+        "sure_confidence_percentile": 90.0,
+        "conformal_enabled": true,
+        "conformal_alpha": 0.05
       },
       "learning_rate": 0.0001,
       "weight_decay": 0.0,
@@ -94,7 +105,11 @@
   "ood": {
     "enabled": true,
     "method": "ensemble",
-    "threshold_factor": 2.0
+    "threshold_factor": 2.0,
+    "radial_l2_enabled": true,
+    "sure_enabled": true,
+    "conformal_enabled": true,
+    "conformal_alpha": 0.05
   },
   "inference": {
     "adapter_root": "models/adapters",
