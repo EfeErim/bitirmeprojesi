@@ -42,6 +42,7 @@ Colab runtime-only controls live in `colab.training`:
 - `num_workers`
 - `pin_memory`
 - `stdout_progress_batch_interval`
+- `stdout_progress_min_interval_sec`
 - `checkpoint_every_n_steps`
 - `checkpoint_on_exception`
 

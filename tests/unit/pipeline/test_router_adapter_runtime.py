@@ -215,3 +215,36 @@ def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path)
     assert result["status"] == "success"
     assert result["crop"] == "tomato"
     assert result["router_confidence"] == 0.61
+
+
+def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+    status_lines = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+        status_callback=status_lines.append,
+    )
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "success"
+    assert status_lines == [
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Ready.",
+        "[ROUTER] crop=tomato part=leaf confidence=0.940",
+        "[ADAPTER] Loading adapter for crop=tomato...",
+        "[ADAPTER] Ready crop=tomato",
+        "[RESULT] status=success crop=tomato diagnosis=healthy confidence=0.910 ood=False",
+    ]

@@ -150,6 +150,9 @@ class ConfigurationManager:
         colab_training["num_workers"] = int(colab_training.get("num_workers", 2))
         colab_training["pin_memory"] = bool(colab_training.get("pin_memory", True))
         colab_training["stdout_progress_batch_interval"] = int(colab_training.get("stdout_progress_batch_interval", 50))
+        colab_training["stdout_progress_min_interval_sec"] = float(
+            colab_training.get("stdout_progress_min_interval_sec", 15.0)
+        )
         colab_training["checkpoint_every_n_steps"] = int(
             checkpoint_every_n_steps if checkpoint_every_n_steps is not None else 200
         )

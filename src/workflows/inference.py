@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
 from src.shared.contracts import InferenceResult
@@ -19,12 +19,14 @@ class InferenceWorkflow:
         environment: Optional[str] = None,
         device: str = "cuda",
         adapter_root: Optional[str | Path] = None,
+        status_callback: Optional[Callable[[str], None]] = None,
     ) -> None:
         self.runtime = RouterAdapterRuntime(
             config=config,
             environment=environment,
             device=device,
             adapter_root=adapter_root,
+            status_callback=status_callback,
         )
 
     def predict_result(

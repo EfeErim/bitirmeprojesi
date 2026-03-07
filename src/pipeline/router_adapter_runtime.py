@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import torch
 from PIL import Image
@@ -20,6 +20,8 @@ from src.pipeline.inference_payloads import (
 )
 from src.shared.contracts import InferenceResult
 
+StatusCallback = Callable[[str], None]
+
 
 class RouterAdapterRuntime:
     """Minimal inference surface for router -> adapter -> OOD."""
@@ -31,6 +33,7 @@ class RouterAdapterRuntime:
         environment: Optional[str] = None,
         device: str = "cuda",
         adapter_root: Optional[str | Path] = None,
+        status_callback: Optional[StatusCallback] = None,
     ) -> None:
         self.config = dict(config or get_config(environment=environment))
         self.device = torch.device(device if torch.cuda.is_available() and str(device).startswith("cuda") else "cpu")
@@ -39,6 +42,11 @@ class RouterAdapterRuntime:
         self.target_size = int(inference_cfg.get("target_size", 224))
         self.router: Optional[Any] = None
         self.adapters: Dict[str, IndependentCropAdapter] = {}
+        self.status_callback = status_callback
+
+    def _emit_status(self, message: str) -> None:
+        if self.status_callback is not None:
+            self.status_callback(str(message))
 
     def _build_router(self) -> Any:
         from src.router.vlm_pipeline import VLMPipeline
@@ -50,8 +58,10 @@ class RouterAdapterRuntime:
 
     def load_router(self) -> Any:
         if self.router is None:
+            self._emit_status(f"[ROUTER] Loading models on {self.device}...")
             self.router = self._build_router()
             self.router.load_models()
+            self._emit_status("[ROUTER] Ready.")
         return self.router
 
     def _resolve_adapter_dir(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> Path:
@@ -68,10 +78,12 @@ class RouterAdapterRuntime:
         if crop_key in self.adapters:
             return self.adapters[crop_key]
 
+        self._emit_status(f"[ADAPTER] Loading adapter for crop={crop_key}...")
         resolved_dir = self._resolve_adapter_dir(crop_key, adapter_dir=adapter_dir)
         adapter = self._build_adapter(crop_key)
         adapter.load_adapter(str(resolved_dir))
         self.adapters[crop_key] = adapter
+        self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter
 
     def _coerce_image(self, image: Any) -> Any:
@@ -96,39 +108,63 @@ class RouterAdapterRuntime:
         part_name = str(part_hint).strip().lower() if part_hint else None
         router_confidence = 1.0 if crop_name else 0.0
 
-        if not crop_name:
+        if crop_name:
+            self._emit_status(
+                f"[ROUTER] Skipped; using crop hint crop={crop_name} part={part_name or 'unknown'}"
+            )
+        else:
             detection = self._route(prepared_image)
             crop_name = str(detection.get("crop", "")).strip().lower() or None
             part_name = part_name or str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
+            self._emit_status(
+                f"[ROUTER] crop={crop_name or 'unknown'} part={part_name or 'unknown'} confidence={router_confidence:.3f}"
+            )
 
         if not crop_name or crop_name == "unknown":
-            return build_unknown_crop_result(
+            result = build_unknown_crop_result(
                 part_name=part_name,
                 router_confidence=router_confidence,
                 include_ood=return_ood,
             )
+            self._emit_status(
+                f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f}"
+            )
+            return result
 
         try:
             adapter = self.load_adapter(crop_name)
         except FileNotFoundError as exc:
-            return build_adapter_unavailable_result(
+            result = build_adapter_unavailable_result(
                 crop_name=crop_name,
                 part_name=part_name,
                 router_confidence=router_confidence,
                 message=str(exc),
                 include_ood=return_ood,
             )
+            self._emit_status(f"[RESULT] status={result.status} crop={crop_name} message={result.message}")
+            return result
 
         image_tensor = preprocess_image(prepared_image, target_size=self.target_size)
         result = adapter.predict_with_ood(image_tensor)
-        return build_success_result(
+        payload = build_success_result(
             crop_name=crop_name,
             part_name=part_name,
             router_confidence=router_confidence,
             result=result,
             include_ood=return_ood,
         )
+        status_bits = [
+            f"[RESULT] status={payload.status}",
+            f"crop={payload.crop or 'unknown'}",
+            f"confidence={payload.confidence:.3f}",
+        ]
+        if payload.diagnosis:
+            status_bits.insert(2, f"diagnosis={payload.diagnosis}")
+        if return_ood and payload.ood_analysis is not None:
+            status_bits.append(f"ood={payload.ood_analysis.is_ood}")
+        self._emit_status(" ".join(status_bits))
+        return payload
 
     def predict(
         self,

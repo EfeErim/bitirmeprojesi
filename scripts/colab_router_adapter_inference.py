@@ -6,11 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 from PIL import Image
 
 from src.workflows.inference import InferenceWorkflow
+
+StatusPrinter = Callable[[str], None]
 
 
 def run_inference(
@@ -21,8 +23,17 @@ def run_inference(
     part_hint: Optional[str] = None,
     adapter_root: Optional[str | Path] = None,
     device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = None,
 ) -> Dict[str, Any]:
-    workflow = InferenceWorkflow(environment=config_env, adapter_root=adapter_root, device=device)
+    image_ref = Path(image_path)
+    if status_printer is not None:
+        status_printer(f"[INFER] image={image_ref.name} device={device}")
+    workflow = InferenceWorkflow(
+        environment=config_env,
+        adapter_root=adapter_root,
+        device=device,
+        status_callback=status_printer,
+    )
     image = Image.open(image_path).convert("RGB")
     return workflow.predict(image, crop_hint=crop_hint, part_hint=part_hint, return_ood=True)
 

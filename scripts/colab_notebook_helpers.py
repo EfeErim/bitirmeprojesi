@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import os
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib
 
@@ -25,6 +27,143 @@ def _artifact_dir(root: Path, *parts: str) -> Path:
         target /= part
     target.mkdir(parents=True, exist_ok=True)
     return target
+
+
+def ensure_notebook_checkpoint_manager(
+    checkpoint_manager: Any = None,
+    *,
+    run_id: Optional[str] = None,
+    drive_root: Optional[str | Path] = None,
+    retention: int = 3,
+) -> Any:
+    if checkpoint_manager is not None:
+        return checkpoint_manager
+
+    from scripts.colab_checkpointing import TrainingCheckpointManager
+
+    resolved_run_id = str(run_id or datetime.now().strftime("%Y%m%d_%H%M%S"))
+    resolved_drive_root = Path(
+        drive_root or os.environ.get("AADS_DRIVE_LOG_ROOT", "/content/drive/MyDrive/aads_ulora")
+    )
+    return TrainingCheckpointManager(resolved_drive_root / "telemetry" / resolved_run_id, retention=retention)
+
+
+def _format_duration(seconds: float) -> str:
+    total = max(0, int(round(float(seconds or 0.0))))
+    minutes, sec = divmod(total, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours > 0:
+        return f"{hours}h{minutes:02d}m"
+    if minutes > 0:
+        return f"{minutes}m{sec:02d}s"
+    return f"{sec}s"
+
+
+class NotebookTrainingStatusPrinter:
+    """Emit low-frequency, notebook-friendly training status lines."""
+
+    def __init__(
+        self,
+        *,
+        total_epochs: int,
+        batch_interval: int = 50,
+        min_interval_sec: float = 15.0,
+        print_fn: Optional[Callable[[str], None]] = None,
+    ) -> None:
+        self.total_epochs = int(max(1, total_epochs))
+        self.batch_interval = int(max(0, batch_interval))
+        self.min_interval_sec = float(max(1.0, min_interval_sec))
+        self.print_fn = print if print_fn is None else print_fn
+        self._last_batch_emit_elapsed = -1.0
+
+    def _emit(self, message: str) -> None:
+        self.print_fn(str(message))
+
+    def _metric_fragment(self, payload: Dict[str, Any], key: str, label: str) -> Optional[str]:
+        value = payload.get(key)
+        if value is None:
+            return None
+        return f"{label}={float(value):.4f}"
+
+    def handle(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
+        event_name = str(event_type or "")
+        event = dict(payload or {})
+        if event_name == "batch_end":
+            self._handle_batch_end(event)
+            return
+        if event_name == "validation_end":
+            self._handle_validation_end(event)
+            return
+        if event_name == "best_metric_updated":
+            self._handle_best_metric(event)
+            return
+        if event_name == "stop_requested":
+            self._handle_stop_requested(event)
+
+    def _handle_batch_end(self, payload: Dict[str, Any]) -> None:
+        batch = int(payload.get("batch", 0))
+        if batch <= 0:
+            return
+        total_batches = int(payload.get("total_batches", 0))
+        elapsed_sec = float(payload.get("elapsed_sec", 0.0))
+        emit_due_to_interval = self.batch_interval > 0 and (batch % self.batch_interval == 0)
+        emit_due_to_time = (
+            self._last_batch_emit_elapsed < 0
+            or (elapsed_sec - self._last_batch_emit_elapsed) >= self.min_interval_sec
+        )
+        emit_due_to_terminal_batch = total_batches > 0 and batch >= total_batches
+        if not (batch == 1 or emit_due_to_interval or emit_due_to_time or emit_due_to_terminal_batch):
+            return
+
+        self._last_batch_emit_elapsed = elapsed_sec
+        epoch = int(payload.get("epoch", 0))
+        parts = [
+            f"[LIVE] {epoch}/{self.total_epochs}",
+            f"batch={batch}/{total_batches or '?'}",
+            f"loss={float(payload.get('loss', 0.0)):.4f}",
+            f"lr={float(payload.get('lr', 0.0)):.6f}",
+            f"throughput={float(payload.get('samples_per_sec', 0.0)):.1f}/s",
+            f"elapsed={_format_duration(elapsed_sec)}",
+            f"eta={_format_duration(float(payload.get('eta_sec', 0.0)))}",
+        ]
+        advisory = str(payload.get("advisory", "")).strip()
+        severity = str(payload.get("severity", "")).strip().lower()
+        if advisory and severity in {"warning", "critical"}:
+            parts.append(f"{severity}={advisory}")
+        self._emit(" ".join(parts))
+
+    def _handle_validation_end(self, payload: Dict[str, Any]) -> None:
+        epoch_done = int(payload.get("epoch_done", 0))
+        parts = [f"[VALID] {epoch_done}/{self.total_epochs}"]
+        for key, label in (
+            ("val_loss", "val_loss"),
+            ("val_accuracy", "val_acc"),
+            ("macro_f1", "macro_f1"),
+            ("balanced_accuracy", "bal_acc"),
+            ("generalization_gap", "gap"),
+        ):
+            metric = self._metric_fragment(payload, key, label)
+            if metric is not None:
+                parts.append(metric)
+        advisory = str(payload.get("epoch_advisory", "")).strip()
+        severity = str(payload.get("epoch_severity", "")).strip().lower()
+        if advisory and severity in {"warning", "critical"}:
+            parts.append(f"{severity}={advisory}")
+        self._emit(" ".join(parts))
+
+    def _handle_best_metric(self, payload: Dict[str, Any]) -> None:
+        metric_name = str(payload.get("best_metric_name", "metric"))
+        metric_value = payload.get("best_metric_value")
+        if metric_value is None:
+            return
+        epoch_done = int(payload.get("epoch_done", 0))
+        self._emit(f"[BEST] {epoch_done}/{self.total_epochs} {metric_name}={float(metric_value):.4f}")
+
+    def _handle_stop_requested(self, payload: Dict[str, Any]) -> None:
+        reason = str(payload.get("reason", "requested"))
+        epoch = int(payload.get("epoch", 0))
+        step = int(payload.get("global_step", 0))
+        self._emit(f"[STOP] epoch={epoch} step={step} reason={reason}")
 
 
 def build_history_snapshot(

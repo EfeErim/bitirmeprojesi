@@ -9,6 +9,7 @@ def test_colab_training_surface_normalizes_runtime_aliases():
     assert colab_training["checkpoint_interval"] == 200
     assert colab_training["checkpoint_on_exception"] is True
     assert colab_training["stdout_progress_batch_interval"] == 50
+    assert colab_training["stdout_progress_min_interval_sec"] == 15.0
 
 
 def test_training_continual_surface_exposes_reliability_defaults():
