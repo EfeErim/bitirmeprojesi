@@ -75,6 +75,32 @@ def ensure_open_clip_image_embedding(runtime: Any, request: ClipScoreRequest) ->
     return request.image_embedding
 
 
+def ensure_open_clip_image_embeddings(
+    runtime: Any,
+    images: List[Image.Image],
+    *,
+    image_batch_size: Optional[int] = None,
+) -> torch.Tensor:
+    """Encode many images with open_clip in image batches."""
+    if not images:
+        return torch.empty((0, 0), dtype=torch.float32, device=runtime.device)
+
+    processor = runtime.bioclip_processor
+    model = runtime.bioclip
+    if not isinstance(processor, dict) or model is None:
+        raise RuntimeError("open_clip image encoding requested before BioCLIP runtime was initialized.")
+
+    preprocess = processor["preprocess"]
+    batch_size = max(1, int(image_batch_size or len(images)))
+    embeddings: List[torch.Tensor] = []
+    for start in range(0, len(images), batch_size):
+        image_tensor = torch.stack([preprocess(image) for image in images[start : start + batch_size]], dim=0).to(runtime.device)
+        with torch.no_grad():
+            image_embeds = model.encode_image(image_tensor)
+            embeddings.append(image_embeds / image_embeds.norm(dim=-1, keepdim=True))
+    return torch.cat(embeddings, dim=0)
+
+
 def score_open_clip_with_image_embedding(
     runtime: Any,
     image_embedding: torch.Tensor,
@@ -89,6 +115,21 @@ def score_open_clip_with_image_embedding(
         logits_per_image = (image_embedding @ text_embeds.T) * logit_scale
         scores = torch.softmax(logits_per_image, dim=-1)[0]
     return scores.detach().cpu().numpy().tolist()
+
+
+def score_open_clip_with_image_embeddings(
+    runtime: Any,
+    image_embeddings: torch.Tensor,
+    prompts: List[str],
+) -> torch.Tensor:
+    """Score prompts against precomputed open_clip image embeddings."""
+    text_embeds = get_open_clip_text_embeddings(runtime, prompts)
+    if runtime.bioclip is None:
+        raise RuntimeError("open_clip scoring requested before BioCLIP runtime was initialized.")
+    logit_scale = get_clip_logit_scale(runtime.bioclip)
+    with torch.no_grad():
+        logits_per_image = (image_embeddings @ text_embeds.T) * logit_scale
+    return torch.softmax(logits_per_image, dim=-1)
 
 
 def encode_and_score(runtime: Any, request: ClipScoreRequest, prompts: List[str]) -> List[float]:
@@ -134,6 +175,64 @@ def encode_and_score(runtime: Any, request: ClipScoreRequest, prompts: List[str]
         return [0.0] * len(prompts)
 
 
+def encode_and_score_batch(
+    runtime: Any,
+    images: List[Image.Image],
+    prompts: List[str],
+    *,
+    image_batch_size: Optional[int] = None,
+    image_embeddings: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    """Encode many images and score against a shared prompt set."""
+    if not images or not prompts:
+        return torch.zeros((len(images), len(prompts)), dtype=torch.float32)
+
+    try:
+        if runtime.bioclip_backend == "open_clip":
+            embeddings = image_embeddings
+            if embeddings is None:
+                embeddings = ensure_open_clip_image_embeddings(runtime, images, image_batch_size=image_batch_size)
+            return score_open_clip_with_image_embeddings(runtime, embeddings, prompts).detach().cpu()
+
+        processor = runtime.bioclip_processor
+        model = runtime.bioclip
+        if processor is None or model is None:
+            raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
+
+        batch_size = max(1, int(image_batch_size or len(images)))
+        outputs: List[torch.Tensor] = []
+        for start in range(0, len(images), batch_size):
+            chunk = images[start : start + batch_size]
+            model_inputs = processor(
+                text=prompts,
+                images=chunk,
+                return_tensors="pt",
+                padding=True,
+            )
+            model_inputs = {k: v.to(runtime.device) for k, v in model_inputs.items()}
+
+            with torch.no_grad():
+                model_outputs = model(**model_inputs)
+                if hasattr(model_outputs, "logits_per_image") and model_outputs.logits_per_image is not None:
+                    logits_per_image = model_outputs.logits_per_image
+                elif hasattr(model_outputs, "image_embeds") and hasattr(model_outputs, "text_embeds"):
+                    chunk_image_embeds = model_outputs.image_embeds
+                    text_embeds = model_outputs.text_embeds
+                    chunk_image_embeds = chunk_image_embeds / chunk_image_embeds.norm(dim=-1, keepdim=True)
+                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+                    logit_scale = get_clip_logit_scale(model)
+                    logits_per_image = (chunk_image_embeds @ text_embeds.T) * logit_scale
+                else:
+                    raise RuntimeError(
+                        "BioCLIP model output does not provide logits_per_image or embeddable outputs"
+                    )
+                outputs.append(torch.softmax(logits_per_image, dim=-1).detach().cpu())
+        return torch.cat(outputs, dim=0) if outputs else torch.zeros((0, len(prompts)), dtype=torch.float32)
+    except Exception as exc:
+        logger.error("Batch encoding failed: %s", exc)
+        return torch.zeros((len(images), len(prompts)), dtype=torch.float32)
+
+
 def clip_score_labels_ensemble(
     runtime: Any,
     image: Image.Image,
@@ -175,6 +274,64 @@ def clip_score_labels_ensemble(
     best_label = max(label_avg_scores, key=lambda label: label_avg_scores[label]) if label_avg_scores else "unknown"
     best_score = label_avg_scores.get(best_label, 0.0)
     return best_label, best_score, label_avg_scores
+
+
+def clip_score_labels_ensemble_batch(
+    runtime: Any,
+    images: List[Image.Image],
+    labels: List[str],
+    *,
+    label_type: str = "generic",
+    num_prompts: Optional[int] = None,
+    image_batch_size: Optional[int] = None,
+) -> List[Tuple[str, float, Dict[str, float]]]:
+    """Batch ensemble scoring for many images against a shared label set."""
+    if not images:
+        return []
+    if not labels:
+        return [("unknown", 0.0, {}) for _ in images]
+
+    templates = get_prompt_templates_for_type(runtime.vlm_config, label_type)
+    if num_prompts is not None:
+        try:
+            prompt_limit = int(num_prompts)
+        except Exception:
+            prompt_limit = 0
+        if prompt_limit > 0:
+            templates = templates[:prompt_limit]
+
+    per_image_scores: List[Dict[str, List[float]]] = [{label: [] for label in labels} for _ in images]
+    shared_image_embeddings: Optional[torch.Tensor] = None
+    if runtime.bioclip_backend == "open_clip":
+        shared_image_embeddings = ensure_open_clip_image_embeddings(
+            runtime,
+            images,
+            image_batch_size=image_batch_size,
+        )
+
+    for template in templates:
+        prompts = [template.format(term=label) for label in labels]
+        batch_scores = encode_and_score_batch(
+            runtime,
+            images,
+            prompts,
+            image_batch_size=image_batch_size,
+            image_embeddings=shared_image_embeddings,
+        )
+        for image_index, row in enumerate(batch_scores.tolist()):
+            for label, score in zip(labels, row):
+                per_image_scores[image_index][label].append(float(score))
+
+    results: List[Tuple[str, float, Dict[str, float]]] = []
+    for label_score_lists in per_image_scores:
+        label_avg_scores = {
+            label: float(np.mean(scores)) if scores else 0.0
+            for label, scores in label_score_lists.items()
+        }
+        best_label = max(label_avg_scores, key=lambda label: label_avg_scores[label]) if label_avg_scores else "unknown"
+        best_score = label_avg_scores.get(best_label, 0.0)
+        results.append((best_label, best_score, label_avg_scores))
+    return results
 
 
 def _log_open_set_debug(

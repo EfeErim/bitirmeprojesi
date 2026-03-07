@@ -26,6 +26,8 @@ LEAF_VISUAL_GENERIC_LABELS = {
 __all__ = [
     'collect_sam3_roi_candidates',
     'classify_sam3_roi_candidate',
+    'finalize_sam3_roi_candidate',
+    'filter_classified_sam3_detections',
     'run_sam3_roi_classification_stage',
 ]
 
@@ -109,7 +111,70 @@ def classify_sam3_roi_candidate(
     """Classify a single ROI candidate and return detection payload + call count."""
     part_num_prompts = settings.get('part_num_prompts')
     crop_num_prompts = settings.get('crop_num_prompts')
-    classification_min_confidence = float(settings['classification_min_confidence'])
+
+    bbox = candidate['bbox']
+    roi_image = extract_roi_fn(pil_image, bbox, pad_ratio=0.08)
+
+    part_label, part_conf, part_scores = clip_score_labels_ensemble_fn(
+        roi_image, part_labels, label_type='part', num_prompts=part_num_prompts
+    )
+    classification_calls = 1
+
+    crop_label, crop_conf, crop_scores = clip_score_labels_ensemble_fn(
+        roi_image, crop_labels, label_type='crop', num_prompts=crop_num_prompts
+    )
+    classification_calls += 1
+
+    detection = finalize_sam3_roi_candidate(
+        roi_image=roi_image,
+        candidate=candidate,
+        image_width=image_width,
+        image_height=image_height,
+        settings=settings,
+        policy_enabled_fn=policy_enabled_fn,
+        part_label=part_label,
+        part_conf=part_conf,
+        part_scores=part_scores,
+        crop_label=crop_label,
+        crop_conf=crop_conf,
+        crop_scores=crop_scores,
+        compute_leaf_likeness_fn=compute_leaf_likeness_fn,
+        rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi_fn,
+        select_best_crop_with_fallback_fn=select_best_crop_with_fallback_fn,
+        compatible_parts_for_crop_fn=compatible_parts_for_crop_fn,
+        score_parts_conditioned_on_crop_fn=score_parts_conditioned_on_crop_fn,
+        apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
+        select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
+        apply_leaf_like_override_fn=apply_leaf_like_override_fn,
+    )
+    return detection, classification_calls
+
+
+def finalize_sam3_roi_candidate(
+    *,
+    roi_image: Image.Image,
+    candidate: Candidate,
+    image_width: int,
+    image_height: int,
+    settings: Dict[str, Any],
+    policy_enabled_fn: Callable[[str, bool], bool],
+    part_label: str,
+    part_conf: float,
+    part_scores: Dict[str, float],
+    crop_label: str,
+    crop_conf: float,
+    crop_scores: Dict[str, float],
+    compute_leaf_likeness_fn: Callable[..., float],
+    rebalance_part_scores_for_leaf_like_roi_fn: Callable[..., Dict[str, float]],
+    select_best_crop_with_fallback_fn: Callable[..., Tuple[str, float]],
+    compatible_parts_for_crop_fn: Callable[[str], List[str]],
+    score_parts_conditioned_on_crop_fn: Callable[..., Dict[str, float]],
+    apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
+    select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
+    apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
+) -> Detection:
+    """Finalize ROI detection from precomputed crop/part scores."""
+    part_num_prompts = settings.get('part_num_prompts')
 
     compatibility_fusion_enabled = policy_enabled_fn('compatibility_fusion', True)
     conditioned_part_weight = float(settings['conditioned_part_weight'])
@@ -132,12 +197,6 @@ def classify_sam3_roi_candidate(
 
     bbox = candidate['bbox']
     sam3_score = float(candidate['sam3_score'])
-    roi_image = extract_roi_fn(pil_image, bbox, pad_ratio=0.08)
-
-    part_label, part_conf, part_scores = clip_score_labels_ensemble_fn(
-        roi_image, part_labels, label_type='part', num_prompts=part_num_prompts
-    )
-    classification_calls = 1
 
     leaf_likeness = compute_leaf_likeness_fn(
         roi_image=roi_image,
@@ -159,17 +218,9 @@ def classify_sam3_roi_candidate(
             part_label = max(part_scores, key=lambda label: float(part_scores.get(label, 0.0)))
             part_conf = float(part_scores.get(part_label, 0.0))
 
-    crop_label, crop_conf, crop_scores = clip_score_labels_ensemble_fn(
-        roi_image, crop_labels, label_type='crop', num_prompts=crop_num_prompts
-    )
-    classification_calls += 1
-
     crop_label, crop_conf = select_best_crop_with_fallback_fn(
-        roi_image,
         crop_scores,
-        part_label,
         part_scores,
-        min_confidence=classification_min_confidence,
     )
 
     compatible_parts = compatible_parts_for_crop_fn(crop_label)
@@ -276,28 +327,22 @@ def classify_sam3_roi_candidate(
         'mask': None,
         'sam3_score': sam3_score,
         '_quality_score': quality_score,
-    }, classification_calls
+    }
 
 
-def run_sam3_roi_classification_stage(
-    candidates: List[Candidate],
+def filter_classified_sam3_detections(
+    *,
+    all_detections: List[Detection],
     settings: Dict[str, Any],
     stage_order: List[str],
     policy_enabled_fn: Callable[[str, bool], bool],
-    classify_candidate_fn: Callable[[Candidate], Tuple[Optional[Detection], int]],
     passes_open_set_gate_fn: Callable[..., bool],
-) -> Tuple[List[Detection], int, int, float]:
-    """Execute ROI classification stage with focus fallback and optional open-set gate."""
+) -> Tuple[List[Detection], int]:
+    """Apply focus fallback and open-set gate to already-classified detections."""
     detections: List[Detection] = []
     roi_kept = 0
-    roi_classification_calls = 0
-    roi_classification_ms = 0.0
 
-    run_classification = policy_enabled_fn('crop_evidence', True) and 'roi_classification' in stage_order
     run_open_set_gate = policy_enabled_fn('open_set_gate', True) and 'open_set_gate' in stage_order
-    if not run_classification:
-        return detections, roi_kept, roi_classification_calls, roi_classification_ms
-
     focus_mode_enabled = bool(settings.get('focus_part_mode_enabled'))
     focus_fallback_enabled = bool(settings.get('focus_fallback_enabled'))
     focus_min_confidence = float(settings.get('focus_min_confidence_fallback', 0.50))
@@ -306,35 +351,17 @@ def run_sam3_roi_classification_stage(
     focus_parts_lower = [str(part).strip().lower() for part in focus_parts if str(part).strip()]
     classification_min_confidence = float(settings['classification_min_confidence'])
 
-    all_detections: List[Detection] = []
     focused_detections: List[Detection] = []
-    for candidate in candidates:
-        classify_start = time.perf_counter()
-        detection, classification_calls = classify_candidate_fn(candidate)
-        roi_classification_calls += classification_calls
-        roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
-
-        if detection is None:
-            continue
-
-        all_detections.append(detection)
-
-        if focus_mode_enabled:
+    if focus_mode_enabled:
+        for detection in all_detections:
             part_label = str(detection.get('part', 'unknown')).strip().lower()
             part_confidence = float(detection.get('part_confidence', 0.0))
-
-            if (
-                any(focus_part in part_label for focus_part in focus_parts_lower)
-                and part_confidence >= focus_min_confidence
-            ):
+            if any(focus_part in part_label for focus_part in focus_parts_lower) and part_confidence >= focus_min_confidence:
                 focused_detections.append(detection)
 
     if focus_mode_enabled and focus_fallback_enabled:
         if focused_detections:
-            max_focused_conf = max(
-                float(d.get('part_confidence', 0.0)) for d in focused_detections
-            ) if focused_detections else 0.0
-
+            max_focused_conf = max(float(d.get('part_confidence', 0.0)) for d in focused_detections)
             if max_focused_conf >= focus_min_confidence:
                 logger.debug(
                     "Using %d focused ROIs (parts=%s, max_conf=%.2f)",
@@ -369,5 +396,47 @@ def run_sam3_roi_classification_stage(
             continue
         detections.append(detection)
         roi_kept += 1
+
+    return detections, roi_kept
+
+
+def run_sam3_roi_classification_stage(
+    candidates: List[Candidate],
+    settings: Dict[str, Any],
+    stage_order: List[str],
+    policy_enabled_fn: Callable[[str, bool], bool],
+    classify_candidate_fn: Callable[[Candidate], Tuple[Optional[Detection], int]],
+    passes_open_set_gate_fn: Callable[..., bool],
+) -> Tuple[List[Detection], int, int, float]:
+    """Execute ROI classification stage with focus fallback and optional open-set gate."""
+    detections: List[Detection] = []
+    roi_kept = 0
+    roi_classification_calls = 0
+    roi_classification_ms = 0.0
+
+    run_classification = policy_enabled_fn('crop_evidence', True) and 'roi_classification' in stage_order
+    run_open_set_gate = policy_enabled_fn('open_set_gate', True) and 'open_set_gate' in stage_order
+    if not run_classification:
+        return detections, roi_kept, roi_classification_calls, roi_classification_ms
+
+    all_detections: List[Detection] = []
+    for candidate in candidates:
+        classify_start = time.perf_counter()
+        detection, classification_calls = classify_candidate_fn(candidate)
+        roi_classification_calls += classification_calls
+        roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
+
+        if detection is None:
+            continue
+
+        all_detections.append(detection)
+
+    detections, roi_kept = filter_classified_sam3_detections(
+        all_detections=all_detections,
+        settings=settings,
+        stage_order=stage_order,
+        policy_enabled_fn=policy_enabled_fn,
+        passes_open_set_gate_fn=passes_open_set_gate_fn,
+    )
 
     return detections, roi_kept, roi_classification_calls, roi_classification_ms

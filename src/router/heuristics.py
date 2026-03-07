@@ -1,0 +1,308 @@
+"""Pure heuristic helpers for SAM3 ROI post-classification decisions."""
+
+from __future__ import annotations
+
+from typing import Dict, List, Optional, Tuple
+
+import numpy as np
+from PIL import Image
+
+from src.router.compatibility_utils import compatible_parts_for_crop
+
+
+def apply_generic_part_penalty(
+    part_scores: Dict[str, float],
+    generic_part_labels: List[str],
+    generic_penalty: float,
+) -> Dict[str, float]:
+    """Down-weight overly generic part labels to prefer specific parts when close."""
+    if not part_scores:
+        return {}
+
+    generic_set = {
+        str(label).strip().lower()
+        for label in generic_part_labels
+        if str(label).strip()
+    }
+    if not generic_set:
+        return dict(part_scores)
+
+    penalty = max(0.0, min(1.0, float(generic_penalty)))
+    adjusted: Dict[str, float] = {}
+    for part_name, score in part_scores.items():
+        normalized = str(part_name).strip().lower()
+        base_score = float(score)
+        if normalized in generic_set:
+            adjusted[part_name] = base_score * penalty
+        else:
+            adjusted[part_name] = base_score
+    return adjusted
+
+
+def select_part_label_with_specificity(
+    part_scores: Dict[str, float],
+    generic_part_labels: List[str],
+    specific_override_ratio: float,
+    specific_min_confidence: float,
+    preferred_part_labels: Optional[List[str]] = None,
+    preferred_override_ratio: float = 0.50,
+) -> Tuple[str, float]:
+    """Select part label while preferring specific parts over generic labels when close."""
+    if not part_scores:
+        return "unknown", 0.0
+
+    best_label = max(part_scores, key=lambda label: part_scores[label])
+    best_score = float(part_scores.get(best_label, 0.0))
+
+    generic_set = {
+        str(label).strip().lower()
+        for label in generic_part_labels
+        if str(label).strip()
+    }
+
+    specific_override_ratio = max(0.0, min(1.0, float(specific_override_ratio)))
+    specific_min_confidence = max(0.0, min(1.0, float(specific_min_confidence)))
+    preferred_override_ratio = max(0.0, min(1.0, float(preferred_override_ratio)))
+
+    preferred_set = {
+        str(label).strip().lower()
+        for label in (preferred_part_labels or [])
+        if str(label).strip()
+    }
+
+    if preferred_set:
+        preferred_candidates = [
+            (label, float(score))
+            for label, score in part_scores.items()
+            if str(label).strip().lower() in preferred_set
+        ]
+        if preferred_candidates:
+            preferred_label, preferred_score = max(preferred_candidates, key=lambda item: item[1])
+            if (
+                preferred_score >= specific_min_confidence
+                and preferred_score >= best_score * preferred_override_ratio
+            ):
+                return preferred_label, preferred_score
+
+    if str(best_label).strip().lower() not in generic_set:
+        return best_label, best_score
+
+    specific_candidates = [
+        (label, float(score))
+        for label, score in part_scores.items()
+        if str(label).strip().lower() not in generic_set
+    ]
+    if not specific_candidates:
+        return best_label, best_score
+
+    specific_label, specific_score = max(specific_candidates, key=lambda item: item[1])
+    if specific_score >= specific_min_confidence and specific_score >= best_score * specific_override_ratio:
+        return specific_label, specific_score
+
+    return best_label, best_score
+
+
+def apply_leaf_like_override(
+    selected_label: str,
+    selected_score: float,
+    part_scores: Dict[str, float],
+    bbox: Optional[List[float]],
+    image_width: int,
+    image_height: int,
+    leaf_label: str = "leaf",
+    override_target_labels: Optional[List[str]] = None,
+    leaf_score_ratio: float = 0.35,
+    leaf_min_confidence: float = 0.10,
+    leaf_min_area_ratio: float = 0.02,
+    leaf_aspect_min: float = 0.30,
+    leaf_aspect_max: float = 3.20,
+) -> Tuple[str, float]:
+    """Prefer leaf part for leaf-like ROIs when selected label is generic or broad."""
+    if not part_scores or bbox is None or len(bbox) != 4 or image_width <= 0 or image_height <= 0:
+        return selected_label, float(selected_score)
+
+    leaf_key = str(leaf_label).strip().lower()
+    if not leaf_key:
+        return selected_label, float(selected_score)
+
+    leaf_candidates = {
+        label: float(score)
+        for label, score in part_scores.items()
+        if str(label).strip().lower() == leaf_key
+    }
+    if not leaf_candidates:
+        return selected_label, float(selected_score)
+
+    leaf_name, leaf_score = max(leaf_candidates.items(), key=lambda item: item[1])
+
+    target_labels = override_target_labels or ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"]
+    target_set = {str(label).strip().lower() for label in target_labels if str(label).strip()}
+    current_key = str(selected_label).strip().lower()
+    if current_key not in target_set:
+        return selected_label, float(selected_score)
+
+    x1, y1, x2, y2 = [float(v) for v in bbox]
+    box_w = max(0.0, x2 - x1)
+    box_h = max(0.0, y2 - y1)
+    if box_w <= 0.0 or box_h <= 0.0:
+        return selected_label, float(selected_score)
+
+    area_ratio = (box_w * box_h) / float(image_width * image_height)
+    if area_ratio < max(0.0, float(leaf_min_area_ratio)):
+        return selected_label, float(selected_score)
+
+    aspect = box_w / max(1e-6, box_h)
+    aspect_min = max(0.05, float(leaf_aspect_min))
+    aspect_max = max(aspect_min, float(leaf_aspect_max))
+    if aspect < aspect_min or aspect > aspect_max:
+        return selected_label, float(selected_score)
+
+    ratio = max(0.0, min(1.0, float(leaf_score_ratio)))
+    min_conf = max(0.0, min(1.0, float(leaf_min_confidence)))
+    if leaf_score >= min_conf and leaf_score >= float(selected_score) * ratio:
+        return leaf_name, leaf_score
+
+    return selected_label, float(selected_score)
+
+
+def compute_leaf_likeness(
+    roi_image: Image.Image,
+    bbox: Optional[List[float]],
+    image_width: int,
+    image_height: int,
+) -> float:
+    """Estimate how leaf-like an ROI is using color + geometry cues in [0,1]."""
+    if roi_image is None or bbox is None or len(bbox) != 4 or image_width <= 0 or image_height <= 0:
+        return 0.0
+
+    try:
+        roi_np = np.asarray(roi_image.convert("RGB"), dtype=np.float32)
+    except Exception:
+        return 0.0
+
+    if roi_np.size == 0:
+        return 0.0
+
+    h, w = roi_np.shape[:2]
+    if h <= 0 or w <= 0:
+        return 0.0
+
+    y1 = int(max(0, round(h * 0.15)))
+    y2 = int(min(h, round(h * 0.85)))
+    x1 = int(max(0, round(w * 0.15)))
+    x2 = int(min(w, round(w * 0.85)))
+    center = roi_np[y1:y2, x1:x2] if (y2 > y1 and x2 > x1) else roi_np
+
+    r = center[..., 0]
+    g = center[..., 1]
+    b = center[..., 2]
+    green_mask = (g > (r * 0.95)) & (g > (b * 1.05)) & (g > 45.0)
+    green_ratio = float(np.mean(green_mask)) if green_mask.size > 0 else 0.0
+
+    bx1, by1, bx2, by2 = [float(v) for v in bbox]
+    box_w = max(0.0, bx2 - bx1)
+    box_h = max(0.0, by2 - by1)
+    area_ratio = (box_w * box_h) / float(image_width * image_height)
+    aspect = box_w / max(1e-6, box_h)
+
+    size_score = max(0.0, min(1.0, area_ratio / 0.15))
+    if 0.25 <= aspect <= 4.2:
+        shape_score = 1.0
+    elif 0.15 <= aspect <= 5.5:
+        shape_score = 0.6
+    else:
+        shape_score = 0.2
+
+    return float(max(0.0, min(1.0, (0.60 * green_ratio) + (0.25 * size_score) + (0.15 * shape_score))))
+
+
+def rebalance_part_scores_for_leaf_like_roi(
+    part_scores: Dict[str, float],
+    leaf_likeness: float,
+    leaf_label: str = "leaf",
+    non_foliar_part_labels: Optional[List[str]] = None,
+    activation_threshold: float = 0.34,
+    non_foliar_penalty: float = 0.55,
+    leaf_boost: float = 1.35,
+) -> Dict[str, float]:
+    """Boost leaf and suppress non-foliar labels for leaf-like ROIs."""
+    if not part_scores:
+        return {}
+
+    threshold = max(0.0, min(1.0, float(activation_threshold)))
+    if float(leaf_likeness) < threshold:
+        return dict(part_scores)
+
+    leaf_key = str(leaf_label).strip().lower()
+    if not leaf_key:
+        return dict(part_scores)
+
+    default_non_foliar = [
+        "husk",
+        "shell",
+        "pod",
+        "seed",
+        "grain",
+        "ear",
+        "tuber",
+        "bulb",
+        "fruit",
+        "berry",
+        "bark",
+        "peel",
+        "whole plant",
+        "whole",
+        "plant",
+        "entire plant",
+    ]
+    non_foliar_set = {
+        str(label).strip().lower()
+        for label in (non_foliar_part_labels if isinstance(non_foliar_part_labels, list) else default_non_foliar)
+        if str(label).strip()
+    }
+
+    penalty = max(0.0, min(1.0, float(non_foliar_penalty)))
+    boost = max(1.0, float(leaf_boost))
+
+    adjusted: Dict[str, float] = {}
+    for part_name, score in part_scores.items():
+        key = str(part_name).strip().lower()
+        value = float(score)
+        if key == leaf_key:
+            adjusted[part_name] = value * boost
+        elif key in non_foliar_set:
+            adjusted[part_name] = value * penalty
+        else:
+            adjusted[part_name] = value
+    return adjusted
+
+
+def select_best_crop_with_fallback(
+    crop_scores: Dict[str, float],
+    part_scores: Dict[str, float],
+    crop_part_compatibility: Dict[str, List[str]],
+    part_labels: List[str],
+) -> Tuple[str, float]:
+    """Rerank crop scores by compatible-part evidence when crop confidence is uncertain."""
+    if not crop_scores:
+        return "unknown", 0.0
+
+    best_crop_raw, best_score_raw = max(crop_scores.items(), key=lambda item: item[1])
+    if not part_scores:
+        return best_crop_raw, best_score_raw
+
+    sorted_crop_scores = sorted(float(v) for v in crop_scores.values())
+    second_best = sorted_crop_scores[-2] if len(sorted_crop_scores) > 1 else 0.0
+    uncertainty = max(0.0, 1.0 - max(0.0, min(1.0, best_score_raw - second_best)))
+
+    reranked_scores: Dict[str, float] = {}
+    for crop_name, base_score in crop_scores.items():
+        compatible_parts = compatible_parts_for_crop(crop_name, crop_part_compatibility, part_labels)
+        compatible_part_score = 0.0
+        if compatible_parts:
+            compatible_part_score = max(float(part_scores.get(part, 0.0)) for part in compatible_parts)
+        reranked_scores[crop_name] = float(base_score) + (1.0 - float(base_score)) * compatible_part_score * uncertainty
+
+    best_crop, best_score = max(reranked_scores.items(), key=lambda item: item[1])
+    return best_crop, best_score
+

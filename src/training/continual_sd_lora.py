@@ -33,6 +33,7 @@ from src.training.services.persistence import (
 from src.training.services.persistence import (
     snapshot_training_state as snapshot_trainer_training_state,
 )
+from src.training.services.ood_calibration import calibrate_trainer_ood
 from src.training.services.runtime import (
     autocast_context,
     build_grad_scaler,
@@ -634,31 +635,7 @@ class ContinualSDLoRATrainer:
         )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
-        feats: List[torch.Tensor] = []
-        logits_list: List[torch.Tensor] = []
-        labels_list: List[torch.Tensor] = []
-        if self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("Cannot calibrate OOD before adapter, classifier, and fusion are initialized.")
-        self.adapter_model.eval()
-        self.classifier.eval()
-        self.fusion.eval()
-        with torch.no_grad():
-            for batch in loader:
-                images = batch["images"].to(self.device)
-                labels = batch["labels"].to(self.device)
-                features = self.encode(images)
-                logits = self.classifier(features)
-                feats.append(features.detach().cpu())
-                logits_list.append(logits.detach().cpu())
-                labels_list.append(labels.detach().cpu())
-
-        if not feats:
-            raise ValueError("Cannot calibrate OOD with an empty loader.")
-        return self.ood_detector.calibrate(
-            features=torch.cat(feats, dim=0),
-            logits=torch.cat(logits_list, dim=0),
-            labels=torch.cat(labels_list, dim=0),
-        )
+        return calibrate_trainer_ood(self, loader)
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
         if self.adapter_model is None or self.classifier is None or self.fusion is None:

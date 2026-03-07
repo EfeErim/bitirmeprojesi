@@ -10,6 +10,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 from PIL import Image
 
+from src.router import clip_runtime
 from src.router.analysis_results import (
     build_sam3_analysis_result,
     init_sam3_stage_timings,
@@ -20,11 +21,27 @@ from src.router.confidence_utils import (
     passes_open_set_gate,
     resolve_effective_confidence_threshold,
 )
+from src.router.heuristics import (
+    apply_generic_part_penalty,
+    apply_leaf_like_override,
+    compute_leaf_likeness,
+    rebalance_part_scores_for_leaf_like_roi,
+    select_best_crop_with_fallback,
+    select_part_label_with_specificity,
+)
 from src.router.pipeline_flow_utils import resolve_effective_max_detections
-from src.router.roi_helpers import bbox_area_ratio, extract_roi, sanitize_bbox, suppress_overlapping_detections
+from src.router.roi_helpers import (
+    bbox_area_ratio,
+    coerce_image_input,
+    extract_roi,
+    sanitize_bbox,
+    suppress_overlapping_detections,
+)
 from src.router.roi_pipeline import (
     classify_sam3_roi_candidate,
     collect_sam3_roi_candidates,
+    filter_classified_sam3_detections,
+    finalize_sam3_roi_candidate,
     run_sam3_roi_classification_stage,
 )
 from src.router.runtime_settings import build_sam3_runtime_settings, resolve_sam3_stage_order
@@ -122,6 +139,139 @@ def run_sam3_roi_filter_stage(
     )
 
 
+def _mask_count(masks: Any) -> int:
+    if torch.is_tensor(masks):
+        return int(masks.shape[0]) if masks.ndim > 0 else int(masks.numel() > 0)
+    if isinstance(masks, (list, tuple)):
+        return len(masks)
+    return 0
+
+
+def _resolve_positive_int(value: Any, default: int) -> int:
+    try:
+        resolved = int(value)
+    except Exception:
+        resolved = int(default)
+    return max(1, resolved)
+
+
+def _classify_chunk_candidates_batched(
+    runtime: Any,
+    *,
+    contexts: List[Sam3RequestContext],
+    candidates_per_image: List[List[Dict[str, Any]]],
+) -> List[Dict[str, Any]]:
+    """Batch-score ROI candidates, then finalize/filter detections per image."""
+    records: List[Dict[str, Any]] = []
+    roi_score_batch_size = _resolve_positive_int(runtime.vlm_config.get("roi_score_batch_size", 32), 32)
+    for image_index, (context, candidates) in enumerate(zip(contexts, candidates_per_image)):
+        for candidate_index, candidate in enumerate(candidates):
+            roi_image = extract_roi(context.pil_image, candidate["bbox"], pad_ratio=0.08)
+            records.append(
+                {
+                    "image_index": image_index,
+                    "candidate_index": candidate_index,
+                    "candidate": candidate,
+                    "context": context,
+                    "roi_image": roi_image,
+                }
+            )
+
+    if not records:
+        return [
+            {
+                "detections": [],
+                "roi_kept": 0,
+                "roi_classification_calls": 0,
+                "roi_classification_ms": 0.0,
+            }
+            for _ in contexts
+        ]
+
+    roi_images = [record["roi_image"] for record in records]
+    scoring_started_at = time.perf_counter()
+    part_results = clip_runtime.clip_score_labels_ensemble_batch(
+        runtime,
+        roi_images,
+        runtime.part_labels,
+        label_type="part",
+        num_prompts=contexts[0].settings.get("part_num_prompts"),
+        image_batch_size=roi_score_batch_size,
+    )
+    crop_results = clip_runtime.clip_score_labels_ensemble_batch(
+        runtime,
+        roi_images,
+        runtime.crop_labels,
+        label_type="crop",
+        num_prompts=contexts[0].settings.get("crop_num_prompts"),
+        image_batch_size=roi_score_batch_size,
+    )
+    scoring_ms = (time.perf_counter() - scoring_started_at) * 1000.0
+
+    per_image_all_detections: List[List[Dict[str, Any]]] = [[] for _ in contexts]
+    per_image_calls: List[int] = [0 for _ in contexts]
+    finalize_started_at = time.perf_counter()
+    for record, part_result, crop_result in zip(records, part_results, crop_results):
+        image_index = int(record["image_index"])
+        context = record["context"]
+        detection = finalize_sam3_roi_candidate(
+            roi_image=record["roi_image"],
+            candidate=record["candidate"],
+            image_width=context.image_width,
+            image_height=context.image_height,
+            settings=context.settings,
+            policy_enabled_fn=runtime._policy_enabled,
+            part_label=part_result[0],
+            part_conf=part_result[1],
+            part_scores=part_result[2],
+            crop_label=crop_result[0],
+            crop_conf=crop_result[1],
+            crop_scores=crop_result[2],
+            compute_leaf_likeness_fn=compute_leaf_likeness,
+            rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi,
+            select_best_crop_with_fallback_fn=lambda crop_scores, part_scores: select_best_crop_with_fallback(
+                crop_scores,
+                part_scores,
+                runtime.crop_part_compatibility,
+                runtime.part_labels,
+            ),
+            compatible_parts_for_crop_fn=lambda crop_label: compatible_parts_for_crop(
+                crop_label,
+                runtime.crop_part_compatibility,
+                runtime.part_labels,
+            ),
+            score_parts_conditioned_on_crop_fn=runtime._score_parts_conditioned_on_crop,
+            apply_generic_part_penalty_fn=apply_generic_part_penalty,
+            select_part_label_with_specificity_fn=select_part_label_with_specificity,
+            apply_leaf_like_override_fn=apply_leaf_like_override,
+        )
+        per_image_all_detections[image_index].append(detection)
+        per_image_calls[image_index] += 2
+    finalize_ms = (time.perf_counter() - finalize_started_at) * 1000.0
+
+    total_records = max(1, len(records))
+    results: List[Dict[str, Any]] = []
+    for image_index, all_detections in enumerate(per_image_all_detections):
+        detections, roi_kept = filter_classified_sam3_detections(
+            all_detections=all_detections,
+            settings=contexts[image_index].settings,
+            stage_order=contexts[image_index].stage_order,
+            policy_enabled_fn=runtime._policy_enabled,
+            passes_open_set_gate_fn=passes_open_set_gate,
+        )
+        record_count = max(0, len(all_detections))
+        timing_share = (scoring_ms + finalize_ms) * (float(record_count) / float(total_records))
+        results.append(
+            {
+                "detections": detections,
+                "roi_kept": roi_kept,
+                "roi_classification_calls": per_image_calls[image_index],
+                "roi_classification_ms": timing_share,
+            }
+        )
+    return results
+
+
 def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, Any]:
     """Analyze an image using the SAM3 + BioCLIP runtime."""
     start_time = time.perf_counter()
@@ -139,12 +289,7 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     boxes = sam3_results.get("boxes", [])
     scores = sam3_results.get("scores", [])
 
-    if torch.is_tensor(masks):
-        mask_count = int(masks.shape[0]) if masks.ndim > 0 else int(masks.numel() > 0)
-    elif isinstance(masks, (list, tuple)):
-        mask_count = len(masks)
-    else:
-        mask_count = 0
+    mask_count = _mask_count(masks)
 
     detections: List[Dict[str, Any]] = []
     roi_seen = 0
@@ -169,19 +314,30 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
                 crop_labels=runtime.crop_labels,
                 policy_enabled_fn=runtime._policy_enabled,
                 extract_roi_fn=extract_roi,
-                clip_score_labels_ensemble_fn=runtime._clip_score_labels_ensemble,
-                compute_leaf_likeness_fn=runtime._compute_leaf_likeness,
-                rebalance_part_scores_for_leaf_like_roi_fn=runtime._rebalance_part_scores_for_leaf_like_roi,
-                select_best_crop_with_fallback_fn=runtime._select_best_crop_with_fallback,
+                clip_score_labels_ensemble_fn=lambda roi_image, labels, label_type="generic", num_prompts=None: clip_runtime.clip_score_labels_ensemble(
+                    runtime,
+                    roi_image,
+                    labels,
+                    label_type=label_type,
+                    num_prompts=num_prompts,
+                ),
+                compute_leaf_likeness_fn=compute_leaf_likeness,
+                rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi,
+                select_best_crop_with_fallback_fn=lambda crop_scores, part_scores: select_best_crop_with_fallback(
+                    crop_scores,
+                    part_scores,
+                    runtime.crop_part_compatibility,
+                    runtime.part_labels,
+                ),
                 compatible_parts_for_crop_fn=lambda crop_label: compatible_parts_for_crop(
                     crop_label,
                     runtime.crop_part_compatibility,
                     runtime.part_labels,
                 ),
                 score_parts_conditioned_on_crop_fn=runtime._score_parts_conditioned_on_crop,
-                apply_generic_part_penalty_fn=runtime._apply_generic_part_penalty,
-                select_part_label_with_specificity_fn=runtime._select_part_label_with_specificity,
-                apply_leaf_like_override_fn=runtime._apply_leaf_like_override,
+                apply_generic_part_penalty_fn=apply_generic_part_penalty,
+                select_part_label_with_specificity_fn=select_part_label_with_specificity,
+                apply_leaf_like_override_fn=apply_leaf_like_override,
             ),
             passes_open_set_gate_fn=passes_open_set_gate,
         )
@@ -220,3 +376,121 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
         mask_count=mask_count,
         sam3_threshold=context.sam3_threshold,
     )
+
+
+def analyze_sam3_batch(
+    runtime: Any,
+    batch: torch.Tensor,
+    confidence_threshold: float = 0.8,
+    max_detections: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """Analyze a tensor batch with chunked SAM3 inference and batched CLIP ROI scoring."""
+    batch_size = int(batch.shape[0]) if hasattr(batch, "shape") else 0
+    if batch_size <= 0:
+        return []
+
+    pil_images: List[Image.Image] = []
+    image_sizes: List[Tuple[int, int, int]] = []
+    for index in range(batch_size):
+        pil_image, image_size = coerce_image_input(batch[index])
+        pil_images.append(pil_image)
+        image_sizes.append(image_size)
+
+    contexts = [
+        build_request_context(
+            runtime,
+            pil_image=pil_image,
+            image_size=image_size,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        )
+        for pil_image, image_size in zip(pil_images, image_sizes)
+    ]
+
+    chunk_size = _resolve_positive_int(runtime.vlm_config.get("batch_chunk_size", 8), 8)
+    analyses: List[Dict[str, Any]] = []
+    for start in range(0, len(contexts), chunk_size):
+        chunk_contexts = contexts[start : start + chunk_size]
+        if not chunk_contexts:
+            continue
+
+        prompts = {context.sam3_prompt for context in chunk_contexts}
+        thresholds = {context.sam3_threshold for context in chunk_contexts}
+        if len(prompts) != 1 or len(thresholds) != 1:
+            analyses.extend(analyze_sam3_image(runtime, context) for context in chunk_contexts)
+            continue
+
+        try:
+            sam3_started_at = time.perf_counter()
+            batched_results = runtime._run_sam3_batch(
+                [context.pil_image for context in chunk_contexts],
+                prompt=chunk_contexts[0].sam3_prompt,
+                threshold=chunk_contexts[0].sam3_threshold,
+            )
+            sam3_total_ms = (time.perf_counter() - sam3_started_at) * 1000.0
+        except Exception as exc:
+            logger.info("Falling back to per-image SAM3 analysis for chunk: %s", exc)
+            analyses.extend(analyze_sam3_image(runtime, context) for context in chunk_contexts)
+            continue
+
+        candidates_per_image: List[List[Dict[str, Any]]] = []
+        roi_seen_per_image: List[int] = []
+        roi_filter_ms_per_image: List[float] = []
+        mask_count_per_image: List[int] = []
+        for context, sam3_results in zip(chunk_contexts, batched_results):
+            boxes = sam3_results.get("boxes", [])
+            scores = sam3_results.get("scores", [])
+            masks = sam3_results.get("masks", [])
+            mask_count_per_image.append(_mask_count(masks))
+            roi_started_at = time.perf_counter()
+            candidates, roi_seen = run_sam3_roi_filter_stage(runtime, boxes, scores, context=context)
+            roi_filter_ms_per_image.append((time.perf_counter() - roi_started_at) * 1000.0)
+            candidates_per_image.append(candidates)
+            roi_seen_per_image.append(roi_seen)
+
+        classification_results = _classify_chunk_candidates_batched(
+            runtime,
+            contexts=chunk_contexts,
+            candidates_per_image=candidates_per_image,
+        )
+        sam3_share_ms = sam3_total_ms / float(max(1, len(chunk_contexts)))
+        for context, classification_result, mask_count, roi_seen, roi_filter_ms in zip(
+            chunk_contexts,
+            classification_results,
+            mask_count_per_image,
+            roi_seen_per_image,
+            roi_filter_ms_per_image,
+        ):
+            stage_timings_ms = init_sam3_stage_timings()
+            stage_timings_ms["preprocess"] = context.preprocess_ms
+            stage_timings_ms["sam3_inference"] = sam3_share_ms
+            stage_timings_ms["roi_classification"] = float(classification_result["roi_classification_ms"])
+            stage_timings_ms["roi_total"] = roi_filter_ms + stage_timings_ms["roi_classification"]
+
+            postprocess_started_at = time.perf_counter()
+            detections = postprocess_sam3_detections(
+                runtime,
+                classification_result["detections"],
+                context=context,
+            )
+            stage_timings_ms["postprocess"] = (time.perf_counter() - postprocess_started_at) * 1000.0
+            elapsed_ms = sum(float(value) for value in stage_timings_ms.values())
+            stage_summary = summarize_sam3_stage_timings(
+                stage_timings_ms,
+                roi_seen,
+                int(classification_result["roi_classification_calls"]),
+            )
+            analyses.append(
+                build_sam3_analysis_result(
+                    detections=detections,
+                    image_size=context.image_size,
+                    elapsed_ms=elapsed_ms,
+                    stage_summary=stage_summary,
+                    roi_seen=roi_seen,
+                    roi_kept=int(classification_result["roi_kept"]),
+                    roi_classification_calls=int(classification_result["roi_classification_calls"]),
+                    mask_count=mask_count,
+                    sam3_threshold=context.sam3_threshold,
+                )
+            )
+    return analyses
