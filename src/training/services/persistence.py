@@ -59,8 +59,10 @@ def restore_ood_state(
     payload: Dict[str, Any],
     *,
     default_threshold_factor: float,
+    device: torch.device | str | None = None,
 ) -> ContinualOODDetector:
     threshold_factor = float(payload.get("threshold_factor", default_threshold_factor))
+    target_device = torch.device(device) if device is not None else torch.device("cpu")
 
     # Restore extended flags with backward-compatible defaults
     radial_beta_range_raw = payload.get("radial_beta_range", [0.5, 2.0])
@@ -91,8 +93,8 @@ def restore_ood_state(
         if not isinstance(stats, dict):
             continue
         detector.class_stats[int(class_id_raw)] = ClassCalibration(
-            mean=torch.tensor(stats.get("mean", []), dtype=torch.float32),
-            var=torch.tensor(stats.get("var", []), dtype=torch.float32),
+            mean=torch.tensor(stats.get("mean", []), dtype=torch.float32, device=target_device),
+            var=torch.tensor(stats.get("var", []), dtype=torch.float32, device=target_device),
             mahalanobis_mu=float(stats.get("mahalanobis_mu", 0.0)),
             mahalanobis_sigma=float(stats.get("mahalanobis_sigma", 1.0)),
             energy_mu=float(stats.get("energy_mu", 0.0)),
@@ -284,6 +286,7 @@ def restore_training_state(
         trainer.ood_detector = restore_ood_state(
             checkpoint.ood_state,
             default_threshold_factor=trainer.config.ood_threshold_factor,
+            device=trainer.device,
         )
     restore_rng_state(checkpoint.rng_state, np_module=np_module)
     trainer.current_epoch = int(checkpoint.current_epoch)
@@ -345,6 +348,7 @@ def load_trainer_adapter(trainer: Any, adapter_dir: str, *, peft_model_cls: Any 
         trainer.ood_detector = restore_ood_state(
             ood_state,
             default_threshold_factor=trainer.config.ood_threshold_factor,
+            device=trainer.device,
         )
     else:
         trainer.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))

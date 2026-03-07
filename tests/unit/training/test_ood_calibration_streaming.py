@@ -143,6 +143,23 @@ def test_one_shot_loader_falls_back_to_materialized_calibration(monkeypatch):
     assert int(result["num_classes"]) == 2
 
 
+def test_reiterable_loader_with_extended_ood_uses_materialized_calibration(monkeypatch):
+    trainer = _build_trainer()
+    called = {"count": 0}
+
+    def fake_calibrate(features, logits, labels):
+        called["count"] += 1
+        assert features.shape[0] == logits.shape[0] == labels.shape[0]
+        return {"num_classes": 2.0, "calibration_version": 1.0}
+
+    monkeypatch.setattr(trainer.ood_detector, "calibrate", fake_calibrate)
+
+    result = trainer.calibrate_ood(_make_loader())
+
+    assert called["count"] == 1
+    assert int(result["num_classes"]) == 2
+
+
 def test_streamed_calibration_raises_for_empty_loader():
     trainer = _build_trainer()
 

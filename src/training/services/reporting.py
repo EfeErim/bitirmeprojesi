@@ -216,6 +216,9 @@ def persist_validation_artifacts(
     require_ood: bool = False,
     ood_labels: Sequence[int] | None = None,
     ood_scores: Sequence[float] | None = None,
+    sure_ds_f1: float | None = None,
+    conformal_empirical_coverage: float | None = None,
+    conformal_avg_set_size: float | None = None,
     context: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     resolved_classes = [str(name) for name in classes]
@@ -295,18 +298,46 @@ def persist_validation_artifacts(
     _copy_to_telemetry(telemetry, confusion_png, "validation/confusion_matrix.png")
     _copy_to_telemetry(telemetry, confusion_norm_png, "validation/confusion_matrix_normalized.png")
 
+    metric_context = dict(context or {"num_classes": len(resolved_classes)})
     metrics = compute_plan_metrics(
         y_true=y_true,
         y_pred=y_pred,
         ood_labels=ood_labels,
         ood_scores=ood_scores,
+        sure_ds_f1=(
+            sure_ds_f1
+            if sure_ds_f1 is not None
+            else (
+                float(metric_context["sure_ds_f1"])
+                if metric_context.get("sure_ds_f1") is not None
+                else None
+            )
+        ),
+        conformal_empirical_coverage=(
+            conformal_empirical_coverage
+            if conformal_empirical_coverage is not None
+            else (
+                float(metric_context["conformal_empirical_coverage"])
+                if metric_context.get("conformal_empirical_coverage") is not None
+                else None
+            )
+        ),
+        conformal_avg_set_size=(
+            conformal_avg_set_size
+            if conformal_avg_set_size is not None
+            else (
+                float(metric_context["conformal_avg_set_size"])
+                if metric_context.get("conformal_avg_set_size") is not None
+                else None
+            )
+        ),
     )
     metric_gate = write_plan_metric_artifact(
         output_path=metric_gate_json,
         metrics=metrics,
         targets=gate_targets,
         require_ood=require_ood,
-        context=dict(context or {"num_classes": len(resolved_classes)}),
+        context=metric_context,
     )
     _copy_to_telemetry(telemetry, metric_gate_json, "validation/metric_gate.json")
 

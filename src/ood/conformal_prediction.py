@@ -89,9 +89,11 @@ def score_all_classes(
     energy = float((-torch.logsumexp(logits.unsqueeze(0), dim=1))[0].item())
 
     for class_id, stats in class_stats.items():
+        mean = stats.mean.to(device=features.device, dtype=features.dtype)
+        var = stats.var.to(device=features.device, dtype=features.dtype)
         # Mahalanobis distance against this class
         distance = float(
-            torch.sqrt(((features - stats.mean) ** 2 / stats.var).sum()).item()
+            torch.sqrt(((features - mean) ** 2 / var).sum()).item()
         )
         m_z = (distance - stats.mahalanobis_mu) / max(stats.mahalanobis_sigma, 1e-6)
         e_z = (energy - stats.energy_mu) / max(stats.energy_sigma, 1e-6)

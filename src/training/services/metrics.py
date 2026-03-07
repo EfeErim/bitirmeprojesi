@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
 import torch
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve
 
 from src.shared.json_utils import read_json, write_json
 
@@ -30,10 +30,19 @@ def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
     payload = read_json(resolved, default={}, expect_type=dict)
     targets = payload.get("targets", {}) if isinstance(payload, dict) else {}
     return {
-        "accuracy": float(targets.get("continual_accuracy", DEFAULT_PLAN_TARGETS["accuracy"])),
+        "accuracy": float(
+            targets.get("accuracy", targets.get("continual_accuracy", DEFAULT_PLAN_TARGETS["accuracy"]))
+        ),
         "ood_auroc": float(targets.get("ood_auroc", DEFAULT_PLAN_TARGETS["ood_auroc"])),
         "ood_false_positive_rate": float(
             targets.get("ood_false_positive_rate", DEFAULT_PLAN_TARGETS["ood_false_positive_rate"])
+        ),
+        "sure_ds_f1": float(targets.get("sure_ds_f1", DEFAULT_PLAN_TARGETS["sure_ds_f1"])),
+        "conformal_empirical_coverage": float(
+            targets.get(
+                "conformal_empirical_coverage",
+                DEFAULT_PLAN_TARGETS["conformal_empirical_coverage"],
+            )
         ),
     }
 
@@ -71,13 +80,16 @@ def compute_plan_metrics(
             in_dist_total = int((labels_t == 0).sum().item())
             if ood_total > 0 and in_dist_total > 0:
                 try:
-                    ood_auroc = float(roc_auc_score(labels_t.cpu().numpy(), scores_t.cpu().numpy()))
+                    labels_np = labels_t.cpu().numpy()
+                    scores_np = scores_t.cpu().numpy()
+                    ood_auroc = float(roc_auc_score(labels_np, scores_np))
+                    fpr, tpr, _ = roc_curve(labels_np, scores_np, pos_label=1)
+                    valid_tpr = tpr >= 0.95
+                    if valid_tpr.any():
+                        ood_fpr = float(fpr[valid_tpr].min())
                 except Exception:
                     ood_auroc = None
-                in_scores = scores_t[labels_t == 0]
-                if in_scores.numel() > 0:
-                    threshold = torch.quantile(in_scores, 0.95)
-                    ood_fpr = float((in_scores > threshold).float().mean().item())
+                    ood_fpr = None
 
     return {
         "accuracy": accuracy,

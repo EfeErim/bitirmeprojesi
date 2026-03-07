@@ -111,6 +111,41 @@ def test_add_classes_expands_classifier_shape():
     assert trainer.classifier.out_features == 3
 
 
+def test_add_classes_refreshes_existing_optimizer_params():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+        scheduler_name="linear",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer._is_initialized = True
+    trainer.adapter_model = nn.Linear(8, 8)
+    trainer.fusion = nn.Linear(8, 8)
+    trainer.classifier = nn.Linear(8, 1)
+    trainer.class_to_idx = {"healthy": 0}
+    trainer.configure_training_plan(total_batches=2, num_epochs=1)
+    trainer.setup_optimizer()
+    assert trainer.optimizer is not None
+    assert trainer.scheduler is not None
+
+    old_classifier_weight_id = id(trainer.classifier.weight)
+
+    trainer.add_classes(["disease_a"])
+
+    assert trainer.optimizer is not None
+    assert trainer.scheduler is not None
+    optimizer_param_ids = {
+        id(param)
+        for group in trainer.optimizer.param_groups
+        for param in group["params"]
+    }
+    assert id(trainer.classifier.weight) in optimizer_param_ids
+    assert old_classifier_weight_id not in optimizer_param_ids
+
+
 def test_predict_payload_contains_v6_ood_keys():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
@@ -548,3 +583,41 @@ def test_save_and_load_adapter_roundtrip_restores_raw_adapter_weights(monkeypatc
         reloaded.fusion.projections[0].weight,
         torch.full_like(reloaded.fusion.projections[0].weight, 0.5),
     )
+
+
+def test_save_and_load_adapter_roundtrip_restores_ood_state(monkeypatch, tmp_path):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={"healthy": 0, "disease_a": 1})
+
+    calibration_loader = [
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)},
+        {"images": torch.ones(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)},
+    ]
+    calibration = trainer.calibrate_ood(calibration_loader)
+    assert int(calibration["num_classes"]) == 2
+
+    save_dir = tmp_path / "adapter_with_ood"
+    trainer.save_adapter(str(save_dir))
+
+    reloaded = ContinualSDLoRATrainer(cfg)
+    reloaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
+
+    assert int(reloaded.ood_detector.calibration_version) == int(trainer.ood_detector.calibration_version)
+    assert set(reloaded.ood_detector.class_stats.keys()) == {0, 1}

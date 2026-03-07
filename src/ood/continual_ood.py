@@ -87,6 +87,16 @@ class ContinualOODDetector:
         return value.clamp_min(1e-6)
 
     @staticmethod
+    def _stats_on_input_device(
+        stats: ClassCalibration,
+        reference: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        target_dtype = reference.dtype if torch.is_floating_point(reference) else torch.float32
+        mean = stats.mean.to(device=reference.device, dtype=target_dtype)
+        var = stats.var.to(device=reference.device, dtype=target_dtype)
+        return mean, var
+
+    @staticmethod
     def _energy(logits: torch.Tensor) -> torch.Tensor:
         return -torch.logsumexp(logits, dim=1)
 
@@ -247,7 +257,8 @@ class ContinualOODDetector:
         feature = self._maybe_normalize(feature.unsqueeze(0)).squeeze(0) if feature.ndim == 1 else self._maybe_normalize(feature)
 
         stats = self.class_stats[class_id]
-        distance = torch.sqrt(((feature - stats.mean) ** 2 / stats.var).sum())
+        mean, var = self._stats_on_input_device(stats, feature)
+        distance = torch.sqrt(((feature - mean) ** 2 / var).sum())
         energy = self._energy(logit.unsqueeze(0))[0]
 
         m_z = float(((distance - stats.mahalanobis_mu) / stats.mahalanobis_sigma).item())

@@ -124,11 +124,29 @@ def _iter_feature_batches(
             yield features, logits, labels
 
 
+def _requires_materialized_extended_calibration(detector: ContinualOODDetector) -> bool:
+    return bool(
+        detector.radial_l2_enabled
+        or detector.sure_enabled
+        or detector.conformal_enabled
+    )
+
+
+def _move_detector_stats_to_device(detector: ContinualOODDetector, device: torch.device) -> None:
+    for stats in detector.class_stats.values():
+        stats.mean = stats.mean.to(device=device, dtype=torch.float32)
+        stats.var = stats.var.to(device=device, dtype=torch.float32)
+
+
 def calibrate_trainer_ood(
     trainer: Any,
     loader: Iterable[Dict[str, torch.Tensor]],
 ) -> Dict[str, float]:
-    """Calibrate trainer-owned OOD statistics with streamed multi-pass accumulation."""
+    """Calibrate trainer-owned OOD statistics.
+
+    The fully extended detector uses global beta and threshold calibration, so it
+    falls back to one materialized pass to avoid repeated loader scans.
+    """
     if trainer.adapter_model is None or trainer.classifier is None or trainer.fusion is None:
         raise RuntimeError("Cannot calibrate OOD before adapter, classifier, and fusion are initialized.")
 
@@ -136,9 +154,11 @@ def calibrate_trainer_ood(
     trainer.classifier.eval()
     trainer.fusion.eval()
 
-    if not _is_reiterable(loader):
+    if not _is_reiterable(loader) or _requires_materialized_extended_calibration(trainer.ood_detector):
         features, logits, labels = _collect_materialized_tensors(trainer, loader)
-        return trainer.ood_detector.calibrate(features=features, logits=logits, labels=labels)
+        result = trainer.ood_detector.calibrate(features=features, logits=logits, labels=labels)
+        _move_detector_stats_to_device(trainer.ood_detector, trainer.device)
+        return result
 
     feature_accumulators: Dict[int, _VectorAccumulator] = {}
     energy_accumulators: Dict[int, _ScalarAccumulator] = {}
@@ -233,8 +253,8 @@ def calibrate_trainer_ood(
         ensemble_mu, ensemble_sigma = ensemble_accumulators[class_id].mean_std()
         threshold = float(ensemble_mu + (trainer.ood_detector.threshold_factor * ensemble_sigma))
         trainer.ood_detector.class_stats[int(class_id)] = ClassCalibration(
-            mean=stats["mean"].to(dtype=torch.float32),
-            var=stats["var"].to(dtype=torch.float32),
+            mean=stats["mean"].to(device=trainer.device, dtype=torch.float32),
+            var=stats["var"].to(device=trainer.device, dtype=torch.float32),
             mahalanobis_mu=float(stats["mahalanobis_mu"]),
             mahalanobis_sigma=float(stats["mahalanobis_sigma"]),
             energy_mu=float(stats["energy_mu"]),

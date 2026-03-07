@@ -22,7 +22,7 @@ Training is split into four layers:
 1. `TrainingWorkflow.run(...)` is the canonical orchestration entrypoint for the supported adapter-training flow.
 2. `ContinualSDLoRATrainer` owns model initialization, LoRA wrapping, optimizer setup, batch stepping, snapshot/restore, OOD calibration, and adapter save/load, while `src/training/services/` holds shared metric/runtime/persistence helpers.
 3. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, checkpoint requests, best-metric updates, early stopping, observer events, and history accumulation.
-4. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact.
+4. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact (`accuracy`, OOD AUROC, FPR@95TPR, and optional SURE+/conformal checks when supplied).
 
 ## LoRA Training Details
 
@@ -34,7 +34,8 @@ At a high level:
 2. The trainer resolves target transformer modules and applies PEFT LoRA wrappers to those linear layers.
 3. Intermediate backbone layers are sampled and fused by `MultiScaleFeatureFusion`.
 4. A classifier head is trained on top of the fused representation for the current crop classes.
-5. The saved adapter bundle includes LoRA weights, classifier weights, fusion weights, config metadata, and serialized OOD state.
+5. When new classes are added, the classifier is expanded with old weights copied forward and the optimizer is rebuilt around the new trainable head.
+6. The saved adapter bundle includes LoRA weights, classifier weights, fusion weights, config metadata, and serialized OOD state.
 
 Configuration for this path lives in `ContinualSDLoRAConfig` and includes:
 
@@ -79,6 +80,7 @@ Extended OOD stack details:
 - SURE+ double scoring computes semantic OOD score (ensemble-based) and confidence rejection score (`1 - max softmax`), then applies calibrated percentile thresholds.
 - Conformal prediction calibrates a global nonconformity quantile $\hat{q}$ and produces `conformal_set` at inference time.
 - BER (Bi-directional Energy Regularization) is training-only and applies separate old/new energy penalties via a composable loss wrapper.
+- The fully extended calibration path materializes one feature/logit snapshot and reuses it across radial, SURE+, and conformal phases to avoid repeated loader rescans.
 
 When SURE+ is enabled, the final OOD decision uses combined semantic/confidence rejection; conformal output is returned as an additional prediction-set field, not as a replacement for top-1 diagnosis.
 
@@ -89,7 +91,7 @@ The relevant repo mapping is:
 - radial normalization: `src/ood/radial_normalization.py`
 - SURE+ scoring: `src/ood/sure_scoring.py`
 - conformal prediction: `src/ood/conformal_prediction.py`
-- streamed calibration: `src/training/services/ood_calibration.py`
+- calibration orchestration: `src/training/services/ood_calibration.py`
 - OOD metric computation and gate checks: `src/training/services/metrics.py`
 - inference payload normalization: `src/pipeline/inference_payloads.py`
 

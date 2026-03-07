@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import copy
 import inspect
 import logging
 import time
@@ -41,6 +42,7 @@ from src.training.services.runtime import (
     build_idx_to_class,
     build_train_batch_stats,
     clip_gradients,
+    collect_trainable_parameters,
     compute_grad_norm,
     configure_runtime_reproducibility,
     configure_training_plan_state,
@@ -393,6 +395,46 @@ class ContinualSDLoRATrainer:
             return True
         return any(self._idx_to_class.get(idx) != name for name, idx in self.class_to_idx.items())
 
+    def _refresh_optimizer_after_model_change(self) -> None:
+        if self.optimizer is None:
+            return
+
+        previous_optimizer = self.optimizer
+        previous_scheduler_state = self.scheduler.state_dict() if self.scheduler is not None else None
+
+        rebuilt_optimizer = torch.optim.AdamW(
+            collect_trainable_parameters(self),
+            lr=self.config.learning_rate,
+            weight_decay=self.config.weight_decay,
+        )
+
+        if len(previous_optimizer.param_groups) == len(rebuilt_optimizer.param_groups):
+            for previous_group, rebuilt_group in zip(previous_optimizer.param_groups, rebuilt_optimizer.param_groups):
+                for key, value in previous_group.items():
+                    if key != "params":
+                        rebuilt_group[key] = value
+
+        for group in rebuilt_optimizer.param_groups:
+            for param in group.get("params", []):
+                if param in previous_optimizer.state:
+                    rebuilt_optimizer.state[param] = copy.deepcopy(previous_optimizer.state[param])
+
+        self.optimizer = rebuilt_optimizer
+        self.scheduler = None
+        if previous_scheduler_state is not None:
+            self._ensure_scheduler()
+            if self.scheduler is not None:
+                self.scheduler.load_state_dict(previous_scheduler_state)
+        self.optimizer.zero_grad(set_to_none=True)
+
+    def _reported_grad_norm(self, *, gradients_unscaled: bool) -> float:
+        grad_norm = self._compute_grad_norm()
+        if self.scaler.is_enabled() and not gradients_unscaled:
+            scale = float(self.scaler.get_scale())
+            if scale > 0.0:
+                grad_norm /= scale
+        return grad_norm
+
     def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
         configure_training_plan_state(self, total_batches=total_batches, num_epochs=num_epochs)
 
@@ -597,6 +639,7 @@ class ContinualSDLoRATrainer:
             replacement.bias.data[:old_out] = old_classifier.bias.data[:old_out]
         self.classifier = replacement
         self._trainable_params_cache = None
+        self._refresh_optimizer_after_model_change()
         return dict(self.class_to_idx)
 
     def setup_optimizer(self) -> None:
@@ -694,7 +737,7 @@ class ContinualSDLoRATrainer:
 
         self._accumulation_counter += 1
         should_step = self._accumulation_counter >= accumulation_steps
-        grad_norm = self._compute_grad_norm()
+        grad_norm = self._reported_grad_norm(gradients_unscaled=not self.scaler.is_enabled())
         if should_step:
             if self.scaler.is_enabled():
                 self.scaler.unscale_(self.optimizer)

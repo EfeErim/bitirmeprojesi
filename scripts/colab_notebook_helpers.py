@@ -262,6 +262,9 @@ def persist_validation_artifacts(
     require_ood: bool = False,
     ood_labels: Optional[List[int]] = None,
     ood_scores: Optional[List[float]] = None,
+    sure_ds_f1: Optional[float] = None,
+    conformal_empirical_coverage: Optional[float] = None,
+    conformal_avg_set_size: Optional[float] = None,
     context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     return persist_validation_artifacts_core(
@@ -274,5 +277,8 @@ def persist_validation_artifacts(
         require_ood=require_ood,
         ood_labels=ood_labels,
         ood_scores=ood_scores,
+        sure_ds_f1=sure_ds_f1,
+        conformal_empirical_coverage=conformal_empirical_coverage,
+        conformal_avg_set_size=conformal_avg_set_size,
         context=context,
     )
