@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import torch
 
 from src.training.types import ValidationReport
 
 
-def evaluate_model(trainer: Any, loader: Iterable[Dict[str, torch.Tensor]]) -> Optional[ValidationReport]:
+def _evaluate_model_core(
+    trainer: Any,
+    loader: Iterable[Dict[str, torch.Tensor]],
+) -> Optional[Tuple[ValidationReport, List[int], List[int]]]:
     if getattr(trainer, "classifier", None) is None:
         return None
 
@@ -73,9 +76,13 @@ def evaluate_model(trainer: Any, loader: Iterable[Dict[str, torch.Tensor]]) -> O
 
     supported_class_mask = support > 0
     if bool(supported_class_mask.any().item()):
+        macro_precision = float(precision[supported_class_mask].mean().item())
+        macro_recall = float(recall[supported_class_mask].mean().item())
         macro_f1 = float(f1[supported_class_mask].mean().item())
-        balanced_accuracy = float(recall[supported_class_mask].mean().item())
+        balanced_accuracy = macro_recall
     else:
+        macro_precision = 0.0
+        macro_recall = 0.0
         macro_f1 = 0.0
         balanced_accuracy = 0.0
 
@@ -103,9 +110,11 @@ def evaluate_model(trainer: Any, loader: Iterable[Dict[str, torch.Tensor]]) -> O
         key=lambda item: (item["accuracy"], -item["support"], item["class_name"]),
     )
 
-    return ValidationReport(
+    report = ValidationReport(
         val_loss=val_loss,
         val_accuracy=val_accuracy,
+        macro_precision=macro_precision,
+        macro_recall=macro_recall,
         macro_f1=macro_f1,
         weighted_f1=weighted_f1,
         balanced_accuracy=balanced_accuracy,
@@ -113,3 +122,16 @@ def evaluate_model(trainer: Any, loader: Iterable[Dict[str, torch.Tensor]]) -> O
         per_class_support=per_class_support,
         worst_classes=ranked_worst[:3],
     )
+    return report, labels.tolist(), preds.tolist()
+
+
+def evaluate_model(trainer: Any, loader: Iterable[Dict[str, torch.Tensor]]) -> Optional[ValidationReport]:
+    result = _evaluate_model_core(trainer, loader)
+    return None if result is None else result[0]
+
+
+def evaluate_model_with_predictions(
+    trainer: Any,
+    loader: Iterable[Dict[str, torch.Tensor]],
+) -> Optional[Tuple[ValidationReport, List[int], List[int]]]:
+    return _evaluate_model_core(trainer, loader)

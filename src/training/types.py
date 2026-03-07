@@ -67,6 +67,8 @@ class TrainingProgressState:
 class ValidationReport:
     val_loss: float
     val_accuracy: float
+    macro_precision: float
+    macro_recall: float
     macro_f1: float
     weighted_f1: float
     balanced_accuracy: float
@@ -81,6 +83,8 @@ class ValidationReport:
         payload: Dict[str, Any] = {
             "val_loss": float(self.val_loss),
             "val_accuracy": float(self.val_accuracy),
+            "macro_precision": float(self.macro_precision),
+            "macro_recall": float(self.macro_recall),
             "macro_f1": float(self.macro_f1),
             "weighted_f1": float(self.weighted_f1),
             "balanced_accuracy": float(self.balanced_accuracy),
@@ -100,6 +104,8 @@ class ValidationReport:
         return cls(
             val_loss=float(data.get("val_loss", 0.0)),
             val_accuracy=float(data.get("val_accuracy", 0.0)),
+            macro_precision=float(data.get("macro_precision", 0.0)),
+            macro_recall=float(data.get("macro_recall", 0.0)),
             macro_f1=float(data.get("macro_f1", 0.0)),
             weighted_f1=float(data.get("weighted_f1", 0.0)),
             balanced_accuracy=float(data.get("balanced_accuracy", 0.0)),
@@ -119,6 +125,8 @@ class TrainingHistory:
     train_loss: List[float] = field(default_factory=list)
     val_loss: List[float] = field(default_factory=list)
     val_accuracy: List[float] = field(default_factory=list)
+    macro_precision: List[float] = field(default_factory=list)
+    macro_recall: List[float] = field(default_factory=list)
     macro_f1: List[float] = field(default_factory=list)
     weighted_f1: List[float] = field(default_factory=list)
     balanced_accuracy: List[float] = field(default_factory=list)
@@ -138,6 +146,8 @@ class TrainingHistory:
             "train_loss": list(self.train_loss),
             "val_loss": list(self.val_loss),
             "val_accuracy": list(self.val_accuracy),
+            "macro_precision": list(self.macro_precision),
+            "macro_recall": list(self.macro_recall),
             "macro_f1": list(self.macro_f1),
             "weighted_f1": list(self.weighted_f1),
             "balanced_accuracy": list(self.balanced_accuracy),
@@ -163,6 +173,8 @@ class TrainingHistory:
             train_loss=[float(v) for v in list(data.get("train_loss", []))],
             val_loss=[float(v) for v in list(data.get("val_loss", []))],
             val_accuracy=[float(v) for v in list(data.get("val_accuracy", []))],
+            macro_precision=[float(v) for v in list(data.get("macro_precision", []))],
+            macro_recall=[float(v) for v in list(data.get("macro_recall", []))],
             macro_f1=[float(v) for v in list(data.get("macro_f1", []))],
             weighted_f1=[float(v) for v in list(data.get("weighted_f1", []))],
             balanced_accuracy=[float(v) for v in list(data.get("balanced_accuracy", []))],
@@ -189,6 +201,8 @@ class TrainingHistory:
     def append_validation(self, report: ValidationReport) -> None:
         self.val_loss.append(float(report.val_loss))
         self.val_accuracy.append(float(report.val_accuracy))
+        self.macro_precision.append(float(report.macro_precision))
+        self.macro_recall.append(float(report.macro_recall))
         self.macro_f1.append(float(report.macro_f1))
         self.weighted_f1.append(float(report.weighted_f1))
         self.balanced_accuracy.append(float(report.balanced_accuracy))

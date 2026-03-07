@@ -51,6 +51,10 @@ Legacy `checkpoint_interval` is still accepted as an alias for `checkpoint_every
 
 - Adapter: `models/adapters/<crop>/continual_sd_lora_adapter/`
 - Training checkpoints: `checkpoints/`
+- Workflow metrics board: `<output_dir>/training_metrics/training/results.png`
+- Workflow epoch metrics: `<output_dir>/training_metrics/training/results.csv`
+- Workflow batch telemetry: `<output_dir>/training_metrics/training/batch_metrics.csv`
+- Workflow confusion matrices: `<output_dir>/training_metrics/validation/`
 - Notebook artifacts: `outputs/colab_notebook_training/artifacts/`
 - Validation metric gate: `outputs/colab_notebook_training/artifacts/validation/metric_gate.json`
 - Telemetry: Drive or local spool from `scripts/colab_live_telemetry.py`

@@ -10,6 +10,14 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
+from src.training.services.reporting import (
+    persist_batch_metrics_artifacts,
+    persist_training_history_artifacts,
+    persist_training_results_figure,
+    persist_training_summary_artifact,
+    persist_validation_artifacts,
+)
+from src.training.validation import evaluate_model_with_predictions
 
 Observer = Callable[[Dict[str, Any]], None]
 
@@ -27,6 +35,23 @@ def _loader_size(loader: Any) -> int:
         return 0
 
 
+def _stringify_paths(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, dict):
+        return {str(key): _stringify_paths(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_stringify_paths(item) for item in value]
+    return value
+
+
+def _last_history_value(history_payload: Dict[str, Any], key: str) -> Optional[float]:
+    values = history_payload.get(key, [])
+    if not isinstance(values, list) or not values:
+        return None
+    return float(values[-1])
+
+
 @dataclass
 class TrainingWorkflowResult:
     run_id: str
@@ -35,6 +60,8 @@ class TrainingWorkflowResult:
     history: Dict[str, Any]
     loader_sizes: Dict[str, int]
     adapter_dir: Path
+    artifact_dir: Optional[Path] = None
+    artifacts: Dict[str, Any] = field(default_factory=dict)
     ood_calibration: Dict[str, Any] = field(default_factory=dict)
     checkpoint_records: List[Dict[str, Any]] = field(default_factory=list)
 
@@ -46,6 +73,8 @@ class TrainingWorkflowResult:
             "history": dict(self.history),
             "loader_sizes": {str(k): int(v) for k, v in self.loader_sizes.items()},
             "adapter_dir": str(self.adapter_dir),
+            "artifact_dir": ("" if self.artifact_dir is None else str(self.artifact_dir)),
+            "artifacts": _stringify_paths(self.artifacts),
             "ood_calibration": dict(self.ood_calibration),
             "checkpoint_records": [dict(item) for item in self.checkpoint_records],
         }
@@ -126,23 +155,34 @@ class TrainingWorkflow:
         adapter.initialize_engine(class_names=detected_classes, config=self.config)
 
         checkpoint_records: List[Dict[str, Any]] = []
+        batch_history: List[Dict[str, Any]] = []
         session_observers: List[Observer] = list(observers or [])
         session_holder: Dict[str, Any] = {}
 
         def _workflow_observer(event: Dict[str, Any]) -> None:
+            event_type = str(event.get("event_type", "training_event"))
+            payload = dict(event.get("payload", {}))
+            if event_type == "batch_end":
+                batch_history.append(payload)
             if telemetry is not None:
                 telemetry.emit_event(
-                    str(event.get("event_type", "training_event")),
-                    dict(event.get("payload", {})),
+                    event_type,
+                    payload,
                     phase="training",
                     force_sync=False,
                 )
-            if checkpoint_manager is None or event.get("event_type") != "checkpoint_requested":
+                if hasattr(telemetry, "update_latest") and event_type in {
+                    "batch_end",
+                    "validation_end",
+                    "epoch_end",
+                    "training_completed",
+                }:
+                    telemetry.update_latest({"event_type": event_type, **payload})
+            if checkpoint_manager is None or event_type != "checkpoint_requested":
                 return
             session = session_holder.get("session")
             if session is None:
                 return
-            payload = dict(event.get("payload", {}))
             record = checkpoint_manager.save_checkpoint(
                 adapter=adapter,
                 session=session,
@@ -188,24 +228,121 @@ class TrainingWorkflow:
             )
 
         history = session.run()
+        history_payload = history.to_dict()
         calibration_loader = loaders["val"] if _loader_size(loaders["val"]) > 0 else loaders["train"]
         ood_calibration = {}
         if _loader_size(calibration_loader) > 0:
             ood_calibration = adapter.calibrate_ood(calibration_loader)
         adapter_dir = adapter.save_adapter(str(output_dir))
 
+        artifact_dir = Path(output_dir) / "training_metrics"
+        loader_sizes = {name: _loader_size(loader) for name, loader in loaders.items()}
+        training_artifacts = {
+            **persist_training_history_artifacts(
+                artifact_root=artifact_dir,
+                history_snapshot=history_payload,
+                telemetry=telemetry,
+            ),
+            **persist_batch_metrics_artifacts(
+                artifact_root=artifact_dir,
+                batch_history=batch_history,
+                telemetry=telemetry,
+            ),
+            **persist_training_results_figure(
+                artifact_root=artifact_dir,
+                history_snapshot=history_payload,
+                batch_history=batch_history,
+                telemetry=telemetry,
+            ),
+        }
+
+        validation_artifacts: Dict[str, Any] = {}
+        trainer_for_artifacts = getattr(session, "trainer", None)
+        if trainer_for_artifacts is not None and _loader_size(loaders.get("val")) > 0:
+            validation_result = evaluate_model_with_predictions(trainer_for_artifacts, loaders["val"])
+            if validation_result is not None:
+                _, y_true, y_pred = validation_result
+                validation_artifacts = persist_validation_artifacts(
+                    artifact_root=artifact_dir,
+                    y_true=y_true,
+                    y_pred=y_pred,
+                    classes=detected_classes,
+                    telemetry=telemetry,
+                    require_ood=bool(
+                        getattr(getattr(trainer_for_artifacts, "config", None), "evaluation_require_ood_for_gate", False)
+                    ),
+                    context={
+                        "run_id": run_id,
+                        "crop_name": crop_name,
+                        "num_classes": len(detected_classes),
+                        "loader_sizes": loader_sizes,
+                    },
+                )
+
+        summary_payload = {
+            "run_id": run_id,
+            "crop_name": crop_name,
+            "class_names": list(detected_classes),
+            "class_count": len(detected_classes),
+            "loader_sizes": loader_sizes,
+            "adapter_dir": str(adapter_dir),
+            "artifact_dir": str(artifact_dir),
+            "checkpoint_count": len(checkpoint_records),
+            "ood_calibration": dict(ood_calibration),
+            "stopped_early": bool(history_payload.get("stopped_early", False)),
+            "global_step": int(history_payload.get("global_step", 0)),
+            "optimizer_steps": int(history_payload.get("optimizer_steps", 0)),
+            "best_metric_name": str(history_payload.get("best_metric_name", "")),
+            "best_metric_value": history_payload.get("best_metric_value"),
+            "best_epoch": int(history_payload.get("best_epoch", 0)),
+            "final_metrics": {
+                key: value
+                for key, value in {
+                    "train_loss": _last_history_value(history_payload, "train_loss"),
+                    "val_loss": _last_history_value(history_payload, "val_loss"),
+                    "val_accuracy": _last_history_value(history_payload, "val_accuracy"),
+                    "macro_precision": _last_history_value(history_payload, "macro_precision"),
+                    "macro_recall": _last_history_value(history_payload, "macro_recall"),
+                    "macro_f1": _last_history_value(history_payload, "macro_f1"),
+                    "weighted_f1": _last_history_value(history_payload, "weighted_f1"),
+                    "balanced_accuracy": _last_history_value(history_payload, "balanced_accuracy"),
+                    "generalization_gap": _last_history_value(history_payload, "generalization_gap"),
+                }.items()
+                if value is not None
+            },
+        }
+        summary_artifacts = persist_training_summary_artifact(
+            artifact_root=artifact_dir,
+            summary_payload=summary_payload,
+            telemetry=telemetry,
+        )
+        artifact_payload = _stringify_paths(
+            {
+                "training": training_artifacts,
+                "validation": validation_artifacts.get("paths", {}),
+                "summary": summary_artifacts,
+            }
+        )
+
         result = TrainingWorkflowResult(
             run_id=run_id,
             crop_name=crop_name,
             class_names=detected_classes,
-            history=history.to_dict(),
-            loader_sizes={name: _loader_size(loader) for name, loader in loaders.items()},
+            history=history_payload,
+            loader_sizes=loader_sizes,
             adapter_dir=adapter_dir,
+            artifact_dir=artifact_dir,
+            artifacts=artifact_payload,
             ood_calibration=ood_calibration,
             checkpoint_records=checkpoint_records,
         )
 
         if telemetry is not None:
+            telemetry.emit_event(
+                "training_artifacts_ready",
+                {"artifact_dir": str(artifact_dir), "artifacts": artifact_payload},
+                phase="artifact",
+            )
             telemetry.emit_event(
                 "training_workflow_completed",
                 result.to_dict(),

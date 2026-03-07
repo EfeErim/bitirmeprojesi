@@ -109,5 +109,7 @@ def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_
     assert result.class_names == ["healthy", "disease_a"]
     assert result.history["train_loss"] == [0.1]
     assert result.adapter_dir.exists()
+    assert result.artifact_dir is not None and result.artifact_dir.exists()
+    assert (result.artifact_dir / "training" / "results.png").exists()
     assert checkpoint_manager.calls
     assert result.checkpoint_records[0]["reason"] == "batch_interval"

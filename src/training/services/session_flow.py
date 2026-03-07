@@ -43,6 +43,8 @@ def decorate_validation(report: ValidationReport, epoch_loss: float) -> Validati
     return ValidationReport(
         val_loss=report.val_loss,
         val_accuracy=report.val_accuracy,
+        macro_precision=report.macro_precision,
+        macro_recall=report.macro_recall,
         macro_f1=report.macro_f1,
         weighted_f1=report.weighted_f1,
         balanced_accuracy=report.balanced_accuracy,

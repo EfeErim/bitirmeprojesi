@@ -37,6 +37,15 @@ python -m src.app.cli inference path\to\image.jpg --config-env colab
 python -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
 ```
 
+Training runs now also write Ultralytics-style artifacts under `output_dir/training_metrics/`:
+
+- `training/results.png`
+- `training/results.csv`
+- `training/batch_metrics.csv`
+- `validation/confusion_matrix.png`
+- `validation/confusion_matrix_normalized.png`
+- `validation/classification_report.json`
+
 ## Colab
 
 - Root Colab dependencies live in `requirements_colab.txt`
