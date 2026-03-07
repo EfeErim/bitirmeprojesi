@@ -16,13 +16,14 @@ class DiagnosticScoutingAnalyzer:
     def __init__(self, config: Dict, device: str = "cuda"):
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.config = config
+        self.vlm_pipeline: Optional[Any] = None
         # Resolve lazily to avoid module import cycles.
         try:
             from src.router.vlm_pipeline import VLMPipeline
 
             self.vlm_pipeline = VLMPipeline(config, device=device)
         except Exception:
-            self.vlm_pipeline = None
+            pass
 
         vlm_conf = config.get("router", {}).get("vlm", {}) if isinstance(config.get("router"), dict) else {}
         self.confidence_threshold = config.get("vlm_confidence_threshold", vlm_conf.get("confidence_threshold", 0.8))

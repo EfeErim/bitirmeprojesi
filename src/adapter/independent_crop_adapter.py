@@ -9,6 +9,17 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional
 
 import torch
 
+from src.adapter.checkpointing import (
+    build_checkpoint_load_result,
+    build_runtime_adapter_metadata,
+    normalize_trainer_config,
+)
+from src.adapter.checkpointing import (
+    load_training_checkpoint as load_adapter_training_checkpoint,
+)
+from src.adapter.checkpointing import (
+    save_training_checkpoint as save_adapter_training_checkpoint,
+)
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
 from src.training.services.runtime import resolve_session_num_epochs
@@ -200,73 +211,34 @@ class IndependentCropAdapter:
         """Persist trainer and session state for fault-tolerant notebook runs."""
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
-        root = Path(checkpoint_dir)
-        checkpoint_dir_path = root / "training_checkpoint"
-        checkpoint_dir_path.mkdir(parents=True, exist_ok=True)
-        trainer_payload = self._trainer.snapshot_training_state()
-        torch.save(trainer_payload.to_dict(), checkpoint_dir_path / "training_checkpoint.pt")
-
-        session_payload = dict(session_state or {})
-        meta = {
-            "schema_version": trainer_payload.schema_version,
-            "created_at": trainer_payload.created_at,
-            "run_id": str(run_id),
-            "current_epoch": int(trainer_payload.current_epoch),
-            "global_step": int(dict(session_payload.get("progress_state", {})).get("global_step", 0)),
-            "epoch": int(dict(session_payload.get("progress_state", {})).get("epoch", 0)),
-        }
-        write_json(checkpoint_dir_path / "session_state.json", session_payload)
-        write_json(checkpoint_dir_path / "checkpoint_meta.json", meta)
-        return checkpoint_dir_path
+        return save_adapter_training_checkpoint(
+            trainer=self._trainer,
+            checkpoint_dir=checkpoint_dir,
+            session_state=session_state,
+            run_id=run_id,
+        )
 
     def load_training_checkpoint(self, checkpoint_dir: str) -> Dict[str, Any]:
         """Load resumable trainer and session state from checkpoint directory."""
-        root = Path(checkpoint_dir)
-        if root.is_dir() and (root / "training_checkpoint").exists():
-            root = root / "training_checkpoint"
-        trainer_payload_raw = torch.load(root / "training_checkpoint.pt", map_location=self.device, weights_only=False)
-        trainer_payload_cls = _checkpoint_payload_type()
-        trainer_payload = trainer_payload_cls.from_dict(trainer_payload_raw)
-        if self._trainer is None:
-            normalized = dict(trainer_payload.trainer_config or {})
-            if not normalized:
-                normalized = {
-                    "backbone": {"model_name": self.model_name},
-                    "adapter": {
-                        "target_modules_strategy": "all_linear_transformer",
-                        "lora_r": 16,
-                        "lora_alpha": 32,
-                        "lora_dropout": 0.1,
-                    },
-                    "fusion": {"layers": [2, 5, 8, 11]},
-                    "ood": {"threshold_factor": 2.0},
-                    "device": str(self.device),
-                }
-            normalized["device"] = str(normalized.get("device", str(self.device)))
-            config_cls, trainer_cls = _trainer_types()
+        config_cls, trainer_cls = _trainer_types()
+
+        def _trainer_factory(normalized: Dict[str, Any]) -> "ContinualSDLoRATrainer":
             cfg = config_cls.from_training_config(normalized)
-            self._trainer = trainer_cls(cfg)
-        trainer_payload = self._trainer.restore_training_state(trainer_payload)
-        session_path = root / "session_state.json"
-        session_payload = {}
-        if session_path.exists():
-            session_payload = read_json_dict(session_path)
+            return trainer_cls(cfg)
+
+        self._trainer, trainer_payload, session_payload = load_adapter_training_checkpoint(
+            checkpoint_dir=checkpoint_dir,
+            device=self.device,
+            trainer=self._trainer,
+            trainer_factory=_trainer_factory,
+            checkpoint_payload_factory=_checkpoint_payload_type,
+            model_name=self.model_name,
+        )
         class_to_idx = trainer_payload.class_to_idx
         if isinstance(class_to_idx, dict):
             self.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
         self.is_trained = True
-        return {
-            "trainer_state": trainer_payload.to_dict(),
-            "session_state": session_payload,
-            "run_id": str(dict(session_payload).get("run_id", "")),
-            "progress_state": (
-                dict(session_payload.get("progress_state", {})) if isinstance(session_payload, dict) else {}
-            ),
-            "history": dict(session_payload.get("history", {})) if isinstance(session_payload, dict) else {},
-            "best_metric_state": (
-                dict(session_payload.get("best_metric_state", {})) if isinstance(session_payload, dict) else {}
-            ),
-        }
+        return build_checkpoint_load_result(trainer_payload=trainer_payload, session_payload=session_payload)
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
         """Calibrate OOD statistics for current classes."""
@@ -303,42 +275,18 @@ class IndependentCropAdapter:
     def _metadata_payload(self) -> Dict[str, Any]:
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
-        trainer_config = (
-            self._trainer.config.as_contract_dict()
-            if hasattr(self._trainer.config, "as_contract_dict")
-            else {"backbone": {"model_name": getattr(self._trainer.config, "backbone_model_name", self.model_name)}}
-        )
         from src.training.services.persistence import serialize_ood_state
 
-        ood_detector = getattr(self._trainer, "ood_detector", None)
-        ood_state = (
-            serialize_ood_state(ood_detector)
-            if hasattr(ood_detector, "class_stats")
-            else {
-                "threshold_factor": 2.0,
-                "calibration_version": self.ood_calibration_version,
-                "class_stats": {},
-            }
-        )
-        return AdapterMetadata(
+        return build_runtime_adapter_metadata(
+            trainer=self._trainer,
+            class_to_idx=self.class_to_idx,
             schema_version=self.schema_version,
             engine=self.engine,
-            trainer_config=trainer_config,
-            backbone={
-                "model_name": self._trainer.config.backbone_model_name,
-                "frozen": True,
-            },
-            fusion={
-                "layers": list(self._trainer.config.fusion_layers),
-                "output_dim": int(self._trainer.config.fusion_output_dim),
-                "dropout": float(self._trainer.config.fusion_dropout),
-                "gating": str(self._trainer.config.fusion_gating),
-            },
-            class_to_idx=dict(self.class_to_idx),
-            ood_calibration={"version": self.ood_calibration_version},
-            ood_state=ood_state,
+            model_name=self.model_name,
+            ood_calibration_version=self.ood_calibration_version,
             target_modules_resolved=list(self.target_modules_resolved),
-        ).to_dict()
+            serialize_ood_state_fn=serialize_ood_state,
+        )
 
     def save_adapter(self, checkpoint_dir: str) -> Path:
         """Persist adapter assets with v6 metadata schema."""
@@ -367,21 +315,13 @@ class IndependentCropAdapter:
         meta = AdapterMetadata.from_dict(read_json_dict(meta_path))
         self.class_to_idx = dict(meta.class_to_idx)
 
-        normalized = dict(meta.trainer_config)
-        if not normalized:
-            normalized = {
-                "backbone": dict(meta.backbone or {"model_name": self.model_name}),
-                "adapter": {
-                    "target_modules_strategy": "all_linear_transformer",
-                    "lora_r": 16,
-                    "lora_alpha": 32,
-                    "lora_dropout": 0.1,
-                },
-                "fusion": dict(meta.fusion or {"layers": [2, 5, 8, 11]}),
-                "ood": {"threshold_factor": 2.0},
-                "device": str(self.device),
-            }
-        normalized["device"] = str(normalized.get("device", str(self.device)))
+        normalized = normalize_trainer_config(
+            meta.trainer_config,
+            model_name=self.model_name,
+            device=self.device,
+            backbone=dict(meta.backbone or {"model_name": self.model_name}),
+            fusion=dict(meta.fusion or {"layers": [2, 5, 8, 11]}),
+        )
 
         config_cls, trainer_cls = _trainer_types()
         cfg = config_cls.from_training_config(normalized)

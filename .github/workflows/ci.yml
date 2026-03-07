@@ -40,11 +40,11 @@ jobs:
             src/data \
             src/training/services \
             src/training/continual_sd_lora.py \
-            src/router/vlm_pipeline.py \
+            src/router \
             src/workflows \
             src/pipeline/router_adapter_runtime.py \
             src/pipeline/inference_payloads.py \
-            src/adapter/independent_crop_adapter.py \
+            src/adapter \
             src/core/config_manager.py \
             tests/unit/imports \
             tests/unit/shared \
@@ -55,11 +55,11 @@ jobs:
             src/shared \
             src/data \
             src/training/continual_sd_lora.py \
-            src/router/vlm_pipeline.py \
+            src/router \
             src/workflows \
             src/pipeline/router_adapter_runtime.py \
             src/pipeline/inference_payloads.py \
-            src/adapter/independent_crop_adapter.py \
+            src/adapter \
             src/core/config_manager.py \
             scripts/benchmark_surfaces.py
 

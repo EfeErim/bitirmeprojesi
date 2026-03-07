@@ -1,3 +1,4 @@
+import pytest
 import torch
 import torch.nn as nn
 
@@ -151,3 +152,25 @@ def test_session_snapshot_includes_best_metric_state():
     snapshot = session.snapshot_state()
 
     assert "best_metric_state" in snapshot
+
+
+def test_session_emits_exception_checkpoint_request():
+    trainer, _ = _build_minimal_trainer()
+    trainer.train_batch = lambda _batch: (_ for _ in ()).throw(RuntimeError("boom"))  # type: ignore[assignment]
+    events = []
+    session = ContinualTrainingSession(
+        trainer,
+        _make_loader(1),
+        1,
+        observers=[events.append],
+        checkpoint_on_exception=True,
+    )
+
+    with pytest.raises(RuntimeError, match="boom"):
+        session.run()
+
+    event_types = [event["event_type"] for event in events]
+    assert "training_aborted" in event_types
+    checkpoint_events = [event for event in events if event["event_type"] == "checkpoint_requested"]
+    assert checkpoint_events
+    assert checkpoint_events[-1]["payload"]["reason"] == "exception"

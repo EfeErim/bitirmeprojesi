@@ -1,12 +1,16 @@
-"""Runtime helpers for AMP, seeds, and session defaults."""
+"""Runtime helpers for AMP, optimizer/scheduler setup, and session defaults."""
 
 from __future__ import annotations
 
+import math
 import random
+import time
 from contextlib import nullcontext
 from typing import Any, Optional
 
 import torch
+
+from src.training.types import TrainBatchStats
 
 
 def configure_runtime_reproducibility(config: Any, *, np_module: Any = None) -> None:
@@ -77,3 +81,162 @@ def resolve_session_num_epochs(config: Any, explicit_num_epochs: Optional[int], 
         return int(max(1, int(configured)))
     except Exception:
         return int(max(1, default))
+
+
+def configure_training_plan_state(trainer: Any, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
+    epochs = int(max(1, num_epochs if num_epochs is not None else trainer.config.num_epochs))
+    trainer._planned_epochs = epochs
+    optimizer_steps = max(
+        1,
+        math.ceil((max(1, int(total_batches)) * epochs) / max(1, int(trainer.config.grad_accumulation_steps))),
+    )
+    if trainer.config.scheduler_step_on == "epoch":
+        optimizer_steps = epochs
+    trainer._planned_scheduler_steps = int(optimizer_steps)
+    if trainer.optimizer is not None:
+        ensure_scheduler(trainer)
+
+
+def ensure_scheduler(trainer: Any) -> None:
+    if trainer.optimizer is None or trainer.scheduler is not None or trainer.config.scheduler_name == "none":
+        return
+
+    total_units = max(
+        1,
+        int(trainer._planned_scheduler_steps if trainer._planned_scheduler_steps > 0 else trainer._planned_epochs),
+    )
+    if trainer.config.scheduler_name == "linear":
+        warmup_steps = int(max(0, round(total_units * float(trainer.config.scheduler_warmup_ratio))))
+        min_lr_scale = (
+            float(trainer.config.scheduler_min_lr) / float(trainer.config.learning_rate)
+            if trainer.config.learning_rate > 0
+            else 0.0
+        )
+        min_lr_scale = max(0.0, min(1.0, min_lr_scale))
+
+        def _lr_lambda(step_idx: int) -> float:
+            step = int(max(0, step_idx))
+            if warmup_steps > 0 and step < warmup_steps:
+                return float(step + 1) / float(max(1, warmup_steps))
+            remaining = max(1, total_units - warmup_steps)
+            progress = float(step - warmup_steps) / float(remaining)
+            progress = max(0.0, min(1.0, progress))
+            return max(min_lr_scale, 1.0 - progress * (1.0 - min_lr_scale))
+
+        trainer.scheduler = torch.optim.lr_scheduler.LambdaLR(trainer.optimizer, lr_lambda=_lr_lambda)
+        return
+
+    if trainer.config.scheduler_name == "cosine":
+        trainer.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            trainer.optimizer,
+            T_max=total_units,
+            eta_min=float(trainer.config.scheduler_min_lr),
+        )
+
+
+def step_scheduler(trainer: Any) -> None:
+    if trainer.scheduler is None:
+        return
+    trainer.scheduler.step()
+
+
+def build_idx_to_class(class_to_idx: dict[str, int]) -> dict[int, str]:
+    return {idx: name for name, idx in class_to_idx.items()}
+
+
+def collect_trainable_parameters(trainer: Any) -> list[torch.nn.Parameter]:
+    cached = getattr(trainer, "_trainable_params_cache", None)
+    if cached is not None:
+        return list(cached)
+
+    if trainer.adapter_model is None or trainer.classifier is None or trainer.fusion is None:
+        raise RuntimeError("initialize_engine() must be called before setup_optimizer().")
+
+    trainable_params = [p for p in trainer.adapter_model.parameters() if p.requires_grad]
+    trainable_params.extend([p for p in trainer.classifier.parameters() if p.requires_grad])
+    trainable_params.extend([p for p in trainer.fusion.parameters() if p.requires_grad])
+    trainer._trainable_params_cache = list(trainable_params)
+    return list(trainable_params)
+
+
+def setup_optimizer(trainer: Any) -> None:
+    if (
+        not trainer._is_initialized
+        or trainer.adapter_model is None
+        or trainer.classifier is None
+        or trainer.fusion is None
+    ):
+        raise RuntimeError("initialize_engine() must be called before setup_optimizer().")
+
+    trainer.optimizer = torch.optim.AdamW(
+        collect_trainable_parameters(trainer),
+        lr=trainer.config.learning_rate,
+        weight_decay=trainer.config.weight_decay,
+    )
+    trainer.scaler = build_grad_scaler(trainer.device, trainer.config.mixed_precision)
+    ensure_scheduler(trainer)
+    trainer.optimizer.zero_grad(set_to_none=True)
+
+
+def compute_grad_norm(optimizer: Optional[torch.optim.Optimizer]) -> float:
+    if optimizer is None:
+        return 0.0
+    total_norm_sq = 0.0
+    has_grad = False
+    for group in optimizer.param_groups:
+        for param in group.get("params", []):
+            if param is None or param.grad is None:
+                continue
+            grad = param.grad.detach()
+            if grad.is_sparse:
+                grad = grad.coalesce().values()
+            grad_norm = float(torch.norm(grad, p=2).item())
+            total_norm_sq += grad_norm * grad_norm
+            has_grad = True
+    if not has_grad:
+        return 0.0
+    return float(total_norm_sq ** 0.5)
+
+
+def clip_gradients(trainer: Any) -> None:
+    if trainer.optimizer is None or trainer.config.max_grad_norm <= 0.0:
+        return
+    params = [
+        param
+        for group in trainer.optimizer.param_groups
+        for param in group.get("params", [])
+        if param is not None
+    ]
+    torch.nn.utils.clip_grad_norm_(params, max_norm=float(trainer.config.max_grad_norm))
+
+
+def build_train_batch_stats(
+    *,
+    batch: dict[str, torch.Tensor],
+    optimizer: torch.optim.Optimizer,
+    config: Any,
+    loss: float,
+    grad_norm: float,
+    step_started_at: float,
+    accumulation_counter: int,
+    accumulation_steps: int,
+    optimizer_steps: int,
+    optimizer_step_applied: bool,
+) -> TrainBatchStats:
+    step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
+    batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
+    if batch_size <= 0 and isinstance(batch, dict) and "images" in batch:
+        batch_size = int(batch["images"].shape[0])
+    samples_per_sec = float(batch_size / step_time_sec) if batch_size > 0 else 0.0
+    lr_value = float(optimizer.param_groups[0].get("lr", config.learning_rate))
+    return TrainBatchStats(
+        loss=float(loss),
+        lr=lr_value,
+        grad_norm=float(grad_norm),
+        step_time_sec=step_time_sec,
+        samples_per_sec=samples_per_sec,
+        batch_size=int(batch_size),
+        accumulation_step=int(accumulation_counter if accumulation_counter > 0 else accumulation_steps),
+        optimizer_steps=int(optimizer_steps),
+        optimizer_step_applied=bool(optimizer_step_applied),
+    )

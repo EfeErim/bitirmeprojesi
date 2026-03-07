@@ -5,10 +5,8 @@ from __future__ import annotations
 
 import inspect
 import logging
-import math
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -22,18 +20,33 @@ except Exception:  # pragma: no cover - optional dependency in some local sandbo
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
 from src.ood.continual_ood import ContinualOODDetector
-from src.shared.json_utils import read_json_dict, write_json
 from src.training.quantization import assert_no_prohibited_4bit_flags
-from src.training.services import (
-    autocast_context,
-    build_adapter_metadata,
-    build_grad_scaler,
-    capture_rng_state,
+from src.training.services.persistence import (
+    build_trainer_metadata_payload,
     compute_config_hash,
+    load_trainer_adapter,
+    save_trainer_adapter,
+)
+from src.training.services.persistence import (
+    restore_training_state as restore_trainer_training_state,
+)
+from src.training.services.persistence import (
+    snapshot_training_state as snapshot_trainer_training_state,
+)
+from src.training.services.runtime import (
+    autocast_context,
+    build_grad_scaler,
+    build_idx_to_class,
+    build_train_batch_stats,
+    clip_gradients,
+    compute_grad_norm,
     configure_runtime_reproducibility,
-    restore_ood_state,
-    restore_rng_state,
-    serialize_ood_state,
+    configure_training_plan_state,
+    ensure_scheduler,
+    step_scheduler,
+)
+from src.training.services.runtime import (
+    setup_optimizer as setup_trainer_optimizer,
 )
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
@@ -299,62 +312,27 @@ class ContinualSDLoRATrainer:
         self._planned_epochs = int(max(1, self.config.num_epochs))
         self._accumulation_counter = 0
         self.best_metric_state: Dict[str, Any] = {}
+        self._idx_to_class: Dict[int, str] = {}
+        self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
         configure_runtime_reproducibility(self.config, np_module=np)
+        self._refresh_class_index_cache()
+
+    def _refresh_class_index_cache(self) -> None:
+        self._idx_to_class = build_idx_to_class(self.class_to_idx)
+
+    def _class_index_cache_stale(self) -> bool:
+        if len(self._idx_to_class) != len(self.class_to_idx):
+            return True
+        return any(self._idx_to_class.get(idx) != name for name, idx in self.class_to_idx.items())
 
     def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
-        epochs = int(max(1, num_epochs if num_epochs is not None else self.config.num_epochs))
-        self._planned_epochs = epochs
-        optimizer_steps = max(
-            1,
-            math.ceil((max(1, int(total_batches)) * epochs) / max(1, int(self.config.grad_accumulation_steps))),
-        )
-        if self.config.scheduler_step_on == "epoch":
-            optimizer_steps = epochs
-        self._planned_scheduler_steps = int(optimizer_steps)
-        if self.optimizer is not None:
-            self._ensure_scheduler()
+        configure_training_plan_state(self, total_batches=total_batches, num_epochs=num_epochs)
 
     def _ensure_scheduler(self) -> None:
-        if self.optimizer is None or self.scheduler is not None or self.config.scheduler_name == "none":
-            return
-
-        total_units = max(
-            1,
-            int(self._planned_scheduler_steps if self._planned_scheduler_steps > 0 else self._planned_epochs),
-        )
-        if self.config.scheduler_name == "linear":
-            warmup_steps = int(max(0, round(total_units * float(self.config.scheduler_warmup_ratio))))
-            min_lr_scale = (
-                float(self.config.scheduler_min_lr) / float(self.config.learning_rate)
-                if self.config.learning_rate > 0
-                else 0.0
-            )
-            min_lr_scale = max(0.0, min(1.0, min_lr_scale))
-
-            def _lr_lambda(step_idx: int) -> float:
-                step = int(max(0, step_idx))
-                if warmup_steps > 0 and step < warmup_steps:
-                    return float(step + 1) / float(max(1, warmup_steps))
-                remaining = max(1, total_units - warmup_steps)
-                progress = float(step - warmup_steps) / float(remaining)
-                progress = max(0.0, min(1.0, progress))
-                return max(min_lr_scale, 1.0 - progress * (1.0 - min_lr_scale))
-
-            self.scheduler = torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=_lr_lambda)
-            return
-
-        if self.config.scheduler_name == "cosine":
-            eta_min = float(self.config.scheduler_min_lr)
-            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-                self.optimizer,
-                T_max=total_units,
-                eta_min=eta_min,
-            )
+        ensure_scheduler(self)
 
     def _step_scheduler(self) -> None:
-        if self.scheduler is None:
-            return
-        self.scheduler.step()
+        step_scheduler(self)
 
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
         """Load frozen backbone, apply adapters, initialize heads."""
@@ -395,6 +373,8 @@ class ContinualSDLoRATrainer:
         self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
         self.optimizer_steps = 0
         self._accumulation_counter = 0
+        self._trainable_params_cache = None
+        self._refresh_class_index_cache()
         logger.info(
             "Continual engine initialized: backbone=%s, targets=%s",
             self.config.backbone_model_name,
@@ -517,6 +497,7 @@ class ContinualSDLoRATrainer:
         for name in new_class_names:
             if name not in self.class_to_idx:
                 self.class_to_idx[name] = len(self.class_to_idx)
+        self._refresh_class_index_cache()
         if self.classifier is None:
             return dict(self.class_to_idx)
 
@@ -531,22 +512,11 @@ class ContinualSDLoRATrainer:
             replacement.weight.data[:old_out] = old_classifier.weight.data[:old_out]
             replacement.bias.data[:old_out] = old_classifier.bias.data[:old_out]
         self.classifier = replacement
+        self._trainable_params_cache = None
         return dict(self.class_to_idx)
 
     def setup_optimizer(self) -> None:
-        if not self._is_initialized or self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("initialize_engine() must be called before setup_optimizer().")
-        trainable_params = [p for p in self.adapter_model.parameters() if p.requires_grad]
-        trainable_params.extend([p for p in self.classifier.parameters() if p.requires_grad])
-        trainable_params.extend([p for p in self.fusion.parameters() if p.requires_grad])
-        self.optimizer = torch.optim.AdamW(
-            trainable_params,
-            lr=self.config.learning_rate,
-            weight_decay=self.config.weight_decay,
-        )
-        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
-        self._ensure_scheduler()
-        self.optimizer.zero_grad(set_to_none=True)
+        setup_trainer_optimizer(self)
 
     def _extract_hidden_states(self, images: torch.Tensor) -> Sequence[torch.Tensor]:
         if self.adapter_model is None:
@@ -607,23 +577,7 @@ class ContinualSDLoRATrainer:
             self.fusion.eval()
 
     def _compute_grad_norm(self) -> float:
-        if self.optimizer is None:
-            return 0.0
-        total_norm_sq = 0.0
-        has_grad = False
-        for group in self.optimizer.param_groups:
-            for param in group.get("params", []):
-                if param is None or param.grad is None:
-                    continue
-                grad = param.grad.detach()
-                if grad.is_sparse:
-                    grad = grad.coalesce().values()
-                grad_norm = float(torch.norm(grad, p=2).item())
-                total_norm_sq += grad_norm * grad_norm
-                has_grad = True
-        if not has_grad:
-            return 0.0
-        return float(total_norm_sq ** 0.5)
+        return compute_grad_norm(self.optimizer)
 
     def train_batch(self, batch: Dict[str, torch.Tensor]) -> TrainBatchStats:
         if self.optimizer is None:
@@ -653,17 +607,7 @@ class ContinualSDLoRATrainer:
         if should_step:
             if self.scaler.is_enabled():
                 self.scaler.unscale_(self.optimizer)
-            if self.config.max_grad_norm > 0.0:
-                params = [
-                    param
-                    for group in self.optimizer.param_groups
-                    for param in group.get("params", [])
-                    if param is not None
-                ]
-                torch.nn.utils.clip_grad_norm_(
-                    params,
-                    max_norm=float(self.config.max_grad_norm),
-                )
+            clip_gradients(self)
             grad_norm = self._compute_grad_norm()
             if self.scaler.is_enabled():
                 self.scaler.step(self.optimizer)
@@ -676,21 +620,16 @@ class ContinualSDLoRATrainer:
             self.optimizer.zero_grad(set_to_none=True)
             self._accumulation_counter = 0
 
-        step_time_sec = float(max(1e-9, time.perf_counter() - step_started_at))
-        batch_size = int(batch.get("labels", torch.empty(0)).shape[0]) if isinstance(batch, dict) else 0
-        if batch_size <= 0 and isinstance(batch, dict) and "images" in batch:
-            batch_size = int(batch["images"].shape[0])
-        samples_per_sec = float(batch_size / step_time_sec) if batch_size > 0 else 0.0
-        lr_value = float(self.optimizer.param_groups[0].get("lr", self.config.learning_rate))
-        return TrainBatchStats(
+        return build_train_batch_stats(
+            batch=batch,
+            optimizer=self.optimizer,
+            config=self.config,
             loss=raw_loss_value,
-            lr=lr_value,
-            grad_norm=float(grad_norm),
-            step_time_sec=step_time_sec,
-            samples_per_sec=samples_per_sec,
-            batch_size=int(batch_size),
-            accumulation_step=int(self._accumulation_counter if self._accumulation_counter > 0 else accumulation_steps),
-            optimizer_steps=int(self.optimizer_steps),
+            grad_norm=grad_norm,
+            step_started_at=step_started_at,
+            accumulation_counter=self._accumulation_counter,
+            accumulation_steps=accumulation_steps,
+            optimizer_steps=self.optimizer_steps,
             optimizer_step_applied=bool(should_step),
         )
 
@@ -734,13 +673,14 @@ class ContinualSDLoRATrainer:
             confidence, indices = probs.max(dim=1)
             ood = self.ood_detector.score(features=features, logits=logits, predicted_labels=indices)
 
-        idx_to_class = {idx: name for name, idx in self.class_to_idx.items()}
+        if self._class_index_cache_stale():
+            self._refresh_class_index_cache()
         predicted_idx = int(indices[0].item()) if indices.numel() else 0
         return {
             "status": "success",
             "disease": {
                 "class_index": predicted_idx,
-                "name": idx_to_class.get(predicted_idx, str(predicted_idx)),
+                "name": self._idx_to_class.get(predicted_idx, str(predicted_idx)),
                 "confidence": float(confidence[0].item()) if confidence.numel() else 0.0,
             },
             "ood_analysis": {
@@ -754,154 +694,16 @@ class ContinualSDLoRATrainer:
         }
 
     def _metadata_payload(self) -> Dict[str, Any]:
-        return build_adapter_metadata(
-            schema_version="v6",
-            engine="continual_sd_lora",
-            trainer_config=self.config.as_contract_dict(),
-            config_hash=self._config_hash,
-            backbone_model_name=self.config.backbone_model_name,
-            fusion_layers=list(self.config.fusion_layers),
-            fusion_output_dim=self.config.fusion_output_dim,
-            fusion_dropout=self.config.fusion_dropout,
-            fusion_gating=self.config.fusion_gating,
-            class_to_idx=dict(self.class_to_idx),
-            target_modules_resolved=list(self.target_modules_resolved),
-            ood_detector=self.ood_detector,
-            peft_available=bool(self._peft_available),
-            adapter_wrapped=bool(self._adapter_wrapped),
-        ).to_dict()
+        return build_trainer_metadata_payload(self)
 
     def snapshot_training_state(self) -> TrainingCheckpointPayload:
-        if self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("Cannot snapshot training state before initialization.")
-        return TrainingCheckpointPayload(
-            schema_version="v6_training_checkpoint",
-            created_at=datetime.utcnow().isoformat() + "Z",
-            trainer_config=self.config.as_contract_dict(),
-            config_hash=self._config_hash,
-            class_to_idx=dict(self.class_to_idx),
-            target_modules_resolved=list(self.target_modules_resolved),
-            model_state={
-                "adapter_model": self.adapter_model.state_dict(),
-                "classifier": self.classifier.state_dict(),
-                "fusion": self.fusion.state_dict(),
-            },
-            optimizer_state=self.optimizer.state_dict() if self.optimizer is not None else None,
-            scheduler_state=self.scheduler.state_dict() if self.scheduler is not None else None,
-            scaler_state=self.scaler.state_dict() if self.scaler.is_enabled() else None,
-            ood_state=serialize_ood_state(self.ood_detector),
-            rng_state=capture_rng_state(np_module=np),
-            best_metric_state=dict(self.best_metric_state),
-            current_epoch=int(self.current_epoch),
-            optimizer_steps=int(self.optimizer_steps),
-        )
+        return snapshot_trainer_training_state(self, np_module=np)
 
     def restore_training_state(self, payload: TrainingCheckpointPayload | Dict[str, Any]) -> TrainingCheckpointPayload:
-        checkpoint = (
-            payload
-            if isinstance(payload, TrainingCheckpointPayload)
-            else TrainingCheckpointPayload.from_dict(payload)
-        )
-        class_to_idx = {str(k): int(v) for k, v in checkpoint.class_to_idx.items()}
-        self.class_to_idx = dict(class_to_idx)
-        self.target_modules_resolved = [str(v) for v in checkpoint.target_modules_resolved]
-
-        needs_initialize = self.adapter_model is None or self.classifier is None or self.fusion is None
-        if needs_initialize:
-            self.initialize_engine(class_to_idx=self.class_to_idx)
-        else:
-            self._is_initialized = True
-
-        model_state = checkpoint.model_state
-        adapter_state = model_state.get("adapter_model")
-        classifier_state = model_state.get("classifier")
-        fusion_state = model_state.get("fusion")
-
-        if adapter_state is not None and self.adapter_model is not None:
-            self.adapter_model.load_state_dict(adapter_state, strict=False)
-        if classifier_state is not None and self.classifier is not None:
-            self.classifier.load_state_dict(classifier_state)
-        if fusion_state is not None and self.fusion is not None:
-            self.fusion.load_state_dict(fusion_state)
-
-        if self.optimizer is None:
-            self.setup_optimizer()
-        optimizer_state = checkpoint.optimizer_state
-        if optimizer_state is not None and self.optimizer is not None:
-            self.optimizer.load_state_dict(optimizer_state)
-        scheduler_state = checkpoint.scheduler_state
-        if scheduler_state is not None:
-            self._ensure_scheduler()
-            if self.scheduler is not None:
-                self.scheduler.load_state_dict(scheduler_state)
-        scaler_state = checkpoint.scaler_state
-        if scaler_state is not None and self.scaler.is_enabled():
-            self.scaler.load_state_dict(scaler_state)
-
-        ood_state = checkpoint.ood_state
-        if isinstance(ood_state, dict):
-            self.ood_detector = restore_ood_state(
-                ood_state,
-                default_threshold_factor=self.config.ood_threshold_factor,
-            )
-        restore_rng_state(checkpoint.rng_state, np_module=np)
-        self.current_epoch = int(checkpoint.current_epoch)
-        self.optimizer_steps = int(checkpoint.optimizer_steps)
-        self.best_metric_state = dict(checkpoint.best_metric_state)
-        return checkpoint
+        return restore_trainer_training_state(self, payload, np_module=np)
 
     def save_adapter(self, output_dir: str) -> Path:
-        out = Path(output_dir)
-        adapter_dir = out / "continual_sd_lora_adapter"
-        adapter_dir.mkdir(parents=True, exist_ok=True)
-
-        if self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("Cannot save adapter before initialization.")
-
-        if hasattr(self.adapter_model, "save_pretrained"):
-            self.adapter_model.save_pretrained(adapter_dir)
-        else:
-            torch.save(self.adapter_model.state_dict(), adapter_dir / "adapter_model.pt")
-
-        torch.save(self.classifier.state_dict(), adapter_dir / "classifier.pth")
-        torch.save(self.fusion.state_dict(), adapter_dir / "fusion.pth")
-
-        meta = self._metadata_payload()
-        write_json(adapter_dir / "adapter_meta.json", meta)
-        return adapter_dir
+        return save_trainer_adapter(self, output_dir)
 
     def load_adapter(self, adapter_dir: str) -> Dict[str, Any]:
-        root = Path(adapter_dir)
-        if root.is_dir() and (root / "continual_sd_lora_adapter").exists():
-            root = root / "continual_sd_lora_adapter"
-        meta_path = root / "adapter_meta.json"
-        if not meta_path.exists():
-            raise FileNotFoundError(f"adapter_meta.json not found in {root}")
-        meta = read_json_dict(meta_path)
-        self.class_to_idx = {str(k): int(v) for k, v in meta.get("class_to_idx", {}).items()}
-        self.target_modules_resolved = [str(v) for v in meta.get("target_modules_resolved", [])]
-
-        self.initialize_engine(class_to_idx=self.class_to_idx)
-        adapter_config_path = root / "adapter_config.json"
-        if adapter_config_path.exists() and PeftModel is not None and self.backbone is not None:
-            loaded_adapter = PeftModel.from_pretrained(self.backbone, str(root), is_trainable=False)
-            self.adapter_model = self._prepare_module_for_device(loaded_adapter, module_name="adapter_model")
-            self._adapter_wrapped = True
-        elif (root / "adapter_model.pt").exists() and self.adapter_model is not None:
-            adapter_state = torch.load(root / "adapter_model.pt", map_location=self.device)
-            self.adapter_model.load_state_dict(adapter_state, strict=False)
-        classifier_path = root / "classifier.pth"
-        fusion_path = root / "fusion.pth"
-        if classifier_path.exists():
-            self.classifier.load_state_dict(torch.load(classifier_path, map_location=self.device))  # type: ignore[union-attr]
-        if fusion_path.exists():
-            self.fusion.load_state_dict(torch.load(fusion_path, map_location=self.device))  # type: ignore[union-attr]
-        ood_state = meta.get("ood_state", {})
-        if isinstance(ood_state, dict) and ood_state:
-            self.ood_detector = restore_ood_state(
-                ood_state,
-                default_threshold_factor=self.config.ood_threshold_factor,
-            )
-        else:
-            self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
-        return meta
+        return load_trainer_adapter(self, adapter_dir, peft_model_cls=PeftModel)

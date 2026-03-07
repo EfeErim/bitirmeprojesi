@@ -145,6 +145,42 @@ def test_predict_payload_contains_v6_ood_keys():
     assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(result["ood_analysis"].keys())
 
 
+def test_predict_payload_refreshes_cached_class_index_after_class_update():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.class_to_idx = {"healthy": 0}
+
+    class DummyModule(nn.Module):
+        def forward(self, *args, **kwargs):
+            return args[0]
+
+    trainer.adapter_model = DummyModule()
+    trainer.fusion = DummyModule()
+    trainer.classifier = nn.Linear(4, 1)
+    trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
+    trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
+        "mahalanobis_z": torch.tensor([0.1]),
+        "energy_z": torch.tensor([0.2]),
+        "ensemble_score": torch.tensor([0.15]),
+        "class_threshold": torch.tensor([0.8]),
+        "is_ood": torch.tensor([False]),
+        "calibration_version": torch.tensor([3]),
+    }
+
+    first = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
+    trainer.class_to_idx = {"disease_a": 0}
+    second = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
+
+    assert first["disease"]["name"] == "healthy"
+    assert second["disease"]["name"] == "disease_a"
+
+
 def test_raises_when_peft_is_missing(monkeypatch):
     from src.training import continual_sd_lora as continual_module
 
@@ -508,4 +544,7 @@ def test_save_and_load_adapter_roundtrip_restores_raw_adapter_weights(monkeypatc
     assert reloaded.fusion is not None
     assert torch.equal(reloaded.adapter_model.state_dict()[first_weight_name], first_weight)
     assert torch.allclose(reloaded.classifier.weight, torch.full_like(reloaded.classifier.weight, 0.25))
-    assert torch.allclose(reloaded.fusion.projections[0].weight, torch.full_like(reloaded.fusion.projections[0].weight, 0.5))
+    assert torch.allclose(
+        reloaded.fusion.projections[0].weight,
+        torch.full_like(reloaded.fusion.projections[0].weight, 0.5),
+    )

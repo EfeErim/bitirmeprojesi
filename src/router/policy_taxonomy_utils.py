@@ -11,15 +11,15 @@ from typing import Any, Dict, List, Optional, Tuple
 logger = logging.getLogger(__name__)
 
 __all__ = [
-    'deep_merge_dicts',
-    'default_policy_graph',
-    'build_policy_graph',
-    'resolve_requested_profile',
-    'apply_runtime_profile',
-    'policy_value',
-    'policy_enabled',
-    'load_taxonomy',
-    'load_crop_part_compatibility',
+    "deep_merge_dicts",
+    "default_policy_graph",
+    "build_policy_graph",
+    "resolve_requested_profile",
+    "apply_runtime_profile",
+    "policy_value",
+    "policy_enabled",
+    "load_taxonomy",
+    "load_crop_part_compatibility",
 ]
 
 
@@ -40,19 +40,19 @@ def deep_merge_dicts(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str
 def default_policy_graph() -> Dict[str, Dict[str, Any]]:
     """Return default policy stage graph for router execution gates."""
     return {
-        'roi_filter': {'enabled': True},
-        'part_evidence': {'enabled': True},
-        'crop_evidence': {'enabled': True},
-        'compatibility_fusion': {'enabled': True},
-        'part_resolution': {'enabled': True},
-        'open_set_gate': {'enabled': True},
-        'dedupe': {'enabled': True},
+        "roi_filter": {"enabled": True},
+        "part_evidence": {"enabled": True},
+        "crop_evidence": {"enabled": True},
+        "compatibility_fusion": {"enabled": True},
+        "part_resolution": {"enabled": True},
+        "open_set_gate": {"enabled": True},
+        "dedupe": {"enabled": True},
     }
 
 
 def build_policy_graph(vlm_config: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
     """Build effective policy graph from defaults and config overrides."""
-    configured_policy = vlm_config.get('policy_graph', {})
+    configured_policy = vlm_config.get("policy_graph", {})
     if not isinstance(configured_policy, dict):
         configured_policy = {}
     return deep_merge_dicts(default_policy_graph(), configured_policy)
@@ -60,11 +60,11 @@ def build_policy_graph(vlm_config: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
 
 def resolve_requested_profile(vlm_config: Dict[str, Any]) -> Optional[str]:
     """Resolve active runtime profile from env override or config."""
-    env_profile = str(os.getenv('AADS_ULORA_VLM_PROFILE', '')).strip()
+    env_profile = str(os.getenv("AADS_ULORA_VLM_PROFILE", "")).strip()
     if env_profile:
         return env_profile
 
-    config_profile = vlm_config.get('profile')
+    config_profile = vlm_config.get("profile")
     if isinstance(config_profile, str) and config_profile.strip():
         return config_profile.strip()
     return None
@@ -82,7 +82,7 @@ def apply_runtime_profile(
     if not profile_name:
         return vlm_config, active_profile, False
 
-    profiles = base_vlm_config.get('profiles', {})
+    profiles = base_vlm_config.get("profiles", {})
     if not isinstance(profiles, dict):
         profiles = {}
 
@@ -93,13 +93,15 @@ def apply_runtime_profile(
         return vlm_config, active_profile, False
 
     vlm_config = deep_merge_dicts(base_vlm_config, profile_cfg)
-    vlm_config['profile'] = profile_name
+    vlm_config["profile"] = profile_name
     active_profile = profile_name
     logger.info(f"Applied VLM profile: {profile_name}")
     return vlm_config, active_profile, True
 
 
-def policy_value(policy_graph: Dict[str, Dict[str, Any]], vlm_config: Dict[str, Any], stage: str, key: str, default: Any) -> Any:
+def policy_value(
+    policy_graph: Dict[str, Dict[str, Any]], vlm_config: Dict[str, Any], stage: str, key: str, default: Any
+) -> Any:
     """Read policy value with stage override precedence and config fallback."""
     stage_cfg = policy_graph.get(stage, {})
     if isinstance(stage_cfg, dict) and key in stage_cfg:
@@ -112,7 +114,7 @@ def policy_enabled(policy_graph: Dict[str, Dict[str, Any]], stage: str, default:
     stage_cfg = policy_graph.get(stage, {})
     if not isinstance(stage_cfg, dict):
         return bool(default)
-    return bool(stage_cfg.get('enabled', default))
+    return bool(stage_cfg.get("enabled", default))
 
 
 def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
@@ -125,21 +127,21 @@ def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
 
     if not path.exists():
         logger.warning(f"Taxonomy file not found: {taxonomy_path}, using minimal defaults")
-        return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
+        return ["plant"], ["leaf", "flower", "fruit", "stem", "root"]
 
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             taxonomy = json.load(f)
 
-        crops = taxonomy.get('crops', [])
-        weeds = taxonomy.get('common_weeds', [])
-        ornamentals = taxonomy.get('ornamentals', [])
+        crops = taxonomy.get("crops", [])
+        weeds = taxonomy.get("common_weeds", [])
+        ornamentals = taxonomy.get("ornamentals", [])
         all_crops = crops + weeds + ornamentals
 
-        parts_data = taxonomy.get('parts', [])
+        parts_data = taxonomy.get("parts", [])
         if isinstance(parts_data, dict):
-            core_parts = parts_data.get('core', [])
-            extended_parts = parts_data.get('extended', [])
+            core_parts = parts_data.get("core", [])
+            extended_parts = parts_data.get("extended", [])
             parts = core_parts + extended_parts
             logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} crops, {len(parts)} parts (core+extended)")
         else:
@@ -149,7 +151,7 @@ def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
         return all_crops, parts
     except Exception as e:
         logger.error(f"Failed to load taxonomy from {path}: {e}")
-        return ['plant'], ['leaf', 'flower', 'fruit', 'stem', 'root']
+        return ["plant"], ["leaf", "flower", "fruit", "stem", "root"]
 
 
 def load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
@@ -163,10 +165,10 @@ def load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
     if not path.exists():
         return {}
 
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         taxonomy = json.load(f)
 
-    compatibility = taxonomy.get('crop_part_compatibility', {})
+    compatibility = taxonomy.get("crop_part_compatibility", {})
     if not isinstance(compatibility, dict):
         return {}
 

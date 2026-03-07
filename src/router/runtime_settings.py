@@ -3,12 +3,12 @@ from typing import Any, Callable, Dict, List
 
 def resolve_sam3_stage_order(policy_value_fn: Callable[[str, str, Any], Any]) -> List[str]:
     """Resolve SAM3 stage execution order from policy graph."""
-    default_order = ['roi_filter', 'roi_classification', 'open_set_gate', 'postprocess']
-    configured = policy_value_fn('execution', 'sam3_stage_order', default_order)
+    default_order = ["roi_filter", "roi_classification", "open_set_gate", "postprocess"]
+    configured = policy_value_fn("execution", "sam3_stage_order", default_order)
     if not isinstance(configured, list):
         return default_order
 
-    allowed = {'roi_filter', 'roi_classification', 'open_set_gate', 'postprocess'}
+    allowed = {"roi_filter", "roi_classification", "open_set_gate", "postprocess"}
     ordered: List[str] = []
     for stage_name in configured:
         normalized = str(stage_name).strip()
@@ -24,119 +24,147 @@ def build_sam3_runtime_settings(
 ) -> Dict[str, Any]:
     """Collect policy-controlled runtime settings for SAM3 analysis."""
     settings: Dict[str, Any] = {}
-    settings['sam3_threshold'] = float(policy_value_fn('roi_filter', 'sam3_mask_threshold', 0.60))
-    settings['min_box_area_ratio'] = float(policy_value_fn('roi_filter', 'min_box_area_ratio', 0.001))
-    settings['min_box_side_px'] = float(policy_value_fn('roi_filter', 'min_box_side_px', 10))
-    settings['classification_min_confidence'] = max(
-        float(policy_value_fn('crop_evidence', 'classification_min_confidence', 0.20)),
+    settings["sam3_threshold"] = float(policy_value_fn("roi_filter", "sam3_mask_threshold", 0.60))
+    settings["min_box_area_ratio"] = float(policy_value_fn("roi_filter", "min_box_area_ratio", 0.001))
+    settings["min_box_side_px"] = float(policy_value_fn("roi_filter", "min_box_side_px", 10))
+    settings["classification_min_confidence"] = max(
+        float(policy_value_fn("crop_evidence", "classification_min_confidence", 0.20)),
         float(effective_threshold),
     )
-    settings['detection_nms_iou_threshold'] = float(policy_value_fn('dedupe', 'detection_nms_iou_threshold', 0.75))
-    settings['detection_nms_same_crop_only'] = bool(policy_value_fn('dedupe', 'detection_nms_same_crop_only', True))
-    settings['conditioned_part_weight'] = max(
+    settings["detection_nms_iou_threshold"] = float(policy_value_fn("dedupe", "detection_nms_iou_threshold", 0.75))
+    settings["detection_nms_same_crop_only"] = bool(policy_value_fn("dedupe", "detection_nms_same_crop_only", True))
+    settings["conditioned_part_weight"] = max(
         0.0,
-        min(1.0, float(policy_value_fn('compatibility_fusion', 'conditioned_part_weight', 0.45))),
+        min(1.0, float(policy_value_fn("compatibility_fusion", "conditioned_part_weight", 0.45))),
     )
-    settings['generic_part_penalty'] = float(policy_value_fn('part_resolution', 'generic_part_penalty', 0.78))
+    settings["generic_part_penalty"] = float(policy_value_fn("part_resolution", "generic_part_penalty", 0.78))
 
     generic_part_labels_raw = policy_value_fn(
-        'part_resolution',
-        'generic_part_labels',
-        ['whole plant', 'whole', 'plant', 'entire plant'],
+        "part_resolution",
+        "generic_part_labels",
+        ["whole plant", "whole", "plant", "entire plant"],
     )
-    settings['generic_part_labels'] = (
+    settings["generic_part_labels"] = (
         [str(label) for label in generic_part_labels_raw]
         if isinstance(generic_part_labels_raw, list)
-        else ['whole plant', 'whole', 'plant', 'entire plant']
+        else ["whole plant", "whole", "plant", "entire plant"]
     )
 
-    settings['specific_part_override_ratio'] = float(policy_value_fn('part_resolution', 'specific_part_override_ratio', 0.45))
-    settings['specific_part_min_confidence'] = float(policy_value_fn('part_resolution', 'specific_part_min_confidence', 0.12))
-
-    preferred_part_labels_raw = policy_value_fn('part_resolution', 'preferred_part_labels', ['leaf'])
-    settings['preferred_part_labels'] = (
-        [str(label) for label in preferred_part_labels_raw]
-        if isinstance(preferred_part_labels_raw, list)
-        else ['leaf']
+    settings["specific_part_override_ratio"] = float(
+        policy_value_fn("part_resolution", "specific_part_override_ratio", 0.45)
     )
-    settings['preferred_part_override_ratio'] = float(policy_value_fn('part_resolution', 'preferred_part_override_ratio', 0.50))
+    settings["specific_part_min_confidence"] = float(
+        policy_value_fn("part_resolution", "specific_part_min_confidence", 0.12)
+    )
 
-    settings['leaf_override_enabled'] = bool(policy_value_fn('part_resolution', 'leaf_override_enabled', True))
-    settings['leaf_override_label'] = str(policy_value_fn('part_resolution', 'leaf_override_label', 'leaf'))
+    preferred_part_labels_raw = policy_value_fn("part_resolution", "preferred_part_labels", ["leaf"])
+    settings["preferred_part_labels"] = (
+        [str(label) for label in preferred_part_labels_raw] if isinstance(preferred_part_labels_raw, list) else ["leaf"]
+    )
+    settings["preferred_part_override_ratio"] = float(
+        policy_value_fn("part_resolution", "preferred_part_override_ratio", 0.50)
+    )
+
+    settings["leaf_override_enabled"] = bool(policy_value_fn("part_resolution", "leaf_override_enabled", True))
+    settings["leaf_override_label"] = str(policy_value_fn("part_resolution", "leaf_override_label", "leaf"))
 
     leaf_override_target_raw = policy_value_fn(
-        'part_resolution',
-        'leaf_override_target_labels',
-        ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry'],
+        "part_resolution",
+        "leaf_override_target_labels",
+        ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"],
     )
-    settings['leaf_override_target_labels'] = (
+    settings["leaf_override_target_labels"] = (
         [str(label) for label in leaf_override_target_raw]
         if isinstance(leaf_override_target_raw, list)
-        else ['whole plant', 'whole', 'plant', 'entire plant', 'fruit', 'berry']
+        else ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"]
     )
 
-    settings['leaf_override_ratio'] = float(policy_value_fn('part_resolution', 'leaf_override_ratio', 0.35))
-    settings['leaf_override_min_confidence'] = float(policy_value_fn('part_resolution', 'leaf_override_min_confidence', 0.10))
-    settings['leaf_override_min_area_ratio'] = float(policy_value_fn('part_resolution', 'leaf_override_min_area_ratio', 0.02))
-    settings['leaf_override_aspect_min'] = float(policy_value_fn('part_resolution', 'leaf_override_aspect_min', 0.30))
-    settings['leaf_override_aspect_max'] = float(policy_value_fn('part_resolution', 'leaf_override_aspect_max', 3.20))
+    settings["leaf_override_ratio"] = float(policy_value_fn("part_resolution", "leaf_override_ratio", 0.35))
+    settings["leaf_override_min_confidence"] = float(
+        policy_value_fn("part_resolution", "leaf_override_min_confidence", 0.10)
+    )
+    settings["leaf_override_min_area_ratio"] = float(
+        policy_value_fn("part_resolution", "leaf_override_min_area_ratio", 0.02)
+    )
+    settings["leaf_override_aspect_min"] = float(policy_value_fn("part_resolution", "leaf_override_aspect_min", 0.30))
+    settings["leaf_override_aspect_max"] = float(policy_value_fn("part_resolution", "leaf_override_aspect_max", 3.20))
 
-    settings['leaf_visual_override_enabled'] = bool(policy_value_fn('part_resolution', 'leaf_visual_override_enabled', True))
-    settings['leaf_visual_likeness_threshold'] = float(policy_value_fn('part_resolution', 'leaf_visual_likeness_threshold', 0.44))
-    settings['leaf_visual_green_min'] = float(policy_value_fn('part_resolution', 'leaf_visual_green_min', 0.12))
-    settings['leaf_visual_force_generic'] = bool(policy_value_fn('part_resolution', 'leaf_visual_force_generic', True))
-    settings['leaf_visual_force_without_leaf_score'] = bool(policy_value_fn('part_resolution', 'leaf_visual_force_without_leaf_score', True))
-    settings['leaf_visual_force_conf_floor'] = float(policy_value_fn('part_resolution', 'leaf_visual_force_conf_floor', 0.16))
-    settings['leaf_visual_force_part_factor'] = float(policy_value_fn('part_resolution', 'leaf_visual_force_part_factor', 0.65))
+    settings["leaf_visual_override_enabled"] = bool(
+        policy_value_fn("part_resolution", "leaf_visual_override_enabled", True)
+    )
+    settings["leaf_visual_likeness_threshold"] = float(
+        policy_value_fn("part_resolution", "leaf_visual_likeness_threshold", 0.44)
+    )
+    settings["leaf_visual_green_min"] = float(policy_value_fn("part_resolution", "leaf_visual_green_min", 0.12))
+    settings["leaf_visual_force_generic"] = bool(policy_value_fn("part_resolution", "leaf_visual_force_generic", True))
+    settings["leaf_visual_force_without_leaf_score"] = bool(
+        policy_value_fn("part_resolution", "leaf_visual_force_without_leaf_score", True)
+    )
+    settings["leaf_visual_force_conf_floor"] = float(
+        policy_value_fn("part_resolution", "leaf_visual_force_conf_floor", 0.16)
+    )
+    settings["leaf_visual_force_part_factor"] = float(
+        policy_value_fn("part_resolution", "leaf_visual_force_part_factor", 0.65)
+    )
 
     leaf_non_foliar_labels_raw = policy_value_fn(
-        'part_resolution',
-        'leaf_non_foliar_part_labels',
-        ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel'],
+        "part_resolution",
+        "leaf_non_foliar_part_labels",
+        ["husk", "shell", "pod", "seed", "grain", "ear", "tuber", "bulb", "fruit", "berry", "bark", "peel"],
     )
-    settings['leaf_non_foliar_part_labels'] = (
+    settings["leaf_non_foliar_part_labels"] = (
         [str(label) for label in leaf_non_foliar_labels_raw]
         if isinstance(leaf_non_foliar_labels_raw, list)
-        else ['husk', 'shell', 'pod', 'seed', 'grain', 'ear', 'tuber', 'bulb', 'fruit', 'berry', 'bark', 'peel']
+        else ["husk", "shell", "pod", "seed", "grain", "ear", "tuber", "bulb", "fruit", "berry", "bark", "peel"]
     )
 
-    settings['leaf_part_rebalance_enabled'] = bool(policy_value_fn('part_resolution', 'leaf_part_rebalance_enabled', True))
-    settings['leaf_part_rebalance_threshold'] = float(policy_value_fn('part_resolution', 'leaf_part_rebalance_threshold', 0.34))
-    settings['leaf_part_rebalance_penalty'] = float(policy_value_fn('part_resolution', 'leaf_part_rebalance_penalty', 0.55))
-    settings['leaf_part_rebalance_boost'] = float(policy_value_fn('part_resolution', 'leaf_part_rebalance_boost', 1.35))
+    settings["leaf_part_rebalance_enabled"] = bool(
+        policy_value_fn("part_resolution", "leaf_part_rebalance_enabled", True)
+    )
+    settings["leaf_part_rebalance_threshold"] = float(
+        policy_value_fn("part_resolution", "leaf_part_rebalance_threshold", 0.34)
+    )
+    settings["leaf_part_rebalance_penalty"] = float(
+        policy_value_fn("part_resolution", "leaf_part_rebalance_penalty", 0.55)
+    )
+    settings["leaf_part_rebalance_boost"] = float(policy_value_fn("part_resolution", "leaf_part_rebalance_boost", 1.35))
 
-    max_rois_raw = policy_value_fn('roi_filter', 'max_rois_for_classification', 0)
+    max_rois_raw = policy_value_fn("roi_filter", "max_rois_for_classification", 0)
     try:
         max_rois = int(max_rois_raw)
     except Exception:
         max_rois = 0
-    settings['max_rois_for_classification'] = None if max_rois <= 0 else max_rois
+    settings["max_rois_for_classification"] = None if max_rois <= 0 else max_rois
 
-    ensemble_config = vlm_config.get('ensemble_config', {})
-    crop_num_prompts_raw = policy_value_fn('crop_evidence', 'crop_num_prompts', ensemble_config.get('crop_num_prompts', None))
-    part_num_prompts_raw = policy_value_fn('part_evidence', 'part_num_prompts', ensemble_config.get('part_num_prompts', None))
-
-    try:
-        settings['crop_num_prompts'] = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
-    except Exception:
-        settings['crop_num_prompts'] = None
-    try:
-        settings['part_num_prompts'] = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
-    except Exception:
-        settings['part_num_prompts'] = None
-
-    quality_weights = vlm_config.get('quality_score_weights', {})
-    settings['weight_crop'] = float(quality_weights.get('crop_confidence', 0.65))
-    settings['weight_part'] = float(quality_weights.get('part_confidence', 0.20))
-    settings['weight_sam3'] = float(quality_weights.get('sam3_score', 0.15))
-
-    settings['focus_part_mode_enabled'] = bool(policy_value_fn('focus_mode', 'focus_part_mode_enabled', False))
-    focus_parts_raw = policy_value_fn('focus_mode', 'focus_parts', ['leaf'])
-    settings['focus_parts'] = (
-        [str(label) for label in focus_parts_raw]
-        if isinstance(focus_parts_raw, list)
-        else ['leaf']
+    ensemble_config = vlm_config.get("ensemble_config", {})
+    crop_num_prompts_raw = policy_value_fn(
+        "crop_evidence", "crop_num_prompts", ensemble_config.get("crop_num_prompts", None)
     )
-    settings['focus_min_confidence_fallback'] = float(policy_value_fn('focus_mode', 'focus_min_confidence_fallback', 0.50))
-    settings['focus_fallback_enabled'] = bool(policy_value_fn('focus_mode', 'focus_fallback_enabled', True))
+    part_num_prompts_raw = policy_value_fn(
+        "part_evidence", "part_num_prompts", ensemble_config.get("part_num_prompts", None)
+    )
+
+    try:
+        settings["crop_num_prompts"] = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
+    except Exception:
+        settings["crop_num_prompts"] = None
+    try:
+        settings["part_num_prompts"] = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
+    except Exception:
+        settings["part_num_prompts"] = None
+
+    quality_weights = vlm_config.get("quality_score_weights", {})
+    settings["weight_crop"] = float(quality_weights.get("crop_confidence", 0.65))
+    settings["weight_part"] = float(quality_weights.get("part_confidence", 0.20))
+    settings["weight_sam3"] = float(quality_weights.get("sam3_score", 0.15))
+
+    settings["focus_part_mode_enabled"] = bool(policy_value_fn("focus_mode", "focus_part_mode_enabled", False))
+    focus_parts_raw = policy_value_fn("focus_mode", "focus_parts", ["leaf"])
+    settings["focus_parts"] = (
+        [str(label) for label in focus_parts_raw] if isinstance(focus_parts_raw, list) else ["leaf"]
+    )
+    settings["focus_min_confidence_fallback"] = float(
+        policy_value_fn("focus_mode", "focus_min_confidence_fallback", 0.50)
+    )
+    settings["focus_fallback_enabled"] = bool(policy_value_fn("focus_mode", "focus_fallback_enabled", True))
     return settings

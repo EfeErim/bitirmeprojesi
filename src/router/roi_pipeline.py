@@ -95,7 +95,7 @@ def classify_sam3_roi_candidate(
     part_labels: List[str],
     crop_labels: List[str],
     policy_enabled_fn: Callable[[str, bool], bool],
-    extract_roi_fn: Callable[[Image.Image, Optional[BoundingBox], float], Image.Image],
+    extract_roi_fn: Callable[..., Image.Image],
     clip_score_labels_ensemble_fn: Callable[..., Tuple[str, float, Dict[str, float]]],
     compute_leaf_likeness_fn: Callable[..., float],
     rebalance_part_scores_for_leaf_like_roi_fn: Callable[..., Dict[str, float]],
@@ -156,7 +156,7 @@ def classify_sam3_roi_candidate(
             leaf_boost=settings['leaf_part_rebalance_boost'],
         )
         if part_scores:
-            part_label = max(part_scores, key=part_scores.get)
+            part_label = max(part_scores, key=lambda label: float(part_scores.get(label, 0.0)))
             part_conf = float(part_scores.get(part_label, 0.0))
 
     crop_label, crop_conf, crop_scores = clip_score_labels_ensemble_fn(
@@ -285,7 +285,7 @@ def run_sam3_roi_classification_stage(
     stage_order: List[str],
     policy_enabled_fn: Callable[[str, bool], bool],
     classify_candidate_fn: Callable[[Candidate], Tuple[Optional[Detection], int]],
-    passes_open_set_gate_fn: Callable[[str, float, float], bool],
+    passes_open_set_gate_fn: Callable[..., bool],
 ) -> Tuple[List[Detection], int, int, float]:
     """Execute ROI classification stage with focus fallback and optional open-set gate."""
     detections: List[Detection] = []
@@ -323,7 +323,10 @@ def run_sam3_roi_classification_stage(
             part_label = str(detection.get('part', 'unknown')).strip().lower()
             part_confidence = float(detection.get('part_confidence', 0.0))
 
-            if any(focus_part in part_label for focus_part in focus_parts_lower) and part_confidence >= focus_min_confidence:
+            if (
+                any(focus_part in part_label for focus_part in focus_parts_lower)
+                and part_confidence >= focus_min_confidence
+            ):
                 focused_detections.append(detection)
 
     if focus_mode_enabled and focus_fallback_enabled:

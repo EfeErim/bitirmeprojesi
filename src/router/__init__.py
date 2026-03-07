@@ -10,7 +10,8 @@ __all__ = ["VLMPipeline", "DiagnosticScoutingAnalyzer"]
 def __getattr__(name: str) -> Any:
     if name not in __all__:
         raise AttributeError(name)
-    from src.router.vlm_pipeline import DiagnosticScoutingAnalyzer, VLMPipeline
+    from src.router.diagnostic_scouting import DiagnosticScoutingAnalyzer
+    from src.router.vlm_pipeline import VLMPipeline
 
     exports = {
         "VLMPipeline": VLMPipeline,

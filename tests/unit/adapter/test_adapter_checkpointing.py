@@ -56,6 +56,7 @@ def test_adapter_checkpoint_save_load(monkeypatch, tmp_path):
             "run_id": "run_123",
             "progress_state": {"epoch": 2, "global_step": 42},
             "history": {"train_loss": [0.3, 0.2]},
+            "best_metric_state": {"best_metric_name": "val_loss", "best_metric_value": 0.2},
         },
         run_id="run_123",
     )
@@ -64,3 +65,4 @@ def test_adapter_checkpoint_save_load(monkeypatch, tmp_path):
     loaded = adapter.load_training_checkpoint(str(saved))
     assert loaded["run_id"] == "run_123"
     assert loaded["progress_state"]["global_step"] == 42
+    assert loaded["best_metric_state"]["best_metric_name"] == "val_loss"

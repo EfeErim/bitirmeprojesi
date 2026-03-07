@@ -5,33 +5,22 @@ SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 """
 
 import copy
-import json
 import logging
 import os
-import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
 from PIL import Image
 
-from src.router.analysis_results import (
-    build_sam3_analysis_result,
-    init_sam3_stage_timings,
-    summarize_sam3_stage_timings,
-)
+from src.router import clip_runtime, sam3_runtime
 from src.router.batch_output_utils import analysis_to_batch_item
 from src.router.compatibility_utils import compatible_parts_for_crop
-from src.router.confidence_utils import (
-    passes_open_set_gate,
-    resolve_effective_confidence_threshold,
-)
 from src.router.dependency_utils import check_vlm_dependencies
 from src.router.pipeline_flow_utils import (
     build_process_image_response,
     empty_analysis_result,
     resolve_active_analyzer,
-    resolve_effective_max_detections,
 )
 from src.router.policy_taxonomy_utils import (
     apply_runtime_profile,
@@ -42,33 +31,7 @@ from src.router.policy_taxonomy_utils import (
     policy_value,
     resolve_requested_profile,
 )
-from src.router.prompt_clip_utils import (
-    aggregate_prompt_logits,
-    build_prompt_batch,
-    build_prompt_ensemble,
-    crop_prompt_aliases,
-    get_clip_logit_scale,
-    get_prompt_templates_for_type,
-    open_set_unknown_prompts,
-)
-from src.router.roi_helpers import (
-    bbox_area_ratio,
-    bbox_iou,
-    coerce_image_input,
-    extract_roi,
-    sanitize_bbox,
-    suppress_overlapping_detections,
-    tensor_to_pil,
-)
-from src.router.roi_pipeline import (
-    classify_sam3_roi_candidate,
-    collect_sam3_roi_candidates,
-    run_sam3_roi_classification_stage,
-)
-from src.router.runtime_settings import (
-    build_sam3_runtime_settings,
-    resolve_sam3_stage_order,
-)
+from src.router.roi_helpers import coerce_image_input
 from src.router.sam3_output_utils import (
     normalize_sam3_results,
     sam3_error_result,
@@ -451,88 +414,6 @@ class VLMPipeline:
                 f"For BioCLIP models, ensure open_clip_torch is installed."
             ) from e
 
-    @staticmethod
-    def _crop_prompt_aliases() -> Dict[str, List[str]]:
-        """Return crop prompt aliases including scientific names where available."""
-        return crop_prompt_aliases()
-
-    def _build_prompt_ensemble(self, label: str, label_type: str) -> List[str]:
-        """Build multiple prompt variants for a single semantic class label."""
-        return build_prompt_ensemble(label=label, label_type=label_type, vlm_config=self.vlm_config)
-
-    def _build_prompt_batch(self, labels: List[str], label_type: str) -> Tuple[List[str], List[int]]:
-        """Build prompt list and class index mapping for class-level aggregation."""
-        return build_prompt_batch(labels=labels, label_type=label_type, vlm_config=self.vlm_config)
-
-    @staticmethod
-    def _open_set_unknown_prompts(label_type: str, known_labels: Optional[List[str]] = None) -> List[str]:
-        """Prompt set for unknown/out-of-scope rejection.
-        
-        Uses truly out-of-domain examples to create a distinct visual concept
-        for what is NOT a target crop/part, preventing false positives.
-        """
-        return open_set_unknown_prompts(label_type=label_type, known_labels=known_labels)
-
-    @staticmethod
-    def _aggregate_prompt_logits(logits: torch.Tensor, prompt_to_class: List[int], num_classes: int) -> torch.Tensor:
-        """Aggregate prompt-level logits into class-level logits using max pooling."""
-        return aggregate_prompt_logits(logits, prompt_to_class, num_classes)
-
-    @staticmethod
-    def _get_clip_logit_scale(model: Any) -> float:
-        """Get CLIP logit scale (temperature inverse) with safe fallback."""
-        return get_clip_logit_scale(model)
-
-    @staticmethod
-    def _tensor_to_pil(image_tensor: torch.Tensor) -> Image.Image:
-        """Convert CHW or NCHW tensor to PIL image."""
-        return tensor_to_pil(image_tensor)
-
-    @staticmethod
-    def _coerce_image_input(image_input: Any) -> Tuple[Image.Image, Tuple[int, int, int]]:
-        """Normalize supported image inputs to PIL and return a best-effort image_size tuple.
-
-        Supported inputs:
-        - torch.Tensor (CHW or NCHW)
-        - str / pathlib.Path file path
-        - PIL.Image.Image
-        - numpy.ndarray (HWC/CHW)
-        """
-        return coerce_image_input(image_input)
-
-    @staticmethod
-    def _extract_roi(image: Image.Image, bbox: Optional[List[float]], pad_ratio: float = 0.08) -> Image.Image:
-        """Extract padded ROI from bbox; fallback to original image when bbox invalid."""
-        return extract_roi(image, bbox, pad_ratio=pad_ratio)
-
-    @staticmethod
-    def _sanitize_bbox(bbox: Optional[List[float]], image_width: int, image_height: int) -> Optional[List[float]]:
-        """Clamp bbox to image bounds and return None when invalid."""
-        return sanitize_bbox(bbox, image_width, image_height)
-
-    @staticmethod
-    def _bbox_area_ratio(bbox: Optional[List[float]], image_width: int, image_height: int) -> float:
-        """Compute normalized bbox area in [0,1], returning 0 for invalid boxes."""
-        return bbox_area_ratio(bbox, image_width, image_height)
-
-    @staticmethod
-    def _bbox_iou(box_a: Optional[List[float]], box_b: Optional[List[float]]) -> float:
-        """Compute IoU between two xyxy boxes."""
-        return bbox_iou(box_a, box_b)
-
-    def _suppress_overlapping_detections(
-        self,
-        detections: List[Dict[str, Any]],
-        iou_threshold: float = 0.75,
-        same_crop_only: bool = True,
-    ) -> List[Dict[str, Any]]:
-        """Suppress highly-overlapping detections by keeping higher-quality detections first."""
-        return suppress_overlapping_detections(
-            detections,
-            iou_threshold=iou_threshold,
-            same_crop_only=same_crop_only,
-        )
-
     def _score_parts_conditioned_on_crop(
         self,
         roi_image: Image.Image,
@@ -557,7 +438,8 @@ class VLMPipeline:
         if not conditioned_terms:
             return {}
 
-        _, _, conditioned_scores = self._clip_score_labels_ensemble(
+        _, _, conditioned_scores = clip_runtime.clip_score_labels_ensemble(
+            self,
             roi_image,
             conditioned_terms,
             label_type='part',
@@ -841,15 +723,7 @@ class VLMPipeline:
         if not labels:
             return 'unknown', 0.0
             
-        return self._clip_score_labels(
-            image, 
-            labels,
-            label_type=label_type
-        )
-
-    def _get_prompt_templates_for_type(self, label_type: str) -> List[str]:
-        """Get dynamic prompt templates from config."""
-        return get_prompt_templates_for_type(self.vlm_config, label_type)
+        return self._clip_score_labels(image, labels, label_type=label_type)
 
     def _clip_score_labels_ensemble(
         self, 
@@ -858,145 +732,13 @@ class VLMPipeline:
         label_type: str = 'generic',
         num_prompts: Optional[int] = None
     ) -> Tuple[str, float, Dict[str, float]]:
-        """
-        Score text labels against image with multiple prompts for robustness.
-        Returns: (best_label, best_score, all_scores_dict)
-        """
-        if not labels:
-            return 'unknown', 0.0, {}
-
-        templates = self._get_prompt_templates_for_type(label_type)
-        if num_prompts is not None:
-            try:
-                prompt_limit = int(num_prompts)
-            except Exception:
-                prompt_limit = 0
-            if prompt_limit > 0:
-                templates = templates[:prompt_limit]
-        label_ensemble_scores: Dict[str, List[float]] = {label: [] for label in labels}
-
-        open_clip_image_embedding: Optional[torch.Tensor] = None
-        if self.bioclip_backend == 'open_clip':
-            open_clip_image_embedding = self._get_open_clip_image_embedding(image)
-        
-        # Score each label with each prompt template
-        for template in templates:
-            prompts = [template.format(term=label) for label in labels]
-            if open_clip_image_embedding is not None:
-                scores = self._score_open_clip_with_image_embedding(open_clip_image_embedding, prompts)
-            else:
-                scores = self._encode_and_score(image, prompts)
-            for label, score in zip(labels, scores):
-                label_ensemble_scores[label].append(float(score))
-        
-        # Average scores across prompts
-        label_avg_scores = {
-            label: float(np.mean(scores)) if scores else 0.0
-            for label, scores in label_ensemble_scores.items()
-        }
-        
-        best_label = max(label_avg_scores, key=lambda label: label_avg_scores[label]) if label_avg_scores else 'unknown'
-        best_score = label_avg_scores.get(best_label, 0.0)
-        
-        return best_label, best_score, label_avg_scores
-
-    def _get_open_clip_text_embeddings(self, prompts: List[str]) -> torch.Tensor:
-        """Get normalized text embeddings for prompts with lightweight in-memory caching."""
-        cache_key = tuple(prompts)
-        cached = self._open_clip_text_embedding_cache.get(cache_key)
-        if cached is not None:
-            return cached
-
-        processor = self.bioclip_processor
-        model = self.bioclip
-        if not isinstance(processor, dict) or model is None:
-            raise RuntimeError("open_clip text encoding requested before BioCLIP runtime was initialized.")
-
-        tokenizer = processor['tokenizer']
-        text_tokens = tokenizer(prompts).to(self.device)
-        with torch.no_grad():
-            text_embeds = model.encode_text(text_tokens)
-            text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-
-        max_cache_size = int(self.vlm_config.get('open_clip_text_cache_size', 64))
-        if len(self._open_clip_text_embedding_cache) >= max_cache_size and max_cache_size > 0:
-            oldest_key = next(iter(self._open_clip_text_embedding_cache))
-            self._open_clip_text_embedding_cache.pop(oldest_key, None)
-        if max_cache_size > 0:
-            self._open_clip_text_embedding_cache[cache_key] = text_embeds
-        return text_embeds
-
-    def _get_open_clip_image_embedding(self, image: Image.Image) -> torch.Tensor:
-        """Encode a single image once for open_clip scoring."""
-        processor = self.bioclip_processor
-        model = self.bioclip
-        if not isinstance(processor, dict) or model is None:
-            raise RuntimeError("open_clip image encoding requested before BioCLIP runtime was initialized.")
-
-        preprocess = processor['preprocess']
-        image_tensor = preprocess(image).unsqueeze(0).to(self.device)
-        with torch.no_grad():
-            image_embeds = model.encode_image(image_tensor)
-            image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-        return image_embeds
-
-    def _score_open_clip_with_image_embedding(self, image_embedding: torch.Tensor, prompts: List[str]) -> List[float]:
-        """Score prompts against a precomputed open_clip image embedding."""
-        text_embeds = self._get_open_clip_text_embeddings(prompts)
-        if self.bioclip is None:
-            raise RuntimeError("open_clip scoring requested before BioCLIP runtime was initialized.")
-        logit_scale = self._get_clip_logit_scale(self.bioclip)
-        with torch.no_grad():
-            logits_per_image = (image_embedding @ text_embeds.T) * logit_scale
-            scores = torch.softmax(logits_per_image, dim=-1)[0]
-        return scores.detach().cpu().numpy().tolist()
-
-    def _encode_and_score(self, image: Image.Image, prompts: List[str]) -> List[float]:
-        """Encode image and score against text prompts."""
-        try:
-            from PIL import Image as PILImage
-            # Ensure image is PIL
-            if not isinstance(image, PILImage.Image):
-                image = PILImage.fromarray(np.array(image))
-
-            if self.bioclip_backend == 'open_clip':
-                image_embedding = self._get_open_clip_image_embedding(image)
-                return self._score_open_clip_with_image_embedding(image_embedding, prompts)
-            else:
-                processor = self.bioclip_processor
-                model = self.bioclip
-                if processor is None or model is None:
-                    raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
-
-                model_inputs = processor(
-                    text=prompts,
-                    images=image,
-                    return_tensors='pt',
-                    padding=True
-                )
-                model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
-
-                with torch.no_grad():
-                    outputs = model(**model_inputs)
-                    if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
-                        logits_per_image = outputs.logits_per_image
-                    elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
-                        image_embeds = outputs.image_embeds
-                        text_embeds = outputs.text_embeds
-                        image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                        text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                        logit_scale = self._get_clip_logit_scale(model)
-                        logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
-                    else:
-                        raise RuntimeError(
-                            'BioCLIP model output does not provide logits_per_image or embeddable outputs'
-                        )
-                    scores = torch.softmax(logits_per_image, dim=-1)[0]
-
-            return scores.detach().cpu().numpy().tolist()
-        except Exception as e:
-            logger.error(f"Encoding failed: {e}")
-            return [0.0] * len(prompts)
+        return clip_runtime.clip_score_labels_ensemble(
+            self,
+            image,
+            labels,
+            label_type=label_type,
+            num_prompts=num_prompts,
+        )
 
     def _select_best_crop_with_fallback(
         self,
@@ -1051,127 +793,7 @@ class VLMPipeline:
         labels: List[str],
         label_type: str = 'generic'
     ) -> Tuple[str, float]:
-        """Score text labels against image using CLIP/BioCLIP (on-the-fly encoding)."""
-        if not labels:
-            return 'unknown', 0.0
-
-        text_prompts, prompt_to_class = self._build_prompt_batch(labels, label_type=label_type)
-        if not text_prompts:
-            return 'unknown', 0.0
-
-        known_class_count = len(labels)
-        use_open_set = bool(self.open_set_enabled and label_type == 'crop')
-        unknown_class_index = known_class_count
-        if use_open_set:
-            unknown_prompts = self._open_set_unknown_prompts(label_type=label_type, known_labels=labels)
-            text_prompts.extend(unknown_prompts)
-            prompt_to_class.extend([unknown_class_index] * len(unknown_prompts))
-            class_count = known_class_count + 1
-        else:
-            class_count = known_class_count
-            
-        if self.bioclip_backend == 'open_clip':
-            logit_scale = self._get_clip_logit_scale(self.bioclip)
-            image_embeds = self._get_open_clip_image_embedding(image)
-            text_embeds = self._get_open_clip_text_embeddings(text_prompts)
-
-            with torch.no_grad():
-                prompt_logits = (image_embeds @ text_embeds.T) * logit_scale
-                logits = self._aggregate_prompt_logits(prompt_logits, prompt_to_class, class_count)
-                probabilities = torch.softmax(logits, dim=-1)
-        else:
-            processor = self.bioclip_processor
-            model = self.bioclip
-            if processor is None or model is None:
-                raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
-
-            model_inputs = processor(
-                text=text_prompts,
-                images=image,
-                return_tensors='pt',
-                padding=True
-            )
-            model_inputs = {k: v.to(self.device) for k, v in model_inputs.items()}
-
-            with torch.no_grad():
-                outputs = model(**model_inputs)
-                if hasattr(outputs, 'logits_per_image') and outputs.logits_per_image is not None:
-                    logits = outputs.logits_per_image
-                elif hasattr(outputs, 'image_embeds') and hasattr(outputs, 'text_embeds'):
-                    image_embeds = outputs.image_embeds
-                    text_embeds = outputs.text_embeds
-                    image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                    logit_scale = self._get_clip_logit_scale(model)
-                    logits = (image_embeds @ text_embeds.T) * logit_scale
-                else:
-                    raise RuntimeError(
-                        'BioCLIP model output does not provide logits_per_image or embeddable outputs'
-                    )
-
-                logits = self._aggregate_prompt_logits(logits, prompt_to_class, class_count)
-                probabilities = torch.softmax(logits, dim=-1)
-
-        if use_open_set:
-            known_probs = probabilities[:, :known_class_count]
-            unknown_prob = probabilities[:, unknown_class_index]
-            best_confidence, best_index = torch.max(known_probs, dim=-1)
-
-            if known_class_count > 1:
-                topk_conf, _ = torch.topk(known_probs, k=2, dim=-1)
-                second_confidence = topk_conf[:, 1]
-            else:
-                second_confidence = torch.zeros_like(best_confidence)
-
-            class_index = int(best_index.item())
-            confidence = float(best_confidence.item())
-            unknown_confidence = float(unknown_prob.item())
-            margin = confidence - float(second_confidence.item())
-
-            rejection_reasons: List[str] = []
-            if unknown_confidence >= confidence:
-                rejection_reasons.append(
-                    f"unknown_confidence ({unknown_confidence:.4f}) >= confidence ({confidence:.4f})"
-                )
-            if confidence < self.open_set_min_confidence:
-                rejection_reasons.append(
-                    f"confidence ({confidence:.4f}) < threshold ({self.open_set_min_confidence:.4f})"
-                )
-            if margin < self.open_set_margin:
-                rejection_reasons.append(
-                    f"margin ({margin:.4f}) < threshold ({self.open_set_margin:.4f})"
-                )
-
-            if logger.isEnabledFor(logging.DEBUG):
-                debug_info = {
-                    'label_type': label_type,
-                    'known_labels': labels,
-                    'known_class_probabilities': {
-                        labels[i]: float(known_probs[0, i].item()) if i < len(labels) else None
-                        for i in range(known_class_count)
-                    },
-                    'unknown_probability': unknown_confidence,
-                    'best_known_label': labels[class_index] if class_index < len(labels) else 'unknown',
-                    'best_known_confidence': confidence,
-                    'second_known_confidence': float(second_confidence.item()),
-                    'margin_best_vs_second': margin,
-                    'threshold_min_confidence': self.open_set_min_confidence,
-                    'threshold_margin': self.open_set_margin,
-                    'rejection_reasons': list(rejection_reasons),
-                }
-                status = "REJECTED as unknown" if rejection_reasons else f"ACCEPTED {debug_info['best_known_label']}"
-                logger.debug("[OPEN-SET] %s: %s", status, json.dumps(debug_info, indent=2, default=str))
-
-            if rejection_reasons:
-                return 'unknown', max(unknown_confidence, confidence)
-            label = labels[class_index] if class_index < len(labels) else 'unknown'
-            return label, confidence
-
-        best_confidence, best_index = torch.max(probabilities, dim=-1)
-        class_index = int(best_index.item())
-        confidence = float(best_confidence.item())
-        label = labels[class_index] if class_index < len(labels) else 'unknown'
-        return label, confidence
+        return clip_runtime.clip_score_labels(self, image, labels, label_type=label_type)
 
     def process_image(self, image_tensor: torch.Tensor) -> Dict[str, Any]:
         """High-level processing entrypoint expected by tests.
@@ -1200,7 +822,7 @@ class VLMPipeline:
         Returns:
             Dictionary with analysis results
         """
-        pil_image, image_size = self._coerce_image_input(image_tensor)
+        pil_image, image_size = coerce_image_input(image_tensor)
 
         if not (self.enabled and self.models_loaded):
             return empty_analysis_result(image_size)
@@ -1209,8 +831,7 @@ class VLMPipeline:
         if analyzer is None:
             return empty_analysis_result(image_size)
 
-        effective_max_detections = resolve_effective_max_detections(max_detections)
-        return analyzer(pil_image, image_size, confidence_threshold, effective_max_detections)
+        return analyzer(pil_image, image_size, confidence_threshold, max_detections)
 
     def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any]]]:
         """Resolve analysis function for active pipeline."""
@@ -1219,58 +840,6 @@ class VLMPipeline:
         }
         return resolve_active_analyzer(self.actual_pipeline, analyzers)
 
-    def _sam3_stage_order(self) -> List[str]:
-        """Resolve SAM3 stage execution order from policy graph."""
-        return resolve_sam3_stage_order(self._policy_value)
-
-    def _resolve_effective_confidence_threshold(self, confidence_threshold: float) -> float:
-        """Resolve profile/policy-adjusted confidence threshold with optional clamps."""
-        return resolve_effective_confidence_threshold(confidence_threshold, self._policy_value)
-
-    def _postprocess_sam3_detections(
-        self,
-        detections: List[Dict[str, Any]],
-        settings: Dict[str, Any],
-        effective_max_detections: Optional[int],
-        stage_order: List[str],
-    ) -> List[Dict[str, Any]]:
-        """Finalize SAM3 detections with optional dedupe and cap."""
-        ordered = sorted(detections, key=lambda d: float(d.get('_quality_score', 0.0)), reverse=True)
-        if self._policy_enabled('dedupe', True) and 'postprocess' in stage_order:
-            ordered = self._suppress_overlapping_detections(
-                ordered,
-                iou_threshold=settings['detection_nms_iou_threshold'],
-                same_crop_only=settings['detection_nms_same_crop_only'],
-            )
-        if effective_max_detections is not None:
-            ordered = ordered[:effective_max_detections]
-        for det in ordered:
-            det.pop('_quality_score', None)
-        return ordered
-
-    def _run_sam3_roi_filter_stage(
-        self,
-        boxes: Any,
-        scores: Any,
-        image_width: int,
-        image_height: int,
-        settings: Dict[str, Any],
-        stage_order: List[str],
-    ) -> Tuple[List[Dict[str, Any]], int]:
-        """Execute ROI candidate filtering stage."""
-        apply_roi_filters = self._policy_enabled('roi_filter', True) and 'roi_filter' in stage_order
-        candidates, roi_seen = collect_sam3_roi_candidates(
-            boxes=boxes,
-            scores=scores,
-            image_width=image_width,
-            image_height=image_height,
-            settings=settings,
-            apply_roi_filters=apply_roi_filters,
-            sanitize_bbox_fn=self._sanitize_bbox,
-            bbox_area_ratio_fn=self._bbox_area_ratio,
-        )
-        return candidates, roi_seen
-    
     def _analyze_image_sam3(
         self,
         pil_image: Image.Image,
@@ -1279,123 +848,14 @@ class VLMPipeline:
         max_detections: Optional[int] = None
     ) -> Dict[str, Any]:
         """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
-        start_time = time.perf_counter()
-        timing_logs_enabled = bool(self.vlm_config.get('timing_logs_enabled', True))
-        stage_timings_ms = init_sam3_stage_timings()
-        stage_start = time.perf_counter()
-        
-        effective_threshold = self._resolve_effective_confidence_threshold(confidence_threshold)
-        effective_max_detections = resolve_effective_max_detections(max_detections)
-        image_width, image_height = pil_image.size
-        stage_timings_ms['preprocess'] = (time.perf_counter() - stage_start) * 1000.0
-
-        settings = build_sam3_runtime_settings(self._policy_value, self.vlm_config, effective_threshold)
-        sam3_threshold = settings['sam3_threshold']
-        
-        # SAM3 with configurable text prompt (default "plant" works for leaves, fruits, stems, etc.)
-        sam3_prompt = self.vlm_config.get('sam3_text_prompt', 'plant')
-        stage_start = time.perf_counter()
-        sam3_results = self._run_sam3(pil_image, prompt=sam3_prompt, threshold=sam3_threshold)
-        stage_timings_ms['sam3_inference'] = (time.perf_counter() - stage_start) * 1000.0
-        masks = sam3_results.get('masks', [])
-        boxes = sam3_results.get('boxes', [])
-        scores = sam3_results.get('scores', [])
-
-        if torch.is_tensor(masks):
-            mask_count = int(masks.shape[0]) if masks.ndim > 0 else int(masks.numel() > 0)
-        elif isinstance(masks, (list, tuple)):
-            mask_count = len(masks)
-        else:
-            mask_count = 0
-        
-        detections = []
-        stage_order = self._sam3_stage_order()
-        roi_seen = 0
-        roi_kept = 0
-        roi_classification_calls = 0
-        if mask_count > 0:
-            roi_stage_start = time.perf_counter()
-
-            candidates, roi_seen = self._run_sam3_roi_filter_stage(
-                boxes=boxes,
-                scores=scores,
-                image_width=image_width,
-                image_height=image_height,
-                settings=settings,
-                stage_order=stage_order,
-            )
-
-            detections, roi_kept, roi_classification_calls, roi_classification_ms = run_sam3_roi_classification_stage(
-                candidates=candidates,
-                settings=settings,
-                stage_order=stage_order,
-                policy_enabled_fn=self._policy_enabled,
-                classify_candidate_fn=lambda candidate: classify_sam3_roi_candidate(
-                    pil_image=pil_image,
-                    candidate=candidate,
-                    image_width=image_width,
-                    image_height=image_height,
-                    settings=settings,
-                    part_labels=self.part_labels,
-                    crop_labels=self.crop_labels,
-                    policy_enabled_fn=self._policy_enabled,
-                    extract_roi_fn=self._extract_roi,
-                    clip_score_labels_ensemble_fn=self._clip_score_labels_ensemble,
-                    compute_leaf_likeness_fn=self._compute_leaf_likeness,
-                    rebalance_part_scores_for_leaf_like_roi_fn=self._rebalance_part_scores_for_leaf_like_roi,
-                    select_best_crop_with_fallback_fn=self._select_best_crop_with_fallback,
-                    compatible_parts_for_crop_fn=lambda crop_label: compatible_parts_for_crop(
-                        crop_label,
-                        self.crop_part_compatibility,
-                        self.part_labels,
-                    ),
-                    score_parts_conditioned_on_crop_fn=self._score_parts_conditioned_on_crop,
-                    apply_generic_part_penalty_fn=self._apply_generic_part_penalty,
-                    select_part_label_with_specificity_fn=self._select_part_label_with_specificity,
-                    apply_leaf_like_override_fn=self._apply_leaf_like_override,
-                ),
-                passes_open_set_gate_fn=passes_open_set_gate,
-            )
-            stage_timings_ms['roi_classification'] += roi_classification_ms
-            stage_timings_ms['roi_total'] = (time.perf_counter() - roi_stage_start) * 1000.0
-
-        stage_start = time.perf_counter()
-        detections = self._postprocess_sam3_detections(
-            detections=detections,
-            settings=settings,
-            effective_max_detections=effective_max_detections,
-            stage_order=stage_order,
-        )
-        stage_timings_ms['postprocess'] = (time.perf_counter() - stage_start) * 1000.0
-        
-        elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-        stage_summary = summarize_sam3_stage_timings(stage_timings_ms, roi_seen, roi_classification_calls)
-
-        if timing_logs_enabled:
-            logger.info(
-                (
-                    "[TIMING] SAM3 pipeline | total=%.2fms | sam3=%.2fms | roi_total=%.2fms "
-                    "| roi_class=%.2fms | rois=%d | kept=%d"
-                ),
-                elapsed_ms,
-                stage_timings_ms['sam3_inference'],
-                stage_timings_ms['roi_total'],
-                stage_timings_ms['roi_classification'],
-                roi_seen,
-                roi_kept,
-            )
-
-        return build_sam3_analysis_result(
-            detections=detections,
+        context = sam3_runtime.build_request_context(
+            self,
+            pil_image=pil_image,
             image_size=image_size,
-            elapsed_ms=elapsed_ms,
-            stage_summary=stage_summary,
-            roi_seen=roi_seen,
-            roi_kept=roi_kept,
-            roi_classification_calls=roi_classification_calls,
-            mask_count=mask_count,
-            sam3_threshold=sam3_threshold,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
         )
+        return sam3_runtime.analyze_sam3_image(self, context)
     
     def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
         """Run SAM3 instance segmentation with text prompt."""
