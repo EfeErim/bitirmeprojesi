@@ -39,12 +39,14 @@ jobs:
             src/shared \
             src/data \
             src/training/services \
+            src/training/continual_sd_lora.py \
+            src/router/vlm_pipeline.py \
             src/workflows \
             src/pipeline/router_adapter_runtime.py \
             src/pipeline/inference_payloads.py \
             src/adapter/independent_crop_adapter.py \
             src/core/config_manager.py \
-            src/utils/data_loader.py \
+            tests/unit/imports \
             tests/unit/shared \
             tests/unit/workflows \
             tests/unit/adapter/test_continual_adapter.py \
@@ -52,13 +54,13 @@ jobs:
           mypy --follow-imports skip \
             src/shared \
             src/data \
-            src/training/services \
+            src/training/continual_sd_lora.py \
+            src/router/vlm_pipeline.py \
             src/workflows \
             src/pipeline/router_adapter_runtime.py \
             src/pipeline/inference_payloads.py \
             src/adapter/independent_crop_adapter.py \
             src/core/config_manager.py \
-            src/utils/data_loader.py \
             scripts/benchmark_surfaces.py
 
       - name: Run unit tests

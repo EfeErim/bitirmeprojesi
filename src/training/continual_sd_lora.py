@@ -30,15 +30,10 @@ from src.training.services import (
     build_grad_scaler,
     capture_rng_state,
     compute_config_hash,
-    compute_plan_metrics,
     configure_runtime_reproducibility,
-    load_plan_targets,
-    resolve_amp_dtype,
     restore_ood_state,
     restore_rng_state,
     serialize_ood_state,
-    validate_plan_metrics,
-    write_plan_metric_artifact,
 )
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
@@ -296,7 +291,7 @@ class ContinualSDLoRATrainer:
         self.ood_detector = ContinualOODDetector(threshold_factor=self.config.ood_threshold_factor)
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
-        self._config_hash = self._compute_config_hash(self._contract)
+        self._config_hash = compute_config_hash(self._contract)
         self._peft_available = LoraConfig is not None
         self._adapter_wrapped = False
         self._peft_warning_emitted = False
@@ -304,13 +299,6 @@ class ContinualSDLoRATrainer:
         self._planned_epochs = int(max(1, self.config.num_epochs))
         self._accumulation_counter = 0
         self.best_metric_state: Dict[str, Any] = {}
-        self._configure_runtime_reproducibility()
-
-    @staticmethod
-    def _compute_config_hash(contract: Dict[str, Any]) -> str:
-        return compute_config_hash(contract)
-
-    def _configure_runtime_reproducibility(self) -> None:
         configure_runtime_reproducibility(self.config, np_module=np)
 
     def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
@@ -325,15 +313,6 @@ class ContinualSDLoRATrainer:
         self._planned_scheduler_steps = int(optimizer_steps)
         if self.optimizer is not None:
             self._ensure_scheduler()
-
-    def _resolve_amp_dtype(self) -> Optional[torch.dtype]:
-        return resolve_amp_dtype(self.device, self.config.mixed_precision)
-
-    def _autocast_context(self) -> Any:
-        return autocast_context(self.device, self.config.mixed_precision)
-
-    def _amp_scaler_enabled(self) -> bool:
-        return self.scaler.is_enabled()
 
     def _ensure_scheduler(self) -> None:
         if self.optimizer is None or self.scheduler is not None or self.config.scheduler_name == "none":
@@ -376,53 +355,6 @@ class ContinualSDLoRATrainer:
         if self.scheduler is None:
             return
         self.scheduler.step()
-
-    @staticmethod
-    def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
-        return load_plan_targets(spec_path)
-
-    @staticmethod
-    def compute_plan_metrics(
-        *,
-        y_true: Sequence[int],
-        y_pred: Sequence[int],
-        ood_labels: Optional[Sequence[int]] = None,
-        ood_scores: Optional[Sequence[float]] = None,
-    ) -> Dict[str, Optional[float]]:
-        return compute_plan_metrics(
-            y_true=y_true,
-            y_pred=y_pred,
-            ood_labels=ood_labels,
-            ood_scores=ood_scores,
-        )
-
-    @classmethod
-    def validate_plan_metrics(
-        cls,
-        metrics: Dict[str, Optional[float]],
-        targets: Optional[Dict[str, float]] = None,
-        *,
-        require_ood: bool = False,
-    ) -> Dict[str, Any]:
-        return validate_plan_metrics(metrics, targets, require_ood=require_ood)
-
-    @classmethod
-    def write_plan_metric_artifact(
-        cls,
-        *,
-        output_path: Path,
-        metrics: Dict[str, Optional[float]],
-        targets: Optional[Dict[str, float]] = None,
-        require_ood: bool = False,
-        context: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        return write_plan_metric_artifact(
-            output_path=output_path,
-            metrics=metrics,
-            targets=targets,
-            require_ood=require_ood,
-            context=context,
-        )
 
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
         """Load frozen backbone, apply adapters, initialize heads."""
@@ -650,7 +582,7 @@ class ContinualSDLoRATrainer:
             raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
         images = batch["images"].to(self.device)
         labels = batch["labels"].to(self.device)
-        with self._autocast_context():
+        with autocast_context(self.device, self.config.mixed_precision):
             logits = self.forward_logits(images)
             return nn.functional.cross_entropy(
                 logits,
@@ -766,15 +698,17 @@ class ContinualSDLoRATrainer:
         feats: List[torch.Tensor] = []
         logits_list: List[torch.Tensor] = []
         labels_list: List[torch.Tensor] = []
-        self.adapter_model.eval()  # type: ignore[union-attr]
-        self.classifier.eval()  # type: ignore[union-attr]
-        self.fusion.eval()  # type: ignore[union-attr]
+        if self.adapter_model is None or self.classifier is None or self.fusion is None:
+            raise RuntimeError("Cannot calibrate OOD before adapter, classifier, and fusion are initialized.")
+        self.adapter_model.eval()
+        self.classifier.eval()
+        self.fusion.eval()
         with torch.no_grad():
             for batch in loader:
                 images = batch["images"].to(self.device)
                 labels = batch["labels"].to(self.device)
                 features = self.encode(images)
-                logits = self.classifier(features)  # type: ignore[operator]
+                logits = self.classifier(features)
                 feats.append(features.detach().cpu())
                 logits_list.append(logits.detach().cpu())
                 labels_list.append(labels.detach().cpu())
@@ -788,12 +722,14 @@ class ContinualSDLoRATrainer:
         )
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
-        self.adapter_model.eval()  # type: ignore[union-attr]
-        self.classifier.eval()  # type: ignore[union-attr]
-        self.fusion.eval()  # type: ignore[union-attr]
+        if self.adapter_model is None or self.classifier is None or self.fusion is None:
+            raise RuntimeError("Cannot predict before adapter, classifier, and fusion are initialized.")
+        self.adapter_model.eval()
+        self.classifier.eval()
+        self.fusion.eval()
         with torch.no_grad():
             features = self.encode(images.to(self.device))
-            logits = self.classifier(features)  # type: ignore[operator]
+            logits = self.classifier(features)
             probs = torch.softmax(logits, dim=1)
             confidence, indices = probs.max(dim=1)
             ood = self.ood_detector.score(features=features, logits=logits, predicted_labels=indices)
@@ -835,23 +771,6 @@ class ContinualSDLoRATrainer:
             adapter_wrapped=bool(self._adapter_wrapped),
         ).to_dict()
 
-    def _serialize_ood_state(self) -> Dict[str, Any]:
-        return serialize_ood_state(self.ood_detector)
-
-    def _restore_ood_state(self, payload: Dict[str, Any]) -> None:
-        self.ood_detector = restore_ood_state(
-            payload,
-            default_threshold_factor=self.config.ood_threshold_factor,
-        )
-
-    @staticmethod
-    def _capture_rng_state() -> Dict[str, Any]:
-        return capture_rng_state(np_module=np)
-
-    @staticmethod
-    def _restore_rng_state(payload: Dict[str, Any]) -> None:
-        restore_rng_state(payload, np_module=np)
-
     def snapshot_training_state(self) -> TrainingCheckpointPayload:
         if self.adapter_model is None or self.classifier is None or self.fusion is None:
             raise RuntimeError("Cannot snapshot training state before initialization.")
@@ -870,8 +789,8 @@ class ContinualSDLoRATrainer:
             optimizer_state=self.optimizer.state_dict() if self.optimizer is not None else None,
             scheduler_state=self.scheduler.state_dict() if self.scheduler is not None else None,
             scaler_state=self.scaler.state_dict() if self.scaler.is_enabled() else None,
-            ood_state=self._serialize_ood_state(),
-            rng_state=self._capture_rng_state(),
+            ood_state=serialize_ood_state(self.ood_detector),
+            rng_state=capture_rng_state(np_module=np),
             best_metric_state=dict(self.best_metric_state),
             current_epoch=int(self.current_epoch),
             optimizer_steps=int(self.optimizer_steps),
@@ -921,8 +840,11 @@ class ContinualSDLoRATrainer:
 
         ood_state = checkpoint.ood_state
         if isinstance(ood_state, dict):
-            self._restore_ood_state(ood_state)
-        self._restore_rng_state(checkpoint.rng_state)
+            self.ood_detector = restore_ood_state(
+                ood_state,
+                default_threshold_factor=self.config.ood_threshold_factor,
+            )
+        restore_rng_state(checkpoint.rng_state, np_module=np)
         self.current_epoch = int(checkpoint.current_epoch)
         self.optimizer_steps = int(checkpoint.optimizer_steps)
         self.best_metric_state = dict(checkpoint.best_metric_state)
@@ -976,7 +898,10 @@ class ContinualSDLoRATrainer:
             self.fusion.load_state_dict(torch.load(fusion_path, map_location=self.device))  # type: ignore[union-attr]
         ood_state = meta.get("ood_state", {})
         if isinstance(ood_state, dict) and ood_state:
-            self._restore_ood_state(ood_state)
+            self.ood_detector = restore_ood_state(
+                ood_state,
+                default_threshold_factor=self.config.ood_threshold_factor,
+            )
         else:
             self.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
         return meta

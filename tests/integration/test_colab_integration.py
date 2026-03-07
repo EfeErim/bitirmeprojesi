@@ -36,8 +36,12 @@ def test_continual_config_rejects_low_bit_payload():
 
 
 def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path):
-    from src.training import continual_sd_lora as continual_module
     from src.adapter import independent_crop_adapter as adapter_module
+
+    class FakeTrainerConfig:
+        @classmethod
+        def from_training_config(cls, _payload):
+            return cls()
 
     class FakeTrainer:
         def __init__(self, config):
@@ -81,7 +85,11 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
             )
 
         def restore_training_state(self, payload):
-            checkpoint = payload if isinstance(payload, TrainingCheckpointPayload) else TrainingCheckpointPayload.from_dict(payload)
+            checkpoint = (
+                payload
+                if isinstance(payload, TrainingCheckpointPayload)
+                else TrainingCheckpointPayload.from_dict(payload)
+            )
             self.class_to_idx = dict(checkpoint.class_to_idx)
             return checkpoint
 
@@ -108,8 +116,7 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
         def load_adapter(self, adapter_dir):
             return {}
 
-    monkeypatch.setattr(continual_module, "ContinualSDLoRATrainer", FakeTrainer)
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy"])

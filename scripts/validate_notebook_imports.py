@@ -48,7 +48,7 @@ def test_continual_trainer_imports() -> bool:
         from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
         from src.training.session import ContinualTrainingSession
         from src.training.validation import evaluate_model
-        from src.workflows import TrainingWorkflow
+        from src.workflows.training import TrainingWorkflow
 
         config = ContinualSDLoRAConfig.from_training_config(
             {
@@ -137,7 +137,7 @@ def test_runtime_surface() -> bool:
     print(f"\nTesting {gate_label(step_id, 'router runtime surface')}...")
     try:
         from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
-        from src.workflows import InferenceWorkflow
+        from src.workflows.inference import InferenceWorkflow
 
         runtime = RouterAdapterRuntime(
             config={

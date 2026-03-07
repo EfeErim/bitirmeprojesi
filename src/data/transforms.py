@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any, List, Union
+from typing import TYPE_CHECKING, Any, List, Union
 
-import cv2
 import numpy as np
 import torch
 from PIL import Image
-from torchvision import transforms
+
+if TYPE_CHECKING:
+    from torchvision import transforms
 
 
-def build_image_transform(target_size: int, training: bool) -> transforms.Compose:
+def build_image_transform(target_size: int, training: bool) -> "transforms.Compose":
+    from torchvision import transforms
+
     steps: List[Any] = [transforms.Resize((target_size, target_size))]
     if training:
         steps.extend(
@@ -34,15 +37,15 @@ def preprocess_image(image: Union[np.ndarray, Image.Image], target_size: int = 2
     """Normalize a single image into an ImageNet-style tensor."""
     if isinstance(image, np.ndarray):
         if image.ndim == 2:
-            image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+            image = np.stack([image] * 3, axis=-1)
         elif image.ndim == 3:
             channels = image.shape[2]
             if channels == 1:
-                image = cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
+                image = np.repeat(image, 3, axis=2)
             elif channels == 3:
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                image = image[:, :, ::-1]
             elif channels == 4:
-                image = cv2.cvtColor(image, cv2.COLOR_BGRA2RGB)
+                image = image[:, :, [2, 1, 0]]
             else:
                 raise ValueError(f"Unsupported channel count: {channels}")
         else:

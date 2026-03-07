@@ -1,10 +1,10 @@
 from pathlib import Path
 
-from PIL import Image
 import torch
+from PIL import Image
 
-from src.utils import data_loader
-from src.utils.data_loader import create_training_loaders, dict_collate_fn
+import src.data.datasets as datasets
+from src.data.loaders import create_training_loaders, dict_collate_fn
 
 
 class DummyCropDataset:
@@ -36,7 +36,7 @@ def test_dict_collate_fn_transforms_tuple_batch():
 
 
 def test_create_training_loaders_uses_dict_collation(monkeypatch):
-    monkeypatch.setattr(data_loader, 'CropDataset', DummyCropDataset)
+    monkeypatch.setattr("src.data.loaders.CropDataset", DummyCropDataset)
 
     loaders = create_training_loaders(
         data_dir='unused',
@@ -44,6 +44,8 @@ def test_create_training_loaders_uses_dict_collation(monkeypatch):
         batch_size=2,
         num_workers=0,
         use_cache=False,
+        dataset_cls=DummyCropDataset,
+        infer_classes_fn=lambda *_args: ["healthy", "disease_a"],
     )
 
     assert {'train', 'val', 'test'} <= set(loaders.keys())
@@ -85,7 +87,7 @@ def test_crop_dataset_strict_error_policy_rejects_invalid_images(tmp_path: Path)
     bad_image.write_bytes(b"not-an-image")
 
     try:
-        data_loader.CropDataset(
+        datasets.CropDataset(
             data_dir=str(tmp_path),
             crop="tomato",
             split="train",
@@ -103,7 +105,7 @@ def test_crop_dataset_tolerant_error_policy_skips_invalid_images(tmp_path: Path)
     bad_image = tmp_path / "tomato" / "continual" / "healthy" / "bad.jpg"
     bad_image.write_bytes(b"not-an-image")
 
-    dataset = data_loader.CropDataset(
+    dataset = datasets.CropDataset(
         data_dir=str(tmp_path),
         crop="tomato",
         split="train",

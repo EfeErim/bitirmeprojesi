@@ -12,7 +12,6 @@ The repo is intentionally narrow.
 - `src/training/validation.py`
 - `src/training/types.py`
 - `src/data/`
-- `src/utils/data_loader.py`
 - `scripts/colab_checkpointing.py`
 - `scripts/colab_dataset_layout.py`
 - `scripts/colab_live_telemetry.py`

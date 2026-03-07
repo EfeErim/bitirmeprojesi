@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 
 from PIL import Image
 
-from src.workflows import InferenceWorkflow
+from src.workflows.inference import InferenceWorkflow
 
 
 def run_inference(

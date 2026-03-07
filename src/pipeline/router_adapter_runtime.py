@@ -11,6 +11,7 @@ from PIL import Image
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
+from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
     best_detection_from_analysis,
     build_adapter_unavailable_result,
@@ -18,7 +19,6 @@ from src.pipeline.inference_payloads import (
     build_unknown_crop_result,
 )
 from src.shared.contracts import InferenceResult
-from src.utils.data_loader import preprocess_image
 
 
 class RouterAdapterRuntime:

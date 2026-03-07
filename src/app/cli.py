@@ -8,8 +8,6 @@ from pathlib import Path
 
 from PIL import Image
 
-from src.workflows import InferenceWorkflow, TrainingWorkflow
-
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="AADS v6 workflow CLI")
@@ -40,6 +38,8 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "inference":
+        from src.workflows.inference import InferenceWorkflow
+
         workflow = InferenceWorkflow(
             environment=args.config_env,
             device=args.device,
@@ -54,6 +54,8 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2))
         return 0
+
+    from src.workflows.training import TrainingWorkflow
 
     workflow = TrainingWorkflow(
         environment=args.config_env,

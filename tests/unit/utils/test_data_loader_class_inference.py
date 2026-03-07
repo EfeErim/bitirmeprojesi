@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from src.utils.data_loader import CropDataset, infer_crop_classes_from_layout
+from src.data.datasets import CropDataset, infer_crop_classes_from_layout
 
 
 def _write_image(path: Path) -> None:

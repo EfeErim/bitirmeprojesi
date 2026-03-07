@@ -9,7 +9,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
-from src.utils.data_loader import create_training_loaders
+from src.data.loaders import create_training_loaders
 
 Observer = Callable[[Dict[str, Any]], None]
 

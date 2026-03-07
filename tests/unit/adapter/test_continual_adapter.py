@@ -26,6 +26,12 @@ class FakeConfig:
         return {"backbone": {"model_name": self.backbone_model_name}}
 
 
+class FakeTrainerConfig:
+    @classmethod
+    def from_training_config(cls, _payload):
+        return cls()
+
+
 class FakeTrainer:
     def __init__(self, config):
         self.config = FakeConfig()
@@ -97,7 +103,7 @@ class FakeTrainer:
 
 
 def test_adapter_lifecycle_surface(monkeypatch):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     initialized = adapter.initialize_engine(class_names=["healthy"])
@@ -111,7 +117,7 @@ def test_adapter_lifecycle_surface(monkeypatch):
 
 
 def test_adapter_builds_training_session(monkeypatch):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy"])
@@ -127,7 +133,7 @@ def test_adapter_builds_training_session(monkeypatch):
 
 
 def test_adapter_builds_training_session_without_num_epochs_on_trainer_config(monkeypatch):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy"])
@@ -142,7 +148,7 @@ def test_adapter_builds_training_session_without_num_epochs_on_trainer_config(mo
 
 
 def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy", "disease_a"])
@@ -151,7 +157,7 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
     adapter.save_adapter(str(save_dir))
 
     loaded = IndependentCropAdapter(crop_name="tomato", device="cpu")
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
     loaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
 
     assert loaded.class_to_idx
@@ -159,7 +165,7 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
 
 
 def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy", "disease_a"])
@@ -183,7 +189,7 @@ def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path)
 
 
 def test_adapter_training_checkpoint_passthrough(monkeypatch, tmp_path):
-    monkeypatch.setattr(adapter_module, "ContinualSDLoRATrainer", FakeTrainer)
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy"])

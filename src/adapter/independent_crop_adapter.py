@@ -5,18 +5,38 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional
 
 import torch
 
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
-from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
-from src.training.services import resolve_session_num_epochs
-from src.training.session import ContinualTrainingSession
-from src.training.types import TrainingCheckpointPayload
+from src.training.services.runtime import resolve_session_num_epochs
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+    from src.training.session import ContinualTrainingSession
+    from src.training.types import TrainingCheckpointPayload
+
+
+def _trainer_types() -> tuple[type["ContinualSDLoRAConfig"], type["ContinualSDLoRATrainer"]]:
+    from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+
+    return ContinualSDLoRAConfig, ContinualSDLoRATrainer
+
+
+def _training_session_type() -> type["ContinualTrainingSession"]:
+    from src.training.session import ContinualTrainingSession
+
+    return ContinualTrainingSession
+
+
+def _checkpoint_payload_type() -> type["TrainingCheckpointPayload"]:
+    from src.training.types import TrainingCheckpointPayload
+
+    return TrainingCheckpointPayload
 
 
 class IndependentCropAdapter:
@@ -36,7 +56,7 @@ class IndependentCropAdapter:
         self.schema_version = "v6"
         self.class_to_idx: Dict[str, int] = {}
         self.is_trained = False
-        self._trainer: Optional[ContinualSDLoRATrainer] = None
+        self._trainer: Optional["ContinualSDLoRATrainer"] = None
 
         logger.info("IndependentCropAdapter initialized for %s on %s", self.crop_name, self.device)
 
@@ -47,7 +67,7 @@ class IndependentCropAdapter:
         return list(self._trainer.target_modules_resolved)
 
     @property
-    def trainer(self) -> ContinualSDLoRATrainer:
+    def trainer(self) -> "ContinualSDLoRATrainer":
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
         return self._trainer
@@ -115,8 +135,9 @@ class IndependentCropAdapter:
             self.class_to_idx = {str(name): idx for idx, name in enumerate(class_names)}
 
         continual_dict = self._normalize_continual_config(config)
-        trainer_config = ContinualSDLoRAConfig.from_training_config(continual_dict)
-        self._trainer = ContinualSDLoRATrainer(trainer_config)
+        config_cls, trainer_cls = _trainer_types()
+        trainer_config = config_cls.from_training_config(continual_dict)
+        self._trainer = trainer_cls(trainer_config)
         self._trainer.initialize_engine(class_to_idx=self.class_to_idx)
         self.is_trained = True
 
@@ -150,12 +171,13 @@ class IndependentCropAdapter:
         run_id: str = "",
         checkpoint_every_n_steps: int = 0,
         checkpoint_on_exception: bool = False,
-    ) -> ContinualTrainingSession:
+    ) -> "ContinualTrainingSession":
         """Build a training session around the initialized trainer."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before build_training_session().")
         resolved_epochs = resolve_session_num_epochs(self._trainer.config, num_epochs)
-        return ContinualTrainingSession(
+        training_session_cls = _training_session_type()
+        return training_session_cls(
             self._trainer,
             train_loader,
             resolved_epochs,
@@ -203,7 +225,8 @@ class IndependentCropAdapter:
         if root.is_dir() and (root / "training_checkpoint").exists():
             root = root / "training_checkpoint"
         trainer_payload_raw = torch.load(root / "training_checkpoint.pt", map_location=self.device, weights_only=False)
-        trainer_payload = TrainingCheckpointPayload.from_dict(trainer_payload_raw)
+        trainer_payload_cls = _checkpoint_payload_type()
+        trainer_payload = trainer_payload_cls.from_dict(trainer_payload_raw)
         if self._trainer is None:
             normalized = dict(trainer_payload.trainer_config or {})
             if not normalized:
@@ -220,8 +243,9 @@ class IndependentCropAdapter:
                     "device": str(self.device),
                 }
             normalized["device"] = str(normalized.get("device", str(self.device)))
-            cfg = ContinualSDLoRAConfig.from_training_config(normalized)
-            self._trainer = ContinualSDLoRATrainer(cfg)
+            config_cls, trainer_cls = _trainer_types()
+            cfg = config_cls.from_training_config(normalized)
+            self._trainer = trainer_cls(cfg)
         trainer_payload = self._trainer.restore_training_state(trainer_payload)
         session_path = root / "session_state.json"
         session_payload = {}
@@ -284,9 +308,12 @@ class IndependentCropAdapter:
             if hasattr(self._trainer.config, "as_contract_dict")
             else {"backbone": {"model_name": getattr(self._trainer.config, "backbone_model_name", self.model_name)}}
         )
+        from src.training.services.persistence import serialize_ood_state
+
+        ood_detector = getattr(self._trainer, "ood_detector", None)
         ood_state = (
-            self._trainer._serialize_ood_state()  # type: ignore[attr-defined]
-            if hasattr(self._trainer, "_serialize_ood_state")
+            serialize_ood_state(ood_detector)
+            if hasattr(ood_detector, "class_stats")
             else {
                 "threshold_factor": 2.0,
                 "calibration_version": self.ood_calibration_version,
@@ -356,8 +383,9 @@ class IndependentCropAdapter:
             }
         normalized["device"] = str(normalized.get("device", str(self.device)))
 
-        cfg = ContinualSDLoRAConfig.from_training_config(normalized)
-        self._trainer = ContinualSDLoRATrainer(cfg)
+        config_cls, trainer_cls = _trainer_types()
+        cfg = config_cls.from_training_config(normalized)
+        self._trainer = trainer_cls(cfg)
         self._trainer.load_adapter(str(asset_dir))
         self.is_trained = True
 

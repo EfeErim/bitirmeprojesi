@@ -59,17 +59,15 @@ def _time_call(fn):
     return elapsed_ms, result
 
 
-def _build_trainer():
-    from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
-
-    cfg = ContinualSDLoRAConfig(
+def _build_trainer(config_cls, trainer_cls):
+    cfg = config_cls(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
         target_modules_strategy="all_linear_transformer",
         fusion_layers=[2],
         fusion_output_dim=4,
         device="cpu",
     )
-    trainer = ContinualSDLoRATrainer(cfg)
+    trainer = trainer_cls(cfg)
     trainer.class_to_idx = {"healthy": 0}
     trainer.adapter_model = _IdentityModule()
     trainer.classifier = nn.Linear(4, 1)
@@ -84,13 +82,17 @@ def _build_trainer():
 
 def collect_benchmarks() -> dict[str, float]:
     from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+    from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 
-    trainer_init_ms, trainer = _time_call(_build_trainer)
+    def trainer_factory():
+        return _build_trainer(ContinualSDLoRAConfig, ContinualSDLoRATrainer)
+
+    trainer_init_ms, trainer = _time_call(trainer_factory)
     train_batch_ms, _ = _time_call(
         lambda: trainer.train_batch({"images": torch.zeros(1, 3, 8, 8), "labels": torch.zeros(1, dtype=torch.long)})
     )
     snapshot = trainer.snapshot_training_state()
-    checkpoint_roundtrip_ms, _ = _time_call(lambda: _build_trainer().restore_training_state(snapshot))
+    checkpoint_roundtrip_ms, _ = _time_call(lambda: trainer_factory().restore_training_state(snapshot))
 
     runtime_root = Path(".runtime_tmp") / "benchmark_models" / "tomato" / "continual_sd_lora_adapter"
     runtime_root.mkdir(parents=True, exist_ok=True)
