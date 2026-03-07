@@ -26,12 +26,16 @@ Each generated runtime dataset includes:
 
 Normalized training controls live in `training.continual`:
 
+- `adapter.lora_r`, `adapter.lora_alpha`, `adapter.lora_dropout`
+- `adapter.target_modules_strategy`
+- `fusion.layers`, `fusion.output_dim`, `fusion.dropout`, `fusion.gating`
 - `seed`, `deterministic`
 - `optimization.grad_accumulation_steps`
 - `optimization.max_grad_norm`
 - `optimization.mixed_precision`
 - `optimization.label_smoothing`
 - `optimization.scheduler`
+- `ood.threshold_factor`
 - `early_stopping`
 - `evaluation.best_metric`
 - `evaluation.emit_ood_gate`
@@ -47,6 +51,39 @@ Colab runtime-only controls live in `colab.training`:
 - `checkpoint_on_exception`
 
 Legacy `checkpoint_interval` is still accepted as an alias for `checkpoint_every_n_steps`.
+
+## What The Notebook Trains
+
+Notebook 2 trains a continual SD-LoRA adapter rather than fine-tuning the full backbone.
+
+The training stack is:
+
+- frozen pretrained backbone
+- LoRA adapters on selected transformer linear layers
+- multi-scale feature fusion across configured backbone layers
+- classifier head trained for the current crop classes
+
+This keeps most backbone weights fixed and saves only the adapter bundle, classifier, fusion state, and metadata.
+
+## OOD Behavior
+
+After normal training, the workflow calibrates OOD statistics on known-class data.
+
+Calibration stores per-class:
+
+- fused-feature mean and variance for Mahalanobis scoring
+- logit energy mean and standard deviation
+- ensemble threshold derived from the calibrated score distribution
+
+Inference then returns both the predicted class and an OOD payload built from:
+
+- `mahalanobis_z`
+- `energy_z`
+- `ensemble_score`
+- `class_threshold`
+- `is_ood`
+
+The notebook user usually only needs to tune `training.continual.ood.threshold_factor` and decide whether validation gates should require OOD metrics through `training.continual.evaluation.require_ood_for_gate`.
 
 ## Outputs
 

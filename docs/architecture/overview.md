@@ -24,6 +24,28 @@ Training is split into four layers:
 3. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, checkpoint requests, best-metric updates, early stopping, observer events, and history accumulation.
 4. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact.
 
+## LoRA Training Details
+
+The supported training path uses one backbone and one adapter strategy only: continual SD-LoRA.
+
+At a high level:
+
+1. `ContinualSDLoRATrainer` loads a pretrained backbone and freezes its base parameters.
+2. The trainer resolves target transformer modules and applies PEFT LoRA wrappers to those linear layers.
+3. Intermediate backbone layers are sampled and fused by `MultiScaleFeatureFusion`.
+4. A classifier head is trained on top of the fused representation for the current crop classes.
+5. The saved adapter bundle includes LoRA weights, classifier weights, fusion weights, config metadata, and serialized OOD state.
+
+Configuration for this path lives in `ContinualSDLoRAConfig` and includes:
+
+- backbone model name
+- LoRA rank / alpha / dropout
+- target module selection strategy
+- fusion layer selection and output dimension
+- optimizer, scheduler, mixed precision, and early stopping controls
+
+The implementation surface for these details is `src/training/continual_sd_lora.py`, while adapter packaging and runtime metadata are handled by `src/adapter/independent_crop_adapter.py` and `src/training/services/persistence.py`.
+
 Notebook 2 now uses a two-stage dataset contract:
 
 1. User input is a flat class-root directory `<root>/<class>/<images>`.
@@ -32,6 +54,31 @@ Notebook 2 now uses a two-stage dataset contract:
 The session emits stable observer payloads. `batch_end` exposes `loss`, and epoch/validation payloads carry the validation summary plus the history snapshot used for artifact persistence and best-checkpoint decisions.
 
 Checkpoint payloads persist the normalized trainer contract, optimizer state, scheduler state, scaler state, best-metric state, optimizer-step counters, RNG state, and serialized OOD calibration state. Adapter bundles persist LoRA weights, classifier/fusion weights, and the public metadata contract in one place.
+
+## OOD Details
+
+OOD behavior is part of the canonical adapter runtime, not a separate model family.
+
+The current production path works like this:
+
+1. Train the adapter on all known classes.
+2. Run OOD calibration on known-class data after training.
+3. Persist per-class calibration statistics with the adapter.
+4. During inference, score the predicted class with an ensemble OOD detector.
+
+The detector combines two signals:
+
+- Mahalanobis distance in fused feature space, normalized as a z-score per class
+- energy score from classifier logits, also normalized as a z-score per class
+
+The runtime ensemble is `0.6 * mahalanobis_z + 0.4 * energy_z`. Each class gets its own threshold derived from the calibrated ensemble distribution, and inference marks a sample as OOD when the ensemble score exceeds that class threshold.
+
+The relevant repo mapping is:
+
+- detector logic: `src/ood/continual_ood.py`
+- streamed calibration: `src/training/services/ood_calibration.py`
+- OOD metric computation and gate checks: `src/training/services/metrics.py`
+- inference payload normalization: `src/pipeline/inference_payloads.py`
 
 Experimental ideas that are intentionally not part of the canonical path are tracked separately. The current repository note for held-out-class OOD benchmarking lives in [experimental_leave_one_class_out_ood.md](/d:/bitirme projesi/docs/architecture/experimental_leave_one_class_out_ood.md).
 

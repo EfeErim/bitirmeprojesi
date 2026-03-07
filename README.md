@@ -14,6 +14,24 @@ The workflow layer delegates to `src/pipeline/router_adapter_runtime.py`, `src/t
 
 Experimental design notes that are not part of the supported workflow live under `docs/architecture/`. The current OOD prototype note is `docs/architecture/experimental_leave_one_class_out_ood.md`.
 
+## Core Model Behavior
+
+The training engine is a continual SD-LoRA adapter pipeline:
+
+- a frozen vision backbone is loaded once
+- LoRA adapters are attached to the selected transformer linear layers
+- multi-scale backbone features are fused into one feature vector
+- a classifier head is trained on top of that fused representation
+
+The same adapter bundle also carries the runtime OOD state:
+
+- OOD calibration is run after normal training on the known classes
+- per-class calibration stores feature mean/variance plus energy statistics
+- inference scores each prediction with a weighted ensemble of Mahalanobis z-score and energy z-score
+- a class-specific threshold decides whether the sample is treated as OOD
+
+The architecture guide expands these details in `docs/architecture/overview.md`, and the experimental OOD evaluation note lives in `docs/architecture/experimental_leave_one_class_out_ood.md`.
+
 ## Quick Start
 
 Install minimal local dependencies:
