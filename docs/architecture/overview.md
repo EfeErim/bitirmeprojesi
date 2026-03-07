@@ -33,6 +33,8 @@ The session emits stable observer payloads. `batch_end` exposes `loss`, and epoc
 
 Checkpoint payloads persist the normalized trainer contract, optimizer state, scheduler state, scaler state, best-metric state, optimizer-step counters, RNG state, and serialized OOD calibration state. Adapter bundles persist LoRA weights, classifier/fusion weights, and the public metadata contract in one place.
 
+Experimental ideas that are intentionally not part of the canonical path are tracked separately. The current repository note for held-out-class OOD benchmarking lives in [experimental_leave_one_class_out_ood.md](/d:/bitirme projesi/docs/architecture/experimental_leave_one_class_out_ood.md).
+
 Output locations are surface-specific:
 
 - Notebook 2 writes adapter + notebook artifacts under `outputs/colab_notebook_training/` and writes rolling checkpoints to Drive telemetry (`.../telemetry/<RUN_ID>/checkpoints/`).

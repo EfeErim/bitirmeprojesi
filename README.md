@@ -12,6 +12,8 @@ The canonical app entrypoints are:
 
 The workflow layer delegates to `src/pipeline/router_adapter_runtime.py`, `src/training/continual_sd_lora.py`, and `src/adapter/independent_crop_adapter.py`.
 
+Experimental design notes that are not part of the supported workflow live under `docs/architecture/`. The current OOD prototype note is `docs/architecture/experimental_leave_one_class_out_ood.md`.
+
 ## Quick Start
 
 Install minimal local dependencies:
