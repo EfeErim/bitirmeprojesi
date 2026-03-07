@@ -50,15 +50,26 @@ Legacy `checkpoint_interval` is still accepted as an alias for `checkpoint_every
 
 ## Outputs
 
-- Adapter: `models/adapters/<crop>/continual_sd_lora_adapter/`
-- Training checkpoints: `checkpoints/`
+Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:
+
+- Adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+- Notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+- Validation metric gate: `outputs/colab_notebook_training/artifacts/validation/metric_gate.json`
+- Training checkpoints + manifests: `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/checkpoints/` (default root `/content/drive/MyDrive/aads_ulora`)
+
+Workflow / CLI training (`TrainingWorkflow.run(...)` and `python -m src.app.cli training ...`) writes:
+
+- Adapter: `<output_dir>/continual_sd_lora_adapter/`
 - Workflow metrics board: `<output_dir>/training_metrics/training/results.png`
 - Workflow epoch metrics: `<output_dir>/training_metrics/training/results.csv`
 - Workflow batch telemetry: `<output_dir>/training_metrics/training/batch_metrics.csv`
-- Workflow confusion matrices: `<output_dir>/training_metrics/validation/`
-- Notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-- Validation metric gate: `outputs/colab_notebook_training/artifacts/validation/metric_gate.json`
-- Telemetry: Drive or local spool from `scripts/colab_live_telemetry.py`
+- Workflow confusion/report artifacts: `<output_dir>/training_metrics/validation/`
+
+Inference default adapter lookup remains:
+
+- `models/adapters/<crop>/continual_sd_lora_adapter/`
+
+If your adapter was produced by Notebook 2, copy or move it under `models/adapters/<crop>/`, or use inference `--adapter-root`.
 
 ## Validation
 

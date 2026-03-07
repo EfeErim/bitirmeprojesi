@@ -33,6 +33,11 @@ The session emits stable observer payloads. `batch_end` exposes `loss`, and epoc
 
 Checkpoint payloads persist the normalized trainer contract, optimizer state, scheduler state, scaler state, best-metric state, optimizer-step counters, RNG state, and serialized OOD calibration state. Adapter bundles persist LoRA weights, classifier/fusion weights, and the public metadata contract in one place.
 
+Output locations are surface-specific:
+
+- Notebook 2 writes adapter + notebook artifacts under `outputs/colab_notebook_training/` and writes rolling checkpoints to Drive telemetry (`.../telemetry/<RUN_ID>/checkpoints/`).
+- `TrainingWorkflow.run(...)` (including `python -m src.app.cli training ...`) writes adapter and metrics under the provided `<output_dir>` (`<output_dir>/continual_sd_lora_adapter/` and `<output_dir>/training_metrics/`).
+
 ## Inference
 
 - `src/workflows/inference.py`
@@ -48,3 +53,5 @@ Inference is one path only:
 2. Router resolves the crop.
 3. Runtime loads that crop adapter lazily.
 4. Adapter returns diagnosis and OOD payload through a typed inference contract.
+
+By default inference resolves adapters from `models/adapters/<crop>/continual_sd_lora_adapter/`, unless `adapter_root` / `--adapter-root` is provided.

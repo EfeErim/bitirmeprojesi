@@ -37,14 +37,23 @@ python -m src.app.cli inference path\to\image.jpg --config-env colab
 python -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
 ```
 
-Training runs now also write Ultralytics-style artifacts under `output_dir/training_metrics/`:
+Training surfaces and output paths differ by entrypoint:
 
-- `training/results.png`
-- `training/results.csv`
-- `training/batch_metrics.csv`
-- `validation/confusion_matrix.png`
-- `validation/confusion_matrix_normalized.png`
-- `validation/classification_report.json`
+- Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`)
+	- adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+	- notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+	- checkpoint stream: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/checkpoints/` (or `AADS_DRIVE_LOG_ROOT` override)
+- Workflow / CLI (`TrainingWorkflow.run(...)`, `python -m src.app.cli training ...`)
+	- adapter: `<output_dir>/continual_sd_lora_adapter/`
+	- artifacts: `<output_dir>/training_metrics/`
+		- `training/results.png`
+		- `training/results.csv`
+		- `training/batch_metrics.csv`
+		- `validation/confusion_matrix.png`
+		- `validation/confusion_matrix_normalized.png`
+		- `validation/classification_report.json`
+		- `validation/metric_gate.json`
+		- `training/summary.json`
 
 ## Colab
 
@@ -59,4 +68,26 @@ Inference expects adapters under:
 
 ```text
 models/adapters/<crop>/continual_sd_lora_adapter/
+```
+
+If a training run writes the adapter elsewhere (for example Notebook 2 under `outputs/colab_notebook_training/`), move or copy it into `models/adapters/<crop>/`, or pass `--adapter-root` to inference entrypoints.
+
+## End-to-End Path Map
+
+Notebook-to-inference handoff in 3 steps:
+
+1. Train in `colab_notebooks/2_interactive_adapter_training.ipynb`.
+2. Take adapter output from `outputs/colab_notebook_training/continual_sd_lora_adapter/`.
+3. Deploy either by:
+	 - copying to `models/adapters/<crop>/continual_sd_lora_adapter/` (default inference lookup), or
+	 - keeping custom location and running inference with `--adapter-root <parent_of_crop_dirs>`.
+
+Example default deploy layout:
+
+```text
+models/adapters/
+	tomato/
+		continual_sd_lora_adapter/
+			adapter_meta.json
+			...
 ```
