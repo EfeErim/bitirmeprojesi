@@ -1,0 +1,6 @@
+from src.data.loaders import create_training_loaders as canonical_create_training_loaders
+from src.utils.data_loader import create_training_loaders as legacy_create_training_loaders
+
+
+def test_legacy_data_loader_import_reexports_canonical_loader():
+    assert legacy_create_training_loaders is canonical_create_training_loaders
