@@ -1,6 +1,6 @@
 from src.router.confidence_utils import (
-    resolve_effective_confidence_threshold,
     passes_open_set_gate,
+    resolve_effective_confidence_threshold,
 )
 
 

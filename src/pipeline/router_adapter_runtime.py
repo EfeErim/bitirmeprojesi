@@ -117,8 +117,13 @@ class RouterAdapterRuntime:
             crop_name = str(detection.get("crop", "")).strip().lower() or None
             part_name = part_name or str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
+            status_message = (
+                f"[ROUTER] crop={crop_name or 'unknown'} "
+                f"part={part_name or 'unknown'} "
+                f"confidence={router_confidence:.3f}"
+            )
             self._emit_status(
-                f"[ROUTER] crop={crop_name or 'unknown'} part={part_name or 'unknown'} confidence={router_confidence:.3f}"
+                status_message
             )
 
         if not crop_name or crop_name == "unknown":

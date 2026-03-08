@@ -98,6 +98,7 @@ def build_prompt_batch(labels: List[str], label_type: str, vlm_config: Dict[str,
 
 def open_set_unknown_prompts(label_type: str, known_labels: Optional[List[str]] = None) -> List[str]:
     """Prompt set for unknown/out-of-scope rejection."""
+    _ = known_labels
     if label_type == 'part':
         return [
             "a photo of a rock or stone",

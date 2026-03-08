@@ -117,7 +117,13 @@ def persist_batch_metrics_artifacts(
     return {"batch_metrics_csv": batch_csv}
 
 
-def _plot_epoch_series(axis: Any, history_snapshot: Dict[str, Any], keys: Sequence[str], title: str, ylabel: str) -> None:
+def _plot_epoch_series(
+    axis: Any,
+    history_snapshot: Dict[str, Any],
+    keys: Sequence[str],
+    title: str,
+    ylabel: str,
+) -> None:
     plotted = False
     for key in keys:
         values = history_snapshot.get(key, [])

@@ -44,6 +44,8 @@ class BERLoss(nn.Module):
         self.ema_momentum = float(ema_momentum)
 
         # Running energy margins (will be initialized on first forward pass)
+        self._margin_old: torch.Tensor
+        self._margin_new: torch.Tensor
         self.register_buffer("_margin_old", torch.tensor(0.0))
         self.register_buffer("_margin_new", torch.tensor(0.0))
         self._margins_initialized = False

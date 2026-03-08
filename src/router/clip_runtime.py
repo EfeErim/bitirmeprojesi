@@ -30,6 +30,66 @@ class ClipScoreRequest:
     image_embedding: Optional[torch.Tensor] = None
 
 
+def _normalize_embeddings(embeddings: torch.Tensor) -> torch.Tensor:
+    return embeddings / embeddings.norm(dim=-1, keepdim=True)
+
+
+def _open_clip_components(runtime: Any) -> tuple[Dict[str, Any], Any]:
+    processor = runtime.bioclip_processor
+    model = runtime.bioclip
+    if not isinstance(processor, dict) or model is None:
+        raise RuntimeError("open_clip encoding requested before BioCLIP runtime was initialized.")
+    return processor, model
+
+
+def _processor_components(runtime: Any) -> tuple[Any, Any]:
+    processor = runtime.bioclip_processor
+    model = runtime.bioclip
+    if processor is None or model is None:
+        raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
+    return processor, model
+
+
+def _resolve_logits_per_image(model_outputs: Any, model: Any) -> torch.Tensor:
+    if hasattr(model_outputs, "logits_per_image") and model_outputs.logits_per_image is not None:
+        return model_outputs.logits_per_image
+    if hasattr(model_outputs, "image_embeds") and hasattr(model_outputs, "text_embeds"):
+        image_embeds = _normalize_embeddings(model_outputs.image_embeds)
+        text_embeds = _normalize_embeddings(model_outputs.text_embeds)
+        logit_scale = get_clip_logit_scale(model)
+        return (image_embeds @ text_embeds.T) * logit_scale
+    raise RuntimeError("BioCLIP model output does not provide logits_per_image or embeddable outputs")
+
+
+def _build_open_clip_image_batch(
+    preprocess: Any,
+    images: List[Image.Image],
+    device: Any,
+) -> torch.Tensor:
+    processed_images = [preprocess(image) for image in images]
+    return torch.stack(processed_images, dim=0).to(device)
+
+
+def _score_processor_batch(
+    runtime: Any,
+    images: Image.Image | List[Image.Image],
+    prompts: List[str],
+) -> torch.Tensor:
+    processor, model = _processor_components(runtime)
+    model_inputs = processor(
+        text=prompts,
+        images=images,
+        return_tensors="pt",
+        padding=True,
+    )
+    model_inputs = {key: value.to(runtime.device) for key, value in model_inputs.items()}
+
+    with torch.no_grad():
+        model_outputs = model(**model_inputs)
+        logits_per_image = _resolve_logits_per_image(model_outputs, model)
+    return torch.softmax(logits_per_image, dim=-1)
+
+
 def get_open_clip_text_embeddings(runtime: Any, prompts: List[str]) -> torch.Tensor:
     """Get normalized text embeddings for prompts with lightweight in-memory caching."""
     cache_key = tuple(prompts)
@@ -37,16 +97,13 @@ def get_open_clip_text_embeddings(runtime: Any, prompts: List[str]) -> torch.Ten
     if cached is not None:
         return cached
 
-    processor = runtime.bioclip_processor
-    model = runtime.bioclip
-    if not isinstance(processor, dict) or model is None:
-        raise RuntimeError("open_clip text encoding requested before BioCLIP runtime was initialized.")
+    processor, model = _open_clip_components(runtime)
 
     tokenizer = processor["tokenizer"]
     text_tokens = tokenizer(prompts).to(runtime.device)
     with torch.no_grad():
         text_embeds = model.encode_text(text_tokens)
-        text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+        text_embeds = _normalize_embeddings(text_embeds)
 
     max_cache_size = int(runtime.vlm_config.get("open_clip_text_cache_size", 64))
     if len(runtime._open_clip_text_embedding_cache) >= max_cache_size and max_cache_size > 0:
@@ -62,16 +119,13 @@ def ensure_open_clip_image_embedding(runtime: Any, request: ClipScoreRequest) ->
     if request.image_embedding is not None:
         return request.image_embedding
 
-    processor = runtime.bioclip_processor
-    model = runtime.bioclip
-    if not isinstance(processor, dict) or model is None:
-        raise RuntimeError("open_clip image encoding requested before BioCLIP runtime was initialized.")
+    processor, model = _open_clip_components(runtime)
 
     preprocess = processor["preprocess"]
     image_tensor = preprocess(request.image).unsqueeze(0).to(runtime.device)
     with torch.no_grad():
         image_embeds = model.encode_image(image_tensor)
-        request.image_embedding = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+        request.image_embedding = _normalize_embeddings(image_embeds)
     return request.image_embedding
 
 
@@ -85,19 +139,20 @@ def ensure_open_clip_image_embeddings(
     if not images:
         return torch.empty((0, 0), dtype=torch.float32, device=runtime.device)
 
-    processor = runtime.bioclip_processor
-    model = runtime.bioclip
-    if not isinstance(processor, dict) or model is None:
-        raise RuntimeError("open_clip image encoding requested before BioCLIP runtime was initialized.")
+    processor, model = _open_clip_components(runtime)
 
     preprocess = processor["preprocess"]
     batch_size = max(1, int(image_batch_size or len(images)))
     embeddings: List[torch.Tensor] = []
     for start in range(0, len(images), batch_size):
-        image_tensor = torch.stack([preprocess(image) for image in images[start : start + batch_size]], dim=0).to(runtime.device)
+        image_tensor = _build_open_clip_image_batch(
+            preprocess,
+            images[start : start + batch_size],
+            runtime.device,
+        )
         with torch.no_grad():
             image_embeds = model.encode_image(image_tensor)
-            embeddings.append(image_embeds / image_embeds.norm(dim=-1, keepdim=True))
+            embeddings.append(_normalize_embeddings(image_embeds))
     return torch.cat(embeddings, dim=0)
 
 
@@ -139,36 +194,7 @@ def encode_and_score(runtime: Any, request: ClipScoreRequest, prompts: List[str]
             image_embedding = ensure_open_clip_image_embedding(runtime, request)
             return score_open_clip_with_image_embedding(runtime, image_embedding, prompts)
 
-        processor = runtime.bioclip_processor
-        model = runtime.bioclip
-        if processor is None or model is None:
-            raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
-
-        model_inputs = processor(
-            text=prompts,
-            images=request.image,
-            return_tensors="pt",
-            padding=True,
-        )
-        model_inputs = {k: v.to(runtime.device) for k, v in model_inputs.items()}
-
-        with torch.no_grad():
-            outputs = model(**model_inputs)
-            if hasattr(outputs, "logits_per_image") and outputs.logits_per_image is not None:
-                logits_per_image = outputs.logits_per_image
-            elif hasattr(outputs, "image_embeds") and hasattr(outputs, "text_embeds"):
-                image_embeds = outputs.image_embeds
-                text_embeds = outputs.text_embeds
-                image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
-                text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                logit_scale = get_clip_logit_scale(model)
-                logits_per_image = (image_embeds @ text_embeds.T) * logit_scale
-            else:
-                raise RuntimeError(
-                    "BioCLIP model output does not provide logits_per_image or embeddable outputs"
-                )
-            scores = torch.softmax(logits_per_image, dim=-1)[0]
-
+        scores = _score_processor_batch(runtime, request.image, prompts)[0]
         return scores.detach().cpu().numpy().tolist()
     except Exception as exc:
         logger.error("Encoding failed: %s", exc)
@@ -194,39 +220,11 @@ def encode_and_score_batch(
                 embeddings = ensure_open_clip_image_embeddings(runtime, images, image_batch_size=image_batch_size)
             return score_open_clip_with_image_embeddings(runtime, embeddings, prompts).detach().cpu()
 
-        processor = runtime.bioclip_processor
-        model = runtime.bioclip
-        if processor is None or model is None:
-            raise RuntimeError("BioCLIP scoring requested before BioCLIP runtime was initialized.")
-
         batch_size = max(1, int(image_batch_size or len(images)))
         outputs: List[torch.Tensor] = []
         for start in range(0, len(images), batch_size):
             chunk = images[start : start + batch_size]
-            model_inputs = processor(
-                text=prompts,
-                images=chunk,
-                return_tensors="pt",
-                padding=True,
-            )
-            model_inputs = {k: v.to(runtime.device) for k, v in model_inputs.items()}
-
-            with torch.no_grad():
-                model_outputs = model(**model_inputs)
-                if hasattr(model_outputs, "logits_per_image") and model_outputs.logits_per_image is not None:
-                    logits_per_image = model_outputs.logits_per_image
-                elif hasattr(model_outputs, "image_embeds") and hasattr(model_outputs, "text_embeds"):
-                    chunk_image_embeds = model_outputs.image_embeds
-                    text_embeds = model_outputs.text_embeds
-                    chunk_image_embeds = chunk_image_embeds / chunk_image_embeds.norm(dim=-1, keepdim=True)
-                    text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
-                    logit_scale = get_clip_logit_scale(model)
-                    logits_per_image = (chunk_image_embeds @ text_embeds.T) * logit_scale
-                else:
-                    raise RuntimeError(
-                        "BioCLIP model output does not provide logits_per_image or embeddable outputs"
-                    )
-                outputs.append(torch.softmax(logits_per_image, dim=-1).detach().cpu())
+            outputs.append(_score_processor_batch(runtime, chunk, prompts).detach().cpu())
         return torch.cat(outputs, dim=0) if outputs else torch.zeros((0, len(prompts)), dtype=torch.float32)
     except Exception as exc:
         logger.error("Batch encoding failed: %s", exc)

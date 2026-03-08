@@ -7,7 +7,7 @@ SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 import copy
 import logging
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 import torch
 from PIL import Image
@@ -374,7 +374,8 @@ class VLMPipeline:
             processor = SamProcessor.from_pretrained(model_id)
             model = SamModel.from_pretrained(model_id)
             self.sam_backend = 'transformers_sam'
-        model = model.to(self.device)
+        if hasattr(model, "to"):
+            model = cast(Any, model).to(self.device)
         model.eval()
         return processor, model
 

@@ -32,6 +32,10 @@ __all__ = [
 ]
 
 
+def _matches_focus_part(part_label: str, focus_parts_lower: List[str]) -> bool:
+    return any(focus_part in part_label for focus_part in focus_parts_lower)
+
+
 def collect_sam3_roi_candidates(
     boxes: Any,
     scores: Any,
@@ -356,7 +360,7 @@ def filter_classified_sam3_detections(
         for detection in all_detections:
             part_label = str(detection.get('part', 'unknown')).strip().lower()
             part_confidence = float(detection.get('part_confidence', 0.0))
-            if any(focus_part in part_label for focus_part in focus_parts_lower) and part_confidence >= focus_min_confidence:
+            if _matches_focus_part(part_label, focus_parts_lower) and part_confidence >= focus_min_confidence:
                 focused_detections.append(detection)
 
     if focus_mode_enabled and focus_fallback_enabled:
@@ -415,7 +419,6 @@ def run_sam3_roi_classification_stage(
     roi_classification_ms = 0.0
 
     run_classification = policy_enabled_fn('crop_evidence', True) and 'roi_classification' in stage_order
-    run_open_set_gate = policy_enabled_fn('open_set_gate', True) and 'open_set_gate' in stage_order
     if not run_classification:
         return detections, roi_kept, roi_classification_calls, roi_classification_ms
 

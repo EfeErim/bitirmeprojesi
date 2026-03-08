@@ -9,22 +9,29 @@ Extended with:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 
+from src.ood._scoring_utils import (
+    energy_from_logits,
+    ensemble_threshold,
+    ensemble_z_score,
+    mahalanobis_distance,
+    safe_std,
+)
+from src.ood.conformal_prediction import (
+    build_prediction_set,
+    calibrate_conformal_qhat,
+    compute_nonconformity_scores,
+)
 from src.ood.radial_normalization import auto_tune_beta, radial_l2_normalize
 from src.ood.sure_scoring import (
     apply_sure_decision,
     calibrate_sure_thresholds,
     compute_confidence_score,
     compute_semantic_score,
-)
-from src.ood.conformal_prediction import (
-    build_prediction_set,
-    calibrate_conformal_qhat,
-    compute_nonconformity_scores,
 )
 
 
@@ -84,7 +91,7 @@ class ContinualOODDetector:
 
     @staticmethod
     def _safe_std(value: torch.Tensor) -> torch.Tensor:
-        return value.clamp_min(1e-6)
+        return safe_std(value)
 
     @staticmethod
     def _stats_on_input_device(
@@ -98,13 +105,37 @@ class ContinualOODDetector:
 
     @staticmethod
     def _energy(logits: torch.Tensor) -> torch.Tensor:
-        return -torch.logsumexp(logits, dim=1)
+        return energy_from_logits(logits)
 
     def _maybe_normalize(self, features: torch.Tensor) -> torch.Tensor:
         """Apply radial L2 normalization if enabled and β is calibrated."""
         if self.radial_l2_enabled and self.radial_beta is not None:
             return radial_l2_normalize(features, self.radial_beta)
         return features
+
+    def _class_distances(
+        self,
+        features: torch.Tensor,
+        stats: ClassCalibration,
+    ) -> torch.Tensor:
+        mean, var = self._stats_on_input_device(stats, features)
+        return mahalanobis_distance(features, mean, var)
+
+    def _class_ensemble_scores(
+        self,
+        features: torch.Tensor,
+        energies: torch.Tensor,
+        stats: ClassCalibration,
+    ) -> torch.Tensor:
+        distances = self._class_distances(features, stats)
+        return ensemble_z_score(
+            distances,
+            energies,
+            mahalanobis_mu=stats.mahalanobis_mu,
+            mahalanobis_sigma=stats.mahalanobis_sigma,
+            energy_mu=stats.energy_mu,
+            energy_sigma=stats.energy_sigma,
+        )
 
     def calibrate(self, features: torch.Tensor, logits: torch.Tensor, labels: torch.Tensor) -> Dict[str, float]:
         if features.ndim != 2:
@@ -140,17 +171,22 @@ class ContinualOODDetector:
             mean = class_features.mean(dim=0)
             var = class_features.var(dim=0, unbiased=False).clamp_min(1e-6)
 
-            distances = ((class_features - mean) ** 2 / var).sum(dim=1).sqrt()
+            distances = mahalanobis_distance(class_features, mean, var)
             m_mu = float(distances.mean().item())
             m_sigma = float(self._safe_std(distances.std(unbiased=False)).item())
 
             e_mu = float(class_energy.mean().item())
             e_sigma = float(self._safe_std(class_energy.std(unbiased=False)).item())
 
-            m_z = (distances - m_mu) / m_sigma
-            e_z = (class_energy - e_mu) / e_sigma
-            ensemble = 0.6 * m_z + 0.4 * e_z
-            threshold = float(ensemble.mean().item() + self.threshold_factor * self._safe_std(ensemble.std(unbiased=False)).item())
+            ensemble = ensemble_z_score(
+                distances,
+                class_energy,
+                mahalanobis_mu=m_mu,
+                mahalanobis_sigma=m_sigma,
+                energy_mu=e_mu,
+                energy_sigma=e_sigma,
+            )
+            threshold = ensemble_threshold(ensemble, self.threshold_factor)
 
             self.class_stats[int(class_id)] = ClassCalibration(
                 mean=mean,
@@ -175,10 +211,7 @@ class ContinualOODDetector:
                 class_logits = logits[mask]
                 class_energy = energies[mask]
 
-                distances = ((class_features - stats.mean) ** 2 / stats.var).sum(dim=1).sqrt()
-                m_z = (distances - stats.mahalanobis_mu) / stats.mahalanobis_sigma
-                e_z = (class_energy - stats.energy_mu) / stats.energy_sigma
-                ensemble_z = 0.6 * m_z + 0.4 * e_z
+                ensemble_z = self._class_ensemble_scores(class_features, class_energy, stats)
                 conf_scores = compute_confidence_score(class_logits)
 
                 all_ensemble_z.append(ensemble_z)
@@ -210,15 +243,10 @@ class ContinualOODDetector:
                 class_features = features[mask]
                 class_energy = energies[mask]
 
-                distances = ((class_features - stats.mean) ** 2 / stats.var).sum(dim=1).sqrt()
-                m_z = (distances - stats.mahalanobis_mu) / stats.mahalanobis_sigma
-                e_z = (class_energy - stats.energy_mu) / stats.energy_sigma
-                ensemble_z = 0.6 * m_z + 0.4 * e_z
+                ensemble_z = self._class_ensemble_scores(class_features, class_energy, stats)
 
                 all_ensemble_scores.append(ensemble_z)
-                all_class_thresholds.append(
-                    torch.full_like(ensemble_z, stats.threshold)
-                )
+                all_class_thresholds.append(torch.full_like(ensemble_z, stats.threshold))
 
             if all_ensemble_scores:
                 cat_scores = torch.cat(all_ensemble_scores)
@@ -253,30 +281,32 @@ class ContinualOODDetector:
                 "sure_confidence_reject": None,
             }
 
-        # Apply radial normalization
-        feature = self._maybe_normalize(feature.unsqueeze(0)).squeeze(0) if feature.ndim == 1 else self._maybe_normalize(feature)
+        score_feature = feature
+        if feature.ndim == 1:
+            score_feature = self._maybe_normalize(feature.unsqueeze(0)).squeeze(0)
+        else:
+            score_feature = self._maybe_normalize(feature)
 
         stats = self.class_stats[class_id]
-        mean, var = self._stats_on_input_device(stats, feature)
-        distance = torch.sqrt(((feature - mean) ** 2 / var).sum())
+        distance = self._class_distances(score_feature, stats)
         energy = self._energy(logit.unsqueeze(0))[0]
+        ensemble = self._class_ensemble_scores(score_feature, energy, stats)
 
-        m_z = float(((distance - stats.mahalanobis_mu) / stats.mahalanobis_sigma).item())
-        e_z = float(((energy - stats.energy_mu) / stats.energy_sigma).item())
-        ensemble = 0.6 * m_z + 0.4 * e_z
+        m_z = float(((distance - stats.mahalanobis_mu) / max(stats.mahalanobis_sigma, 1e-6)).item())
+        e_z = float(((energy - stats.energy_mu) / max(stats.energy_sigma, 1e-6)).item())
         threshold = float(stats.threshold)
 
         result: Dict[str, Any] = {
             "mahalanobis_z": m_z,
             "energy_z": e_z,
-            "ensemble_score": float(ensemble),
+            "ensemble_score": float(ensemble.item()),
             "class_threshold": threshold,
-            "is_ood": bool(ensemble > threshold),
+            "is_ood": bool(ensemble.item() > threshold),
         }
 
         # SURE+ scoring
         if self.sure_enabled:
-            semantic_score = float(ensemble)  # Semantic score IS the ensemble score
+            semantic_score = float(ensemble.item())  # Semantic score IS the ensemble score
             confidence_score = float((1.0 - torch.softmax(logit, dim=-1).max()).item())
             sure_decision = apply_sure_decision(
                 semantic_score,
@@ -374,7 +404,12 @@ class ContinualOODDetector:
             "ensemble_score": torch.tensor(result["ensemble_score"], dtype=torch.float32, device=features.device),
             "class_threshold": torch.tensor(result["class_threshold"], dtype=torch.float32, device=features.device),
             "is_ood": torch.tensor(result["is_ood"], dtype=torch.bool, device=features.device),
-            "calibration_version": torch.full((features.size(0),), self.calibration_version, dtype=torch.long, device=features.device),
+            "calibration_version": torch.full(
+                (features.size(0),),
+                self.calibration_version,
+                dtype=torch.long,
+                device=features.device,
+            ),
         }
 
         # SURE+ fields (None-safe for disabled mode)

@@ -41,7 +41,7 @@ def build_weighted_sampler(dataset: CropDataset, seed: int) -> WeightedRandomSam
     generator = torch.Generator()
     generator.manual_seed(int(seed))
     return WeightedRandomSampler(
-        weights=torch.tensor(weights, dtype=torch.double),
+        weights=weights,
         num_samples=len(weights),
         replacement=True,
         generator=generator,

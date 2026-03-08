@@ -155,6 +155,51 @@ def _resolve_positive_int(value: Any, default: int) -> int:
     return max(1, resolved)
 
 
+def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
+    def _clip_score(
+        roi_image: Image.Image,
+        labels: List[str],
+        *,
+        label_type: str = "generic",
+        num_prompts: Optional[int] = None,
+    ) -> Tuple[str, float, Dict[str, float]]:
+        return clip_runtime.clip_score_labels_ensemble(
+            runtime,
+            roi_image,
+            labels,
+            label_type=label_type,
+            num_prompts=num_prompts,
+        )
+
+    def _select_best_crop(crop_scores: Dict[str, float], part_scores: Dict[str, float]) -> Tuple[str, float]:
+        return select_best_crop_with_fallback(
+            crop_scores,
+            part_scores,
+            runtime.crop_part_compatibility,
+            runtime.part_labels,
+        )
+
+    def _compatible_parts(crop_label: str) -> List[str]:
+        return compatible_parts_for_crop(
+            crop_label,
+            runtime.crop_part_compatibility,
+            runtime.part_labels,
+        )
+
+    return {
+        "policy_enabled_fn": runtime._policy_enabled,
+        "clip_score_labels_ensemble_fn": _clip_score,
+        "compute_leaf_likeness_fn": compute_leaf_likeness,
+        "rebalance_part_scores_for_leaf_like_roi_fn": rebalance_part_scores_for_leaf_like_roi,
+        "select_best_crop_with_fallback_fn": _select_best_crop,
+        "compatible_parts_for_crop_fn": _compatible_parts,
+        "score_parts_conditioned_on_crop_fn": runtime._score_parts_conditioned_on_crop,
+        "apply_generic_part_penalty_fn": apply_generic_part_penalty,
+        "select_part_label_with_specificity_fn": select_part_label_with_specificity,
+        "apply_leaf_like_override_fn": apply_leaf_like_override,
+    }
+
+
 def _classify_chunk_candidates_batched(
     runtime: Any,
     *,
@@ -163,6 +208,8 @@ def _classify_chunk_candidates_batched(
 ) -> List[Dict[str, Any]]:
     """Batch-score ROI candidates, then finalize/filter detections per image."""
     records: List[Dict[str, Any]] = []
+    hooks = _build_roi_classification_hooks(runtime)
+    finalize_hooks = {key: value for key, value in hooks.items() if key != "clip_score_labels_ensemble_fn"}
     roi_score_batch_size = _resolve_positive_int(runtime.vlm_config.get("roi_score_batch_size", 32), 32)
     for image_index, (context, candidates) in enumerate(zip(contexts, candidates_per_image)):
         for candidate_index, candidate in enumerate(candidates):
@@ -220,30 +267,13 @@ def _classify_chunk_candidates_batched(
             image_width=context.image_width,
             image_height=context.image_height,
             settings=context.settings,
-            policy_enabled_fn=runtime._policy_enabled,
+            **finalize_hooks,
             part_label=part_result[0],
             part_conf=part_result[1],
             part_scores=part_result[2],
             crop_label=crop_result[0],
             crop_conf=crop_result[1],
             crop_scores=crop_result[2],
-            compute_leaf_likeness_fn=compute_leaf_likeness,
-            rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi,
-            select_best_crop_with_fallback_fn=lambda crop_scores, part_scores: select_best_crop_with_fallback(
-                crop_scores,
-                part_scores,
-                runtime.crop_part_compatibility,
-                runtime.part_labels,
-            ),
-            compatible_parts_for_crop_fn=lambda crop_label: compatible_parts_for_crop(
-                crop_label,
-                runtime.crop_part_compatibility,
-                runtime.part_labels,
-            ),
-            score_parts_conditioned_on_crop_fn=runtime._score_parts_conditioned_on_crop,
-            apply_generic_part_penalty_fn=apply_generic_part_penalty,
-            select_part_label_with_specificity_fn=select_part_label_with_specificity,
-            apply_leaf_like_override_fn=apply_leaf_like_override,
         )
         per_image_all_detections[image_index].append(detection)
         per_image_calls[image_index] += 2
@@ -277,6 +307,7 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     start_time = time.perf_counter()
     stage_timings_ms = init_sam3_stage_timings()
     stage_timings_ms["preprocess"] = context.preprocess_ms
+    hooks = _build_roi_classification_hooks(runtime)
 
     stage_start = time.perf_counter()
     sam3_results = runtime._run_sam3(
@@ -312,32 +343,8 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
                 settings=context.settings,
                 part_labels=runtime.part_labels,
                 crop_labels=runtime.crop_labels,
-                policy_enabled_fn=runtime._policy_enabled,
                 extract_roi_fn=extract_roi,
-                clip_score_labels_ensemble_fn=lambda roi_image, labels, label_type="generic", num_prompts=None: clip_runtime.clip_score_labels_ensemble(
-                    runtime,
-                    roi_image,
-                    labels,
-                    label_type=label_type,
-                    num_prompts=num_prompts,
-                ),
-                compute_leaf_likeness_fn=compute_leaf_likeness,
-                rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi,
-                select_best_crop_with_fallback_fn=lambda crop_scores, part_scores: select_best_crop_with_fallback(
-                    crop_scores,
-                    part_scores,
-                    runtime.crop_part_compatibility,
-                    runtime.part_labels,
-                ),
-                compatible_parts_for_crop_fn=lambda crop_label: compatible_parts_for_crop(
-                    crop_label,
-                    runtime.crop_part_compatibility,
-                    runtime.part_labels,
-                ),
-                score_parts_conditioned_on_crop_fn=runtime._score_parts_conditioned_on_crop,
-                apply_generic_part_penalty_fn=apply_generic_part_penalty,
-                select_part_label_with_specificity_fn=select_part_label_with_specificity,
-                apply_leaf_like_override_fn=apply_leaf_like_override,
+                **hooks,
             ),
             passes_open_set_gate_fn=passes_open_set_gate,
         )

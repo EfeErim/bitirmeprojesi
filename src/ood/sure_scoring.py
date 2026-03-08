@@ -8,7 +8,7 @@ Reference: SURE+ — unifying OOD detection and failure prediction (2026).
 
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Tuple
 
 import torch
 

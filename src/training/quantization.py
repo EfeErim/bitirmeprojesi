@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 PROHIBITED_4BIT_KEYS = {
     "load_in_" + "4bit",
     "bnb_" + "4bit_compute_dtype",

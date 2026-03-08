@@ -13,17 +13,11 @@ from typing import Any, Dict, Iterable, List, Optional
 
 import torch
 
+from src.ood._scoring_utils import energy_from_logits, ensemble_z_score, mahalanobis_distance
+from src.ood.conformal_prediction import calibrate_conformal_qhat, compute_nonconformity_scores
 from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
 from src.ood.radial_normalization import auto_tune_beta, radial_l2_normalize
-from src.ood.sure_scoring import (
-    calibrate_sure_thresholds,
-    compute_confidence_score,
-    compute_semantic_score,
-)
-from src.ood.conformal_prediction import (
-    calibrate_conformal_qhat,
-    compute_nonconformity_scores,
-)
+from src.ood.sure_scoring import calibrate_sure_thresholds, compute_confidence_score, compute_semantic_score
 
 
 @dataclass
@@ -42,8 +36,11 @@ class _VectorAccumulator:
             self.total = summed
             self.total_sq = squared
         else:
-            self.total = self.total + summed
-            self.total_sq = self.total_sq + squared
+            current_total = self.total
+            current_total_sq = self.total_sq
+            assert current_total is not None and current_total_sq is not None
+            self.total = current_total + summed
+            self.total_sq = current_total_sq + squared
         self.count += int(values.shape[0])
 
     def mean_var(self) -> tuple[torch.Tensor, torch.Tensor]:
@@ -138,6 +135,35 @@ def _move_detector_stats_to_device(detector: ContinualOODDetector, device: torch
         stats.var = stats.var.to(device=device, dtype=torch.float32)
 
 
+def _normalize_features_for_detector(
+    detector: ContinualOODDetector,
+    features: torch.Tensor,
+) -> torch.Tensor:
+    if detector.radial_l2_enabled and detector.radial_beta is not None:
+        return radial_l2_normalize(features, detector.radial_beta)
+    return features
+
+
+def _class_distances(features: torch.Tensor, stats: Dict[str, Any]) -> torch.Tensor:
+    return mahalanobis_distance(features, stats["mean"], stats["var"])
+
+
+def _class_ensemble_scores(
+    features: torch.Tensor,
+    energies: torch.Tensor,
+    stats: Dict[str, Any],
+) -> torch.Tensor:
+    distances = _class_distances(features, stats)
+    return ensemble_z_score(
+        distances,
+        energies,
+        mahalanobis_mu=float(stats["mahalanobis_mu"]),
+        mahalanobis_sigma=float(stats["mahalanobis_sigma"]),
+        energy_mu=float(stats["energy_mu"]),
+        energy_sigma=float(stats["energy_sigma"]),
+    )
+
+
 def calibrate_trainer_ood(
     trainer: Any,
     loader: Iterable[Dict[str, torch.Tensor]],
@@ -156,15 +182,15 @@ def calibrate_trainer_ood(
 
     if not _is_reiterable(loader) or _requires_materialized_extended_calibration(trainer.ood_detector):
         features, logits, labels = _collect_materialized_tensors(trainer, loader)
-        result = trainer.ood_detector.calibrate(features=features, logits=logits, labels=labels)
+        calibration_result = trainer.ood_detector.calibrate(features=features, logits=logits, labels=labels)
         _move_detector_stats_to_device(trainer.ood_detector, trainer.device)
-        return result
+        return calibration_result
 
     feature_accumulators: Dict[int, _VectorAccumulator] = {}
     energy_accumulators: Dict[int, _ScalarAccumulator] = {}
     total_examples = 0
     for features, logits, labels in _iter_feature_batches(trainer, loader):
-        energies = ContinualOODDetector._energy(logits)
+        energies = energy_from_logits(logits)
         total_examples += int(labels.numel())
         for class_id in torch.unique(labels).tolist():
             class_mask = labels == int(class_id)
@@ -214,13 +240,12 @@ def calibrate_trainer_ood(
         for class_id in class_stats
     }
     for features, _logits, labels in _iter_feature_batches(trainer, loader):
-        if trainer.ood_detector.radial_l2_enabled and trainer.ood_detector.radial_beta is not None:
-            features = radial_l2_normalize(features, trainer.ood_detector.radial_beta)
+        features = _normalize_features_for_detector(trainer.ood_detector, features)
         for class_id in torch.unique(labels).tolist():
             class_mask = labels == int(class_id)
             stats = class_stats[int(class_id)]
             class_features = features[class_mask]
-            distances = ((class_features - stats["mean"]) ** 2 / stats["var"]).sum(dim=1).sqrt()
+            distances = _class_distances(class_features, stats)
             mahalanobis_accumulators[int(class_id)].update(distances)
 
     for class_id, accumulator in mahalanobis_accumulators.items():
@@ -234,18 +259,14 @@ def calibrate_trainer_ood(
         for class_id in class_stats
     }
     for features, logits, labels in _iter_feature_batches(trainer, loader):
-        if trainer.ood_detector.radial_l2_enabled and trainer.ood_detector.radial_beta is not None:
-            features = radial_l2_normalize(features, trainer.ood_detector.radial_beta)
-        energies = ContinualOODDetector._energy(logits)
+        features = _normalize_features_for_detector(trainer.ood_detector, features)
+        energies = energy_from_logits(logits)
         for class_id in torch.unique(labels).tolist():
             class_mask = labels == int(class_id)
             stats = class_stats[int(class_id)]
             class_features = features[class_mask]
             class_energies = energies[class_mask]
-            distances = ((class_features - stats["mean"]) ** 2 / stats["var"]).sum(dim=1).sqrt()
-            mahalanobis_z = (distances - float(stats["mahalanobis_mu"])) / float(stats["mahalanobis_sigma"])
-            energy_z = (class_energies - float(stats["energy_mu"])) / float(stats["energy_sigma"])
-            ensemble = (0.6 * mahalanobis_z) + (0.4 * energy_z)
+            ensemble = _class_ensemble_scores(class_features, class_energies, stats)
             ensemble_accumulators[int(class_id)].update(ensemble)
 
     trainer.ood_detector.class_stats = {}
@@ -267,9 +288,8 @@ def calibrate_trainer_ood(
         all_semantic: List[torch.Tensor] = []
         all_confidence: List[torch.Tensor] = []
         for features, logits, labels in _iter_feature_batches(trainer, loader):
-            if trainer.ood_detector.radial_l2_enabled and trainer.ood_detector.radial_beta is not None:
-                features = radial_l2_normalize(features, trainer.ood_detector.radial_beta)
-            energies = ContinualOODDetector._energy(logits)
+            features = _normalize_features_for_detector(trainer.ood_detector, features)
+            energies = energy_from_logits(logits)
             for cid in torch.unique(labels).tolist():
                 cid = int(cid)
                 if cid not in trainer.ood_detector.class_stats:
@@ -279,10 +299,14 @@ def calibrate_trainer_ood(
                 cf = features[mask]
                 ce = energies[mask]
                 cl = logits[mask]
-                distances = ((cf - cs.mean) ** 2 / cs.var).sum(dim=1).sqrt()
-                m_z = (distances - cs.mahalanobis_mu) / cs.mahalanobis_sigma
-                e_z = (ce - cs.energy_mu) / cs.energy_sigma
-                ens_z = 0.6 * m_z + 0.4 * e_z
+                ens_z = ensemble_z_score(
+                    mahalanobis_distance(cf, cs.mean, cs.var),
+                    ce,
+                    mahalanobis_mu=cs.mahalanobis_mu,
+                    mahalanobis_sigma=cs.mahalanobis_sigma,
+                    energy_mu=cs.energy_mu,
+                    energy_sigma=cs.energy_sigma,
+                )
                 all_semantic.append(compute_semantic_score(ens_z))
                 all_confidence.append(compute_confidence_score(cl))
 
@@ -303,9 +327,8 @@ def calibrate_trainer_ood(
     if trainer.ood_detector.conformal_enabled and trainer.ood_detector.class_stats:
         all_nc: List[torch.Tensor] = []
         for features, logits, labels in _iter_feature_batches(trainer, loader):
-            if trainer.ood_detector.radial_l2_enabled and trainer.ood_detector.radial_beta is not None:
-                features = radial_l2_normalize(features, trainer.ood_detector.radial_beta)
-            energies = ContinualOODDetector._energy(logits)
+            features = _normalize_features_for_detector(trainer.ood_detector, features)
+            energies = energy_from_logits(logits)
             for cid in torch.unique(labels).tolist():
                 cid = int(cid)
                 if cid not in trainer.ood_detector.class_stats:
@@ -314,10 +337,14 @@ def calibrate_trainer_ood(
                 cs = trainer.ood_detector.class_stats[cid]
                 cf = features[mask]
                 ce = energies[mask]
-                distances = ((cf - cs.mean) ** 2 / cs.var).sum(dim=1).sqrt()
-                m_z = (distances - cs.mahalanobis_mu) / cs.mahalanobis_sigma
-                e_z = (ce - cs.energy_mu) / cs.energy_sigma
-                ens_z = 0.6 * m_z + 0.4 * e_z
+                ens_z = ensemble_z_score(
+                    mahalanobis_distance(cf, cs.mean, cs.var),
+                    ce,
+                    mahalanobis_mu=cs.mahalanobis_mu,
+                    mahalanobis_sigma=cs.mahalanobis_sigma,
+                    energy_mu=cs.energy_mu,
+                    energy_sigma=cs.energy_sigma,
+                )
                 thresholds = torch.full_like(ens_z, cs.threshold)
                 all_nc.append(compute_nonconformity_scores(ens_z, thresholds))
 
@@ -328,12 +355,12 @@ def calibrate_trainer_ood(
             )
 
     trainer.ood_detector.calibration_version += 1
-    result: Dict[str, float] = {
+    calibration_summary: Dict[str, float] = {
         "num_classes": float(len(trainer.ood_detector.class_stats)),
         "calibration_version": float(trainer.ood_detector.calibration_version),
     }
     if trainer.ood_detector.radial_beta is not None:
-        result["radial_beta"] = float(trainer.ood_detector.radial_beta)
+        calibration_summary["radial_beta"] = float(trainer.ood_detector.radial_beta)
     if trainer.ood_detector.conformal_qhat is not None:
-        result["conformal_qhat"] = float(trainer.ood_detector.conformal_qhat)
-    return result
+        calibration_summary["conformal_qhat"] = float(trainer.ood_detector.conformal_qhat)
+    return calibration_summary

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
 import torch
 
 from src.training.ber_loss import BERLoss
@@ -67,7 +66,6 @@ class TestBERLoss:
         labels = torch.tensor([0, 1, 2, 3, 0, 1, 2, 3])
         loss_fn(logits, labels)
         assert loss_fn._margins_initialized
-        old_margin = loss_fn._margin_old.item()
         # Second pass should update via EMA
         loss_fn(logits, labels)
         # Margins may change (momentum blending)

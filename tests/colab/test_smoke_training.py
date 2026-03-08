@@ -65,5 +65,9 @@ class TestContinualSmoke:
 
         result = trainer.predict_with_ood(torch.zeros(1, 3, 224, 224))
         assert result['status'] == 'success'
-        assert {'ensemble_score', 'class_threshold', 'is_ood', 'calibration_version'} <= set(result['ood_analysis'].keys())
-
+        assert {
+            'ensemble_score',
+            'class_threshold',
+            'is_ood',
+            'calibration_version',
+        } <= set(result['ood_analysis'].keys())

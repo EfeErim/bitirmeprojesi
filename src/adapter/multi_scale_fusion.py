@@ -62,6 +62,12 @@ class MultiScaleFeatureFusion(nn.Module):
         self.dropout = nn.Dropout(float(dropout))
         self.norm = nn.LayerNorm(self.output_dim)
 
+    def _projection(self, index: int) -> nn.Linear:
+        projection = self.projections[index]
+        if not isinstance(projection, nn.Linear):
+            raise TypeError(f"Expected Linear projection at index {index}, got {type(projection)!r}")
+        return projection
+
     def _weights(self, active_scales: int) -> torch.Tensor:
         logits = self.scale_logits[:active_scales]
         if self.gating == "softmax":
@@ -72,7 +78,8 @@ class MultiScaleFeatureFusion(nn.Module):
         if not feature_list:
             raise ValueError("feature_list must contain at least one tensor")
 
-        projection_weight = self.projections[0].weight
+        first_projection = self._projection(0)
+        projection_weight = first_projection.weight
         normalized = [
             _to_2d(feat).to(device=projection_weight.device, dtype=projection_weight.dtype)
             for feat in feature_list
@@ -81,7 +88,7 @@ class MultiScaleFeatureFusion(nn.Module):
             normalized.append(normalized[-1])
         active = normalized[: self.num_scales]
 
-        projected = [self.projections[idx](feat) for idx, feat in enumerate(active)]
+        projected = [self._projection(idx)(feat) for idx, feat in enumerate(active)]
         weights = self._weights(len(projected))
 
         fused = torch.zeros_like(projected[0])

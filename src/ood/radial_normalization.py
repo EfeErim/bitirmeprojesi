@@ -9,7 +9,7 @@ Reference: Mahalanobis++ dissection — tunable radial geometry for OOD detectio
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
+from typing import Dict, Tuple
 
 import torch
 

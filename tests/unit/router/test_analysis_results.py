@@ -1,7 +1,7 @@
 from src.router.analysis_results import (
+    build_sam3_analysis_result,
     init_sam3_stage_timings,
     summarize_sam3_stage_timings,
-    build_sam3_analysis_result,
 )
 
 

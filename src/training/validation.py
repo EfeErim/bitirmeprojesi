@@ -93,8 +93,13 @@ def _evaluate_model_core(
     per_class_support: Dict[str, int] = {}
     for class_index in range(num_classes):
         class_name = str(idx_to_class.get(class_index, class_index))
-        per_class_accuracy[class_name] = float(recall[class_index].item()) if bool(recall_mask[class_index].item()) else 0.0
+        per_class_accuracy[class_name] = (
+            float(recall[class_index].item()) if bool(recall_mask[class_index].item()) else 0.0
+        )
         per_class_support[class_name] = int(support[class_index].item())
+
+    def _worst_class_sort_key(item: Dict[str, Any]) -> tuple[float, int, str]:
+        return (float(item["accuracy"]), -int(item["support"]), str(item["class_name"]))
 
     ranked_worst = sorted(
         [
@@ -107,7 +112,7 @@ def _evaluate_model_core(
             for class_index, class_name in [(idx, str(idx_to_class.get(idx, idx))) for idx in range(num_classes)]
             if per_class_support[class_name] > 0
         ],
-        key=lambda item: (item["accuracy"], -item["support"], item["class_name"]),
+        key=_worst_class_sort_key,
     )
 
     report = ValidationReport(

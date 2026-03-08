@@ -134,8 +134,11 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
     image_path = tmp_path / "leaf.png"
     Image.new("RGB", (8, 8), color="green").save(image_path)
 
+    def zero_preprocess(_image, target_size=224):
+        return torch.zeros(3, target_size, target_size)
+
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
-    monkeypatch.setattr(smoke, "preprocess_image", lambda image, target_size=224: torch.zeros(3, target_size, target_size))
+    monkeypatch.setattr(smoke, "preprocess_image", zero_preprocess)
     monkeypatch.setattr(smoke, "_target_size", lambda _env: 224)
 
     result = smoke.predict_single_image(image_path, "tomato", adapter_dir=asset_dir, device="cpu")
@@ -152,8 +155,11 @@ def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_pat
     image_path = tmp_path / "leaf.png"
     Image.new("RGB", (8, 8), color="green").save(image_path)
 
+    def zero_preprocess(_image, target_size=224):
+        return torch.zeros(3, target_size, target_size)
+
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
-    monkeypatch.setattr(smoke, "preprocess_image", lambda image, target_size=224: torch.zeros(3, target_size, target_size))
+    monkeypatch.setattr(smoke, "preprocess_image", zero_preprocess)
     monkeypatch.setattr(smoke, "_target_size", lambda _env: 224)
 
     result = smoke.predict_single_image(image_path, None, adapter_dir=asset_dir, device="cpu")
@@ -170,8 +176,11 @@ def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, t
     (image_dir / "broken.png").write_text("not an image", encoding="utf-8")
     (image_dir / "notes.txt").write_text("skip me", encoding="utf-8")
 
+    def zero_preprocess(_image, target_size=224):
+        return torch.zeros(3, target_size, target_size)
+
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
-    monkeypatch.setattr(smoke, "preprocess_image", lambda image, target_size=224: torch.zeros(3, target_size, target_size))
+    monkeypatch.setattr(smoke, "preprocess_image", zero_preprocess)
     monkeypatch.setattr(smoke, "_target_size", lambda _env: 224)
 
     rows = smoke.predict_image_folder(image_dir, "tomato", adapter_dir=asset_dir, device="cpu")

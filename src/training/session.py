@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Sized
 from datetime import datetime
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
@@ -99,7 +100,7 @@ class ContinualTrainingSession:
         self.history.resume_start_epoch = start_epoch
         batch_loss_window: List[float] = []
         train_started_at = time.perf_counter() - max(0.0, self._elapsed_before_resume)
-        total_batches = len(self.train_loader) if hasattr(self.train_loader, "__len__") else 0
+        total_batches = len(self.train_loader) if isinstance(self.train_loader, Sized) else 0
 
         if hasattr(self.trainer, "configure_training_plan"):
             self.trainer.configure_training_plan(total_batches=max(1, total_batches), num_epochs=self.num_epochs)

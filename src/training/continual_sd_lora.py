@@ -9,7 +9,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence, cast
 
 import torch
 import torch.nn as nn
@@ -23,6 +23,7 @@ from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multi
 from src.ood.continual_ood import ContinualOODDetector
 from src.training.ber_loss import BERLoss
 from src.training.quantization import assert_no_prohibited_4bit_flags
+from src.training.services.ood_calibration import calibrate_trainer_ood
 from src.training.services.persistence import (
     build_trainer_metadata_payload,
     compute_config_hash,
@@ -35,7 +36,6 @@ from src.training.services.persistence import (
 from src.training.services.persistence import (
     snapshot_training_state as snapshot_trainer_training_state,
 )
-from src.training.services.ood_calibration import calibrate_trainer_ood
 from src.training.services.runtime import (
     autocast_context,
     build_grad_scaler,
@@ -54,19 +54,27 @@ from src.training.services.runtime import (
 )
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
+AUTO_MODEL_FACTORY: Any = None
 try:
-    from transformers import AutoModel
-except Exception:  # pragma: no cover - test fallback
-    AutoModel = None  # type: ignore[assignment]
+    from transformers import AutoModel as _loaded_auto_model
 
+    AUTO_MODEL_FACTORY = _loaded_auto_model
+except Exception:  # pragma: no cover - test fallback
+    pass
+
+PEFT_LORA_CONFIG: Any = None
+PEFT_MODEL_CLASS: Any = None
+PEFT_GET_MODEL: Any = None
 try:
-    from peft import LoraConfig, PeftModel, get_peft_model
-except Exception:  # pragma: no cover - test fallback
-    LoraConfig = None  # type: ignore[assignment]
-    PeftModel = None  # type: ignore[assignment]
+    from peft import LoraConfig as _loaded_lora_config
+    from peft import PeftModel as _loaded_peft_model
+    from peft import get_peft_model as _loaded_peft_get_model
 
-    def get_peft_model(model: nn.Module, _cfg: Any) -> nn.Module:  # type: ignore[no-redef]
-        return model
+    PEFT_LORA_CONFIG = _loaded_lora_config
+    PEFT_MODEL_CLASS = _loaded_peft_model
+    PEFT_GET_MODEL = _loaded_peft_get_model
+except Exception:  # pragma: no cover - test fallback
+    pass
 
 
 logger = logging.getLogger(__name__)
@@ -351,7 +359,7 @@ class ContinualSDLoRATrainer:
         )
         self.backbone: Optional[nn.Module] = None
         self.adapter_model: Optional[nn.Module] = None
-        self.classifier: Optional[nn.Module] = None
+        self.classifier: Optional[nn.Linear] = None
         self.fusion: Optional[MultiScaleFeatureFusion] = None
         self.optimizer: Optional[torch.optim.Optimizer] = None
         self.scheduler: Optional[torch.optim.lr_scheduler._LRScheduler | torch.optim.lr_scheduler.LRScheduler] = None
@@ -375,9 +383,8 @@ class ContinualSDLoRATrainer:
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
         self._config_hash = compute_config_hash(self._contract)
-        self._peft_available = LoraConfig is not None
+        self._peft_available = PEFT_LORA_CONFIG is not None
         self._adapter_wrapped = False
-        self._peft_warning_emitted = False
         self._planned_scheduler_steps = 0
         self._planned_epochs = int(max(1, self.config.num_epochs))
         self._accumulation_counter = 0
@@ -449,10 +456,10 @@ class ContinualSDLoRATrainer:
         if class_to_idx:
             self.class_to_idx = dict(class_to_idx)
 
-        if AutoModel is None:
+        if AUTO_MODEL_FACTORY is None:
             raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
 
-        loaded_backbone = AutoModel.from_pretrained(self.config.backbone_model_name)
+        loaded_backbone = cast(nn.Module, AUTO_MODEL_FACTORY.from_pretrained(self.config.backbone_model_name))
         self.backbone = self._prepare_module_for_device(
             loaded_backbone,
             module_name="backbone",
@@ -560,7 +567,7 @@ class ContinualSDLoRATrainer:
     @staticmethod
     def _supports_low_cpu_mem_usage_kwarg() -> bool:
         try:
-            signature = inspect.signature(get_peft_model)
+            signature = inspect.signature(PEFT_GET_MODEL)
         except (TypeError, ValueError):
             return False
 
@@ -569,11 +576,11 @@ class ContinualSDLoRATrainer:
         return any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
 
     def _apply_lora(self, model: nn.Module, target_modules: Sequence[str]) -> nn.Module:
-        if LoraConfig is None:
+        if PEFT_LORA_CONFIG is None:
             self._raise_missing_peft()
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
-        lora_config = LoraConfig(
+        lora_config = PEFT_LORA_CONFIG(
             r=self.config.lora_r,
             lora_alpha=self.config.lora_alpha,
             lora_dropout=self.config.lora_dropout,
@@ -583,9 +590,9 @@ class ContinualSDLoRATrainer:
 
         supports_low_cpu_mem_usage = self._supports_low_cpu_mem_usage_kwarg()
         if supports_low_cpu_mem_usage:
-            wrapped = get_peft_model(model, lora_config, low_cpu_mem_usage=False)
+            wrapped = cast(nn.Module, PEFT_GET_MODEL(model, lora_config, low_cpu_mem_usage=False))
         else:
-            wrapped = get_peft_model(model, lora_config)
+            wrapped = cast(nn.Module, PEFT_GET_MODEL(model, lora_config))
 
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
@@ -636,7 +643,8 @@ class ContinualSDLoRATrainer:
         replacement = nn.Linear(old_classifier.in_features, new_out).to(self.device)
         if old_out > 0:
             replacement.weight.data[:old_out] = old_classifier.weight.data[:old_out]
-            replacement.bias.data[:old_out] = old_classifier.bias.data[:old_out]
+            if old_classifier.bias is not None and replacement.bias is not None:
+                replacement.bias.data[:old_out] = old_classifier.bias.data[:old_out]
         self.classifier = replacement
         self._trainable_params_cache = None
         self._refresh_optimizer_after_model_change()
@@ -754,6 +762,7 @@ class ContinualSDLoRATrainer:
             self.optimizer.zero_grad(set_to_none=True)
             self._accumulation_counter = 0
 
+        ber_components = getattr(self, "_last_ber_components", {}) if self.ber_loss is not None else {}
         return build_train_batch_stats(
             batch=batch,
             optimizer=self.optimizer,
@@ -765,9 +774,9 @@ class ContinualSDLoRATrainer:
             accumulation_steps=accumulation_steps,
             optimizer_steps=self.optimizer_steps,
             optimizer_step_applied=bool(should_step),
-            ber_ce_loss=getattr(self, "_last_ber_components", {}).get("ce") if self.ber_loss is not None else None,
-            ber_old_loss=getattr(self, "_last_ber_components", {}).get("ber_old") if self.ber_loss is not None else None,
-            ber_new_loss=getattr(self, "_last_ber_components", {}).get("ber_new") if self.ber_loss is not None else None,
+            ber_ce_loss=ber_components.get("ce"),
+            ber_old_loss=ber_components.get("ber_old"),
+            ber_new_loss=ber_components.get("ber_new"),
         )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
@@ -843,4 +852,4 @@ class ContinualSDLoRATrainer:
         return save_trainer_adapter(self, output_dir)
 
     def load_adapter(self, adapter_dir: str) -> Dict[str, Any]:
-        return load_trainer_adapter(self, adapter_dir, peft_model_cls=PeftModel)
+        return load_trainer_adapter(self, adapter_dir, peft_model_cls=PEFT_MODEL_CLASS)

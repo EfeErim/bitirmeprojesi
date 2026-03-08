@@ -10,9 +10,11 @@ Reference: Conformal Prediction for OOD detection via statistical hypothesis tes
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import torch
+
+from src.ood._scoring_utils import energy_from_logits, ensemble_z_score, mahalanobis_distance
 
 
 def compute_nonconformity_scores(
@@ -86,19 +88,21 @@ def score_all_classes(
         ``{class_id: ensemble_score}`` for every calibrated class.
     """
     scores: Dict[int, float] = {}
-    energy = float((-torch.logsumexp(logits.unsqueeze(0), dim=1))[0].item())
+    energy = energy_from_logits(logits.unsqueeze(0))[0]
 
     for class_id, stats in class_stats.items():
         mean = stats.mean.to(device=features.device, dtype=features.dtype)
         var = stats.var.to(device=features.device, dtype=features.dtype)
-        # Mahalanobis distance against this class
-        distance = float(
-            torch.sqrt(((features - mean) ** 2 / var).sum()).item()
+        distance = mahalanobis_distance(features, mean, var)
+        ensemble = ensemble_z_score(
+            distance,
+            energy,
+            mahalanobis_mu=stats.mahalanobis_mu,
+            mahalanobis_sigma=stats.mahalanobis_sigma,
+            energy_mu=stats.energy_mu,
+            energy_sigma=stats.energy_sigma,
         )
-        m_z = (distance - stats.mahalanobis_mu) / max(stats.mahalanobis_sigma, 1e-6)
-        e_z = (energy - stats.energy_mu) / max(stats.energy_sigma, 1e-6)
-        ensemble = 0.6 * m_z + 0.4 * e_z
-        scores[int(class_id)] = float(ensemble)
+        scores[int(class_id)] = float(ensemble.item())
 
     return scores
 
