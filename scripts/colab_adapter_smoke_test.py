@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -18,6 +19,18 @@ DEFAULT_DISCOVERY_ROOTS = (
     Path("/content/drive/MyDrive/aads_ulora"),
     Path("/content/drive/MyDrive"),
 )
+SKIP_DISCOVERY_DIR_NAMES = {
+    ".git",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".runtime_tmp",
+    ".venv",
+    "__pycache__",
+    "node_modules",
+}
 
 
 def _load_config(config_env: Optional[str]) -> Dict[str, Any]:
@@ -211,6 +224,16 @@ def _candidate_label(
     return " | ".join(label_bits)
 
 
+def _iter_adapter_meta_paths(root: Path) -> Iterable[Path]:
+    if not root.exists() or not root.is_dir():
+        return
+
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [name for name in dirnames if name not in SKIP_DISCOVERY_DIR_NAMES]
+        if "adapter_meta.json" in filenames:
+            yield Path(dirpath) / "adapter_meta.json"
+
+
 def discover_adapter_candidates(
     search_roots: Optional[Sequence[str | Path]] = None,
     *,
@@ -223,9 +246,7 @@ def discover_adapter_candidates(
     seen: set[str] = set()
 
     for root in roots:
-        if not root.exists() or not root.is_dir():
-            continue
-        for meta_path in sorted(root.rglob("adapter_meta.json")):
+        for meta_path in sorted(_iter_adapter_meta_paths(root)):
             adapter_dir = meta_path.parent
             adapter_key = str(adapter_dir.resolve())
             if adapter_key in seen:

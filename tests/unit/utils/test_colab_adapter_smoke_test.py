@@ -209,6 +209,17 @@ def test_discover_adapter_candidates_reads_drive_exports(tmp_path: Path):
     assert "run=run_456" in candidate["display_name"]
 
 
+def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
+    project_root = tmp_path / "project"
+    asset_dir = _write_adapter_export(project_root / "outputs" / "colab_notebook_training")
+    _write_adapter_export(project_root / ".venv" / "ignored_export")
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 1
+    assert candidates[0]["adapter_dir"] == str(asset_dir)
+
+
 def test_load_adapter_summary_accepts_crop_dir_as_adapter_root(monkeypatch, tmp_path: Path):
     crop_dir = tmp_path / "models" / "adapters" / "tomato"
     asset_dir = _write_adapter_export(crop_dir)
