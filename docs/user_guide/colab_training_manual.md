@@ -158,12 +158,22 @@ The notebook supports a discovery-first flow:
 - it prints the discovered candidates and shows a selection dropdown when widgets are available
 - it uses the selected adapter for metadata inspection and prediction
 
-The notebook also supports two manual path styles when you want to bypass discovery:
+The notebook also supports manual path inputs when you want to bypass discovery:
 
 - explicit export path with `ADAPTER_DIR`
   - parent export directory such as `outputs/colab_notebook_training/`
   - asset directory such as `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+  - telemetry run directory such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
+  - telemetry artifacts directory such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/`
+  - direct metadata file such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/adapter/adapter_meta.json`
 - deployed adapter layout with `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`
+  - `ADAPTER_ROOT` should be the parent of crop folders, for example `models/adapters/`
+
+For image inputs:
+
+- `IMAGE_PATH` must point to one image file
+- `BATCH_IMAGE_DIR` must point to one directory containing image files
+- `CROP_NAME` can stay `None` when the chosen adapter path already implies the crop, such as `models/adapters/<crop>/continual_sd_lora_adapter/` or a telemetry export with `crop_info.json`
 
 The notebook includes:
 

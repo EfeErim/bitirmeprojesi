@@ -108,6 +108,27 @@ def test_load_adapter_summary_accepts_asset_dir(monkeypatch, tmp_path: Path):
     assert summary["class_count"] == 2
 
 
+def test_load_adapter_summary_accepts_adapter_meta_file(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    meta_path = asset_dir / "adapter_meta.json"
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary("tomato", adapter_dir=meta_path, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+
+
+def test_load_adapter_summary_accepts_drive_run_dir_and_infers_crop(monkeypatch, tmp_path: Path):
+    run_dir = tmp_path / "telemetry" / "run_123"
+    asset_dir = _write_drive_adapter_export(run_dir, crop_name="tomato")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
 def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
@@ -177,3 +198,26 @@ def test_discover_adapter_candidates_reads_drive_exports(tmp_path: Path):
     assert candidate["crop_name"] == "tomato"
     assert candidate["run_id"] == "run_456"
     assert "run=run_456" in candidate["display_name"]
+
+
+def test_load_adapter_summary_accepts_crop_dir_as_adapter_root(monkeypatch, tmp_path: Path):
+    crop_dir = tmp_path / "models" / "adapters" / "tomato"
+    asset_dir = _write_adapter_export(crop_dir)
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary("tomato", adapter_root=crop_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+
+
+def test_load_adapter_summary_accepts_crop_dir_as_adapter_root_without_crop_name(
+    monkeypatch, tmp_path: Path
+):
+    crop_dir = tmp_path / "models" / "adapters" / "tomato"
+    asset_dir = _write_adapter_export(crop_dir)
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_root=crop_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"

@@ -78,7 +78,8 @@ def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
     if inferred is not None:
         return inferred
     raise ValueError(
-        "crop_name is required when it cannot be inferred from the adapter path or crop_info.json"
+        "crop_name is required when it cannot be inferred from the adapter path or crop_info.json. "
+        "Set CROP_NAME manually, or pass an adapter path that already implies the crop."
     )
 
 
@@ -96,6 +97,36 @@ def _is_adapter_dir(path: Path) -> bool:
     return path.is_dir() and (path / "adapter_meta.json").exists()
 
 
+def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
+    if path.name == "adapter_meta.json":
+        yield path.parent
+
+    yield path
+    yield path / "continual_sd_lora_adapter"
+    yield path / "adapter"
+    yield path / "artifacts" / "adapter"
+    yield path / "artifacts" / "continual_sd_lora_adapter"
+
+
+def _iter_adapter_root_candidates(path: Path, *, crop_key: str) -> Iterable[Path]:
+    yield path
+    yield path / "continual_sd_lora_adapter"
+    yield path / crop_key
+    yield path / crop_key / "continual_sd_lora_adapter"
+
+
+def _first_adapter_dir(candidates: Iterable[Path]) -> Optional[Path]:
+    seen: set[str] = set()
+    for candidate in candidates:
+        candidate_key = str(candidate)
+        if candidate_key in seen:
+            continue
+        seen.add(candidate_key)
+        if _is_adapter_dir(candidate):
+            return candidate
+    return None
+
+
 def _resolve_adapter_dir(
     crop_name: Optional[str],
     *,
@@ -105,19 +136,34 @@ def _resolve_adapter_dir(
 ) -> Path:
     if adapter_dir is not None:
         root = Path(adapter_dir)
-        if _is_adapter_dir(root):
-            return root
-        nested = root / "continual_sd_lora_adapter"
-        if _is_adapter_dir(nested):
-            return nested
-        raise FileNotFoundError(f"adapter_meta.json not found under explicit adapter_dir={root}")
+        resolved = _first_adapter_dir(_iter_explicit_adapter_dir_candidates(root))
+        if resolved is not None:
+            return resolved
+        raise FileNotFoundError(
+            "Could not resolve an adapter bundle from "
+            f"adapter_dir={root}. Pass the adapter asset directory, its parent export directory, "
+            "the telemetry run directory, the telemetry artifacts directory, or adapter_meta.json."
+        )
 
-    crop_key = _normalize_crop_name(crop_name or "")
     base_root = Path(adapter_root) if adapter_root is not None else _default_adapter_root(config_env)
-    candidate = base_root / crop_key / "continual_sd_lora_adapter"
-    if _is_adapter_dir(candidate):
-        return candidate
-    raise FileNotFoundError(f"Adapter not found for crop '{crop_key}' at {candidate}")
+    if crop_name is None:
+        resolved = _first_adapter_dir((base_root, base_root / "continual_sd_lora_adapter"))
+        if resolved is not None:
+            return resolved
+        raise ValueError(
+            "crop_name is required when resolving from ADAPTER_ROOT or the configured adapter_root. "
+            "Set CROP_NAME manually, or use ADAPTER_DIR to point at a specific adapter export."
+        )
+
+    crop_key = _normalize_crop_name(crop_name)
+    resolved = _first_adapter_dir(_iter_adapter_root_candidates(base_root, crop_key=crop_key))
+    if resolved is not None:
+        return resolved
+    raise FileNotFoundError(
+        f"Adapter not found for crop '{crop_key}' under adapter_root={base_root}. "
+        "Expected either <adapter_root>/<crop>/continual_sd_lora_adapter/, "
+        "<adapter_root>/<crop>/, or a direct adapter asset directory."
+    )
 
 
 def _build_adapter(crop_name: str, *, device: str) -> IndependentCropAdapter:
@@ -311,7 +357,9 @@ def predict_image_folder(
     """Run direct adapter predictions for all supported images in a folder."""
     folder = Path(image_dir)
     if not folder.is_dir():
-        raise NotADirectoryError(f"image_dir is not a directory: {folder}")
+        raise NotADirectoryError(
+            f"image_dir must be a directory containing images, but got: {folder}"
+        )
 
     resolved_dir = _resolve_adapter_dir(
         crop_name,

@@ -113,8 +113,15 @@ Training surfaces and output paths differ by entrypoint:
 
 - Use `colab_notebooks/3_adapter_smoke_test.ipynb` to load one trained crop adapter directly, inspect its metadata, and run smoke predictions without the router.
 - By default the notebook searches configured Drive roots for adapter bundles, lists the discovered candidates, and lets you choose which adapter to load.
-- `ADAPTER_DIR` can still point either to a direct `continual_sd_lora_adapter/` asset directory or its parent export directory when you want to bypass discovery.
-- If discovery is skipped and `ADAPTER_DIR` is not set, the notebook resolves adapters from `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`, falling back to the configured inference `adapter_root`.
+- `ADAPTER_DIR` is the forgiving manual override. It can point to a direct adapter asset directory, a parent export directory, a telemetry run directory, a telemetry `artifacts/` directory, or directly to `adapter_meta.json`.
+- Typical `ADAPTER_DIR` examples:
+  - `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+  - `outputs/colab_notebook_training/`
+  - `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
+  - `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/`
+  - `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/adapter/adapter_meta.json`
+- `ADAPTER_ROOT` is different: it should be the parent of crop directories, usually `models/adapters/`, so the notebook resolves `<ADAPTER_ROOT>/<crop>/continual_sd_lora_adapter/`.
+- `IMAGE_PATH` must be one image file. `BATCH_IMAGE_DIR` must be one directory containing image files.
 - The notebook includes:
   - one-image direct prediction for quick adapter verification
   - an optional folder pass that summarizes predicted labels, OOD decisions, and failed files
