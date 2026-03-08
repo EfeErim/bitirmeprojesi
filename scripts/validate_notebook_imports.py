@@ -171,11 +171,13 @@ def test_adapter_smoke_notebook_surface() -> bool:
     print(f"\nTesting {gate_label(step_id, 'adapter smoke-test helper surface')}...")
     try:
         from scripts.colab_adapter_smoke_test import (
+            discover_adapter_candidates,
             load_adapter_summary,
             predict_image_folder,
             predict_single_image,
         )
 
+        assert callable(discover_adapter_candidates)
         assert callable(load_adapter_summary)
         assert callable(predict_single_image)
         assert callable(predict_image_folder)

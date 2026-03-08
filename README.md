@@ -112,8 +112,9 @@ Training surfaces and output paths differ by entrypoint:
 ## Adapter Smoke Test
 
 - Use `colab_notebooks/3_adapter_smoke_test.ipynb` to load one trained crop adapter directly, inspect its metadata, and run smoke predictions without the router.
-- `ADAPTER_DIR` can point either to a direct `continual_sd_lora_adapter/` asset directory or its parent export directory.
-- If `ADAPTER_DIR` is not set, the notebook resolves adapters from `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`, falling back to the configured inference `adapter_root`.
+- By default the notebook searches configured Drive roots for adapter bundles, lists the discovered candidates, and lets you choose which adapter to load.
+- `ADAPTER_DIR` can still point either to a direct `continual_sd_lora_adapter/` asset directory or its parent export directory when you want to bypass discovery.
+- If discovery is skipped and `ADAPTER_DIR` is not set, the notebook resolves adapters from `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`, falling back to the configured inference `adapter_root`.
 - The notebook includes:
   - one-image direct prediction for quick adapter verification
   - an optional folder pass that summarizes predicted labels, OOD decisions, and failed files

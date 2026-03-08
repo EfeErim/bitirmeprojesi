@@ -152,7 +152,13 @@ Notebook 3 (`colab_notebooks/3_adapter_smoke_test.ipynb`) is the maintained dire
 
 Use it when you want to verify that a trained adapter bundle still loads correctly on the DINO backbone and can produce predictions without involving the router.
 
-The notebook supports two adapter path styles:
+The notebook supports a discovery-first flow:
+
+- it searches the configured Drive roots for adapter bundles
+- it prints the discovered candidates and shows a selection dropdown when widgets are available
+- it uses the selected adapter for metadata inspection and prediction
+
+The notebook also supports two manual path styles when you want to bypass discovery:
 
 - explicit export path with `ADAPTER_DIR`
   - parent export directory such as `outputs/colab_notebook_training/`
