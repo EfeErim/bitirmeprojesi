@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
+from src.training.session import ContinualTrainingSession
 
 
 class DummyBackbone(nn.Module):
@@ -165,6 +166,8 @@ def test_predict_payload_contains_v6_ood_keys():
     trainer.fusion = DummyModule()
     trainer.classifier = nn.Linear(4, 1)
     trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
+    trainer.ood_detector.calibration_version = 1
+    trainer.ood_detector.class_stats = {0: object()}
     trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
         "mahalanobis_z": torch.tensor([0.1]),
         "energy_z": torch.tensor([0.2]),
@@ -199,6 +202,8 @@ def test_predict_payload_refreshes_cached_class_index_after_class_update():
     trainer.fusion = DummyModule()
     trainer.classifier = nn.Linear(4, 1)
     trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
+    trainer.ood_detector.calibration_version = 1
+    trainer.ood_detector.class_stats = {0: object()}
     trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
         "mahalanobis_z": torch.tensor([0.1]),
         "energy_z": torch.tensor([0.2]),
@@ -567,6 +572,11 @@ def test_save_and_load_adapter_roundtrip_restores_raw_adapter_weights(monkeypatc
     first_weight_name, first_weight = next(iter(trainer.adapter_model.state_dict().items()))
     trainer.classifier.weight.data.fill_(0.25)
     trainer.fusion.projections[0].weight.data.fill_(0.5)
+    calibration_loader = [
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 0], dtype=torch.long)},
+        {"images": torch.ones(2, 3, 8, 8), "labels": torch.tensor([0, 0], dtype=torch.long)},
+    ]
+    trainer.calibrate_ood(calibration_loader)
 
     save_dir = tmp_path / "adapter"
     trainer.save_adapter(str(save_dir))
@@ -621,3 +631,87 @@ def test_save_and_load_adapter_roundtrip_restores_ood_state(monkeypatch, tmp_pat
 
     assert int(reloaded.ood_detector.calibration_version) == int(trainer.ood_detector.calibration_version)
     assert set(reloaded.ood_detector.class_stats.keys()) == {0, 1}
+
+
+def test_save_adapter_auto_calibrates_from_session_loader(monkeypatch, tmp_path):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={"healthy": 0, "disease_a": 1})
+
+    calibration_loader = [
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)},
+        {"images": torch.ones(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)},
+    ]
+    _ = ContinualTrainingSession(trainer, calibration_loader, 1)
+
+    save_dir = tmp_path / "auto_calibrated_adapter"
+    trainer.save_adapter(str(save_dir))
+
+    assert trainer.ood_detector.calibration_version > 0
+    assert trainer.ood_detector.class_stats
+    assert (save_dir / "continual_sd_lora_adapter" / "adapter_meta.json").exists()
+
+
+def test_predict_with_ood_raises_when_ood_not_calibrated():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.class_to_idx = {"healthy": 0}
+
+    class DummyModule(nn.Module):
+        def forward(self, *args, **kwargs):
+            return args[0]
+
+    trainer.adapter_model = DummyModule()
+    trainer.fusion = DummyModule()
+    trainer.classifier = nn.Linear(4, 1)
+    trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
+
+    with pytest.raises(RuntimeError, match="No calibration loader is available for automatic OOD calibration before predict_with_ood\\(\\)"):
+        trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
+
+
+def test_save_adapter_rejects_uncalibrated_ood_state(monkeypatch, tmp_path):
+    from src.training import continual_sd_lora as continual_module
+
+    class FakeAutoModel:
+        @staticmethod
+        def from_pretrained(_model_name):
+            return DummyBackbone()
+
+    monkeypatch.setattr(continual_module, "AutoModel", FakeAutoModel)
+    monkeypatch.setattr(ContinualSDLoRATrainer, "_apply_lora", lambda self, model, _targets: model)
+
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.initialize_engine(class_to_idx={"healthy": 0})
+
+    with pytest.raises(RuntimeError, match="No calibration loader is available for automatic OOD calibration before save_adapter\\(\\)"):
+        trainer.save_adapter(str(tmp_path / "adapter"))

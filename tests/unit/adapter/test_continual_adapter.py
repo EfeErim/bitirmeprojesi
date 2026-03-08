@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+import pytest
 import torch
 
 from src.adapter import independent_crop_adapter as adapter_module
@@ -12,6 +13,14 @@ from src.training.types import TrainingCheckpointPayload
 class FakeOOD:
     def __init__(self):
         self.calibration_version = 2
+        self.class_stats = {}
+
+    def calibration_issue(self):
+        if not self.class_stats:
+            return "OOD detector has no calibrated class statistics."
+        if self.calibration_version <= 0:
+            return "OOD detector calibration version is unset."
+        return None
 
 
 class FakeConfig:
@@ -75,6 +84,7 @@ class FakeTrainer:
 
     def calibrate_ood(self, loader):
         self.ood_detector.calibration_version += 1
+        self.ood_detector.class_stats = {0: object()}
         return {"num_classes": float(len(self.class_to_idx))}
 
     def predict_with_ood(self, image):
@@ -152,6 +162,7 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy", "disease_a"])
+    adapter.calibrate_ood([{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}])
 
     save_dir = tmp_path / "model_dir"
     adapter.save_adapter(str(save_dir))
@@ -169,6 +180,7 @@ def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path)
 
     adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
     adapter.initialize_engine(class_names=["healthy", "disease_a"])
+    adapter.calibrate_ood([{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}])
 
     save_dir = tmp_path / "model_dir"
     adapter.save_adapter(str(save_dir))
@@ -186,6 +198,30 @@ def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path)
         "target_modules_resolved",
     }
     assert required <= set(meta.keys())
+
+
+def test_save_adapter_auto_calibrates_from_training_session_loader(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+    train_loader = [{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}]
+    adapter.build_training_session(train_loader=train_loader)
+
+    save_dir = tmp_path / "auto_calibrated_model"
+    adapter.save_adapter(str(save_dir))
+
+    assert adapter.ood_calibration_version == 3
+
+
+def test_save_adapter_raises_without_loader_when_ood_uncalibrated(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+
+    with pytest.raises(RuntimeError, match="No calibration loader is available for automatic export calibration"):
+        adapter.save_adapter(str(tmp_path / "missing_loader"))
 
 
 def test_adapter_training_checkpoint_passthrough(monkeypatch, tmp_path):

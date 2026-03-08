@@ -61,6 +61,21 @@ def test_session_run_emits_observer_events_and_history():
     assert event_types.count("epoch_end") == 1
 
 
+def test_session_sets_preferred_ood_calibration_loader_on_trainer():
+    trainer, _ = _build_minimal_trainer()
+    train_loader = _make_loader(2)
+    val_loader = _make_loader(1)
+
+    _ = ContinualTrainingSession(
+        trainer,
+        train_loader,
+        1,
+        val_loader=val_loader,
+    )
+
+    assert trainer._ood_calibration_loader is val_loader
+
+
 def test_session_resume_continues_global_step_and_resume_epoch():
     trainer, _ = _build_minimal_trainer()
     session = ContinualTrainingSession(

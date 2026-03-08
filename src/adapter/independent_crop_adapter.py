@@ -68,6 +68,7 @@ class IndependentCropAdapter:
         self.class_to_idx: Dict[str, int] = {}
         self.is_trained = False
         self._trainer: Optional["ContinualSDLoRATrainer"] = None
+        self._calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
 
         logger.info("IndependentCropAdapter initialized for %s on %s", self.crop_name, self.device)
 
@@ -186,6 +187,7 @@ class IndependentCropAdapter:
         """Build a training session around the initialized trainer."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before build_training_session().")
+        self._calibration_loader = val_loader if val_loader is not None else train_loader
         resolved_epochs = resolve_session_num_epochs(self._trainer.config, num_epochs)
         training_session_cls = _training_session_type()
         return training_session_cls(
@@ -244,6 +246,7 @@ class IndependentCropAdapter:
         """Calibrate OOD statistics for current classes."""
         if self._trainer is None:
             raise RuntimeError("initialize_engine() must run before calibrate_ood().")
+        self._calibration_loader = loader
         result = self._trainer.calibrate_ood(loader)
         return {
             "status": "calibrated",
@@ -252,6 +255,17 @@ class IndependentCropAdapter:
                 "num_classes": int(result.get("num_classes", 0)),
             },
         }
+
+    def _ensure_ood_calibrated_for_export(self) -> None:
+        if self._trainer is None:
+            raise RuntimeError("Adapter is not initialized.")
+        issue = self._trainer.ood_detector.calibration_issue()
+        if issue is None:
+            return
+        if self._calibration_loader is None:
+            raise RuntimeError(f"{issue} No calibration loader is available for automatic export calibration.")
+        logger.info("Auto-calibrating OOD state before adapter export for %s", self.crop_name)
+        self.calibrate_ood(self._calibration_loader)
 
     def predict_with_ood(self, image: torch.Tensor) -> Dict[str, Any]:
         """Return diagnosis + v6 OOD payload for a single image tensor."""
@@ -292,6 +306,7 @@ class IndependentCropAdapter:
         """Persist adapter assets with v6 metadata schema."""
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
+        self._ensure_ood_calibrated_for_export()
 
         root = Path(checkpoint_dir)
         asset_dir = self._trainer.save_adapter(str(root))

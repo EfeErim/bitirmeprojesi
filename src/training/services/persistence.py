@@ -22,6 +22,11 @@ def compute_config_hash(contract: Dict[str, Any]) -> str:
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
 
+def assert_exportable_ood_state(ood_detector: ContinualOODDetector) -> None:
+    """Fail fast when an adapter export would silently disable OOD."""
+    ood_detector.assert_calibrated(operation="saving adapter assets")
+
+
 def serialize_ood_state(ood_detector: ContinualOODDetector) -> Dict[str, Any]:
     class_stats: Dict[str, Any] = {}
     for class_id, stats in ood_detector.class_stats.items():
@@ -297,11 +302,11 @@ def restore_training_state(
 
 def save_trainer_adapter(trainer: Any, output_dir: str) -> Path:
     out = Path(output_dir)
-    adapter_dir = out / "continual_sd_lora_adapter"
-    adapter_dir.mkdir(parents=True, exist_ok=True)
-
     if trainer.adapter_model is None or trainer.classifier is None or trainer.fusion is None:
         raise RuntimeError("Cannot save adapter before initialization.")
+    assert_exportable_ood_state(trainer.ood_detector)
+    adapter_dir = out / "continual_sd_lora_adapter"
+    adapter_dir.mkdir(parents=True, exist_ok=True)
 
     if hasattr(trainer.adapter_model, "save_pretrained"):
         trainer.adapter_model.save_pretrained(adapter_dir)

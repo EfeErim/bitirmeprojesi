@@ -137,6 +137,20 @@ class ContinualOODDetector:
             energy_sigma=stats.energy_sigma,
         )
 
+    def calibration_issue(self) -> Optional[str]:
+        """Return a human-readable calibration problem, if any."""
+        if not self.class_stats:
+            return "OOD detector has no calibrated class statistics."
+        if self.calibration_version <= 0:
+            return "OOD detector calibration version is unset."
+        return None
+
+    def assert_calibrated(self, *, operation: str) -> None:
+        issue = self.calibration_issue()
+        if issue is None:
+            return
+        raise RuntimeError(f"{issue} Run calibrate_ood(...) before {operation}.")
+
     def calibrate(self, features: torch.Tensor, logits: torch.Tensor, labels: torch.Tensor) -> Dict[str, float]:
         if features.ndim != 2:
             raise ValueError("features must be [N, D]")

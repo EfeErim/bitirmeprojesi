@@ -58,7 +58,15 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
             )()
             self.class_to_idx = {}
             self.target_modules_resolved = ["transformer.block.0.linear"]
-            self.ood_detector = type("OOD", (), {"calibration_version": 1})()
+            self.ood_detector = type(
+                "OOD",
+                (),
+                {
+                    "calibration_version": 1,
+                    "class_stats": {0: object()},
+                    "calibration_issue": lambda self: None,
+                },
+            )()
             self.current_epoch = 0
 
         def initialize_engine(self, class_to_idx=None):

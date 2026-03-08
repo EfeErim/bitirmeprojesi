@@ -63,6 +63,10 @@ class ContinualTrainingSession:
         self.best_metric_state = dict(resume_payload.get("best_metric_state", {}))
         self.history.resume_start_epoch = int(self.progress_state.resume_start_epoch)
         self._elapsed_before_resume = float(self.progress_state.elapsed_sec)
+        preferred_loader = self.val_loader if self.val_loader is not None else self.train_loader
+        set_loader = getattr(self.trainer, "set_preferred_ood_calibration_loader", None)
+        if callable(set_loader):
+            set_loader(preferred_loader)
 
     def _emit(self, event_type: str, payload: Dict[str, Any]) -> None:
         event = {

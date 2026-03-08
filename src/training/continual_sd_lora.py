@@ -391,6 +391,7 @@ class ContinualSDLoRATrainer:
         self.best_metric_state: Dict[str, Any] = {}
         self._idx_to_class: Dict[int, str] = {}
         self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
+        self._ood_calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
         configure_runtime_reproducibility(self.config, np_module=np)
         self._refresh_class_index_cache()
 
@@ -441,6 +442,25 @@ class ContinualSDLoRATrainer:
             if scale > 0.0:
                 grad_norm /= scale
         return grad_norm
+
+    def set_preferred_ood_calibration_loader(self, loader: Iterable[Dict[str, torch.Tensor]]) -> None:
+        self._ood_calibration_loader = loader
+
+    def _ensure_ood_calibrated(self, *, operation: str) -> None:
+        issue = self.ood_detector.calibration_issue()
+        if issue is None:
+            return
+        if self._ood_calibration_loader is not None:
+            self.calibrate_ood(self._ood_calibration_loader)
+            issue = self.ood_detector.calibration_issue()
+            if issue is None:
+                return
+            raise RuntimeError(
+                f"{issue} Automatic OOD calibration before {operation} did not produce usable class statistics."
+            )
+        raise RuntimeError(
+            f"{issue} No calibration loader is available for automatic OOD calibration before {operation}."
+        )
 
     def configure_training_plan(self, *, total_batches: int, num_epochs: Optional[int] = None) -> None:
         configure_training_plan_state(self, total_batches=total_batches, num_epochs=num_epochs)
@@ -780,11 +800,13 @@ class ContinualSDLoRATrainer:
         )
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
+        self._ood_calibration_loader = loader
         return calibrate_trainer_ood(self, loader)
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
         if self.adapter_model is None or self.classifier is None or self.fusion is None:
             raise RuntimeError("Cannot predict before adapter, classifier, and fusion are initialized.")
+        self._ensure_ood_calibrated(operation="predict_with_ood()")
         self.adapter_model.eval()
         self.classifier.eval()
         self.fusion.eval()
@@ -849,6 +871,7 @@ class ContinualSDLoRATrainer:
         return restore_trainer_training_state(self, payload, np_module=np)
 
     def save_adapter(self, output_dir: str) -> Path:
+        self._ensure_ood_calibrated(operation="save_adapter()")
         return save_trainer_adapter(self, output_dir)
 
     def load_adapter(self, adapter_dir: str) -> Dict[str, Any]:
