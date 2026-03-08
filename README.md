@@ -1,9 +1,10 @@
 # AADS v6
 
-This repo now keeps only two supported flows:
+This repo now keeps three supported notebook/runtime flows:
 
 - `colab_notebooks/2_interactive_adapter_training.ipynb` for Colab training
 - `colab_notebooks/1_router_adapter_inference.ipynb` or `scripts/colab_router_adapter_inference.py` for router-driven inference
+- `colab_notebooks/3_adapter_smoke_test.ipynb` for direct adapter validation on top of the DINO backbone
 
 The canonical app entrypoints are:
 
@@ -106,6 +107,16 @@ Training surfaces and output paths differ by entrypoint:
 - Notebook bootstrap helpers live in `scripts/colab_repo_bootstrap.py`
 - Telemetry and checkpoints live in `scripts/colab_live_telemetry.py` and `scripts/colab_checkpointing.py`
 - Notebook and script wrappers now sit on top of the workflow layer instead of owning the core orchestration
+- Adapter smoke-test helpers live in `scripts/colab_adapter_smoke_test.py`
+
+## Adapter Smoke Test
+
+- Use `colab_notebooks/3_adapter_smoke_test.ipynb` to load one trained crop adapter directly, inspect its metadata, and run smoke predictions without the router.
+- `ADAPTER_DIR` can point either to a direct `continual_sd_lora_adapter/` asset directory or its parent export directory.
+- If `ADAPTER_DIR` is not set, the notebook resolves adapters from `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`, falling back to the configured inference `adapter_root`.
+- The notebook includes:
+  - one-image direct prediction for quick adapter verification
+  - an optional folder pass that summarizes predicted labels, OOD decisions, and failed files
 
 ## Adapter Layout
 
@@ -123,7 +134,8 @@ Notebook-to-inference handoff in 3 steps:
 
 1. Train in `colab_notebooks/2_interactive_adapter_training.ipynb`.
 2. Take adapter output from either `outputs/colab_notebook_training/continual_sd_lora_adapter/` or `telemetry/<RUN_ID>/artifacts/adapter/`.
-3. Deploy either by:
+3. Optionally verify the adapter directly in `colab_notebooks/3_adapter_smoke_test.ipynb`.
+4. Deploy either by:
 	 - copying to `models/adapters/<crop>/continual_sd_lora_adapter/` (default inference lookup), or
 	 - keeping custom location and running inference with `--adapter-root <parent_of_crop_dirs>`.
 

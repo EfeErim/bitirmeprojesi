@@ -119,3 +119,15 @@ Inference is one path only:
 4. Adapter returns diagnosis and OOD payload through a typed inference contract.
 
 By default inference resolves adapters from `models/adapters/<crop>/continual_sd_lora_adapter/`, unless `adapter_root` / `--adapter-root` is provided.
+
+## Adapter Validation
+
+- `scripts/colab_adapter_smoke_test.py`
+- `colab_notebooks/3_adapter_smoke_test.ipynb`
+
+This direct-adapter surface is separate from router inference:
+
+1. Resolve one crop adapter from either an explicit export path or a deployed adapter root.
+2. Load the adapter bundle directly through `IndependentCropAdapter`.
+3. Inspect the saved metadata contract.
+4. Run a one-image smoke prediction or a small folder sanity pass without router involvement.

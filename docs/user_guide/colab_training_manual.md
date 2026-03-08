@@ -2,6 +2,8 @@
 
 Use `colab_notebooks/2_interactive_adapter_training.ipynb`.
 
+For direct post-training adapter verification, use `colab_notebooks/3_adapter_smoke_test.ipynb`.
+
 ## Dataset Contract
 
 ```text
@@ -143,6 +145,25 @@ Inference default adapter lookup remains:
 - `models/adapters/<crop>/continual_sd_lora_adapter/`
 
 If your adapter was produced by Notebook 2, copy or move it from either the local notebook export or the Drive telemetry adapter export under `models/adapters/<crop>/`, or use inference `--adapter-root`.
+
+## Adapter Smoke Test
+
+Notebook 3 (`colab_notebooks/3_adapter_smoke_test.ipynb`) is the maintained direct-adapter validation surface.
+
+Use it when you want to verify that a trained adapter bundle still loads correctly on the DINO backbone and can produce predictions without involving the router.
+
+The notebook supports two adapter path styles:
+
+- explicit export path with `ADAPTER_DIR`
+  - parent export directory such as `outputs/colab_notebook_training/`
+  - asset directory such as `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+- deployed adapter layout with `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`
+
+The notebook includes:
+
+- adapter metadata inspection
+- one-image smoke prediction
+- optional folder-level sanity check with per-file errors, predicted-class counts, and OOD counts
 
 ## Validation
 

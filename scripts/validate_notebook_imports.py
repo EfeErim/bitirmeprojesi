@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the two supported surfaces: Colab training helpers and router inference runtime."""
+"""Validate the maintained notebook support surfaces."""
 
 from __future__ import annotations
 
@@ -166,6 +166,26 @@ def test_runtime_surface() -> bool:
         return False
 
 
+def test_adapter_smoke_notebook_surface() -> bool:
+    step_id = "ADAPTER_SMOKE"
+    print(f"\nTesting {gate_label(step_id, 'adapter smoke-test helper surface')}...")
+    try:
+        from scripts.colab_adapter_smoke_test import (
+            load_adapter_summary,
+            predict_image_folder,
+            predict_single_image,
+        )
+
+        assert callable(load_adapter_summary)
+        assert callable(predict_single_image)
+        assert callable(predict_image_folder)
+        print(f"PASS {gate_label(step_id, 'Adapter smoke-test helper surface available')}")
+        return True
+    except Exception as exc:
+        print(f"FAIL {gate_label(step_id, f'Adapter smoke-test surface failed: {exc}')}")
+        return False
+
+
 def test_colab_helpers() -> bool:
     step_id = "COLAB"
     print(f"\nTesting {gate_label(step_id, 'colab support helpers')}...")
@@ -194,6 +214,7 @@ def main() -> int:
         ("Quantization Guard", test_quantization_guard()),
         ("Adapter Lifecycle", test_adapter_surface()),
         ("Router Runtime", test_runtime_surface()),
+        ("Adapter Smoke Notebook", test_adapter_smoke_notebook_surface()),
         ("Colab Helpers", test_colab_helpers()),
     ]
 
