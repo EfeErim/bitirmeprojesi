@@ -111,10 +111,24 @@ Typical tuning order for notebook users:
 
 Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:
 
-- Adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- Notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-- Validation metric gate: `outputs/colab_notebook_training/artifacts/validation/metric_gate.json`
-- Training checkpoints + manifests: `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/checkpoints/` (default root `/content/drive/MyDrive/aads_ulora`)
+- Local outputs stay under `outputs/colab_notebook_training/`
+  - adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+  - notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+- Drive outputs stay under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
+  Default root: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
+  - `artifacts/adapter/`
+  - `artifacts/validation/`
+  - `artifacts/best_checkpoint.json`
+  - `artifacts/export_layout.json`
+  - `artifacts/crop_info.json`
+  - `checkpoints/`
+- Meaning of each Drive path:
+  - `artifacts/adapter/` holds the adapter exported from the best checkpoint
+  - `artifacts/validation/` holds the validation metrics and plots for that best checkpoint
+  - `artifacts/best_checkpoint.json` identifies which checkpoint was selected as best
+  - `artifacts/export_layout.json` records the final local/Drive paths for the run
+  - `artifacts/crop_info.json` records the crop name for the run
+  - `checkpoints/` holds the rolling checkpoint history during training
 
 Workflow / CLI training (`TrainingWorkflow.run(...)` and `python -m src.app.cli training ...`) writes:
 
@@ -128,7 +142,7 @@ Inference default adapter lookup remains:
 
 - `models/adapters/<crop>/continual_sd_lora_adapter/`
 
-If your adapter was produced by Notebook 2, copy or move it under `models/adapters/<crop>/`, or use inference `--adapter-root`.
+If your adapter was produced by Notebook 2, copy or move it from either the local notebook export or the Drive telemetry adapter export under `models/adapters/<crop>/`, or use inference `--adapter-root`.
 
 ## Validation
 

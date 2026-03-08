@@ -71,9 +71,23 @@ python -m src.app.cli training tomato data\runtime_notebook_datasets outputs\tra
 Training surfaces and output paths differ by entrypoint:
 
 - Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`)
-	- adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-	- notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-	- checkpoint stream: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/checkpoints/` (or `AADS_DRIVE_LOG_ROOT` override)
+	- local outputs stay under `outputs/colab_notebook_training/`
+		- adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+		- notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+	- Drive outputs stay under `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/` (or `AADS_DRIVE_LOG_ROOT/telemetry/<RUN_ID>/`)
+		- `artifacts/adapter/`
+		- `artifacts/validation/`
+		- `artifacts/best_checkpoint.json`
+		- `artifacts/export_layout.json`
+		- `artifacts/crop_info.json`
+		- `checkpoints/`
+	- simple rule:
+		- `artifacts/adapter/` = adapter from the best checkpoint
+		- `artifacts/validation/` = metrics for that best checkpoint
+		- `artifacts/best_checkpoint.json` = which checkpoint was chosen as best
+		- `artifacts/export_layout.json` = saved path summary for the run
+		- `artifacts/crop_info.json` = crop name marker for the run
+		- `checkpoints/` = rolling checkpoint saves during training
 - Workflow / CLI (`TrainingWorkflow.run(...)`, `python -m src.app.cli training ...`)
 	- adapter: `<output_dir>/continual_sd_lora_adapter/`
 	- artifacts: `<output_dir>/training_metrics/`
@@ -101,14 +115,14 @@ Inference expects adapters under:
 models/adapters/<crop>/continual_sd_lora_adapter/
 ```
 
-If a training run writes the adapter elsewhere (for example Notebook 2 under `outputs/colab_notebook_training/`), move or copy it into `models/adapters/<crop>/`, or pass `--adapter-root` to inference entrypoints.
+If a training run writes the adapter elsewhere (for example Notebook 2 under `outputs/colab_notebook_training/` or Drive telemetry under `telemetry/<RUN_ID>/artifacts/adapter/`), move or copy it into `models/adapters/<crop>/`, or pass `--adapter-root` to inference entrypoints.
 
 ## End-to-End Path Map
 
 Notebook-to-inference handoff in 3 steps:
 
 1. Train in `colab_notebooks/2_interactive_adapter_training.ipynb`.
-2. Take adapter output from `outputs/colab_notebook_training/continual_sd_lora_adapter/`.
+2. Take adapter output from either `outputs/colab_notebook_training/continual_sd_lora_adapter/` or `telemetry/<RUN_ID>/artifacts/adapter/`.
 3. Deploy either by:
 	 - copying to `models/adapters/<crop>/continual_sd_lora_adapter/` (default inference lookup), or
 	 - keeping custom location and running inference with `--adapter-root <parent_of_crop_dirs>`.
