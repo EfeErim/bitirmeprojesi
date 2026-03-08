@@ -68,7 +68,7 @@ def _read_json_if_exists(path: Path) -> Dict[str, Any]:
 def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_crop = adapter_dir.parent.name.strip().lower()
-        if parent_crop not in {"adapter", "artifacts", "models"}:
+        if parent_crop not in {"adapter", "artifacts", "colab_notebook_training", "models", "outputs"}:
             return parent_crop
 
     crop_info_candidates = [

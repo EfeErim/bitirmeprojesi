@@ -60,6 +60,15 @@ def _write_adapter_export(root: Path) -> Path:
     return asset_dir
 
 
+def _write_adapter_export_with_crop_info(root: Path, crop_name: str = "tomato") -> Path:
+    asset_dir = _write_adapter_export(root)
+    (asset_dir / "crop_info.json").write_text(
+        f'{{"crop": "{crop_name}", "run_id": "run_local", "export_source": "notebook_2"}}',
+        encoding="utf-8",
+    )
+    return asset_dir
+
+
 def _write_drive_adapter_export(root: Path, crop_name: str = "tomato") -> Path:
     asset_dir = root / "artifacts" / "adapter"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -124,6 +133,19 @@ def test_load_adapter_summary_accepts_drive_run_dir_and_infers_crop(monkeypatch,
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
 
     summary = smoke.load_adapter_summary(None, adapter_dir=run_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
+def test_load_adapter_summary_infers_crop_from_local_export_crop_info(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export_with_crop_info(
+        tmp_path / "outputs" / "colab_notebook_training",
+        crop_name="tomato",
+    )
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=asset_dir, device="cpu")
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
@@ -211,13 +233,17 @@ def test_discover_adapter_candidates_reads_drive_exports(tmp_path: Path):
 
 def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
     project_root = tmp_path / "project"
-    asset_dir = _write_adapter_export(project_root / "outputs" / "colab_notebook_training")
+    asset_dir = _write_adapter_export_with_crop_info(
+        project_root / "outputs" / "colab_notebook_training",
+        crop_name="tomato",
+    )
     _write_adapter_export(project_root / ".venv" / "ignored_export")
 
     candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
 
     assert len(candidates) == 1
     assert candidates[0]["adapter_dir"] == str(asset_dir)
+    assert candidates[0]["crop_name"] == "tomato"
 
 
 def test_load_adapter_summary_accepts_crop_dir_as_adapter_root(monkeypatch, tmp_path: Path):
