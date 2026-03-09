@@ -9,6 +9,8 @@ import torch
 
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
+from src.training.services.config_surface import extract_continual_training_config
+from src.training.services.serialization import serialize_ood_state
 
 TrainerFactory = Callable[[Dict[str, Any]], Any]
 CheckpointPayloadFactory = Callable[[], type[Any]]
@@ -29,20 +31,15 @@ def normalize_trainer_config(
     backbone: Optional[Dict[str, Any]] = None,
     fusion: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    normalized = dict(trainer_config or {})
-    if not normalized:
-        normalized = {
-            "backbone": dict(backbone or {"model_name": model_name}),
-            "adapter": {
-                "target_modules_strategy": "all_linear_transformer",
-                "lora_r": 16,
-                "lora_alpha": 32,
-                "lora_dropout": 0.1,
-            },
-            "fusion": dict(fusion or {"layers": [2, 5, 8, 11]}),
-            "ood": {"threshold_factor": 2.0},
-            "device": str(device),
-        }
+    normalized = extract_continual_training_config(
+        trainer_config,
+        model_name=str(model_name),
+        device=device,
+    )
+    if isinstance(backbone, dict) and backbone:
+        normalized["backbone"] = {**dict(normalized.get("backbone", {})), **dict(backbone)}
+    if isinstance(fusion, dict) and fusion:
+        normalized["fusion"] = {**dict(normalized.get("fusion", {})), **dict(fusion)}
     normalized["device"] = str(normalized.get("device", str(device)))
     return normalized
 
@@ -126,7 +123,6 @@ def build_runtime_adapter_metadata(
     model_name: str,
     ood_calibration_version: int,
     target_modules_resolved: list[str],
-    serialize_ood_state_fn: Callable[[Any], Dict[str, Any]],
 ) -> Dict[str, Any]:
     trainer_config = (
         trainer.config.as_contract_dict()
@@ -135,7 +131,7 @@ def build_runtime_adapter_metadata(
     )
     ood_detector = getattr(trainer, "ood_detector", None)
     ood_state = (
-        serialize_ood_state_fn(ood_detector)
+        serialize_ood_state(ood_detector, strict=False)
         if hasattr(ood_detector, "class_stats")
         else {
             "threshold_factor": 2.0,
@@ -147,6 +143,7 @@ def build_runtime_adapter_metadata(
         schema_version=schema_version,
         engine=engine,
         trainer_config=trainer_config,
+        config_hash=str(getattr(trainer, "_config_hash", "")),
         backbone={
             "model_name": getattr(trainer.config, "backbone_model_name", model_name),
             "frozen": True,
@@ -161,4 +158,11 @@ def build_runtime_adapter_metadata(
         ood_calibration={"version": int(ood_calibration_version)},
         ood_state=ood_state,
         target_modules_resolved=list(target_modules_resolved),
+        adapter_runtime={
+            "peft_available": bool(getattr(trainer, "_peft_available", False)),
+            "adapter_wrapped": bool(getattr(trainer, "_adapter_wrapped", False)),
+            "degraded_without_peft": bool(
+                getattr(trainer, "_peft_available", False) and not getattr(trainer, "_adapter_wrapped", False)
+            ),
+        },
     ).to_dict()

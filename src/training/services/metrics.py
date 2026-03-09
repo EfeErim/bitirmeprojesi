@@ -18,6 +18,13 @@ DEFAULT_PLAN_TARGETS = {
     "conformal_empirical_coverage": 0.95,
 }
 
+OOD_METRIC_NAMES = (
+    "ood_auroc",
+    "ood_false_positive_rate",
+    "sure_ds_f1",
+    "conformal_empirical_coverage",
+)
+
 
 def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
     if spec_path is None:
@@ -104,66 +111,34 @@ def compute_plan_metrics(
     }
 
 
-def validate_plan_metrics(
-    metrics: Dict[str, Optional[float]],
-    targets: Optional[Dict[str, float]] = None,
+def _build_check(
+    value: Optional[float],
+    target: float,
     *,
-    require_ood: bool = False,
+    operator: str,
 ) -> Dict[str, Any]:
-    target_values = dict(targets or load_plan_targets())
-    checks: Dict[str, Dict[str, Any]] = {}
-
-    acc_value = metrics.get("accuracy")
-    checks["accuracy"] = {
-        "value": acc_value,
-        "target": target_values["accuracy"],
-        "operator": ">=",
-        "asserted": acc_value is not None,
-        "passed": bool(acc_value is not None and float(acc_value) >= float(target_values["accuracy"])),
+    if operator == ">=":
+        passed = bool(value is not None and float(value) >= float(target))
+    elif operator == "<=":
+        passed = bool(value is not None and float(value) <= float(target))
+    else:  # pragma: no cover - internal misuse guard
+        raise ValueError(f"Unsupported operator: {operator}")
+    return {
+        "value": value,
+        "target": float(target),
+        "operator": operator,
+        "asserted": value is not None,
+        "passed": passed,
     }
 
-    auroc_value = metrics.get("ood_auroc")
-    checks["ood_auroc"] = {
-        "value": auroc_value,
-        "target": target_values["ood_auroc"],
-        "operator": ">=",
-        "asserted": auroc_value is not None,
-        "passed": bool(auroc_value is not None and float(auroc_value) >= float(target_values["ood_auroc"])),
-    }
 
-    fpr_value = metrics.get("ood_false_positive_rate")
-    checks["ood_false_positive_rate"] = {
-        "value": fpr_value,
-        "target": target_values["ood_false_positive_rate"],
-        "operator": "<=",
-        "asserted": fpr_value is not None,
-        "passed": bool(fpr_value is not None and float(fpr_value) <= float(target_values["ood_false_positive_rate"])),
-    }
-
-    # SURE+ DS-F1 (soft gate)
-    ds_f1_value = metrics.get("sure_ds_f1")
-    ds_f1_target = target_values.get("sure_ds_f1", 0.90)
-    checks["sure_ds_f1"] = {
-        "value": ds_f1_value,
-        "target": ds_f1_target,
-        "operator": ">=",
-        "asserted": ds_f1_value is not None,
-        "passed": bool(ds_f1_value is not None and float(ds_f1_value) >= float(ds_f1_target)),
-    }
-
-    # Conformal empirical coverage (soft gate)
-    coverage_value = metrics.get("conformal_empirical_coverage")
-    coverage_target = target_values.get("conformal_empirical_coverage", 0.95)
-    checks["conformal_empirical_coverage"] = {
-        "value": coverage_value,
-        "target": coverage_target,
-        "operator": ">=",
-        "asserted": coverage_value is not None,
-        "passed": bool(coverage_value is not None and float(coverage_value) >= float(coverage_target)),
-    }
-
+def _finalize_validation(
+    checks: Dict[str, Dict[str, Any]],
+    *,
+    require_metrics: bool,
+) -> Dict[str, Any]:
     missing_checks = [name for name, detail in checks.items() if not detail["asserted"]]
-    if require_ood:
+    if require_metrics:
         gating_status = "failed" if missing_checks else "ready"
         gating_reason = "missing_required_metrics" if missing_checks else "all_required_metrics_present"
     else:
@@ -171,19 +146,141 @@ def validate_plan_metrics(
         gating_reason = "missing_optional_metrics" if missing_checks else "all_metrics_present"
 
     all_asserted_passed = all(detail["passed"] for detail in checks.values() if detail["asserted"])
-    hard_fail = require_ood and bool(missing_checks)
+    hard_fail = require_metrics and bool(missing_checks)
     passed = bool(all_asserted_passed and not hard_fail)
 
     return {
         "passed": passed,
-        "require_ood": bool(require_ood),
-        "targets": target_values,
         "checks": checks,
         "gating": {
             "status": gating_status,
             "reason": gating_reason,
             "missing_metrics": missing_checks,
         },
+    }
+
+
+def validate_ood_metrics(
+    metrics: Dict[str, Optional[float]],
+    targets: Optional[Dict[str, float]] = None,
+    *,
+    require_ood: bool = False,
+) -> Dict[str, Any]:
+    target_values = dict(targets or load_plan_targets())
+    checks = {
+        "ood_auroc": _build_check(
+            metrics.get("ood_auroc"),
+            target_values["ood_auroc"],
+            operator=">=",
+        ),
+        "ood_false_positive_rate": _build_check(
+            metrics.get("ood_false_positive_rate"),
+            target_values["ood_false_positive_rate"],
+            operator="<=",
+        ),
+        "sure_ds_f1": _build_check(
+            metrics.get("sure_ds_f1"),
+            target_values.get("sure_ds_f1", DEFAULT_PLAN_TARGETS["sure_ds_f1"]),
+            operator=">=",
+        ),
+        "conformal_empirical_coverage": _build_check(
+            metrics.get("conformal_empirical_coverage"),
+            target_values.get(
+                "conformal_empirical_coverage",
+                DEFAULT_PLAN_TARGETS["conformal_empirical_coverage"],
+            ),
+            operator=">=",
+        ),
+    }
+    finalized = _finalize_validation(checks, require_metrics=require_ood)
+    return {
+        "passed": finalized["passed"],
+        "require_ood": bool(require_ood),
+        "targets": target_values,
+        "checks": checks,
+        "gating": finalized["gating"],
+    }
+
+
+def validate_plan_metrics(
+    metrics: Dict[str, Optional[float]],
+    targets: Optional[Dict[str, float]] = None,
+    *,
+    require_ood: bool = False,
+) -> Dict[str, Any]:
+    target_values = dict(targets or load_plan_targets())
+    checks: Dict[str, Dict[str, Any]] = {
+        "accuracy": _build_check(
+            metrics.get("accuracy"),
+            target_values["accuracy"],
+            operator=">=",
+        ),
+    }
+    ood_validation = validate_ood_metrics(metrics, target_values, require_ood=require_ood)
+    checks.update(ood_validation["checks"])
+    finalized = _finalize_validation(checks, require_metrics=require_ood)
+    return {
+        "passed": finalized["passed"],
+        "require_ood": bool(require_ood),
+        "targets": target_values,
+        "checks": checks,
+        "gating": finalized["gating"],
+    }
+
+
+def build_production_readiness(
+    *,
+    classification_metric_gate: Optional[Dict[str, Any]],
+    classification_split: str,
+    ood_evidence_source: Optional[str],
+    ood_metrics: Optional[Dict[str, Optional[float]]],
+    targets: Optional[Dict[str, float]] = None,
+    context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    target_values = dict(targets or load_plan_targets())
+    classification_gate = dict(classification_metric_gate or {})
+    classification_metrics = dict(classification_gate.get("metrics", {}))
+    classification_eval = dict(classification_gate.get("evaluation", {}))
+    classification_checks = dict(classification_eval.get("checks", {}))
+    accuracy_check = classification_checks.get(
+        "accuracy",
+        _build_check(classification_metrics.get("accuracy"), target_values["accuracy"], operator=">="),
+    )
+
+    resolved_ood_metrics = {name: None for name in OOD_METRIC_NAMES}
+    for name, value in dict(ood_metrics or {}).items():
+        if name in resolved_ood_metrics:
+            resolved_ood_metrics[name] = value
+    ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=True)
+
+    missing_requirements: list[str] = []
+    if not accuracy_check.get("asserted", False) or not accuracy_check.get("passed", False):
+        missing_requirements.append("accuracy")
+    for metric_name, detail in ood_validation["checks"].items():
+        if not detail.get("asserted", False) or not detail.get("passed", False):
+            missing_requirements.append(metric_name)
+
+    passed = not missing_requirements
+    status = "ready" if passed else "failed"
+    return {
+        "status": status,
+        "passed": bool(passed),
+        "ood_evidence_source": str(ood_evidence_source or "unavailable"),
+        "classification_evidence": {
+            "split_name": str(classification_split),
+            "metrics": classification_metrics,
+            "evaluation": {
+                "checks": {"accuracy": accuracy_check},
+            },
+        },
+        "ood_evidence": {
+            "source": str(ood_evidence_source or "unavailable"),
+            "metrics": resolved_ood_metrics,
+            "evaluation": ood_validation,
+        },
+        "missing_requirements": missing_requirements,
+        "targets": target_values,
+        "context": dict(context or {}),
     }
 
 

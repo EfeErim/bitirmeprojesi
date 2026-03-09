@@ -10,6 +10,10 @@ from typing import Any, Dict, Optional
 
 from src.shared.json_utils import deep_merge, read_json_dict
 from src.training.quantization import assert_no_prohibited_4bit_flags
+from src.training.services.config_surface import (
+    DEFAULT_BACKBONE_MODEL_NAME,
+    normalize_continual_training_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -116,45 +120,17 @@ class ConfigurationManager:
 
     def _normalize_training_surface(self, merged_config: Dict[str, Any]) -> None:
         training = merged_config.setdefault("training", {})
-        continual = training.setdefault("continual", {})
-
-        optimization = continual.setdefault("optimization", {})
-        scheduler = optimization.setdefault("scheduler", {})
-        data = continual.setdefault("data", {})
-        early_stopping = continual.setdefault("early_stopping", {})
-        evaluation = continual.setdefault("evaluation", {})
-
-        continual["seed"] = int(continual.get("seed", 42))
-        continual["deterministic"] = bool(continual.get("deterministic", False))
-
-        optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 1))
-        optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 0.0))
-        optimization["mixed_precision"] = str(optimization.get("mixed_precision", "auto"))
-        optimization["label_smoothing"] = float(optimization.get("label_smoothing", 0.0))
-
-        scheduler["name"] = str(scheduler.get("name", "none"))
-        scheduler["warmup_ratio"] = float(scheduler.get("warmup_ratio", 0.0))
-        scheduler["min_lr"] = float(scheduler.get("min_lr", 0.0))
-        scheduler["step_on"] = str(scheduler.get("step_on", "batch"))
-
-        data["sampler"] = str(data.get("sampler", "shuffle"))
-        data["loader_error_policy"] = str(data.get("loader_error_policy", "tolerant"))
-        data["target_size"] = int(data.get("target_size", 224))
-        data["cache_size"] = int(data.get("cache_size", 1000))
-        data["validate_images_on_init"] = bool(data.get("validate_images_on_init", True))
-
-        evaluation_best_metric = str(evaluation.get("best_metric", early_stopping.get("metric", "val_loss")))
-        evaluation["best_metric"] = evaluation_best_metric
-        evaluation["emit_ood_gate"] = bool(evaluation.get("emit_ood_gate", True))
-        evaluation["require_ood_for_gate"] = bool(evaluation.get("require_ood_for_gate", False))
-
-        early_metric = str(early_stopping.get("metric", evaluation_best_metric))
-        inferred_mode = "min" if early_metric in {"val_loss", "generalization_gap"} else "max"
-        early_stopping["enabled"] = bool(early_stopping.get("enabled", False))
-        early_stopping["metric"] = early_metric
-        early_stopping["mode"] = str(early_stopping.get("mode", inferred_mode))
-        early_stopping["patience"] = int(early_stopping.get("patience", 3))
-        early_stopping["min_delta"] = float(early_stopping.get("min_delta", 0.0))
+        continual = normalize_continual_training_config(
+            training.get("continual", {}),
+            model_name=str(
+                dict(training.get("continual", {})).get("backbone", {}).get(
+                    "model_name",
+                    DEFAULT_BACKBONE_MODEL_NAME,
+                )
+            ),
+            device=dict(training.get("continual", {})).get("device", "cuda"),
+        )
+        training["continual"] = continual
 
         colab = merged_config.setdefault("colab", {})
         colab_training = colab.setdefault("training", {})

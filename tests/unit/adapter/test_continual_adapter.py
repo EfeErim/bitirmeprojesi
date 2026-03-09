@@ -23,6 +23,19 @@ class FakeOOD:
         return None
 
 
+class FakeCalibrationStats:
+    def __init__(self):
+        self.mean = torch.tensor([0.1, 0.2])
+        self.var = torch.tensor([1.0, 1.5])
+        self.mahalanobis_mu = 0.3
+        self.mahalanobis_sigma = 0.4
+        self.energy_mu = 0.5
+        self.energy_sigma = 0.6
+        self.threshold = 0.7
+        self.sure_semantic_threshold = 0.8
+        self.sure_confidence_threshold = 0.9
+
+
 class FakeConfig:
     backbone_model_name = "facebook/dinov3-vitl16-pretrain-lvd1689m"
     fusion_layers = [2, 5, 8, 11]
@@ -212,6 +225,26 @@ def test_save_adapter_auto_calibrates_from_training_session_loader(monkeypatch, 
     adapter.save_adapter(str(save_dir))
 
     assert adapter.ood_calibration_version == 3
+
+
+def test_adapter_metadata_golden_contract_with_exportable_ood_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+    adapter.trainer.ood_detector.class_stats = {0: FakeCalibrationStats()}
+    adapter.trainer.ood_detector.calibration_version = 5
+
+    save_dir = tmp_path / "golden_model"
+    adapter.save_adapter(str(save_dir))
+    meta = json.loads((save_dir / "continual_sd_lora_adapter" / "adapter_meta.json").read_text(encoding="utf-8"))
+
+    assert meta["schema_version"] == "v6"
+    assert meta["engine"] == "continual_sd_lora"
+    assert meta["class_to_idx"] == {"healthy": 0}
+    assert meta["ood_calibration"]["version"] == 5
+    assert meta["ood_state"]["class_stats"]["0"]["mean"] == [0.10000000149011612, 0.20000000298023224]
+    assert meta["ood_state"]["class_stats"]["0"]["threshold"] == 0.7
 
 
 def test_save_adapter_raises_without_loader_when_ood_uncalibrated(monkeypatch, tmp_path):

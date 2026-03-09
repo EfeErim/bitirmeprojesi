@@ -14,6 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from src.training.services.reporting import (
+    persist_production_readiness_artifact as persist_production_readiness_artifact_core,
     persist_training_history_artifacts as persist_training_history_artifacts_core,
 )
 from src.training.services.reporting import (
@@ -27,6 +28,10 @@ def _artifact_dir(root: Path, *parts: str) -> Path:
         target /= part
     target.mkdir(parents=True, exist_ok=True)
     return target
+
+
+def notebook_artifact_root(root: Path) -> Path:
+    return _artifact_dir(root)
 
 
 def ensure_notebook_checkpoint_manager(
@@ -285,4 +290,27 @@ def persist_validation_artifacts(
         conformal_empirical_coverage=conformal_empirical_coverage,
         conformal_avg_set_size=conformal_avg_set_size,
         context=context,
+    )
+
+
+def persist_production_readiness_artifact(
+    *,
+    root: Path,
+    classification_metric_gate: Dict[str, Any] | None,
+    classification_split: str,
+    ood_evidence_source: str | None,
+    ood_metrics: Dict[str, Any] | None,
+    targets: Optional[Dict[str, float]] = None,
+    context: Optional[Dict[str, Any]] = None,
+    telemetry: Any = None,
+) -> Dict[str, Any]:
+    return persist_production_readiness_artifact_core(
+        artifact_root=_artifact_dir(root),
+        classification_metric_gate=classification_metric_gate,
+        classification_split=classification_split,
+        ood_evidence_source=ood_evidence_source,
+        ood_metrics=ood_metrics,
+        targets=targets,
+        context=context,
+        telemetry=telemetry,
     )

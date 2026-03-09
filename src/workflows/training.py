@@ -3,46 +3,41 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
+from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.reporting import (
     persist_batch_metrics_artifacts,
+    persist_production_readiness_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_summary_artifact,
     persist_validation_artifacts,
 )
 from src.training.validation import evaluate_model_with_artifact_metrics
+from src.workflows.training_support import (
+    build_artifact_payload,
+    prepare_training_run,
+    select_calibration_loader,
+    stringify_paths,
+)
+from src.workflows.training_support import (
+    loader_size as workflow_loader_size,
+)
 
 Observer = Callable[[Dict[str, Any]], None]
 
 
 def _loader_size(loader: Any) -> int:
-    dataset = getattr(loader, "dataset", None)
-    if dataset is not None:
-        try:
-            return int(len(dataset))
-        except Exception:
-            return 0
-    try:
-        return int(len(loader))
-    except Exception:
-        return 0
+    return workflow_loader_size(loader)
 
 
 def _stringify_paths(value: Any) -> Any:
-    if isinstance(value, Path):
-        return str(value)
-    if isinstance(value, dict):
-        return {str(key): _stringify_paths(item) for key, item in value.items()}
-    if isinstance(value, list):
-        return [_stringify_paths(item) for item in value]
-    return value
+    return stringify_paths(value)
 
 
 def _last_history_value(history_payload: Dict[str, Any], key: str) -> Optional[float]:
@@ -64,6 +59,9 @@ class TrainingWorkflowResult:
     artifacts: Dict[str, Any] = field(default_factory=dict)
     ood_calibration: Dict[str, Any] = field(default_factory=dict)
     checkpoint_records: List[Dict[str, Any]] = field(default_factory=list)
+    ood_evidence_source: str = ""
+    ood_benchmark: Dict[str, Any] = field(default_factory=dict)
+    production_readiness: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -77,6 +75,9 @@ class TrainingWorkflowResult:
             "artifacts": _stringify_paths(self.artifacts),
             "ood_calibration": dict(self.ood_calibration),
             "checkpoint_records": [dict(item) for item in self.checkpoint_records],
+            "ood_evidence_source": str(self.ood_evidence_source),
+            "ood_benchmark": _stringify_paths(self.ood_benchmark),
+            "production_readiness": dict(self.production_readiness),
         }
 
 
@@ -248,6 +249,9 @@ class TrainingWorkflow:
         checkpoint_records: List[Dict[str, Any]],
         ood_calibration: Dict[str, Any],
         history_payload: Dict[str, Any],
+        ood_evidence_source: str,
+        ood_benchmark: Dict[str, Any],
+        production_readiness: Dict[str, Any],
     ) -> Dict[str, Any]:
         return {
             "run_id": run_id,
@@ -265,6 +269,9 @@ class TrainingWorkflow:
             "best_metric_name": str(history_payload.get("best_metric_name", "")),
             "best_metric_value": history_payload.get("best_metric_value"),
             "best_epoch": int(history_payload.get("best_epoch", 0)),
+            "ood_evidence_source": str(ood_evidence_source or ""),
+            "ood_benchmark": dict(ood_benchmark),
+            "production_readiness": dict(production_readiness),
             "final_metrics": {
                 key: value
                 for key, value in {
@@ -281,6 +288,17 @@ class TrainingWorkflow:
                 if value is not None
             },
         }
+
+    @staticmethod
+    def _select_authoritative_evaluation(
+        validation_artifacts: Dict[str, Any],
+        test_artifacts: Dict[str, Any],
+    ) -> tuple[str, Dict[str, Any]]:
+        if isinstance(test_artifacts, dict) and isinstance(test_artifacts.get("metric_gate"), dict):
+            return "test", test_artifacts
+        if isinstance(validation_artifacts, dict) and isinstance(validation_artifacts.get("metric_gate"), dict):
+            return "val", validation_artifacts
+        return "", {}
 
     def run(
         self,
@@ -307,41 +325,28 @@ class TrainingWorkflow:
         if not crop_name:
             raise ValueError("crop_name must not be empty")
 
-        training_cfg = dict(self.config.get("training", {}).get("continual", {}))
-        data_cfg = dict(training_cfg.get("data", {}))
-        colab_cfg = dict(self.config.get("colab", {}).get("training", {}))
-        run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}")
-
-        loaders = create_training_loaders(
-            data_dir=str(data_dir),
-            crop=crop_name,
-            batch_size=int(training_cfg.get("batch_size", 8)),
-            num_workers=int(num_workers if num_workers is not None else colab_cfg.get("num_workers", 2)),
-            use_cache=bool(use_cache),
-            cache_size=int(data_cfg.get("cache_size", 1000)),
-            target_size=int(data_cfg.get("target_size", 224)),
-            error_policy=str(error_policy or data_cfg.get("loader_error_policy", "tolerant")),
-            sampler=str(sampler or data_cfg.get("sampler", "shuffle")),
-            seed=int(training_cfg.get("seed", 42)),
-            validate_images_on_init=bool(data_cfg.get("validate_images_on_init", True)),
-            pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
-        )
-
-        detected_classes = list(class_names or getattr(loaders["train"].dataset, "classes", []))
-        if not detected_classes:
-            raise ValueError(f"No classes found for crop '{crop_name}' in {data_dir}")
-
-        adapter = IndependentCropAdapter(
-            crop_name=crop_name,
-            model_name=str(
-                training_cfg.get("backbone", {}).get(
-                    "model_name",
-                    "facebook/dinov3-vitl16-pretrain-lvd1689m",
-                )
-            ),
+        run_setup = prepare_training_run(
+            config=self.config,
             device=self.device,
+            crop_name=crop_name,
+            data_dir=data_dir,
+            class_names=class_names,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            use_cache=use_cache,
+            sampler=sampler,
+            error_policy=error_policy,
+            run_id=run_id,
+            loader_factory=create_training_loaders,
+            adapter_factory=IndependentCropAdapter,
         )
-        adapter.initialize_engine(class_names=detected_classes, config=self.config)
+        training_cfg = run_setup.training_cfg
+        colab_cfg = run_setup.colab_cfg
+        run_id = run_setup.run_id
+        loaders = run_setup.loaders
+        loader_sizes = dict(run_setup.loader_sizes)
+        detected_classes = list(run_setup.detected_classes)
+        adapter = run_setup.adapter
 
         checkpoint_records: List[Dict[str, Any]] = []
         batch_history: List[Dict[str, Any]] = []
@@ -394,17 +399,13 @@ class TrainingWorkflow:
         history = session.run()
         history_payload = history.to_dict()
         val_loader = loaders.get("val")
-        val_loader_size = _loader_size(val_loader)
-        calibration_loader = loaders["train"]
-        if val_loader is not None and val_loader_size > 0:
-            calibration_loader = val_loader
+        calibration_loader = select_calibration_loader(loaders, loader_sizes)
         ood_calibration = {}
         if _loader_size(calibration_loader) > 0:
             ood_calibration = adapter.calibrate_ood(calibration_loader)
         adapter_dir = adapter.save_adapter(str(output_dir))
 
         artifact_dir = Path(output_dir) / "training_metrics"
-        loader_sizes = {name: _loader_size(loader) for name, loader in loaders.items()}
         training_artifacts = self._persist_training_artifacts(
             artifact_dir=artifact_dir,
             history_payload=history_payload,
@@ -439,6 +440,80 @@ class TrainingWorkflow:
             artifact_subdir="test",
         )
 
+        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
+        authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
+            validation_artifacts,
+            test_artifacts,
+        )
+        real_ood_present = _loader_size(loaders.get("ood")) > 0
+        ood_evidence_source = "real_ood_split" if real_ood_present else "unavailable"
+        ood_evidence_metrics: Dict[str, Any] = (
+            dict(authoritative_artifacts.get("metric_gate", {}).get("metrics", {}))
+            if real_ood_present and authoritative_artifacts
+            else {}
+        )
+        ood_benchmark: Dict[str, Any] = {}
+        if (
+            not real_ood_present
+            and str(evaluation_cfg.get("ood_fallback_strategy", "held_out_benchmark")) == "held_out_benchmark"
+            and bool(evaluation_cfg.get("ood_benchmark_auto_run", True))
+        ):
+            ood_benchmark = run_leave_one_class_out_benchmark(
+                crop_name=crop_name,
+                class_names=detected_classes,
+                loaders=loaders,
+                config=self.config,
+                device=self.device,
+                artifact_root=artifact_dir,
+                adapter_factory=IndependentCropAdapter,
+                run_id=run_id,
+                num_epochs=num_epochs,
+                telemetry=telemetry,
+                emit_event=lambda event_type, payload: self._emit_telemetry(
+                    telemetry,
+                    event_type,
+                    payload,
+                    phase="evaluation",
+                ),
+                min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
+            )
+            ood_evidence_source = "held_out_benchmark"
+            ood_evidence_metrics = dict(ood_benchmark.get("metrics", {}))
+
+        readiness_artifacts = persist_production_readiness_artifact(
+            artifact_root=artifact_dir,
+            classification_metric_gate=(
+                dict(authoritative_artifacts.get("metric_gate", {}))
+                if isinstance(authoritative_artifacts, dict)
+                else None
+            ),
+            classification_split=authoritative_split,
+            ood_evidence_source=ood_evidence_source,
+            ood_metrics=ood_evidence_metrics,
+            context={
+                "run_id": run_id,
+                "crop_name": crop_name,
+                "loader_sizes": loader_sizes,
+                "classification_split": authoritative_split,
+                "ood_benchmark_status": ood_benchmark.get("status"),
+                "ood_benchmark_passed": ood_benchmark.get("passed"),
+            },
+            telemetry=telemetry,
+        )
+        production_readiness = dict(readiness_artifacts.get("payload", {}))
+        self._emit_telemetry(
+            telemetry,
+            "production_readiness_ready",
+            {
+                "run_id": run_id,
+                "crop_name": crop_name,
+                "status": production_readiness.get("status"),
+                "passed": production_readiness.get("passed"),
+                "ood_evidence_source": production_readiness.get("ood_evidence_source"),
+            },
+            phase="artifact",
+        )
+
         summary_payload = self._build_summary_payload(
             run_id=run_id,
             crop_name=crop_name,
@@ -449,19 +524,22 @@ class TrainingWorkflow:
             checkpoint_records=checkpoint_records,
             ood_calibration=ood_calibration,
             history_payload=history_payload,
+            ood_evidence_source=ood_evidence_source,
+            ood_benchmark=ood_benchmark,
+            production_readiness=production_readiness,
         )
         summary_artifacts = persist_training_summary_artifact(
             artifact_root=artifact_dir,
             summary_payload=summary_payload,
             telemetry=telemetry,
         )
-        artifact_payload = _stringify_paths(
-            {
-                "training": training_artifacts,
-                "validation": validation_artifacts.get("paths", {}),
-                "test": test_artifacts.get("paths", {}),
-                "summary": summary_artifacts,
-            }
+        artifact_payload = build_artifact_payload(
+            training_artifacts=training_artifacts,
+            validation_artifacts=validation_artifacts,
+            test_artifacts=test_artifacts,
+            ood_benchmark=ood_benchmark,
+            readiness_artifacts=readiness_artifacts,
+            summary_artifacts=summary_artifacts,
         )
 
         result = TrainingWorkflowResult(
@@ -475,6 +553,9 @@ class TrainingWorkflow:
             artifacts=artifact_payload,
             ood_calibration=ood_calibration,
             checkpoint_records=checkpoint_records,
+            ood_evidence_source=ood_evidence_source,
+            ood_benchmark=ood_benchmark,
+            production_readiness=production_readiness,
         )
 
         self._emit_telemetry(

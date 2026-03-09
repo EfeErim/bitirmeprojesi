@@ -140,3 +140,77 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
     reloaded = IndependentCropAdapter(crop_name="tomato", device="cpu")
     reloaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
     assert reloaded.is_trained is True
+
+
+def test_training_checkpoint_roundtrip_without_model_download(monkeypatch, tmp_path):
+    from src.adapter import independent_crop_adapter as adapter_module
+
+    class FakeTrainerConfig:
+        @classmethod
+        def from_training_config(cls, _payload):
+            return cls()
+
+    class FakeTrainer:
+        def __init__(self, config):
+            self.config = type("Cfg", (), {"num_epochs": 2, "as_contract_dict": lambda self: {}})()
+            self.class_to_idx = {}
+            self.target_modules_resolved = ["transformer.block.0.linear"]
+            self.ood_detector = type(
+                "OOD",
+                (),
+                {
+                    "calibration_version": 0,
+                    "class_stats": {},
+                    "calibration_issue": lambda self: "OOD detector has no calibrated class statistics.",
+                },
+            )()
+            self.current_epoch = 0
+
+        def initialize_engine(self, class_to_idx=None):
+            self.class_to_idx = dict(class_to_idx or {})
+
+        def snapshot_training_state(self):
+            return TrainingCheckpointPayload(
+                schema_version="v6_training_checkpoint",
+                created_at="2026-03-07T00:00:00Z",
+                trainer_config={},
+                class_to_idx=dict(self.class_to_idx),
+                target_modules_resolved=list(self.target_modules_resolved),
+                model_state={"adapter_model": {}, "classifier": {}, "fusion": {}},
+                optimizer_state={},
+                ood_state={},
+                rng_state={},
+                current_epoch=int(self.current_epoch),
+            )
+
+        def restore_training_state(self, payload):
+            checkpoint = (
+                payload
+                if isinstance(payload, TrainingCheckpointPayload)
+                else TrainingCheckpointPayload.from_dict(payload)
+            )
+            self.class_to_idx = dict(checkpoint.class_to_idx)
+            self.current_epoch = int(checkpoint.current_epoch)
+            return checkpoint
+
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy", "disease_a"])
+    checkpoint_dir = adapter.save_training_checkpoint(
+        str(tmp_path / "checkpoint"),
+        session_state={
+            "run_id": "run_42",
+            "progress_state": {"epoch": 2, "global_step": 11},
+            "history": {"train_loss": [0.3, 0.2]},
+        },
+        run_id="run_42",
+    )
+
+    reloaded = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+    payload = reloaded.load_training_checkpoint(str(checkpoint_dir))
+
+    assert payload["run_id"] == "run_42"
+    assert payload["progress_state"]["global_step"] == 11
+    assert payload["history"]["train_loss"] == [0.3, 0.2]

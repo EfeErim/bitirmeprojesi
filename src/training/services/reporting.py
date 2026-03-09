@@ -10,7 +10,11 @@ import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 
 from src.shared.artifacts import ArtifactStore
-from src.training.services.metrics import compute_plan_metrics, write_plan_metric_artifact
+from src.training.services.metrics import (
+    build_production_readiness,
+    compute_plan_metrics,
+    write_plan_metric_artifact,
+)
 
 _HISTORY_KEYS = [
     "train_loss",
@@ -209,6 +213,84 @@ def persist_training_summary_artifact(
     summary_json = ArtifactStore(training_dir).write_json("summary.json", summary_payload)
     _copy_to_telemetry(telemetry, summary_json, "training/summary.json")
     return {"summary_json": summary_json}
+
+
+def persist_ood_benchmark_artifacts(
+    *,
+    artifact_root: Path,
+    summary_payload: Dict[str, Any],
+    telemetry: Any = None,
+) -> Dict[str, Path]:
+    benchmark_dir = _artifact_dir(artifact_root, "ood_benchmark")
+    store = ArtifactStore(benchmark_dir)
+    summary_json = store.write_json("summary.json", summary_payload)
+    folds = list(summary_payload.get("folds", [])) if isinstance(summary_payload, dict) else []
+    headers = [
+        "held_out_class",
+        "status",
+        "reason",
+        "accuracy",
+        "ood_auroc",
+        "ood_false_positive_rate",
+        "sure_ds_f1",
+        "conformal_empirical_coverage",
+        "conformal_avg_set_size",
+        "train_samples",
+        "calibration_samples",
+        "eval_in_distribution_samples",
+        "eval_ood_samples",
+    ]
+    rows: List[List[Any]] = []
+    for fold in folds:
+        metrics = dict(fold.get("metrics", {}))
+        sample_counts = dict(fold.get("sample_counts", {}))
+        rows.append(
+            [
+                fold.get("held_out_class", ""),
+                fold.get("status", ""),
+                fold.get("reason", ""),
+                metrics.get("accuracy", ""),
+                metrics.get("ood_auroc", ""),
+                metrics.get("ood_false_positive_rate", ""),
+                metrics.get("sure_ds_f1", ""),
+                metrics.get("conformal_empirical_coverage", ""),
+                metrics.get("conformal_avg_set_size", ""),
+                sample_counts.get("train_samples", ""),
+                sample_counts.get("calibration_samples", ""),
+                sample_counts.get("eval_in_distribution_samples", ""),
+                sample_counts.get("eval_ood_samples", ""),
+            ]
+        )
+    per_fold_csv = _write_csv(benchmark_dir / "per_fold.csv", headers, rows)
+    _copy_to_telemetry(telemetry, summary_json, "ood_benchmark/summary.json")
+    _copy_to_telemetry(telemetry, per_fold_csv, "ood_benchmark/per_fold.csv")
+    return {"summary_json": summary_json, "per_fold_csv": per_fold_csv}
+
+
+def persist_production_readiness_artifact(
+    *,
+    artifact_root: Path,
+    classification_metric_gate: Dict[str, Any] | None,
+    classification_split: str,
+    ood_evidence_source: str | None,
+    ood_metrics: Dict[str, Any] | None,
+    targets: Dict[str, float] | None = None,
+    context: Dict[str, Any] | None = None,
+    telemetry: Any = None,
+) -> Dict[str, Any]:
+    artifact_root = Path(artifact_root)
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    payload = build_production_readiness(
+        classification_metric_gate=classification_metric_gate,
+        classification_split=classification_split,
+        ood_evidence_source=ood_evidence_source,
+        ood_metrics=ood_metrics,
+        targets=targets,
+        context=context,
+    )
+    readiness_json = ArtifactStore(artifact_root).write_json("production_readiness.json", payload)
+    _copy_to_telemetry(telemetry, readiness_json, "production_readiness.json")
+    return {"payload": payload, "readiness_json": readiness_json}
 
 
 def persist_validation_artifacts(

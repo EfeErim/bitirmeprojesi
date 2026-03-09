@@ -14,6 +14,7 @@ import torch
 from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
+from src.training.services.serialization import serialize_ood_state as build_serialized_ood_state
 from src.training.types import TrainingCheckpointPayload
 
 
@@ -28,36 +29,7 @@ def assert_exportable_ood_state(ood_detector: ContinualOODDetector) -> None:
 
 
 def serialize_ood_state(ood_detector: ContinualOODDetector) -> Dict[str, Any]:
-    class_stats: Dict[str, Any] = {}
-    for class_id, stats in ood_detector.class_stats.items():
-        class_stats[str(class_id)] = {
-            "mean": stats.mean.detach().cpu().tolist(),
-            "var": stats.var.detach().cpu().tolist(),
-            "mahalanobis_mu": float(stats.mahalanobis_mu),
-            "mahalanobis_sigma": float(stats.mahalanobis_sigma),
-            "energy_mu": float(stats.energy_mu),
-            "energy_sigma": float(stats.energy_sigma),
-            "threshold": float(stats.threshold),
-            "sure_semantic_threshold": float(stats.sure_semantic_threshold),
-            "sure_confidence_threshold": float(stats.sure_confidence_threshold),
-        }
-    payload: Dict[str, Any] = {
-        "threshold_factor": float(ood_detector.threshold_factor),
-        "calibration_version": int(ood_detector.calibration_version),
-        "class_stats": class_stats,
-        # Extended OOD state
-        "radial_l2_enabled": bool(ood_detector.radial_l2_enabled),
-        "radial_beta": float(ood_detector.radial_beta) if ood_detector.radial_beta is not None else None,
-        "radial_beta_range": list(ood_detector.radial_beta_range),
-        "radial_beta_steps": int(ood_detector.radial_beta_steps),
-        "sure_enabled": bool(ood_detector.sure_enabled),
-        "sure_semantic_percentile": float(ood_detector.sure_semantic_percentile),
-        "sure_confidence_percentile": float(ood_detector.sure_confidence_percentile),
-        "conformal_enabled": bool(ood_detector.conformal_enabled),
-        "conformal_alpha": float(ood_detector.conformal_alpha),
-        "conformal_qhat": float(ood_detector.conformal_qhat) if ood_detector.conformal_qhat is not None else None,
-    }
-    return payload
+    return build_serialized_ood_state(ood_detector, strict=True)
 
 
 def restore_ood_state(

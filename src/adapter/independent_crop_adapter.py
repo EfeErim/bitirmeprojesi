@@ -22,6 +22,7 @@ from src.adapter.checkpointing import (
 )
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
+from src.training.services.config_surface import extract_continual_training_config
 from src.training.services.runtime import resolve_session_num_epochs
 
 logger = logging.getLogger(__name__)
@@ -100,38 +101,11 @@ class IndependentCropAdapter:
             yield from module.parameters()
 
     def _normalize_continual_config(self, config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        config = dict(config or {})
-        continual = config.get("training", {}).get("continual") if isinstance(config.get("training"), dict) else None
-        if isinstance(continual, dict):
-            normalized = dict(continual)
-        elif "backbone" in config or "adapter" in config:
-            normalized = config
-        else:
-            normalized = {
-                "backbone": {"model_name": self.model_name},
-                "adapter": {
-                    "target_modules_strategy": "all_linear_transformer",
-                    "lora_r": int(config.get("lora_r", 16)),
-                    "lora_alpha": int(config.get("lora_alpha", 32)),
-                    "lora_dropout": float(config.get("lora_dropout", 0.1)),
-                },
-                "fusion": {
-                    "layers": [2, 5, 8, 11],
-                    "output_dim": int(config.get("fusion_output_dim", 768)),
-                    "dropout": float(config.get("fusion_dropout", 0.1)),
-                    "gating": str(config.get("fusion_gating", "softmax")),
-                },
-                "ood": {"threshold_factor": float(config.get("ood_threshold_factor", 2.0))},
-                "learning_rate": float(config.get("learning_rate", 1e-4)),
-                "weight_decay": float(config.get("weight_decay", 0.0)),
-                "num_epochs": int(config.get("num_epochs", 1)),
-                "batch_size": int(config.get("batch_size", 8)),
-                "device": str(config.get("device", str(self.device))),
-                "strict_model_loading": bool(config.get("strict_model_loading", False)),
-            }
-        normalized.setdefault("backbone", {"model_name": self.model_name})
-        normalized["backbone"].setdefault("model_name", self.model_name)
-        return normalized
+        return extract_continual_training_config(
+            config,
+            model_name=self.model_name,
+            device=self.device,
+        )
 
     def initialize_engine(
         self,
@@ -289,8 +263,6 @@ class IndependentCropAdapter:
     def _metadata_payload(self) -> Dict[str, Any]:
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
-        from src.training.services.persistence import serialize_ood_state
-
         return build_runtime_adapter_metadata(
             trainer=self._trainer,
             class_to_idx=self.class_to_idx,
@@ -299,7 +271,6 @@ class IndependentCropAdapter:
             model_name=self.model_name,
             ood_calibration_version=self.ood_calibration_version,
             target_modules_resolved=list(self.target_modules_resolved),
-            serialize_ood_state_fn=serialize_ood_state,
         )
 
     def save_adapter(self, checkpoint_dir: str) -> Path:

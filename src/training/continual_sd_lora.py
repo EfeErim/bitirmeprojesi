@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 
-import copy
 import inspect
 import logging
-import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, cast
@@ -23,6 +21,10 @@ from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multi
 from src.ood.continual_ood import ContinualOODDetector
 from src.training.ber_loss import BERLoss
 from src.training.quantization import assert_no_prohibited_4bit_flags
+from src.training.services.config_surface import (
+    DEFAULT_BACKBONE_MODEL_NAME,
+    normalize_continual_training_config,
+)
 from src.training.services.ood_calibration import calibrate_trainer_ood
 from src.training.services.persistence import (
     build_trainer_metadata_payload,
@@ -40,9 +42,6 @@ from src.training.services.runtime import (
     autocast_context,
     build_grad_scaler,
     build_idx_to_class,
-    build_train_batch_stats,
-    clip_gradients,
-    collect_trainable_parameters,
     compute_grad_norm,
     configure_runtime_reproducibility,
     configure_training_plan_state,
@@ -51,6 +50,13 @@ from src.training.services.runtime import (
 )
 from src.training.services.runtime import (
     setup_optimizer as setup_trainer_optimizer,
+)
+from src.training.services.trainer_runtime import (
+    add_trainer_classes,
+    execute_train_batch,
+    initialize_trainer_engine,
+    predict_with_ood_result,
+    refresh_optimizer_after_model_change,
 )
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
 
@@ -104,7 +110,7 @@ PREFERRED_TARGET_TOKEN = (
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
 
-    backbone_model_name: str = "facebook/dinov3-vitl16-pretrain-lvd1689m"
+    backbone_model_name: str = DEFAULT_BACKBONE_MODEL_NAME
     target_modules_strategy: str = "all_linear_transformer"
     fusion_layers: List[int] = field(default_factory=lambda: [2, 5, 8, 11])
     fusion_output_dim: int = 768
@@ -137,7 +143,10 @@ class ContinualSDLoRAConfig:
     early_stopping_min_delta: float = 0.0
     evaluation_best_metric: str = "val_loss"
     evaluation_emit_ood_gate: bool = True
-    evaluation_require_ood_for_gate: bool = False
+    evaluation_require_ood_for_gate: bool = True
+    evaluation_ood_fallback_strategy: str = "held_out_benchmark"
+    evaluation_ood_benchmark_auto_run: bool = True
+    evaluation_ood_benchmark_min_classes: int = 3
     # --- Bi-directional Energy Regularization (BER) ---
     ber_enabled: bool = False
     ber_lambda_old: float = 0.1
@@ -181,6 +190,10 @@ class ContinualSDLoRAConfig:
             raise ValueError("early_stopping.patience must be non-negative.")
         if self.early_stopping_min_delta < 0.0:
             raise ValueError("early_stopping.min_delta must be non-negative.")
+        if self.evaluation_ood_fallback_strategy not in {"held_out_benchmark", "none"}:
+            raise ValueError("evaluation_ood_fallback_strategy must be 'held_out_benchmark' or 'none'.")
+        if self.evaluation_ood_benchmark_min_classes < 1:
+            raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
         if self.radial_beta_min <= 0.0 or self.radial_beta_max <= 0.0:
@@ -257,6 +270,9 @@ class ContinualSDLoRAConfig:
                 "best_metric": self.evaluation_best_metric,
                 "emit_ood_gate": self.evaluation_emit_ood_gate,
                 "require_ood_for_gate": self.evaluation_require_ood_for_gate,
+                "ood_fallback_strategy": self.evaluation_ood_fallback_strategy,
+                "ood_benchmark_auto_run": self.evaluation_ood_benchmark_auto_run,
+                "ood_benchmark_min_classes": self.evaluation_ood_benchmark_min_classes,
             },
         }
         if self.extra:
@@ -266,18 +282,23 @@ class ContinualSDLoRAConfig:
     @classmethod
     def from_training_config(cls, training_continual: Dict[str, Any]) -> "ContinualSDLoRAConfig":
         """Build from `training.continual` dictionary."""
-        assert_no_prohibited_4bit_flags(training_continual)
-        backbone = training_continual.get("backbone", {})
-        adapter = training_continual.get("adapter", {})
-        fusion = training_continual.get("fusion", {})
-        ood = training_continual.get("ood", {})
-        optimization = training_continual.get("optimization", {})
+        normalized = normalize_continual_training_config(
+            training_continual,
+            model_name=str(training_continual.get("backbone", {}).get("model_name", DEFAULT_BACKBONE_MODEL_NAME)),
+            device=training_continual.get("device", "cuda"),
+        )
+        assert_no_prohibited_4bit_flags(normalized)
+        backbone = normalized.get("backbone", {})
+        adapter = normalized.get("adapter", {})
+        fusion = normalized.get("fusion", {})
+        ood = normalized.get("ood", {})
+        optimization = normalized.get("optimization", {})
         scheduler = optimization.get("scheduler", {}) if isinstance(optimization, dict) else {}
-        early_stopping = training_continual.get("early_stopping", {})
-        evaluation = training_continual.get("evaluation", {})
+        early_stopping = normalized.get("early_stopping", {})
+        evaluation = normalized.get("evaluation", {})
 
         config = cls(
-            backbone_model_name=str(backbone.get("model_name", "facebook/dinov3-vitl16-pretrain-lvd1689m")),
+            backbone_model_name=str(backbone.get("model_name", DEFAULT_BACKBONE_MODEL_NAME)),
             target_modules_strategy=str(adapter.get("target_modules_strategy", "all_linear_transformer")),
             fusion_layers=[int(v) for v in fusion.get("layers", [2, 5, 8, 11])],
             fusion_output_dim=int(fusion.get("output_dim", 768)),
@@ -286,12 +307,12 @@ class ContinualSDLoRAConfig:
             lora_r=int(adapter.get("lora_r", 16)),
             lora_alpha=int(adapter.get("lora_alpha", 32)),
             lora_dropout=float(adapter.get("lora_dropout", 0.1)),
-            learning_rate=float(training_continual.get("learning_rate", 1e-4)),
-            weight_decay=float(training_continual.get("weight_decay", 0.0)),
-            num_epochs=int(training_continual.get("num_epochs", 1)),
-            batch_size=int(training_continual.get("batch_size", 8)),
-            device=str(training_continual.get("device", "cuda")),
-            strict_model_loading=bool(training_continual.get("strict_model_loading", False)),
+            learning_rate=float(normalized.get("learning_rate", 1e-4)),
+            weight_decay=float(normalized.get("weight_decay", 0.0)),
+            num_epochs=int(normalized.get("num_epochs", 1)),
+            batch_size=int(normalized.get("batch_size", 8)),
+            device=str(normalized.get("device", "cuda")),
+            strict_model_loading=bool(normalized.get("strict_model_loading", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
             ber_enabled=bool(ood.get("ber_enabled", False)),
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
@@ -305,8 +326,8 @@ class ContinualSDLoRAConfig:
             sure_confidence_percentile=float(ood.get("sure_confidence_percentile", 90.0)),
             conformal_enabled=bool(ood.get("conformal_enabled", True)),
             conformal_alpha=float(ood.get("conformal_alpha", 0.05)),
-            seed=int(training_continual.get("seed", 42)),
-            deterministic=bool(training_continual.get("deterministic", False)),
+            seed=int(normalized.get("seed", 42)),
+            deterministic=bool(normalized.get("deterministic", False)),
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 1)),
             max_grad_norm=float(optimization.get("max_grad_norm", 0.0)),
             mixed_precision=str(optimization.get("mixed_precision", "auto")),
@@ -332,8 +353,11 @@ class ContinualSDLoRAConfig:
             early_stopping_min_delta=float(early_stopping.get("min_delta", 0.0)),
             evaluation_best_metric=str(evaluation.get("best_metric", "val_loss")),
             evaluation_emit_ood_gate=bool(evaluation.get("emit_ood_gate", True)),
-            evaluation_require_ood_for_gate=bool(evaluation.get("require_ood_for_gate", False)),
-            extra={k: v for k, v in training_continual.items() if k not in {
+            evaluation_require_ood_for_gate=bool(evaluation.get("require_ood_for_gate", True)),
+            evaluation_ood_fallback_strategy=str(evaluation.get("ood_fallback_strategy", "held_out_benchmark")),
+            evaluation_ood_benchmark_auto_run=bool(evaluation.get("ood_benchmark_auto_run", True)),
+            evaluation_ood_benchmark_min_classes=int(evaluation.get("ood_benchmark_min_classes", 3)),
+            extra={k: v for k, v in normalized.items() if k not in {
                 "backbone",
                 "adapter",
                 "fusion",
@@ -412,36 +436,7 @@ class ContinualSDLoRATrainer:
         return any(self._idx_to_class.get(idx) != name for name, idx in self.class_to_idx.items())
 
     def _refresh_optimizer_after_model_change(self) -> None:
-        if self.optimizer is None:
-            return
-
-        previous_optimizer = self.optimizer
-        previous_scheduler_state = self.scheduler.state_dict() if self.scheduler is not None else None
-
-        rebuilt_optimizer = torch.optim.AdamW(
-            collect_trainable_parameters(self),
-            lr=self.config.learning_rate,
-            weight_decay=self.config.weight_decay,
-        )
-
-        if len(previous_optimizer.param_groups) == len(rebuilt_optimizer.param_groups):
-            for previous_group, rebuilt_group in zip(previous_optimizer.param_groups, rebuilt_optimizer.param_groups):
-                for key, value in previous_group.items():
-                    if key != "params":
-                        rebuilt_group[key] = value
-
-        for group in rebuilt_optimizer.param_groups:
-            for param in group.get("params", []):
-                if param in previous_optimizer.state:
-                    rebuilt_optimizer.state[param] = copy.deepcopy(previous_optimizer.state[param])
-
-        self.optimizer = rebuilt_optimizer
-        self.scheduler = None
-        if previous_scheduler_state is not None:
-            self._ensure_scheduler()
-            if self.scheduler is not None:
-                self.scheduler.load_state_dict(previous_scheduler_state)
-        self.optimizer.zero_grad(set_to_none=True)
+        refresh_optimizer_after_model_change(self)
 
     def _reported_grad_norm(self, *, gradients_unscaled: bool) -> float:
         grad_norm = self._compute_grad_norm()
@@ -480,60 +475,11 @@ class ContinualSDLoRATrainer:
         step_scheduler(self)
 
     def initialize_engine(self, class_to_idx: Optional[Dict[str, int]] = None) -> None:
-        """Load frozen backbone, apply adapters, initialize heads."""
-        if class_to_idx:
-            self.class_to_idx = dict(class_to_idx)
-
-        if AutoModel is None:
-            raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
-
-        loaded_backbone = cast(nn.Module, AutoModel.from_pretrained(self.config.backbone_model_name))
-        self.backbone = self._prepare_module_for_device(
-            loaded_backbone,
-            module_name="backbone",
-        )
-        for param in self.backbone.parameters():
-            param.requires_grad = False
-
-        hidden_size = int(getattr(getattr(self.backbone, "config", None), "hidden_size", self.config.fusion_output_dim))
-        self.fusion = MultiScaleFeatureFusion(
-            input_dim=hidden_size,
-            output_dim=self.config.fusion_output_dim,
-            num_scales=max(1, len(self.config.fusion_layers)),
-            dropout=self.config.fusion_dropout,
-            gating=self.config.fusion_gating,
-        ).to(self.device)
-
-        self.target_modules_resolved = self.resolve_target_modules(self.backbone)
-        adapter_model = self._apply_lora(self.backbone, self.target_modules_resolved)
-        self.adapter_model = self._prepare_module_for_device(
-            adapter_model,
-            module_name="adapter_model",
-        )
-        self.classifier = nn.Linear(self.config.fusion_output_dim, max(1, len(self.class_to_idx))).to(self.device)
-
-        # Initialize BER loss if enabled
-        if self.config.ber_enabled:
-            self.ber_loss = BERLoss(
-                lambda_old=self.config.ber_lambda_old,
-                lambda_new=self.config.ber_lambda_new,
-                num_old_classes=0,  # First task: no old classes
-            ).to(self.device)
-        else:
-            self.ber_loss = None
-
-        self._is_initialized = True
-        self.optimizer = None
-        self.scheduler = None
-        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
-        self.optimizer_steps = 0
-        self._accumulation_counter = 0
-        self._trainable_params_cache = None
-        self._refresh_class_index_cache()
-        logger.info(
-            "Continual engine initialized: backbone=%s, targets=%s",
-            self.config.backbone_model_name,
-            len(self.target_modules_resolved),
+        initialize_trainer_engine(
+            self,
+            class_to_idx=class_to_idx,
+            auto_model_factory=AutoModel,
+            fusion_cls=MultiScaleFeatureFusion,
         )
 
     def _raise_missing_peft(self) -> None:
@@ -648,35 +594,7 @@ class ContinualSDLoRATrainer:
         return resolved
 
     def add_classes(self, new_class_names: Iterable[str]) -> Dict[str, int]:
-        """Add new classes and expand classifier output."""
-        num_old = len(self.class_to_idx)
-        for name in new_class_names:
-            if name not in self.class_to_idx:
-                self.class_to_idx[name] = len(self.class_to_idx)
-        self._refresh_class_index_cache()
-
-        # Update BER boundary for incremental learning
-        if self.ber_loss is not None:
-            self.ber_loss.num_old_classes = num_old
-
-        if self.classifier is None:
-            return dict(self.class_to_idx)
-
-        old_classifier = self.classifier
-        old_out = int(getattr(old_classifier, "out_features", 0))
-        new_out = max(1, len(self.class_to_idx))
-        if new_out == old_out:
-            return dict(self.class_to_idx)
-
-        replacement = nn.Linear(old_classifier.in_features, new_out).to(self.device)
-        if old_out > 0:
-            replacement.weight.data[:old_out] = old_classifier.weight.data[:old_out]
-            if old_classifier.bias is not None and replacement.bias is not None:
-                replacement.bias.data[:old_out] = old_classifier.bias.data[:old_out]
-        self.classifier = replacement
-        self._trainable_params_cache = None
-        self._refresh_optimizer_after_model_change()
-        return dict(self.class_to_idx)
+        return add_trainer_classes(self, new_class_names)
 
     def setup_optimizer(self) -> None:
         setup_trainer_optimizer(self)
@@ -750,124 +668,14 @@ class ContinualSDLoRATrainer:
         return compute_grad_norm(self.optimizer)
 
     def train_batch(self, batch: Dict[str, torch.Tensor]) -> TrainBatchStats:
-        if self.optimizer is None:
-            self.setup_optimizer()
-        if self.optimizer is None:
-            raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
-        self.set_train_mode()
-        step_started_at = time.perf_counter()
-        accumulation_steps = int(max(1, self.config.grad_accumulation_steps))
-        if self._accumulation_counter == 0:
-            self.optimizer.zero_grad(set_to_none=True)
-
-        loss = self.training_step(batch)
-        if not torch.isfinite(loss).item():
-            raise RuntimeError("Non-finite training loss encountered.")
-
-        raw_loss_value = float(loss.detach().item())
-        scaled_loss = loss / float(accumulation_steps)
-        if self.scaler.is_enabled():
-            self.scaler.scale(scaled_loss).backward()
-        else:
-            scaled_loss.backward()
-
-        self._accumulation_counter += 1
-        should_step = self._accumulation_counter >= accumulation_steps
-        grad_norm = self._reported_grad_norm(gradients_unscaled=not self.scaler.is_enabled())
-        if should_step:
-            if self.scaler.is_enabled():
-                self.scaler.unscale_(self.optimizer)
-            clip_gradients(self)
-            grad_norm = self._compute_grad_norm()
-            if self.scaler.is_enabled():
-                self.scaler.step(self.optimizer)
-                self.scaler.update()
-            else:
-                self.optimizer.step()
-            self.optimizer_steps += 1
-            if self.config.scheduler_step_on == "batch":
-                self._step_scheduler()
-            self.optimizer.zero_grad(set_to_none=True)
-            self._accumulation_counter = 0
-
-        ber_components = getattr(self, "_last_ber_components", {}) if self.ber_loss is not None else {}
-        return build_train_batch_stats(
-            batch=batch,
-            optimizer=self.optimizer,
-            config=self.config,
-            loss=raw_loss_value,
-            grad_norm=grad_norm,
-            step_started_at=step_started_at,
-            accumulation_counter=self._accumulation_counter,
-            accumulation_steps=accumulation_steps,
-            optimizer_steps=self.optimizer_steps,
-            optimizer_step_applied=bool(should_step),
-            ber_ce_loss=ber_components.get("ce"),
-            ber_old_loss=ber_components.get("ber_old"),
-            ber_new_loss=ber_components.get("ber_new"),
-        )
+        return execute_train_batch(self, batch)
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
         self._ood_calibration_loader = loader
         return calibrate_trainer_ood(self, loader)
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
-        if self.adapter_model is None or self.classifier is None or self.fusion is None:
-            raise RuntimeError("Cannot predict before adapter, classifier, and fusion are initialized.")
-        self._ensure_ood_calibrated(operation="predict_with_ood()")
-        self.adapter_model.eval()
-        self.classifier.eval()
-        self.fusion.eval()
-        with torch.no_grad():
-            features = self.encode(images.to(self.device))
-            logits = self.classifier(features)
-            probs = torch.softmax(logits, dim=1)
-            confidence, indices = probs.max(dim=1)
-            ood = self.ood_detector.score(features=features, logits=logits, predicted_labels=indices)
-
-        if self._class_index_cache_stale():
-            self._refresh_class_index_cache()
-        predicted_idx = int(indices[0].item()) if indices.numel() else 0
-
-        ood_analysis: Dict[str, Any] = {
-            "ensemble_score": float(ood["ensemble_score"][0].item()),
-            "class_threshold": float(ood["class_threshold"][0].item()),
-            "is_ood": bool(ood["is_ood"][0].item()),
-            "mahalanobis_z": float(ood["mahalanobis_z"][0].item()),
-            "energy_z": float(ood["energy_z"][0].item()),
-            "calibration_version": int(ood["calibration_version"][0].item()),
-        }
-
-        # Radial beta
-        if self.ood_detector.radial_beta is not None:
-            ood_analysis["radial_beta"] = float(self.ood_detector.radial_beta)
-
-        # SURE+ fields
-        if self.ood_detector.sure_enabled and "sure_semantic_score" in ood:
-            ood_analysis["sure_semantic_score"] = float(ood["sure_semantic_score"][0].item())
-            ood_analysis["sure_confidence_score"] = float(ood["sure_confidence_score"][0].item())
-            ood_analysis["sure_semantic_ood"] = bool(ood["sure_semantic_ood"][0].item())
-            ood_analysis["sure_confidence_reject"] = bool(ood["sure_confidence_reject"][0].item())
-
-        # Conformal prediction set
-        if self.ood_detector.conformal_enabled:
-            with torch.no_grad():
-                conformal_set = self.ood_detector.build_conformal_set(
-                    features[0], logits[0], self._idx_to_class
-                )
-            ood_analysis["conformal_set"] = conformal_set
-            ood_analysis["conformal_set_size"] = len(conformal_set)
-            ood_analysis["conformal_coverage"] = 1.0 - self.ood_detector.conformal_alpha
-
-        return {
-            "status": "success",
-            "disease": {
-                "class_index": predicted_idx,
-                "name": self._idx_to_class.get(predicted_idx, str(predicted_idx)),
-                "confidence": float(confidence[0].item()) if confidence.numel() else 0.0,
-            },
-            "ood_analysis": ood_analysis,
-        }
+        return predict_with_ood_result(self, images)
 
     def _metadata_payload(self) -> Dict[str, Any]:
         return build_trainer_metadata_payload(self)
