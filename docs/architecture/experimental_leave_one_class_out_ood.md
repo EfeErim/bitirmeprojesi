@@ -1,6 +1,6 @@
 # Experimental Prototype: Leave-One-Class-Out OOD Evaluation
 
-Status: prototype, experimental, not part of the canonical training workflow.
+Status: historical design note. The supported workflow now includes an automatic held-out benchmark fallback when no real `data/<crop>/ood/` split exists. For the current user-facing behavior, see [OOD Readiness Guide](../user_guide/ood_readiness_guide.md).
 
 ## Goal
 

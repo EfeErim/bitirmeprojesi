@@ -75,6 +75,8 @@ This keeps most backbone weights fixed and saves only the adapter bundle, classi
 
 After normal training, the workflow calibrates OOD statistics on known-class data.
 
+For the full production-readiness flow, including `data/<crop>/ood/`, the held-out fallback benchmark, and `production_readiness.json`, see [OOD Readiness Guide](ood_readiness_guide.md).
+
 Calibration stores per-class:
 
 - fused-feature mean and variance for Mahalanobis scoring

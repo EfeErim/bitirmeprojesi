@@ -95,7 +95,7 @@ The relevant repo mapping is:
 - OOD metric computation and gate checks: `src/training/services/metrics.py`
 - inference payload normalization: `src/pipeline/inference_payloads.py`
 
-Experimental ideas that are intentionally not part of the canonical path are tracked separately. The current repository note for held-out-class OOD benchmarking lives in [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md).
+User-facing operational guidance for real OOD data, fallback benchmarking, and final readiness artifacts lives in [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md). A literature-backed recommendation note for next-step OOD improvements lives in [ood_recommendation.md](ood_recommendation.md). The original held-out-class design note remains in [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md).
 
 Output locations are surface-specific:
 

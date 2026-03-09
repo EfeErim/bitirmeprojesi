@@ -13,7 +13,7 @@ The canonical app entrypoints are:
 
 The workflow layer delegates to `src/pipeline/router_adapter_runtime.py`, `src/training/continual_sd_lora.py`, and `src/adapter/independent_crop_adapter.py`.
 
-Experimental design notes that are not part of the supported workflow live under `docs/architecture/`. The current OOD prototype note is `docs/architecture/experimental_leave_one_class_out_ood.md`.
+User-facing OOD behavior, dataset layout, fallback benchmarking, and readiness outputs are documented in [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md). Historical design notes live under `docs/architecture/`, including `docs/architecture/experimental_leave_one_class_out_ood.md`.
 
 ## Core Model Behavior
 
@@ -35,7 +35,7 @@ The same adapter bundle also carries the runtime OOD state:
 - optional split conformal prediction adds a set-valued guarantee (`conformal_set`) in addition to the top-1 diagnosis
 - class-specific thresholds and SURE+/conformal calibration artifacts are persisted with the adapter
 
-The architecture guide expands these details in `docs/architecture/overview.md`, and the experimental OOD evaluation note lives in `docs/architecture/experimental_leave_one_class_out_ood.md`.
+The architecture guide expands these details in [docs/architecture/overview.md](docs/architecture/overview.md), and the user-facing OOD workflow guide lives in [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 Key controls are under `training.continual.ood` in `config/base.json`, including:
 
