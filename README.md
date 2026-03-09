@@ -105,7 +105,7 @@ Training surfaces and output paths differ by entrypoint:
 
 - Root Colab dependencies live in `requirements_colab.txt`
 - Notebook bootstrap helpers live in `scripts/colab_repo_bootstrap.py`
-- Notebook 1 now resolves `HF_TOKEN` from env or Colab secrets in its second code cell and validates the login before router inference
+- Notebooks 1 and 2 now resolve `HF_TOKEN` from env or Colab secrets in their second code cell and validate the login before model access
 - Telemetry and checkpoints live in `scripts/colab_live_telemetry.py` and `scripts/colab_checkpointing.py`
 - Notebook and script wrappers now sit on top of the workflow layer instead of owning the core orchestration
 - Adapter smoke-test helpers live in `scripts/colab_adapter_smoke_test.py`
