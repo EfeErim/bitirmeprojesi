@@ -13,7 +13,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from src.shared.artifacts import ArtifactStore
 from src.shared.json_utils import ensure_parent, read_json, write_json
@@ -153,6 +153,9 @@ class ColabLiveTelemetry:
         self._last_sync_attempt = 0.0
         self._drive_available = True
         self._sequence = 0
+        self._repo_output_dir: Optional[Path] = None
+        self._repo_notebook_path: Optional[Path] = None
+        self._repo_notebook_exporter: Optional[Callable[[Path], Optional[Path]]] = None
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
         self.drive_run_dir.mkdir(parents=True, exist_ok=True)
@@ -168,6 +171,65 @@ class ColabLiveTelemetry:
             },
             phase="bootstrap",
         )
+
+    def configure_repo_output_export(
+        self,
+        *,
+        output_dir: str | Path,
+        notebook_filename: str,
+        export_notebook_fn: Callable[[Path], Optional[Path]],
+    ) -> None:
+        self._repo_output_dir = Path(output_dir)
+        self._repo_notebook_path = self._repo_output_dir / str(notebook_filename)
+        self._repo_notebook_exporter = export_notebook_fn
+        self.emit_event(
+            "repo_output_export_enabled",
+            {
+                "output_dir": str(self._repo_output_dir),
+                "notebook_path": str(self._repo_notebook_path),
+            },
+            phase="repo_sync",
+            force_sync=False,
+        )
+
+    def _export_repo_notebook(
+        self,
+        *,
+        reason: str,
+        cell_name: Optional[str] = None,
+    ) -> Optional[Path]:
+        if self._repo_notebook_exporter is None or self._repo_notebook_path is None:
+            return None
+
+        payload: Dict[str, Any] = {
+            "reason": str(reason),
+            "output_dir": str(self._repo_output_dir) if self._repo_output_dir is not None else "",
+            "notebook_path": str(self._repo_notebook_path),
+        }
+        if cell_name:
+            payload["cell_name"] = str(cell_name)
+
+        try:
+            saved_path = self._repo_notebook_exporter(self._repo_notebook_path)
+            if saved_path is not None:
+                payload["saved_path"] = str(saved_path)
+                self.emit_event(
+                    "repo_notebook_exported",
+                    payload,
+                    phase="repo_sync",
+                    force_sync=False,
+                )
+            return saved_path
+        except Exception as exc:
+            payload["error"] = f"{exc.__class__.__name__}: {exc}"
+            self.emit_event(
+                "repo_notebook_export_failed",
+                payload,
+                phase="repo_sync",
+                level="error",
+                force_sync=False,
+            )
+            return None
 
     def _load_artifact_index(self) -> List[Dict[str, Any]]:
         if not self.local_artifact_index_path.exists():
@@ -444,6 +506,7 @@ class ColabLiveTelemetry:
             self._drive_available = False
 
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
+        self._export_repo_notebook(reason="run_close")
         summary = {
             "ts": _utc_now_iso(),
             "run_id": self.run_id,

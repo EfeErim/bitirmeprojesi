@@ -75,6 +75,11 @@ Training surfaces and output paths differ by entrypoint:
 	- local outputs stay under `outputs/colab_notebook_training/`
 		- adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
 		- notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+	- when the run finishes, non-checkpoint outputs are mirrored into `runs/<RUN_ID>/`
+		- notebook export: `runs/<RUN_ID>/notebooks/2_interactive_adapter_training.executed.ipynb`
+		- local notebook outputs: `runs/<RUN_ID>/outputs/colab_notebook_training/`
+		- telemetry logs and artifacts: `runs/<RUN_ID>/telemetry/`
+		- checkpoint metadata only: `runs/<RUN_ID>/checkpoint_state/` (manifests/index, no `checkpoints/` tree)
 	- Drive outputs stay under `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/` (or `AADS_DRIVE_LOG_ROOT/telemetry/<RUN_ID>/`)
 		- `artifacts/adapter/`
 		- `artifacts/validation/`
@@ -106,6 +111,7 @@ Training surfaces and output paths differ by entrypoint:
 - Root Colab dependencies live in `requirements_colab.txt`
 - Notebook bootstrap helpers live in `scripts/colab_repo_bootstrap.py`
 - Notebooks 1 and 2 now resolve `HF_TOKEN` from env or Colab secrets in their second code cell and validate the login before model access
+- Notebook 2 now mirrors all non-checkpoint run outputs into `runs/<RUN_ID>/` inside the repo
 - Telemetry and checkpoints live in `scripts/colab_live_telemetry.py` and `scripts/colab_checkpointing.py`
 - Notebook and script wrappers now sit on top of the workflow layer instead of owning the core orchestration
 - Adapter smoke-test helpers live in `scripts/colab_adapter_smoke_test.py`

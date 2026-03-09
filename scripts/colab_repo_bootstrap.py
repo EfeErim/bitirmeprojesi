@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import json
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -124,6 +126,62 @@ def mount_drive_if_available(force_remount: bool = False) -> None:
         drive.mount("/content/drive", force_remount=force_remount)
     except Exception as exc:
         print(f"Drive mount skipped: {exc}")
+
+
+def export_current_colab_notebook(destination_path: str | Path) -> Optional[Path]:
+    """Write the current Colab notebook JSON, including cell outputs, to disk."""
+    if not running_in_colab():
+        return None
+
+    try:
+        from google.colab import _message
+    except Exception:
+        return None
+
+    response = _message.blocking_request("get_ipynb", timeout_sec=30)
+    payload = response.get("ipynb") if isinstance(response, dict) else None
+    if not isinstance(payload, dict) or not payload:
+        raise RuntimeError("Colab did not return a notebook payload for get_ipynb.")
+
+    destination = Path(destination_path).expanduser()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return destination
+
+
+def mirror_path_to_repo(
+    source_path: str | Path,
+    destination_path: str | Path,
+    *,
+    exclude_dir_names: tuple[str, ...] = ("checkpoints",),
+) -> Optional[Path]:
+    """Copy a file or directory tree into the repo, optionally skipping directories by name."""
+    source = Path(source_path).expanduser()
+    if not source.exists():
+        return None
+
+    destination = Path(destination_path).expanduser()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    if source.is_file():
+        shutil.copy2(source, destination)
+        return destination
+
+    if destination.exists():
+        shutil.rmtree(destination, ignore_errors=True)
+
+    excluded = set(str(name) for name in exclude_dir_names)
+
+    def _ignore(current_dir: str, names: list[str]) -> set[str]:
+        current = Path(current_dir)
+        ignored: set[str] = set()
+        for name in names:
+            if name in excluded and (current / name).is_dir():
+                ignored.add(name)
+        return ignored
+
+    shutil.copytree(source, destination, ignore=_ignore)
+    return destination
 
 
 def resolve_hf_token() -> Optional[str]:

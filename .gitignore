@@ -25,7 +25,6 @@ Thumbs.db
 checkpoints/
 outputs/
 logs/
-runs/
 wandb/
 tensorboard/
 models/
@@ -46,4 +45,6 @@ data/metadata.json
 *.pdf
 *.tmp
 *.temp
+!runs/
+!runs/**
 !colab_notebooks/*.ipynb

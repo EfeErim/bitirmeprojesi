@@ -116,6 +116,11 @@ Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:
 - Local outputs stay under `outputs/colab_notebook_training/`
   - adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
   - notebook artifacts: `outputs/colab_notebook_training/artifacts/`
+- When the run finishes, all non-checkpoint outputs are mirrored into `runs/<RUN_ID>/` in the repo
+  - notebook export: `runs/<RUN_ID>/notebooks/2_interactive_adapter_training.executed.ipynb`
+  - local notebook outputs: `runs/<RUN_ID>/outputs/colab_notebook_training/`
+  - telemetry logs and artifacts: `runs/<RUN_ID>/telemetry/`
+  - checkpoint metadata only: `runs/<RUN_ID>/checkpoint_state/`
 - Drive outputs stay under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
   Default root: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
   - `artifacts/adapter/`
