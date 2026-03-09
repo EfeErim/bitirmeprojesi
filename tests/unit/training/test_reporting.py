@@ -63,3 +63,18 @@ def test_reporting_writes_training_and_validation_artifacts(tmp_path: Path):
     assert validation_paths["paths"]["cm_png"].exists()
     assert validation_paths["paths"]["cm_norm_png"].exists()
     assert validation_paths["paths"]["metric_gate_json"].exists()
+
+
+def test_reporting_can_write_test_artifacts_to_a_separate_subdirectory(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        artifact_subdir="test",
+        context={"crop_name": "tomato", "split_name": "test"},
+    )
+
+    assert result["paths"]["report_txt"].exists()
+    assert result["paths"]["report_txt"].parent.name == "test"
+    assert result["paths"]["metric_gate_json"].parent.name == "test"

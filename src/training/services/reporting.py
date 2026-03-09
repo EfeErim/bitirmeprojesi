@@ -218,6 +218,8 @@ def persist_validation_artifacts(
     y_pred: Sequence[int],
     classes: Sequence[str],
     telemetry: Any = None,
+    artifact_subdir: str = "validation",
+    telemetry_subdir: str | None = None,
     gate_targets: Dict[str, float] | None = None,
     require_ood: bool = False,
     ood_labels: Sequence[int] | None = None,
@@ -229,6 +231,12 @@ def persist_validation_artifacts(
 ) -> Dict[str, Any]:
     resolved_classes = [str(name) for name in classes]
     labels = list(range(len(resolved_classes)))
+    resolved_artifact_subdir = str(artifact_subdir or "validation").strip().strip("/\\") or "validation"
+    resolved_telemetry_subdir = (
+        str(telemetry_subdir).strip().strip("/\\")
+        if telemetry_subdir is not None
+        else resolved_artifact_subdir
+    ) or resolved_artifact_subdir
     report_text = classification_report(
         y_true,
         y_pred,
@@ -247,7 +255,7 @@ def persist_validation_artifacts(
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     cm_norm = cm.astype(float) / np.clip(cm.sum(axis=1, keepdims=True), 1.0, None)
 
-    validation_dir = _artifact_dir(artifact_root, "validation")
+    validation_dir = _artifact_dir(artifact_root, resolved_artifact_subdir)
     store = ArtifactStore(validation_dir)
     report_txt = store.write_text("classification_report.txt", report_text)
     report_json = store.write_json("classification_report.json", report_dict)
@@ -297,12 +305,16 @@ def persist_validation_artifacts(
         plt.savefig(path, dpi=150)
         plt.close()
 
-    _copy_to_telemetry(telemetry, report_txt, "validation/classification_report.txt")
-    _copy_to_telemetry(telemetry, report_json, "validation/classification_report.json")
-    _copy_to_telemetry(telemetry, per_class_csv, "validation/per_class_metrics.csv")
-    _copy_to_telemetry(telemetry, confusion_csv, "validation/confusion_matrix.csv")
-    _copy_to_telemetry(telemetry, confusion_png, "validation/confusion_matrix.png")
-    _copy_to_telemetry(telemetry, confusion_norm_png, "validation/confusion_matrix_normalized.png")
+    _copy_to_telemetry(telemetry, report_txt, f"{resolved_telemetry_subdir}/classification_report.txt")
+    _copy_to_telemetry(telemetry, report_json, f"{resolved_telemetry_subdir}/classification_report.json")
+    _copy_to_telemetry(telemetry, per_class_csv, f"{resolved_telemetry_subdir}/per_class_metrics.csv")
+    _copy_to_telemetry(telemetry, confusion_csv, f"{resolved_telemetry_subdir}/confusion_matrix.csv")
+    _copy_to_telemetry(telemetry, confusion_png, f"{resolved_telemetry_subdir}/confusion_matrix.png")
+    _copy_to_telemetry(
+        telemetry,
+        confusion_norm_png,
+        f"{resolved_telemetry_subdir}/confusion_matrix_normalized.png",
+    )
 
     metric_context = dict(context or {"num_classes": len(resolved_classes)})
     metrics = compute_plan_metrics(
@@ -345,7 +357,7 @@ def persist_validation_artifacts(
         require_ood=require_ood,
         context=metric_context,
     )
-    _copy_to_telemetry(telemetry, metric_gate_json, "validation/metric_gate.json")
+    _copy_to_telemetry(telemetry, metric_gate_json, f"{resolved_telemetry_subdir}/metric_gate.json")
 
     return {
         "report_text": report_text,

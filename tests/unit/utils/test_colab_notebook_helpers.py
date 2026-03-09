@@ -24,6 +24,20 @@ def test_persist_validation_artifacts_writes_metric_gate(tmp_path: Path):
     assert result["metric_gate"]["evaluation"]["gating"]["status"] in {"soft", "ready"}
 
 
+def test_persist_validation_artifacts_supports_custom_artifact_subdir(tmp_path: Path):
+    result = persist_validation_artifacts(
+        root=tmp_path,
+        y_true=[0, 1],
+        y_pred=[0, 1],
+        classes=["healthy", "disease_a"],
+        artifact_subdir="test",
+        context={"crop": "tomato", "split_name": "test"},
+    )
+
+    assert result["paths"]["report_txt"].exists()
+    assert result["paths"]["report_txt"].parent.name == "test"
+
+
 def test_ensure_notebook_checkpoint_manager_returns_existing_instance(tmp_path: Path):
     existing = TrainingCheckpointManager(tmp_path / "telemetry" / "run_1", retention=2)
 

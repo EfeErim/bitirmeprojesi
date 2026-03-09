@@ -185,22 +185,25 @@ class TrainingWorkflow:
             ),
         }
 
-    def _persist_validation_artifacts(
+    def _persist_evaluation_artifacts(
         self,
         *,
         artifact_dir: Path,
         trainer: Any,
-        val_loader: Any,
+        loader: Any,
         detected_classes: List[str],
         telemetry: Any,
         run_id: str,
         crop_name: str,
         loader_sizes: Dict[str, int],
+        split_name: str,
+        artifact_subdir: str,
+        telemetry_subdir: Optional[str] = None,
     ) -> Dict[str, Any]:
-        if trainer is None or _loader_size(val_loader) <= 0:
+        if trainer is None or _loader_size(loader) <= 0:
             return {}
 
-        validation_result = evaluate_model_with_predictions(trainer, val_loader)
+        validation_result = evaluate_model_with_predictions(trainer, loader)
         if validation_result is None:
             return {}
 
@@ -214,10 +217,13 @@ class TrainingWorkflow:
             y_pred=y_pred,
             classes=detected_classes,
             telemetry=telemetry,
+            artifact_subdir=artifact_subdir,
+            telemetry_subdir=telemetry_subdir,
             require_ood=require_ood,
             context={
                 "run_id": run_id,
                 "crop_name": crop_name,
+                "split_name": split_name,
                 "num_classes": len(detected_classes),
                 "loader_sizes": loader_sizes,
             },
@@ -399,15 +405,29 @@ class TrainingWorkflow:
             telemetry=telemetry,
         )
         trainer_for_artifacts = getattr(session, "trainer", None)
-        validation_artifacts = self._persist_validation_artifacts(
+        validation_artifacts = self._persist_evaluation_artifacts(
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
-            val_loader=val_loader,
+            loader=val_loader,
             detected_classes=detected_classes,
             telemetry=telemetry,
             run_id=run_id,
             crop_name=crop_name,
             loader_sizes=loader_sizes,
+            split_name="val",
+            artifact_subdir="validation",
+        )
+        test_artifacts = self._persist_evaluation_artifacts(
+            artifact_dir=artifact_dir,
+            trainer=trainer_for_artifacts,
+            loader=loaders.get("test"),
+            detected_classes=detected_classes,
+            telemetry=telemetry,
+            run_id=run_id,
+            crop_name=crop_name,
+            loader_sizes=loader_sizes,
+            split_name="test",
+            artifact_subdir="test",
         )
 
         summary_payload = self._build_summary_payload(
@@ -430,6 +450,7 @@ class TrainingWorkflow:
             {
                 "training": training_artifacts,
                 "validation": validation_artifacts.get("paths", {}),
+                "test": test_artifacts.get("paths", {}),
                 "summary": summary_artifacts,
             }
         )
