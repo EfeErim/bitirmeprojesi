@@ -1,0 +1,7 @@
+[CELL_CAPTURE] cell=Cell 3: Parameters
+run_id=20260309_073749
+started_at=2026-03-09T07:37:52.621663+00:00
+finished_at=2026-03-09T07:37:52.629214+00:00
+duration_sec=0.008
+
+[CONFIG] crop=tomato leaf epochs=25 bs=192 lr=0.0003 resume=fresh
