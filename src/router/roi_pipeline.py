@@ -36,6 +36,102 @@ def _matches_focus_part(part_label: str, focus_parts_lower: List[str]) -> bool:
     return any(focus_part in part_label for focus_part in focus_parts_lower)
 
 
+def _resolve_focus_settings(settings: Dict[str, Any]) -> tuple[bool, bool, float, List[str], List[str]]:
+    focus_mode_enabled = bool(settings.get('focus_part_mode_enabled'))
+    focus_fallback_enabled = bool(settings.get('focus_fallback_enabled'))
+    focus_min_confidence = float(settings.get('focus_min_confidence_fallback', 0.50))
+    focus_parts_raw = settings.get('focus_parts', ['leaf'])
+    focus_parts = focus_parts_raw if isinstance(focus_parts_raw, list) else ['leaf']
+    focus_parts_lower = [str(part).strip().lower() for part in focus_parts if str(part).strip()]
+    return focus_mode_enabled, focus_fallback_enabled, focus_min_confidence, focus_parts, focus_parts_lower
+
+
+def _collect_focused_detections(
+    all_detections: List[Detection],
+    *,
+    focus_parts_lower: List[str],
+    focus_min_confidence: float,
+) -> List[Detection]:
+    focused_detections: List[Detection] = []
+    for detection in all_detections:
+        part_label = str(detection.get('part', 'unknown')).strip().lower()
+        part_confidence = float(detection.get('part_confidence', 0.0))
+        if _matches_focus_part(part_label, focus_parts_lower) and part_confidence >= focus_min_confidence:
+            focused_detections.append(detection)
+    return focused_detections
+
+
+def _resolve_focus_result_detections(
+    *,
+    all_detections: List[Detection],
+    focused_detections: List[Detection],
+    focus_mode_enabled: bool,
+    focus_fallback_enabled: bool,
+    focus_parts: List[str],
+    focus_min_confidence: float,
+) -> List[Detection]:
+    if not (focus_mode_enabled and focus_fallback_enabled):
+        return all_detections
+    if focused_detections:
+        max_focused_conf = max(float(d.get('part_confidence', 0.0)) for d in focused_detections)
+        if max_focused_conf >= focus_min_confidence:
+            logger.debug(
+                "Using %d focused ROIs (parts=%s, max_conf=%.2f)",
+                len(focused_detections),
+                focus_parts,
+                max_focused_conf,
+            )
+            return focused_detections
+        logger.debug(
+            "Focus mode confidence threshold not met (%.2f < %.2f); reverting to full ROI set",
+            max_focused_conf,
+            focus_min_confidence,
+        )
+        return all_detections
+    logger.debug(
+        "No ROIs with focus_parts=%s; reverting to full ROI set (%d total)",
+        focus_parts,
+        len(all_detections),
+    )
+    return all_detections
+
+
+def _passes_detection_gate(
+    detection: Detection,
+    *,
+    run_open_set_gate: bool,
+    classification_min_confidence: float,
+    passes_open_set_gate_fn: Callable[..., bool],
+) -> bool:
+    if not run_open_set_gate:
+        return True
+    return bool(
+        passes_open_set_gate_fn(
+            crop_label=str(detection.get('crop', 'unknown')),
+            crop_confidence=float(detection.get('crop_confidence', 0.0)),
+            min_confidence=classification_min_confidence,
+        )
+    )
+
+
+def _classify_candidates(
+    candidates: List[Candidate],
+    *,
+    classify_candidate_fn: Callable[[Candidate], Tuple[Optional[Detection], int]],
+) -> tuple[List[Detection], int, float]:
+    all_detections: List[Detection] = []
+    roi_classification_calls = 0
+    roi_classification_ms = 0.0
+    for candidate in candidates:
+        classify_start = time.perf_counter()
+        detection, classification_calls = classify_candidate_fn(candidate)
+        roi_classification_calls += classification_calls
+        roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
+        if detection is not None:
+            all_detections.append(detection)
+    return all_detections, roi_classification_calls, roi_classification_ms
+
+
 def collect_sam3_roi_candidates(
     boxes: Any,
     scores: Any,
@@ -347,55 +443,39 @@ def filter_classified_sam3_detections(
     roi_kept = 0
 
     run_open_set_gate = policy_enabled_fn('open_set_gate', True) and 'open_set_gate' in stage_order
-    focus_mode_enabled = bool(settings.get('focus_part_mode_enabled'))
-    focus_fallback_enabled = bool(settings.get('focus_fallback_enabled'))
-    focus_min_confidence = float(settings.get('focus_min_confidence_fallback', 0.50))
-    focus_parts_raw = settings.get('focus_parts', ['leaf'])
-    focus_parts = focus_parts_raw if isinstance(focus_parts_raw, list) else ['leaf']
-    focus_parts_lower = [str(part).strip().lower() for part in focus_parts if str(part).strip()]
+    (
+        focus_mode_enabled,
+        focus_fallback_enabled,
+        focus_min_confidence,
+        focus_parts,
+        focus_parts_lower,
+    ) = _resolve_focus_settings(settings)
     classification_min_confidence = float(settings['classification_min_confidence'])
 
-    focused_detections: List[Detection] = []
-    if focus_mode_enabled:
-        for detection in all_detections:
-            part_label = str(detection.get('part', 'unknown')).strip().lower()
-            part_confidence = float(detection.get('part_confidence', 0.0))
-            if _matches_focus_part(part_label, focus_parts_lower) and part_confidence >= focus_min_confidence:
-                focused_detections.append(detection)
-
-    if focus_mode_enabled and focus_fallback_enabled:
-        if focused_detections:
-            max_focused_conf = max(float(d.get('part_confidence', 0.0)) for d in focused_detections)
-            if max_focused_conf >= focus_min_confidence:
-                logger.debug(
-                    "Using %d focused ROIs (parts=%s, max_conf=%.2f)",
-                    len(focused_detections),
-                    focus_parts,
-                    max_focused_conf,
-                )
-                result_detections = focused_detections
-            else:
-                logger.debug(
-                    "Focus mode confidence threshold not met (%.2f < %.2f); reverting to full ROI set",
-                    max_focused_conf,
-                    focus_min_confidence,
-                )
-                result_detections = all_detections
-        else:
-            logger.debug(
-                "No ROIs with focus_parts=%s; reverting to full ROI set (%d total)",
-                focus_parts,
-                len(all_detections),
-            )
-            result_detections = all_detections
-    else:
-        result_detections = all_detections
+    focused_detections = (
+        _collect_focused_detections(
+            all_detections,
+            focus_parts_lower=focus_parts_lower,
+            focus_min_confidence=focus_min_confidence,
+        )
+        if focus_mode_enabled
+        else []
+    )
+    result_detections = _resolve_focus_result_detections(
+        all_detections=all_detections,
+        focused_detections=focused_detections,
+        focus_mode_enabled=focus_mode_enabled,
+        focus_fallback_enabled=focus_fallback_enabled,
+        focus_parts=focus_parts,
+        focus_min_confidence=focus_min_confidence,
+    )
 
     for detection in result_detections:
-        if run_open_set_gate and not passes_open_set_gate_fn(
-            crop_label=str(detection.get('crop', 'unknown')),
-            crop_confidence=float(detection.get('crop_confidence', 0.0)),
-            min_confidence=classification_min_confidence,
+        if not _passes_detection_gate(
+            detection,
+            run_open_set_gate=run_open_set_gate,
+            classification_min_confidence=classification_min_confidence,
+            passes_open_set_gate_fn=passes_open_set_gate_fn,
         ):
             continue
         detections.append(detection)
@@ -413,26 +493,14 @@ def run_sam3_roi_classification_stage(
     passes_open_set_gate_fn: Callable[..., bool],
 ) -> Tuple[List[Detection], int, int, float]:
     """Execute ROI classification stage with focus fallback and optional open-set gate."""
-    detections: List[Detection] = []
-    roi_kept = 0
-    roi_classification_calls = 0
-    roi_classification_ms = 0.0
-
     run_classification = policy_enabled_fn('crop_evidence', True) and 'roi_classification' in stage_order
     if not run_classification:
-        return detections, roi_kept, roi_classification_calls, roi_classification_ms
+        return [], 0, 0, 0.0
 
-    all_detections: List[Detection] = []
-    for candidate in candidates:
-        classify_start = time.perf_counter()
-        detection, classification_calls = classify_candidate_fn(candidate)
-        roi_classification_calls += classification_calls
-        roi_classification_ms += (time.perf_counter() - classify_start) * 1000.0
-
-        if detection is None:
-            continue
-
-        all_detections.append(detection)
+    all_detections, roi_classification_calls, roi_classification_ms = _classify_candidates(
+        candidates,
+        classify_candidate_fn=classify_candidate_fn,
+    )
 
     detections, roi_kept = filter_classified_sam3_detections(
         all_detections=all_detections,

@@ -34,6 +34,20 @@ from src.ood.sure_scoring import (
     compute_semantic_score,
 )
 
+_BASE_SCORE_FIELDS = (
+    "mahalanobis_z",
+    "energy_z",
+    "ensemble_score",
+    "class_threshold",
+    "is_ood",
+)
+_SURE_SCORE_FIELDS = (
+    "sure_semantic_score",
+    "sure_confidence_score",
+    "sure_semantic_ood",
+    "sure_confidence_reject",
+)
+
 
 @dataclass
 class ClassCalibration:
@@ -107,6 +121,101 @@ class ContinualOODDetector:
     def _energy(logits: torch.Tensor) -> torch.Tensor:
         return energy_from_logits(logits)
 
+    @staticmethod
+    def _calibrated_class_ids(labels: torch.Tensor) -> List[int]:
+        return [int(class_id) for class_id in torch.unique(labels).tolist()]
+
+    @staticmethod
+    def _build_calibration_summary(
+        *,
+        class_count: int,
+        calibration_version: int,
+        radial_beta: Optional[float],
+        conformal_qhat: Optional[float],
+    ) -> Dict[str, float]:
+        result: Dict[str, float] = {
+            "num_classes": float(class_count),
+            "calibration_version": float(calibration_version),
+        }
+        if radial_beta is not None:
+            result["radial_beta"] = float(radial_beta)
+        if conformal_qhat is not None:
+            result["conformal_qhat"] = float(conformal_qhat)
+        return result
+
+    @staticmethod
+    def _default_score_result() -> Dict[str, Any]:
+        return {
+            "mahalanobis_z": 0.0,
+            "energy_z": 0.0,
+            "ensemble_score": 0.0,
+            "class_threshold": float("inf"),
+            "is_ood": False,
+            "sure_semantic_score": None,
+            "sure_confidence_score": None,
+            "sure_semantic_ood": None,
+            "sure_confidence_reject": None,
+        }
+
+    @staticmethod
+    def _set_sure_thresholds(
+        class_stats: Dict[int, ClassCalibration],
+        *,
+        semantic_threshold: float,
+        confidence_threshold: float,
+    ) -> None:
+        for stats in class_stats.values():
+            stats.sure_semantic_threshold = semantic_threshold
+            stats.sure_confidence_threshold = confidence_threshold
+
+    @staticmethod
+    def _build_score_output(
+        *,
+        result: Dict[str, list],
+        device: torch.device | str,
+        batch_size: int,
+        calibration_version: int,
+        sure_enabled: bool,
+        radial_beta: Optional[float],
+    ) -> Dict[str, Any]:
+        output: Dict[str, Any] = {
+            "mahalanobis_z": torch.tensor(result["mahalanobis_z"], dtype=torch.float32, device=device),
+            "energy_z": torch.tensor(result["energy_z"], dtype=torch.float32, device=device),
+            "ensemble_score": torch.tensor(result["ensemble_score"], dtype=torch.float32, device=device),
+            "class_threshold": torch.tensor(result["class_threshold"], dtype=torch.float32, device=device),
+            "is_ood": torch.tensor(result["is_ood"], dtype=torch.bool, device=device),
+            "calibration_version": torch.full(
+                (batch_size,),
+                calibration_version,
+                dtype=torch.long,
+                device=device,
+            ),
+        }
+        if sure_enabled:
+            output["sure_semantic_score"] = torch.tensor(
+                [s if s is not None else 0.0 for s in result["sure_semantic_score"]],
+                dtype=torch.float32,
+                device=device,
+            )
+            output["sure_confidence_score"] = torch.tensor(
+                [s if s is not None else 0.0 for s in result["sure_confidence_score"]],
+                dtype=torch.float32,
+                device=device,
+            )
+            output["sure_semantic_ood"] = torch.tensor(
+                [s if s is not None else False for s in result["sure_semantic_ood"]],
+                dtype=torch.bool,
+                device=device,
+            )
+            output["sure_confidence_reject"] = torch.tensor(
+                [s if s is not None else False for s in result["sure_confidence_reject"]],
+                dtype=torch.bool,
+                device=device,
+            )
+        if radial_beta is not None:
+            output["radial_beta"] = radial_beta
+        return output
+
     def _maybe_normalize(self, features: torch.Tensor) -> torch.Tensor:
         """Apply radial L2 normalization if enabled and β is calibrated."""
         if self.radial_l2_enabled and self.radial_beta is not None:
@@ -173,8 +282,8 @@ class ContinualOODDetector:
         self.class_stats = {}
         energies = self._energy(logits)
 
-        unique_classes = torch.unique(labels)
-        for class_id in unique_classes.tolist():
+        class_ids = self._calibrated_class_ids(labels)
+        for class_id in class_ids:
             mask = labels == class_id
             class_features = features[mask]
             class_logits = logits[mask]
@@ -216,11 +325,11 @@ class ContinualOODDetector:
         if self.sure_enabled and self.class_stats:
             all_ensemble_z = []
             all_confidence = []
-            for class_id in unique_classes.tolist():
+            for class_id in class_ids:
                 mask = labels == class_id
-                if int(class_id) not in self.class_stats:
+                if class_id not in self.class_stats:
                     continue
-                stats = self.class_stats[int(class_id)]
+                stats = self.class_stats[class_id]
                 class_features = features[mask]
                 class_logits = logits[mask]
                 class_energy = energies[mask]
@@ -240,20 +349,21 @@ class ContinualOODDetector:
                     semantic_percentile=self.sure_semantic_percentile,
                     confidence_percentile=self.sure_confidence_percentile,
                 )
-                # Store thresholds in each class (global thresholds for now)
-                for stats in self.class_stats.values():
-                    stats.sure_semantic_threshold = sem_thresh
-                    stats.sure_confidence_threshold = conf_thresh
+                self._set_sure_thresholds(
+                    self.class_stats,
+                    semantic_threshold=sem_thresh,
+                    confidence_threshold=conf_thresh,
+                )
 
         # --- Phase 3: Conformal prediction calibration ---
         if self.conformal_enabled and self.class_stats:
             all_ensemble_scores = []
             all_class_thresholds = []
-            for class_id in unique_classes.tolist():
+            for class_id in class_ids:
                 mask = labels == class_id
-                if int(class_id) not in self.class_stats:
+                if class_id not in self.class_stats:
                     continue
-                stats = self.class_stats[int(class_id)]
+                stats = self.class_stats[class_id]
                 class_features = features[mask]
                 class_energy = energies[mask]
 
@@ -271,29 +381,16 @@ class ContinualOODDetector:
                 )
 
         self.calibration_version += 1
-        result: Dict[str, float] = {
-            "num_classes": float(len(self.class_stats)),
-            "calibration_version": float(self.calibration_version),
-        }
-        if self.radial_beta is not None:
-            result["radial_beta"] = float(self.radial_beta)
-        if self.conformal_qhat is not None:
-            result["conformal_qhat"] = float(self.conformal_qhat)
-        return result
+        return self._build_calibration_summary(
+            class_count=len(self.class_stats),
+            calibration_version=self.calibration_version,
+            radial_beta=self.radial_beta,
+            conformal_qhat=self.conformal_qhat,
+        )
 
     def _score_class(self, class_id: int, feature: torch.Tensor, logit: torch.Tensor) -> Dict[str, Any]:
         if class_id not in self.class_stats:
-            return {
-                "mahalanobis_z": 0.0,
-                "energy_z": 0.0,
-                "ensemble_score": 0.0,
-                "class_threshold": float("inf"),
-                "is_ood": False,
-                "sure_semantic_score": None,
-                "sure_confidence_score": None,
-                "sure_semantic_ood": None,
-                "sure_confidence_reject": None,
-            }
+            return self._default_score_result()
 
         score_feature = feature
         if feature.ndim == 1:
@@ -388,65 +485,18 @@ class ContinualOODDetector:
             predicted_labels = torch.argmax(logits, dim=1)
         predicted_labels = predicted_labels.reshape(-1)
 
-        result: Dict[str, list] = {
-            "mahalanobis_z": [],
-            "energy_z": [],
-            "ensemble_score": [],
-            "class_threshold": [],
-            "is_ood": [],
-            "sure_semantic_score": [],
-            "sure_confidence_score": [],
-            "sure_semantic_ood": [],
-            "sure_confidence_reject": [],
-        }
+        result: Dict[str, list] = {field: [] for field in (*_BASE_SCORE_FIELDS, *_SURE_SCORE_FIELDS)}
 
         for feat, logit, cls in zip(features, logits, predicted_labels):
             item = self._score_class(int(cls.item()), feat, logit)
-            result["mahalanobis_z"].append(item["mahalanobis_z"])
-            result["energy_z"].append(item["energy_z"])
-            result["ensemble_score"].append(item["ensemble_score"])
-            result["class_threshold"].append(item["class_threshold"])
-            result["is_ood"].append(item["is_ood"])
-            result["sure_semantic_score"].append(item["sure_semantic_score"])
-            result["sure_confidence_score"].append(item["sure_confidence_score"])
-            result["sure_semantic_ood"].append(item["sure_semantic_ood"])
-            result["sure_confidence_reject"].append(item["sure_confidence_reject"])
+            for field in (*_BASE_SCORE_FIELDS, *_SURE_SCORE_FIELDS):
+                result[field].append(item[field])
 
-        output: Dict[str, Any] = {
-            "mahalanobis_z": torch.tensor(result["mahalanobis_z"], dtype=torch.float32, device=features.device),
-            "energy_z": torch.tensor(result["energy_z"], dtype=torch.float32, device=features.device),
-            "ensemble_score": torch.tensor(result["ensemble_score"], dtype=torch.float32, device=features.device),
-            "class_threshold": torch.tensor(result["class_threshold"], dtype=torch.float32, device=features.device),
-            "is_ood": torch.tensor(result["is_ood"], dtype=torch.bool, device=features.device),
-            "calibration_version": torch.full(
-                (features.size(0),),
-                self.calibration_version,
-                dtype=torch.long,
-                device=features.device,
-            ),
-        }
-
-        # SURE+ fields (None-safe for disabled mode)
-        if self.sure_enabled:
-            output["sure_semantic_score"] = torch.tensor(
-                [s if s is not None else 0.0 for s in result["sure_semantic_score"]],
-                dtype=torch.float32, device=features.device,
-            )
-            output["sure_confidence_score"] = torch.tensor(
-                [s if s is not None else 0.0 for s in result["sure_confidence_score"]],
-                dtype=torch.float32, device=features.device,
-            )
-            output["sure_semantic_ood"] = torch.tensor(
-                [s if s is not None else False for s in result["sure_semantic_ood"]],
-                dtype=torch.bool, device=features.device,
-            )
-            output["sure_confidence_reject"] = torch.tensor(
-                [s if s is not None else False for s in result["sure_confidence_reject"]],
-                dtype=torch.bool, device=features.device,
-            )
-
-        # Radial beta info
-        if self.radial_beta is not None:
-            output["radial_beta"] = self.radial_beta
-
-        return output
+        return self._build_score_output(
+            result=result,
+            device=features.device,
+            batch_size=features.size(0),
+            calibration_version=self.calibration_version,
+            sure_enabled=self.sure_enabled,
+            radial_beta=self.radial_beta,
+        )

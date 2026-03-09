@@ -16,6 +16,15 @@ from src.training.services.reporting import (
 )
 from src.training.validation import evaluate_model_with_artifact_metrics
 
+_OOD_BENCHMARK_METRIC_NAMES = (
+    "accuracy",
+    "ood_auroc",
+    "ood_false_positive_rate",
+    "sure_ds_f1",
+    "conformal_empirical_coverage",
+    "conformal_avg_set_size",
+)
+
 
 def _loader_size(loader: Any) -> int:
     dataset = getattr(loader, "dataset", None)
@@ -60,7 +69,8 @@ class FilteredLabelDataset(Dataset):
         self.idx_to_class = {idx: name for name, idx in self.class_to_idx.items()}
         self._label_map = {int(key): int(value) for key, value in dict(label_map or {}).items()}
         self._constant_label = int(constant_label) if constant_label is not None else None
-        self.labels = [self._remap_label(_dataset_labels(base_dataset)[index]) for index in self.indices]
+        base_labels = _dataset_labels(base_dataset)
+        self.labels = [self._remap_label(base_labels[index]) for index in self.indices]
 
     def _remap_label(self, label: int) -> int:
         if self._constant_label is not None:
@@ -155,6 +165,106 @@ def _select_calibration_loader(loaders: Dict[str, Any]) -> tuple[str, Any]:
     return "train", loaders.get("train")
 
 
+def _empty_metric_map() -> Dict[str, None]:
+    return {name: None for name in _OOD_BENCHMARK_METRIC_NAMES}
+
+
+def _persist_benchmark_summary(
+    *,
+    artifact_root: Path,
+    summary_payload: Dict[str, Any],
+    telemetry: Any,
+) -> Dict[str, Any]:
+    artifacts = persist_ood_benchmark_artifacts(
+        artifact_root=artifact_root,
+        summary_payload=summary_payload,
+        telemetry=telemetry,
+    )
+    summary_payload["paths"] = {key: str(path) for key, path in artifacts.items()}
+    return summary_payload
+
+
+def _build_failed_summary(
+    *,
+    reason: str,
+    base_context: Dict[str, Any],
+    target_values: Dict[str, float],
+    extra_context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    return {
+        "schema_version": "v6_ood_benchmark",
+        "status": "failed",
+        "passed": False,
+        "ood_evidence_source": "held_out_benchmark",
+        "reason": str(reason),
+        "metrics": _empty_metric_map(),
+        "metric_std": {},
+        "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
+        "successful_folds": 0,
+        "failed_folds": 0,
+        "folds": [],
+        "targets": target_values,
+        "context": {
+            **base_context,
+            **dict(extra_context or {}),
+        },
+    }
+
+
+def _build_fold_sample_counts(
+    train_indices: Sequence[int],
+    calibration_indices: Sequence[int],
+    eval_id_indices: Sequence[int],
+    eval_ood_indices: Sequence[int],
+) -> Dict[str, int]:
+    return {
+        "train_samples": len(train_indices),
+        "calibration_samples": len(calibration_indices),
+        "eval_in_distribution_samples": len(eval_id_indices),
+        "eval_ood_samples": len(eval_ood_indices),
+    }
+
+
+def _build_fold_payload(
+    *,
+    held_out_class: str,
+    status: str,
+    reason: str,
+    seen_classes: Sequence[str],
+    sample_counts: Dict[str, int],
+    metrics: Optional[Dict[str, Any]] = None,
+    evaluation: Optional[Dict[str, Any]] = None,
+    paths: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    payload = {
+        "held_out_class": held_out_class,
+        "status": status,
+        "reason": reason,
+        "seen_classes": list(seen_classes),
+        "metrics": dict(metrics or {}),
+        "sample_counts": dict(sample_counts),
+        "paths": dict(paths or {}),
+    }
+    if evaluation is not None:
+        payload["evaluation"] = dict(evaluation)
+    return payload
+
+
+def _aggregate_fold_metric_stats(folds: Sequence[Dict[str, Any]]) -> tuple[Dict[str, Optional[float]], Dict[str, Optional[float]]]:
+    aggregate_metrics: Dict[str, Optional[float]] = {}
+    metric_std: Dict[str, Optional[float]] = {}
+    successful_folds = list(folds)
+    for metric_name in _OOD_BENCHMARK_METRIC_NAMES:
+        values = [
+            float(fold["metrics"][metric_name])
+            for fold in successful_folds
+            if fold.get("metrics", {}).get(metric_name) is not None
+        ]
+        aggregate_metrics[metric_name] = _mean(values) if len(values) == len(successful_folds) else None
+        metric_std[metric_name] = _std(values) if len(values) == len(successful_folds) else None
+    return aggregate_metrics, metric_std
+
+
 def run_leave_one_class_out_benchmark(
     *,
     crop_name: str,
@@ -187,67 +297,41 @@ def run_leave_one_class_out_benchmark(
     }
 
     if len(resolved_classes) < int(min_classes):
-        payload = {
-            "schema_version": "v6_ood_benchmark",
-            "status": "failed",
-            "passed": False,
-            "ood_evidence_source": "held_out_benchmark",
-            "reason": "insufficient_classes_for_fallback",
-            "metrics": {name: None for name in ("accuracy", "ood_auroc", "ood_false_positive_rate", "sure_ds_f1", "conformal_empirical_coverage", "conformal_avg_set_size")},
-            "metric_std": {},
-            "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
-            "successful_folds": 0,
-            "failed_folds": 0,
-            "folds": [],
-            "targets": target_values,
-            "context": {**base_context, "required_min_classes": int(min_classes)},
-        }
-        artifacts = persist_ood_benchmark_artifacts(artifact_root=artifact_root, summary_payload=payload, telemetry=telemetry)
-        payload["paths"] = {key: str(path) for key, path in artifacts.items()}
-        return payload
+        return _persist_benchmark_summary(
+            artifact_root=artifact_root,
+            summary_payload=_build_failed_summary(
+                reason="insufficient_classes_for_fallback",
+                base_context=base_context,
+                target_values=target_values,
+                extra_context={"required_min_classes": int(min_classes)},
+            ),
+            telemetry=telemetry,
+        )
 
     if train_loader is None or _loader_size(train_loader) <= 0:
-        payload = {
-            "schema_version": "v6_ood_benchmark",
-            "status": "failed",
-            "passed": False,
-            "ood_evidence_source": "held_out_benchmark",
-            "reason": "missing_train_loader",
-            "metrics": {name: None for name in ("accuracy", "ood_auroc", "ood_false_positive_rate", "sure_ds_f1", "conformal_empirical_coverage", "conformal_avg_set_size")},
-            "metric_std": {},
-            "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
-            "successful_folds": 0,
-            "failed_folds": 0,
-            "folds": [],
-            "targets": target_values,
-            "context": base_context,
-        }
-        artifacts = persist_ood_benchmark_artifacts(artifact_root=artifact_root, summary_payload=payload, telemetry=telemetry)
-        payload["paths"] = {key: str(path) for key, path in artifacts.items()}
-        return payload
+        return _persist_benchmark_summary(
+            artifact_root=artifact_root,
+            summary_payload=_build_failed_summary(
+                reason="missing_train_loader",
+                base_context=base_context,
+                target_values=target_values,
+            ),
+            telemetry=telemetry,
+        )
 
     train_dataset = train_loader.dataset
     calibration_dataset = getattr(calibration_loader, "dataset", None)
     eval_dataset = getattr(eval_loader, "dataset", None)
     if calibration_dataset is None or eval_dataset is None:
-        payload = {
-            "schema_version": "v6_ood_benchmark",
-            "status": "failed",
-            "passed": False,
-            "ood_evidence_source": "held_out_benchmark",
-            "reason": "missing_eval_loader",
-            "metrics": {name: None for name in ("accuracy", "ood_auroc", "ood_false_positive_rate", "sure_ds_f1", "conformal_empirical_coverage", "conformal_avg_set_size")},
-            "metric_std": {},
-            "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
-            "successful_folds": 0,
-            "failed_folds": 0,
-            "folds": [],
-            "targets": target_values,
-            "context": base_context,
-        }
-        artifacts = persist_ood_benchmark_artifacts(artifact_root=artifact_root, summary_payload=payload, telemetry=telemetry)
-        payload["paths"] = {key: str(path) for key, path in artifacts.items()}
-        return payload
+        return _persist_benchmark_summary(
+            artifact_root=artifact_root,
+            summary_payload=_build_failed_summary(
+                reason="missing_eval_loader",
+                base_context=base_context,
+                target_values=target_values,
+            ),
+            telemetry=telemetry,
+        )
 
     class_to_idx = dict(getattr(train_dataset, "class_to_idx", {name: idx for idx, name in enumerate(resolved_classes)}))
     train_labels = _dataset_labels(train_dataset)
@@ -273,12 +357,12 @@ def run_leave_one_class_out_benchmark(
         eval_id_indices = [idx for idx, label in enumerate(eval_labels) if label in seen_label_map]
         eval_ood_indices = [idx for idx, label in enumerate(eval_labels) if label == held_out_label]
 
-        sample_counts = {
-            "train_samples": len(train_indices),
-            "calibration_samples": len(calibration_indices),
-            "eval_in_distribution_samples": len(eval_id_indices),
-            "eval_ood_samples": len(eval_ood_indices),
-        }
+        sample_counts = _build_fold_sample_counts(
+            train_indices,
+            calibration_indices,
+            eval_id_indices,
+            eval_ood_indices,
+        )
         emit(
             "ood_benchmark_fold_started",
             {
@@ -297,16 +381,13 @@ def run_leave_one_class_out_benchmark(
             or sample_counts["eval_in_distribution_samples"] <= 0
             or sample_counts["eval_ood_samples"] <= 0
         ):
-            reason = "missing_fold_samples"
-            fold_payload = {
-                "held_out_class": held_out_class,
-                "status": "failed",
-                "reason": reason,
-                "seen_classes": list(seen_classes),
-                "metrics": {},
-                "sample_counts": sample_counts,
-                "paths": {},
-            }
+            fold_payload = _build_fold_payload(
+                held_out_class=held_out_class,
+                status="failed",
+                reason="missing_fold_samples",
+                seen_classes=seen_classes,
+                sample_counts=sample_counts,
+            )
             folds.append(fold_payload)
             emit(
                 "ood_benchmark_fold_completed",
@@ -397,26 +478,24 @@ def run_leave_one_class_out_benchmark(
                 },
             )
             metric_gate = dict(artifacts.get("metric_gate", {}))
-            fold_payload = {
-                "held_out_class": held_out_class,
-                "status": "completed",
-                "reason": "",
-                "seen_classes": list(seen_classes),
-                "metrics": dict(metric_gate.get("metrics", {})),
-                "evaluation": dict(metric_gate.get("evaluation", {})),
-                "sample_counts": sample_counts,
-                "paths": {key: str(path) for key, path in dict(artifacts.get("paths", {})).items()},
-            }
+            fold_payload = _build_fold_payload(
+                held_out_class=held_out_class,
+                status="completed",
+                reason="",
+                seen_classes=seen_classes,
+                sample_counts=sample_counts,
+                metrics=dict(metric_gate.get("metrics", {})),
+                evaluation=dict(metric_gate.get("evaluation", {})),
+                paths={key: str(path) for key, path in dict(artifacts.get("paths", {})).items()},
+            )
         except Exception as exc:
-            fold_payload = {
-                "held_out_class": held_out_class,
-                "status": "failed",
-                "reason": str(exc),
-                "seen_classes": list(seen_classes),
-                "metrics": {},
-                "sample_counts": sample_counts,
-                "paths": {},
-            }
+            fold_payload = _build_fold_payload(
+                held_out_class=held_out_class,
+                status="failed",
+                reason=str(exc),
+                seen_classes=seen_classes,
+                sample_counts=sample_counts,
+            )
 
         folds.append(fold_payload)
         emit(
@@ -431,24 +510,7 @@ def run_leave_one_class_out_benchmark(
 
     successful_folds = [fold for fold in folds if fold.get("status") == "completed"]
     failed_folds = [fold for fold in folds if fold.get("status") != "completed"]
-    metric_names = (
-        "accuracy",
-        "ood_auroc",
-        "ood_false_positive_rate",
-        "sure_ds_f1",
-        "conformal_empirical_coverage",
-        "conformal_avg_set_size",
-    )
-    aggregate_metrics: Dict[str, Optional[float]] = {}
-    metric_std: Dict[str, Optional[float]] = {}
-    for metric_name in metric_names:
-        values = [
-            float(fold["metrics"][metric_name])
-            for fold in successful_folds
-            if fold.get("metrics", {}).get(metric_name) is not None
-        ]
-        aggregate_metrics[metric_name] = _mean(values) if len(values) == len(successful_folds) else None
-        metric_std[metric_name] = _std(values) if len(values) == len(successful_folds) else None
+    aggregate_metrics, metric_std = _aggregate_fold_metric_stats(successful_folds)
 
     ood_validation = validate_ood_metrics(aggregate_metrics, target_values, require_ood=True)
     passed = bool(not failed_folds and ood_validation["passed"])
@@ -466,12 +528,11 @@ def run_leave_one_class_out_benchmark(
         "targets": target_values,
         "context": base_context,
     }
-    artifacts = persist_ood_benchmark_artifacts(
+    summary_payload = _persist_benchmark_summary(
         artifact_root=artifact_root,
         summary_payload=summary_payload,
         telemetry=telemetry,
     )
-    summary_payload["paths"] = {key: str(path) for key, path in artifacts.items()}
     emit(
         "ood_benchmark_completed",
         {

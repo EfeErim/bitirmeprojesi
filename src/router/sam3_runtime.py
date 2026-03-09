@@ -155,6 +155,92 @@ def _resolve_positive_int(value: Any, default: int) -> int:
     return max(1, resolved)
 
 
+def _empty_classification_result() -> Dict[str, Any]:
+    return {
+        "detections": [],
+        "roi_kept": 0,
+        "roi_classification_calls": 0,
+        "roi_classification_ms": 0.0,
+    }
+
+
+def _build_sam3_analysis_payload(
+    *,
+    context: Sam3RequestContext,
+    detections: List[Dict[str, Any]],
+    stage_timings_ms: Dict[str, float],
+    elapsed_ms: float,
+    roi_seen: int,
+    roi_kept: int,
+    roi_classification_calls: int,
+    mask_count: int,
+) -> Dict[str, Any]:
+    stage_summary = summarize_sam3_stage_timings(stage_timings_ms, roi_seen, roi_classification_calls)
+    return build_sam3_analysis_result(
+        detections=detections,
+        image_size=context.image_size,
+        elapsed_ms=elapsed_ms,
+        stage_summary=stage_summary,
+        roi_seen=roi_seen,
+        roi_kept=roi_kept,
+        roi_classification_calls=roi_classification_calls,
+        mask_count=mask_count,
+        sam3_threshold=context.sam3_threshold,
+    )
+
+
+def _build_batch_contexts(
+    runtime: Any,
+    batch: torch.Tensor,
+    *,
+    confidence_threshold: float,
+    max_detections: Optional[int],
+) -> List[Sam3RequestContext]:
+    batch_size = int(batch.shape[0]) if hasattr(batch, "shape") else 0
+    contexts: List[Sam3RequestContext] = []
+    for index in range(batch_size):
+        pil_image, image_size = coerce_image_input(batch[index])
+        contexts.append(
+            build_request_context(
+                runtime,
+                pil_image=pil_image,
+                image_size=image_size,
+                confidence_threshold=confidence_threshold,
+                max_detections=max_detections,
+            )
+        )
+    return contexts
+
+
+def _chunk_supports_batched_sam3(contexts: List[Sam3RequestContext]) -> bool:
+    prompts = {context.sam3_prompt for context in contexts}
+    thresholds = {context.sam3_threshold for context in contexts}
+    return len(prompts) == 1 and len(thresholds) == 1
+
+
+def _collect_chunk_roi_candidates(
+    runtime: Any,
+    *,
+    contexts: List[Sam3RequestContext],
+    batched_results: List[Dict[str, Any]],
+) -> tuple[List[List[Dict[str, Any]]], List[int], List[float], List[int]]:
+    candidates_per_image: List[List[Dict[str, Any]]] = []
+    roi_seen_per_image: List[int] = []
+    roi_filter_ms_per_image: List[float] = []
+    mask_count_per_image: List[int] = []
+    for context, sam3_results in zip(contexts, batched_results):
+        boxes = sam3_results.get("boxes", [])
+        scores = sam3_results.get("scores", [])
+        masks = sam3_results.get("masks", [])
+        mask_count_per_image.append(_mask_count(masks))
+        roi_started_at = time.perf_counter()
+        candidates, roi_seen = run_sam3_roi_filter_stage(runtime, boxes, scores, context=context)
+        roi_filter_ms_per_image.append((time.perf_counter() - roi_started_at) * 1000.0)
+        candidates_per_image.append(candidates)
+        roi_seen_per_image.append(roi_seen)
+    return candidates_per_image, roi_seen_per_image, roi_filter_ms_per_image, mask_count_per_image
+
+
 def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
     def _clip_score(
         roi_image: Image.Image,
@@ -225,15 +311,7 @@ def _classify_chunk_candidates_batched(
             )
 
     if not records:
-        return [
-            {
-                "detections": [],
-                "roi_kept": 0,
-                "roi_classification_calls": 0,
-                "roi_classification_ms": 0.0,
-            }
-            for _ in contexts
-        ]
+        return [_empty_classification_result() for _ in contexts]
 
     roi_images = [record["roi_image"] for record in records]
     scoring_started_at = time.perf_counter()
@@ -356,7 +434,6 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     stage_timings_ms["postprocess"] = (time.perf_counter() - stage_start) * 1000.0
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-    stage_summary = summarize_sam3_stage_timings(stage_timings_ms, roi_seen, roi_classification_calls)
 
     if context.timing_logs_enabled:
         logger.info(
@@ -372,16 +449,15 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
             roi_kept,
         )
 
-    return build_sam3_analysis_result(
+    return _build_sam3_analysis_payload(
+        context=context,
         detections=detections,
-        image_size=context.image_size,
         elapsed_ms=elapsed_ms,
-        stage_summary=stage_summary,
+        stage_timings_ms=stage_timings_ms,
         roi_seen=roi_seen,
         roi_kept=roi_kept,
         roi_classification_calls=roi_classification_calls,
         mask_count=mask_count,
-        sam3_threshold=context.sam3_threshold,
     )
 
 
@@ -392,27 +468,14 @@ def analyze_sam3_batch(
     max_detections: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Analyze a tensor batch with chunked SAM3 inference and batched CLIP ROI scoring."""
-    batch_size = int(batch.shape[0]) if hasattr(batch, "shape") else 0
-    if batch_size <= 0:
+    contexts = _build_batch_contexts(
+        runtime,
+        batch,
+        confidence_threshold=confidence_threshold,
+        max_detections=max_detections,
+    )
+    if not contexts:
         return []
-
-    pil_images: List[Image.Image] = []
-    image_sizes: List[Tuple[int, int, int]] = []
-    for index in range(batch_size):
-        pil_image, image_size = coerce_image_input(batch[index])
-        pil_images.append(pil_image)
-        image_sizes.append(image_size)
-
-    contexts = [
-        build_request_context(
-            runtime,
-            pil_image=pil_image,
-            image_size=image_size,
-            confidence_threshold=confidence_threshold,
-            max_detections=max_detections,
-        )
-        for pil_image, image_size in zip(pil_images, image_sizes)
-    ]
 
     chunk_size = _resolve_positive_int(runtime.vlm_config.get("batch_chunk_size", 8), 8)
     analyses: List[Dict[str, Any]] = []
@@ -421,9 +484,7 @@ def analyze_sam3_batch(
         if not chunk_contexts:
             continue
 
-        prompts = {context.sam3_prompt for context in chunk_contexts}
-        thresholds = {context.sam3_threshold for context in chunk_contexts}
-        if len(prompts) != 1 or len(thresholds) != 1:
+        if not _chunk_supports_batched_sam3(chunk_contexts):
             analyses.extend(analyze_sam3_image(runtime, context) for context in chunk_contexts)
             continue
 
@@ -440,20 +501,13 @@ def analyze_sam3_batch(
             analyses.extend(analyze_sam3_image(runtime, context) for context in chunk_contexts)
             continue
 
-        candidates_per_image: List[List[Dict[str, Any]]] = []
-        roi_seen_per_image: List[int] = []
-        roi_filter_ms_per_image: List[float] = []
-        mask_count_per_image: List[int] = []
-        for context, sam3_results in zip(chunk_contexts, batched_results):
-            boxes = sam3_results.get("boxes", [])
-            scores = sam3_results.get("scores", [])
-            masks = sam3_results.get("masks", [])
-            mask_count_per_image.append(_mask_count(masks))
-            roi_started_at = time.perf_counter()
-            candidates, roi_seen = run_sam3_roi_filter_stage(runtime, boxes, scores, context=context)
-            roi_filter_ms_per_image.append((time.perf_counter() - roi_started_at) * 1000.0)
-            candidates_per_image.append(candidates)
-            roi_seen_per_image.append(roi_seen)
+        candidates_per_image, roi_seen_per_image, roi_filter_ms_per_image, mask_count_per_image = (
+            _collect_chunk_roi_candidates(
+                runtime,
+                contexts=chunk_contexts,
+                batched_results=batched_results,
+            )
+        )
 
         classification_results = _classify_chunk_candidates_batched(
             runtime,
@@ -482,22 +536,16 @@ def analyze_sam3_batch(
             )
             stage_timings_ms["postprocess"] = (time.perf_counter() - postprocess_started_at) * 1000.0
             elapsed_ms = sum(float(value) for value in stage_timings_ms.values())
-            stage_summary = summarize_sam3_stage_timings(
-                stage_timings_ms,
-                roi_seen,
-                int(classification_result["roi_classification_calls"]),
-            )
             analyses.append(
-                build_sam3_analysis_result(
+                _build_sam3_analysis_payload(
+                    context=context,
                     detections=detections,
-                    image_size=context.image_size,
                     elapsed_ms=elapsed_ms,
-                    stage_summary=stage_summary,
+                    stage_timings_ms=stage_timings_ms,
                     roi_seen=roi_seen,
                     roi_kept=int(classification_result["roi_kept"]),
                     roi_classification_calls=int(classification_result["roi_classification_calls"]),
                     mask_count=mask_count,
-                    sam3_threshold=context.sam3_threshold,
                 )
             )
     return analyses
