@@ -6,7 +6,8 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import torch
 
-from src.training.types import ValidationReport
+from src.ood.sure_scoring import compute_ds_f1
+from src.training.types import EvaluationArtifactsPayload, ValidationReport
 
 
 def _evaluate_model_core(
@@ -140,3 +141,113 @@ def evaluate_model_with_predictions(
     loader: Iterable[Dict[str, torch.Tensor]],
 ) -> Optional[Tuple[ValidationReport, List[int], List[int]]]:
     return _evaluate_model_core(trainer, loader)
+
+
+def evaluate_model_with_artifact_metrics(
+    trainer: Any,
+    loader: Iterable[Dict[str, torch.Tensor]],
+    *,
+    ood_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
+) -> Optional[EvaluationArtifactsPayload]:
+    result = _evaluate_model_core(trainer, loader)
+    if result is None:
+        return None
+
+    report, y_true, y_pred = result
+    payload = EvaluationArtifactsPayload(report=report, y_true=y_true, y_pred=y_pred)
+
+    detector = getattr(trainer, "ood_detector", None)
+    if detector is None or not hasattr(detector, "calibration_issue"):
+        return payload
+    if detector.calibration_issue() is not None:
+        return payload
+
+    idx_to_class = {idx: name for name, idx in dict(getattr(trainer, "class_to_idx", {})).items()}
+    if not idx_to_class:
+        return payload
+
+    conformal_hits = 0
+    conformal_total = 0
+    conformal_set_size_total = 0
+    mixed_ood_labels: List[int] = []
+    mixed_ood_scores: List[float] = []
+    semantic_labels: List[int] = []
+    semantic_preds: List[int] = []
+    confidence_labels: List[int] = []
+    confidence_preds: List[int] = []
+
+    def _score_loader(
+        eval_loader: Iterable[Dict[str, torch.Tensor]],
+        *,
+        is_ood_loader: bool,
+    ) -> None:
+        nonlocal conformal_hits, conformal_total, conformal_set_size_total
+
+        trainer.set_eval_mode()
+        with torch.no_grad():
+            for batch in eval_loader:
+                images = batch["images"].to(trainer.device)
+                labels = batch["labels"].to(trainer.device)
+                features = trainer.encode(images)
+                logits = trainer.classifier(features)
+                predictions = torch.argmax(logits, dim=1)
+                ood = detector.score(features, logits, predicted_labels=predictions)
+
+                if ood_loader is not None:
+                    batch_ood_labels = [1 if is_ood_loader else 0] * int(images.shape[0])
+                    mixed_ood_labels.extend(batch_ood_labels)
+                    mixed_ood_scores.extend(float(score) for score in ood["ensemble_score"].detach().cpu().tolist())
+
+                if getattr(detector, "sure_enabled", False) and ood_loader is not None and "sure_semantic_ood" in ood:
+                    semantic_labels.extend([1 if is_ood_loader else 0] * int(images.shape[0]))
+                    semantic_preds.extend(int(flag) for flag in ood["sure_semantic_ood"].detach().cpu().tolist())
+                    if is_ood_loader:
+                        confidence_labels.extend([1] * int(images.shape[0]))
+                    else:
+                        confidence_labels.extend(
+                            int(flag)
+                            for flag in (predictions != labels).detach().cpu().tolist()
+                        )
+                    confidence_preds.extend(
+                        int(flag) for flag in ood["sure_confidence_reject"].detach().cpu().tolist()
+                    )
+
+                if (
+                    not is_ood_loader
+                    and getattr(detector, "conformal_enabled", False)
+                    and getattr(detector, "conformal_qhat", None) is not None
+                ):
+                    for feat, logit, label in zip(features, logits, labels):
+                        pred_set = detector.build_conformal_set(feat, logit, idx_to_class)
+                        true_label = idx_to_class.get(int(label.item()), str(int(label.item())))
+                        conformal_hits += int(true_label in pred_set)
+                        conformal_total += 1
+                        conformal_set_size_total += len(pred_set)
+
+    _score_loader(loader, is_ood_loader=False)
+    if ood_loader is not None:
+        _score_loader(ood_loader, is_ood_loader=True)
+
+    if conformal_total > 0:
+        payload.conformal_empirical_coverage = float(conformal_hits) / float(conformal_total)
+        payload.conformal_avg_set_size = float(conformal_set_size_total) / float(conformal_total)
+        payload.context["conformal_eval_samples"] = int(conformal_total)
+
+    if mixed_ood_labels and 0 in mixed_ood_labels and 1 in mixed_ood_labels:
+        payload.ood_labels = list(mixed_ood_labels)
+        payload.ood_scores = list(mixed_ood_scores)
+        payload.context["ood_eval_in_distribution_samples"] = int(sum(1 for item in mixed_ood_labels if item == 0))
+        payload.context["ood_eval_ood_samples"] = int(sum(1 for item in mixed_ood_labels if item == 1))
+
+    if semantic_labels and 0 in semantic_labels and 1 in semantic_labels and confidence_labels:
+        ds_f1 = compute_ds_f1(
+            torch.tensor(semantic_labels, dtype=torch.long),
+            torch.tensor(confidence_labels, dtype=torch.long),
+            torch.tensor(semantic_preds, dtype=torch.long),
+            torch.tensor(confidence_preds, dtype=torch.long),
+        )
+        payload.sure_ds_f1 = float(ds_f1["ds_f1"])
+        payload.context["sure_semantic_f1"] = float(ds_f1["semantic_f1"])
+        payload.context["sure_confidence_f1"] = float(ds_f1["confidence_f1"])
+
+    return payload

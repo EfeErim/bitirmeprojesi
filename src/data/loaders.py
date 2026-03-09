@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import random
 from collections import Counter
+from pathlib import Path
 from typing import Any, Callable, Dict, List
 
 import numpy as np
@@ -120,5 +121,40 @@ def create_training_loaders(
             worker_init_fn=worker_init_fn,
             generator=loader_generator,
             **extra_kwargs,
+        )
+
+    ood_root = Path(data_dir) / crop / "ood"
+    if ood_root.exists():
+        ood_dataset = dataset_cls(
+            data_dir=data_dir,
+            crop=crop,
+            split="ood",
+            class_names=class_names,
+            transform=False,
+            target_size=target_size,
+            use_cache=use_cache,
+            cache_size=cache_size,
+            error_policy=error_policy,
+            validate_images_on_init=validate_images_on_init,
+        )
+        ood_generator = torch.Generator()
+        ood_generator.manual_seed(int(seed) + 30)
+        ood_extra_kwargs = dict(dataloader_kwargs)
+        if num_workers <= 0:
+            ood_extra_kwargs.pop("prefetch_factor", None)
+        elif prefetch_factor is not None:
+            ood_extra_kwargs["prefetch_factor"] = int(prefetch_factor)
+
+        loaders["ood"] = DataLoader(
+            ood_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
+            persistent_workers=persistent_workers if num_workers > 0 else False,
+            collate_fn=collate_fn,
+            worker_init_fn=worker_init_fn,
+            generator=ood_generator,
+            **ood_extra_kwargs,
         )
     return loaders

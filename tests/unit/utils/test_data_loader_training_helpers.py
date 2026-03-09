@@ -81,6 +81,25 @@ def test_create_training_loaders_supports_weighted_sampler(tmp_path: Path):
     assert loaders["train"].sampler.__class__.__name__ == "WeightedRandomSampler"
 
 
+def test_create_training_loaders_adds_optional_ood_loader(tmp_path: Path):
+    _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")
+    _write_image(tmp_path / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(tmp_path / "tomato" / "test" / "healthy" / "test.jpg")
+    _write_image(tmp_path / "tomato" / "ood" / "unknown" / "ood.jpg", color=(0, 0, 255))
+
+    loaders = create_training_loaders(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        batch_size=2,
+        num_workers=0,
+        seed=7,
+    )
+
+    assert "ood" in loaders
+    batch = next(iter(loaders["ood"]))
+    assert batch["labels"].tolist() == [-1]
+
+
 def test_crop_dataset_strict_error_policy_rejects_invalid_images(tmp_path: Path):
     bad_image = tmp_path / "tomato" / "continual" / "healthy" / "bad.jpg"
     bad_image.parent.mkdir(parents=True, exist_ok=True)
@@ -118,3 +137,19 @@ def test_crop_dataset_tolerant_error_policy_skips_invalid_images(tmp_path: Path)
     stats = dataset.get_cache_stats()
     assert stats["load_error_count"] == 1
     assert any("bad.jpg" in item for item in stats["skipped_files"])
+
+
+def test_crop_dataset_supports_optional_ood_split(tmp_path: Path):
+    _write_image(tmp_path / "tomato" / "ood" / "unknown_a" / "a.jpg")
+    _write_image(tmp_path / "tomato" / "ood" / "unknown_b" / "b.jpg", color=(0, 0, 255))
+
+    dataset = datasets.CropDataset(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        split="ood",
+        transform=False,
+        use_cache=False,
+    )
+
+    assert len(dataset) == 2
+    assert dataset.labels == [-1, -1]

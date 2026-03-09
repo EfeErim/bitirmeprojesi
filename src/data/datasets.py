@@ -23,7 +23,7 @@ VALID_ERROR_POLICIES = {"tolerant", "strict"}
 def normalize_split(split: str) -> str:
     if split == "train":
         return "continual"
-    if split in {"val", "test", "continual"}:
+    if split in {"val", "test", "continual", "ood"}:
         return split
     raise ValueError(f"Unsupported split: {split}")
 
@@ -95,6 +95,14 @@ class CropDataset(Dataset):
         base_dir = self.data_dir / self.crop / self.split
         if not base_dir.exists():
             return [], []
+
+        if self.split == "ood":
+            image_paths = sorted(
+                path
+                for path in base_dir.rglob("*")
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+            )
+            return image_paths, [-1] * len(image_paths)
 
         image_paths: List[Path] = []
         labels: List[int] = []

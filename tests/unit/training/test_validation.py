@@ -3,12 +3,45 @@ import torch
 import torch.nn as nn
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
-from src.training.validation import evaluate_model, evaluate_model_with_predictions
+from src.training.validation import evaluate_model, evaluate_model_with_artifact_metrics, evaluate_model_with_predictions
 
 
 class IdentityModule(nn.Module):
     def forward(self, x, *args, **kwargs):
         return x
+
+
+class FakeOODDetector:
+    sure_enabled = True
+    conformal_enabled = True
+    conformal_qhat = 0.1
+    calibration_version = 1
+
+    @staticmethod
+    def calibration_issue():
+        return None
+
+    def score(self, features, logits, predicted_labels=None):
+        del predicted_labels
+        first_value = float(logits[0, 0].item())
+        if first_value >= 5.0:
+            ensemble = torch.tensor([0.1, 0.2], dtype=torch.float32, device=features.device)
+            semantic = torch.tensor([False, False], dtype=torch.bool, device=features.device)
+            confidence = torch.tensor([False, False], dtype=torch.bool, device=features.device)
+        else:
+            ensemble = torch.tensor([0.9, 1.1], dtype=torch.float32, device=features.device)
+            semantic = torch.tensor([True, True], dtype=torch.bool, device=features.device)
+            confidence = torch.tensor([True, True], dtype=torch.bool, device=features.device)
+        return {
+            "ensemble_score": ensemble,
+            "sure_semantic_ood": semantic,
+            "sure_confidence_reject": confidence,
+        }
+
+    def build_conformal_set(self, features, logits, idx_to_class):
+        del features
+        predicted = int(torch.argmax(logits).item())
+        return [idx_to_class[predicted]]
 
 
 def test_evaluate_model_reports_expected_metrics():
@@ -65,3 +98,52 @@ def test_evaluate_model_with_predictions_returns_labels_and_predictions():
     assert report.val_accuracy == 0.5
     assert y_true == [0, 1]
     assert y_pred == [0, 0]
+
+
+def test_evaluate_model_with_artifact_metrics_collects_optional_ood_and_conformal_fields():
+    trainer = type("FakeTrainer", (), {})()
+    trainer.device = "cpu"
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer.adapter_model = IdentityModule()
+    trainer.classifier = IdentityModule()
+    trainer.fusion = IdentityModule()
+    trainer.ood_detector = FakeOODDetector()
+    trainer.set_eval_mode = lambda: None
+    trainer.encode = lambda images: images.float()
+    trainer.forward_logits = lambda images: images.float()
+
+    id_loader = [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}]
+    ood_loader = [{"images": torch.tensor([[0.2, 0.1], [0.1, 0.2]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}]
+
+    result = evaluate_model_with_artifact_metrics(trainer, id_loader, ood_loader=ood_loader)
+
+    assert result is not None
+    assert result.report.val_accuracy == 1.0
+    assert result.ood_labels == [0, 0, 1, 1]
+    assert result.ood_scores == pytest.approx([0.1, 0.2, 0.9, 1.1])
+    assert result.sure_ds_f1 == pytest.approx(1.0)
+    assert result.conformal_empirical_coverage == pytest.approx(1.0)
+    assert result.conformal_avg_set_size == pytest.approx(1.0)
+
+
+def test_evaluate_model_with_artifact_metrics_keeps_ood_fields_empty_without_ood_loader():
+    trainer = type("FakeTrainer", (), {})()
+    trainer.device = "cpu"
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer.adapter_model = IdentityModule()
+    trainer.classifier = IdentityModule()
+    trainer.fusion = IdentityModule()
+    trainer.ood_detector = FakeOODDetector()
+    trainer.set_eval_mode = lambda: None
+    trainer.encode = lambda images: images.float()
+    trainer.forward_logits = lambda images: images.float()
+
+    id_loader = [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}]
+
+    result = evaluate_model_with_artifact_metrics(trainer, id_loader)
+
+    assert result is not None
+    assert result.ood_labels is None
+    assert result.ood_scores is None
+    assert result.sure_ds_f1 is None
+    assert result.conformal_empirical_coverage == pytest.approx(1.0)

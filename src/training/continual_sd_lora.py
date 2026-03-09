@@ -62,6 +62,10 @@ try:
 except Exception:  # pragma: no cover - test fallback
     pass
 
+# Preserve the historical module-level names so tests and callers can monkeypatch
+# dependency injection points directly.
+AutoModel = AUTO_MODEL_FACTORY
+
 PEFT_LORA_CONFIG: Any = None
 PEFT_MODEL_CLASS: Any = None
 PEFT_GET_MODEL: Any = None
@@ -75,6 +79,10 @@ try:
     PEFT_GET_MODEL = _loaded_peft_get_model
 except Exception:  # pragma: no cover - test fallback
     pass
+
+LoraConfig = PEFT_LORA_CONFIG
+PeftModel = PEFT_MODEL_CLASS
+get_peft_model = PEFT_GET_MODEL
 
 
 logger = logging.getLogger(__name__)
@@ -383,7 +391,7 @@ class ContinualSDLoRATrainer:
         self._is_initialized = False
         self._contract = self.config.as_contract_dict()
         self._config_hash = compute_config_hash(self._contract)
-        self._peft_available = PEFT_LORA_CONFIG is not None
+        self._peft_available = LoraConfig is not None
         self._adapter_wrapped = False
         self._planned_scheduler_steps = 0
         self._planned_epochs = int(max(1, self.config.num_epochs))
@@ -476,10 +484,10 @@ class ContinualSDLoRATrainer:
         if class_to_idx:
             self.class_to_idx = dict(class_to_idx)
 
-        if AUTO_MODEL_FACTORY is None:
+        if AutoModel is None:
             raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
 
-        loaded_backbone = cast(nn.Module, AUTO_MODEL_FACTORY.from_pretrained(self.config.backbone_model_name))
+        loaded_backbone = cast(nn.Module, AutoModel.from_pretrained(self.config.backbone_model_name))
         self.backbone = self._prepare_module_for_device(
             loaded_backbone,
             module_name="backbone",
@@ -587,7 +595,7 @@ class ContinualSDLoRATrainer:
     @staticmethod
     def _supports_low_cpu_mem_usage_kwarg() -> bool:
         try:
-            signature = inspect.signature(PEFT_GET_MODEL)
+            signature = inspect.signature(get_peft_model)
         except (TypeError, ValueError):
             return False
 
@@ -596,11 +604,11 @@ class ContinualSDLoRATrainer:
         return any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
 
     def _apply_lora(self, model: nn.Module, target_modules: Sequence[str]) -> nn.Module:
-        if PEFT_LORA_CONFIG is None:
+        if LoraConfig is None or get_peft_model is None:
             self._raise_missing_peft()
 
         suffixes = sorted({name.split(".")[-1] for name in target_modules})
-        lora_config = PEFT_LORA_CONFIG(
+        lora_config = LoraConfig(
             r=self.config.lora_r,
             lora_alpha=self.config.lora_alpha,
             lora_dropout=self.config.lora_dropout,
@@ -610,9 +618,9 @@ class ContinualSDLoRATrainer:
 
         supports_low_cpu_mem_usage = self._supports_low_cpu_mem_usage_kwarg()
         if supports_low_cpu_mem_usage:
-            wrapped = cast(nn.Module, PEFT_GET_MODEL(model, lora_config, low_cpu_mem_usage=False))
+            wrapped = cast(nn.Module, get_peft_model(model, lora_config, low_cpu_mem_usage=False))
         else:
-            wrapped = cast(nn.Module, PEFT_GET_MODEL(model, lora_config))
+            wrapped = cast(nn.Module, get_peft_model(model, lora_config))
 
         for name, param in wrapped.named_parameters():
             if "lora_" in name.lower():
@@ -875,4 +883,4 @@ class ContinualSDLoRATrainer:
         return save_trainer_adapter(self, output_dir)
 
     def load_adapter(self, adapter_dir: str) -> Dict[str, Any]:
-        return load_trainer_adapter(self, adapter_dir, peft_model_cls=PEFT_MODEL_CLASS)
+        return load_trainer_adapter(self, adapter_dir, peft_model_cls=PeftModel)

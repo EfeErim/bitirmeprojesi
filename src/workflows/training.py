@@ -17,7 +17,7 @@ from src.training.services.reporting import (
     persist_training_summary_artifact,
     persist_validation_artifacts,
 )
-from src.training.validation import evaluate_model_with_predictions
+from src.training.validation import evaluate_model_with_artifact_metrics
 
 Observer = Callable[[Dict[str, Any]], None]
 
@@ -191,6 +191,7 @@ class TrainingWorkflow:
         artifact_dir: Path,
         trainer: Any,
         loader: Any,
+        ood_loader: Any,
         detected_classes: List[str],
         telemetry: Any,
         run_id: str,
@@ -203,30 +204,36 @@ class TrainingWorkflow:
         if trainer is None or _loader_size(loader) <= 0:
             return {}
 
-        validation_result = evaluate_model_with_predictions(trainer, loader)
-        if validation_result is None:
+        evaluation_result = evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
+        if evaluation_result is None:
             return {}
 
-        _, y_true, y_pred = validation_result
         require_ood = bool(
             getattr(getattr(trainer, "config", None), "evaluation_require_ood_for_gate", False)
         )
+        metric_context = {
+            "run_id": run_id,
+            "crop_name": crop_name,
+            "split_name": split_name,
+            "num_classes": len(detected_classes),
+            "loader_sizes": loader_sizes,
+            **dict(evaluation_result.context),
+        }
         return persist_validation_artifacts(
             artifact_root=artifact_dir,
-            y_true=y_true,
-            y_pred=y_pred,
+            y_true=evaluation_result.y_true,
+            y_pred=evaluation_result.y_pred,
             classes=detected_classes,
             telemetry=telemetry,
             artifact_subdir=artifact_subdir,
             telemetry_subdir=telemetry_subdir,
             require_ood=require_ood,
-            context={
-                "run_id": run_id,
-                "crop_name": crop_name,
-                "split_name": split_name,
-                "num_classes": len(detected_classes),
-                "loader_sizes": loader_sizes,
-            },
+            ood_labels=evaluation_result.ood_labels,
+            ood_scores=evaluation_result.ood_scores,
+            sure_ds_f1=evaluation_result.sure_ds_f1,
+            conformal_empirical_coverage=evaluation_result.conformal_empirical_coverage,
+            conformal_avg_set_size=evaluation_result.conformal_avg_set_size,
+            context=metric_context,
         )
 
     def _build_summary_payload(
@@ -409,6 +416,7 @@ class TrainingWorkflow:
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
             loader=val_loader,
+            ood_loader=loaders.get("ood"),
             detected_classes=detected_classes,
             telemetry=telemetry,
             run_id=run_id,
@@ -421,6 +429,7 @@ class TrainingWorkflow:
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
             loader=loaders.get("test"),
+            ood_loader=loaders.get("ood"),
             detected_classes=detected_classes,
             telemetry=telemetry,
             run_id=run_id,
