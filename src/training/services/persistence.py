@@ -18,6 +18,70 @@ from src.training.services.serialization import serialize_ood_state as build_ser
 from src.training.types import TrainingCheckpointPayload
 
 
+def _restore_class_index_state(trainer: Any, class_to_idx: Dict[str, int], target_modules_resolved: list[str]) -> None:
+    trainer.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
+    trainer.target_modules_resolved = [str(v) for v in target_modules_resolved]
+    if hasattr(trainer, "_refresh_class_index_cache"):
+        trainer._refresh_class_index_cache()
+
+
+def _load_module_state(module: Any, state: Any, *, strict: bool = True) -> None:
+    if module is None or state is None:
+        return
+    module.load_state_dict(state, strict=strict)
+
+
+def _restore_checkpoint_component_states(trainer: Any, checkpoint: TrainingCheckpointPayload) -> None:
+    model_state = checkpoint.model_state
+    _load_module_state(trainer.adapter_model, model_state.get("adapter_model"), strict=False)
+    _load_module_state(trainer.classifier, model_state.get("classifier"))
+    _load_module_state(trainer.fusion, model_state.get("fusion"))
+
+
+def _resolve_adapter_root(adapter_dir: str | Path) -> Path:
+    root = Path(adapter_dir)
+    if root.is_dir() and (root / "continual_sd_lora_adapter").exists():
+        return root / "continual_sd_lora_adapter"
+    return root
+
+
+def _restore_exported_adapter_model(trainer: Any, root: Path, *, peft_model_cls: Any = None) -> None:
+    adapter_config_path = root / "adapter_config.json"
+    if adapter_config_path.exists() and peft_model_cls is not None and trainer.backbone is not None:
+        loaded_adapter = peft_model_cls.from_pretrained(trainer.backbone, str(root), is_trainable=False)
+        trainer.adapter_model = trainer._prepare_module_for_device(loaded_adapter, module_name="adapter_model")
+        trainer._adapter_wrapped = True
+        return
+    adapter_model_path = root / "adapter_model.pt"
+    if adapter_model_path.exists():
+        _load_module_state(
+            trainer.adapter_model,
+            torch.load(adapter_model_path, map_location=trainer.device),
+            strict=False,
+        )
+
+
+def _restore_exported_head_state(trainer: Any, root: Path) -> None:
+    classifier_path = root / "classifier.pth"
+    fusion_path = root / "fusion.pth"
+    if classifier_path.exists():
+        _load_module_state(trainer.classifier, torch.load(classifier_path, map_location=trainer.device))
+    if fusion_path.exists():
+        _load_module_state(trainer.fusion, torch.load(fusion_path, map_location=trainer.device))
+
+
+def _restore_exported_ood_state(trainer: Any, meta: Dict[str, Any]) -> None:
+    ood_state = meta.get("ood_state", {})
+    if isinstance(ood_state, dict) and ood_state:
+        trainer.ood_detector = restore_ood_state(
+            ood_state,
+            default_threshold_factor=trainer.config.ood_threshold_factor,
+            device=trainer.device,
+        )
+    else:
+        trainer.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
+
+
 def compute_config_hash(contract: Dict[str, Any]) -> str:
     serialized = json.dumps(contract, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
@@ -221,10 +285,7 @@ def restore_training_state(
         if isinstance(payload, TrainingCheckpointPayload)
         else TrainingCheckpointPayload.from_dict(payload)
     )
-    trainer.class_to_idx = {str(k): int(v) for k, v in checkpoint.class_to_idx.items()}
-    trainer.target_modules_resolved = [str(v) for v in checkpoint.target_modules_resolved]
-    if hasattr(trainer, "_refresh_class_index_cache"):
-        trainer._refresh_class_index_cache()
+    _restore_class_index_state(trainer, checkpoint.class_to_idx, checkpoint.target_modules_resolved)
 
     needs_initialize = (
         trainer.adapter_model is None
@@ -236,17 +297,7 @@ def restore_training_state(
     else:
         trainer._is_initialized = True
 
-    model_state = checkpoint.model_state
-    adapter_state = model_state.get("adapter_model")
-    classifier_state = model_state.get("classifier")
-    fusion_state = model_state.get("fusion")
-
-    if adapter_state is not None and trainer.adapter_model is not None:
-        trainer.adapter_model.load_state_dict(adapter_state, strict=False)
-    if classifier_state is not None and trainer.classifier is not None:
-        trainer.classifier.load_state_dict(classifier_state)
-    if fusion_state is not None and trainer.fusion is not None:
-        trainer.fusion.load_state_dict(fusion_state)
+    _restore_checkpoint_component_states(trainer, checkpoint)
 
     if trainer.optimizer is None:
         trainer.setup_optimizer()
@@ -293,40 +344,19 @@ def save_trainer_adapter(trainer: Any, output_dir: str) -> Path:
 
 
 def load_trainer_adapter(trainer: Any, adapter_dir: str, *, peft_model_cls: Any = None) -> Dict[str, Any]:
-    root = Path(adapter_dir)
-    if root.is_dir() and (root / "continual_sd_lora_adapter").exists():
-        root = root / "continual_sd_lora_adapter"
+    root = _resolve_adapter_root(adapter_dir)
     meta_path = root / "adapter_meta.json"
     if not meta_path.exists():
         raise FileNotFoundError(f"adapter_meta.json not found in {root}")
     meta = read_json_dict(meta_path)
-    trainer.class_to_idx = {str(k): int(v) for k, v in meta.get("class_to_idx", {}).items()}
-    trainer.target_modules_resolved = [str(v) for v in meta.get("target_modules_resolved", [])]
-    if hasattr(trainer, "_refresh_class_index_cache"):
-        trainer._refresh_class_index_cache()
+    _restore_class_index_state(
+        trainer,
+        dict(meta.get("class_to_idx", {})),
+        list(meta.get("target_modules_resolved", [])),
+    )
 
     trainer.initialize_engine(class_to_idx=trainer.class_to_idx)
-    adapter_config_path = root / "adapter_config.json"
-    if adapter_config_path.exists() and peft_model_cls is not None and trainer.backbone is not None:
-        loaded_adapter = peft_model_cls.from_pretrained(trainer.backbone, str(root), is_trainable=False)
-        trainer.adapter_model = trainer._prepare_module_for_device(loaded_adapter, module_name="adapter_model")
-        trainer._adapter_wrapped = True
-    elif (root / "adapter_model.pt").exists() and trainer.adapter_model is not None:
-        adapter_state = torch.load(root / "adapter_model.pt", map_location=trainer.device)
-        trainer.adapter_model.load_state_dict(adapter_state, strict=False)
-    classifier_path = root / "classifier.pth"
-    fusion_path = root / "fusion.pth"
-    if classifier_path.exists():
-        trainer.classifier.load_state_dict(torch.load(classifier_path, map_location=trainer.device))  # type: ignore[union-attr]
-    if fusion_path.exists():
-        trainer.fusion.load_state_dict(torch.load(fusion_path, map_location=trainer.device))  # type: ignore[union-attr]
-    ood_state = meta.get("ood_state", {})
-    if isinstance(ood_state, dict) and ood_state:
-        trainer.ood_detector = restore_ood_state(
-            ood_state,
-            default_threshold_factor=trainer.config.ood_threshold_factor,
-            device=trainer.device,
-        )
-    else:
-        trainer.ood_detector.calibration_version = int(meta.get("ood_calibration", {}).get("version", 0))
+    _restore_exported_adapter_model(trainer, root, peft_model_cls=peft_model_cls)
+    _restore_exported_head_state(trainer, root)
+    _restore_exported_ood_state(trainer, meta)
     return meta

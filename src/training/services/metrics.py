@@ -25,6 +25,14 @@ OOD_METRIC_NAMES = (
     "conformal_empirical_coverage",
 )
 
+_TARGET_FALLBACK_KEYS = {
+    "accuracy": ("accuracy", "continual_accuracy"),
+    "ood_auroc": ("ood_auroc",),
+    "ood_false_positive_rate": ("ood_false_positive_rate",),
+    "sure_ds_f1": ("sure_ds_f1",),
+    "conformal_empirical_coverage": ("conformal_empirical_coverage",),
+}
+
 
 def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
     if spec_path is None:
@@ -37,21 +45,52 @@ def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
     payload = read_json(resolved, default={}, expect_type=dict)
     targets = payload.get("targets", {}) if isinstance(payload, dict) else {}
     return {
-        "accuracy": float(
-            targets.get("accuracy", targets.get("continual_accuracy", DEFAULT_PLAN_TARGETS["accuracy"]))
-        ),
-        "ood_auroc": float(targets.get("ood_auroc", DEFAULT_PLAN_TARGETS["ood_auroc"])),
-        "ood_false_positive_rate": float(
-            targets.get("ood_false_positive_rate", DEFAULT_PLAN_TARGETS["ood_false_positive_rate"])
-        ),
-        "sure_ds_f1": float(targets.get("sure_ds_f1", DEFAULT_PLAN_TARGETS["sure_ds_f1"])),
-        "conformal_empirical_coverage": float(
-            targets.get(
-                "conformal_empirical_coverage",
-                DEFAULT_PLAN_TARGETS["conformal_empirical_coverage"],
-            )
-        ),
+        metric_name: float(_resolve_target_value(targets, metric_name))
+        for metric_name in DEFAULT_PLAN_TARGETS
     }
+
+
+def _resolve_target_value(targets: Dict[str, Any], metric_name: str) -> float:
+    for key in _TARGET_FALLBACK_KEYS.get(metric_name, (metric_name,)):
+        if key in targets:
+            return float(targets[key])
+    return float(DEFAULT_PLAN_TARGETS[metric_name])
+
+
+def _build_threshold_checks(
+    metrics: Dict[str, Optional[float]],
+    target_values: Dict[str, float],
+    definitions: Sequence[tuple[str, str]],
+) -> Dict[str, Dict[str, Any]]:
+    return {
+        metric_name: _build_check(
+            metrics.get(metric_name),
+            float(target_values[metric_name]),
+            operator=operator,
+        )
+        for metric_name, operator in definitions
+    }
+
+
+def _resolve_ood_metric_payload(ood_metrics: Optional[Dict[str, Optional[float]]]) -> Dict[str, Optional[float]]:
+    resolved_ood_metrics = {name: None for name in OOD_METRIC_NAMES}
+    for name, value in dict(ood_metrics or {}).items():
+        if name in resolved_ood_metrics:
+            resolved_ood_metrics[name] = value
+    return resolved_ood_metrics
+
+
+def _collect_missing_requirements(
+    accuracy_check: Dict[str, Any],
+    ood_checks: Dict[str, Dict[str, Any]],
+) -> list[str]:
+    missing_requirements: list[str] = []
+    if not accuracy_check.get("asserted", False) or not accuracy_check.get("passed", False):
+        missing_requirements.append("accuracy")
+    for metric_name, detail in ood_checks.items():
+        if not detail.get("asserted", False) or not detail.get("passed", False):
+            missing_requirements.append(metric_name)
+    return missing_requirements
 
 
 def compute_plan_metrics(
@@ -167,31 +206,16 @@ def validate_ood_metrics(
     require_ood: bool = False,
 ) -> Dict[str, Any]:
     target_values = dict(targets or load_plan_targets())
-    checks = {
-        "ood_auroc": _build_check(
-            metrics.get("ood_auroc"),
-            target_values["ood_auroc"],
-            operator=">=",
+    checks = _build_threshold_checks(
+        metrics,
+        target_values,
+        (
+            ("ood_auroc", ">="),
+            ("ood_false_positive_rate", "<="),
+            ("sure_ds_f1", ">="),
+            ("conformal_empirical_coverage", ">="),
         ),
-        "ood_false_positive_rate": _build_check(
-            metrics.get("ood_false_positive_rate"),
-            target_values["ood_false_positive_rate"],
-            operator="<=",
-        ),
-        "sure_ds_f1": _build_check(
-            metrics.get("sure_ds_f1"),
-            target_values.get("sure_ds_f1", DEFAULT_PLAN_TARGETS["sure_ds_f1"]),
-            operator=">=",
-        ),
-        "conformal_empirical_coverage": _build_check(
-            metrics.get("conformal_empirical_coverage"),
-            target_values.get(
-                "conformal_empirical_coverage",
-                DEFAULT_PLAN_TARGETS["conformal_empirical_coverage"],
-            ),
-            operator=">=",
-        ),
-    }
+    )
     finalized = _finalize_validation(checks, require_metrics=require_ood)
     return {
         "passed": finalized["passed"],
@@ -209,13 +233,11 @@ def validate_plan_metrics(
     require_ood: bool = False,
 ) -> Dict[str, Any]:
     target_values = dict(targets or load_plan_targets())
-    checks: Dict[str, Dict[str, Any]] = {
-        "accuracy": _build_check(
-            metrics.get("accuracy"),
-            target_values["accuracy"],
-            operator=">=",
-        ),
-    }
+    checks: Dict[str, Dict[str, Any]] = _build_threshold_checks(
+        metrics,
+        target_values,
+        (("accuracy", ">="),),
+    )
     ood_validation = validate_ood_metrics(metrics, target_values, require_ood=require_ood)
     checks.update(ood_validation["checks"])
     finalized = _finalize_validation(checks, require_metrics=require_ood)
@@ -247,19 +269,10 @@ def build_production_readiness(
         _build_check(classification_metrics.get("accuracy"), target_values["accuracy"], operator=">="),
     )
 
-    resolved_ood_metrics = {name: None for name in OOD_METRIC_NAMES}
-    for name, value in dict(ood_metrics or {}).items():
-        if name in resolved_ood_metrics:
-            resolved_ood_metrics[name] = value
+    resolved_ood_metrics = _resolve_ood_metric_payload(ood_metrics)
     ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=True)
 
-    missing_requirements: list[str] = []
-    if not accuracy_check.get("asserted", False) or not accuracy_check.get("passed", False):
-        missing_requirements.append("accuracy")
-    for metric_name, detail in ood_validation["checks"].items():
-        if not detail.get("asserted", False) or not detail.get("passed", False):
-            missing_requirements.append(metric_name)
-
+    missing_requirements = _collect_missing_requirements(accuracy_check, ood_validation["checks"])
     passed = not missing_requirements
     status = "ready" if passed else "failed"
     return {

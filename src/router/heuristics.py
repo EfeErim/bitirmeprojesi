@@ -10,6 +10,36 @@ from PIL import Image
 from src.router.compatibility_utils import compatible_parts_for_crop
 
 
+def _normalized_label_set(labels: List[str] | None) -> set[str]:
+    return {
+        str(label).strip().lower()
+        for label in (labels or [])
+        if str(label).strip()
+    }
+
+
+def _clamp_unit_interval(value: float) -> float:
+    return max(0.0, min(1.0, float(value)))
+
+
+def _bbox_geometry(
+    bbox: Optional[List[float]],
+    *,
+    image_width: int,
+    image_height: int,
+) -> Optional[tuple[float, float, float, float]]:
+    if bbox is None or len(bbox) != 4 or image_width <= 0 or image_height <= 0:
+        return None
+    x1, y1, x2, y2 = [float(v) for v in bbox]
+    box_w = max(0.0, x2 - x1)
+    box_h = max(0.0, y2 - y1)
+    if box_w <= 0.0 or box_h <= 0.0:
+        return None
+    area_ratio = (box_w * box_h) / float(image_width * image_height)
+    aspect = box_w / max(1e-6, box_h)
+    return box_w, box_h, area_ratio, aspect
+
+
 def apply_generic_part_penalty(
     part_scores: Dict[str, float],
     generic_part_labels: List[str],
@@ -19,15 +49,11 @@ def apply_generic_part_penalty(
     if not part_scores:
         return {}
 
-    generic_set = {
-        str(label).strip().lower()
-        for label in generic_part_labels
-        if str(label).strip()
-    }
+    generic_set = _normalized_label_set(generic_part_labels)
     if not generic_set:
         return dict(part_scores)
 
-    penalty = max(0.0, min(1.0, float(generic_penalty)))
+    penalty = _clamp_unit_interval(generic_penalty)
     adjusted: Dict[str, float] = {}
     for part_name, score in part_scores.items():
         normalized = str(part_name).strip().lower()
@@ -54,21 +80,12 @@ def select_part_label_with_specificity(
     best_label = max(part_scores, key=lambda label: part_scores[label])
     best_score = float(part_scores.get(best_label, 0.0))
 
-    generic_set = {
-        str(label).strip().lower()
-        for label in generic_part_labels
-        if str(label).strip()
-    }
+    generic_set = _normalized_label_set(generic_part_labels)
 
-    specific_override_ratio = max(0.0, min(1.0, float(specific_override_ratio)))
-    specific_min_confidence = max(0.0, min(1.0, float(specific_min_confidence)))
-    preferred_override_ratio = max(0.0, min(1.0, float(preferred_override_ratio)))
-
-    preferred_set = {
-        str(label).strip().lower()
-        for label in (preferred_part_labels or [])
-        if str(label).strip()
-    }
+    specific_override_ratio = _clamp_unit_interval(specific_override_ratio)
+    specific_min_confidence = _clamp_unit_interval(specific_min_confidence)
+    preferred_override_ratio = _clamp_unit_interval(preferred_override_ratio)
+    preferred_set = _normalized_label_set(preferred_part_labels)
 
     if preferred_set:
         preferred_candidates = [
@@ -118,7 +135,7 @@ def apply_leaf_like_override(
     leaf_aspect_max: float = 3.20,
 ) -> Tuple[str, float]:
     """Prefer leaf part for leaf-like ROIs when selected label is generic or broad."""
-    if not part_scores or bbox is None or len(bbox) != 4 or image_width <= 0 or image_height <= 0:
+    if not part_scores:
         return selected_label, float(selected_score)
 
     leaf_key = str(leaf_label).strip().lower()
@@ -136,29 +153,25 @@ def apply_leaf_like_override(
     leaf_name, leaf_score = max(leaf_candidates.items(), key=lambda item: item[1])
 
     target_labels = override_target_labels or ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"]
-    target_set = {str(label).strip().lower() for label in target_labels if str(label).strip()}
+    target_set = _normalized_label_set(target_labels)
     current_key = str(selected_label).strip().lower()
     if current_key not in target_set:
         return selected_label, float(selected_score)
 
-    x1, y1, x2, y2 = [float(v) for v in bbox]
-    box_w = max(0.0, x2 - x1)
-    box_h = max(0.0, y2 - y1)
-    if box_w <= 0.0 or box_h <= 0.0:
+    geometry = _bbox_geometry(bbox, image_width=image_width, image_height=image_height)
+    if geometry is None:
         return selected_label, float(selected_score)
-
-    area_ratio = (box_w * box_h) / float(image_width * image_height)
+    _box_w, _box_h, area_ratio, aspect = geometry
     if area_ratio < max(0.0, float(leaf_min_area_ratio)):
         return selected_label, float(selected_score)
 
-    aspect = box_w / max(1e-6, box_h)
     aspect_min = max(0.05, float(leaf_aspect_min))
     aspect_max = max(aspect_min, float(leaf_aspect_max))
     if aspect < aspect_min or aspect > aspect_max:
         return selected_label, float(selected_score)
 
-    ratio = max(0.0, min(1.0, float(leaf_score_ratio)))
-    min_conf = max(0.0, min(1.0, float(leaf_min_confidence)))
+    ratio = _clamp_unit_interval(leaf_score_ratio)
+    min_conf = _clamp_unit_interval(leaf_min_confidence)
     if leaf_score >= min_conf and leaf_score >= float(selected_score) * ratio:
         return leaf_name, leaf_score
 
@@ -229,7 +242,7 @@ def rebalance_part_scores_for_leaf_like_roi(
     if not part_scores:
         return {}
 
-    threshold = max(0.0, min(1.0, float(activation_threshold)))
+    threshold = _clamp_unit_interval(activation_threshold)
     if float(leaf_likeness) < threshold:
         return dict(part_scores)
 
@@ -255,13 +268,11 @@ def rebalance_part_scores_for_leaf_like_roi(
         "plant",
         "entire plant",
     ]
-    non_foliar_set = {
-        str(label).strip().lower()
-        for label in (non_foliar_part_labels if isinstance(non_foliar_part_labels, list) else default_non_foliar)
-        if str(label).strip()
-    }
+    non_foliar_set = _normalized_label_set(
+        non_foliar_part_labels if isinstance(non_foliar_part_labels, list) else default_non_foliar
+    )
 
-    penalty = max(0.0, min(1.0, float(non_foliar_penalty)))
+    penalty = _clamp_unit_interval(non_foliar_penalty)
     boost = max(1.0, float(leaf_boost))
 
     adjusted: Dict[str, float] = {}
@@ -305,4 +316,3 @@ def select_best_crop_with_fallback(
 
     best_crop, best_score = max(reranked_scores.items(), key=lambda item: item[1])
     return best_crop, best_score
-

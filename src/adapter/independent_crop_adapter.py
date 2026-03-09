@@ -79,11 +79,32 @@ class IndependentCropAdapter:
             return []
         return list(self._trainer.target_modules_resolved)
 
-    @property
-    def trainer(self) -> "ContinualSDLoRATrainer":
+    def _require_trainer(self) -> "ContinualSDLoRATrainer":
         if self._trainer is None:
             raise RuntimeError("Adapter is not initialized.")
         return self._trainer
+
+    def _store_trainer(self, trainer: "ContinualSDLoRATrainer") -> "ContinualSDLoRATrainer":
+        self._trainer = trainer
+        self.class_to_idx = dict(getattr(trainer, "class_to_idx", {}))
+        self.is_trained = True
+        return trainer
+
+    def _build_trainer_from_config(self, config: Optional[Dict[str, Any]]) -> "ContinualSDLoRATrainer":
+        continual_dict = self._normalize_continual_config(config)
+        config_cls, trainer_cls = _trainer_types()
+        trainer_config = config_cls.from_training_config(continual_dict)
+        return trainer_cls(trainer_config)
+
+    @staticmethod
+    def _resolve_asset_dir(checkpoint_dir: str | Path) -> Path:
+        root = Path(checkpoint_dir)
+        asset_dir = root / "continual_sd_lora_adapter"
+        return asset_dir if asset_dir.exists() else root
+
+    @property
+    def trainer(self) -> "ContinualSDLoRATrainer":
+        return self._require_trainer()
 
     @property
     def ood_calibration_version(self) -> int:
@@ -120,12 +141,9 @@ class IndependentCropAdapter:
         elif class_names is not None:
             self.class_to_idx = {str(name): idx for idx, name in enumerate(class_names)}
 
-        continual_dict = self._normalize_continual_config(config)
-        config_cls, trainer_cls = _trainer_types()
-        trainer_config = config_cls.from_training_config(continual_dict)
-        self._trainer = trainer_cls(trainer_config)
-        self._trainer.initialize_engine(class_to_idx=self.class_to_idx)
-        self.is_trained = True
+        trainer = self._build_trainer_from_config(config)
+        trainer.initialize_engine(class_to_idx=self.class_to_idx)
+        self._store_trainer(trainer)
 
         return {
             "status": "initialized",
@@ -136,9 +154,8 @@ class IndependentCropAdapter:
 
     def add_classes(self, new_classes: Iterable[str]) -> Dict[str, Any]:
         """Add new class labels and expand classifier."""
-        if self._trainer is None:
-            raise RuntimeError("initialize_engine() must run before add_classes().")
-        self.class_to_idx = self._trainer.add_classes(new_classes)
+        trainer = self._require_trainer()
+        self.class_to_idx = trainer.add_classes(new_classes)
         return {
             "status": "classes_added",
             "num_classes": len(self.class_to_idx),
@@ -159,13 +176,12 @@ class IndependentCropAdapter:
         checkpoint_on_exception: bool = False,
     ) -> "ContinualTrainingSession":
         """Build a training session around the initialized trainer."""
-        if self._trainer is None:
-            raise RuntimeError("initialize_engine() must run before build_training_session().")
+        trainer = self._require_trainer()
         self._calibration_loader = val_loader if val_loader is not None else train_loader
-        resolved_epochs = resolve_session_num_epochs(self._trainer.config, num_epochs)
+        resolved_epochs = resolve_session_num_epochs(trainer.config, num_epochs)
         training_session_cls = _training_session_type()
         return training_session_cls(
-            self._trainer,
+            trainer,
             train_loader,
             resolved_epochs,
             val_loader=val_loader,
@@ -185,10 +201,9 @@ class IndependentCropAdapter:
         run_id: str = "",
     ) -> Path:
         """Persist trainer and session state for fault-tolerant notebook runs."""
-        if self._trainer is None:
-            raise RuntimeError("Adapter is not initialized.")
+        trainer = self._require_trainer()
         return save_adapter_training_checkpoint(
-            trainer=self._trainer,
+            trainer=trainer,
             checkpoint_dir=checkpoint_dir,
             session_state=session_state,
             run_id=run_id,
@@ -202,7 +217,7 @@ class IndependentCropAdapter:
             cfg = config_cls.from_training_config(normalized)
             return trainer_cls(cfg)
 
-        self._trainer, trainer_payload, session_payload = load_adapter_training_checkpoint(
+        trainer, trainer_payload, session_payload = load_adapter_training_checkpoint(
             checkpoint_dir=checkpoint_dir,
             device=self.device,
             trainer=self._trainer,
@@ -210,18 +225,17 @@ class IndependentCropAdapter:
             checkpoint_payload_factory=_checkpoint_payload_type,
             model_name=self.model_name,
         )
+        self._store_trainer(trainer)
         class_to_idx = trainer_payload.class_to_idx
         if isinstance(class_to_idx, dict):
             self.class_to_idx = {str(k): int(v) for k, v in class_to_idx.items()}
-        self.is_trained = True
         return build_checkpoint_load_result(trainer_payload=trainer_payload, session_payload=session_payload)
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, Any]:
         """Calibrate OOD statistics for current classes."""
-        if self._trainer is None:
-            raise RuntimeError("initialize_engine() must run before calibrate_ood().")
+        trainer = self._require_trainer()
         self._calibration_loader = loader
-        result = self._trainer.calibrate_ood(loader)
+        result = trainer.calibrate_ood(loader)
         return {
             "status": "calibrated",
             "ood_calibration": {
@@ -231,9 +245,8 @@ class IndependentCropAdapter:
         }
 
     def _ensure_ood_calibrated_for_export(self) -> None:
-        if self._trainer is None:
-            raise RuntimeError("Adapter is not initialized.")
-        issue = self._trainer.ood_detector.calibration_issue()
+        trainer = self._require_trainer()
+        issue = trainer.ood_detector.calibration_issue()
         if issue is None:
             return
         if self._calibration_loader is None:
@@ -243,11 +256,10 @@ class IndependentCropAdapter:
 
     def predict_with_ood(self, image: torch.Tensor) -> Dict[str, Any]:
         """Return diagnosis + v6 OOD payload for a single image tensor."""
-        if self._trainer is None:
-            raise RuntimeError("Adapter is not initialized.")
+        trainer = self._require_trainer()
         if image.ndim == 3:
             image = image.unsqueeze(0)
-        return self._trainer.predict_with_ood(image.to(self.device))
+        return trainer.predict_with_ood(image.to(self.device))
 
     def detect_ood_dynamic(self, image: torch.Tensor) -> Dict[str, Any]:
         """Compatibility helper returning OOD analysis fields only."""
@@ -261,10 +273,9 @@ class IndependentCropAdapter:
         }
 
     def _metadata_payload(self) -> Dict[str, Any]:
-        if self._trainer is None:
-            raise RuntimeError("Adapter is not initialized.")
+        trainer = self._require_trainer()
         return build_runtime_adapter_metadata(
-            trainer=self._trainer,
+            trainer=trainer,
             class_to_idx=self.class_to_idx,
             schema_version=self.schema_version,
             engine=self.engine,
@@ -275,12 +286,11 @@ class IndependentCropAdapter:
 
     def save_adapter(self, checkpoint_dir: str) -> Path:
         """Persist adapter assets with v6 metadata schema."""
-        if self._trainer is None:
-            raise RuntimeError("Adapter is not initialized.")
+        trainer = self._require_trainer()
         self._ensure_ood_calibrated_for_export()
 
         root = Path(checkpoint_dir)
-        asset_dir = self._trainer.save_adapter(str(root))
+        asset_dir = trainer.save_adapter(str(root))
         meta_path = asset_dir / "adapter_meta.json"
         if not meta_path.exists():
             metadata = self._metadata_payload()
@@ -289,10 +299,7 @@ class IndependentCropAdapter:
 
     def load_adapter(self, checkpoint_dir: str) -> None:
         """Load adapter assets and metadata from disk."""
-        root = Path(checkpoint_dir)
-        asset_dir = root / "continual_sd_lora_adapter"
-        if not asset_dir.exists():
-            asset_dir = root
+        asset_dir = self._resolve_asset_dir(checkpoint_dir)
 
         meta_path = asset_dir / "adapter_meta.json"
         if not meta_path.exists():
@@ -311,9 +318,9 @@ class IndependentCropAdapter:
 
         config_cls, trainer_cls = _trainer_types()
         cfg = config_cls.from_training_config(normalized)
-        self._trainer = trainer_cls(cfg)
-        self._trainer.load_adapter(str(asset_dir))
-        self.is_trained = True
+        trainer = trainer_cls(cfg)
+        trainer.load_adapter(str(asset_dir))
+        self._store_trainer(trainer)
 
     def get_summary(self) -> Dict[str, Any]:
         """Return concise runtime adapter summary."""
