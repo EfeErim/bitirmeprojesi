@@ -47,6 +47,31 @@ def _last_history_value(history_payload: Dict[str, Any], key: str) -> Optional[f
     return float(values[-1])
 
 
+_FINAL_HISTORY_METRICS = (
+    "train_loss",
+    "val_loss",
+    "val_accuracy",
+    "macro_precision",
+    "macro_recall",
+    "macro_f1",
+    "weighted_f1",
+    "balanced_accuracy",
+    "generalization_gap",
+)
+
+
+def _collect_final_metrics(history_payload: Dict[str, Any]) -> Dict[str, float]:
+    final_metrics = {
+        key: _last_history_value(history_payload, key)
+        for key in _FINAL_HISTORY_METRICS
+    }
+    return {
+        key: value
+        for key, value in final_metrics.items()
+        if value is not None
+    }
+
+
 @dataclass
 class TrainingWorkflowResult:
     run_id: str
@@ -237,6 +262,39 @@ class TrainingWorkflow:
             context=metric_context,
         )
 
+    def _persist_split_artifacts(
+        self,
+        *,
+        artifact_dir: Path,
+        trainer: Any,
+        loaders: Dict[str, Any],
+        detected_classes: List[str],
+        telemetry: Any,
+        run_id: str,
+        crop_name: str,
+        loader_sizes: Dict[str, int],
+    ) -> Dict[str, Dict[str, Any]]:
+        split_specs = (
+            ("val", loaders.get("val"), "validation"),
+            ("test", loaders.get("test"), "test"),
+        )
+        return {
+            split_name: self._persist_evaluation_artifacts(
+                artifact_dir=artifact_dir,
+                trainer=trainer,
+                loader=loader,
+                ood_loader=loaders.get("ood"),
+                detected_classes=detected_classes,
+                telemetry=telemetry,
+                run_id=run_id,
+                crop_name=crop_name,
+                loader_sizes=loader_sizes,
+                split_name=split_name,
+                artifact_subdir=artifact_subdir,
+            )
+            for split_name, loader, artifact_subdir in split_specs
+        }
+
     def _build_summary_payload(
         self,
         *,
@@ -272,21 +330,7 @@ class TrainingWorkflow:
             "ood_evidence_source": str(ood_evidence_source or ""),
             "ood_benchmark": dict(ood_benchmark),
             "production_readiness": dict(production_readiness),
-            "final_metrics": {
-                key: value
-                for key, value in {
-                    "train_loss": _last_history_value(history_payload, "train_loss"),
-                    "val_loss": _last_history_value(history_payload, "val_loss"),
-                    "val_accuracy": _last_history_value(history_payload, "val_accuracy"),
-                    "macro_precision": _last_history_value(history_payload, "macro_precision"),
-                    "macro_recall": _last_history_value(history_payload, "macro_recall"),
-                    "macro_f1": _last_history_value(history_payload, "macro_f1"),
-                    "weighted_f1": _last_history_value(history_payload, "weighted_f1"),
-                    "balanced_accuracy": _last_history_value(history_payload, "balanced_accuracy"),
-                    "generalization_gap": _last_history_value(history_payload, "generalization_gap"),
-                }.items()
-                if value is not None
-            },
+            "final_metrics": _collect_final_metrics(history_payload),
         }
 
     @staticmethod
@@ -299,6 +343,56 @@ class TrainingWorkflow:
         if isinstance(validation_artifacts, dict) and isinstance(validation_artifacts.get("metric_gate"), dict):
             return "val", validation_artifacts
         return "", {}
+
+    def _resolve_ood_evidence(
+        self,
+        *,
+        crop_name: str,
+        detected_classes: List[str],
+        loaders: Dict[str, Any],
+        evaluation_cfg: Dict[str, Any],
+        authoritative_artifacts: Dict[str, Any],
+        artifact_dir: Path,
+        run_id: str,
+        num_epochs: Optional[int],
+        telemetry: Any,
+    ) -> tuple[str, Dict[str, Any], Dict[str, Any]]:
+        real_ood_present = _loader_size(loaders.get("ood")) > 0
+        if real_ood_present:
+            ood_metrics = (
+                dict(authoritative_artifacts.get("metric_gate", {}).get("metrics", {}))
+                if authoritative_artifacts
+                else {}
+            )
+            return "real_ood_split", ood_metrics, {}
+
+        should_run_benchmark = (
+            str(evaluation_cfg.get("ood_fallback_strategy", "held_out_benchmark")) == "held_out_benchmark"
+            and bool(evaluation_cfg.get("ood_benchmark_auto_run", True))
+        )
+        if not should_run_benchmark:
+            return "unavailable", {}, {}
+
+        ood_benchmark = run_leave_one_class_out_benchmark(
+            crop_name=crop_name,
+            class_names=detected_classes,
+            loaders=loaders,
+            config=self.config,
+            device=self.device,
+            artifact_root=artifact_dir,
+            adapter_factory=IndependentCropAdapter,
+            run_id=run_id,
+            num_epochs=num_epochs,
+            telemetry=telemetry,
+            emit_event=lambda event_type, payload: self._emit_telemetry(
+                telemetry,
+                event_type,
+                payload,
+                phase="evaluation",
+            ),
+            min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
+        )
+        return "held_out_benchmark", dict(ood_benchmark.get("metrics", {})), ood_benchmark
 
     def run(
         self,
@@ -413,72 +507,35 @@ class TrainingWorkflow:
             telemetry=telemetry,
         )
         trainer_for_artifacts = getattr(session, "trainer", None)
-        validation_artifacts = self._persist_evaluation_artifacts(
+        split_artifacts = self._persist_split_artifacts(
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
-            loader=val_loader,
-            ood_loader=loaders.get("ood"),
+            loaders=loaders,
             detected_classes=detected_classes,
             telemetry=telemetry,
             run_id=run_id,
             crop_name=crop_name,
             loader_sizes=loader_sizes,
-            split_name="val",
-            artifact_subdir="validation",
         )
-        test_artifacts = self._persist_evaluation_artifacts(
-            artifact_dir=artifact_dir,
-            trainer=trainer_for_artifacts,
-            loader=loaders.get("test"),
-            ood_loader=loaders.get("ood"),
-            detected_classes=detected_classes,
-            telemetry=telemetry,
-            run_id=run_id,
-            crop_name=crop_name,
-            loader_sizes=loader_sizes,
-            split_name="test",
-            artifact_subdir="test",
-        )
+        validation_artifacts = split_artifacts["val"]
+        test_artifacts = split_artifacts["test"]
 
         evaluation_cfg = dict(training_cfg.get("evaluation", {}))
         authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
             validation_artifacts,
             test_artifacts,
         )
-        real_ood_present = _loader_size(loaders.get("ood")) > 0
-        ood_evidence_source = "real_ood_split" if real_ood_present else "unavailable"
-        ood_evidence_metrics: Dict[str, Any] = (
-            dict(authoritative_artifacts.get("metric_gate", {}).get("metrics", {}))
-            if real_ood_present and authoritative_artifacts
-            else {}
+        ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
+            crop_name=crop_name,
+            detected_classes=detected_classes,
+            loaders=loaders,
+            evaluation_cfg=evaluation_cfg,
+            authoritative_artifacts=authoritative_artifacts,
+            artifact_dir=artifact_dir,
+            run_id=run_id,
+            num_epochs=num_epochs,
+            telemetry=telemetry,
         )
-        ood_benchmark: Dict[str, Any] = {}
-        if (
-            not real_ood_present
-            and str(evaluation_cfg.get("ood_fallback_strategy", "held_out_benchmark")) == "held_out_benchmark"
-            and bool(evaluation_cfg.get("ood_benchmark_auto_run", True))
-        ):
-            ood_benchmark = run_leave_one_class_out_benchmark(
-                crop_name=crop_name,
-                class_names=detected_classes,
-                loaders=loaders,
-                config=self.config,
-                device=self.device,
-                artifact_root=artifact_dir,
-                adapter_factory=IndependentCropAdapter,
-                run_id=run_id,
-                num_epochs=num_epochs,
-                telemetry=telemetry,
-                emit_event=lambda event_type, payload: self._emit_telemetry(
-                    telemetry,
-                    event_type,
-                    payload,
-                    phase="evaluation",
-                ),
-                min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
-            )
-            ood_evidence_source = "held_out_benchmark"
-            ood_evidence_metrics = dict(ood_benchmark.get("metrics", {}))
 
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,

@@ -52,6 +52,21 @@ def _coerce_non_negative_int(value: Any, default: int = 0) -> int:
         return int(default)
 
 
+def _normalize_crop_part_compatibility(crop_mapping: Dict[str, Any]) -> Dict[str, List[str]]:
+    compatibility: Dict[str, List[str]] = {}
+    for crop_name, crop_data in crop_mapping.items():
+        if not isinstance(crop_data, dict):
+            continue
+        parts = crop_data.get('parts', [])
+        if not isinstance(parts, list):
+            continue
+        normalized_crop = str(crop_name).strip().lower()
+        normalized_parts = [str(part).strip().lower() for part in parts if str(part).strip()]
+        if normalized_crop and normalized_parts:
+            compatibility[normalized_crop] = normalized_parts
+    return compatibility
+
+
 class VLMPipeline:
     """
      Unified VLM pipeline (SAM3 + BioCLIP-2.5 only).
@@ -80,54 +95,10 @@ class VLMPipeline:
         self.taxonomy_path = self.vlm_config.get('taxonomy_path', 'config/plant_taxonomy.json')
         
         crop_mapping = router_config.get('crop_mapping', {}) if isinstance(router_config, dict) else {}
-        
-        # Always try to load from taxonomy first if available
-        taxonomy_available = False
-        if self.use_dynamic_taxonomy or not self.vlm_config.get('crop_labels'):
-            try:
-                self.crop_labels, self.part_labels = load_taxonomy(self.taxonomy_path)
-                taxonomy_available = True
-                logger.info(
-                    "Loaded taxonomy from %s: %d crops, %d parts",
-                    self.taxonomy_path,
-                    len(self.crop_labels),
-                    len(self.part_labels),
-                )
-            except Exception as e:
-                logger.warning(f"Failed to load taxonomy from {self.taxonomy_path}: {e}")
-
-        # Optional dynamic crop->part compatibility map
+        self.crop_labels: List[str] = []
+        self.part_labels: List[str] = []
         self.crop_part_compatibility: Dict[str, List[str]] = {}
-        if taxonomy_available:
-            try:
-                self.crop_part_compatibility = load_crop_part_compatibility(self.taxonomy_path)
-                if self.crop_part_compatibility:
-                    logger.info(f"Loaded crop-part compatibility for {len(self.crop_part_compatibility)} crops")
-            except Exception as e:
-                logger.warning(f"Failed to load crop-part compatibility from {self.taxonomy_path}: {e}")
-        
-        # Fallback to config-specified labels only if taxonomy not loaded
-        if not taxonomy_available:
-            self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
-            parts_from_mapping = []
-            for crop_data in crop_mapping.values() if isinstance(crop_mapping, dict) else []:
-                if isinstance(crop_data, dict):
-                    parts_from_mapping.extend(crop_data.get('parts', []))
-            default_parts = sorted(set(parts_from_mapping))
-            self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
-            logger.info(f"Using config labels: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
-
-        if not self.crop_part_compatibility and isinstance(crop_mapping, dict):
-            for crop_name, crop_data in crop_mapping.items():
-                if not isinstance(crop_data, dict):
-                    continue
-                parts = crop_data.get('parts', [])
-                if not isinstance(parts, list):
-                    continue
-                normalized_crop = str(crop_name).strip().lower()
-                normalized_parts = [str(part).strip().lower() for part in parts if str(part).strip()]
-                if normalized_crop and normalized_parts:
-                    self.crop_part_compatibility[normalized_crop] = normalized_parts
+        self._initialize_taxonomy_surface(crop_mapping)
         
         # SAM model placeholders
         self.sam_model: Any = None
@@ -157,6 +128,49 @@ class VLMPipeline:
                 torch.cuda.get_device_name(0),
                 torch.cuda.get_device_properties(0).total_memory / 1e9,
             )
+
+    def _initialize_taxonomy_surface(self, crop_mapping: Dict[str, Any]) -> None:
+        taxonomy_available = self._try_load_taxonomy()
+        if taxonomy_available:
+            self._try_load_crop_part_compatibility()
+        if not taxonomy_available:
+            self._load_labels_from_config(crop_mapping)
+        if not self.crop_part_compatibility:
+            self.crop_part_compatibility = _normalize_crop_part_compatibility(crop_mapping)
+
+    def _try_load_taxonomy(self) -> bool:
+        if not (self.use_dynamic_taxonomy or not self.vlm_config.get('crop_labels')):
+            return False
+        try:
+            self.crop_labels, self.part_labels = load_taxonomy(self.taxonomy_path)
+            logger.info(
+                "Loaded taxonomy from %s: %d crops, %d parts",
+                self.taxonomy_path,
+                len(self.crop_labels),
+                len(self.part_labels),
+            )
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to load taxonomy from {self.taxonomy_path}: {e}")
+            return False
+
+    def _try_load_crop_part_compatibility(self) -> None:
+        try:
+            self.crop_part_compatibility = load_crop_part_compatibility(self.taxonomy_path)
+            if self.crop_part_compatibility:
+                logger.info(f"Loaded crop-part compatibility for {len(self.crop_part_compatibility)} crops")
+        except Exception as e:
+            logger.warning(f"Failed to load crop-part compatibility from {self.taxonomy_path}: {e}")
+
+    def _load_labels_from_config(self, crop_mapping: Dict[str, Any]) -> None:
+        self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
+        parts_from_mapping: List[str] = []
+        for crop_data in crop_mapping.values():
+            if isinstance(crop_data, dict):
+                parts_from_mapping.extend(crop_data.get('parts', []))
+        default_parts = sorted(set(parts_from_mapping))
+        self.part_labels = list(self.vlm_config.get('part_labels', default_parts))
+        logger.info(f"Using config labels: {len(self.crop_labels)} crops, {len(self.part_labels)} parts")
 
     def _refresh_policy_graph(self) -> None:
         """Refresh merged policy graph from defaults + configuration."""
@@ -228,6 +242,30 @@ class VLMPipeline:
         """Check if a policy stage is enabled."""
         return policy_enabled(self.policy_graph, stage, default)
 
+    def _prepare_inference_model(self, model: Any) -> Any:
+        if hasattr(model, 'to'):
+            model = cast(Any, model).to(self.device)
+        if hasattr(model, 'eval'):
+            model.eval()
+        return model
+
+    def _set_sam_runtime(self, processor: Any, model: Any, *, backend: str) -> None:
+        self.sam_processor = processor
+        self.sam_model = model
+        self.sam_backend = backend
+
+    def _set_bioclip_runtime(self, processor: Any, model: Any, *, backend: str) -> None:
+        self.bioclip_processor = processor
+        self.bioclip = model
+        self.bioclip_backend = backend
+
+    def _labels_for_type(self, label_type: str) -> List[str]:
+        if label_type == 'crop':
+            return self.crop_labels
+        if label_type == 'part':
+            return self.part_labels
+        raise ValueError(f"label_type must be 'crop' or 'part', got {label_type}")
+
     def load_models(self):
         """Load SAM3 + BioCLIP-2.5 models (fallback disabled)."""
         logger.info("Loading VLM models...")
@@ -292,14 +330,12 @@ class VLMPipeline:
             sam_processor, sam_model = self._load_sam(sam_id)
             bioclip_processor, bioclip_model = self._load_clip_like_model(bioclip_id)
 
-            self.sam_processor = sam_processor
-            self.sam_model = sam_model
-            self.sam_backend = 'sam3'
-
-            self.bioclip = bioclip_model
-            self.bioclip_processor = bioclip_processor
-            if not self.bioclip_backend:
-                self.bioclip_backend = 'transformers'
+            self._set_sam_runtime(sam_processor, sam_model, backend='sam3')
+            self._set_bioclip_runtime(
+                bioclip_processor,
+                bioclip_model,
+                backend=self.bioclip_backend or 'transformers',
+            )
             return
 
         import open_clip
@@ -308,9 +344,7 @@ class VLMPipeline:
         # Load SAM3
         logger.info("Loading SAM3...")
         sam3_processor = Sam3Processor.from_pretrained(sam_id)
-        sam3_model = Sam3Model.from_pretrained(sam_id)
-        sam3_model = sam3_model.to(self.device)
-        sam3_model.eval()
+        sam3_model = self._prepare_inference_model(Sam3Model.from_pretrained(sam_id))
         
         # Load BioCLIP-2.5
         logger.info("Loading BioCLIP-2.5...")
@@ -318,20 +352,18 @@ class VLMPipeline:
         model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
         tokenizer = open_clip.get_tokenizer(hub_model_id)
         
-        model = model.to(self.device)
-        model.eval()
+        model = self._prepare_inference_model(model)
         
         # Store models (sam2 field reused for sam3, bioclip_processor adapted)
-        self.sam_processor = sam3_processor
-        self.sam_model = sam3_model
-        self.sam_backend = 'sam3'
-        
-        self.bioclip = model
-        self.bioclip_processor = {
-            'preprocess': preprocess_val,
-            'tokenizer': tokenizer,
-        }
-        self.bioclip_backend = 'open_clip'
+        self._set_sam_runtime(sam3_processor, sam3_model, backend='sam3')
+        self._set_bioclip_runtime(
+            {
+                'preprocess': preprocess_val,
+                'tokenizer': tokenizer,
+            },
+            model,
+            backend='open_clip',
+        )
 
     def is_ready(self) -> bool:
         """Return whether the pipeline is ready for real inference."""
@@ -374,9 +406,7 @@ class VLMPipeline:
             processor = SamProcessor.from_pretrained(model_id)
             model = SamModel.from_pretrained(model_id)
             self.sam_backend = 'transformers_sam'
-        if hasattr(model, "to"):
-            model = cast(Any, model).to(self.device)
-        model.eval()
+        model = self._prepare_inference_model(model)
         return processor, model
 
     def _load_clip_like_model(self, model_id: str):
@@ -397,8 +427,7 @@ class VLMPipeline:
                 model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
                 tokenizer = open_clip.get_tokenizer(hub_model_id)
                 
-                model = model.to(self.device)
-                model.eval()
+                model = self._prepare_inference_model(model)
                 self.bioclip_backend = 'open_clip'
                 
                 processor = {
@@ -414,9 +443,7 @@ class VLMPipeline:
             from transformers import AutoModel, AutoProcessor
 
             processor = AutoProcessor.from_pretrained(model_id)
-            model = AutoModel.from_pretrained(model_id)
-            model = model.to(self.device)
-            model.eval()
+            model = self._prepare_inference_model(AutoModel.from_pretrained(model_id))
             self.bioclip_backend = 'transformers'
             return processor, model
         except Exception as e:
@@ -470,12 +497,7 @@ class VLMPipeline:
         label_type: str  # 'crop' or 'part'
     ) -> Tuple[str, float]:
         """Classify image with prompt-ensemble scoring."""
-        if label_type == 'crop':
-            labels = self.crop_labels
-        elif label_type == 'part':
-            labels = self.part_labels
-        else:
-            raise ValueError(f"label_type must be 'crop' or 'part', got {label_type}")
+        labels = self._labels_for_type(label_type)
             
         if not labels:
             return 'unknown', 0.0

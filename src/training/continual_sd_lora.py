@@ -104,6 +104,53 @@ PREFERRED_TARGET_TOKEN = (
     "mlp",
     "ffn",
 )
+_CONFIG_EXTRA_EXCLUDED_KEYS = {
+    "backbone",
+    "adapter",
+    "fusion",
+    "ood",
+    "optimization",
+    "early_stopping",
+    "evaluation",
+    "learning_rate",
+    "weight_decay",
+    "num_epochs",
+    "batch_size",
+    "device",
+    "strict_model_loading",
+    "seed",
+    "deterministic",
+}
+_META_TENSOR_COPY_ERROR = "Cannot copy out of meta tensor; no data!"
+
+
+def _resolve_radial_beta_range(ood: Dict[str, Any]) -> tuple[float, float]:
+    raw_range = ood.get("radial_beta_range", [0.5, 2.0])
+    if not isinstance(raw_range, (list, tuple)) or len(raw_range) < 2:
+        raw_range = [0.5, 2.0]
+    return float(raw_range[0]), float(raw_range[1])
+
+
+def _resolve_early_stopping_surface(
+    early_stopping: Dict[str, Any],
+    evaluation: Dict[str, Any],
+) -> tuple[str, str]:
+    metric = str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss")))
+    mode = str(
+        early_stopping.get(
+            "mode",
+            "min" if metric in {"val_loss", "generalization_gap"} else "max",
+        )
+    )
+    return metric, mode
+
+
+def _collect_extra_training_fields(normalized: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        key: value
+        for key, value in normalized.items()
+        if key not in _CONFIG_EXTRA_EXCLUDED_KEYS
+    }
 
 
 @dataclass
@@ -296,6 +343,11 @@ class ContinualSDLoRAConfig:
         scheduler = optimization.get("scheduler", {}) if isinstance(optimization, dict) else {}
         early_stopping = normalized.get("early_stopping", {})
         evaluation = normalized.get("evaluation", {})
+        radial_beta_min, radial_beta_max = _resolve_radial_beta_range(ood)
+        early_stopping_metric, early_stopping_mode = _resolve_early_stopping_surface(
+            early_stopping,
+            evaluation,
+        )
 
         config = cls(
             backbone_model_name=str(backbone.get("model_name", DEFAULT_BACKBONE_MODEL_NAME)),
@@ -318,8 +370,8 @@ class ContinualSDLoRAConfig:
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
             ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
             radial_l2_enabled=bool(ood.get("radial_l2_enabled", True)),
-            radial_beta_min=float(ood.get("radial_beta_range", [0.5, 2.0])[0]),
-            radial_beta_max=float(ood.get("radial_beta_range", [0.5, 2.0])[1]),
+            radial_beta_min=radial_beta_min,
+            radial_beta_max=radial_beta_max,
             radial_beta_steps=int(ood.get("radial_beta_steps", 16)),
             sure_enabled=bool(ood.get("sure_enabled", True)),
             sure_semantic_percentile=float(ood.get("sure_semantic_percentile", 95.0)),
@@ -337,18 +389,8 @@ class ContinualSDLoRAConfig:
             scheduler_min_lr=float(scheduler.get("min_lr", 0.0)),
             scheduler_step_on=str(scheduler.get("step_on", "batch")),
             early_stopping_enabled=bool(early_stopping.get("enabled", False)),
-            early_stopping_metric=str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss"))),
-            early_stopping_mode=str(
-                early_stopping.get(
-                    "mode",
-                    (
-                        "min"
-                        if str(early_stopping.get("metric", evaluation.get("best_metric", "val_loss")))
-                        in {"val_loss", "generalization_gap"}
-                        else "max"
-                    ),
-                )
-            ),
+            early_stopping_metric=early_stopping_metric,
+            early_stopping_mode=early_stopping_mode,
             early_stopping_patience=int(early_stopping.get("patience", 3)),
             early_stopping_min_delta=float(early_stopping.get("min_delta", 0.0)),
             evaluation_best_metric=str(evaluation.get("best_metric", "val_loss")),
@@ -357,23 +399,7 @@ class ContinualSDLoRAConfig:
             evaluation_ood_fallback_strategy=str(evaluation.get("ood_fallback_strategy", "held_out_benchmark")),
             evaluation_ood_benchmark_auto_run=bool(evaluation.get("ood_benchmark_auto_run", True)),
             evaluation_ood_benchmark_min_classes=int(evaluation.get("ood_benchmark_min_classes", 3)),
-            extra={k: v for k, v in normalized.items() if k not in {
-                "backbone",
-                "adapter",
-                "fusion",
-                "ood",
-                "optimization",
-                "early_stopping",
-                "evaluation",
-                "learning_rate",
-                "weight_decay",
-                "num_epochs",
-                "batch_size",
-                "device",
-                "strict_model_loading",
-                "seed",
-                "deterministic",
-            }},
+            extra=_collect_extra_training_fields(normalized),
         )
         config.validate()
         return config
@@ -528,7 +554,7 @@ class ContinualSDLoRATrainer:
         try:
             return module.to(self.device)
         except NotImplementedError as exc:
-            if "Cannot copy out of meta tensor; no data!" in str(exc) and self._is_dispatch_managed_module(module):
+            if _META_TENSOR_COPY_ERROR in str(exc) and self._is_dispatch_managed_module(module):
                 logger.warning(
                     "%s raised meta tensor NotImplementedError during .to(%s) but is dispatch-managed; "
                     "leaving module placement unchanged.",
@@ -649,20 +675,15 @@ class ContinualSDLoRATrainer:
             )
 
     def set_train_mode(self) -> None:
-        if self.adapter_model is not None:
-            self.adapter_model.train()
-        if self.classifier is not None:
-            self.classifier.train()
-        if self.fusion is not None:
-            self.fusion.train()
+        self._set_module_training_mode(training=True)
 
     def set_eval_mode(self) -> None:
-        if self.adapter_model is not None:
-            self.adapter_model.eval()
-        if self.classifier is not None:
-            self.classifier.eval()
-        if self.fusion is not None:
-            self.fusion.eval()
+        self._set_module_training_mode(training=False)
+
+    def _set_module_training_mode(self, *, training: bool) -> None:
+        for module in (self.adapter_model, self.classifier, self.fusion):
+            if module is not None:
+                module.train(training)
 
     def _compute_grad_norm(self) -> float:
         return compute_grad_norm(self.optimizer)
