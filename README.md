@@ -28,7 +28,7 @@ The same adapter bundle also carries the runtime OOD state:
 
 - OOD calibration is run after normal training on the known classes
 - when the extended OOD stack is enabled, calibration materializes one feature/logit snapshot and reuses it across radial, SURE+, and conformal phases instead of rescanning the loader repeatedly
-- optional Bi-directional Energy Regularization (BER) can be applied during training as an additive loss wrapper
+- optional experimental Bi-directional Energy Regularization (BER) can be applied during training as an additive loss wrapper
 - radial L2 feature normalization can auto-tune a calibration-time $\beta$ and rescale features before OOD stats are computed
 - per-class calibration stores feature mean/variance, energy statistics, and SURE+ thresholds
 - inference scores each prediction with a weighted ensemble of Mahalanobis z-score and energy z-score, then applies SURE+ semantic/confidence rejection

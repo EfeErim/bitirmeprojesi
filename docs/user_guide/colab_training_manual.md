@@ -111,6 +111,39 @@ Typical tuning order for notebook users:
 3. Enable conformal prediction and set `conformal_alpha` for target coverage level.
 4. Enable BER when continual old/new class energy separation needs stabilization.
 
+BER guidance:
+
+- BER is experimental and training-only. It does not change the runtime OOD payload shape or readiness gate logic.
+- BER is most relevant for incremental old/new class separation, but Notebook 2 also exposes it as an optional one-shot training experiment.
+- When BER is enabled, batch telemetry can include `ber_ce_loss`, `ber_old_loss`, and `ber_new_loss` in `training/batch_metrics.csv`.
+
+## BER Experiment Matrix
+
+Notebook 2 now exposes these top-cell controls:
+
+- `BER_ENABLED`
+- `BER_LAMBDA_OLD`
+- `BER_LAMBDA_NEW`
+
+Recommended rollout procedure:
+
+1. Keep crop, split layout, seed, and OOD evidence source fixed.
+2. Run one baseline with BER disabled.
+3. Run BER with `0.05 / 0.05`, `0.10 / 0.10`, and `0.20 / 0.20`.
+4. Compare the same readiness artifacts:
+   - `validation/metric_gate.json`
+   - `test/metric_gate.json`
+   - `ood_benchmark/summary.json`
+   - `production_readiness.json`
+5. Optionally automate the comparison with:
+   - `.\.venv\Scripts\python.exe scripts/evaluate_ber_rollout.py <baseline_artifact_root> <candidate_artifact_root> [...]`
+
+Accept a BER setting only if all of these are true:
+
+- readiness is not worse than the baseline run
+- authoritative accuracy drops by no more than `0.002` absolute
+- either `ood_auroc` improves by at least `0.01` or `ood_false_positive_rate` improves by at least `0.01`
+
 ## Outputs
 
 Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:

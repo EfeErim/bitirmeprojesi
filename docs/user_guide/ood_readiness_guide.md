@@ -183,6 +183,12 @@ Practical meaning:
 - If no real `ood/` split exists, the workflow auto-runs the fallback benchmark.
 - If the crop has fewer than 3 classes, fallback evidence is considered too weak and readiness fails.
 
+BER note:
+
+- `training.continual.ood.ber_enabled` is an optional experimental training-time regularizer.
+- BER does not change the readiness artifact schema, runtime OOD payload, or gate thresholds.
+- Evaluate BER only by comparing the same artifact set on the same crop, split, seed, and OOD evidence source.
+
 ## What This Does And Does Not Guarantee
 
 What the repo does automatically:
@@ -210,8 +216,9 @@ Use this order of preference:
 1. Train normally on the disease classes you support.
 2. Add a small shared `ood/` pool with realistic plant-like unknowns if you can.
 3. Let the workflow use the fallback benchmark when you do not have that pool yet.
-4. Inspect `production_readiness.json` instead of relying on one split-local metric file.
-5. Expand the shared `ood/` pool over time using real failure cases and hard negatives.
+4. If you trial BER, treat it as training-only and compare it against a BER-off baseline on the same evidence source.
+5. Inspect `production_readiness.json` instead of relying on one split-local metric file.
+6. Expand the shared `ood/` pool over time using real failure cases and hard negatives.
 
 ## Related Files
 

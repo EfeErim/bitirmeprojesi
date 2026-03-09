@@ -1,4 +1,5 @@
 from pathlib import Path
+import csv
 
 from src.training.services.reporting import (
     persist_batch_metrics_artifacts,
@@ -78,3 +79,33 @@ def test_reporting_can_write_test_artifacts_to_a_separate_subdirectory(tmp_path:
     assert result["paths"]["report_txt"].exists()
     assert result["paths"]["report_txt"].parent.name == "test"
     assert result["paths"]["metric_gate_json"].parent.name == "test"
+
+
+def test_batch_metrics_artifacts_include_optional_ber_columns(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+    batch_history = [
+        {
+            "epoch": 1,
+            "batch": 1,
+            "global_step": 1,
+            "optimizer_steps": 1,
+            "loss": 0.8,
+            "lr": 1e-3,
+            "ber_ce_loss": 0.7,
+            "ber_old_loss": 0.02,
+            "ber_new_loss": 0.03,
+        }
+    ]
+
+    batch_paths = persist_batch_metrics_artifacts(
+        artifact_root=artifact_root,
+        batch_history=batch_history,
+    )
+
+    with batch_paths["batch_metrics_csv"].open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert rows
+    assert rows[0]["ber_ce_loss"] == "0.7"
+    assert rows[0]["ber_old_loss"] == "0.02"
+    assert rows[0]["ber_new_loss"] == "0.03"

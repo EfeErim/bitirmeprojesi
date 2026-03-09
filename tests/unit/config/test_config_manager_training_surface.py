@@ -17,6 +17,9 @@ def test_training_continual_surface_exposes_reliability_defaults():
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
     continual = cfg["training"]["continual"]
+    assert continual["ood"]["ber_enabled"] is False
+    assert continual["ood"]["ber_lambda_old"] == 0.1
+    assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["seed"] == 42
     assert continual["deterministic"] is False
     assert continual["optimization"]["grad_accumulation_steps"] == 1
@@ -56,3 +59,23 @@ def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
     assert legacy_normalized["adapter"]["lora_r"] == 4
     assert legacy_normalized["fusion"]["output_dim"] == 256
     assert legacy_normalized["device"] == "cpu"
+
+
+def test_extract_continual_training_config_normalizes_ber_fields():
+    payload = {
+        "training": {
+            "continual": {
+                "ood": {
+                    "ber_enabled": True,
+                    "ber_lambda_old": "0.05",
+                    "ber_lambda_new": 0.2,
+                }
+            }
+        }
+    }
+
+    normalized = extract_continual_training_config(payload)
+
+    assert normalized["ood"]["ber_enabled"] is True
+    assert normalized["ood"]["ber_lambda_old"] == 0.05
+    assert normalized["ood"]["ber_lambda_new"] == 0.2

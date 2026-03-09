@@ -2,6 +2,7 @@ import pytest
 import torch
 import torch.nn as nn
 
+from src.training.ber_loss import BERLoss
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 from src.training.session import ContinualTrainingSession
 
@@ -31,6 +32,7 @@ def test_config_from_training_config_accepts_v6_contract():
             "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
             "adapter": {"target_modules_strategy": "all_linear_transformer", "lora_r": 4, "lora_alpha": 8},
             "fusion": {"layers": [2, 5, 8, 11]},
+            "ood": {"ber_enabled": True, "ber_lambda_old": 0.05, "ber_lambda_new": 0.2},
             "optimization": {"grad_accumulation_steps": 2, "scheduler": {"name": "linear"}},
             "evaluation": {"best_metric": "macro_f1"},
             "device": "cpu",
@@ -38,6 +40,9 @@ def test_config_from_training_config_accepts_v6_contract():
     )
     assert cfg.backbone_model_name == "facebook/dinov3-vitl16-pretrain-lvd1689m"
     assert cfg.target_modules_strategy == "all_linear_transformer"
+    assert cfg.ber_enabled is True
+    assert cfg.ber_lambda_old == pytest.approx(0.05)
+    assert cfg.ber_lambda_new == pytest.approx(0.2)
     assert cfg.grad_accumulation_steps == 2
     assert cfg.scheduler_name == "linear"
     assert cfg.evaluation_best_metric == "macro_f1"
@@ -53,11 +58,17 @@ def test_as_contract_dict_emits_normalized_training_surface():
         grad_accumulation_steps=2,
         scheduler_name="linear",
         evaluation_best_metric="macro_f1",
+        ber_enabled=True,
+        ber_lambda_old=0.05,
+        ber_lambda_new=0.2,
     )
 
     payload = cfg.as_contract_dict()
 
     assert payload["seed"] == 7
+    assert payload["ood"]["ber_enabled"] is True
+    assert payload["ood"]["ber_lambda_old"] == pytest.approx(0.05)
+    assert payload["ood"]["ber_lambda_new"] == pytest.approx(0.2)
     assert payload["optimization"]["grad_accumulation_steps"] == 2
     assert payload["optimization"]["scheduler"]["name"] == "linear"
     assert payload["evaluation"]["best_metric"] == "macro_f1"
@@ -110,6 +121,44 @@ def test_add_classes_expands_classifier_shape():
 
     assert set(updated.keys()) == {"healthy", "disease_a", "disease_b"}
     assert trainer.classifier.out_features == 3
+
+
+def test_add_classes_updates_ber_partition_and_keeps_ber_metrics_available():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=8,
+        device="cpu",
+        ber_enabled=True,
+        ber_lambda_old=0.1,
+        ber_lambda_new=0.1,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.classifier = nn.Linear(8, 1)
+    trainer.class_to_idx = {"healthy": 0}
+    trainer.adapter_model = DummyBackbone()
+    trainer.fusion = nn.Identity()
+    trainer.ber_loss = BERLoss(lambda_old=0.1, lambda_new=0.1, num_old_classes=0)
+
+    updated = trainer.add_classes(["disease_a"])
+
+    assert updated == {"healthy": 0, "disease_a": 1}
+    assert trainer.classifier.out_features == 2
+    assert trainer.ber_loss is not None
+    assert trainer.ber_loss.num_old_classes == 1
+
+    logits = nn.Parameter(torch.tensor([[1.2, -0.4], [-0.3, 1.1]], dtype=torch.float32))
+    trainer.optimizer = torch.optim.SGD([logits], lr=0.1)
+    trainer.forward_logits = lambda images: logits  # type: ignore[assignment]
+
+    stats = trainer.train_batch(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    assert stats.ber_ce_loss is not None
+    assert stats.ber_old_loss is not None
+    assert stats.ber_new_loss is not None
 
 
 def test_add_classes_refreshes_existing_optimizer_params():
@@ -328,10 +377,88 @@ def test_train_batch_emits_step_metrics():
     )
 
     assert stats.loss > 0.0
+    assert stats.ber_ce_loss is None
+    assert stats.ber_old_loss is None
+    assert stats.ber_new_loss is None
     assert stats.lr == pytest.approx(0.1)
     assert stats.grad_norm > 0.0
     assert stats.batch_size == 2
     assert stats.step_time_sec >= 0.0
+
+
+def test_training_step_uses_ber_loss_when_enabled():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        ber_enabled=True,
+        label_smoothing=0.1,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.optimizer = object()
+    recorded = {}
+    expected_loss = torch.tensor(1.23, requires_grad=True)
+
+    class FakeBER:
+        def __call__(self, logits, labels, label_smoothing=0.0):
+            recorded["logits"] = logits.detach().clone()
+            recorded["labels"] = labels.detach().clone()
+            recorded["label_smoothing"] = label_smoothing
+            return expected_loss, {"ce": 0.7, "ber_old": 0.1, "ber_new": 0.2}
+
+    trainer.ber_loss = FakeBER()
+    trainer.forward_logits = lambda images: torch.full((images.shape[0], 2), 0.5, requires_grad=True)  # type: ignore[assignment]
+
+    loss = trainer.training_step(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    assert loss is expected_loss
+    assert recorded["labels"].tolist() == [0, 1]
+    assert recorded["label_smoothing"] == pytest.approx(0.1)
+    assert trainer._last_ber_components == {"ce": 0.7, "ber_old": 0.1, "ber_new": 0.2}
+
+
+def test_train_batch_emits_ber_metrics_when_enabled():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        ber_enabled=True,
+        ber_lambda_old=0.1,
+        ber_lambda_new=0.1,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    class DummyModule(nn.Module):
+        def forward(self, x, *args, **kwargs):
+            return x
+
+    trainer.adapter_model = DummyModule()
+    trainer.classifier = DummyModule()
+    trainer.fusion = DummyModule()
+
+    logits = nn.Parameter(torch.tensor([[1.2, -0.4], [-0.3, 1.1]], dtype=torch.float32))
+    trainer.optimizer = torch.optim.SGD([logits], lr=0.1)
+    trainer.ber_loss = BERLoss(
+        lambda_old=trainer.config.ber_lambda_old,
+        lambda_new=trainer.config.ber_lambda_new,
+        num_old_classes=1,
+    )
+    trainer.forward_logits = lambda images: logits  # type: ignore[assignment]
+
+    stats = trainer.train_batch(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    assert stats.loss > 0.0
+    assert stats.ber_ce_loss is not None
+    assert stats.ber_old_loss is not None
+    assert stats.ber_new_loss is not None
 
 
 def test_initialize_engine_with_non_quantized_backbone(monkeypatch):
