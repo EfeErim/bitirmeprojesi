@@ -7,7 +7,9 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
+
+HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
 
 
 def is_repo_root(path: Path) -> bool:
@@ -122,3 +124,62 @@ def mount_drive_if_available(force_remount: bool = False) -> None:
         drive.mount("/content/drive", force_remount=force_remount)
     except Exception as exc:
         print(f"Drive mount skipped: {exc}")
+
+
+def resolve_hf_token() -> Optional[str]:
+    """Resolve a Hugging Face token from env vars first, then Colab secrets."""
+    for env_name in HF_TOKEN_NAMES:
+        token = str(os.environ.get(env_name, "")).strip()
+        if token:
+            os.environ.setdefault("HF_TOKEN", token)
+            return token
+
+    if not running_in_colab():
+        return None
+
+    try:
+        from google.colab import userdata
+    except Exception:
+        return None
+
+    for secret_name in HF_TOKEN_NAMES:
+        try:
+            token = str(userdata.get(secret_name) or "").strip()
+        except Exception:
+            token = ""
+        if token:
+            os.environ["HF_TOKEN"] = token
+            return token
+
+    return None
+
+
+def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None) -> bool:
+    """Authenticate once and validate the token with a lightweight identity lookup."""
+    emit = print if print_fn is None else print_fn
+    token = resolve_hf_token()
+    if not token:
+        emit("[HF] No token found. Set a Colab secret or env var named HF_TOKEN before running inference.")
+        return False
+
+    try:
+        from huggingface_hub import HfApi, login
+    except Exception as exc:
+        emit(f"[HF] Could not import huggingface_hub: {exc}")
+        return False
+
+    try:
+        login(token=token, add_to_git_credential=False)
+        profile = dict(HfApi(token=token).whoami() or {})
+        username = str(
+            profile.get("name")
+            or profile.get("fullname")
+            or profile.get("email")
+            or profile.get("user")
+            or "authenticated user"
+        )
+        emit(f"[HF] Authenticated as {username}")
+        return True
+    except Exception as exc:
+        emit(f"[HF] Authentication check failed: {exc}")
+        return False

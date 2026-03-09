@@ -250,8 +250,8 @@ class VLMPipeline:
             if install_cmd:
                 logger.warning(f"Install in Colab cell: {install_cmd}")
 
-        # Authenticate with HuggingFace if token available (e.g., from Colab secrets)
-        hf_token = os.getenv('HF_TOKEN')
+        # HuggingFace authentication is handled by the caller when needed.
+        hf_token = None  # Notebook/script setup now handles HF auth explicitly.
         if hf_token:
             try:
                 from huggingface_hub import login
@@ -260,7 +260,7 @@ class VLMPipeline:
             except Exception as hf_auth_error:
                 logger.warning(f"HuggingFace authentication failed: {hf_auth_error}")
         else:
-            logger.warning("No HF_TOKEN found in environment; SAM3 models may require manual agreement on HuggingFace")
+            pass
 
         try:
             if self.model_source != 'huggingface':
