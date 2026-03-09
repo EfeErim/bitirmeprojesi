@@ -3,14 +3,17 @@
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 import os
+import sys
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 from src.shared.artifacts import ArtifactStore
 from src.shared.json_utils import ensure_parent, read_json, write_json
@@ -25,12 +28,57 @@ def _utc_now_iso() -> str:
 def _safe_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
+
+def _slugify_capture_name(value: str) -> str:
+    slug = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(value or "").strip())
+    while "__" in slug:
+        slug = slug.replace("__", "_")
+    slug = slug.strip("_")
+    return slug or "cell"
+
+
 def _append_line(path: Path, line: str) -> None:
     ensure_parent(path)
     with path.open("a", encoding="utf-8") as handle:
         handle.write(line)
         if not line.endswith("\n"):
             handle.write("\n")
+
+
+class _TeeTextStream:
+    def __init__(self, *streams: Any) -> None:
+        self._streams = [stream for stream in streams if stream is not None]
+
+    def write(self, data: str) -> int:
+        text = str(data)
+        for stream in self._streams:
+            stream.write(text)
+        return len(text)
+
+    def flush(self) -> None:
+        for stream in self._streams:
+            flush = getattr(stream, "flush", None)
+            if callable(flush):
+                flush()
+
+    def isatty(self) -> bool:
+        return any(bool(getattr(stream, "isatty", lambda: False)()) for stream in self._streams)
+
+    def writable(self) -> bool:
+        return True
+
+    @property
+    def encoding(self) -> str:
+        for stream in self._streams:
+            encoding = getattr(stream, "encoding", None)
+            if encoding:
+                return str(encoding)
+        return "utf-8"
+
+    def __getattr__(self, name: str) -> Any:
+        if not self._streams:
+            raise AttributeError(name)
+        return getattr(self._streams[0], name)
 
 
 @dataclass
@@ -193,6 +241,83 @@ class ColabLiveTelemetry:
         self._append_log_local(line)
         self.emit_event("log_line", {"message": message}, phase=phase, level=level, force_sync=False)
         self._periodic_sync()
+
+    @contextmanager
+    def capture_cell_output(self, cell_name: str, *, phase: str = "notebook_cell") -> Iterator[Path]:
+        label = str(cell_name or "cell")
+        capture_ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        started_at = _utc_now_iso()
+        start_clock = time.time()
+        relative_path = Path("cell_outputs") / f"{capture_ts}_{_slugify_capture_name(label)}.log"
+        relative_path_text = str(relative_path).replace("\\", "/")
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+        original_stdout = sys.stdout
+        original_stderr = sys.stderr
+        failure_message = ""
+
+        self.emit_event(
+            "cell_capture_started",
+            {"cell_name": label, "relative_path": relative_path_text},
+            phase=phase,
+            force_sync=False,
+        )
+        sys.stdout = _TeeTextStream(original_stdout, stdout_buffer)
+        sys.stderr = _TeeTextStream(original_stderr, stderr_buffer)
+        try:
+            yield self.artifacts_dir / relative_path
+        except Exception as exc:
+            failure_message = f"{exc.__class__.__name__}: {exc}"
+            self.emit_event(
+                "cell_capture_failed",
+                {
+                    "cell_name": label,
+                    "relative_path": relative_path_text,
+                    "error": failure_message,
+                },
+                phase=phase,
+                level="error",
+                force_sync=False,
+            )
+            raise
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
+            duration_sec = round(time.time() - start_clock, 3)
+            finished_at = _utc_now_iso()
+            sections = [
+                f"[CELL_CAPTURE] cell={label}",
+                f"run_id={self.run_id}",
+                f"started_at={started_at}",
+                f"finished_at={finished_at}",
+                f"duration_sec={duration_sec:.3f}",
+                "",
+                stdout_buffer.getvalue(),
+            ]
+            body = "\n".join(section for section in sections if section is not None)
+            stderr_text = stderr_buffer.getvalue()
+            if stderr_text:
+                if not body.endswith("\n"):
+                    body += "\n"
+                body += "\n[STDERR]\n"
+                body += stderr_text
+            if failure_message:
+                if not body.endswith("\n"):
+                    body += "\n"
+                body += f"\n[EXCEPTION] {failure_message}\n"
+            artifact_path = self.write_text_artifact(relative_path_text, body)
+            self.emit_event(
+                "cell_capture_finished",
+                {
+                    "cell_name": label,
+                    "relative_path": relative_path_text,
+                    "artifact_path": str(artifact_path),
+                    "duration_sec": duration_sec,
+                },
+                phase=phase,
+                force_sync=False,
+            )
+            self._periodic_sync(force=True)
 
     def update_latest(self, status_payload: Dict[str, Any]) -> None:
         payload = {
