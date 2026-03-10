@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Colab Notebooks"
+  short_description: "AADS v6 Colab notebook and export workflow guidance"
+  default_prompt: "Use $aads-colab-notebooks to update a maintained Colab notebook flow in this repo."

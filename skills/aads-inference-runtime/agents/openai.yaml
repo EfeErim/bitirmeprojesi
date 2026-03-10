@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Inference Runtime"
+  short_description: "AADS v6 inference, adapter loading, and runtime guidance"
+  default_prompt: "Use $aads-inference-runtime to fix router inference or adapter runtime behavior in this repo."

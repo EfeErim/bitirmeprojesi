@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Training and OOD"
+  short_description: "AADS v6 training, OOD, and readiness guidance"
+  default_prompt: "Use $aads-training-ood to update the training workflow or OOD readiness behavior in this repo."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "AADS Repo Hygiene"
+  short_description: "AADS v6 CI, validation, and repo hygiene guidance"
+  default_prompt: "Use $aads-repo-hygiene to update CI, validation, or repo hygiene in this repo."
