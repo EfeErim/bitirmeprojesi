@@ -61,6 +61,9 @@ class ConfigurationManager:
         merged = self.load_base_config()
         if self._environment:
             merged = _deep_merge(merged, self.get_environment_config(self._environment))
+        # Backfill legacy top-level OOD keys before defaults materialize on the
+        # canonical training surface, then resync after normalization.
+        self._normalize_ood_surface(merged)
         self._normalize_training_surface(merged)
         self._normalize_ood_surface(merged)
         assert_no_prohibited_4bit_flags(merged)
