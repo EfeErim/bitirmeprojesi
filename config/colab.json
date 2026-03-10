@@ -43,6 +43,8 @@
         "ood_benchmark_min_classes": 3
       },
       "data": {
+        "cache_size": 20000,
+        "cache_train_split": true,
         "validate_images_on_init": false
       }
     }

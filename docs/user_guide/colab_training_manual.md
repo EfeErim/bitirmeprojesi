@@ -243,6 +243,8 @@ Current Colab default tradeoffs:
 - the Colab environment disables deterministic training so CuDNN can use faster kernels
 - automatic held-out OOD fallback benchmarking is disabled by default for faster iteration
 - if you do not provide a real `ood/` split and leave that fallback disabled, `production_readiness.json` will stay failed until you re-enable the benchmark or add real OOD data
+- Notebook 2 can also validate every `N` epochs instead of every epoch; this reduces runtime but makes best-model and early-stopping decisions less responsive between validation checkpoints
+- the Colab environment now uses a much larger cache budget and can cache the continual train split too, which is intended for high-RAM A100 sessions to reduce repeated image decode and disk I/O
 
 ## Notebook-Only Top Cell Toggles
 

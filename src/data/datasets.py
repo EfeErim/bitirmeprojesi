@@ -63,6 +63,7 @@ class CropDataset(Dataset):
         target_size: int = 224,
         use_cache: bool = True,
         cache_size: int = 1000,
+        cache_train_split: bool = False,
         error_policy: str = "tolerant",
         validate_images_on_init: bool = True,
     ) -> None:
@@ -72,6 +73,7 @@ class CropDataset(Dataset):
         self.target_size = int(target_size)
         self.use_cache = bool(use_cache)
         self.cache = LRUCache(cache_size) if self.use_cache else None
+        self.cache_train_split = bool(cache_train_split)
         self.error_policy = str(error_policy).strip().lower()
         if self.error_policy not in VALID_ERROR_POLICIES:
             raise ValueError(f"Unsupported error policy: {error_policy}")
@@ -161,14 +163,17 @@ class CropDataset(Dataset):
         return Image.fromarray(rgb)
 
     def _load_image(self, img_path: Path) -> Image.Image:
-        if self.use_cache and self.split != "continual" and self.cache is not None:
+        cache_enabled_for_split = self.use_cache and self.cache is not None and (
+            self.split != "continual" or self.cache_train_split
+        )
+        if cache_enabled_for_split:
             cached = self.cache.get(str(img_path))
             if cached is not None:
                 return cached.copy()
 
         image = self._decode_image(img_path)
 
-        if self.use_cache and self.split != "continual" and self.cache is not None:
+        if cache_enabled_for_split:
             self.cache.put(str(img_path), image.copy())
         return image
 
@@ -202,6 +207,7 @@ class CropDataset(Dataset):
         return {
             "cache_size": len(self.cache) if self.cache is not None else 0,
             "cache_capacity": self.cache.capacity if self.cache is not None else 0,
+            "cache_train_split": bool(self.cache_train_split),
             "load_error_count": len(self.load_errors),
             "skipped_files": list(self.skipped_files),
         }

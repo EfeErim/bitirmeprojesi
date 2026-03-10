@@ -172,6 +172,7 @@ def prepare_training_run(
         num_workers=int(num_workers if num_workers is not None else colab_cfg.get("num_workers", 2)),
         use_cache=bool(use_cache),
         cache_size=int(data_cfg.get("cache_size", 1000)),
+        cache_train_split=bool(data_cfg.get("cache_train_split", False)),
         target_size=int(data_cfg.get("target_size", 224)),
         error_policy=str(error_policy or data_cfg.get("loader_error_policy", "tolerant")),
         sampler=str(sampler or data_cfg.get("sampler", "shuffle")),

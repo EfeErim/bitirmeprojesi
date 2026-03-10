@@ -156,6 +156,36 @@ def test_crop_dataset_supports_optional_ood_split(tmp_path: Path):
     assert dataset.labels == [-1, -1]
 
 
+def test_crop_dataset_can_cache_train_split_when_enabled(tmp_path: Path, monkeypatch):
+    _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")
+
+    dataset = datasets.CropDataset(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        split="train",
+        transform=False,
+        use_cache=True,
+        cache_size=4,
+        cache_train_split=True,
+    )
+    decode_calls = {"count": 0}
+    original_decode = datasets.CropDataset._decode_image
+
+    def _counting_decode(path):
+        decode_calls["count"] += 1
+        return original_decode(path)
+
+    monkeypatch.setattr(datasets.CropDataset, "_decode_image", staticmethod(_counting_decode))
+
+    dataset[0]
+    dataset[0]
+
+    assert decode_calls["count"] == 1
+    stats = dataset.get_cache_stats()
+    assert stats["cache_train_split"] is True
+    assert stats["cache_size"] == 1
+
+
 def test_create_training_loaders_rejects_class_name_mismatch(tmp_path: Path):
     _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")
     _write_image(tmp_path / "tomato" / "val" / "healthy" / "val.jpg")

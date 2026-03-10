@@ -39,6 +39,7 @@ class ContinualTrainingSession:
         run_id: str = "",
         checkpoint_every_n_steps: int = 0,
         checkpoint_on_exception: bool = False,
+        validation_every_n_epochs: int = 1,
     ) -> None:
         self.trainer = trainer
         self.train_loader = train_loader
@@ -49,6 +50,7 @@ class ContinualTrainingSession:
         self.run_id = str(run_id)
         self.checkpoint_every_n_steps = int(max(0, checkpoint_every_n_steps))
         self.checkpoint_on_exception = bool(checkpoint_on_exception)
+        self.validation_every_n_epochs = int(max(1, validation_every_n_epochs))
 
         resume_payload = dict(resume_state or {})
         history_payload = resume_payload.get("history", resume_payload.get("history_snapshot", {}))
@@ -270,7 +272,16 @@ class ContinualTrainingSession:
                     "elapsed_sec": float(time.perf_counter() - train_started_at),
                 }
 
-                if self.val_loader is not None:
+                should_validate = (
+                    self.val_loader is not None
+                    and (
+                        int(epoch_idx + 1) == int(self.num_epochs)
+                        or (int(epoch_idx + 1) % self.validation_every_n_epochs) == 0
+                    )
+                )
+                epoch_payload["validation_every_n_epochs"] = int(self.validation_every_n_epochs)
+                epoch_payload["validation_skipped"] = not should_validate
+                if should_validate:
                     validation_report = evaluate_model(self.trainer, self.val_loader)
                     if validation_report is not None:
                         decorated = decorate_validation(validation_report, epoch_loss)

@@ -57,6 +57,7 @@ def create_training_loaders(
     num_workers: int = 4,
     use_cache: bool = True,
     cache_size: int = 1000,
+    cache_train_split: bool = False,
     target_size: int = 224,
     error_policy: str = "tolerant",
     sampler: str = "shuffle",
@@ -102,6 +103,7 @@ def create_training_loaders(
             target_size=target_size,
             use_cache=use_cache,
             cache_size=cache_size,
+            cache_train_split=cache_train_split,
             error_policy=error_policy,
             validate_images_on_init=validate_images_on_init,
         )
@@ -150,6 +152,7 @@ def create_training_loaders(
             target_size=target_size,
             use_cache=use_cache,
             cache_size=cache_size,
+            cache_train_split=cache_train_split,
             error_policy=error_policy,
             validate_images_on_init=validate_images_on_init,
         )

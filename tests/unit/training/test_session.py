@@ -171,6 +171,29 @@ def test_session_snapshot_includes_best_metric_state():
     assert "best_metric_state" in snapshot
 
 
+def test_session_can_skip_intermediate_validation_epochs():
+    trainer, _ = _build_minimal_trainer(num_epochs=3)
+    events = []
+    session = ContinualTrainingSession(
+        trainer,
+        _make_loader(1),
+        3,
+        val_loader=_make_loader(1),
+        observers=[events.append],
+        validation_every_n_epochs=2,
+    )
+
+    history = session.run()
+
+    validation_events = [event for event in events if event["event_type"] == "validation_end"]
+    epoch_events = [event for event in events if event["event_type"] == "epoch_end"]
+    assert len(validation_events) == 2
+    assert len(history.val_loss) == 2
+    assert epoch_events[0]["payload"]["validation_skipped"] is True
+    assert epoch_events[1]["payload"]["validation_skipped"] is False
+    assert epoch_events[2]["payload"]["validation_skipped"] is False
+
+
 def test_session_emits_exception_checkpoint_request():
     trainer, _ = _build_minimal_trainer()
     trainer.train_batch = lambda _batch: (_ for _ in ()).throw(RuntimeError("boom"))  # type: ignore[assignment]

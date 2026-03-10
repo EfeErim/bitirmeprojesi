@@ -31,6 +31,8 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["evaluation"]["ood_benchmark_auto_run"] is False
     assert continual["evaluation"]["ood_benchmark_min_classes"] == 3
     assert continual["data"]["loader_error_policy"] == "tolerant"
+    assert continual["data"]["cache_size"] == 20000
+    assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
 
 

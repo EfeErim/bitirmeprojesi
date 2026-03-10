@@ -174,6 +174,7 @@ class IndependentCropAdapter:
         run_id: str = "",
         checkpoint_every_n_steps: int = 0,
         checkpoint_on_exception: bool = False,
+        validation_every_n_epochs: int = 1,
     ) -> "ContinualTrainingSession":
         """Build a training session around the initialized trainer."""
         trainer = self._require_trainer()
@@ -191,6 +192,7 @@ class IndependentCropAdapter:
             run_id=run_id,
             checkpoint_every_n_steps=checkpoint_every_n_steps,
             checkpoint_on_exception=checkpoint_on_exception,
+            validation_every_n_epochs=validation_every_n_epochs,
         )
 
     def save_training_checkpoint(
