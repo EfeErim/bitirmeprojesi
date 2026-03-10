@@ -25,6 +25,7 @@
       "batch_size": 24,
       "device": "cuda",
       "strict_model_loading": true,
+      "deterministic": false,
       "optimization": {
         "grad_accumulation_steps": 1,
         "mixed_precision": "bf16",
@@ -35,6 +36,11 @@
           "min_lr": 1e-06,
           "step_on": "batch"
         }
+      },
+      "evaluation": {
+        "ood_fallback_strategy": "held_out_benchmark",
+        "ood_benchmark_auto_run": false,
+        "ood_benchmark_min_classes": 3
       },
       "data": {
         "validate_images_on_init": false

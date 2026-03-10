@@ -22,14 +22,14 @@ def configure_runtime_reproducibility(config: Any, *, np_module: Any = None) -> 
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-    if bool(getattr(config, "deterministic", False)):
-        try:
-            torch.use_deterministic_algorithms(True)
-        except Exception:
-            pass
-        if hasattr(torch.backends, "cudnn"):
-            torch.backends.cudnn.deterministic = True
-            torch.backends.cudnn.benchmark = False
+    deterministic = bool(getattr(config, "deterministic", False))
+    try:
+        torch.use_deterministic_algorithms(deterministic)
+    except Exception:
+        pass
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = deterministic
+        torch.backends.cudnn.benchmark = not deterministic
 
 
 def resolve_runtime_device(requested_device: Any) -> torch.device:

@@ -22,13 +22,13 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
     assert continual["seed"] == 42
-    assert continual["deterministic"] is True
+    assert continual["deterministic"] is False
     assert continual["optimization"]["grad_accumulation_steps"] == 1
     assert continual["optimization"]["scheduler"]["name"] == "cosine"
     assert continual["evaluation"]["best_metric"] == "val_loss"
     assert continual["evaluation"]["require_ood_for_gate"] is True
     assert continual["evaluation"]["ood_fallback_strategy"] == "held_out_benchmark"
-    assert continual["evaluation"]["ood_benchmark_auto_run"] is True
+    assert continual["evaluation"]["ood_benchmark_auto_run"] is False
     assert continual["evaluation"]["ood_benchmark_min_classes"] == 3
     assert continual["data"]["loader_error_policy"] == "tolerant"
     assert continual["data"]["validate_images_on_init"] is False

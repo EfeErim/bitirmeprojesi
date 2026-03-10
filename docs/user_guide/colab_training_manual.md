@@ -238,6 +238,12 @@ Legacy compatibility note:
 
 - `checkpoint_interval` is still normalized as an alias for `checkpoint_every_n_steps`
 
+Current Colab default tradeoffs:
+
+- the Colab environment disables deterministic training so CuDNN can use faster kernels
+- automatic held-out OOD fallback benchmarking is disabled by default for faster iteration
+- if you do not provide a real `ood/` split and leave that fallback disabled, `production_readiness.json` will stay failed until you re-enable the benchmark or add real OOD data
+
 ## Notebook-Only Top Cell Toggles
 
 Notebook 2 also exposes a small set of notebook-level toggles:
@@ -371,6 +377,8 @@ This folder appears when the fallback held-out OOD benchmark runs.
 
 - `summary.json`: overall benchmark verdict
 - `per_fold.csv`: one row per held-out class fold
+- `progress.json`: latest persisted fold and stage while the benchmark is running
+- `folds/<held_out_class>/failure.json` and `failure_traceback.txt`: saved Python failure details when a fold raises an exception
 
 ### `production_readiness.json`
 

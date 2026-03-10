@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import torch
@@ -54,6 +55,27 @@ class FakeAdapter:
     def calibrate_ood(self, loader):
         del loader
         return {"status": "calibrated"}
+
+
+class FakeTelemetry:
+    def __init__(self, root: Path):
+        self.root = Path(root)
+        self.latest_payloads = []
+        self.logs = []
+        self.copied_paths = []
+
+    def update_latest(self, payload):
+        self.latest_payloads.append(dict(payload))
+
+    def emit_log(self, message, *, phase="runtime", level="info"):
+        self.logs.append({"message": str(message), "phase": str(phase), "level": str(level)})
+
+    def copy_artifact_file(self, source_path, relative_path):
+        target = self.root / Path(relative_path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(Path(source_path).read_bytes())
+        self.copied_paths.append(str(relative_path).replace("\\", "/"))
+        return target
 
 
 def _fake_evaluate_model_with_artifact_metrics(_trainer, loader, *, ood_loader=None):
@@ -143,3 +165,97 @@ def test_run_leave_one_class_out_benchmark_fails_when_class_count_is_too_small(m
     assert summary["passed"] is False
     assert summary["reason"] == "insufficient_classes_for_fallback"
     assert summary["successful_folds"] == 0
+
+
+def test_run_leave_one_class_out_benchmark_writes_progress_artifact(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
+        _fake_evaluate_model_with_artifact_metrics,
+    )
+    telemetry = FakeTelemetry(tmp_path / "telemetry_copy")
+
+    summary = run_leave_one_class_out_benchmark(
+        crop_name="tomato",
+        class_names=["healthy", "disease_a", "disease_b"],
+        loaders=_build_loaders(["healthy", "disease_a", "disease_b"]),
+        config={"training": {"continual": {"backbone": {"model_name": "fake"}}}},
+        device="cpu",
+        artifact_root=tmp_path / "training_metrics",
+        adapter_factory=FakeAdapter,
+        run_id="run_progress",
+        telemetry=telemetry,
+        min_classes=3,
+    )
+
+    progress_path = tmp_path / "training_metrics" / "ood_benchmark" / "progress.json"
+    assert summary["status"] == "completed"
+    assert progress_path.exists()
+    progress_payload = json.loads(progress_path.read_text(encoding="utf-8"))
+    assert progress_payload["status"] == "completed"
+    assert progress_payload["stage"] == "benchmark_completed"
+    assert telemetry.latest_payloads[-1]["stage"] == "benchmark_completed"
+    assert "ood_benchmark/progress.json" in telemetry.copied_paths
+
+
+def test_run_leave_one_class_out_benchmark_persists_compact_success_fold_artifacts(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
+        _fake_evaluate_model_with_artifact_metrics,
+    )
+    telemetry = FakeTelemetry(tmp_path / "telemetry_copy")
+
+    summary = run_leave_one_class_out_benchmark(
+        crop_name="tomato",
+        class_names=["healthy", "disease_a", "disease_b"],
+        loaders=_build_loaders(["healthy", "disease_a", "disease_b"]),
+        config={"training": {"continual": {"backbone": {"model_name": "fake"}}}},
+        device="cpu",
+        artifact_root=tmp_path / "training_metrics",
+        adapter_factory=FakeAdapter,
+        run_id="run_compact",
+        telemetry=telemetry,
+        min_classes=3,
+    )
+
+    first_fold = summary["folds"][0]
+    metric_gate_path = Path(first_fold["paths"]["metric_gate_json"])
+    assert metric_gate_path.exists()
+    assert not (metric_gate_path.parent / "classification_report.txt").exists()
+    assert not (metric_gate_path.parent / "confusion_matrix.png").exists()
+    assert "ood_benchmark/folds/healthy/metric_gate.json" in telemetry.copied_paths
+    assert not any(path.endswith("classification_report.txt") for path in telemetry.copied_paths)
+    assert not any(path.endswith("confusion_matrix.png") for path in telemetry.copied_paths)
+
+
+def test_run_leave_one_class_out_benchmark_persists_traceback_for_fold_failures(monkeypatch, tmp_path: Path):
+    def _raise_during_evaluation(*args, **kwargs):
+        del args, kwargs
+        raise RuntimeError("eval boom")
+
+    monkeypatch.setattr(
+        "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
+        _raise_during_evaluation,
+    )
+
+    summary = run_leave_one_class_out_benchmark(
+        crop_name="tomato",
+        class_names=["healthy", "disease_a", "disease_b"],
+        loaders=_build_loaders(["healthy", "disease_a", "disease_b"]),
+        config={"training": {"continual": {"backbone": {"model_name": "fake"}}}},
+        device="cpu",
+        artifact_root=tmp_path / "training_metrics",
+        adapter_factory=FakeAdapter,
+        run_id="run_failures",
+        min_classes=3,
+    )
+
+    assert summary["status"] == "failed"
+    assert summary["failed_folds"] == 3
+    first_fold = summary["folds"][0]
+    assert first_fold["status"] == "failed"
+    assert first_fold["diagnostics"]["failed_stage"] == "fold_evaluating"
+    traceback_path = Path(first_fold["paths"]["failure_traceback_txt"])
+    failure_json_path = Path(first_fold["paths"]["failure_json"])
+    assert traceback_path.exists()
+    assert failure_json_path.exists()
+    assert "RuntimeError: eval boom" in traceback_path.read_text(encoding="utf-8")

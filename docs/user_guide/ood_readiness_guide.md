@@ -151,6 +151,12 @@ When this path is used, the readiness artifact records the OOD evidence source a
 
 - `held_out_benchmark`
 
+Diagnostic note:
+
+- while the fallback benchmark is running, the workflow persists `ood_benchmark/progress.json`
+- if a fold raises a Python exception, the workflow also writes `ood_benchmark/folds/<held_out_class>/failure.json` and `failure_traceback.txt`
+- these files are for troubleshooting interrupted or failed benchmark runs; the final deployment verdict still comes from `production_readiness.json`
+
 ## How The Final Verdict Is Chosen
 
 The final readiness artifact combines:

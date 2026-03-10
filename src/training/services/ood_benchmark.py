@@ -4,15 +4,22 @@ from __future__ import annotations
 
 from collections import Counter
 from pathlib import Path
+import time
+import traceback
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
 import torch
 from torch.utils.data import DataLoader, Dataset, RandomSampler, WeightedRandomSampler
 
-from src.training.services.metrics import load_plan_targets, validate_ood_metrics
+from src.shared.artifacts import ArtifactStore
+from src.training.services.metrics import (
+    compute_plan_metrics,
+    load_plan_targets,
+    validate_ood_metrics,
+    write_plan_metric_artifact,
+)
 from src.training.services.reporting import (
     persist_ood_benchmark_artifacts,
-    persist_validation_artifacts,
 )
 from src.training.validation import evaluate_model_with_artifact_metrics
 
@@ -37,6 +44,10 @@ def _loader_size(loader: Any) -> int:
         return int(len(loader))
     except Exception:
         return 0
+
+
+def _utc_now_iso() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
 def _dataset_labels(dataset: Any) -> List[int]:
@@ -194,6 +205,132 @@ def _persist_benchmark_summary(
     return summary_payload
 
 
+def _emit_telemetry_log(telemetry: Any, message: str, *, level: str = "info") -> None:
+    if telemetry is None or not hasattr(telemetry, "emit_log"):
+        return
+    telemetry.emit_log(message, phase="evaluation", level=level)
+
+
+def _resource_snapshot(device: str) -> Dict[str, Any]:
+    resolved_device = str(device or "")
+    if not resolved_device.startswith("cuda") or not torch.cuda.is_available():
+        return {}
+    try:
+        if ":" in resolved_device:
+            device_index = int(resolved_device.split(":", 1)[1])
+        else:
+            device_index = torch.cuda.current_device()
+        return {
+            "device": resolved_device,
+            "device_name": str(torch.cuda.get_device_name(device_index)),
+            "memory_allocated_mb": round(float(torch.cuda.memory_allocated(device_index)) / (1024.0 * 1024.0), 3),
+            "memory_reserved_mb": round(float(torch.cuda.memory_reserved(device_index)) / (1024.0 * 1024.0), 3),
+            "max_memory_allocated_mb": round(
+                float(torch.cuda.max_memory_allocated(device_index)) / (1024.0 * 1024.0),
+                3,
+            ),
+            "max_memory_reserved_mb": round(
+                float(torch.cuda.max_memory_reserved(device_index)) / (1024.0 * 1024.0),
+                3,
+            ),
+        }
+    except Exception:
+        return {}
+
+
+def _persist_benchmark_progress(
+    *,
+    artifact_root: Path,
+    telemetry: Any,
+    payload: Dict[str, Any],
+) -> Dict[str, Any]:
+    progress_payload = {
+        "schema_version": "v6_ood_benchmark_progress",
+        "ts": _utc_now_iso(),
+        **dict(payload),
+    }
+    progress_dir = Path(artifact_root) / "ood_benchmark"
+    progress_path = ArtifactStore(progress_dir).write_json("progress.json", progress_payload)
+    if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
+        telemetry.copy_artifact_file(progress_path, "ood_benchmark/progress.json")
+    if telemetry is not None and hasattr(telemetry, "update_latest"):
+        telemetry.update_latest(
+            {
+                "phase": "ood_benchmark",
+                "status": progress_payload.get("status"),
+                "stage": progress_payload.get("stage"),
+                "fold_index": progress_payload.get("fold_index"),
+                "fold_total": progress_payload.get("fold_total"),
+                "held_out_class": progress_payload.get("held_out_class"),
+                "completed_folds": progress_payload.get("completed_folds"),
+                "failed_folds": progress_payload.get("failed_folds"),
+                "last_error": progress_payload.get("last_error"),
+            }
+        )
+    return progress_payload
+
+
+def _persist_fold_failure_diagnostics(
+    *,
+    artifact_root: Path,
+    telemetry: Any,
+    held_out_class: str,
+    failure_payload: Dict[str, Any],
+    traceback_text: str,
+) -> Dict[str, str]:
+    fold_dir = Path(artifact_root) / "ood_benchmark" / "folds" / held_out_class
+    store = ArtifactStore(fold_dir)
+    failure_json = store.write_json("failure.json", failure_payload)
+    failure_txt = store.write_text("failure_traceback.txt", traceback_text)
+    if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
+        telemetry.copy_artifact_file(failure_json, f"ood_benchmark/folds/{held_out_class}/failure.json")
+        telemetry.copy_artifact_file(failure_txt, f"ood_benchmark/folds/{held_out_class}/failure_traceback.txt")
+    return {
+        "failure_json": str(failure_json),
+        "failure_traceback_txt": str(failure_txt),
+    }
+
+
+def _persist_fold_metric_gate(
+    *,
+    artifact_root: Path,
+    telemetry: Any,
+    held_out_class: str,
+    evaluation: Any,
+    seen_classes: Sequence[str],
+    target_values: Dict[str, float],
+    context: Dict[str, Any],
+) -> Dict[str, Any]:
+    fold_dir = Path(artifact_root) / "ood_benchmark" / "folds" / held_out_class
+    metrics = compute_plan_metrics(
+        y_true=evaluation.y_true,
+        y_pred=evaluation.y_pred,
+        ood_labels=evaluation.ood_labels,
+        ood_scores=evaluation.ood_scores,
+        sure_ds_f1=evaluation.sure_ds_f1,
+        conformal_empirical_coverage=evaluation.conformal_empirical_coverage,
+        conformal_avg_set_size=evaluation.conformal_avg_set_size,
+    )
+    fold_dir.mkdir(parents=True, exist_ok=True)
+    metric_gate_json = fold_dir / "metric_gate.json"
+    metric_gate = write_plan_metric_artifact(
+        output_path=metric_gate_json,
+        metrics=metrics,
+        targets=target_values,
+        require_ood=True,
+        context={
+            "num_classes": len(list(seen_classes)),
+            **dict(context),
+        },
+    )
+    if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
+        telemetry.copy_artifact_file(metric_gate_json, f"ood_benchmark/folds/{held_out_class}/metric_gate.json")
+    return {
+        "metric_gate": metric_gate,
+        "paths": {"metric_gate_json": str(metric_gate_json)},
+    }
+
+
 def _build_failed_summary(
     *,
     reason: str,
@@ -245,6 +382,7 @@ def _build_fold_payload(
     metrics: Optional[Dict[str, Any]] = None,
     evaluation: Optional[Dict[str, Any]] = None,
     paths: Optional[Dict[str, Any]] = None,
+    diagnostics: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     payload = {
         "held_out_class": held_out_class,
@@ -254,6 +392,7 @@ def _build_fold_payload(
         "metrics": dict(metrics or {}),
         "sample_counts": dict(sample_counts),
         "paths": dict(paths or {}),
+        "diagnostics": dict(diagnostics or {}),
     }
     if evaluation is not None:
         payload["evaluation"] = dict(evaluation)
@@ -349,6 +488,26 @@ def run_leave_one_class_out_benchmark(
     calibration_labels = _dataset_labels(calibration_dataset)
     eval_labels = _dataset_labels(eval_dataset)
     folds: List[Dict[str, Any]] = []
+    completed_fold_count = 0
+    failed_fold_count = 0
+    benchmark_started_at = time.time()
+
+    _persist_benchmark_progress(
+        artifact_root=artifact_root,
+        telemetry=telemetry,
+        payload={
+            **base_context,
+            "status": "running",
+            "stage": "benchmark_started",
+            "fold_index": 0,
+            "fold_total": len(resolved_classes),
+            "held_out_class": "",
+            "completed_folds": completed_fold_count,
+            "failed_folds": failed_fold_count,
+            "elapsed_sec": 0.0,
+            "resource_snapshot": _resource_snapshot(device),
+        },
+    )
 
     emit(
         "ood_benchmark_started",
@@ -385,6 +544,31 @@ def run_leave_one_class_out_benchmark(
                 "sample_counts": sample_counts,
             },
         )
+        _emit_telemetry_log(
+            telemetry,
+            (
+                f"OOD benchmark fold {fold_index}/{len(resolved_classes)} started for held_out_class="
+                f"{held_out_class}."
+            ),
+        )
+        _persist_benchmark_progress(
+            artifact_root=artifact_root,
+            telemetry=telemetry,
+            payload={
+                **base_context,
+                "status": "running",
+                "stage": "fold_started",
+                "fold_index": fold_index,
+                "fold_total": len(resolved_classes),
+                "held_out_class": held_out_class,
+                "seen_classes": list(seen_classes),
+                "sample_counts": sample_counts,
+                "completed_folds": completed_fold_count,
+                "failed_folds": failed_fold_count,
+                "elapsed_sec": round(time.time() - benchmark_started_at, 3),
+                "resource_snapshot": _resource_snapshot(device),
+            },
+        )
 
         if (
             sample_counts["train_samples"] <= 0
@@ -398,8 +582,27 @@ def run_leave_one_class_out_benchmark(
                 reason="missing_fold_samples",
                 seen_classes=seen_classes,
                 sample_counts=sample_counts,
+                diagnostics={"failed_stage": "fold_started"},
             )
             folds.append(fold_payload)
+            failed_fold_count += 1
+            _persist_benchmark_progress(
+                artifact_root=artifact_root,
+                telemetry=telemetry,
+                payload={
+                    **base_context,
+                    "status": "running",
+                    "stage": "fold_failed",
+                    "fold_index": fold_index,
+                    "fold_total": len(resolved_classes),
+                    "held_out_class": held_out_class,
+                    "completed_folds": completed_fold_count,
+                    "failed_folds": failed_fold_count,
+                    "last_error": "missing_fold_samples",
+                    "elapsed_sec": round(time.time() - benchmark_started_at, 3),
+                    "resource_snapshot": _resource_snapshot(device),
+                },
+            )
             emit(
                 "ood_benchmark_fold_completed",
                 {
@@ -441,6 +644,8 @@ def run_leave_one_class_out_benchmark(
         fold_eval_loader = _clone_loader(eval_loader, fold_eval_dataset, training_like=False)
         fold_ood_loader = _clone_loader(eval_loader, fold_ood_dataset, training_like=False)
 
+        fold_started_at = time.time()
+        current_stage = "adapter_initializing"
         try:
             adapter = adapter_factory(
                 crop_name=str(crop_name),
@@ -453,6 +658,7 @@ def run_leave_one_class_out_benchmark(
                 device=str(device),
             )
             adapter.initialize_engine(class_names=seen_classes, config=config)
+            current_stage = "fold_training"
             session = adapter.build_training_session(
                 train_loader=fold_train_loader,
                 num_epochs=num_epochs,
@@ -462,24 +668,20 @@ def run_leave_one_class_out_benchmark(
                 checkpoint_on_exception=False,
             )
             session.run()
+            current_stage = "fold_calibrating_ood"
             adapter.calibrate_ood(fold_calibration_loader)
             trainer = getattr(session, "trainer", getattr(adapter, "_trainer", None))
+            current_stage = "fold_evaluating"
             evaluation = evaluate_model_with_artifact_metrics(trainer, fold_eval_loader, ood_loader=fold_ood_loader)
             if evaluation is None:
                 raise RuntimeError("No evaluation samples were produced for the fold.")
-            artifacts = persist_validation_artifacts(
+            artifacts = _persist_fold_metric_gate(
                 artifact_root=artifact_root,
-                y_true=evaluation.y_true,
-                y_pred=evaluation.y_pred,
-                classes=seen_classes,
                 telemetry=telemetry,
-                artifact_subdir=f"ood_benchmark/folds/{held_out_class}",
-                require_ood=True,
-                ood_labels=evaluation.ood_labels,
-                ood_scores=evaluation.ood_scores,
-                sure_ds_f1=evaluation.sure_ds_f1,
-                conformal_empirical_coverage=evaluation.conformal_empirical_coverage,
-                conformal_avg_set_size=evaluation.conformal_avg_set_size,
+                held_out_class=held_out_class,
+                evaluation=evaluation,
+                seen_classes=seen_classes,
+                target_values=target_values,
                 context={
                     **base_context,
                     "held_out_class": held_out_class,
@@ -497,18 +699,78 @@ def run_leave_one_class_out_benchmark(
                 sample_counts=sample_counts,
                 metrics=dict(metric_gate.get("metrics", {})),
                 evaluation=dict(metric_gate.get("evaluation", {})),
-                paths={key: str(path) for key, path in dict(artifacts.get("paths", {})).items()},
+                paths=dict(artifacts.get("paths", {})),
+                diagnostics={
+                    "completed_stage": "fold_evaluating",
+                    "fold_duration_sec": round(time.time() - fold_started_at, 3),
+                    "resource_snapshot": _resource_snapshot(device),
+                },
             )
         except Exception as exc:
+            traceback_text = traceback.format_exc()
+            failure_reason = f"{exc.__class__.__name__}: {exc}"
+            failure_paths = _persist_fold_failure_diagnostics(
+                artifact_root=artifact_root,
+                telemetry=telemetry,
+                held_out_class=held_out_class,
+                failure_payload={
+                    "held_out_class": held_out_class,
+                    "failed_stage": current_stage,
+                    "error_type": exc.__class__.__name__,
+                    "error_message": str(exc),
+                    "run_id": run_id,
+                    "crop_name": crop_name,
+                    "sample_counts": sample_counts,
+                    "ts": _utc_now_iso(),
+                },
+                traceback_text=traceback_text,
+            )
+            _emit_telemetry_log(
+                telemetry,
+                (
+                    f"OOD benchmark fold {fold_index}/{len(resolved_classes)} failed at stage={current_stage} "
+                    f"for held_out_class={held_out_class}: {failure_reason}"
+                ),
+                level="error",
+            )
             fold_payload = _build_fold_payload(
                 held_out_class=held_out_class,
                 status="failed",
-                reason=str(exc),
+                reason=failure_reason,
                 seen_classes=seen_classes,
                 sample_counts=sample_counts,
+                paths=failure_paths,
+                diagnostics={
+                    "failed_stage": current_stage,
+                    "error_type": exc.__class__.__name__,
+                    "fold_duration_sec": round(time.time() - fold_started_at, 3),
+                    "resource_snapshot": _resource_snapshot(device),
+                },
             )
 
         folds.append(fold_payload)
+        if fold_payload.get("status") == "completed":
+            completed_fold_count += 1
+        else:
+            failed_fold_count += 1
+        _persist_benchmark_progress(
+            artifact_root=artifact_root,
+            telemetry=telemetry,
+            payload={
+                **base_context,
+                "status": "running",
+                "stage": "fold_completed" if fold_payload.get("status") == "completed" else "fold_failed",
+                "fold_index": fold_index,
+                "fold_total": len(resolved_classes),
+                "held_out_class": held_out_class,
+                "completed_folds": completed_fold_count,
+                "failed_folds": failed_fold_count,
+                "last_completed_fold": held_out_class if fold_payload.get("status") == "completed" else "",
+                "last_error": fold_payload.get("reason") if fold_payload.get("status") != "completed" else "",
+                "elapsed_sec": round(time.time() - benchmark_started_at, 3),
+                "resource_snapshot": _resource_snapshot(device),
+            },
+        )
         emit(
             "ood_benchmark_fold_completed",
             {
@@ -543,6 +805,23 @@ def run_leave_one_class_out_benchmark(
         artifact_root=artifact_root,
         summary_payload=summary_payload,
         telemetry=telemetry,
+    )
+    _persist_benchmark_progress(
+        artifact_root=artifact_root,
+        telemetry=telemetry,
+        payload={
+            **base_context,
+            "status": summary_payload["status"],
+            "stage": "benchmark_completed",
+            "fold_index": len(resolved_classes),
+            "fold_total": len(resolved_classes),
+            "held_out_class": "",
+            "completed_folds": summary_payload["successful_folds"],
+            "failed_folds": summary_payload["failed_folds"],
+            "passed": summary_payload["passed"],
+            "elapsed_sec": round(time.time() - benchmark_started_at, 3),
+            "resource_snapshot": _resource_snapshot(device),
+        },
     )
     emit(
         "ood_benchmark_completed",
