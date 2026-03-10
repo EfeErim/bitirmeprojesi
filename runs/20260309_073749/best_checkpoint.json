@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e23_s2530_20260309_091939",
+  "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260309_073749/checkpoints/ckpt_e23_s2530_20260309_091939/training_checkpoint",
+  "created_at": "2026-03-09T09:19:42.429912+00:00",
+  "global_step": 2530,
+  "epoch": 23,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.0365738005393692
+}
