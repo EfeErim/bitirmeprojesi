@@ -50,6 +50,25 @@ def test_prepare_runtime_dataset_layout_writes_split_manifest(tmp_path: Path):
     assert (crop_root / "test").exists()
 
 
+def test_prepare_runtime_dataset_layout_preserves_nested_relative_paths(tmp_path: Path):
+    source_root = tmp_path / "source"
+    runtime_root = tmp_path / "runtime"
+    nested_dir = source_root / "Healthy" / "camera_a"
+    nested_dir.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (8, 8), color=(255, 0, 0)).save(nested_dir / "image_nested.jpg")
+
+    result_root = prepare_runtime_dataset_layout(
+        source_root,
+        "tomato",
+        seed=42,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato"
+    nested_targets = list(crop_root.rglob("camera_a/image_nested.jpg"))
+    assert len(nested_targets) == 1
+
+
 def test_resolve_notebook_training_classes_uses_taxonomy_when_aliases_cover_dataset():
     resolution = resolve_notebook_training_classes(
         available_classes=[

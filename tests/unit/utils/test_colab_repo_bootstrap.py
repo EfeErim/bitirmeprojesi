@@ -133,7 +133,7 @@ def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: P
     best_checkpoint_file = destination_root / "checkpoints" / "ckpt_best" / "checkpoint.pt"
     assert best_checkpoint_file.exists()
     assert best_checkpoint_file.read_text(encoding="utf-8") == "best"
-    assert (destination_root / "checkpoints" / "best" / "checkpoint.pt").exists()
+    assert not (destination_root / "checkpoints" / "best").exists()
     assert not (destination_root / "checkpoints" / "ckpt_other").exists()
 
     mirrored_best = bootstrap._read_json_dict(destination_root / "best_checkpoint.json")

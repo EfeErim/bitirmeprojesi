@@ -270,9 +270,6 @@ def mirror_checkpoint_state_to_repo(
     destination_best_path = destination_checkpoints_dir / destination_best_name
     mirror_path_to_repo(source_best_path, destination_best_path, exclude_dir_names=())
 
-    if destination_best_name != "best":
-        mirror_path_to_repo(source_best_path, destination_checkpoints_dir / "best", exclude_dir_names=())
-
     if best_manifest:
         best_manifest["path"] = str(destination_best_path)
         (destination / "best_checkpoint.json").write_text(

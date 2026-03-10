@@ -282,7 +282,7 @@ def prepare_runtime_dataset_layout(
     seed: int = 42,
     allowed: Optional[Iterable[str]] = None,
     runtime_root: Optional[Path] = None,
-    materialization_strategy: str = "copy",
+    materialization_strategy: str = "auto",
 ) -> Path:
     """Split class-root data into `continual/val/test` under the runtime dataset root."""
     runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "runtime_notebook_datasets")
@@ -312,10 +312,18 @@ def prepare_runtime_dataset_layout(
     rng = random.Random(int(seed))
     for class_entry in source_manifest.get("classes", []):
         class_name = str(class_entry.get("class_name", ""))
+        source_class_name = str(class_entry.get("source_class_name", ""))
         if not class_name:
             continue
         relative_image_paths = [Path(item) for item in class_entry.get("_relative_image_paths", [])]
-        images = [Path(class_root) / rel_path for rel_path in relative_image_paths]
+        images: List[tuple[Path, Path]] = []
+        for rel_path in relative_image_paths:
+            source_path = Path(class_root) / rel_path
+            try:
+                destination_relative_path = rel_path.relative_to(source_class_name)
+            except Exception:
+                destination_relative_path = Path(rel_path.name)
+            images.append((source_path, destination_relative_path))
         rng.shuffle(images)
 
         continual_count, val_count, _ = estimate_split_counts(len(images))
@@ -327,8 +335,10 @@ def prepare_runtime_dataset_layout(
         for split_name, files in splits.items():
             dst_dir = crop_root / split_name / class_name
             dst_dir.mkdir(parents=True, exist_ok=True)
-            for source_path in files:
-                _materialize_image(source_path, dst_dir / source_path.name, materialization_strategy)
+            for source_path, destination_relative_path in files:
+                destination_path = dst_dir / destination_relative_path
+                destination_path.parent.mkdir(parents=True, exist_ok=True)
+                _materialize_image(source_path, destination_path, materialization_strategy)
 
     public_manifest = _public_manifest(source_manifest)
     write_json(split_manifest_path, public_manifest, ensure_ascii=False)

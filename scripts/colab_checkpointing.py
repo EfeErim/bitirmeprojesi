@@ -107,10 +107,6 @@ class TrainingCheckpointManager:
         self._write_json(self.latest_manifest_path, payload)
         if mark_best:
             self._write_json(self.best_manifest_path, payload)
-            best_dir = self.checkpoints_dir / "best"
-            if best_dir.exists():
-                shutil.rmtree(best_dir, ignore_errors=True)
-            shutil.copytree(checkpoint_dir, best_dir)
         self._prune_old()
         return payload
 

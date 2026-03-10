@@ -143,7 +143,7 @@ Current behavior:
 
 - the notebook uses an 80/10/10-style split policy with small-class safeguards
 - the runtime split names are `continual`, `val`, and `test`
-- on Colab and other non-Windows systems, runtime dataset materialization can use links instead of full copies when the caller selects the automatic strategy
+- Notebook 2 now uses the automatic materialization strategy, which prefers links over full copies on Colab and other non-Windows systems
 - on Windows, materialization defaults to copying files instead of symlinks
 
 ## Training Settings, Explained By Purpose
@@ -320,6 +320,7 @@ Use this when you want one self-contained record of a notebook run inside the re
 Important detail:
 
 - `checkpoint_state/` keeps checkpoint metadata plus only the mirrored best checkpoint
+- the mirrored best checkpoint is stored once; the manifests point to that directory instead of maintaining a second `best/` copy
 - the actual rolling checkpoint tree stays under the Drive checkpoint root
 
 Optional current behavior:
@@ -356,6 +357,7 @@ Important current-state note:
 
 - Notebook 2 currently exports adapter assets to `artifacts/adapter_export/continual_sd_lora_adapter/`
 - some older helpers and fixtures also support `artifacts/adapter/`
+- Drive telemetry manifests point to the best rolling checkpoint; they do not maintain a second duplicated best-checkpoint tree
 
 ## How To Read The Main Training Artifacts
 
