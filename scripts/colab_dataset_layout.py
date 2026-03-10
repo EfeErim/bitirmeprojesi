@@ -14,6 +14,12 @@ from src.shared.json_utils import read_json, write_json
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 MATERIALIZATION_STRATEGIES = {"auto", "copy", "symlink", "hardlink"}
+_CLASS_ALIAS_GROUPS = (
+    {"healthy", "healthy_leaf"},
+    {"gray_mold", "botrytis_gray_mold"},
+    {"yellow_leaf_curl", "yellow_leaf_curl_virus"},
+    {"spotted_wilt_virus", "tomato_spotted_wilt_virus"},
+)
 
 
 def normalize_class_name(name: str) -> str:
@@ -23,6 +29,115 @@ def normalize_class_name(name: str) -> str:
     while "__" in normalized:
         normalized = normalized.replace("__", "_")
     return normalized.strip("_")
+
+
+def _build_alias_lookup() -> Dict[str, set[str]]:
+    lookup: Dict[str, set[str]] = {}
+    for group in _CLASS_ALIAS_GROUPS:
+        resolved_group = {normalize_class_name(item) for item in group if normalize_class_name(item)}
+        for alias in resolved_group:
+            lookup[alias] = set(resolved_group)
+    return lookup
+
+
+_CLASS_ALIAS_LOOKUP = _build_alias_lookup()
+
+
+def _class_name_aliases(name: str, *, crop_name: str) -> set[str]:
+    normalized = normalize_class_name(name)
+    crop_key = normalize_class_name(crop_name)
+    aliases = {normalized}
+
+    if crop_key:
+        crop_prefix = f"{crop_key}_"
+        if normalized.startswith(crop_prefix):
+            stripped = normalized[len(crop_prefix):]
+            if stripped:
+                aliases.add(stripped)
+        aliases.add(crop_prefix + normalized if not normalized.startswith(crop_prefix) else normalized)
+
+    if normalized.endswith("_leaf"):
+        aliases.add(normalized[: -len("_leaf")])
+    if normalized in {"healthy_leaf", f"{crop_key}_healthy_leaf", f"{crop_key}_healthy"}:
+        aliases.add("healthy")
+
+    expanded = set(aliases)
+    for alias in list(aliases):
+        expanded.update(_CLASS_ALIAS_LOOKUP.get(alias, set()))
+    return {item for item in expanded if item}
+
+
+def resolve_notebook_training_classes(
+    *,
+    available_classes: Iterable[str],
+    crop_name: str,
+    taxonomy: Optional[Dict[str, Any]] = None,
+    taxonomy_path: Optional[Path] = None,
+) -> Dict[str, Any]:
+    resolved_available = sorted(
+        {
+            normalize_class_name(name)
+            for name in list(available_classes)
+            if normalize_class_name(name)
+        }
+    )
+    crop_key = normalize_class_name(crop_name)
+    resolution: Dict[str, Any] = {
+        "selected_classes": list(resolved_available),
+        "used_taxonomy_filter": False,
+        "reason": "no_available_classes" if not resolved_available else "taxonomy_unavailable",
+        "expected_classes": [],
+        "matched_classes": [],
+        "unmatched_classes": [],
+    }
+    if not resolved_available:
+        return resolution
+
+    taxonomy_payload: Dict[str, Any] = {}
+    if isinstance(taxonomy, dict):
+        taxonomy_payload = dict(taxonomy)
+    elif taxonomy_path is not None and Path(taxonomy_path).exists():
+        loaded = read_json(Path(taxonomy_path), default={}, expect_type=dict)
+        if isinstance(loaded, dict):
+            taxonomy_payload = dict(loaded)
+
+    expected = sorted(
+        {
+            normalize_class_name(item)
+            for item in (
+                taxonomy_payload.get("crop_specific_diseases", {}).get(crop_key, [])
+                if isinstance(taxonomy_payload.get("crop_specific_diseases", {}), dict)
+                else []
+            )
+            if normalize_class_name(item)
+        }
+        | {"healthy"}
+    )
+    resolution["expected_classes"] = list(expected)
+    if not expected:
+        resolution["reason"] = "crop_not_in_taxonomy"
+        return resolution
+
+    expected_set = set(expected)
+    matched: List[str] = []
+    unmatched: List[str] = []
+    for class_name in resolved_available:
+        aliases = _class_name_aliases(class_name, crop_name=crop_key)
+        if aliases & expected_set:
+            matched.append(class_name)
+        else:
+            unmatched.append(class_name)
+
+    resolution["matched_classes"] = list(matched)
+    resolution["unmatched_classes"] = list(unmatched)
+    if matched and not unmatched:
+        resolution["selected_classes"] = list(matched)
+        resolution["used_taxonomy_filter"] = True
+        resolution["reason"] = "full_taxonomy_alignment"
+        return resolution
+
+    resolution["reason"] = "partial_taxonomy_alignment_fallback"
+    return resolution
 
 
 def estimate_split_counts(total: int) -> tuple[int, int, int]:

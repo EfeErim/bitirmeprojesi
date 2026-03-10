@@ -2,7 +2,11 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.colab_dataset_layout import build_runtime_split_manifest, prepare_runtime_dataset_layout
+from scripts.colab_dataset_layout import (
+    build_runtime_split_manifest,
+    prepare_runtime_dataset_layout,
+    resolve_notebook_training_classes,
+)
 
 
 def _write_images(root: Path, class_name: str, count: int) -> None:
@@ -44,3 +48,58 @@ def test_prepare_runtime_dataset_layout_writes_split_manifest(tmp_path: Path):
     assert (crop_root / "continual").exists()
     assert (crop_root / "val").exists()
     assert (crop_root / "test").exists()
+
+
+def test_resolve_notebook_training_classes_uses_taxonomy_when_aliases_cover_dataset():
+    resolution = resolve_notebook_training_classes(
+        available_classes=[
+            "Tomato Early Blight",
+            "Tomato Healthy Leaf",
+            "Tomato Late Blight",
+        ],
+        crop_name="tomato",
+        taxonomy={
+            "crop_specific_diseases": {
+                "tomato": [
+                    "early blight",
+                    "late blight",
+                ]
+            }
+        },
+    )
+
+    assert resolution["used_taxonomy_filter"] is True
+    assert resolution["reason"] == "full_taxonomy_alignment"
+    assert resolution["unmatched_classes"] == []
+    assert set(resolution["selected_classes"]) == {
+        "tomato_early_blight",
+        "tomato_healthy_leaf",
+        "tomato_late_blight",
+    }
+
+
+def test_resolve_notebook_training_classes_falls_back_to_all_available_when_taxonomy_is_incomplete():
+    resolution = resolve_notebook_training_classes(
+        available_classes=[
+            "Tomato Early Blight",
+            "Tomato Healthy Leaf",
+            "Tomato Spider Mites",
+        ],
+        crop_name="tomato",
+        taxonomy={
+            "crop_specific_diseases": {
+                "tomato": [
+                    "early blight",
+                ]
+            }
+        },
+    )
+
+    assert resolution["used_taxonomy_filter"] is False
+    assert resolution["reason"] == "partial_taxonomy_alignment_fallback"
+    assert "tomato_spider_mites" in resolution["unmatched_classes"]
+    assert set(resolution["selected_classes"]) == {
+        "tomato_early_blight",
+        "tomato_healthy_leaf",
+        "tomato_spider_mites",
+    }
