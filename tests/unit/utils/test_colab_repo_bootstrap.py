@@ -1,5 +1,7 @@
+import json
 import os
 import sys
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 from scripts import colab_repo_bootstrap as bootstrap
@@ -66,3 +68,53 @@ def test_login_and_check_hf_token_validates_identity(monkeypatch):
     assert calls["login"] == ("hf-secret", False)
     assert calls["api_token"] == "hf-secret"
     assert lines == ["[HF] Authenticated as tester"]
+
+
+def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: Path):
+    source_root = tmp_path / "source"
+    destination_root = tmp_path / "repo" / "runs" / "run_1" / "checkpoint_state"
+
+    best_source = source_root / "checkpoints" / "ckpt_best"
+    other_source = source_root / "checkpoints" / "ckpt_other"
+    best_source.mkdir(parents=True, exist_ok=True)
+    other_source.mkdir(parents=True, exist_ok=True)
+    (best_source / "checkpoint.pt").write_text("best", encoding="utf-8")
+    (best_source / "adapter_meta.json").write_text("{}", encoding="utf-8")
+    (other_source / "checkpoint.pt").write_text("other", encoding="utf-8")
+
+    (source_root / "best_checkpoint.json").parent.mkdir(parents=True, exist_ok=True)
+    (source_root / "best_checkpoint.json").write_text(
+        json.dumps({"name": "ckpt_best", "path": str(best_source)}) + "\n",
+        encoding="utf-8",
+    )
+    (source_root / "latest_checkpoint.json").write_text(
+        json.dumps({"name": "ckpt_other", "path": str(other_source)}) + "\n",
+        encoding="utf-8",
+    )
+    (source_root / "checkpoint_index.json").write_text(
+        json.dumps(
+            [
+                {"name": "ckpt_best", "path": str(best_source)},
+                {"name": "ckpt_other", "path": str(other_source)},
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    mirrored_root = bootstrap.mirror_checkpoint_state_to_repo(source_root, destination_root)
+
+    assert mirrored_root == destination_root
+    best_checkpoint_file = destination_root / "checkpoints" / "ckpt_best" / "checkpoint.pt"
+    assert best_checkpoint_file.exists()
+    assert best_checkpoint_file.read_text(encoding="utf-8") == "best"
+    assert (destination_root / "checkpoints" / "best" / "checkpoint.pt").exists()
+    assert not (destination_root / "checkpoints" / "ckpt_other").exists()
+
+    mirrored_best = bootstrap._read_json_dict(destination_root / "best_checkpoint.json")
+    mirrored_latest = bootstrap._read_json_dict(destination_root / "latest_checkpoint.json")
+    mirrored_index = (destination_root / "checkpoint_index.json").read_text(encoding="utf-8")
+
+    assert mirrored_best["path"] == str(destination_root / "checkpoints" / "ckpt_best")
+    assert mirrored_latest["path"] == str(destination_root / "checkpoints" / "ckpt_best")
+    assert "ckpt_other" not in mirrored_index

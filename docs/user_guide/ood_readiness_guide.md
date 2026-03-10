@@ -1,40 +1,80 @@
 # OOD Readiness Guide
 
-This guide describes the current OOD and readiness flow implemented by the training workflow and used by Notebook 2.
+This guide explains how AADS v6 decides whether a trained adapter is ready for deployment.
 
-## Current Workflow
+It is written for readers who may not already know what OOD means.
 
-The supported path is:
+If you are new to the repo, read [../../README.md](../../README.md) first.
 
-1. train the adapter on the known classes
-2. calibrate OOD on known-class data
-3. save the adapter with its OOD state
-4. look for real OOD evidence under `data/<crop>/ood/` or the runtime equivalent
-5. if real OOD data exists, score against it
-6. if real OOD data does not exist, run the held-out fallback benchmark
-7. write the final verdict to `production_readiness.json`
+## The Short Version
 
-The final deployment decision does not come from `validation/metric_gate.json` or `test/metric_gate.json` alone. The authoritative artifact is `production_readiness.json`.
+The workflow does not ask only:
 
-## What OOD Means Here
+- "Is the model accurate on known classes?"
 
-For one crop adapter, known classes are the diseases that adapter was trained to predict.
+It also asks:
 
-Example for tomato:
+- "Can the model recognize inputs that do not belong to the classes it was trained to support?"
 
-- known: `healthy`, `early_blight`, `late_blight`
-- OOD: anything outside that label set
+The final answer is written to:
 
-That includes:
+```text
+production_readiness.json
+```
 
-- unseen diseases for the same crop
-- other plant leaves
-- bad crops, blur, damage, or background clutter
-- non-plant images
+That file is the authoritative deployment verdict.
+
+## What OOD Means In This Repo
+
+`OOD` stands for `out of distribution`.
+
+For one crop adapter, the known classes are the disease labels that adapter was trained on. OOD means the input does not belong to that supported label set.
+
+Example for a tomato adapter trained on:
+
+- `healthy`
+- `early_blight`
+- `late_blight`
+
+Possible OOD inputs include:
+
+- a tomato disease not in that label set
+- a potato or wheat image
+- a non-leaf plant image that does not match training coverage
+- a blurred or heavily damaged image
+- a background or random object image
+- a non-plant image
 
 The practical goal is to reduce confident wrong predictions on unsupported inputs.
 
-## Dataset Layout
+## The Current Readiness Workflow
+
+The supported path is:
+
+1. train the adapter on known classes
+2. calibrate OOD on known-class data
+3. save the adapter together with its OOD state
+4. look for real OOD evidence under the runtime dataset
+5. if real OOD data exists, evaluate against it
+6. if real OOD data does not exist, run the held-out fallback benchmark when enabled
+7. combine classification evidence and OOD evidence into a final verdict
+8. write `production_readiness.json`
+
+## Known Classes Vs Unknown Inputs
+
+Think of readiness as a two-part check.
+
+### Part 1: classification quality
+
+Can the model correctly separate the classes it is supposed to support?
+
+### Part 2: unknown-input handling
+
+Can the model avoid acting overconfident on images outside that supported set?
+
+Both matter for deployment.
+
+## Dataset Layout For OOD Evidence
 
 The runtime training layout is:
 
@@ -55,7 +95,7 @@ data/<crop>/
   ood/*
 ```
 
-`ood/` may also contain nested folders:
+The `ood/` folder may also contain nested folders:
 
 ```text
 data/tomato/ood/
@@ -67,38 +107,67 @@ data/tomato/ood/
 Current behavior:
 
 - images under `ood/` are loaded recursively
-- subfolder names inside `ood/` are not treated as class labels
+- nested folder names inside `ood/` are not treated as class labels
 - one shared `ood/` pool can be reused across runs for the same crop
 
-## When Real OOD Data Is Missing
+## What Happens When Real OOD Data Exists
 
-The current fallback is a leave-one-class-out benchmark.
+This is the strongest current evidence path.
 
-Example with classes `a`, `b`, `c`:
+The workflow:
 
-1. train on `a` and `b`, treat `c` as temporary OOD
-2. train on `a` and `c`, treat `b` as temporary OOD
-3. train on `b` and `c`, treat `a` as temporary OOD
+1. trains the final model on the known classes
+2. calibrates OOD
+3. evaluates the model on a known-class split plus the real `ood/` pool
+4. uses those results in the final readiness decision
 
-These fold models are benchmarking artifacts only. The deployable adapter is still the normal final model trained on all classes.
+When this path is available, the readiness artifact records the OOD evidence source as:
+
+- `real_ood_split`
+
+## What Happens When Real OOD Data Is Missing
+
+The fallback is a leave-one-class-out benchmark.
+
+Example with known classes `a`, `b`, and `c`:
+
+1. train on `a` and `b`, then treat `c` as temporary unknown data
+2. train on `a` and `c`, then treat `b` as temporary unknown data
+3. train on `b` and `c`, then treat `a` as temporary unknown data
+
+Why this exists:
+
+- it gives the workflow some evidence about how the system behaves on unseen classes
+- it is better than having no OOD evidence at all
+
+What it does not mean:
+
+- these fold models are not the deployment model
+- the final deployable adapter is still the main model trained on all classes
 
 If fewer than 3 classes are available, the fallback is considered too weak and readiness fails.
 
+When this path is used, the readiness artifact records the OOD evidence source as:
+
+- `held_out_benchmark`
+
 ## How The Final Verdict Is Chosen
 
-The readiness artifact combines:
+The final readiness artifact combines:
 
 - classification evidence from the authoritative in-distribution split
-- OOD evidence from either a real `ood/` split or the held-out benchmark
+- OOD evidence from either the real `ood/` split or the fallback benchmark
 
-Current authoritative split selection:
+### Which classification split is authoritative
 
-- prefer `test` when a `test/metric_gate.json` artifact exists
-- otherwise fall back to `val` only when `val` was not also used for OOD calibration
+Current selection order:
+
+1. prefer `test` when `test/metric_gate.json` exists
+2. otherwise fall back to `val` only when `val` was not also used for OOD calibration
 
 Important isolation rule:
 
-- if `val` was used for OOD calibration and no isolated `test/` split exists, production readiness fails instead of reusing calibration data as evaluation evidence
+- if `val` was used for OOD calibration and there is no isolated `test/` split, production readiness fails instead of reusing calibration data as final evidence
 
 That chosen split appears in:
 
@@ -106,53 +175,82 @@ That chosen split appears in:
 production_readiness.json -> classification_evidence.split_name
 ```
 
-## Artifact Layout
+## Why `production_readiness.json` Matters More Than `metric_gate.json`
 
-Workflow and CLI training write under:
+The repo writes multiple metric files, but they answer different questions.
 
-```text
-<output_dir>/training_metrics/
+### `validation/metric_gate.json` and `test/metric_gate.json`
+
+These are split-local diagnostics.
+
+They tell you whether one specific split met the configured thresholds.
+
+### `production_readiness.json`
+
+This is the final deployment artifact.
+
+It combines:
+
+- the selected classification evidence
+- the available OOD evidence
+- the configured targets
+- the final missing requirements list
+
+Use this file for go/no-go deployment decisions.
+
+## What `production_readiness.json` Contains
+
+The current payload shape is conceptually:
+
+```json
+{
+  "status": "ready or failed",
+  "passed": true,
+  "ood_evidence_source": "real_ood_split | held_out_benchmark | unavailable",
+  "classification_evidence": {
+    "split_name": "test or val",
+    "metrics": {},
+    "evaluation": {
+      "checks": {
+        "accuracy": {}
+      }
+    }
+  },
+  "ood_evidence": {
+    "source": "real_ood_split | held_out_benchmark | unavailable",
+    "metrics": {},
+    "evaluation": {}
+  },
+  "missing_requirements": [],
+  "targets": {},
+  "context": {}
+}
 ```
 
-Key files:
+### Fields to focus on first
 
-- `training/results.png`
-- `training/results.csv`
-- `training/history.json`
-- `training/history.csv`
-- `training/batch_metrics.csv`
-- `training/summary.json`
-- `validation/metric_gate.json`
-- `test/metric_gate.json`
-- `ood_benchmark/summary.json`
-- `ood_benchmark/per_fold.csv`
-- `production_readiness.json`
+- `status`: `ready` or `failed`
+- `passed`: boolean version of the same outcome
+- `missing_requirements`: which required targets were not satisfied
+- `classification_evidence.split_name`: which in-distribution split was used
+- `ood_evidence.source`: where OOD evidence came from
+- `targets`: the thresholds the run was judged against
 
-Notebook 2 writes the same artifact families locally under:
+## How To Read `metric_gate.json`
 
-```text
-outputs/colab_notebook_training/artifacts/
-```
+The split-local metric gate stores threshold checks in a machine-readable form.
 
-and mirrors them into:
+Important ideas:
 
-```text
-runs/<RUN_ID>/outputs/colab_notebook_training/artifacts/
-runs/<RUN_ID>/telemetry/artifacts/
-```
+- `value`: the measured metric
+- `target`: the required threshold
+- `operator`: whether the metric must be above or below the threshold
+- `asserted`: whether the metric was available at all
+- `passed`: whether that metric met its threshold
 
-## How To Read The Artifacts
+The gate also contains a `gating` section that explains whether missing metrics were treated as a hard failure or a softer status.
 
-- `validation/metric_gate.json` and `test/metric_gate.json`
-  Split-local classification plus OOD metric checks for that split.
-
-- `ood_benchmark/summary.json`
-  Aggregate fallback evidence when no real `ood/` split exists.
-
-- `production_readiness.json`
-  Final deployment verdict. This is the artifact to use for go/no-go decisions.
-
-## Readiness Targets
+## Current Default Targets
 
 The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/services/metrics.py`:
 
@@ -162,16 +260,17 @@ The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/se
 - `sure_ds_f1 >= 0.90`
 - `conformal_empirical_coverage >= 0.95`
 
-Current implementation detail:
+These targets are the default bar used unless a different target spec is loaded.
 
-- production readiness follows `require_ood_for_gate`
-- split-local metric gates are still computed for internal readiness logic
-- `emit_ood_gate` controls whether `validation/metric_gate.json` and `test/metric_gate.json` are written to disk
-- the final readiness artifact fails if required OOD evidence is unavailable or below target
+## Configuration That Controls Readiness
 
-## Configuration
+The current readiness policy lives under:
 
-The current readiness policy is controlled by `training.continual.evaluation`:
+```text
+training.continual.evaluation
+```
+
+Important keys:
 
 - `best_metric`
 - `emit_ood_gate`
@@ -180,17 +279,68 @@ The current readiness policy is controlled by `training.continual.evaluation`:
 - `ood_benchmark_auto_run`
 - `ood_benchmark_min_classes`
 
-Current defaults in shipped config:
+Current shipped defaults include:
 
 - `require_ood_for_gate: true`
 - `ood_fallback_strategy: "held_out_benchmark"`
 - `ood_benchmark_auto_run: true`
 - `ood_benchmark_min_classes: 3`
 
-Current benchmark planning detail:
+Practical meaning:
 
-- when fallback benchmarking runs, the workflow reports the estimated fold count before the benchmark starts
-- for `N` known classes, the held-out fallback retrains `N` fold models, so exploratory runs can become expensive quickly
+- if OOD evidence is required and missing, the final readiness artifact fails
+- if the fallback benchmark is enabled and possible, the workflow will try to generate OOD evidence automatically
+
+## Typical Readiness Outcomes
+
+### Outcome 1: ready
+
+This usually means:
+
+- the chosen classification split met the accuracy target
+- the required OOD metrics were present
+- the OOD metrics met their targets
+
+### Outcome 2: failed because classification quality is not enough
+
+Common reasons:
+
+- accuracy missed the target
+- the isolated final evaluation split performed poorly
+
+### Outcome 3: failed because OOD evidence is missing
+
+Common reasons:
+
+- no real `ood/` split exists
+- fallback benchmarking was disabled
+- fewer than 3 classes were available for the fallback benchmark
+
+### Outcome 4: failed because OOD behavior is below target
+
+Common reasons:
+
+- AUROC too low
+- false positive rate too high
+- SURE or conformal coverage below threshold
+
+## Common Questions
+
+### Why can validation look good while readiness still fails?
+
+Because readiness requires more than good known-class accuracy. It also requires acceptable OOD evidence.
+
+### Why can a run fail when there is no `test/` split?
+
+If `val` was already used for OOD calibration, the workflow refuses to reuse it as final deployment evidence.
+
+### Why is the fallback benchmark expensive?
+
+For `N` known classes, the held-out fallback retrains `N` fold models. That can be costly for exploratory runs.
+
+### When should I add a real `ood/` folder?
+
+Whenever possible. Real unknown examples are the strongest current evidence source.
 
 ## BER Note
 
@@ -202,17 +352,22 @@ It does not change:
 - the inference payload shape
 - the readiness threshold definitions
 
-Evaluate BER by comparing the same artifact set on the same crop, split layout, seed, and OOD evidence source.
+Evaluate BER by comparing runs on the same:
+
+- crop
+- seed
+- class set
+- split layout
+- OOD evidence source
 
 ## Recommended Practice
 
-1. Train on the disease classes you actually support.
-2. Add a realistic shared `ood/` pool when possible.
-3. Keep an isolated `test/` split if `val` is used for calibration and you want a final readiness verdict.
-4. Let the fallback benchmark run only when that pool is missing.
+1. Train on the exact disease classes you intend to support.
+2. Keep an isolated `test/` split for final classification evidence.
+3. Add a realistic shared `ood/` pool whenever possible.
+4. Use the fallback benchmark only when real OOD data is missing.
 5. Read `production_readiness.json` before deployment.
-6. Treat split-local metric gates as diagnostics.
-7. Compare BER or other experiments on identical evidence sources.
+6. Treat split-local gates as diagnostics, not final approval.
 
 ## Related Files
 

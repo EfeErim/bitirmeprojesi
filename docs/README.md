@@ -1,67 +1,185 @@
 # Documentation Map
 
-This repo keeps a small set of maintained Markdown docs. Read them in this order.
+This folder is organized for two kinds of readers:
 
-## Primary Docs
+- someone with zero project knowledge who needs a guided path
+- someone who already knows the goal and needs the exact maintained contract
 
-- [../README.md](../README.md)
-  Repo scope, maintained surfaces, quick start, output locations, and deployment paths.
+If you are new, start with the root [README.md](../README.md) first.
 
-- [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
-  Notebook 2 and Notebook 3 operations, dataset contracts, Colab runtime controls, and adapter handoff.
+## Beginner Reading Paths
 
-- [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
-  How readiness is computed, when fallback benchmarking runs, and how to interpret `production_readiness.json`.
+### I know nothing and want the full picture
 
-- [architecture/overview.md](architecture/overview.md)
-  Current code map for config, training, inference, Colab helpers, and artifact writers.
+Read in this order:
+
+1. [../README.md](../README.md)
+2. [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
+3. [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+4. [architecture/overview.md](architecture/overview.md)
+
+### I only want to train an adapter in Colab
+
+Read:
+
+1. [../README.md](../README.md)
+2. [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
+3. [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+
+### I only want to understand deployment readiness
+
+Read:
+
+1. [../README.md](../README.md)
+2. [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+3. [architecture/overview.md](architecture/overview.md)
+
+### I need the code map
+
+Read:
+
+1. [../README.md](../README.md)
+2. [architecture/overview.md](architecture/overview.md)
+
+## Maintained Docs
+
+### [../README.md](../README.md)
+
+Use this when you need:
+
+- the project purpose in plain language
+- the maintained entrypoints
+- the dataset formats
+- the quick start commands
+- the output and deployment paths
+
+### [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
+
+Use this when you need:
+
+- Notebook 2 and Notebook 3 explained step by step
+- the flat dataset input contract
+- the runtime split layout created by Notebook 2
+- notebook outputs, telemetry, and adapter handoff
+- Hugging Face token behavior and notebook-specific caveats
+
+### [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+
+Use this when you need:
+
+- a beginner explanation of OOD
+- the current readiness policy
+- the difference between `metric_gate.json` and `production_readiness.json`
+- the fallback held-out benchmark behavior
+- the default readiness targets
+
+### [architecture/overview.md](architecture/overview.md)
+
+Use this when you need:
+
+- the end-to-end training flow
+- the end-to-end inference flow
+- the current config flow
+- the artifact writing path
+- the main file-to-responsibility map
 
 ## Supporting Notes
 
-- [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
-  Forward-looking engineering recommendation note for improving OOD quality.
+These are reference notes, not the first documents a beginner should read:
 
+- [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/experimental_leave_one_class_out_ood.md](architecture/experimental_leave_one_class_out_ood.md)
-  Historical design note for the earlier held-out OOD prototype.
+
+## Fast Answers To Common Questions
+
+### Which file tells me whether a trained adapter is deployable?
+
+Read `production_readiness.json`. The readiness guide explains its fields.
+
+### What dataset format does Notebook 2 accept?
+
+Flat class-root:
+
+```text
+<root>/<class>/<images>
+```
+
+### What dataset format does workflow or CLI training accept?
+
+Runtime split layout:
+
+```text
+<data_dir>/<crop>/
+  continual/<class>/*
+  val/<class>/*
+  test/<class>/*
+  ood/*
+```
+
+### Where should deployed adapters live by default?
+
+```text
+models/adapters/<crop>/continual_sd_lora_adapter/
+```
+
+### Which training file is canonical?
+
+`src/workflows/training.py`
+
+### Which inference file is canonical?
+
+`src/workflows/inference.py`
 
 ## Current Source Of Truth
 
-When docs and older notes disagree, prefer:
+When docs, older notes, or generated outputs disagree, prefer this order:
 
-1. `src/workflows/`, `src/core/config_manager.py`, and `src/shared/contracts.py`
-2. `scripts/` helpers and validators
-3. `tests/` coverage
-4. historical architecture notes
+1. `src/workflows/`
+2. `src/core/config_manager.py`
+3. `src/shared/contracts.py`
+4. `src/training/services/`
+5. `scripts/`
+6. `tests/`
+7. historical architecture notes
 
-## Validation Surfaces
+## Validation Commands
 
-These scripts reflect the current maintained surfaces:
+Windows PowerShell should prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv`.
 
-Windows PowerShell should prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher. CI and POSIX shells can keep `python ...`.
+Use the narrow maintained validation surface first:
 
-- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
-- `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>`
-- `.\scripts\python.cmd scripts/benchmark_surfaces.py`
+```powershell
+.\scripts\python.cmd scripts/validate_notebook_imports.py
+.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>
+pytest tests/unit tests/colab/test_smoke_training.py -q
+pytest tests/integration -q --runintegration
+.\scripts\python.cmd scripts/benchmark_surfaces.py
+```
 
 ## Tracked Vs Local Files
 
 Tracked:
 
-- `src/`, `tests/`, `scripts/`, `config/`
-- `docs/` and the root `README.md`
+- `src/`
+- `tests/`
+- `scripts/`
+- `config/`
+- `docs/`
+- root `README.md`
 - `colab_notebooks/*.ipynb`
-- root dependency files such as `requirements.txt` and `requirements_colab.txt`
+- root dependency files
 
-Local and generated:
+Local or generated:
 
 - `runs/<RUN_ID>/`
 - `models/adapters/<crop>/continual_sd_lora_adapter/`
 - `outputs/`
-- `.runtime_tmp/`, `.tmp*/`, caches, and virtualenvs
+- `.runtime_tmp/`
+- caches and virtual environments
 
-## Similar-Looking Paths
+## Similar-Looking Paths That Often Cause Confusion
 
-- `requirements_colab.txt` is the canonical Colab dependency list.
-- `colab_notebooks/requirements_colab.txt` is a wrapper file so notebook-local bootstrap can resolve the root requirements file correctly.
+- `requirements_colab.txt` at the repo root is the canonical Colab dependency list.
+- `colab_notebooks/requirements_colab.txt` is only a wrapper so notebook-local bootstrap can find the root file.
 - Notebook 2 currently exports Drive adapter assets under `artifacts/adapter_export/continual_sd_lora_adapter/`.
-- Some helper surfaces also accept the older `artifacts/adapter/` layout.
+- Some older helpers also accept `artifacts/adapter/`.

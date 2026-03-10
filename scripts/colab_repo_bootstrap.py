@@ -149,6 +149,14 @@ def export_current_colab_notebook(destination_path: str | Path) -> Optional[Path
     return destination
 
 
+def _read_json_dict(path: Path) -> dict:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return dict(payload) if isinstance(payload, dict) else {}
+
+
 def mirror_path_to_repo(
     source_path: str | Path,
     destination_path: str | Path,
@@ -182,6 +190,59 @@ def mirror_path_to_repo(
 
     shutil.copytree(source, destination, ignore=_ignore)
     return destination
+
+
+def mirror_checkpoint_state_to_repo(
+    source_root: str | Path,
+    destination_root: str | Path,
+) -> Optional[Path]:
+    """Copy checkpoint metadata plus the mirrored best checkpoint only."""
+    source = Path(source_root).expanduser()
+    if not source.exists():
+        return None
+
+    destination = Path(destination_root).expanduser()
+    mirrored_root = mirror_path_to_repo(source, destination, exclude_dir_names=("checkpoints",))
+    if mirrored_root is None:
+        return None
+
+    best_manifest = _read_json_dict(source / "best_checkpoint.json")
+    best_name = str(best_manifest.get("name") or "").strip()
+    source_best_path = source / "checkpoints" / "best"
+
+    manifest_path = str(best_manifest.get("path") or "").strip()
+    if manifest_path:
+        candidate = Path(manifest_path).expanduser()
+        if candidate.exists():
+            source_best_path = candidate
+
+    if not source_best_path.exists():
+        return mirrored_root
+
+    destination_checkpoints_dir = destination / "checkpoints"
+    destination_best_name = best_name or source_best_path.name or "best"
+    destination_best_path = destination_checkpoints_dir / destination_best_name
+    mirror_path_to_repo(source_best_path, destination_best_path, exclude_dir_names=())
+
+    if destination_best_name != "best":
+        mirror_path_to_repo(source_best_path, destination_checkpoints_dir / "best", exclude_dir_names=())
+
+    if best_manifest:
+        best_manifest["path"] = str(destination_best_path)
+        (destination / "best_checkpoint.json").write_text(
+            json.dumps(best_manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        (destination / "latest_checkpoint.json").write_text(
+            json.dumps(best_manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        (destination / "checkpoint_index.json").write_text(
+            json.dumps([best_manifest], ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+    return mirrored_root
 
 
 def resolve_hf_token() -> Optional[str]:
