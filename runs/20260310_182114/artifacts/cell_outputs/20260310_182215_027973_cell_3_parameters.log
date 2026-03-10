@@ -1,0 +1,8 @@
+[CELL_CAPTURE] cell=Cell 3: Parameters
+run_id=20260310_182114
+started_at=2026-03-10T18:22:15.028010+00:00
+finished_at=2026-03-10T18:22:15.059299+00:00
+duration_sec=0.031
+
+[CONFIG] crop=tomato epochs=20 bs=96 lr=0.0003 resume=fresh ber=False auto_disconnect=True
+[RUNTIME] profile=a100_high_ram_max mp=bf16 workers=12 prefetch=6 sched=cosine wd=0.01 accum=1 grad_clip=1.0

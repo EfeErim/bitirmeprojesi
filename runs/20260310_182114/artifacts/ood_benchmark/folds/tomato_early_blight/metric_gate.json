@@ -1,0 +1,99 @@
+{
+  "schema_version": "v6_plan_metric_gate",
+  "metrics": {
+    "accuracy": 0.9925031065940857,
+    "ood_auroc": 0.8859943180856216,
+    "ood_false_positive_rate": 0.4956268221574344,
+    "classification_samples": 2401,
+    "ood_samples": 246,
+    "in_distribution_samples": 2401,
+    "sure_ds_f1": 0.56039344854036,
+    "conformal_empirical_coverage": 0.9458558933777592,
+    "conformal_avg_set_size": 0.9970845481049563
+  },
+  "evaluation": {
+    "passed": false,
+    "require_ood": true,
+    "targets": {
+      "accuracy": 0.93,
+      "ood_auroc": 0.92,
+      "ood_false_positive_rate": 0.05,
+      "sure_ds_f1": 0.9,
+      "conformal_empirical_coverage": 0.95
+    },
+    "checks": {
+      "accuracy": {
+        "value": 0.9925031065940857,
+        "target": 0.93,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_auroc": {
+        "value": 0.8859943180856216,
+        "target": 0.92,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      },
+      "ood_false_positive_rate": {
+        "value": 0.4956268221574344,
+        "target": 0.05,
+        "operator": "<=",
+        "asserted": true,
+        "passed": false
+      },
+      "sure_ds_f1": {
+        "value": 0.56039344854036,
+        "target": 0.9,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      },
+      "conformal_empirical_coverage": {
+        "value": 0.9458558933777592,
+        "target": 0.95,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      }
+    },
+    "gating": {
+      "status": "ready",
+      "reason": "all_required_metrics_present",
+      "missing_metrics": []
+    }
+  },
+  "context": {
+    "crop_name": "tomato",
+    "run_id": "20260310_182114",
+    "eval_split_name": "test",
+    "calibration_split_name": "val",
+    "class_count": 13,
+    "estimated_fold_trainings": 13,
+    "held_out_class": "tomato_early_blight",
+    "seen_classes": [
+      "tomato_bacterial_spot",
+      "tomato_gray_mold",
+      "tomato_healthy_leaf",
+      "tomato_late_blight",
+      "tomato_leaf_mold",
+      "tomato_mosaic_virus",
+      "tomato_powdery_mildew",
+      "tomato_septoria_leaf_spot",
+      "tomato_spider_mites",
+      "tomato_spotted_wilt_virus",
+      "tomato_target_spot",
+      "tomato_yellow_leaf_curl"
+    ],
+    "train_samples": 19109,
+    "calibration_samples": 2384,
+    "eval_in_distribution_samples": 2401,
+    "eval_ood_samples": 246,
+    "conformal_eval_samples": 2401,
+    "ood_eval_in_distribution_samples": 2401,
+    "ood_eval_ood_samples": 246,
+    "sure_semantic_f1": 0.5283757338551859,
+    "sure_confidence_f1": 0.5965417867435159
+  }
+}

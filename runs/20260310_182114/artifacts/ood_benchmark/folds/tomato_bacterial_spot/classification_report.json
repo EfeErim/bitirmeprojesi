@@ -1,0 +1,87 @@
+{
+  "tomato_early_blight": {
+    "precision": 0.9876543209876543,
+    "recall": 0.975609756097561,
+    "f1-score": 0.9815950920245399,
+    "support": 246.0
+  },
+  "tomato_gray_mold": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 9.0
+  },
+  "tomato_healthy_leaf": {
+    "precision": 0.9902597402597403,
+    "recall": 0.9967320261437909,
+    "f1-score": 0.993485342019544,
+    "support": 306.0
+  },
+  "tomato_late_blight": {
+    "precision": 0.9903536977491961,
+    "recall": 0.9871794871794872,
+    "f1-score": 0.9887640449438202,
+    "support": 312.0
+  },
+  "tomato_leaf_mold": {
+    "precision": 0.9963768115942029,
+    "recall": 0.9963768115942029,
+    "f1-score": 0.9963768115942029,
+    "support": 276.0
+  },
+  "tomato_mosaic_virus": {
+    "precision": 0.9953488372093023,
+    "recall": 0.9907407407407407,
+    "f1-score": 0.9930394431554525,
+    "support": 216.0
+  },
+  "tomato_powdery_mildew": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 101.0
+  },
+  "tomato_septoria_leaf_spot": {
+    "precision": 0.993127147766323,
+    "recall": 1.0,
+    "f1-score": 0.996551724137931,
+    "support": 289.0
+  },
+  "tomato_spider_mites": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 176.0
+  },
+  "tomato_spotted_wilt_virus": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 43.0
+  },
+  "tomato_target_spot": {
+    "precision": 1.0,
+    "recall": 0.9945652173913043,
+    "f1-score": 0.997275204359673,
+    "support": 184.0
+  },
+  "tomato_yellow_leaf_curl": {
+    "precision": 0.9903381642512077,
+    "recall": 1.0,
+    "f1-score": 0.9951456310679612,
+    "support": 205.0
+  },
+  "accuracy": 0.9936521371138384,
+  "macro avg": {
+    "precision": 0.995288226651469,
+    "recall": 0.9951003365955907,
+    "f1-score": 0.9951861077752605,
+    "support": 2363.0
+  },
+  "weighted avg": {
+    "precision": 0.9936526514572013,
+    "recall": 0.9936521371138384,
+    "f1-score": 0.9936422976246471,
+    "support": 2363.0
+  }
+}

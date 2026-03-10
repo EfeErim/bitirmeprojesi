@@ -1,0 +1,77 @@
+{
+  "schema_version": "v6_plan_metric_gate",
+  "metrics": {
+    "accuracy": 0.9913108944892883,
+    "ood_auroc": null,
+    "ood_false_positive_rate": null,
+    "classification_samples": 2647,
+    "ood_samples": 0,
+    "in_distribution_samples": 0,
+    "sure_ds_f1": null,
+    "conformal_empirical_coverage": 0.9403097846618814,
+    "conformal_avg_set_size": 1.0313562523611637
+  },
+  "evaluation": {
+    "passed": false,
+    "require_ood": false,
+    "targets": {
+      "accuracy": 0.93,
+      "ood_auroc": 0.92,
+      "ood_false_positive_rate": 0.05,
+      "sure_ds_f1": 0.9,
+      "conformal_empirical_coverage": 0.95
+    },
+    "checks": {
+      "accuracy": {
+        "value": 0.9913108944892883,
+        "target": 0.93,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_auroc": {
+        "value": null,
+        "target": 0.92,
+        "operator": ">=",
+        "asserted": false,
+        "passed": false
+      },
+      "ood_false_positive_rate": {
+        "value": null,
+        "target": 0.05,
+        "operator": "<=",
+        "asserted": false,
+        "passed": false
+      },
+      "sure_ds_f1": {
+        "value": null,
+        "target": 0.9,
+        "operator": ">=",
+        "asserted": false,
+        "passed": false
+      },
+      "conformal_empirical_coverage": {
+        "value": 0.9403097846618814,
+        "target": 0.95,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      }
+    },
+    "gating": {
+      "status": "soft",
+      "reason": "missing_optional_metrics",
+      "missing_metrics": [
+        "ood_auroc",
+        "ood_false_positive_rate",
+        "sure_ds_f1"
+      ]
+    }
+  },
+  "context": {
+    "crop": "tomato",
+    "run_id": "20260310_182114",
+    "split_name": "test",
+    "conformal_eval_samples": 2647
+  }
+}

@@ -1,0 +1,732 @@
+[
+  {
+    "relative_path": "cell_outputs/20260310_182215_027973_cell_3_parameters.log",
+    "ts": "2026-03-10T18:22:15.066791+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_182218_494654_cell_4_dataset_validation.log",
+    "ts": "2026-03-10T18:22:18.509738+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_182220_023874_cell_5_engine_init.log",
+    "ts": "2026-03-10T18:32:29.199946+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:35:08.737957+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_001.png",
+    "ts": "2026-03-10T18:35:08.750039+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:35:08.762108+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:35:08.774185+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:35:08.785641+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:37:10.356870+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_002.png",
+    "ts": "2026-03-10T18:37:10.388257+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:37:10.401255+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:37:10.413167+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:37:10.425251+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:39:10.758764+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_003.png",
+    "ts": "2026-03-10T18:39:10.771831+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:39:10.782677+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:39:10.792701+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:39:10.802423+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:41:15.658609+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_004.png",
+    "ts": "2026-03-10T18:41:15.673896+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:41:15.684946+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:41:15.695587+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:41:15.705970+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:43:19.366670+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_005.png",
+    "ts": "2026-03-10T18:43:19.382506+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:43:19.406484+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:43:19.418368+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:43:19.430338+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:45:20.948674+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_006.png",
+    "ts": "2026-03-10T18:45:20.963518+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:45:20.974911+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:45:20.985423+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:45:20.995854+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:47:13.656853+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_007.png",
+    "ts": "2026-03-10T18:47:13.680382+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:47:13.692058+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:47:13.702348+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:47:13.712826+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:49:19.158133+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_008.png",
+    "ts": "2026-03-10T18:49:19.172050+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:49:19.183928+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:49:19.194576+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:49:19.205191+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:51:21.790557+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_009.png",
+    "ts": "2026-03-10T18:51:21.804664+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:51:21.816272+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:51:21.826616+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:51:21.850486+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:53:25.091880+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_010.png",
+    "ts": "2026-03-10T18:53:25.107199+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:53:25.130651+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:53:25.142702+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:53:25.154095+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:55:29.957673+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_011.png",
+    "ts": "2026-03-10T18:55:29.984496+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:55:29.997172+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:55:30.009568+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:55:30.021379+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:57:33.498661+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_012.png",
+    "ts": "2026-03-10T18:57:33.513346+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:57:33.527517+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:57:33.539141+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:57:33.550952+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T18:59:37.454000+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_013.png",
+    "ts": "2026-03-10T18:59:37.470192+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T18:59:37.485671+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T18:59:37.508537+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T18:59:37.519467+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:01:39.308572+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_014.png",
+    "ts": "2026-03-10T19:01:39.324802+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:01:39.338805+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:01:39.351507+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:01:39.363825+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:03:44.969540+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_015.png",
+    "ts": "2026-03-10T19:03:44.984020+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:03:44.996387+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:03:45.011174+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:03:45.036846+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:05:37.859480+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_016.png",
+    "ts": "2026-03-10T19:05:37.874763+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:05:37.887667+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:05:37.899075+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:05:37.911875+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:07:30.064151+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_017.png",
+    "ts": "2026-03-10T19:07:30.078882+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:07:30.092154+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:07:30.103356+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:07:30.114362+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:09:22.414079+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_018.png",
+    "ts": "2026-03-10T19:09:22.443488+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:09:22.458602+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:09:22.470551+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:09:22.482281+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-10T19:11:17.740611+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_019.png",
+    "ts": "2026-03-10T19:11:17.756968+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:11:17.770087+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:11:17.794501+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:11:17.807120+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-10T19:11:20.976618+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-10T19:11:20.989820+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-10T19:11:21.003122+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_183313_229218_cell_6_training.log",
+    "ts": "2026-03-10T19:11:21.020168+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_191121_045120_cell_7_ood_calibration.log",
+    "ts": "2026-03-10T19:11:31.650591+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/README.md",
+    "ts": "2026-03-10T19:11:32.022693+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_config.json",
+    "ts": "2026-03-10T19:11:32.042652+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_meta.json",
+    "ts": "2026-03-10T19:11:32.066263+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_model.safetensors",
+    "ts": "2026-03-10T19:11:32.176400+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/classifier.pth",
+    "ts": "2026-03-10T19:11:32.194424+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/fusion.pth",
+    "ts": "2026-03-10T19:11:32.258228+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_191131_675932_cell_8_adapter_save.log",
+    "ts": "2026-03-10T19:11:32.281567+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "validation/classification_report.txt",
+    "ts": "2026-03-10T19:11:52.155642+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/classification_report.json",
+    "ts": "2026-03-10T19:11:52.169066+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/per_class_metrics.csv",
+    "ts": "2026-03-10T19:11:52.181619+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix.csv",
+    "ts": "2026-03-10T19:11:52.194693+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix.png",
+    "ts": "2026-03-10T19:11:52.208301+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix_normalized.png",
+    "ts": "2026-03-10T19:11:52.221482+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/metric_gate.json",
+    "ts": "2026-03-10T19:11:52.249068+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/classification_report.txt",
+    "ts": "2026-03-10T19:12:12.600421+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/classification_report.json",
+    "ts": "2026-03-10T19:12:12.618294+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/per_class_metrics.csv",
+    "ts": "2026-03-10T19:12:12.634403+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix.csv",
+    "ts": "2026-03-10T19:12:12.650270+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix.png",
+    "ts": "2026-03-10T19:12:12.682993+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix_normalized.png",
+    "ts": "2026-03-10T19:12:12.700782+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/metric_gate.json",
+    "ts": "2026-03-10T19:12:12.717605+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/classification_report.txt",
+    "ts": "2026-03-10T19:45:13.812789+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/classification_report.json",
+    "ts": "2026-03-10T19:45:13.828010+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/per_class_metrics.csv",
+    "ts": "2026-03-10T19:45:13.853588+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/confusion_matrix.csv",
+    "ts": "2026-03-10T19:45:13.866742+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/confusion_matrix.png",
+    "ts": "2026-03-10T19:45:13.880781+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/confusion_matrix_normalized.png",
+    "ts": "2026-03-10T19:45:13.895044+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_bacterial_spot/metric_gate.json",
+    "ts": "2026-03-10T19:45:13.918359+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/classification_report.txt",
+    "ts": "2026-03-10T20:19:05.954961+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/classification_report.json",
+    "ts": "2026-03-10T20:19:05.971197+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/per_class_metrics.csv",
+    "ts": "2026-03-10T20:19:05.984786+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/confusion_matrix.csv",
+    "ts": "2026-03-10T20:19:05.997911+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/confusion_matrix.png",
+    "ts": "2026-03-10T20:19:06.014863+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/confusion_matrix_normalized.png",
+    "ts": "2026-03-10T20:19:06.032409+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_early_blight/metric_gate.json",
+    "ts": "2026-03-10T20:19:06.068281+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/classification_report.txt",
+    "ts": "2026-03-10T20:54:10.768979+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/classification_report.json",
+    "ts": "2026-03-10T20:54:10.787372+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/per_class_metrics.csv",
+    "ts": "2026-03-10T20:54:10.804838+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/confusion_matrix.csv",
+    "ts": "2026-03-10T20:54:10.833622+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/confusion_matrix.png",
+    "ts": "2026-03-10T20:54:10.852196+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/confusion_matrix_normalized.png",
+    "ts": "2026-03-10T20:54:10.872012+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "ood_benchmark/folds/tomato_gray_mold/metric_gate.json",
+    "ts": "2026-03-10T20:54:10.896936+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260310_191132_332489_cell_9_final_evaluation.log",
+    "ts": "2026-03-10T21:09:55.400906+00:00",
+    "type": "text"
+  }
+]

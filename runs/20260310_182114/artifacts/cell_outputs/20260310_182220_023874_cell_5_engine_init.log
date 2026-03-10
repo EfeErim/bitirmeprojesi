@@ -1,0 +1,11 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=20260310_182114
+started_at=2026-03-10T18:22:20.023902+00:00
+finished_at=2026-03-10T18:32:29.193468+00:00
+duration_sec=609.170
+
+[CLASSES] ['tomato_bacterial_spot', 'tomato_early_blight', 'tomato_gray_mold', 'tomato_healthy_leaf', 'tomato_late_blight', 'tomato_leaf_mold', 'tomato_mosaic_virus', 'tomato_powdery_mildew', 'tomato_septoria_leaf_spot', 'tomato_spider_mites', 'tomato_spotted_wilt_virus', 'tomato_target_spot', 'tomato_yellow_leaf_curl']
+[CLASSES] mode=dataset_fallback reason=partial_taxonomy_alignment_fallback matched=12 unmatched=1
+[CLASSES] taxonomy-unmatched classes kept: ['tomato_spider_mites']
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Ready. trainable_params=10,238,225  classes=13
