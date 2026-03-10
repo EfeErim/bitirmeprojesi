@@ -36,12 +36,14 @@ class BERLoss(nn.Module):
         lambda_new: float = 0.1,
         num_old_classes: int = 0,
         ema_momentum: float = 0.9,
+        warmup_steps: int = 50,
     ) -> None:
         super().__init__()
         self.lambda_old = float(lambda_old)
         self.lambda_new = float(lambda_new)
         self.num_old_classes = int(num_old_classes)
         self.ema_momentum = float(ema_momentum)
+        self.warmup_steps = int(max(0, warmup_steps))
 
         # Running energy margins (will be initialized on first forward pass)
         self._margin_old: torch.Tensor
@@ -49,6 +51,7 @@ class BERLoss(nn.Module):
         self.register_buffer("_margin_old", torch.tensor(0.0))
         self.register_buffer("_margin_new", torch.tensor(0.0))
         self._margins_initialized = False
+        self._forward_steps = 0
 
     @staticmethod
     def _energy(logits: torch.Tensor) -> torch.Tensor:
@@ -104,21 +107,29 @@ class BERLoss(nn.Module):
         # Update EMA margins
         self._update_margins(energy_old, energy_new)
 
+        # BER is only meaningful once we have incremental classes and warmed-up margins.
+        apply_ber = bool(
+            self.num_old_classes > 0
+            and self._margins_initialized
+            and self._forward_steps >= self.warmup_steps
+        )
+
         # BER old-class term: penalize energy drifting above margin
         # (prevents old-class representations from becoming overconfident / collapsing)
         ber_old_loss = torch.tensor(0.0, device=logits.device, dtype=logits.dtype)
-        if energy_old.numel() > 0 and self.lambda_old > 0:
+        if apply_ber and energy_old.numel() > 0 and self.lambda_old > 0:
             margin_old = self._margin_old.detach()
             ber_old_loss = self.lambda_old * torch.relu(energy_old - margin_old).pow(2).mean()
 
         # BER new-class term: penalize energy being too low
         # (prevents new classes from dominating the energy landscape)
         ber_new_loss = torch.tensor(0.0, device=logits.device, dtype=logits.dtype)
-        if energy_new.numel() > 0 and self.lambda_new > 0:
+        if apply_ber and energy_new.numel() > 0 and self.lambda_new > 0:
             margin_new = self._margin_new.detach()
             ber_new_loss = self.lambda_new * torch.relu(margin_new - energy_new).pow(2).mean()
 
         total_loss = ce_loss + ber_old_loss + ber_new_loss
+        self._forward_steps += 1
 
         return total_loss, {
             "ce": float(ce_loss.detach().item()),

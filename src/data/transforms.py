@@ -19,27 +19,21 @@ def build_image_transform(target_size: int, training: bool) -> "transforms.Compo
         steps: List[Any] = [
             transforms.RandomResizedCrop(
                 size=(target_size, target_size),
-                scale=(0.65, 1.0),
-                ratio=(0.9, 1.1),
+                scale=(0.8, 1.0),
+                ratio=(0.95, 1.05),
             ),
             transforms.RandomHorizontalFlip(p=0.5),
-            transforms.RandomVerticalFlip(p=0.25),
-            transforms.RandomRotation(25),
+            transforms.RandomVerticalFlip(p=0.1),
+            transforms.RandomRotation(12),
             transforms.ColorJitter(
-                brightness=0.35,
-                contrast=0.35,
-                saturation=0.35,
-                hue=0.15,
+                brightness=0.2,
+                contrast=0.2,
+                saturation=0.2,
+                hue=0.05,
             ),
-            transforms.RandomGrayscale(p=0.1),
-            transforms.RandomApply(
-                [transforms.GaussianBlur(kernel_size=23, sigma=(0.1, 2.0))],
-                p=0.2,
-            ),
-            transforms.RandomPerspective(distortion_scale=0.15, p=0.15),
+            transforms.RandomApply([transforms.GaussianBlur(kernel_size=9, sigma=(0.1, 1.5))], p=0.1),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-            transforms.RandomErasing(p=0.15, scale=(0.02, 0.15), ratio=(0.3, 3.3)),
         ]
     else:
         steps = [

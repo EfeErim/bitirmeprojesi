@@ -11,9 +11,9 @@
     },
     "training": {
       "pin_memory": true,
-      "num_workers": 2,
-      "checkpoint_every_n_steps": 200,
-      "checkpoint_interval": 200,
+      "num_workers": 8,
+      "checkpoint_every_n_steps": 500,
+      "checkpoint_interval": 500,
       "checkpoint_on_exception": true,
       "stdout_progress_batch_interval": 50,
       "stdout_progress_min_interval_sec": 15.0
@@ -21,10 +21,21 @@
   },
   "training": {
     "continual": {
-      "num_epochs": 3,
-      "batch_size": 8,
+      "num_epochs": 12,
+      "batch_size": 24,
       "device": "cuda",
       "strict_model_loading": true,
+      "optimization": {
+        "grad_accumulation_steps": 1,
+        "mixed_precision": "bf16",
+        "max_grad_norm": 1.0,
+        "scheduler": {
+          "name": "cosine",
+          "warmup_ratio": 0.1,
+          "min_lr": 1e-06,
+          "step_on": "batch"
+        }
+      },
       "data": {
         "validate_images_on_init": false
       }

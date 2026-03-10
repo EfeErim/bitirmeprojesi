@@ -18,7 +18,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
         "adapter": {
             "target_modules_strategy": "all_linear_transformer",
             "lora_r": 16,
-            "lora_alpha": 32,
+            "lora_alpha": 16,
             "lora_dropout": 0.1,
         },
         "fusion": {
@@ -32,6 +32,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "ber_enabled": False,
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
+            "ber_warmup_steps": 50,
             "radial_l2_enabled": True,
             "radial_beta_range": [0.5, 2.0],
             "radial_beta_steps": 16,
@@ -42,14 +43,14 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "conformal_alpha": 0.05,
         },
         "optimization": {
-            "grad_accumulation_steps": 1,
-            "max_grad_norm": 0.0,
+            "grad_accumulation_steps": 4,
+            "max_grad_norm": 1.0,
             "mixed_precision": "auto",
             "label_smoothing": 0.0,
             "scheduler": {
-                "name": "none",
-                "warmup_ratio": 0.0,
-                "min_lr": 0.0,
+                "name": "cosine",
+                "warmup_ratio": 0.1,
+                "min_lr": 1e-6,
                 "step_on": "batch",
             },
         },
@@ -61,10 +62,10 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "validate_images_on_init": True,
         },
         "early_stopping": {
-            "enabled": False,
+            "enabled": True,
             "metric": "val_loss",
             "mode": "min",
-            "patience": 3,
+            "patience": 5,
             "min_delta": 0.0,
         },
         "evaluation": {
@@ -76,13 +77,13 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "ood_benchmark_min_classes": 3,
         },
         "learning_rate": 1e-4,
-        "weight_decay": 0.0,
-        "num_epochs": 1,
+        "weight_decay": 0.01,
+        "num_epochs": 10,
         "batch_size": 8,
         "device": str(device),
         "strict_model_loading": False,
         "seed": 42,
-        "deterministic": False,
+        "deterministic": True,
     }
 
 
@@ -92,7 +93,7 @@ def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, 
         "adapter": {
             "target_modules_strategy": str(flat_config.get("target_modules_strategy", "all_linear_transformer")),
             "lora_r": int(flat_config.get("lora_r", 16)),
-            "lora_alpha": int(flat_config.get("lora_alpha", 32)),
+            "lora_alpha": int(flat_config.get("lora_alpha", 16)),
             "lora_dropout": float(flat_config.get("lora_dropout", 0.1)),
         },
         "fusion": {
@@ -106,8 +107,8 @@ def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, 
         },
         "ood": {"threshold_factor": float(flat_config.get("ood_threshold_factor", 2.0))},
         "learning_rate": float(flat_config.get("learning_rate", 1e-4)),
-        "weight_decay": float(flat_config.get("weight_decay", 0.0)),
-        "num_epochs": int(flat_config.get("num_epochs", 1)),
+        "weight_decay": float(flat_config.get("weight_decay", 0.01)),
+        "num_epochs": int(flat_config.get("num_epochs", 10)),
         "batch_size": int(flat_config.get("batch_size", 8)),
         "device": str(flat_config.get("device", device)),
         "strict_model_loading": bool(flat_config.get("strict_model_loading", False)),
@@ -139,7 +140,7 @@ def normalize_continual_training_config(
 
     adapter["target_modules_strategy"] = str(adapter.get("target_modules_strategy", "all_linear_transformer"))
     adapter["lora_r"] = int(adapter.get("lora_r", 16))
-    adapter["lora_alpha"] = int(adapter.get("lora_alpha", 32))
+    adapter["lora_alpha"] = int(adapter.get("lora_alpha", 16))
     adapter["lora_dropout"] = float(adapter.get("lora_dropout", 0.1))
 
     raw_layers = fusion.get("layers", DEFAULT_FUSION_LAYERS)
@@ -149,8 +150,8 @@ def normalize_continual_training_config(
     fusion["gating"] = str(fusion.get("gating", "softmax"))
 
     normalized["learning_rate"] = float(normalized.get("learning_rate", 1e-4))
-    normalized["weight_decay"] = float(normalized.get("weight_decay", 0.0))
-    normalized["num_epochs"] = int(normalized.get("num_epochs", 1))
+    normalized["weight_decay"] = float(normalized.get("weight_decay", 0.01))
+    normalized["num_epochs"] = int(normalized.get("num_epochs", 10))
     normalized["batch_size"] = int(normalized.get("batch_size", 8))
     normalized["device"] = str(normalized.get("device", device))
     normalized["strict_model_loading"] = bool(normalized.get("strict_model_loading", False))
@@ -161,6 +162,7 @@ def normalize_continual_training_config(
     ood["ber_enabled"] = bool(ood.get("ber_enabled", False))
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))
+    ood["ber_warmup_steps"] = int(ood.get("ber_warmup_steps", 50))
     ood["radial_l2_enabled"] = bool(ood.get("radial_l2_enabled", True))
     raw_beta_range = list(ood.get("radial_beta_range", [0.5, 2.0]))
     if len(raw_beta_range) < 2:
@@ -173,14 +175,14 @@ def normalize_continual_training_config(
     ood["conformal_enabled"] = bool(ood.get("conformal_enabled", True))
     ood["conformal_alpha"] = float(ood.get("conformal_alpha", 0.05))
 
-    optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 1))
-    optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 0.0))
+    optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 4))
+    optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))
     optimization["mixed_precision"] = str(optimization.get("mixed_precision", "auto"))
     optimization["label_smoothing"] = float(optimization.get("label_smoothing", 0.0))
 
-    scheduler["name"] = str(scheduler.get("name", "none"))
-    scheduler["warmup_ratio"] = float(scheduler.get("warmup_ratio", 0.0))
-    scheduler["min_lr"] = float(scheduler.get("min_lr", 0.0))
+    scheduler["name"] = str(scheduler.get("name", "cosine"))
+    scheduler["warmup_ratio"] = float(scheduler.get("warmup_ratio", 0.1))
+    scheduler["min_lr"] = float(scheduler.get("min_lr", 1e-6))
     scheduler["step_on"] = str(scheduler.get("step_on", "batch"))
 
     data["sampler"] = str(data.get("sampler", "shuffle"))
@@ -199,10 +201,10 @@ def normalize_continual_training_config(
 
     early_metric = str(early_stopping.get("metric", evaluation_best_metric))
     inferred_mode = "min" if early_metric in {"val_loss", "generalization_gap"} else "max"
-    early_stopping["enabled"] = bool(early_stopping.get("enabled", False))
+    early_stopping["enabled"] = bool(early_stopping.get("enabled", True))
     early_stopping["metric"] = early_metric
     early_stopping["mode"] = str(early_stopping.get("mode", inferred_mode))
-    early_stopping["patience"] = int(early_stopping.get("patience", 3))
+    early_stopping["patience"] = int(early_stopping.get("patience", 5))
     early_stopping["min_delta"] = float(early_stopping.get("min_delta", 0.0))
 
     return normalized

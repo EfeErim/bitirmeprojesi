@@ -98,6 +98,7 @@ def create_training_loaders(
 
         split_sampler = None
         shuffle = split == "train"
+        drop_last = split == "train"
         if split == "train" and sampler_name == "weighted" and len(dataset) > 0:
             split_sampler = sampler_builder(dataset, int(seed))
             shuffle = False
@@ -120,6 +121,7 @@ def create_training_loaders(
             collate_fn=collate_fn,
             worker_init_fn=worker_init_fn,
             generator=loader_generator,
+            drop_last=drop_last,
             **extra_kwargs,
         )
 

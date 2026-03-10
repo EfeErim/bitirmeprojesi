@@ -14,12 +14,9 @@ def test_build_image_transform_training_policy_contains_expected_transforms():
         "RandomVerticalFlip",
         "RandomRotation",
         "ColorJitter",
-        "RandomGrayscale",
         "RandomApply",
-        "RandomPerspective",
         "ToTensor",
         "Normalize",
-        "RandomErasing",
     ]
 
 

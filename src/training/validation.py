@@ -26,10 +26,58 @@ class _ArtifactMetricState:
 
 def _build_confusion_matrix(labels: torch.Tensor, preds: torch.Tensor, num_classes: int) -> torch.Tensor:
     confusion = torch.zeros((num_classes, num_classes), dtype=torch.long)
-    for label, pred in zip(labels.tolist(), preds.tolist()):
-        if 0 <= label < num_classes and 0 <= pred < num_classes:
-            confusion[label, pred] += 1
+    if labels.numel() <= 0 or preds.numel() <= 0:
+        return confusion
+    valid_mask = (labels >= 0) & (labels < num_classes) & (preds >= 0) & (preds < num_classes)
+    if not bool(valid_mask.any().item()):
+        return confusion
+    valid_labels = labels[valid_mask]
+    valid_preds = preds[valid_mask]
+    flat_index = (valid_labels * num_classes + valid_preds).to(torch.long)
+    counts = torch.bincount(flat_index, minlength=num_classes * num_classes)
+    confusion = counts.reshape(num_classes, num_classes)
     return confusion
+
+
+def _update_detector_artifact_state_for_batch(
+    state: _ArtifactMetricState,
+    *,
+    detector: Any,
+    idx_to_class: Dict[int, str],
+    features: torch.Tensor,
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    predictions: torch.Tensor,
+    ood_loader_present: bool,
+    is_ood_loader: bool,
+) -> None:
+    ood = detector.score(features, logits, predicted_labels=predictions)
+
+    if ood_loader_present:
+        batch_ood_labels = [1 if is_ood_loader else 0] * int(labels.shape[0])
+        state.mixed_ood_labels.extend(batch_ood_labels)
+        state.mixed_ood_scores.extend(float(score) for score in ood["ensemble_score"].detach().cpu().tolist())
+
+    if getattr(detector, "sure_enabled", False) and ood_loader_present and "sure_semantic_ood" in ood:
+        state.semantic_labels.extend([1 if is_ood_loader else 0] * int(labels.shape[0]))
+        state.semantic_preds.extend(int(flag) for flag in ood["sure_semantic_ood"].detach().cpu().tolist())
+        if is_ood_loader:
+            state.confidence_labels.extend([1] * int(labels.shape[0]))
+        else:
+            state.confidence_labels.extend(int(flag) for flag in (predictions != labels).detach().cpu().tolist())
+        state.confidence_preds.extend(int(flag) for flag in ood["sure_confidence_reject"].detach().cpu().tolist())
+
+    if (
+        not is_ood_loader
+        and getattr(detector, "conformal_enabled", False)
+        and getattr(detector, "conformal_qhat", None) is not None
+    ):
+        for feat, logit, label in zip(features, logits, labels):
+            pred_set = detector.build_conformal_set(feat, logit, idx_to_class)
+            true_label = idx_to_class.get(int(label.item()), str(int(label.item())))
+            state.conformal_hits += int(true_label in pred_set)
+            state.conformal_total += 1
+            state.conformal_set_size_total += len(pred_set)
 
 
 def _compute_classification_metrics(
@@ -140,38 +188,17 @@ def _update_detector_artifact_state(
             features = trainer.encode(images)
             logits = trainer.classifier(features)
             predictions = torch.argmax(logits, dim=1)
-            ood = detector.score(features, logits, predicted_labels=predictions)
-
-            if ood_loader_present:
-                batch_ood_labels = [1 if is_ood_loader else 0] * int(images.shape[0])
-                state.mixed_ood_labels.extend(batch_ood_labels)
-                state.mixed_ood_scores.extend(float(score) for score in ood["ensemble_score"].detach().cpu().tolist())
-
-            if getattr(detector, "sure_enabled", False) and ood_loader_present and "sure_semantic_ood" in ood:
-                state.semantic_labels.extend([1 if is_ood_loader else 0] * int(images.shape[0]))
-                state.semantic_preds.extend(int(flag) for flag in ood["sure_semantic_ood"].detach().cpu().tolist())
-                if is_ood_loader:
-                    state.confidence_labels.extend([1] * int(images.shape[0]))
-                else:
-                    state.confidence_labels.extend(
-                        int(flag)
-                        for flag in (predictions != labels).detach().cpu().tolist()
-                    )
-                state.confidence_preds.extend(
-                    int(flag) for flag in ood["sure_confidence_reject"].detach().cpu().tolist()
-                )
-
-            if (
-                not is_ood_loader
-                and getattr(detector, "conformal_enabled", False)
-                and getattr(detector, "conformal_qhat", None) is not None
-            ):
-                for feat, logit, label in zip(features, logits, labels):
-                    pred_set = detector.build_conformal_set(feat, logit, idx_to_class)
-                    true_label = idx_to_class.get(int(label.item()), str(int(label.item())))
-                    state.conformal_hits += int(true_label in pred_set)
-                    state.conformal_total += 1
-                    state.conformal_set_size_total += len(pred_set)
+            _update_detector_artifact_state_for_batch(
+                state,
+                detector=detector,
+                idx_to_class=idx_to_class,
+                features=features,
+                logits=logits,
+                labels=labels,
+                predictions=predictions,
+                ood_loader_present=ood_loader_present,
+                is_ood_loader=is_ood_loader,
+            )
 
 
 def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: _ArtifactMetricState) -> None:
@@ -201,6 +228,11 @@ def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: 
 def _evaluate_model_core(
     trainer: Any,
     loader: Iterable[Dict[str, torch.Tensor]],
+    *,
+    detector: Any = None,
+    artifact_state: Optional[_ArtifactMetricState] = None,
+    idx_to_class: Optional[Dict[int, str]] = None,
+    ood_loader_present: bool = False,
 ) -> Optional[Tuple[ValidationReport, List[int], List[int]]]:
     if getattr(trainer, "classifier", None) is None:
         return None
@@ -217,8 +249,16 @@ def _evaluate_model_core(
         for batch in loader:
             images = batch["images"].to(trainer.device)
             labels = batch["labels"].to(trainer.device)
-            logits = trainer.forward_logits(images)
-            loss = torch.nn.functional.cross_entropy(logits, labels)
+
+            if artifact_state is not None and detector is not None:
+                features = trainer.encode(images)
+                logits = trainer.classifier(features)
+            else:
+                features = None
+                logits = trainer.forward_logits(images)
+
+            label_smoothing = float(getattr(getattr(trainer, "config", None), "label_smoothing", 0.0))
+            loss = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=label_smoothing)
 
             batch_size = int(labels.shape[0])
             total_loss += float(loss.item()) * float(batch_size)
@@ -228,6 +268,19 @@ def _evaluate_model_core(
             total_correct += int((predictions == labels).sum().item())
             all_labels.append(labels.detach().cpu())
             all_preds.append(predictions.detach().cpu())
+
+            if artifact_state is not None and detector is not None and features is not None:
+                _update_detector_artifact_state_for_batch(
+                    artifact_state,
+                    detector=detector,
+                    idx_to_class=idx_to_class or {},
+                    features=features,
+                    logits=logits,
+                    labels=labels,
+                    predictions=predictions,
+                    ood_loader_present=ood_loader_present,
+                    is_ood_loader=False,
+                )
 
     if total_samples <= 0:
         return None
@@ -306,28 +359,27 @@ def evaluate_model_with_artifact_metrics(
     *,
     ood_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None,
 ) -> Optional[EvaluationArtifactsPayload]:
-    result = _evaluate_model_core(trainer, loader)
+    detector = getattr(trainer, "ood_detector", None)
+    idx_to_class = {idx: name for name, idx in dict(getattr(trainer, "class_to_idx", {})).items()}
+    can_collect = _can_collect_detector_artifacts(trainer, detector)
+    state = _ArtifactMetricState() if can_collect else None
+
+    result = _evaluate_model_core(
+        trainer,
+        loader,
+        detector=detector if can_collect else None,
+        artifact_state=state,
+        idx_to_class=idx_to_class,
+        ood_loader_present=ood_loader is not None,
+    )
     if result is None:
         return None
 
     report, y_true, y_pred = result
     payload = EvaluationArtifactsPayload(report=report, y_true=y_true, y_pred=y_pred)
-
-    detector = getattr(trainer, "ood_detector", None)
-    idx_to_class = {idx: name for name, idx in dict(getattr(trainer, "class_to_idx", {})).items()}
-    if not _can_collect_detector_artifacts(trainer, detector):
+    if not can_collect or state is None:
         return payload
 
-    state = _ArtifactMetricState()
-    _update_detector_artifact_state(
-        state,
-        detector=detector,
-        idx_to_class=idx_to_class,
-        trainer=trainer,
-        eval_loader=loader,
-        ood_loader_present=ood_loader is not None,
-        is_ood_loader=False,
-    )
     if ood_loader is not None:
         _update_detector_artifact_state(
             state,

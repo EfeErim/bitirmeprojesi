@@ -164,29 +164,29 @@ class ContinualSDLoRAConfig:
     fusion_dropout: float = 0.1
     fusion_gating: str = "softmax"
     lora_r: int = 16
-    lora_alpha: int = 32
+    lora_alpha: int = 16
     lora_dropout: float = 0.1
     learning_rate: float = 1e-4
-    weight_decay: float = 0.0
-    num_epochs: int = 1
+    weight_decay: float = 0.01
+    num_epochs: int = 10
     batch_size: int = 8
     device: str = "cuda"
     strict_model_loading: bool = False
     ood_threshold_factor: float = 2.0
     seed: int = 42
-    deterministic: bool = False
-    grad_accumulation_steps: int = 1
-    max_grad_norm: float = 0.0
+    deterministic: bool = True
+    grad_accumulation_steps: int = 4
+    max_grad_norm: float = 1.0
     mixed_precision: str = "auto"
     label_smoothing: float = 0.0
-    scheduler_name: str = "none"
-    scheduler_warmup_ratio: float = 0.0
-    scheduler_min_lr: float = 0.0
+    scheduler_name: str = "cosine"
+    scheduler_warmup_ratio: float = 0.1
+    scheduler_min_lr: float = 1e-6
     scheduler_step_on: str = "batch"
-    early_stopping_enabled: bool = False
+    early_stopping_enabled: bool = True
     early_stopping_metric: str = "val_loss"
     early_stopping_mode: str = "min"
-    early_stopping_patience: int = 3
+    early_stopping_patience: int = 5
     early_stopping_min_delta: float = 0.0
     evaluation_best_metric: str = "val_loss"
     evaluation_emit_ood_gate: bool = True
@@ -198,6 +198,7 @@ class ContinualSDLoRAConfig:
     ber_enabled: bool = False
     ber_lambda_old: float = 0.1
     ber_lambda_new: float = 0.1
+    ber_warmup_steps: int = 50
     # --- Radially Scaled L2 Normalization ---
     radial_l2_enabled: bool = True
     radial_beta_min: float = 0.5
@@ -243,6 +244,8 @@ class ContinualSDLoRAConfig:
             raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
+        if self.ber_warmup_steps < 0:
+            raise ValueError("ber_warmup_steps must be non-negative.")
         if self.radial_beta_min <= 0.0 or self.radial_beta_max <= 0.0:
             raise ValueError("Radial beta range values must be positive.")
         if self.radial_beta_min >= self.radial_beta_max:
@@ -277,6 +280,7 @@ class ContinualSDLoRAConfig:
                 "ber_enabled": self.ber_enabled,
                 "ber_lambda_old": self.ber_lambda_old,
                 "ber_lambda_new": self.ber_lambda_new,
+                "ber_warmup_steps": self.ber_warmup_steps,
                 "radial_l2_enabled": self.radial_l2_enabled,
                 "radial_beta_range": [self.radial_beta_min, self.radial_beta_max],
                 "radial_beta_steps": self.radial_beta_steps,
@@ -357,11 +361,11 @@ class ContinualSDLoRAConfig:
             fusion_dropout=float(fusion.get("dropout", 0.1)),
             fusion_gating=str(fusion.get("gating", "softmax")),
             lora_r=int(adapter.get("lora_r", 16)),
-            lora_alpha=int(adapter.get("lora_alpha", 32)),
+            lora_alpha=int(adapter.get("lora_alpha", 16)),
             lora_dropout=float(adapter.get("lora_dropout", 0.1)),
             learning_rate=float(normalized.get("learning_rate", 1e-4)),
-            weight_decay=float(normalized.get("weight_decay", 0.0)),
-            num_epochs=int(normalized.get("num_epochs", 1)),
+            weight_decay=float(normalized.get("weight_decay", 0.01)),
+            num_epochs=int(normalized.get("num_epochs", 10)),
             batch_size=int(normalized.get("batch_size", 8)),
             device=str(normalized.get("device", "cuda")),
             strict_model_loading=bool(normalized.get("strict_model_loading", False)),
@@ -369,6 +373,7 @@ class ContinualSDLoRAConfig:
             ber_enabled=bool(ood.get("ber_enabled", False)),
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
             ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
+            ber_warmup_steps=int(ood.get("ber_warmup_steps", 50)),
             radial_l2_enabled=bool(ood.get("radial_l2_enabled", True)),
             radial_beta_min=radial_beta_min,
             radial_beta_max=radial_beta_max,
@@ -379,19 +384,19 @@ class ContinualSDLoRAConfig:
             conformal_enabled=bool(ood.get("conformal_enabled", True)),
             conformal_alpha=float(ood.get("conformal_alpha", 0.05)),
             seed=int(normalized.get("seed", 42)),
-            deterministic=bool(normalized.get("deterministic", False)),
-            grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 1)),
-            max_grad_norm=float(optimization.get("max_grad_norm", 0.0)),
+            deterministic=bool(normalized.get("deterministic", True)),
+            grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 4)),
+            max_grad_norm=float(optimization.get("max_grad_norm", 1.0)),
             mixed_precision=str(optimization.get("mixed_precision", "auto")),
             label_smoothing=float(optimization.get("label_smoothing", 0.0)),
-            scheduler_name=str(scheduler.get("name", "none")),
-            scheduler_warmup_ratio=float(scheduler.get("warmup_ratio", 0.0)),
-            scheduler_min_lr=float(scheduler.get("min_lr", 0.0)),
+            scheduler_name=str(scheduler.get("name", "cosine")),
+            scheduler_warmup_ratio=float(scheduler.get("warmup_ratio", 0.1)),
+            scheduler_min_lr=float(scheduler.get("min_lr", 1e-6)),
             scheduler_step_on=str(scheduler.get("step_on", "batch")),
-            early_stopping_enabled=bool(early_stopping.get("enabled", False)),
+            early_stopping_enabled=bool(early_stopping.get("enabled", True)),
             early_stopping_metric=early_stopping_metric,
             early_stopping_mode=early_stopping_mode,
-            early_stopping_patience=int(early_stopping.get("patience", 3)),
+            early_stopping_patience=int(early_stopping.get("patience", 5)),
             early_stopping_min_delta=float(early_stopping.get("min_delta", 0.0)),
             evaluation_best_metric=str(evaluation.get("best_metric", "val_loss")),
             evaluation_emit_ood_gate=bool(evaluation.get("emit_ood_gate", True)),
@@ -638,7 +643,10 @@ class ContinualSDLoRATrainer:
             return [output.last_hidden_state]
         if torch.is_tensor(output):
             return [output]
-        return [images]
+        raise RuntimeError(
+            "Backbone output does not expose hidden states, last_hidden_state, or tensor output. "
+            "Cannot derive feature representations for fusion."
+        )
 
     def encode(self, images: torch.Tensor) -> torch.Tensor:
         if self.fusion is None:

@@ -7,7 +7,7 @@
       "adapter": {
         "target_modules_strategy": "all_linear_transformer",
         "lora_r": 16,
-        "lora_alpha": 32,
+        "lora_alpha": 16,
         "lora_dropout": 0.1
       },
       "fusion": {
@@ -21,6 +21,7 @@
         "ber_enabled": false,
         "ber_lambda_old": 0.1,
         "ber_lambda_new": 0.1,
+        "ber_warmup_steps": 50,
         "radial_l2_enabled": true,
         "radial_beta_range": [0.5, 2.0],
         "radial_beta_steps": 16,
@@ -31,22 +32,22 @@
         "conformal_alpha": 0.05
       },
       "learning_rate": 0.0001,
-      "weight_decay": 0.0,
-      "num_epochs": 1,
+      "weight_decay": 0.01,
+      "num_epochs": 10,
       "batch_size": 8,
       "device": "cuda",
       "strict_model_loading": false,
       "seed": 42,
-      "deterministic": false,
+      "deterministic": true,
       "optimization": {
-        "grad_accumulation_steps": 1,
-        "max_grad_norm": 0.0,
+        "grad_accumulation_steps": 4,
+        "max_grad_norm": 1.0,
         "mixed_precision": "auto",
         "label_smoothing": 0.0,
         "scheduler": {
-          "name": "none",
-          "warmup_ratio": 0.0,
-          "min_lr": 0.0,
+          "name": "cosine",
+          "warmup_ratio": 0.1,
+          "min_lr": 1e-06,
           "step_on": "batch"
         }
       },
@@ -58,10 +59,10 @@
         "validate_images_on_init": true
       },
       "early_stopping": {
-        "enabled": false,
+        "enabled": true,
         "metric": "val_loss",
         "mode": "min",
-        "patience": 3,
+        "patience": 5,
         "min_delta": 0.0
       },
       "evaluation": {

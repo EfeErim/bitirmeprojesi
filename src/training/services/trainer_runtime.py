@@ -96,6 +96,7 @@ def initialize_trainer_engine(
             lambda_old=trainer.config.ber_lambda_old,
             lambda_new=trainer.config.ber_lambda_new,
             num_old_classes=0,
+            warmup_steps=int(getattr(trainer.config, "ber_warmup_steps", 50)),
         ).to(trainer.device)
     else:
         trainer.ber_loss = None
