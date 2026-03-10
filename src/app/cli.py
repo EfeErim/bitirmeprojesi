@@ -29,6 +29,7 @@ def _build_parser() -> argparse.ArgumentParser:
     training.add_argument("--device", default="cuda")
     training.add_argument("--num-epochs", type=int)
     training.add_argument("--num-workers", type=int)
+    training.add_argument("--validation-every-n-epochs", type=int)
 
     return parser
 
@@ -67,6 +68,7 @@ def main() -> int:
         output_dir=args.output_dir,
         num_epochs=args.num_epochs,
         num_workers=args.num_workers,
+        validation_every_n_epochs=args.validation_every_n_epochs,
     )
     print(json.dumps(result.to_dict(), indent=2))
     return 0

@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import inspect
 import math
 import random
 import time
 from contextlib import nullcontext
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 import torch
 
@@ -166,6 +167,51 @@ def collect_trainable_parameters(trainer: Any) -> list[torch.nn.Parameter]:
     return list(trainable_params)
 
 
+def _optimizer_supports_kwarg(optimizer_cls: Any, keyword: str) -> bool:
+    try:
+        signature = inspect.signature(optimizer_cls)
+    except (TypeError, ValueError):
+        return False
+
+    if keyword in signature.parameters:
+        return True
+    return any(parameter.kind == inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
+
+
+def build_adamw_optimizer(
+    parameters: Iterable[torch.nn.Parameter],
+    *,
+    lr: float,
+    weight_decay: float,
+    device: torch.device,
+) -> torch.optim.Optimizer:
+    resolved_parameters = list(parameters)
+    base_kwargs = {
+        "lr": float(lr),
+        "weight_decay": float(weight_decay),
+    }
+    candidate_kwargs = []
+    if device.type == "cuda":
+        if _optimizer_supports_kwarg(torch.optim.AdamW, "fused"):
+            candidate_kwargs.append({**base_kwargs, "fused": True})
+        if _optimizer_supports_kwarg(torch.optim.AdamW, "foreach"):
+            candidate_kwargs.append({**base_kwargs, "foreach": True})
+    candidate_kwargs.append(base_kwargs)
+
+    last_error: Exception | None = None
+    for kwargs in candidate_kwargs:
+        try:
+            return torch.optim.AdamW(resolved_parameters, **kwargs)
+        except (TypeError, RuntimeError, ValueError) as exc:
+            last_error = exc
+            if kwargs == base_kwargs:
+                raise
+
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError("Unable to construct AdamW optimizer.")
+
+
 def setup_optimizer(trainer: Any) -> None:
     if (
         not trainer._is_initialized
@@ -175,10 +221,11 @@ def setup_optimizer(trainer: Any) -> None:
     ):
         raise RuntimeError("initialize_engine() must be called before setup_optimizer().")
 
-    trainer.optimizer = torch.optim.AdamW(
+    trainer.optimizer = build_adamw_optimizer(
         collect_trainable_parameters(trainer),
         lr=trainer.config.learning_rate,
         weight_decay=trainer.config.weight_decay,
+        device=trainer.device,
     )
     trainer.scaler = build_grad_scaler(trainer.device, trainer.config.mixed_precision)
     ensure_scheduler(trainer)
@@ -208,12 +255,9 @@ def compute_grad_norm(optimizer: Optional[torch.optim.Optimizer]) -> float:
 def clip_gradients(trainer: Any) -> None:
     if trainer.optimizer is None or trainer.config.max_grad_norm <= 0.0:
         return
-    params = [
-        param
-        for group in trainer.optimizer.param_groups
-        for param in group.get("params", [])
-        if param is not None
-    ]
+    params = [param for param in collect_trainable_parameters(trainer) if param is not None]
+    if not params:
+        return
     torch.nn.utils.clip_grad_norm_(params, max_norm=float(trainer.config.max_grad_norm))
 
 

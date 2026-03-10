@@ -12,6 +12,7 @@
     "training": {
       "pin_memory": true,
       "num_workers": 8,
+      "validation_every_n_epochs": 2,
       "checkpoint_every_n_steps": 500,
       "checkpoint_interval": 500,
       "checkpoint_on_exception": true,

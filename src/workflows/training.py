@@ -442,6 +442,7 @@ class TrainingWorkflow:
         stop_policy: Optional[Callable[[], bool]] = None,
         checkpoint_every_n_steps: Optional[int] = None,
         checkpoint_on_exception: Optional[bool] = None,
+        validation_every_n_epochs: Optional[int] = None,
         sampler: Optional[str] = None,
         error_policy: Optional[str] = None,
         run_id: str = "",
@@ -511,6 +512,11 @@ class TrainingWorkflow:
                 colab_cfg.get("checkpoint_on_exception", True)
                 if checkpoint_on_exception is None
                 else checkpoint_on_exception
+            ),
+            validation_every_n_epochs=int(
+                validation_every_n_epochs
+                if validation_every_n_epochs is not None
+                else colab_cfg.get("validation_every_n_epochs", 1)
             ),
         )
         session_holder["session"] = session

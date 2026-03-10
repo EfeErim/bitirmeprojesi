@@ -120,10 +120,12 @@ class ColabLiveTelemetry:
         drive_root: Optional[str | Path] = None,
         local_root: Optional[str | Path] = None,
         sync_interval_sec: float = 5.0,
+        latest_status_min_interval_sec: float = 15.0,
     ) -> None:
         self.notebook_name = str(notebook_name)
         self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
         self.sync_interval_sec = float(max(0.5, sync_interval_sec))
+        self.latest_status_min_interval_sec = float(max(0.0, latest_status_min_interval_sec))
 
         drive_base = Path(
             drive_root
@@ -156,6 +158,8 @@ class ColabLiveTelemetry:
         self._repo_output_dir: Optional[Path] = None
         self._repo_notebook_path: Optional[Path] = None
         self._repo_notebook_exporter: Optional[Callable[[Path], Optional[Path]]] = None
+        self._last_latest_write_at = 0.0
+        self._pending_latest_payload: Optional[Dict[str, Any]] = None
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
         self.drive_run_dir.mkdir(parents=True, exist_ok=True)
@@ -259,6 +263,34 @@ class ColabLiveTelemetry:
         if should_sync:
             self.sync_pending()
             self._last_sync_attempt = now
+
+    def _latest_status_event_type(self, payload: Dict[str, Any]) -> str:
+        status = payload.get("status", {})
+        if not isinstance(status, dict):
+            return ""
+        return str(status.get("event_type", "")).strip().lower()
+
+    def _should_write_latest_now(self, payload: Dict[str, Any], *, force: bool = False) -> bool:
+        if force:
+            return True
+        event_type = self._latest_status_event_type(payload)
+        if event_type != "batch_end":
+            return True
+        if self.latest_status_min_interval_sec <= 0.0:
+            return True
+        if self._last_latest_write_at <= 0.0:
+            return True
+        return (time.monotonic() - self._last_latest_write_at) >= self.latest_status_min_interval_sec
+
+    def _write_latest_payload(self, payload: Dict[str, Any]) -> None:
+        write_json(self.local_latest_path, payload, sort_keys=True)
+        try:
+            write_json(self.drive_latest_path, payload, sort_keys=True)
+            self._drive_available = True
+        except Exception:
+            self._drive_available = False
+        self._last_latest_write_at = time.monotonic()
+        self._pending_latest_payload = None
 
     def _append_event_local(self, payload: Dict[str, Any]) -> None:
         _append_line(self.local_events_path, _safe_json(payload))
@@ -381,19 +413,16 @@ class ColabLiveTelemetry:
             )
             self._periodic_sync(force=True)
 
-    def update_latest(self, status_payload: Dict[str, Any]) -> None:
+    def update_latest(self, status_payload: Dict[str, Any], *, force: bool = False) -> None:
         payload = {
             "ts": _utc_now_iso(),
             "run_id": self.run_id,
             "notebook": self.notebook_name,
             "status": dict(status_payload or {}),
         }
-        write_json(self.local_latest_path, payload, sort_keys=True)
-        try:
-            write_json(self.drive_latest_path, payload, sort_keys=True)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        self._pending_latest_payload = payload
+        if self._should_write_latest_now(payload, force=force):
+            self._write_latest_payload(payload)
         self._periodic_sync()
 
     def write_json_artifact(self, relative_path: str, payload: Dict[str, Any]) -> Path:
@@ -464,6 +493,9 @@ class ColabLiveTelemetry:
         return drive_path if drive_path.exists() else local_path
 
     def sync_pending(self) -> None:
+        pending = self._pending_latest_payload
+        if pending is not None and self._should_write_latest_now(pending, force=False):
+            self._write_latest_payload(pending)
         self.drive_run_dir.mkdir(parents=True, exist_ok=True)
         self._sync_events()
         self._sync_logs()
@@ -506,6 +538,9 @@ class ColabLiveTelemetry:
             self._drive_available = False
 
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
+        pending = self._pending_latest_payload
+        if pending is not None:
+            self._write_latest_payload(pending)
         self._export_repo_notebook(reason="run_close")
         summary = {
             "ts": _utc_now_iso(),

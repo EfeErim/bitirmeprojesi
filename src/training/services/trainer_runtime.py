@@ -13,6 +13,7 @@ import torch.nn as nn
 from src.training.ber_loss import BERLoss
 from src.training.services.runtime import (
     build_grad_scaler,
+    build_adamw_optimizer,
     build_train_batch_stats,
     clip_gradients,
     collect_trainable_parameters,
@@ -28,10 +29,11 @@ def refresh_optimizer_after_model_change(trainer: Any) -> None:
     previous_optimizer = trainer.optimizer
     previous_scheduler_state = trainer.scheduler.state_dict() if trainer.scheduler is not None else None
 
-    rebuilt_optimizer = torch.optim.AdamW(
+    rebuilt_optimizer = build_adamw_optimizer(
         collect_trainable_parameters(trainer),
         lr=trainer.config.learning_rate,
         weight_decay=trainer.config.weight_decay,
+        device=trainer.device,
     )
 
     if len(previous_optimizer.param_groups) == len(rebuilt_optimizer.param_groups):
@@ -201,9 +203,10 @@ def execute_train_batch(trainer: Any, batch: Dict[str, torch.Tensor]):
 
     trainer._accumulation_counter += 1
     should_step = trainer._accumulation_counter >= accumulation_steps
-    grad_norm = trainer._reported_grad_norm(gradients_unscaled=not trainer.scaler.is_enabled())
     if should_step:
         grad_norm = _apply_optimizer_step(trainer)
+    else:
+        grad_norm = trainer._reported_grad_norm(gradients_unscaled=not trainer.scaler.is_enabled())
 
     ber_components = getattr(trainer, "_last_ber_components", {}) if trainer.ber_loss is not None else {}
     return build_train_batch_stats(
@@ -228,8 +231,8 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         raise RuntimeError("Cannot predict before adapter, classifier, and fusion are initialized.")
     trainer._ensure_ood_calibrated(operation="predict_with_ood()")
     trainer.set_eval_mode()
-    with torch.no_grad():
-        features = trainer.encode(images.to(trainer.device))
+    with torch.inference_mode():
+        features = trainer.encode(images.to(trainer.device, non_blocking=True))
         logits = trainer.classifier(features)
         probs = torch.softmax(logits, dim=1)
         confidence, indices = probs.max(dim=1)
@@ -258,7 +261,7 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         ood_analysis["sure_confidence_reject"] = bool(ood["sure_confidence_reject"][0].item())
 
     if trainer.ood_detector.conformal_enabled:
-        with torch.no_grad():
+        with torch.inference_mode():
             conformal_set = trainer.ood_detector.build_conformal_set(
                 features[0],
                 logits[0],

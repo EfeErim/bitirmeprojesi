@@ -230,6 +230,19 @@ def test_session_flushes_final_accumulation_step():
     assert trainable.item() != pytest.approx(1.0)
 
 
+def test_train_batch_computes_grad_norm_once_when_step_is_applied():
+    trainer, _ = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=1)
+    calls = []
+
+    trainer._reported_grad_norm = lambda *, gradients_unscaled: calls.append("reported") or 0.1  # type: ignore[assignment]
+    trainer._compute_grad_norm = lambda: calls.append("compute") or 0.2  # type: ignore[assignment]
+
+    stats = trainer.train_batch(_make_loader(1)[0])
+
+    assert stats.optimizer_step_applied is True
+    assert calls == ["compute"]
+
+
 def test_session_resume_matches_uninterrupted_training_mid_epoch():
     uninterrupted_trainer, uninterrupted_param = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
     uninterrupted_session = ContinualTrainingSession(uninterrupted_trainer, _make_loader(3), 1)

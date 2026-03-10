@@ -171,6 +171,55 @@ def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_
     assert result.checkpoint_records[0]["reason"] == "batch_interval"
 
 
+def test_training_workflow_uses_colab_validation_cadence(monkeypatch, tmp_path: Path):
+    captured = {}
+
+    class RecordingAdapter(FakeAdapter):
+        def build_training_session(self, train_loader, **kwargs):
+            captured["validation_every_n_epochs"] = kwargs.get("validation_every_n_epochs")
+            return super().build_training_session(train_loader, **kwargs)
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy"]),
+            "test": FakeLoader(["healthy"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", RecordingAdapter)
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
+                }
+            },
+            "colab": {
+                "training": {
+                    "num_workers": 0,
+                    "pin_memory": False,
+                    "validation_every_n_epochs": 2,
+                }
+            },
+        },
+        device="cpu",
+    )
+
+    workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert captured["validation_every_n_epochs"] == 2
+
+
 def test_training_workflow_result_to_dict_stringifies_nested_paths(tmp_path: Path):
     result = TrainingWorkflowResult(
         run_id="run_1",

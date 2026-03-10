@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import torch
 
-from src.training.services.runtime import configure_runtime_reproducibility
+from src.training.services.runtime import build_adamw_optimizer, configure_runtime_reproducibility
 
 
 def test_configure_runtime_reproducibility_enables_fast_cudnn_when_not_deterministic(monkeypatch):
@@ -43,3 +43,70 @@ def test_configure_runtime_reproducibility_enforces_deterministic_cudnn(monkeypa
     finally:
         torch.backends.cudnn.deterministic = original_deterministic
         torch.backends.cudnn.benchmark = original_benchmark
+
+
+def test_build_adamw_optimizer_prefers_fused_on_cuda_when_supported(monkeypatch):
+    calls = []
+
+    class DummyOptimizer:
+        pass
+
+    def fake_adamw(params, lr, weight_decay, fused=None, foreach=None):
+        calls.append(
+            {
+                "param_count": len(list(params)),
+                "lr": float(lr),
+                "weight_decay": float(weight_decay),
+                "fused": fused,
+                "foreach": foreach,
+            }
+        )
+        return DummyOptimizer()
+
+    monkeypatch.setattr(torch.optim, "AdamW", fake_adamw)
+
+    optimizer = build_adamw_optimizer(
+        [torch.nn.Parameter(torch.tensor([1.0], requires_grad=True))],
+        lr=3e-4,
+        weight_decay=1e-2,
+        device=torch.device("cuda"),
+    )
+
+    assert isinstance(optimizer, DummyOptimizer)
+    assert calls == [
+        {
+            "param_count": 1,
+            "lr": 3e-4,
+            "weight_decay": 1e-2,
+            "fused": True,
+            "foreach": None,
+        }
+    ]
+
+
+def test_build_adamw_optimizer_falls_back_when_fused_is_rejected(monkeypatch):
+    calls = []
+
+    class DummyOptimizer:
+        pass
+
+    def fake_adamw(params, lr, weight_decay, fused=None, foreach=None):
+        calls.append({"fused": fused, "foreach": foreach})
+        if fused:
+            raise RuntimeError("fused unsupported")
+        return DummyOptimizer()
+
+    monkeypatch.setattr(torch.optim, "AdamW", fake_adamw)
+
+    optimizer = build_adamw_optimizer(
+        [torch.nn.Parameter(torch.tensor([1.0], requires_grad=True))],
+        lr=3e-4,
+        weight_decay=1e-2,
+        device=torch.device("cuda"),
+    )
+
+    assert isinstance(optimizer, DummyOptimizer)
+    assert calls == [
+        {"fused": True, "foreach": None},
+        {"fused": None, "foreach": True},
+    ]

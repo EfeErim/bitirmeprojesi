@@ -652,7 +652,8 @@ class ContinualSDLoRATrainer:
     def encode(self, images: torch.Tensor) -> torch.Tensor:
         if self.fusion is None:
             raise RuntimeError("Fusion module is not initialized.")
-        images = images.to(self.device)
+        if images.device != self.device:
+            images = images.to(self.device, non_blocking=True)
         states = self._extract_hidden_states(images)
         selected = select_multiscale_features(states, self.config.fusion_layers)
         return self.fusion(selected)
@@ -666,8 +667,8 @@ class ContinualSDLoRATrainer:
     def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         if self.optimizer is None:
             raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
-        images = batch["images"].to(self.device)
-        labels = batch["labels"].to(self.device)
+        images = batch["images"].to(self.device, non_blocking=True)
+        labels = batch["labels"].to(self.device, non_blocking=True)
         with autocast_context(self.device, self.config.mixed_precision):
             logits = self.forward_logits(images)
             if self.ber_loss is not None:

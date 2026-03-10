@@ -88,10 +88,10 @@ def _collect_materialized_tensors(
     features_list: List[torch.Tensor] = []
     logits_list: List[torch.Tensor] = []
     labels_list: List[torch.Tensor] = []
-    with torch.no_grad():
+    with torch.inference_mode():
         for batch in loader:
-            images = batch["images"].to(trainer.device)
-            labels = batch["labels"].to(trainer.device)
+            images = batch["images"].to(trainer.device, non_blocking=True)
+            labels = batch["labels"].to(trainer.device, non_blocking=True)
             features = trainer.encode(images)
             logits = trainer.classifier(features)
             features_list.append(features.detach().cpu())
@@ -110,9 +110,9 @@ def _iter_feature_batches(
     trainer: Any,
     loader: Iterable[Dict[str, torch.Tensor]],
 ):
-    with torch.no_grad():
+    with torch.inference_mode():
         for batch in loader:
-            images = batch["images"].to(trainer.device)
+            images = batch["images"].to(trainer.device, non_blocking=True)
             labels = batch["labels"].reshape(-1).to(device="cpu", dtype=torch.long)
             features_device = trainer.encode(images)
             logits_device = trainer.classifier(features_device)

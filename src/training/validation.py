@@ -181,10 +181,10 @@ def _update_detector_artifact_state(
     is_ood_loader: bool,
 ) -> None:
     trainer.set_eval_mode()
-    with torch.no_grad():
+    with torch.inference_mode():
         for batch in eval_loader:
-            images = batch["images"].to(trainer.device)
-            labels = batch["labels"].to(trainer.device)
+            images = batch["images"].to(trainer.device, non_blocking=True)
+            labels = batch["labels"].to(trainer.device, non_blocking=True)
             features = trainer.encode(images)
             logits = trainer.classifier(features)
             predictions = torch.argmax(logits, dim=1)
@@ -245,10 +245,10 @@ def _evaluate_model_core(
     all_labels: List[torch.Tensor] = []
     all_preds: List[torch.Tensor] = []
 
-    with torch.no_grad():
+    with torch.inference_mode():
         for batch in loader:
-            images = batch["images"].to(trainer.device)
-            labels = batch["labels"].to(trainer.device)
+            images = batch["images"].to(trainer.device, non_blocking=True)
+            labels = batch["labels"].to(trainer.device, non_blocking=True)
 
             if artifact_state is not None and detector is not None:
                 features = trainer.encode(images)

@@ -61,6 +61,37 @@ def test_live_telemetry_recovers_after_drive_write_failure(tmp_path, monkeypatch
     assert sync_state["events_synced"] >= 2
 
 
+def test_live_telemetry_throttles_batch_latest_status_writes(tmp_path, monkeypatch):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_002b",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=60.0,
+        latest_status_min_interval_sec=15.0,
+    )
+
+    clock = {"value": 1.0}
+    monkeypatch.setattr("scripts.colab_live_telemetry.time.monotonic", lambda: clock["value"])
+
+    telemetry.update_latest({"event_type": "batch_end", "epoch": 1, "batch": 1})
+    latest_path = drive_root / "telemetry" / "run_002b" / "latest_status.json"
+    first = json.loads(latest_path.read_text(encoding="utf-8"))
+    assert first["status"]["batch"] == 1
+
+    clock["value"] = 5.0
+    telemetry.update_latest({"event_type": "batch_end", "epoch": 1, "batch": 2})
+    second = json.loads(latest_path.read_text(encoding="utf-8"))
+    assert second["status"]["batch"] == 1
+
+    clock["value"] = 20.0
+    telemetry.update_latest({"event_type": "batch_end", "epoch": 1, "batch": 3})
+    third = json.loads(latest_path.read_text(encoding="utf-8"))
+    assert third["status"]["batch"] == 3
+
+
 def test_capture_cell_output_writes_timestamped_drive_artifact(tmp_path):
     drive_root = tmp_path / "drive"
     local_root = tmp_path / "local"
