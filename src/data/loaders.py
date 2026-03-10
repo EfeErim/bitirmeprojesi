@@ -52,6 +52,7 @@ def build_weighted_sampler(dataset: CropDataset, seed: int) -> WeightedRandomSam
 def create_training_loaders(
     data_dir: str,
     crop: str,
+    class_names: List[str] | None = None,
     batch_size: int = 32,
     num_workers: int = 4,
     use_cache: bool = True,
@@ -73,7 +74,18 @@ def create_training_loaders(
     if sampler_name not in VALID_SAMPLERS:
         raise ValueError(f"Unsupported sampler: {sampler}")
 
-    class_names = infer_classes_fn(data_dir, crop)
+    inferred_classes = [str(name) for name in infer_classes_fn(data_dir, crop)]
+    resolved_classes = [str(name) for name in class_names] if class_names is not None else inferred_classes
+    if inferred_classes and class_names is not None and set(resolved_classes) != set(inferred_classes):
+        missing = sorted(set(inferred_classes) - set(resolved_classes))
+        extra = sorted(set(resolved_classes) - set(inferred_classes))
+        details: List[str] = []
+        if missing:
+            details.append(f"missing from override: {', '.join(missing)}")
+        if extra:
+            details.append(f"not found on disk: {', '.join(extra)}")
+        raise ValueError("Provided class_names do not match the dataset layout (" + "; ".join(details) + ").")
+
     pin_memory = bool(dataloader_kwargs.pop("pin_memory", True))
     persistent_workers = bool(dataloader_kwargs.pop("persistent_workers", num_workers > 0))
     prefetch_factor = dataloader_kwargs.pop("prefetch_factor", None)
@@ -85,7 +97,7 @@ def create_training_loaders(
             data_dir=data_dir,
             crop=crop,
             split=split,
-            class_names=class_names,
+            class_names=resolved_classes,
             transform=(split == "train"),
             target_size=target_size,
             use_cache=use_cache,
@@ -124,6 +136,8 @@ def create_training_loaders(
             drop_last=drop_last,
             **extra_kwargs,
         )
+        setattr(loaders[split], "_seed_base", int(seed) + (0 if split == "train" else 10 if split == "val" else 20))
+        setattr(loaders[split], "_sampler_seed_base", int(seed) + (100 if split == "train" else 110 if split == "val" else 120))
 
     ood_root = Path(data_dir) / crop / "ood"
     if ood_root.exists():
@@ -131,7 +145,7 @@ def create_training_loaders(
             data_dir=data_dir,
             crop=crop,
             split="ood",
-            class_names=class_names,
+            class_names=resolved_classes,
             transform=False,
             target_size=target_size,
             use_cache=use_cache,
@@ -159,4 +173,6 @@ def create_training_loaders(
             generator=ood_generator,
             **ood_extra_kwargs,
         )
+        setattr(loaders["ood"], "_seed_base", int(seed) + 30)
+        setattr(loaders["ood"], "_sampler_seed_base", int(seed) + 130)
     return loaders

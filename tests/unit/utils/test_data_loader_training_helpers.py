@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 import torch
 from PIL import Image
 
@@ -153,3 +154,19 @@ def test_crop_dataset_supports_optional_ood_split(tmp_path: Path):
 
     assert len(dataset) == 2
     assert dataset.labels == [-1, -1]
+
+
+def test_create_training_loaders_rejects_class_name_mismatch(tmp_path: Path):
+    _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")
+    _write_image(tmp_path / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(tmp_path / "tomato" / "test" / "healthy" / "test.jpg")
+
+    with pytest.raises(ValueError, match="Provided class_names do not match"):
+        create_training_loaders(
+            data_dir=str(tmp_path),
+            crop="tomato",
+            class_names=["healthy", "disease_a"],
+            batch_size=2,
+            num_workers=0,
+            seed=7,
+        )

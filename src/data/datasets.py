@@ -78,6 +78,7 @@ class CropDataset(Dataset):
         self.validate_images_on_init = bool(validate_images_on_init)
         self.load_errors: List[Dict[str, str]] = []
         self.skipped_files: List[str] = []
+        self._retired_indices: set[int] = set()
 
         inferred = [str(name) for name in class_names] if class_names is not None else infer_crop_classes_from_layout(
             data_dir=str(self.data_dir),
@@ -178,6 +179,10 @@ class CropDataset(Dataset):
         attempts = 0
         current_idx = int(idx % len(self.image_paths))
         while attempts < len(self.image_paths):
+            if current_idx in self._retired_indices:
+                attempts += 1
+                current_idx = (current_idx + 1) % len(self.image_paths)
+                continue
             img_path = self.image_paths[current_idx]
             label = self.labels[current_idx]
             try:
@@ -187,6 +192,7 @@ class CropDataset(Dataset):
                 self._record_error(img_path, exc)
                 if self.error_policy == "strict":
                     raise
+                self._retired_indices.add(current_idx)
                 attempts += 1
                 current_idx = (current_idx + 1) % len(self.image_paths)
 

@@ -11,6 +11,8 @@ from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.reporting import (
+    BatchMetricsRecorder,
+    load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_production_readiness_artifact,
     persist_training_history_artifacts,
@@ -22,7 +24,7 @@ from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_support import (
     build_artifact_payload,
     prepare_training_run,
-    select_calibration_loader,
+    select_calibration_source,
     stringify_paths,
 )
 from src.workflows.training_support import (
@@ -142,15 +144,15 @@ class TrainingWorkflow:
         run_id: str,
         telemetry: Any,
         checkpoint_manager: Any,
-        batch_history: List[Dict[str, Any]],
+        batch_recorder: Optional[BatchMetricsRecorder],
         checkpoint_records: List[Dict[str, Any]],
         session_holder: Dict[str, Any],
     ) -> Observer:
         def _workflow_observer(event: Dict[str, Any]) -> None:
             event_type = str(event.get("event_type", "training_event"))
             payload = dict(event.get("payload", {}))
-            if event_type == "batch_end":
-                batch_history.append(payload)
+            if event_type == "batch_end" and batch_recorder is not None:
+                batch_recorder.append(payload)
 
             self._emit_telemetry(
                 telemetry,
@@ -189,9 +191,10 @@ class TrainingWorkflow:
         *,
         artifact_dir: Path,
         history_payload: Dict[str, Any],
-        batch_history: List[Dict[str, Any]],
+        batch_metrics_csv: Path,
         telemetry: Any,
     ) -> Dict[str, Any]:
+        batch_history = load_batch_metrics_history(batch_metrics_csv)
         return {
             **persist_training_history_artifacts(
                 artifact_root=artifact_dir,
@@ -200,7 +203,7 @@ class TrainingWorkflow:
             ),
             **persist_batch_metrics_artifacts(
                 artifact_root=artifact_dir,
-                batch_history=batch_history,
+                batch_metrics_csv=batch_metrics_csv,
                 telemetry=telemetry,
             ),
             **persist_training_results_figure(
@@ -306,14 +309,18 @@ class TrainingWorkflow:
         crop_name: str,
         detected_classes: List[str],
         loader_sizes: Dict[str, int],
+        loader_batch_counts: Dict[str, int],
+        split_class_counts: Dict[str, Dict[str, int]],
         adapter_dir: Path,
         artifact_dir: Path,
         checkpoint_records: List[Dict[str, Any]],
         ood_calibration: Dict[str, Any],
         history_payload: Dict[str, Any],
+        calibration_split_name: str,
         ood_evidence_source: str,
         ood_benchmark: Dict[str, Any],
         production_readiness: Dict[str, Any],
+        best_state_restored: bool,
     ) -> Dict[str, Any]:
         return {
             "run_id": run_id,
@@ -321,16 +328,20 @@ class TrainingWorkflow:
             "class_names": list(detected_classes),
             "class_count": len(detected_classes),
             "loader_sizes": loader_sizes,
+            "loader_batch_counts": loader_batch_counts,
+            "split_class_counts": split_class_counts,
             "adapter_dir": str(adapter_dir),
             "artifact_dir": str(artifact_dir),
             "checkpoint_count": len(checkpoint_records),
             "ood_calibration": dict(ood_calibration),
+            "calibration_split_name": str(calibration_split_name),
             "stopped_early": bool(history_payload.get("stopped_early", False)),
             "global_step": int(history_payload.get("global_step", 0)),
             "optimizer_steps": int(history_payload.get("optimizer_steps", 0)),
             "best_metric_name": str(history_payload.get("best_metric_name", "")),
             "best_metric_value": history_payload.get("best_metric_value"),
             "best_epoch": int(history_payload.get("best_epoch", 0)),
+            "best_state_restored": bool(best_state_restored),
             "ood_evidence_source": str(ood_evidence_source or ""),
             "ood_benchmark": dict(ood_benchmark),
             "production_readiness": dict(production_readiness),
@@ -341,9 +352,13 @@ class TrainingWorkflow:
     def _select_authoritative_evaluation(
         validation_artifacts: Dict[str, Any],
         test_artifacts: Dict[str, Any],
+        *,
+        calibration_split_name: str,
     ) -> tuple[str, Dict[str, Any]]:
         if isinstance(test_artifacts, dict) and isinstance(test_artifacts.get("metric_gate"), dict):
             return "test", test_artifacts
+        if calibration_split_name == "val":
+            return "", {}
         if isinstance(validation_artifacts, dict) and isinstance(validation_artifacts.get("metric_gate"), dict):
             return "val", validation_artifacts
         return "", {}
@@ -376,6 +391,18 @@ class TrainingWorkflow:
         )
         if not should_run_benchmark:
             return "unavailable", {}, {}
+
+        self._emit_telemetry(
+            telemetry,
+            "ood_benchmark_planned",
+            {
+                "run_id": run_id,
+                "crop_name": crop_name,
+                "estimated_fold_trainings": int(len(detected_classes)),
+                "class_count": int(len(detected_classes)),
+            },
+            phase="evaluation",
+        )
 
         ood_benchmark = run_leave_one_class_out_benchmark(
             crop_name=crop_name,
@@ -443,11 +470,17 @@ class TrainingWorkflow:
         run_id = run_setup.run_id
         loaders = run_setup.loaders
         loader_sizes = dict(run_setup.loader_sizes)
+        loader_batch_counts = dict(run_setup.loader_batch_counts)
         detected_classes = list(run_setup.detected_classes)
+        split_class_counts = {
+            str(split_name): {str(class_name): int(count) for class_name, count in counts.items()}
+            for split_name, counts in dict(run_setup.split_class_counts).items()
+        }
         adapter = run_setup.adapter
+        artifact_dir = Path(output_dir) / "training_metrics"
+        batch_recorder = BatchMetricsRecorder(artifact_root=artifact_dir)
 
         checkpoint_records: List[Dict[str, Any]] = []
-        batch_history: List[Dict[str, Any]] = []
         session_observers: List[Observer] = list(observers or [])
         session_holder: Dict[str, Any] = {}
         session_observers.append(
@@ -456,7 +489,7 @@ class TrainingWorkflow:
                 run_id=run_id,
                 telemetry=telemetry,
                 checkpoint_manager=checkpoint_manager,
-                batch_history=batch_history,
+                batch_recorder=batch_recorder,
                 checkpoint_records=checkpoint_records,
                 session_holder=session_holder,
             )
@@ -496,18 +529,23 @@ class TrainingWorkflow:
 
         history = session.run()
         history_payload = history.to_dict()
-        val_loader = loaders.get("val")
-        calibration_loader = select_calibration_loader(loaders, loader_sizes)
+        if int(history_payload.get("optimizer_steps", 0)) <= 0:
+            raise RuntimeError(
+                "Training produced zero optimizer steps. Check the continual split size, batch_size, and "
+                "grad_accumulation_steps before launching a full experiment."
+            )
+        restore_best_state = getattr(session, "restore_best_model_state", None)
+        best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
+        calibration_split_name, calibration_loader = select_calibration_source(loaders, loader_sizes)
         ood_calibration = {}
         if _loader_size(calibration_loader) > 0:
             ood_calibration = adapter.calibrate_ood(calibration_loader)
         adapter_dir = adapter.save_adapter(str(output_dir))
 
-        artifact_dir = Path(output_dir) / "training_metrics"
         training_artifacts = self._persist_training_artifacts(
             artifact_dir=artifact_dir,
             history_payload=history_payload,
-            batch_history=batch_history,
+            batch_metrics_csv=batch_recorder.output_path,
             telemetry=telemetry,
         )
         trainer_for_artifacts = getattr(session, "trainer", None)
@@ -528,6 +566,7 @@ class TrainingWorkflow:
         authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
             validation_artifacts,
             test_artifacts,
+            calibration_split_name=calibration_split_name,
         )
         ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
             crop_name=crop_name,
@@ -555,6 +594,10 @@ class TrainingWorkflow:
                 "run_id": run_id,
                 "crop_name": crop_name,
                 "loader_sizes": loader_sizes,
+                "loader_batch_counts": loader_batch_counts,
+                "split_class_counts": split_class_counts,
+                "calibration_split_name": calibration_split_name,
+                "best_state_restored": bool(best_state_restored),
                 "classification_split": authoritative_split,
                 "ood_benchmark_status": ood_benchmark.get("status"),
                 "ood_benchmark_passed": ood_benchmark.get("passed"),
@@ -581,14 +624,18 @@ class TrainingWorkflow:
             crop_name=crop_name,
             detected_classes=detected_classes,
             loader_sizes=loader_sizes,
+            loader_batch_counts=loader_batch_counts,
+            split_class_counts=split_class_counts,
             adapter_dir=adapter_dir,
             artifact_dir=artifact_dir,
             checkpoint_records=checkpoint_records,
             ood_calibration=ood_calibration,
             history_payload=history_payload,
+            calibration_split_name=calibration_split_name,
             ood_evidence_source=ood_evidence_source,
             ood_benchmark=ood_benchmark,
             production_readiness=production_readiness,
+            best_state_restored=best_state_restored,
         )
         summary_artifacts = persist_training_summary_artifact(
             artifact_root=artifact_dir,

@@ -16,7 +16,7 @@ from src.training.services.session_flow import (
     should_early_stop,
     update_best_metric_state,
 )
-from src.training.types import TrainingHistory, TrainingProgressState, ValidationReport
+from src.training.types import TrainBatchStats, TrainingHistory, TrainingProgressState, ValidationReport
 from src.training.validation import evaluate_model
 
 Observer = Callable[[Dict[str, Any]], None]
@@ -67,6 +67,7 @@ class ContinualTrainingSession:
         set_loader = getattr(self.trainer, "set_preferred_ood_calibration_loader", None)
         if callable(set_loader):
             set_loader(preferred_loader)
+        self._best_model_state: Optional[Dict[str, Any]] = None
 
     def _emit(self, event_type: str, payload: Dict[str, Any]) -> None:
         event = {
@@ -98,13 +99,87 @@ class ContinualTrainingSession:
         )
         self._emit("checkpoint_requested", checkpoint_payload)
 
+    def _capture_best_model_state(self) -> None:
+        modules = {
+            "adapter_model": getattr(self.trainer, "adapter_model", None),
+            "classifier": getattr(self.trainer, "classifier", None),
+            "fusion": getattr(self.trainer, "fusion", None),
+        }
+        snapshot: Dict[str, Any] = {}
+        for name, module in modules.items():
+            if module is None:
+                continue
+            snapshot[name] = {
+                key: value.detach().cpu().clone()
+                for key, value in module.state_dict().items()
+            }
+        self._best_model_state = snapshot or None
+
+    def restore_best_model_state(self) -> bool:
+        if not self._best_model_state:
+            return False
+        modules = {
+            "adapter_model": getattr(self.trainer, "adapter_model", None),
+            "classifier": getattr(self.trainer, "classifier", None),
+            "fusion": getattr(self.trainer, "fusion", None),
+        }
+        for name, module in modules.items():
+            state = self._best_model_state.get(name)
+            if module is None or state is None:
+                continue
+            module.load_state_dict(state)
+        return True
+
+    @staticmethod
+    def _seed_loader_for_epoch(loader: Any, epoch_idx: int) -> None:
+        seed_base = getattr(loader, "_seed_base", None)
+        epoch_seed = None if seed_base is None else int(seed_base) + (int(epoch_idx) * 1000)
+        generator = getattr(loader, "generator", None)
+        if epoch_seed is not None and generator is not None and hasattr(generator, "manual_seed"):
+            generator.manual_seed(int(epoch_seed))
+
+        sampler_seed_base = getattr(loader, "_sampler_seed_base", seed_base)
+        sampler = getattr(loader, "sampler", None)
+        sampler_generator = getattr(sampler, "generator", None)
+        if sampler_seed_base is not None and sampler_generator is not None and hasattr(sampler_generator, "manual_seed"):
+            sampler_generator.manual_seed(int(sampler_seed_base) + (int(epoch_idx) * 1000))
+
+    def _resolve_resume_position(self, total_batches: int) -> tuple[int, int]:
+        completed_epoch_1based = int(self.progress_state.epoch)
+        completed_batch = int(self.progress_state.batch)
+        resolved_total_batches = int(self.progress_state.total_batches or total_batches)
+        if completed_epoch_1based <= 0:
+            return 0, 0
+        if completed_batch <= 0:
+            return completed_epoch_1based, 0
+        if resolved_total_batches > 0 and completed_batch >= resolved_total_batches:
+            return completed_epoch_1based, 0
+        return max(0, completed_epoch_1based - 1), completed_batch
+
+    def _flush_pending_batch_state(self, stats: Optional[TrainBatchStats] = None) -> bool:
+        has_pending = getattr(self.trainer, "has_pending_gradients", None)
+        if not callable(has_pending) or not bool(has_pending()):
+            return False
+        flush_pending = getattr(self.trainer, "flush_pending_gradients", None)
+        if not callable(flush_pending):
+            return False
+        grad_norm = flush_pending()
+        if stats is not None:
+            stats.optimizer_step_applied = True
+            stats.optimizer_steps = int(getattr(self.trainer, "optimizer_steps", stats.optimizer_steps))
+            if grad_norm is not None:
+                stats.grad_norm = float(grad_norm)
+            config = getattr(self.trainer, "config", None)
+            stats.accumulation_step = int(getattr(config, "grad_accumulation_steps", stats.accumulation_step))
+        return True
+
     def run(self) -> TrainingHistory:
         global_step = int(self.progress_state.global_step)
-        start_epoch = int(self.progress_state.resume_start_epoch or self.progress_state.epoch)
+        total_batches = len(self.train_loader) if isinstance(self.train_loader, Sized) else 0
+        start_epoch, resume_batch = self._resolve_resume_position(total_batches)
         self.history.resume_start_epoch = start_epoch
         batch_loss_window: List[float] = []
         train_started_at = time.perf_counter() - max(0.0, self._elapsed_before_resume)
-        total_batches = len(self.train_loader) if isinstance(self.train_loader, Sized) else 0
 
         if hasattr(self.trainer, "configure_training_plan"):
             self.trainer.configure_training_plan(total_batches=max(1, total_batches), num_epochs=self.num_epochs)
@@ -113,7 +188,7 @@ class ContinualTrainingSession:
             self._emit(
                 "resume_loaded",
                 {
-                    "resume_epoch": int(start_epoch),
+                    "resume_epoch": int(start_epoch + 1) if start_epoch > 0 or global_step > 0 else 0,
                     "global_step": int(global_step),
                     "optimizer_steps": int(self.progress_state.optimizer_steps),
                 },
@@ -122,10 +197,16 @@ class ContinualTrainingSession:
         stopped_early = False
         try:
             for epoch_idx in range(start_epoch, self.num_epochs):
+                self._seed_loader_for_epoch(self.train_loader, epoch_idx)
                 self.trainer.set_train_mode()
                 losses: List[float] = []
                 for batch_idx, batch in enumerate(self.train_loader):
+                    if epoch_idx == start_epoch and batch_idx < resume_batch:
+                        continue
                     stats = self.trainer.train_batch(batch)
+                    is_last_batch = total_batches > 0 and batch_idx == (total_batches - 1)
+                    if is_last_batch:
+                        self._flush_pending_batch_state(stats)
                     losses.append(float(stats.loss))
                     batch_loss_window.append(float(stats.loss))
                     if len(batch_loss_window) > 8:
@@ -171,6 +252,9 @@ class ContinualTrainingSession:
                 if not losses:
                     break
 
+                if not stopped_early:
+                    self._flush_pending_batch_state()
+
                 epoch_loss = float(sum(losses) / max(1, len(losses)))
                 self.history.train_loss.append(epoch_loss)
                 self.trainer.current_epoch = int(epoch_idx + 1)
@@ -205,6 +289,8 @@ class ContinualTrainingSession:
                     emit_fn=self._emit,
                 )
                 epoch_payload.update(best_metric_payload)
+                if bool(best_metric_payload.get("mark_best", False)):
+                    self._capture_best_model_state()
 
                 if (
                     hasattr(self.trainer, "config")

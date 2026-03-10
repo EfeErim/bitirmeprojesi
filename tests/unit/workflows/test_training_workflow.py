@@ -20,16 +20,17 @@ class FakeLoader(list):
 
 class FakeHistory:
     def to_dict(self):
-        return {"train_loss": [0.1], "val_loss": [0.2], "global_step": 1}
+        return {"train_loss": [0.1], "val_loss": [0.2], "global_step": 1, "optimizer_steps": 1}
 
 
 class FakeSession:
     def __init__(self, observers, trainer=None):
         self.observers = list(observers)
         self.trainer = trainer if trainer is not None else object()
+        self.best_state_restored = False
 
     def snapshot_state(self):
-        return {"progress_state": {"epoch": 1, "global_step": 2}, "history": {"train_loss": [0.1]}}
+        return {"progress_state": {"epoch": 1, "batch": 1, "total_batches": 1, "global_step": 2}, "history": {"train_loss": [0.1]}}
 
     def run(self):
         for observer in self.observers:
@@ -40,6 +41,12 @@ class FakeSession:
                 }
             )
         return FakeHistory()
+
+    def restore_best_model_state(self):
+        self.best_state_restored = True
+        if hasattr(self.trainer, "best_state_restored"):
+            self.trainer.best_state_restored = True
+        return True
 
 
 class FakeAdapter:
@@ -68,7 +75,7 @@ class FakeAdapter:
                 "evaluation_emit_ood_gate": bool(evaluation.get("emit_ood_gate", True)),
             },
         )()
-        trainer = type("FakeTrainer", (), {"config": trainer_config})()
+        trainer = type("FakeTrainer", (), {"config": trainer_config, "best_state_restored": False})()
         return FakeSession(kwargs.get("observers", []), trainer=trainer)
 
     def calibrate_ood(self, loader):
@@ -87,6 +94,12 @@ class FakeCheckpointManager:
     def save_checkpoint(self, **kwargs):
         self.calls.append(dict(kwargs))
         return {"name": "ckpt_1", "reason": kwargs["reason"]}
+
+
+class FakeEmptyLoader(list):
+    def __init__(self, classes):
+        super().__init__([])
+        self.dataset = FakeDataset(classes)
 
 
 def _fake_evaluation_result(include_ood: bool) -> EvaluationArtifactsPayload:
@@ -397,3 +410,102 @@ def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp
     assert "metric_gate_json" not in result.artifacts["test"]
     assert not (result.artifact_dir / "validation" / "metric_gate.json").exists()
     assert not (result.artifact_dir / "test" / "metric_gate.json").exists()
+
+
+def test_training_workflow_restores_best_state_before_export(monkeypatch, tmp_path: Path):
+    restored_flags = []
+
+    class RecordingAdapter(FakeAdapter):
+        def build_training_session(self, train_loader, **kwargs):
+            session = super().build_training_session(train_loader, **kwargs)
+            self._session = session
+            return session
+
+        def calibrate_ood(self, loader):
+            restored_flags.append(getattr(self._session, "best_state_restored", False))
+            return super().calibrate_ood(loader)
+
+        def save_adapter(self, output_dir):
+            restored_flags.append(getattr(self._session, "best_state_restored", False))
+            return super().save_adapter(output_dir)
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", RecordingAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": False, "ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert restored_flags == [True, True]
+
+
+def test_training_workflow_requires_isolated_eval_split_when_val_used_for_calibration(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeEmptyLoader([]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": False, "ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert result.production_readiness["passed"] is False
+    assert "accuracy" in result.production_readiness["missing_requirements"]

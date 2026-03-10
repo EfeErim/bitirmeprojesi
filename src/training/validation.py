@@ -257,8 +257,7 @@ def _evaluate_model_core(
                 features = None
                 logits = trainer.forward_logits(images)
 
-            label_smoothing = float(getattr(getattr(trainer, "config", None), "label_smoothing", 0.0))
-            loss = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=label_smoothing)
+            loss = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=0.0)
 
             batch_size = int(labels.shape[0])
             total_loss += float(loss.item()) * float(batch_size)

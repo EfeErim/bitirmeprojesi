@@ -39,10 +39,36 @@ _BATCH_KEYS = [
     "step_time_sec",
     "samples_per_sec",
     "batch_size",
+    "accumulation_step",
+    "optimizer_step_applied",
+    "ber_ce_loss",
+    "ber_old_loss",
+    "ber_new_loss",
     "epoch_progress",
     "advisory",
     "severity",
 ]
+
+_BATCH_INT_KEYS = {
+    "epoch",
+    "batch",
+    "global_step",
+    "optimizer_steps",
+    "batch_size",
+    "accumulation_step",
+}
+_BATCH_FLOAT_KEYS = {
+    "loss",
+    "lr",
+    "grad_norm",
+    "step_time_sec",
+    "samples_per_sec",
+    "ber_ce_loss",
+    "ber_old_loss",
+    "ber_new_loss",
+    "epoch_progress",
+}
+_BATCH_BOOL_KEYS = {"optimizer_step_applied"}
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
@@ -83,6 +109,44 @@ def _write_csv(path: Path, headers: Sequence[str], rows: Iterable[Sequence[Any]]
         for row in rows:
             writer.writerow(list(row))
     return path
+
+
+def _coerce_batch_csv_value(key: str, value: str) -> Any:
+    if value == "":
+        return ""
+    if key in _BATCH_INT_KEYS:
+        return int(value)
+    if key in _BATCH_FLOAT_KEYS:
+        return float(value)
+    if key in _BATCH_BOOL_KEYS:
+        lowered = str(value).strip().lower()
+        return lowered in {"1", "true", "yes"}
+    return value
+
+
+def load_batch_metrics_history(batch_metrics_csv: Path | str) -> List[Dict[str, Any]]:
+    rows: List[Dict[str, Any]] = []
+    path = Path(batch_metrics_csv)
+    if not path.exists():
+        return rows
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        for row in reader:
+            rows.append({key: _coerce_batch_csv_value(key, value) for key, value in row.items() if key is not None})
+    return rows
+
+
+class BatchMetricsRecorder:
+    """Append batch metrics directly to CSV to avoid retaining the full history in memory."""
+
+    def __init__(self, *, artifact_root: Path) -> None:
+        training_dir = _artifact_dir(Path(artifact_root), "training")
+        self.output_path = _write_csv(training_dir / "batch_metrics.csv", _BATCH_KEYS, [])
+
+    def append(self, payload: Dict[str, Any]) -> None:
+        row = [payload.get(key, "") for key in _BATCH_KEYS]
+        with self.output_path.open("a", encoding="utf-8", newline="") as handle:
+            csv.writer(handle).writerow(row)
 
 
 def _resolve_output_subdirs(artifact_subdir: str, telemetry_subdir: str | None) -> tuple[str, str]:
@@ -178,17 +242,21 @@ def persist_training_history_artifacts(
 def persist_batch_metrics_artifacts(
     *,
     artifact_root: Path,
-    batch_history: Sequence[Dict[str, Any]],
+    batch_history: Sequence[Dict[str, Any]] | None = None,
+    batch_metrics_csv: Path | str | None = None,
     telemetry: Any = None,
 ) -> Dict[str, Path]:
     training_dir = _artifact_dir(artifact_root, "training")
-    extras = sorted({str(key) for row in batch_history for key in row.keys()} - set(_BATCH_KEYS))
-    headers = [*_BATCH_KEYS, *extras]
-    rows: List[List[Any]] = []
-    for row in batch_history:
-        rows.append([row.get(key, "") for key in headers])
-
-    batch_csv = _write_csv(training_dir / "batch_metrics.csv", headers, rows)
+    if batch_metrics_csv is not None:
+        batch_csv = Path(batch_metrics_csv)
+    else:
+        history_rows = list(batch_history or [])
+        extras = sorted({str(key) for row in history_rows for key in row.keys()} - set(_BATCH_KEYS))
+        headers = [*_BATCH_KEYS, *extras]
+        rows: List[List[Any]] = []
+        for row in history_rows:
+            rows.append([row.get(key, "") for key in headers])
+        batch_csv = _write_csv(training_dir / "batch_metrics.csv", headers, rows)
     _copy_artifacts_to_telemetry(telemetry, [(batch_csv, "training/batch_metrics.csv")])
     return {"batch_metrics_csv": batch_csv}
 

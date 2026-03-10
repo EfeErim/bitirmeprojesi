@@ -11,21 +11,23 @@ class IdentityModule(nn.Module):
         return x
 
 
-def _build_minimal_trainer() -> tuple[ContinualSDLoRATrainer, nn.Parameter]:
+def _build_minimal_trainer(*, num_epochs: int = 2, grad_accumulation_steps: int = 1) -> tuple[ContinualSDLoRATrainer, nn.Parameter]:
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
         target_modules_strategy="all_linear_transformer",
         fusion_layers=[2],
         fusion_output_dim=4,
         device="cpu",
-        num_epochs=2,
+        num_epochs=num_epochs,
+        grad_accumulation_steps=grad_accumulation_steps,
     )
     trainer = ContinualSDLoRATrainer(cfg)
     trainer.class_to_idx = {"healthy": 0}
     trainer.adapter_model = IdentityModule()
-    trainer.classifier = nn.Linear(4, 2)
+    trainer.classifier = nn.Linear(1, 1, bias=False)
     trainer.fusion = IdentityModule()
-    trainable = nn.Parameter(torch.tensor([1.0], requires_grad=True))
+    trainer.classifier.weight.data.fill_(1.0)
+    trainable = trainer.classifier.weight
     trainer.optimizer = torch.optim.SGD([trainable], lr=0.1)
     trainer.training_step = lambda _batch: (trainable ** 2).sum()  # type: ignore[assignment]
     trainer.forward_logits = lambda images: torch.zeros(images.shape[0], 2)  # type: ignore[assignment]
@@ -189,3 +191,60 @@ def test_session_emits_exception_checkpoint_request():
     checkpoint_events = [event for event in events if event["event_type"] == "checkpoint_requested"]
     assert checkpoint_events
     assert checkpoint_events[-1]["payload"]["reason"] == "exception"
+
+
+def test_session_flushes_final_accumulation_step():
+    trainer, trainable = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=4)
+    session = ContinualTrainingSession(
+        trainer,
+        _make_loader(2),
+        1,
+    )
+
+    history = session.run()
+
+    assert history.optimizer_steps == 1
+    assert trainable.item() != pytest.approx(1.0)
+
+
+def test_session_resume_matches_uninterrupted_training_mid_epoch():
+    uninterrupted_trainer, uninterrupted_param = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
+    uninterrupted_session = ContinualTrainingSession(uninterrupted_trainer, _make_loader(3), 1)
+    uninterrupted_history = uninterrupted_session.run()
+
+    resume_trainer, _ = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
+    captured = {}
+    stop_flag = {"value": False}
+
+    holder = {"session": None}
+
+    def observer(event):
+        if event["event_type"] != "batch_end" or int(event["payload"]["global_step"]) != 1:
+            return
+        captured["session_state"] = holder["session"].snapshot_state()
+        captured["trainer_state"] = resume_trainer.snapshot_training_state()
+        stop_flag["value"] = True
+
+    interrupted_session = ContinualTrainingSession(
+        resume_trainer,
+        _make_loader(3),
+        1,
+        observers=[observer],
+        stop_policy=lambda: stop_flag["value"],
+    )
+    holder["session"] = interrupted_session
+    interrupted_session.run()
+
+    resumed_trainer, resumed_param = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
+    resumed_trainer.restore_training_state(captured["trainer_state"])
+    resumed_session = ContinualTrainingSession(
+        resumed_trainer,
+        _make_loader(3),
+        1,
+        resume_state=captured["session_state"],
+    )
+    resumed_history = resumed_session.run()
+
+    assert resumed_history.optimizer_steps == uninterrupted_history.optimizer_steps
+    assert resumed_history.global_step == uninterrupted_history.global_step
+    assert resumed_param.item() == pytest.approx(uninterrupted_param.item())

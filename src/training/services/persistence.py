@@ -38,6 +38,38 @@ def _restore_checkpoint_component_states(trainer: Any, checkpoint: TrainingCheck
     _load_module_state(trainer.fusion, model_state.get("fusion"))
 
 
+def _capture_module_grad_state(module: Any) -> Dict[str, Any]:
+    if module is None:
+        return {}
+    payload: Dict[str, Any] = {}
+    for name, param in module.named_parameters():
+        if param.grad is None:
+            continue
+        payload[str(name)] = param.grad.detach().cpu().clone()
+    return payload
+
+
+def _restore_module_grad_state(module: Any, grad_state: Any) -> None:
+    if module is None or not isinstance(grad_state, dict):
+        return
+    named_parameters = dict(module.named_parameters())
+    for name, grad in grad_state.items():
+        parameter = named_parameters.get(str(name))
+        if parameter is None:
+            continue
+        if grad is None:
+            parameter.grad = None
+            continue
+        parameter.grad = grad.to(device=parameter.device, dtype=parameter.dtype)
+
+
+def _restore_checkpoint_gradient_state(trainer: Any, checkpoint: TrainingCheckpointPayload) -> None:
+    gradient_state = dict(checkpoint.gradient_state or {})
+    _restore_module_grad_state(trainer.adapter_model, gradient_state.get("adapter_model"))
+    _restore_module_grad_state(trainer.classifier, gradient_state.get("classifier"))
+    _restore_module_grad_state(trainer.fusion, gradient_state.get("fusion"))
+
+
 def _resolve_adapter_root(adapter_dir: str | Path) -> Path:
     root = Path(adapter_dir)
     if root.is_dir() and (root / "continual_sd_lora_adapter").exists():
@@ -269,8 +301,14 @@ def snapshot_training_state(trainer: Any, *, np_module: Any = None) -> TrainingC
         ood_state=serialize_ood_state(trainer.ood_detector),
         rng_state=capture_rng_state(np_module=np_module),
         best_metric_state=dict(trainer.best_metric_state),
+        gradient_state={
+            "adapter_model": _capture_module_grad_state(trainer.adapter_model),
+            "classifier": _capture_module_grad_state(trainer.classifier),
+            "fusion": _capture_module_grad_state(trainer.fusion),
+        },
         current_epoch=int(trainer.current_epoch),
         optimizer_steps=int(trainer.optimizer_steps),
+        accumulation_counter=int(getattr(trainer, "_accumulation_counter", 0)),
     )
 
 
@@ -309,6 +347,7 @@ def restore_training_state(
             trainer.scheduler.load_state_dict(checkpoint.scheduler_state)
     if checkpoint.scaler_state is not None and trainer.scaler.is_enabled():
         trainer.scaler.load_state_dict(checkpoint.scaler_state)
+    _restore_checkpoint_gradient_state(trainer, checkpoint)
 
     if isinstance(checkpoint.ood_state, dict):
         trainer.ood_detector = restore_ood_state(
@@ -319,6 +358,7 @@ def restore_training_state(
     restore_rng_state(checkpoint.rng_state, np_module=np_module)
     trainer.current_epoch = int(checkpoint.current_epoch)
     trainer.optimizer_steps = int(checkpoint.optimizer_steps)
+    trainer._accumulation_counter = int(checkpoint.accumulation_counter)
     trainer.best_metric_state = dict(checkpoint.best_metric_state)
     return checkpoint
 

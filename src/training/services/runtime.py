@@ -32,6 +32,13 @@ def configure_runtime_reproducibility(config: Any, *, np_module: Any = None) -> 
             torch.backends.cudnn.benchmark = False
 
 
+def resolve_runtime_device(requested_device: Any) -> torch.device:
+    requested = str(requested_device or "cpu").strip() or "cpu"
+    if requested.startswith("cuda") and not torch.cuda.is_available():
+        raise RuntimeError(f"Requested device '{requested}' but CUDA is not available.")
+    return torch.device(requested)
+
+
 def resolve_amp_dtype(device: torch.device, mixed_precision: str) -> Optional[torch.dtype]:
     if device.type != "cuda":
         return None
@@ -88,7 +95,7 @@ def configure_training_plan_state(trainer: Any, *, total_batches: int, num_epoch
     trainer._planned_epochs = epochs
     optimizer_steps = max(
         1,
-        math.ceil((max(1, int(total_batches)) * epochs) / max(1, int(trainer.config.grad_accumulation_steps))),
+        epochs * math.ceil(max(1, int(total_batches)) / max(1, int(trainer.config.grad_accumulation_steps))),
     )
     if trainer.config.scheduler_step_on == "epoch":
         optimizer_steps = epochs

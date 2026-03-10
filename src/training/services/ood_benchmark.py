@@ -131,7 +131,12 @@ def _clone_loader(source_loader: DataLoader, dataset: Dataset, *, training_like:
     }
     if num_workers > 0 and prefetch_factor is not None:
         kwargs["prefetch_factor"] = int(prefetch_factor)
-    return DataLoader(dataset, **kwargs)
+    cloned = DataLoader(dataset, **kwargs)
+    if hasattr(source_loader, "_seed_base"):
+        setattr(cloned, "_seed_base", getattr(source_loader, "_seed_base"))
+    if hasattr(source_loader, "_sampler_seed_base"):
+        setattr(cloned, "_sampler_seed_base", getattr(source_loader, "_sampler_seed_base"))
+    return cloned
 
 
 def _mean(values: Sequence[float]) -> Optional[float]:
@@ -151,11 +156,16 @@ def _std(values: Sequence[float]) -> Optional[float]:
     return float(variance ** 0.5)
 
 
-def _select_eval_loader(loaders: Dict[str, Any]) -> tuple[str, Any]:
+def _select_eval_loader(loaders: Dict[str, Any], *, calibration_split_name: str) -> tuple[str, Any]:
     test_loader = loaders.get("test")
     if test_loader is not None and _loader_size(test_loader) > 0:
         return "test", test_loader
-    return "val", loaders.get("val")
+    if calibration_split_name == "val":
+        return "", None
+    val_loader = loaders.get("val")
+    if val_loader is not None and _loader_size(val_loader) > 0:
+        return "val", val_loader
+    return "", None
 
 
 def _select_calibration_loader(loaders: Dict[str, Any]) -> tuple[str, Any]:
@@ -285,8 +295,8 @@ def run_leave_one_class_out_benchmark(
     artifact_root = Path(artifact_root)
     emit = emit_event or (lambda _event_type, _payload: None)
     train_loader = loaders.get("train")
-    eval_split_name, eval_loader = _select_eval_loader(loaders)
     calibration_split_name, calibration_loader = _select_calibration_loader(loaders)
+    eval_split_name, eval_loader = _select_eval_loader(loaders, calibration_split_name=calibration_split_name)
 
     base_context = {
         "crop_name": str(crop_name),
@@ -294,6 +304,7 @@ def run_leave_one_class_out_benchmark(
         "eval_split_name": eval_split_name,
         "calibration_split_name": calibration_split_name,
         "class_count": len(resolved_classes),
+        "estimated_fold_trainings": len(resolved_classes),
     }
 
     if len(resolved_classes) < int(min_classes):
@@ -326,7 +337,7 @@ def run_leave_one_class_out_benchmark(
         return _persist_benchmark_summary(
             artifact_root=artifact_root,
             summary_payload=_build_failed_summary(
-                reason="missing_eval_loader",
+                reason="missing_isolated_eval_loader",
                 base_context=base_context,
                 target_values=target_values,
             ),

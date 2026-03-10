@@ -244,8 +244,10 @@ class TrainingCheckpointPayload:
     scheduler_state: Optional[Dict[str, Any]] = None
     scaler_state: Optional[Dict[str, Any]] = None
     best_metric_state: Dict[str, Any] = field(default_factory=dict)
+    gradient_state: Dict[str, Any] = field(default_factory=dict)
     current_epoch: int = 0
     optimizer_steps: int = 0
+    accumulation_counter: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -262,8 +264,10 @@ class TrainingCheckpointPayload:
             "ood_state": dict(self.ood_state),
             "rng_state": dict(self.rng_state),
             "best_metric_state": dict(self.best_metric_state),
+            "gradient_state": dict(self.gradient_state),
             "current_epoch": int(self.current_epoch),
             "optimizer_steps": int(self.optimizer_steps),
+            "accumulation_counter": int(self.accumulation_counter),
         }
 
     @classmethod
@@ -283,6 +287,8 @@ class TrainingCheckpointPayload:
             ood_state=dict(data.get("ood_state", {})),
             rng_state=dict(data.get("rng_state", {})),
             best_metric_state=dict(data.get("best_metric_state", {})),
+            gradient_state=dict(data.get("gradient_state", {})),
             current_epoch=int(data.get("current_epoch", 0)),
             optimizer_steps=int(data.get("optimizer_steps", 0)),
+            accumulation_counter=int(data.get("accumulation_counter", 0)),
         )

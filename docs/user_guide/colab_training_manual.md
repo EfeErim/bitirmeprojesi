@@ -33,7 +33,7 @@ Notebook 2 expects a flat class-root dataset:
 Before training, validate it with:
 
 ```powershell
-python scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
+.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
 ```
 
 Notebook 2 materializes the runtime split layout automatically:
@@ -59,7 +59,7 @@ The generated runtime dataset includes:
 Important distinction:
 
 - Notebook 2 accepts flat class-root input.
-- `TrainingWorkflow.run(...)` and `python -m src.app.cli training ...` expect the already materialized runtime root.
+- `TrainingWorkflow.run(...)` and local PowerShell `.\scripts\python.cmd -m src.app.cli training ...` expect the already materialized runtime root.
 
 ## Configuration And Controls
 
@@ -97,6 +97,7 @@ Practical behavior:
 - `evaluation.ood_fallback_strategy`
 - `evaluation.ood_benchmark_auto_run`
 - `evaluation.ood_benchmark_min_classes`
+- requesting `device="cuda"` now fails immediately when CUDA is unavailable instead of silently training on CPU
 
 Colab runtime controls live under `colab.training`:
 
@@ -200,6 +201,12 @@ Notebook 2 does not stop at validation accuracy. The current workflow also:
 - otherwise runs the held-out fallback benchmark
 - writes the final gate artifact to `production_readiness.json`
 
+Current readiness guardrails:
+
+- the best in-memory weights are restored before final calibration, evaluation, and adapter export
+- if `val` is used for OOD calibration, Notebook 2 expects an isolated `test/` split for the final readiness verdict
+- if no real `ood/` split exists, the fallback benchmark can retrain once per known class
+
 For the full readiness policy and artifact interpretation, see [ood_readiness_guide.md](ood_readiness_guide.md).
 
 ## BER Rollout
@@ -220,7 +227,7 @@ Recommended comparison flow:
 Optional helper:
 
 ```powershell
-python scripts/evaluate_ber_rollout.py <baseline_artifact_root> <candidate_artifact_root> [...]
+.\scripts\python.cmd scripts/evaluate_ber_rollout.py <baseline_artifact_root> <candidate_artifact_root> [...]
 ```
 
 ## Notebook 3 Adapter Smoke Test
@@ -277,8 +284,8 @@ Or keep a custom location and pass `--adapter-root`.
 Run these before or after notebook changes:
 
 ```powershell
-python scripts/validate_notebook_imports.py
-python scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
+.\scripts\python.cmd scripts/validate_notebook_imports.py
+.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
 pytest tests/colab/test_smoke_training.py -q
 ```
 

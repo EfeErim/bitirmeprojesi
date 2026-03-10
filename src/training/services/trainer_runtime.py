@@ -147,6 +147,36 @@ def add_trainer_classes(trainer: Any, new_class_names: Iterable[str]) -> Dict[st
     return dict(trainer.class_to_idx)
 
 
+def has_pending_gradients(trainer: Any) -> bool:
+    return int(getattr(trainer, "_accumulation_counter", 0)) > 0
+
+
+def _apply_optimizer_step(trainer: Any) -> float:
+    if trainer.optimizer is None:
+        raise RuntimeError("Optimizer is not configured. Call setup_optimizer().")
+    if trainer.scaler.is_enabled():
+        trainer.scaler.unscale_(trainer.optimizer)
+    clip_gradients(trainer)
+    grad_norm = trainer._compute_grad_norm()
+    if trainer.scaler.is_enabled():
+        trainer.scaler.step(trainer.optimizer)
+        trainer.scaler.update()
+    else:
+        trainer.optimizer.step()
+    trainer.optimizer_steps += 1
+    if trainer.config.scheduler_step_on == "batch":
+        trainer._step_scheduler()
+    trainer.optimizer.zero_grad(set_to_none=True)
+    trainer._accumulation_counter = 0
+    return float(grad_norm)
+
+
+def flush_pending_gradients(trainer: Any) -> float | None:
+    if trainer.optimizer is None or not has_pending_gradients(trainer):
+        return None
+    return _apply_optimizer_step(trainer)
+
+
 def execute_train_batch(trainer: Any, batch: Dict[str, torch.Tensor]):
     if trainer.optimizer is None:
         trainer.setup_optimizer()
@@ -173,20 +203,7 @@ def execute_train_batch(trainer: Any, batch: Dict[str, torch.Tensor]):
     should_step = trainer._accumulation_counter >= accumulation_steps
     grad_norm = trainer._reported_grad_norm(gradients_unscaled=not trainer.scaler.is_enabled())
     if should_step:
-        if trainer.scaler.is_enabled():
-            trainer.scaler.unscale_(trainer.optimizer)
-        clip_gradients(trainer)
-        grad_norm = trainer._compute_grad_norm()
-        if trainer.scaler.is_enabled():
-            trainer.scaler.step(trainer.optimizer)
-            trainer.scaler.update()
-        else:
-            trainer.optimizer.step()
-        trainer.optimizer_steps += 1
-        if trainer.config.scheduler_step_on == "batch":
-            trainer._step_scheduler()
-        trainer.optimizer.zero_grad(set_to_none=True)
-        trainer._accumulation_counter = 0
+        grad_norm = _apply_optimizer_step(trainer)
 
     ber_components = getattr(trainer, "_last_ber_components", {}) if trainer.ber_loss is not None else {}
     return build_train_batch_stats(

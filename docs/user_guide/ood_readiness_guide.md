@@ -94,7 +94,11 @@ The readiness artifact combines:
 Current authoritative split selection:
 
 - prefer `test` when a `test/metric_gate.json` artifact exists
-- otherwise fall back to `val`
+- otherwise fall back to `val` only when `val` was not also used for OOD calibration
+
+Important isolation rule:
+
+- if `val` was used for OOD calibration and no isolated `test/` split exists, production readiness fails instead of reusing calibration data as evaluation evidence
 
 That chosen split appears in:
 
@@ -183,6 +187,11 @@ Current defaults in shipped config:
 - `ood_benchmark_auto_run: true`
 - `ood_benchmark_min_classes: 3`
 
+Current benchmark planning detail:
+
+- when fallback benchmarking runs, the workflow reports the estimated fold count before the benchmark starts
+- for `N` known classes, the held-out fallback retrains `N` fold models, so exploratory runs can become expensive quickly
+
 ## BER Note
 
 `training.continual.ood.ber_enabled` is currently a training-only regularizer.
@@ -199,10 +208,11 @@ Evaluate BER by comparing the same artifact set on the same crop, split layout, 
 
 1. Train on the disease classes you actually support.
 2. Add a realistic shared `ood/` pool when possible.
-3. Let the fallback benchmark run only when that pool is missing.
-4. Read `production_readiness.json` before deployment.
-5. Treat split-local metric gates as diagnostics.
-6. Compare BER or other experiments on identical evidence sources.
+3. Keep an isolated `test/` split if `val` is used for calibration and you want a final readiness verdict.
+4. Let the fallback benchmark run only when that pool is missing.
+5. Read `production_readiness.json` before deployment.
+6. Treat split-local metric gates as diagnostics.
+7. Compare BER or other experiments on identical evidence sources.
 
 ## Related Files
 

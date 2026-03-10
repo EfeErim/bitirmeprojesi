@@ -46,6 +46,7 @@ from src.training.services.runtime import (
     configure_runtime_reproducibility,
     configure_training_plan_state,
     ensure_scheduler,
+    resolve_runtime_device,
     step_scheduler,
 )
 from src.training.services.runtime import (
@@ -54,6 +55,8 @@ from src.training.services.runtime import (
 from src.training.services.trainer_runtime import (
     add_trainer_classes,
     execute_train_batch,
+    flush_pending_gradients,
+    has_pending_gradients,
     initialize_trainer_engine,
     predict_with_ood_result,
     refresh_optimizer_after_model_change,
@@ -417,9 +420,7 @@ class ContinualSDLoRATrainer:
         self.config = config
         self.config.validate()
 
-        self.device = torch.device(
-            self.config.device if torch.cuda.is_available() and str(self.config.device).startswith("cuda") else "cpu"
-        )
+        self.device = resolve_runtime_device(self.config.device)
         self.backbone: Optional[nn.Module] = None
         self.adapter_model: Optional[nn.Module] = None
         self.classifier: Optional[nn.Linear] = None
@@ -698,6 +699,12 @@ class ContinualSDLoRATrainer:
 
     def train_batch(self, batch: Dict[str, torch.Tensor]) -> TrainBatchStats:
         return execute_train_batch(self, batch)
+
+    def has_pending_gradients(self) -> bool:
+        return has_pending_gradients(self)
+
+    def flush_pending_gradients(self) -> Optional[float]:
+        return flush_pending_gradients(self)
 
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
         self._ood_calibration_loader = loader

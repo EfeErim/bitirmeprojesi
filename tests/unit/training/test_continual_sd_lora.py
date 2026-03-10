@@ -91,6 +91,19 @@ def test_trainer_seed_configuration_is_repeatable():
     assert torch.equal(first, second)
 
 
+def test_trainer_raises_when_cuda_is_requested_without_gpu(monkeypatch):
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        device="cuda",
+    )
+
+    with pytest.raises(RuntimeError, match="CUDA is not available"):
+        ContinualSDLoRATrainer(cfg)
+
+
 def test_target_resolver_excludes_classifier_and_router_heads():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",

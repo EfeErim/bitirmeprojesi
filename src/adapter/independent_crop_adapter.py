@@ -23,7 +23,7 @@ from src.adapter.checkpointing import (
 from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import read_json_dict, write_json
 from src.training.services.config_surface import extract_continual_training_config
-from src.training.services.runtime import resolve_session_num_epochs
+from src.training.services.runtime import resolve_runtime_device, resolve_session_num_epochs
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,7 @@ class IndependentCropAdapter:
     ) -> None:
         self.crop_name = str(crop_name)
         self.model_name = str(model_name)
-        self.device = torch.device(device if torch.cuda.is_available() and str(device).startswith("cuda") else "cpu")
+        self.device = resolve_runtime_device(device)
 
         self.engine = "continual_sd_lora"
         self.schema_version = "v6"
