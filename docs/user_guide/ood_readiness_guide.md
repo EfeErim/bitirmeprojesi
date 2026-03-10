@@ -1,45 +1,42 @@
 # OOD Readiness Guide
 
-This guide explains how out-of-distribution (OOD) handling works in the current adapter-training workflow, what data you need, and how to read the final readiness result.
-
-## What OOD Means Here
-
-For one crop adapter, the known classes are the diseases you trained on.
-
-Example for tomato:
-
-- known classes: `healthy`, `early_blight`, `late_blight`
-- OOD: anything outside that label set
-
-That can include:
-
-- tomato diseases not in the adapter labels
-- other plant leaves
-- damaged or badly cropped images
-- non-plant images
-
-The goal is simple:
-
-- if the image matches a known class, predict that class
-- if the image does not look like any known class strongly enough, return an unknown / OOD decision
+This guide describes the current OOD and readiness flow implemented by the training workflow and used by Notebook 2.
 
 ## Current Workflow
 
-The supported training path does this automatically:
+The supported path is:
 
-1. Train the adapter on all known classes.
-2. Calibrate OOD statistics on known-class data.
-3. Save the adapter with its OOD state.
-4. Look for real OOD evidence under `data/<crop>/ood/`.
-5. If real OOD data exists, evaluate against it.
-6. If real OOD data does not exist, run the held-out-class fallback benchmark.
-7. Write the final deployment verdict to `production_readiness.json`.
+1. train the adapter on the known classes
+2. calibrate OOD on known-class data
+3. save the adapter with its OOD state
+4. look for real OOD evidence under `data/<crop>/ood/` or the runtime equivalent
+5. if real OOD data exists, score against it
+6. if real OOD data does not exist, run the held-out fallback benchmark
+7. write the final verdict to `production_readiness.json`
 
-The final readiness decision is not taken from `validation/metric_gate.json` or `test/metric_gate.json` alone. The authoritative artifact is `production_readiness.json`.
+The final deployment decision does not come from `validation/metric_gate.json` or `test/metric_gate.json` alone. The authoritative artifact is `production_readiness.json`.
+
+## What OOD Means Here
+
+For one crop adapter, known classes are the diseases that adapter was trained to predict.
+
+Example for tomato:
+
+- known: `healthy`, `early_blight`, `late_blight`
+- OOD: anything outside that label set
+
+That includes:
+
+- unseen diseases for the same crop
+- other plant leaves
+- bad crops, blur, damage, or background clutter
+- non-plant images
+
+The practical goal is to reduce confident wrong predictions on unsupported inputs.
 
 ## Dataset Layout
 
-Known classes still use the normal supervised splits:
+The runtime training layout is:
 
 ```text
 data/<crop>/
@@ -48,7 +45,7 @@ data/<crop>/
   test/<class>/*
 ```
 
-Real OOD data is optional and uses one shared folder:
+Real OOD evidence is optional and uses one shared pool:
 
 ```text
 data/<crop>/
@@ -58,7 +55,7 @@ data/<crop>/
   ood/*
 ```
 
-The `ood/` folder can also contain subfolders:
+`ood/` may also contain nested folders:
 
 ```text
 data/tomato/ood/
@@ -67,67 +64,93 @@ data/tomato/ood/
   random_objects/*
 ```
 
-Important details:
+Current behavior:
 
-- `ood/` is a shared pool of unknown examples, not one folder per known disease class.
-- Images under `ood/` are loaded recursively.
-- Subfolder names inside `ood/` are not treated as class labels.
-- The same `ood/` folder can be reused across multiple runs for the same crop.
+- images under `ood/` are loaded recursively
+- subfolder names inside `ood/` are not treated as class labels
+- one shared `ood/` pool can be reused across runs for the same crop
 
-## What To Put In `ood/`
+## When Real OOD Data Is Missing
 
-Best choices are realistic hard negatives:
+The current fallback is a leave-one-class-out benchmark.
 
-- unseen diseases for the same crop
-- related plant leaves not in the adapter label set
-- non-disease leaf damage
-- bad crops, blur, partial leaves, background clutter
+Example with classes `a`, `b`, `c`:
 
-Allowed but weaker choices:
+1. train on `a` and `b`, treat `c` as temporary OOD
+2. train on `a` and `c`, treat `b` as temporary OOD
+3. train on `b` and `c`, treat `a` as temporary OOD
 
-- random cars, houses, animals, indoor objects
+These fold models are benchmarking artifacts only. The deployable adapter is still the normal final model trained on all classes.
 
-Those are valid OOD samples, but they are often too easy. A detector can look strong on them while still failing on plant-like unknowns.
+If fewer than 3 classes are available, the fallback is considered too weak and readiness fails.
 
-## If `ood/` Does Not Exist
+## How The Final Verdict Is Chosen
 
-The workflow falls back to a held-out-class benchmark.
+The readiness artifact combines:
 
-Simple example with 3 classes `a`, `b`, `c`:
-
-1. Train on `a` and `b`, then test whether `c` is rejected as unknown.
-2. Train on `a` and `c`, then test whether `b` is rejected as unknown.
-3. Train on `b` and `c`, then test whether `a` is rejected as unknown.
-
-Those temporary fold models are only for benchmarking. The deployed adapter is still the normal final model trained on all available classes.
-
-This fallback is useful when you have no real unknown-image set, but it is still proxy evidence rather than direct real-world OOD proof.
-
-## How Readiness Is Decided
-
-The repo combines two kinds of evidence:
-
-- classification evidence from the normal validation/test path
+- classification evidence from the authoritative in-distribution split
 - OOD evidence from either a real `ood/` split or the held-out benchmark
 
-The final artifact is:
+Current authoritative split selection:
+
+- prefer `test` when a `test/metric_gate.json` artifact exists
+- otherwise fall back to `val`
+
+That chosen split appears in:
 
 ```text
-<artifact_root>/production_readiness.json
+production_readiness.json -> classification_evidence.split_name
 ```
 
-Main fields:
+## Artifact Layout
 
-- `status`: `ready` or `failed`
-- `passed`: boolean mirror of the status
-- `ood_evidence_source`: `real_ood_split`, `held_out_benchmark`, or `unavailable`
-- `classification_evidence`: accuracy evidence from the authoritative split
-- `ood_evidence`: OOD metrics and their checks
-- `missing_requirements`: metrics that blocked readiness
-- `targets`: threshold values used for gating
-- `context`: run metadata
+Workflow and CLI training write under:
 
-Default targets are currently:
+```text
+<output_dir>/training_metrics/
+```
+
+Key files:
+
+- `training/results.png`
+- `training/results.csv`
+- `training/history.json`
+- `training/history.csv`
+- `training/batch_metrics.csv`
+- `training/summary.json`
+- `validation/metric_gate.json`
+- `test/metric_gate.json`
+- `ood_benchmark/summary.json`
+- `ood_benchmark/per_fold.csv`
+- `production_readiness.json`
+
+Notebook 2 writes the same artifact families locally under:
+
+```text
+outputs/colab_notebook_training/artifacts/
+```
+
+and mirrors them into:
+
+```text
+runs/<RUN_ID>/outputs/colab_notebook_training/artifacts/
+runs/<RUN_ID>/telemetry/artifacts/
+```
+
+## How To Read The Artifacts
+
+- `validation/metric_gate.json` and `test/metric_gate.json`
+  Split-local classification plus OOD metric checks for that split.
+
+- `ood_benchmark/summary.json`
+  Aggregate fallback evidence when no real `ood/` split exists.
+
+- `production_readiness.json`
+  Final deployment verdict. This is the artifact to use for go/no-go decisions.
+
+## Readiness Targets
+
+The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/services/metrics.py`:
 
 - `accuracy >= 0.93`
 - `ood_auroc >= 0.92`
@@ -135,96 +158,57 @@ Default targets are currently:
 - `sure_ds_f1 >= 0.90`
 - `conformal_empirical_coverage >= 0.95`
 
-## Important Artifacts
+Current implementation detail:
 
-Workflow / CLI training writes these under:
-
-```text
-<output_dir>/training_metrics/
-```
-
-Most useful files:
-
-- `validation/metric_gate.json`
-- `test/metric_gate.json`
-- `ood_benchmark/summary.json`
-- `ood_benchmark/per_fold.csv`
-- `production_readiness.json`
-- `training/summary.json`
-
-Notebook 2 writes the same artifact names under:
-
-```text
-outputs/colab_notebook_training/artifacts/
-```
-
-and mirrors them into the matching local `runs/<RUN_ID>/...` export tree.
-
-How to read them:
-
-- `validation/metric_gate.json` and `test/metric_gate.json`: split-local diagnostics
-- `ood_benchmark/summary.json`: aggregate fallback results when no real `ood/` split exists
-- `production_readiness.json`: final deployment decision
+- production readiness always requires OOD evidence
+- split-local metric gates may still exist even when OOD metrics are missing
+- the final readiness artifact still fails if required OOD evidence is unavailable or below target
 
 ## Configuration
 
-The OOD readiness policy lives under `training.continual.evaluation`.
+The current readiness policy is controlled by `training.continual.evaluation`:
 
-Current defaults:
+- `best_metric`
+- `emit_ood_gate`
+- `require_ood_for_gate`
+- `ood_fallback_strategy`
+- `ood_benchmark_auto_run`
+- `ood_benchmark_min_classes`
+
+Current defaults in shipped config:
 
 - `require_ood_for_gate: true`
 - `ood_fallback_strategy: "held_out_benchmark"`
 - `ood_benchmark_auto_run: true`
 - `ood_benchmark_min_classes: 3`
 
-Practical meaning:
+## BER Note
 
-- OOD evidence is required for readiness by default.
-- If no real `ood/` split exists, the workflow auto-runs the fallback benchmark.
-- If the crop has fewer than 3 classes, fallback evidence is considered too weak and readiness fails.
+`training.continual.ood.ber_enabled` is currently a training-only regularizer.
 
-BER note:
+It does not change:
 
-- `training.continual.ood.ber_enabled` is an optional experimental training-time regularizer.
-- BER does not change the readiness artifact schema, runtime OOD payload, or gate thresholds.
-- Evaluate BER only by comparing the same artifact set on the same crop, split, seed, and OOD evidence source.
+- the readiness artifact schema
+- the inference payload shape
+- the readiness threshold definitions
 
-## What This Does And Does Not Guarantee
+Evaluate BER by comparing the same artifact set on the same crop, split layout, seed, and OOD evidence source.
 
-What the repo does automatically:
+## Recommended Practice
 
-- OOD calibration
-- OOD metric computation when evidence exists
-- fallback benchmarking when real OOD data is missing
-- final readiness reporting
-
-What still requires judgment:
-
-- whether your `ood/` set is realistic enough
-- whether fallback evidence is strong enough for your deployment risk
-
-Important limitation:
-
-- no benchmark can prove rejection for every unseen disease in the world
-
-The practical goal is not perfect certainty. It is to reduce confident wrong predictions on things the adapter was never trained to recognize.
-
-## Recommended Practice For Plant Adapters
-
-Use this order of preference:
-
-1. Train normally on the disease classes you support.
-2. Add a small shared `ood/` pool with realistic plant-like unknowns if you can.
-3. Let the workflow use the fallback benchmark when you do not have that pool yet.
-4. If you trial BER, treat it as training-only and compare it against a BER-off baseline on the same evidence source.
-5. Inspect `production_readiness.json` instead of relying on one split-local metric file.
-6. Expand the shared `ood/` pool over time using real failure cases and hard negatives.
+1. Train on the disease classes you actually support.
+2. Add a realistic shared `ood/` pool when possible.
+3. Let the fallback benchmark run only when that pool is missing.
+4. Read `production_readiness.json` before deployment.
+5. Treat split-local metric gates as diagnostics.
+6. Compare BER or other experiments on identical evidence sources.
 
 ## Related Files
 
-- [README.md](../../README.md)
-- [Colab Training Manual](colab_training_manual.md)
-- [Architecture Overview](../architecture/overview.md)
-- [OOD Recommendation](../architecture/ood_recommendation.md)
-- [Training Workflow](../../src/workflows/training.py)
-- [OOD Benchmark Service](../../src/training/services/ood_benchmark.py)
+- [../../README.md](../../README.md)
+- [colab_training_manual.md](colab_training_manual.md)
+- [../architecture/overview.md](../architecture/overview.md)
+- [../architecture/ood_recommendation.md](../architecture/ood_recommendation.md)
+- [../../src/workflows/training.py](../../src/workflows/training.py)
+- [../../src/training/services/metrics.py](../../src/training/services/metrics.py)
+- [../../src/training/services/ood_benchmark.py](../../src/training/services/ood_benchmark.py)

@@ -1,13 +1,39 @@
-# Colab Training
+# Colab Training Manual
 
-Use `colab_notebooks/2_interactive_adapter_training.ipynb`.
+This guide covers the current maintained Colab surfaces:
 
-For direct post-training adapter verification, use `colab_notebooks/3_adapter_smoke_test.ipynb`.
+- Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
+- Notebook 3: `colab_notebooks/3_adapter_smoke_test.ipynb`
+
+Notebook 2 is the training surface. Notebook 3 is the post-training direct adapter validation surface.
+
+## Notebook 2 In One Pass
+
+The current Notebook 2 flow is:
+
+1. resolve the repo root, install notebook requirements, and mount Drive when available
+2. resolve a Hugging Face token from env or Colab secrets
+3. validate a flat class-root dataset
+4. materialize a runtime dataset split under `data/runtime_notebook_datasets/<crop>/`
+5. train the continual SD-LoRA adapter
+6. calibrate OOD and write validation/test artifacts
+7. run held-out fallback OOD benchmarking when real `ood/` data is missing
+8. write `production_readiness.json`
+9. mirror local outputs into `runs/<RUN_ID>/`
+10. optionally auto-disconnect the Colab runtime after final exports succeed
 
 ## Dataset Contract
 
+Notebook 2 expects a flat class-root dataset:
+
 ```text
 <root>/<class>/<images>
+```
+
+Before training, validate it with:
+
+```powershell
+python scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
 ```
 
 Notebook 2 materializes the runtime split layout automatically:
@@ -19,24 +45,41 @@ data/runtime_notebook_datasets/<crop>/
   test/<class>/*
 ```
 
-Each generated runtime dataset includes:
+If a shared unknown pool exists, the workflow also reads:
 
-- `split_manifest.json` with source root, crop, seed, allowed classes, per-class counts, and split policy
-- `_split_metadata.json` as the legacy compatibility mirror
+```text
+data/runtime_notebook_datasets/<crop>/ood/*
+```
 
-## Training Controls
+The generated runtime dataset includes:
 
-Normalized training controls live in `training.continual`:
+- `split_manifest.json`
+- `_split_metadata.json`
 
-- `adapter.lora_r`, `adapter.lora_alpha`, `adapter.lora_dropout`
-- `adapter.target_modules_strategy`
+Important distinction:
+
+- Notebook 2 accepts flat class-root input.
+- `TrainingWorkflow.run(...)` and `python -m src.app.cli training ...` expect the already materialized runtime root.
+
+## Configuration And Controls
+
+Current normalized training controls live under `training.continual`:
+
+- `backbone.model_name`
+- `adapter.target_modules_strategy`, `adapter.lora_r`, `adapter.lora_alpha`, `adapter.lora_dropout`
 - `fusion.layers`, `fusion.output_dim`, `fusion.dropout`, `fusion.gating`
+- `learning_rate`, `weight_decay`, `num_epochs`, `batch_size`
 - `seed`, `deterministic`
 - `optimization.grad_accumulation_steps`
 - `optimization.max_grad_norm`
 - `optimization.mixed_precision`
 - `optimization.label_smoothing`
 - `optimization.scheduler`
+- `data.sampler`
+- `data.loader_error_policy`
+- `data.target_size`
+- `data.cache_size`
+- `data.validate_images_on_init`
 - `ood.threshold_factor`
 - `ood.ber_enabled`, `ood.ber_lambda_old`, `ood.ber_lambda_new`
 - `ood.radial_l2_enabled`, `ood.radial_beta_range`, `ood.radial_beta_steps`
@@ -46,197 +89,200 @@ Normalized training controls live in `training.continual`:
 - `evaluation.best_metric`
 - `evaluation.emit_ood_gate`
 - `evaluation.require_ood_for_gate`
+- `evaluation.ood_fallback_strategy`
+- `evaluation.ood_benchmark_auto_run`
+- `evaluation.ood_benchmark_min_classes`
 
-Colab runtime-only controls live in `colab.training`:
+Colab runtime controls live under `colab.training`:
 
 - `num_workers`
 - `pin_memory`
-- `stdout_progress_batch_interval`
-- `stdout_progress_min_interval_sec`
 - `checkpoint_every_n_steps`
 - `checkpoint_on_exception`
+- `stdout_progress_batch_interval`
+- `stdout_progress_min_interval_sec`
 
-Legacy `checkpoint_interval` is still accepted as an alias for `checkpoint_every_n_steps`.
+Legacy compatibility:
 
-Notebook-only top-cell completion controls:
+- `checkpoint_interval` is still normalized as an alias for `checkpoint_every_n_steps`.
 
-- `AUTO_DISCONNECT_RUNTIME`
-- `AUTO_DISCONNECT_GRACE_SECONDS`
-
-## What The Notebook Trains
-
-Notebook 2 trains a continual SD-LoRA adapter rather than fine-tuning the full backbone.
-
-The training stack is:
-
-- frozen pretrained backbone
-- LoRA adapters on selected transformer linear layers
-- multi-scale feature fusion across configured backbone layers
-- classifier head trained for the current crop classes
-
-This keeps most backbone weights fixed and saves only the adapter bundle, classifier, fusion state, and metadata.
-
-## OOD Behavior
-
-After normal training, the workflow calibrates OOD statistics on known-class data.
-
-For the full production-readiness flow, including `data/<crop>/ood/`, the held-out fallback benchmark, and `production_readiness.json`, see [OOD Readiness Guide](ood_readiness_guide.md).
-
-Calibration stores per-class:
-
-- fused-feature mean and variance for Mahalanobis scoring
-- logit energy mean and standard deviation
-- ensemble threshold derived from the calibrated score distribution
-- SURE+ semantic and confidence thresholds (when enabled)
-
-Detector-level calibration also stores:
-
-- calibrated radial normalization $\beta$ (when enabled)
-- conformal nonconformity quantile $\hat{q}$ (when enabled)
-
-Inference then returns both the predicted class and an OOD payload built from:
-
-- `mahalanobis_z`
-- `energy_z`
-- `ensemble_score`
-- `class_threshold`
-- `is_ood`
-
-When enabled, payloads additionally include:
-
-- `radial_beta`
-- `sure_semantic_score`, `sure_confidence_score`
-- `sure_semantic_ood`, `sure_confidence_reject`
-- `conformal_set`, `conformal_set_size`, `conformal_coverage`
-
-Typical tuning order for notebook users:
-
-1. Set `training.continual.ood.threshold_factor` for baseline sensitivity.
-2. Enable/disable SURE+ and adjust `sure_semantic_percentile` / `sure_confidence_percentile`.
-3. Enable conformal prediction and set `conformal_alpha` for target coverage level.
-4. Enable BER when continual old/new class energy separation needs stabilization.
-
-BER guidance:
-
-- BER is experimental and training-only. It does not change the runtime OOD payload shape or readiness gate logic.
-- BER is most relevant for incremental old/new class separation, but Notebook 2 also exposes it as an optional one-shot training experiment.
-- When BER is enabled, batch telemetry can include `ber_ce_loss`, `ber_old_loss`, and `ber_new_loss` in `training/batch_metrics.csv`.
-
-## BER Experiment Matrix
-
-Notebook 2 now exposes these top-cell controls:
+Notebook-only top-cell toggles currently exposed in Notebook 2:
 
 - `BER_ENABLED`
 - `BER_LAMBDA_OLD`
 - `BER_LAMBDA_NEW`
+- `AUTO_DISCONNECT_RUNTIME`
+- `AUTO_DISCONNECT_GRACE_SECONDS`
 
-Recommended rollout procedure:
+## Hugging Face Access
 
-1. Keep crop, split layout, seed, and OOD evidence source fixed.
-2. Run one baseline with BER disabled.
-3. Run BER with `0.05 / 0.05`, `0.10 / 0.10`, and `0.20 / 0.20`.
-4. Compare the same readiness artifacts:
+Notebook 2 resolves a token from:
+
+- `HF_TOKEN`
+- `HUGGINGFACE_TOKEN`
+- `HUGGINGFACE_HUB_TOKEN`
+- matching Colab secrets when running in Colab
+
+The notebook validates the token before model access.
+
+## What Notebook 2 Produces
+
+### Local notebook output
+
+```text
+outputs/colab_notebook_training/
+  continual_sd_lora_adapter/
+  artifacts/
+```
+
+`artifacts/` contains the same artifact families as the workflow surface:
+
+- `training/`
+- `validation/`
+- `test/`
+- `ood_benchmark/`
+- `production_readiness.json`
+
+### Repo mirror
+
+Notebook 2 mirrors non-checkpoint outputs into:
+
+```text
+runs/<RUN_ID>/
+  notebooks/2_interactive_adapter_training.executed.ipynb
+  outputs/colab_notebook_training/
+  telemetry/
+  checkpoint_state/
+```
+
+`checkpoint_state/` is a metadata mirror only. The rolling checkpoint tree itself stays under the Drive checkpoint root.
+
+### Drive telemetry
+
+Current Drive telemetry layout:
+
+```text
+<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/
+  checkpoints/
+  artifacts/
+    training/
+    validation/
+    test/
+    ood_benchmark/
+    adapter_export/
+      continual_sd_lora_adapter/
+  events.jsonl
+  runtime.log
+  latest_status.json
+  summary.json
+  latest_checkpoint.json
+  best_checkpoint.json
+  checkpoint_index.json
+```
+
+Important current-state note:
+
+- Notebook 2 currently exports adapter assets to `artifacts/adapter_export/continual_sd_lora_adapter/`.
+- Some helper code and older fixtures also support `artifacts/adapter/`.
+- Do not rely on older docs that mention `export_layout.json` or `crop_info.json` as guaranteed notebook outputs; they are not part of the current maintained notebook flow.
+
+## OOD And Readiness
+
+Notebook 2 does not stop at validation accuracy. The current workflow also:
+
+- calibrates OOD state after training
+- evaluates against real `ood/` data when present
+- otherwise runs the held-out fallback benchmark
+- writes the final gate artifact to `production_readiness.json`
+
+For the full readiness policy and artifact interpretation, see [ood_readiness_guide.md](ood_readiness_guide.md).
+
+## BER Rollout
+
+BER is currently an optional training-only experiment.
+
+Recommended comparison flow:
+
+1. keep crop, seed, split layout, and OOD evidence source fixed
+2. run a BER-off baseline
+3. run BER candidates with different `BER_LAMBDA_OLD` / `BER_LAMBDA_NEW` values
+4. compare:
    - `validation/metric_gate.json`
    - `test/metric_gate.json`
    - `ood_benchmark/summary.json`
    - `production_readiness.json`
-5. Optionally automate the comparison with:
-   - `.\.venv\Scripts\python.exe scripts/evaluate_ber_rollout.py <baseline_artifact_root> <candidate_artifact_root> [...]`
 
-Accept a BER setting only if all of these are true:
+Optional helper:
 
-- readiness is not worse than the baseline run
-- authoritative accuracy drops by no more than `0.002` absolute
-- either `ood_auroc` improves by at least `0.01` or `ood_false_positive_rate` improves by at least `0.01`
+```powershell
+python scripts/evaluate_ber_rollout.py <baseline_artifact_root> <candidate_artifact_root> [...]
+```
 
-## Outputs
+## Notebook 3 Adapter Smoke Test
 
-Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:
+Notebook 3 loads one adapter directly through `scripts/colab_adapter_smoke_test.py` without the router.
 
-- Local outputs stay under `outputs/colab_notebook_training/`
-  - adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-  - notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-- When the run finishes, all non-checkpoint outputs are mirrored into the local `runs/<RUN_ID>/` export tree in the repo
-  - notebook export: `runs/<RUN_ID>/notebooks/2_interactive_adapter_training.executed.ipynb`
-  - local notebook outputs: `runs/<RUN_ID>/outputs/colab_notebook_training/`
-  - telemetry logs and artifacts: `runs/<RUN_ID>/telemetry/`
-  - checkpoint metadata only: `runs/<RUN_ID>/checkpoint_state/`
-- After the final evaluation, telemetry close, repo mirroring, and executed-notebook export all succeed, Notebook 2 can automatically disconnect the Colab runtime to avoid idle credit usage.
-- Drive outputs stay under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
-  Default root: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
-  - `artifacts/adapter/`
-  - `artifacts/validation/`
-  - `artifacts/best_checkpoint.json`
-  - `artifacts/export_layout.json`
-  - `artifacts/crop_info.json`
-  - `checkpoints/`
-- Meaning of each Drive path:
-  - `artifacts/adapter/` holds the adapter exported from the best checkpoint
-  - `artifacts/validation/` holds the validation metrics and plots for that best checkpoint
-  - `artifacts/best_checkpoint.json` identifies which checkpoint was selected as best
-  - `artifacts/export_layout.json` records the final local/Drive paths for the run
-  - `artifacts/crop_info.json` records the crop name for the run
-  - `checkpoints/` holds the rolling checkpoint history during training
+Use it to:
 
-Workflow / CLI training (`TrainingWorkflow.run(...)` and `python -m src.app.cli training ...`) writes:
+- inspect saved adapter metadata
+- verify the bundle still loads
+- run one-image or folder-level sanity predictions
 
-- Adapter: `<output_dir>/continual_sd_lora_adapter/`
-- Workflow metrics board: `<output_dir>/training_metrics/training/results.png`
-- Workflow epoch metrics: `<output_dir>/training_metrics/training/results.csv`
-- Workflow batch telemetry: `<output_dir>/training_metrics/training/batch_metrics.csv`
-- Workflow confusion/report artifacts: `<output_dir>/training_metrics/validation/`
+Current accepted `ADAPTER_DIR` patterns include:
 
-Inference default adapter lookup remains:
+- direct asset dir: `.../continual_sd_lora_adapter/`
+- parent export dir: `outputs/colab_notebook_training/`
+- current Notebook 2 Drive export dir: `.../telemetry/<RUN_ID>/artifacts/adapter_export/`
+- older telemetry adapter dir when present: `.../telemetry/<RUN_ID>/artifacts/adapter/`
+- direct metadata file: `.../adapter_meta.json`
 
-- `models/adapters/<crop>/continual_sd_lora_adapter/`
+Current accepted `ADAPTER_ROOT` pattern:
 
-If your adapter was produced by Notebook 2, copy or move it from either the local notebook export or the Drive telemetry adapter export under `models/adapters/<crop>/`, or use inference `--adapter-root`.
+- parent of crop folders, usually `models/adapters/`
 
-Repo hygiene note:
+Important caveat:
 
-- `runs/`, `models/adapters/`, and `outputs/` are generated local workspaces and should not be committed.
-- `colab_notebooks/requirements_colab.txt` is only a notebook-local wrapper around the canonical root `requirements_colab.txt`.
-
-## Adapter Smoke Test
-
-Notebook 3 (`colab_notebooks/3_adapter_smoke_test.ipynb`) is the maintained direct-adapter validation surface.
-
-Use it when you want to verify that a trained adapter bundle still loads correctly on the DINO backbone and can produce predictions without involving the router.
-
-The notebook supports a discovery-first flow:
-
-- it searches the configured Drive roots for adapter bundles
-- it prints the discovered candidates and shows a selection dropdown when widgets are available
-- it uses the selected adapter for metadata inspection and prediction
-
-The notebook also supports manual path inputs when you want to bypass discovery:
-
-- explicit export path with `ADAPTER_DIR`
-  - parent export directory such as `outputs/colab_notebook_training/`
-  - asset directory such as `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-  - telemetry run directory such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
-  - telemetry artifacts directory such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/`
-  - direct metadata file such as `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/artifacts/adapter/adapter_meta.json`
-- deployed adapter layout with `ADAPTER_ROOT/<crop>/continual_sd_lora_adapter/`
-  - `ADAPTER_ROOT` should be the parent of crop folders, for example `models/adapters/`
+- If your telemetry run only contains the current `adapter_export/continual_sd_lora_adapter/` layout, point `ADAPTER_DIR` at `adapter_export/` or the `continual_sd_lora_adapter/` folder itself.
+- `ADAPTER_ROOT` is for deployed adapters under `models/adapters/<crop>/...`, not for telemetry run roots.
 
 For image inputs:
 
-- `IMAGE_PATH` must point to one image file
-- `BATCH_IMAGE_DIR` must point to one directory containing image files
-- `CROP_NAME` can stay `None` when the chosen adapter path already implies the crop, such as `models/adapters/<crop>/continual_sd_lora_adapter/` or a telemetry export with `crop_info.json`
+- `IMAGE_PATH` must be one image file.
+- `BATCH_IMAGE_DIR` must be one directory of image files.
+- `CROP_NAME` can stay `None` when the adapter path itself implies the crop or nearby metadata provides it.
 
-The notebook includes:
+## Deployment Handoff
 
-- adapter metadata inspection
-- one-image smoke prediction
-- optional folder-level sanity check with per-file errors, predicted-class counts, and OOD counts
+Router inference looks for adapters at:
+
+```text
+models/adapters/<crop>/continual_sd_lora_adapter/
+```
+
+You can deploy from any of these current outputs:
+
+- `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+- `runs/<RUN_ID>/outputs/colab_notebook_training/continual_sd_lora_adapter/`
+- `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/artifacts/adapter_export/continual_sd_lora_adapter/`
+
+Or keep a custom location and pass `--adapter-root`.
 
 ## Validation
 
-Run before or after notebook updates:
+Run these before or after notebook changes:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/validate_notebook_imports.py
-.\.venv\Scripts\python.exe scripts/evaluate_dataset_layout.py --root data\<your_class_root_dataset>
+python scripts/validate_notebook_imports.py
+python scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
+pytest tests/colab/test_smoke_training.py -q
 ```
+
+## Repo Hygiene
+
+Keep these out of git:
+
+- `runs/`
+- `models/adapters/`
+- `outputs/`
+
+`colab_notebooks/requirements_colab.txt` should stay in the repo. It is the notebook-local wrapper around the canonical root `requirements_colab.txt`.

@@ -1,133 +1,168 @@
 # Architecture
 
-The repo is intentionally narrow.
+This repo is intentionally narrow. The current project state is one adapter family, one workflow layer, one router runtime, and a small set of Colab helper surfaces.
 
-## Training
+## Configuration
 
-- `colab_notebooks/2_interactive_adapter_training.ipynb`
-- `src/workflows/training.py`
-- `src/adapter/independent_crop_adapter.py`
-- `src/training/continual_sd_lora.py`
-- `src/training/session.py`
-- `src/training/validation.py`
-- `src/training/types.py`
-- `src/data/`
-- `scripts/colab_checkpointing.py`
-- `scripts/colab_dataset_layout.py`
-- `scripts/colab_live_telemetry.py`
-- `scripts/colab_notebook_helpers.py`
+Current config flow:
 
-Training is split into four layers:
+1. `src/core/config_manager.py` loads `config/base.json`.
+2. Optional environment overrides such as `config/colab.json` are deep-merged on top.
+3. `src/training/services/config_surface.py` normalizes the public `training.continual` surface.
+4. Legacy top-level OOD aliases are backfilled into `training.continual.ood` and kept in sync.
+5. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
 
-1. `TrainingWorkflow.run(...)` is the canonical orchestration entrypoint for the supported adapter-training flow.
-2. `ContinualSDLoRATrainer` owns model initialization, LoRA wrapping, optimizer setup, batch stepping, snapshot/restore, OOD calibration, and adapter save/load, while `src/training/services/` holds shared metric/runtime/persistence helpers.
-3. `ContinualTrainingSession` owns epoch/batch orchestration, resume, validation timing, checkpoint requests, best-metric updates, early stopping, observer events, and history accumulation.
-4. `evaluate_model(...)` computes validation metrics outside the trainer loop, while notebook helpers persist reports, confusion matrices, and the metric gate artifact (`accuracy`, OOD AUROC, FPR@95TPR, and optional SURE+/conformal checks when supplied).
+Important files:
 
-## LoRA Training Details
+- `config/base.json`
+- `config/colab.json`
+- `src/core/config_manager.py`
+- `src/training/services/config_surface.py`
 
-The supported training path uses one backbone and one adapter strategy only: continual SD-LoRA.
+## Training Stack
 
-At a high level:
+Current training path:
 
-1. `ContinualSDLoRATrainer` loads a pretrained backbone and freezes its base parameters.
-2. The trainer resolves target transformer modules and applies PEFT LoRA wrappers to those linear layers.
-3. Intermediate backbone layers are sampled and fused by `MultiScaleFeatureFusion`.
-4. A classifier head is trained on top of the fused representation for the current crop classes.
-5. When new classes are added, the classifier is expanded with old weights copied forward and the optimizer is rebuilt around the new trainable head.
-6. The saved adapter bundle includes LoRA weights, classifier weights, fusion weights, config metadata, and serialized OOD state.
+1. `src/workflows/training.py` is the canonical orchestration entrypoint.
+2. `src/workflows/training_support.py` resolves loaders, class names, adapter initialization, and artifact payload shaping.
+3. `src/adapter/independent_crop_adapter.py` owns the public adapter lifecycle and delegates the actual engine to the trainer.
+4. `src/training/continual_sd_lora.py` owns backbone initialization, LoRA wrapping, optimization, prediction, and OOD calibration.
+5. `src/training/session.py` runs epochs and emits observer events for telemetry and checkpoints.
+6. `src/training/services/` persists plots, metric gates, OOD benchmark summaries, and readiness artifacts.
 
-Configuration for this path lives in `ContinualSDLoRAConfig` and includes:
+The supported adapter path is continual SD-LoRA only:
 
-- backbone model name
-- LoRA rank / alpha / dropout
-- target module selection strategy
-- fusion layer selection and output dimension
-- optimizer, scheduler, mixed precision, and early stopping controls
+- frozen pretrained DINOv3 backbone
+- LoRA adapters on selected transformer linear layers
+- multi-scale feature fusion
+- classifier head over the fused representation
+- OOD state persisted with the exported adapter bundle
 
-The implementation surface for these details is `src/training/continual_sd_lora.py`, while adapter packaging and runtime metadata are handled by `src/adapter/independent_crop_adapter.py` and `src/training/services/persistence.py`.
+## Data Contracts
 
-Notebook 2 now uses a two-stage dataset contract:
+There are two dataset contracts in the current project:
 
-1. User input is a flat class-root directory `<root>/<class>/<images>`.
-2. `prepare_runtime_dataset_layout(...)` materializes `data/runtime_notebook_datasets/<crop>/{continual,val,test}/<class>` and writes `split_manifest.json`.
+- Notebook input contract:
+  `<root>/<class>/<images>`
 
-The session emits stable observer payloads. `batch_end` exposes `loss`, and epoch/validation payloads carry the validation summary plus the history snapshot used for artifact persistence and best-checkpoint decisions.
+- Runtime training contract:
+  `<data_dir>/<crop>/{continual,val,test[,ood]}/...`
 
-Checkpoint payloads persist the normalized trainer contract, optimizer state, scheduler state, scaler state, best-metric state, optimizer-step counters, RNG state, and serialized OOD calibration state. Adapter bundles persist LoRA weights, classifier/fusion weights, and the public metadata contract in one place.
+`scripts/colab_dataset_layout.py` converts the flat class-root notebook input into the runtime split layout and writes:
 
-## OOD Details
+- `split_manifest.json`
+- `_split_metadata.json`
 
-OOD behavior is part of the canonical adapter runtime, not a separate model family.
+`src/data/datasets.py` maps workflow split `train` onto runtime split `continual`.
 
-The current production path works like this:
+## Inference Stack
 
-1. Train the adapter on all known classes (optionally with BER loss wrapping CE).
-2. Run OOD calibration on known-class data after training.
-3. Persist per-class and detector-level calibration statistics with the adapter.
-4. During inference, score the predicted class with an ensemble OOD detector and optional conformal set output.
+Current inference path:
 
-The detector base ensemble combines two signals:
+1. `src/workflows/inference.py` exposes `InferenceWorkflow.predict(...)`.
+2. `src/pipeline/router_adapter_runtime.py` loads the router lazily, chooses the crop, loads the per-crop adapter, and returns a typed result.
+3. `src/router/vlm_pipeline.py` owns the router-side crop and part analysis.
+4. `src/pipeline/inference_payloads.py` maps raw adapter output into the public payload.
+5. `src/shared/contracts.py` defines the shared `InferenceResult`, `OODAnalysis`, and adapter metadata contracts.
 
-- Mahalanobis distance in fused feature space, normalized as a z-score per class
-- energy score from classifier logits, also normalized as a z-score per class
+Default adapter resolution:
 
-The runtime ensemble is `0.6 * mahalanobis_z + 0.4 * energy_z`. Each class gets its own threshold derived from the calibrated ensemble distribution.
+```text
+models/adapters/<crop>/continual_sd_lora_adapter/
+```
 
-Extended OOD stack details:
+`crop_hint` bypasses router crop resolution. `part_hint` is optional metadata, not a separate adapter selector.
 
-- Radially scaled L2 normalization can auto-tune $\beta$ during calibration and normalize features before Mahalanobis statistics are estimated.
-- SURE+ double scoring computes semantic OOD score (ensemble-based) and confidence rejection score (`1 - max softmax`), then applies calibrated percentile thresholds.
-- Conformal prediction calibrates a global nonconformity quantile $\hat{q}$ and produces `conformal_set` at inference time.
-- BER (Bi-directional Energy Regularization) is training-only and applies separate old/new energy penalties via a composable loss wrapper.
-- The fully extended calibration path materializes one feature/logit snapshot and reuses it across radial, SURE+, and conformal phases to avoid repeated loader rescans.
+## OOD Stack
 
-When SURE+ is enabled, the final OOD decision uses combined semantic/confidence rejection; conformal output is returned as an additional prediction-set field, not as a replacement for top-1 diagnosis.
+Current OOD behavior is part of the adapter runtime, not a separate model family.
 
-The relevant repo mapping is:
+The supported path is:
+
+1. train on known classes
+2. calibrate OOD after training
+3. persist calibration with the adapter
+4. score inference output with the calibrated OOD detector
+
+Implemented pieces:
 
 - detector logic: `src/ood/continual_ood.py`
-- BER loss wrapper: `src/training/ber_loss.py`
 - radial normalization: `src/ood/radial_normalization.py`
 - SURE+ scoring: `src/ood/sure_scoring.py`
 - conformal prediction: `src/ood/conformal_prediction.py`
-- calibration orchestration: `src/training/services/ood_calibration.py`
-- OOD metric computation and gate checks: `src/training/services/metrics.py`
-- inference payload normalization: `src/pipeline/inference_payloads.py`
+- BER loss wrapper: `src/training/ber_loss.py`
+- OOD calibration orchestration: `src/training/services/ood_calibration.py`
+- readiness metrics and gates: `src/training/services/metrics.py`
+- held-out fallback benchmark: `src/training/services/ood_benchmark.py`
 
-User-facing operational guidance for real OOD data, fallback benchmarking, and final readiness artifacts lives in [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md). A literature-backed recommendation note for next-step OOD improvements lives in [ood_recommendation.md](ood_recommendation.md). The original held-out-class design note remains in [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md).
+Default readiness targets currently live in `DEFAULT_PLAN_TARGETS` inside `src/training/services/metrics.py`.
 
-Output locations are surface-specific:
+## Colab Support
 
-- Notebook 2 writes adapter + notebook artifacts under `outputs/colab_notebook_training/`, mirrors non-checkpoint exports into the local `runs/<RUN_ID>/` tree, and writes rolling checkpoints to Drive telemetry (`.../telemetry/<RUN_ID>/checkpoints/`).
-- `TrainingWorkflow.run(...)` (including `python -m src.app.cli training ...`) writes adapter and metrics under the provided `<output_dir>` (`<output_dir>/continual_sd_lora_adapter/` and `<output_dir>/training_metrics/`).
+Maintained Colab helpers:
 
-## Inference
-
-- `src/workflows/inference.py`
-- `src/pipeline/router_adapter_runtime.py`
-- `src/pipeline/inference_payloads.py`
-- `src/router/vlm_pipeline.py`
-- `scripts/colab_router_adapter_inference.py`
-- `colab_notebooks/1_router_adapter_inference.ipynb`
-
-Inference is one path only:
-
-1. `InferenceWorkflow.predict(...)` is the canonical entrypoint.
-2. Router resolves the crop.
-3. Runtime loads that crop adapter lazily.
-4. Adapter returns diagnosis and OOD payload through a typed inference contract.
-
-By default inference resolves adapters from `models/adapters/<crop>/continual_sd_lora_adapter/`, unless `adapter_root` / `--adapter-root` is provided.
-
-## Adapter Validation
-
+- `scripts/colab_repo_bootstrap.py`
+- `scripts/colab_live_telemetry.py`
+- `scripts/colab_checkpointing.py`
+- `scripts/colab_notebook_helpers.py`
 - `scripts/colab_adapter_smoke_test.py`
-- `colab_notebooks/3_adapter_smoke_test.ipynb`
 
-This direct-adapter surface is separate from router inference:
+These helpers cover:
 
-1. Resolve one crop adapter from either an explicit export path or a deployed adapter root.
-2. Load the adapter bundle directly through `IndependentCropAdapter`.
-3. Inspect the saved metadata contract.
-4. Run a one-image smoke prediction or a small folder sanity pass without router involvement.
+- repo discovery or auto-clone
+- dependency installation for notebooks
+- Drive mounting and Hugging Face login checks
+- local spool plus Drive telemetry sync
+- rolling checkpoint management
+- repo mirror exports for notebook runs
+- notebook completion checks and optional runtime auto-disconnect
+- direct adapter discovery and smoke prediction
+
+## Artifact Flow
+
+Workflow and CLI training write:
+
+```text
+<output_dir>/
+  continual_sd_lora_adapter/
+  training_metrics/
+```
+
+`training_metrics/` currently contains:
+
+- `training/`
+- `validation/`
+- `test/`
+- `ood_benchmark/`
+- `production_readiness.json`
+
+Notebook 2 writes:
+
+- local outputs under `outputs/colab_notebook_training/`
+- repo mirrors under `runs/<RUN_ID>/`
+- Drive telemetry under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
+
+Current adapter export detail:
+
+- local notebook export: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
+- workflow export: `<output_dir>/continual_sd_lora_adapter/`
+- current Notebook 2 Drive telemetry export: `artifacts/adapter_export/continual_sd_lora_adapter/`
+- some smoke-test helper paths also accept `artifacts/adapter/`
+
+## Validation Surfaces
+
+The repo currently validates itself through:
+
+- `scripts/validate_notebook_imports.py`
+- `scripts/evaluate_dataset_layout.py`
+- `scripts/benchmark_surfaces.py`
+- `tests/unit/`
+- `tests/integration/`
+- `tests/colab/test_smoke_training.py`
+
+## Related Docs
+
+- [../user_guide/colab_training_manual.md](../user_guide/colab_training_manual.md)
+- [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
+- [ood_recommendation.md](ood_recommendation.md)
+- [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md)
