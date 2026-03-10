@@ -160,9 +160,10 @@ The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/se
 
 Current implementation detail:
 
-- production readiness always requires OOD evidence
-- split-local metric gates may still exist even when OOD metrics are missing
-- the final readiness artifact still fails if required OOD evidence is unavailable or below target
+- production readiness follows `require_ood_for_gate`
+- split-local metric gates are still computed for internal readiness logic
+- `emit_ood_gate` controls whether `validation/metric_gate.json` and `test/metric_gate.json` are written to disk
+- the final readiness artifact fails if required OOD evidence is unavailable or below target
 
 ## Configuration
 

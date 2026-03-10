@@ -81,6 +81,20 @@ def test_reporting_can_write_test_artifacts_to_a_separate_subdirectory(tmp_path:
     assert result["paths"]["metric_gate_json"].parent.name == "test"
 
 
+def test_reporting_can_skip_metric_gate_artifact_emission(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        emit_metric_gate=False,
+    )
+
+    assert "metric_gate_json" not in result["paths"]
+    assert result["metric_gate"]["metrics"]["accuracy"] == 1.0
+    assert not (tmp_path / "training_metrics" / "validation" / "metric_gate.json").exists()
+
+
 def test_batch_metrics_artifacts_include_optional_ber_columns(tmp_path: Path):
     artifact_root = tmp_path / "training_metrics"
     batch_history = [

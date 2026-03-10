@@ -119,6 +119,28 @@ def test_build_production_readiness_passes_with_real_ood_evidence(tmp_path):
     assert readiness["missing_requirements"] == []
 
 
+def test_build_production_readiness_allows_missing_ood_evidence_when_not_required(tmp_path):
+    validation = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+    )
+
+    readiness = build_production_readiness(
+        classification_metric_gate=validation["metric_gate"],
+        classification_split="test",
+        ood_evidence_source="unavailable",
+        ood_metrics={},
+        require_ood=False,
+    )
+
+    assert readiness["status"] == "ready"
+    assert readiness["passed"] is True
+    assert readiness["ood_evidence"]["evaluation"]["require_ood"] is False
+    assert readiness["missing_requirements"] == []
+
+
 def test_build_production_readiness_fails_when_ood_evidence_is_missing(tmp_path):
     validation = persist_validation_artifacts(
         artifact_root=tmp_path / "training_metrics",
@@ -132,6 +154,7 @@ def test_build_production_readiness_fails_when_ood_evidence_is_missing(tmp_path)
         classification_split="test",
         ood_evidence_source="unavailable",
         ood_metrics={},
+        require_ood=True,
     )
 
     assert readiness["status"] == "failed"

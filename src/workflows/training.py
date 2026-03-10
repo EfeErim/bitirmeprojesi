@@ -237,6 +237,9 @@ class TrainingWorkflow:
         require_ood = bool(
             getattr(getattr(trainer, "config", None), "evaluation_require_ood_for_gate", False)
         )
+        emit_metric_gate = bool(
+            getattr(getattr(trainer, "config", None), "evaluation_emit_ood_gate", True)
+        )
         metric_context = {
             "run_id": run_id,
             "crop_name": crop_name,
@@ -254,6 +257,7 @@ class TrainingWorkflow:
             artifact_subdir=artifact_subdir,
             telemetry_subdir=telemetry_subdir,
             require_ood=require_ood,
+            emit_metric_gate=emit_metric_gate,
             ood_labels=evaluation_result.ood_labels,
             ood_scores=evaluation_result.ood_scores,
             sure_ds_f1=evaluation_result.sure_ds_f1,
@@ -555,6 +559,7 @@ class TrainingWorkflow:
                 "ood_benchmark_status": ood_benchmark.get("status"),
                 "ood_benchmark_passed": ood_benchmark.get("passed"),
             },
+            require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
             telemetry=telemetry,
         )
         production_readiness = dict(readiness_artifacts.get("payload", {}))

@@ -54,6 +54,7 @@ class TestContinualSmoke:
         trainer.adapter_model = Dummy()
         trainer.fusion = Dummy()
         trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
+        trainer._ensure_ood_calibrated = lambda *, operation: None  # type: ignore[assignment]
         trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
             'mahalanobis_z': torch.tensor([0.1]),
             'energy_z': torch.tensor([0.2]),

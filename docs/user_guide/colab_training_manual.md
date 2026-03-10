@@ -89,6 +89,11 @@ Current normalized training controls live under `training.continual`:
 - `evaluation.best_metric`
 - `evaluation.emit_ood_gate`
 - `evaluation.require_ood_for_gate`
+
+Practical behavior:
+
+- `evaluation.emit_ood_gate` controls whether split-local `validation/metric_gate.json` and `test/metric_gate.json` are written
+- `evaluation.require_ood_for_gate` controls whether final production readiness hard-fails when OOD evidence is missing
 - `evaluation.ood_fallback_strategy`
 - `evaluation.ood_benchmark_auto_run`
 - `evaluation.ood_benchmark_min_classes`

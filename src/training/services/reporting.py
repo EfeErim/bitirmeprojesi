@@ -353,6 +353,7 @@ def persist_production_readiness_artifact(
     ood_metrics: Dict[str, Any] | None,
     targets: Dict[str, float] | None = None,
     context: Dict[str, Any] | None = None,
+    require_ood: bool = True,
     telemetry: Any = None,
 ) -> Dict[str, Any]:
     artifact_root = Path(artifact_root)
@@ -364,6 +365,7 @@ def persist_production_readiness_artifact(
         ood_metrics=ood_metrics,
         targets=targets,
         context=context,
+        require_ood=require_ood,
     )
     readiness_json = ArtifactStore(artifact_root).write_json("production_readiness.json", payload)
     _copy_artifacts_to_telemetry(telemetry, [(readiness_json, "production_readiness.json")])
@@ -381,6 +383,7 @@ def persist_validation_artifacts(
     telemetry_subdir: str | None = None,
     gate_targets: Dict[str, float] | None = None,
     require_ood: bool = False,
+    emit_metric_gate: bool = True,
     ood_labels: Sequence[int] | None = None,
     ood_scores: Sequence[float] | None = None,
     sure_ds_f1: float | None = None,
@@ -419,7 +422,6 @@ def persist_validation_artifacts(
     confusion_csv = validation_dir / "confusion_matrix.csv"
     np.savetxt(confusion_csv, cm, delimiter=",", fmt="%d")
     per_class_csv = validation_dir / "per_class_metrics.csv"
-    metric_gate_json = validation_dir / "metric_gate.json"
     confusion_png = validation_dir / "confusion_matrix.png"
     confusion_norm_png = validation_dir / "confusion_matrix_normalized.png"
     _write_per_class_metrics_csv(per_class_csv, resolved_classes, report_dict)
@@ -445,7 +447,6 @@ def persist_validation_artifacts(
         "cm_csv": confusion_csv,
         "cm_png": confusion_png,
         "cm_norm_png": confusion_norm_png,
-        "metric_gate_json": metric_gate_json,
     }
     _copy_artifacts_to_telemetry(
         telemetry,
@@ -478,13 +479,18 @@ def persist_validation_artifacts(
         ),
     )
     metric_gate = write_plan_metric_artifact(
-        output_path=metric_gate_json,
+        output_path=validation_dir / "metric_gate.json",
         metrics=metrics,
         targets=gate_targets,
         require_ood=require_ood,
         context=metric_context,
     )
-    _copy_artifacts_to_telemetry(telemetry, [(metric_gate_json, f"{resolved_telemetry_subdir}/metric_gate.json")])
+    metric_gate_json = validation_dir / "metric_gate.json"
+    if emit_metric_gate:
+        paths["metric_gate_json"] = metric_gate_json
+        _copy_artifacts_to_telemetry(telemetry, [(metric_gate_json, f"{resolved_telemetry_subdir}/metric_gate.json")])
+    else:
+        metric_gate_json.unlink(missing_ok=True)
 
     return {
         "report_text": report_text,

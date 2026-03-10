@@ -24,9 +24,9 @@ class FakeHistory:
 
 
 class FakeSession:
-    def __init__(self, observers):
+    def __init__(self, observers, trainer=None):
         self.observers = list(observers)
-        self.trainer = object()
+        self.trainer = trainer if trainer is not None else object()
 
     def snapshot_state(self):
         return {"progress_state": {"epoch": 1, "global_step": 2}, "history": {"train_loss": [0.1]}}
@@ -54,7 +54,22 @@ class FakeAdapter:
         return {"status": "initialized"}
 
     def build_training_session(self, train_loader, **kwargs):
-        return FakeSession(kwargs.get("observers", []))
+        evaluation = (
+            self.initialized.get("config", {})
+            .get("training", {})
+            .get("continual", {})
+            .get("evaluation", {})
+        )
+        trainer_config = type(
+            "FakeTrainerConfig",
+            (),
+            {
+                "evaluation_require_ood_for_gate": bool(evaluation.get("require_ood_for_gate", True)),
+                "evaluation_emit_ood_gate": bool(evaluation.get("emit_ood_gate", True)),
+            },
+        )()
+        trainer = type("FakeTrainer", (), {"config": trainer_config})()
+        return FakeSession(kwargs.get("observers", []), trainer=trainer)
 
     def calibrate_ood(self, loader):
         return {"status": "calibrated", "ood_calibration": {"version": 1}}
@@ -279,3 +294,106 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
     assert result.ood_evidence_source == "held_out_benchmark"
     assert result.production_readiness["passed"] is True
     assert result.production_readiness["ood_evidence_source"] == "held_out_benchmark"
+
+
+def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr(
+        "src.workflows.training.run_leave_one_class_out_benchmark",
+        lambda **kwargs: {},
+    )
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {
+                        "require_ood_for_gate": False,
+                        "ood_fallback_strategy": "none",
+                        "ood_benchmark_auto_run": False,
+                    },
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert result.ood_evidence_source == "unavailable"
+    assert result.production_readiness["passed"] is True
+    assert result.production_readiness["ood_evidence"]["evaluation"]["require_ood"] is False
+
+
+def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr(
+        "src.workflows.training.run_leave_one_class_out_benchmark",
+        lambda **kwargs: {},
+    )
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {
+                        "emit_ood_gate": False,
+                        "require_ood_for_gate": False,
+                        "ood_fallback_strategy": "none",
+                        "ood_benchmark_auto_run": False,
+                    },
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert result.production_readiness["passed"] is True
+    assert "metric_gate_json" not in result.artifacts["validation"]
+    assert "metric_gate_json" not in result.artifacts["test"]
+    assert not (result.artifact_dir / "validation" / "metric_gate.json").exists()
+    assert not (result.artifact_dir / "test" / "metric_gate.json").exists()

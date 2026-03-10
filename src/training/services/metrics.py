@@ -83,12 +83,20 @@ def _resolve_ood_metric_payload(ood_metrics: Optional[Dict[str, Optional[float]]
 def _collect_missing_requirements(
     accuracy_check: Dict[str, Any],
     ood_checks: Dict[str, Dict[str, Any]],
+    *,
+    require_ood: bool,
 ) -> list[str]:
     missing_requirements: list[str] = []
     if not accuracy_check.get("asserted", False) or not accuracy_check.get("passed", False):
         missing_requirements.append("accuracy")
     for metric_name, detail in ood_checks.items():
-        if not detail.get("asserted", False) or not detail.get("passed", False):
+        asserted = bool(detail.get("asserted", False))
+        passed = bool(detail.get("passed", False))
+        if require_ood:
+            if not asserted or not passed:
+                missing_requirements.append(metric_name)
+            continue
+        if asserted and not passed:
             missing_requirements.append(metric_name)
     return missing_requirements
 
@@ -258,6 +266,7 @@ def build_production_readiness(
     ood_metrics: Optional[Dict[str, Optional[float]]],
     targets: Optional[Dict[str, float]] = None,
     context: Optional[Dict[str, Any]] = None,
+    require_ood: bool = True,
 ) -> Dict[str, Any]:
     target_values = dict(targets or load_plan_targets())
     classification_gate = dict(classification_metric_gate or {})
@@ -270,9 +279,13 @@ def build_production_readiness(
     )
 
     resolved_ood_metrics = _resolve_ood_metric_payload(ood_metrics)
-    ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=True)
+    ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=require_ood)
 
-    missing_requirements = _collect_missing_requirements(accuracy_check, ood_validation["checks"])
+    missing_requirements = _collect_missing_requirements(
+        accuracy_check,
+        ood_validation["checks"],
+        require_ood=require_ood,
+    )
     passed = not missing_requirements
     status = "ready" if passed else "failed"
     return {
