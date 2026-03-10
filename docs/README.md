@@ -37,9 +37,11 @@ When docs and older notes disagree, prefer:
 
 These scripts reflect the current maintained surfaces:
 
-- `python scripts/validate_notebook_imports.py`
-- `python scripts/evaluate_dataset_layout.py --root <flat_class_root>`
-- `python scripts/benchmark_surfaces.py`
+Windows PowerShell should prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher. CI and POSIX shells can keep `python ...`.
+
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
+- `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>`
+- `.\scripts\python.cmd scripts/benchmark_surfaces.py`
 
 ## Tracked Vs Local Files
 

@@ -69,10 +69,11 @@ Use the smallest set that covers the task.
 
 Start with the narrowest relevant subset:
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
-- `python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
+- `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 
 Run benchmark capture when orchestration interfaces, workflow entrypoints, or router runtime behavior change.
 

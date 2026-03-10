@@ -53,9 +53,10 @@ Do not edit generated outputs as if they were maintained source unless the user 
 
 Use the narrowest relevant validation first:
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
-- `python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
+- `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 
 Run benchmark capture when workflow entrypoints, router runtime orchestration, or benchmarked interfaces change.

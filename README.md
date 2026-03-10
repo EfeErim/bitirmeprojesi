@@ -10,7 +10,7 @@ The canonical app-facing entrypoints are:
 
 - `src/workflows/training.py` via `TrainingWorkflow.run(...)`
 - `src/workflows/inference.py` via `InferenceWorkflow.predict(...)`
-- `src/app/cli.py` via `python -m src.app.cli ...`
+- `src/app/cli.py` via `python -m src.app.cli ...` or local Windows PowerShell `.\scripts\python.cmd -m src.app.cli ...`
 
 The repo keeps one training engine and one runtime contract:
 
@@ -33,21 +33,30 @@ Use [docs/README.md](docs/README.md) for the documentation map.
 
 ## Quick Start
 
+Local Windows PowerShell should prefer `.\scripts\python.cmd ...`. It resolves the repo `.venv` first and ignores the Microsoft Store `python.exe` stub.
+
+Create the repo virtual environment once if it does not already exist:
+
+```powershell
+.\scripts\python.cmd -m venv .venv
+```
+
 Install dependencies:
 
 ```powershell
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+.\scripts\python.cmd -m pip install --upgrade pip
+.\scripts\python.cmd -m pip install -r requirements.txt
+.\scripts\python.cmd -m pip install -r requirements-dev.txt
 ```
 
 Validate the maintained surfaces:
 
 ```powershell
-python scripts/validate_notebook_imports.py
-python scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
+.\scripts\python.cmd scripts/validate_notebook_imports.py
+.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
 pytest tests/unit tests/colab/test_smoke_training.py -q
 pytest tests/integration -q --runintegration
-python scripts/benchmark_surfaces.py
+.\scripts\python.cmd scripts/benchmark_surfaces.py
 ```
 
 ## Running The Project
@@ -55,14 +64,14 @@ python scripts/benchmark_surfaces.py
 CLI inference:
 
 ```powershell
-python -m src.app.cli inference path\to\image.jpg --config-env colab
-python scripts/colab_router_adapter_inference.py path\to\image.jpg --config-env colab
+.\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab
+.\scripts\python.cmd scripts/colab_router_adapter_inference.py path\to\image.jpg --config-env colab
 ```
 
 CLI training:
 
 ```powershell
-python -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
+.\scripts\python.cmd -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
 ```
 
 Important dataset rule:

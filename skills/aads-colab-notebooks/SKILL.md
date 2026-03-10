@@ -38,6 +38,7 @@ Load `skills/aads-training-ood/SKILL.md` for Notebook 2 training or readiness be
 
 ## Validate
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/colab/test_smoke_training.py -q`
 - Run the narrowest relevant notebook-adjacent tests or helper imports for the touched Colab scripts.

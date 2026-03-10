@@ -35,6 +35,7 @@ Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 2, 
 
 ## Validate
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit/workflows/test_training_workflow.py tests/colab/test_smoke_training.py -q`
 - Add or run the narrowest relevant training-side unit or integration tests for the touched modules.

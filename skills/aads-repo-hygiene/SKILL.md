@@ -34,7 +34,8 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 
 ## Validate
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
 - Re-check `.github/workflows/ci.yml` when changing validation commands or coverage expectations.

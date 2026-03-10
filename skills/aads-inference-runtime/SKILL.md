@@ -36,6 +36,7 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1 or Notebook 3 wrapper
 
 ## Validate
 
-- `python scripts/validate_notebook_imports.py`
+- On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
+- `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit/pipeline/test_router_adapter_runtime.py tests/unit/workflows/test_inference_workflow.py -q`
-- `python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json` when runtime orchestration or router performance surfaces change.
+- `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json` when runtime orchestration or router performance surfaces change.
