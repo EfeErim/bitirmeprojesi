@@ -10,8 +10,10 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import Callable, Optional
+from urllib.parse import urlsplit, urlunsplit
 
 HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
+GITHUB_TOKEN_NAMES = ("GH_TOKEN", "GITHUB_TOKEN")
 
 
 def is_repo_root(path: Path) -> bool:
@@ -157,6 +159,50 @@ def _read_json_dict(path: Path) -> dict:
     return dict(payload) if isinstance(payload, dict) else {}
 
 
+def _run_git(
+    args: list[str],
+    *,
+    cwd: Path,
+    check: bool = True,
+    capture_output: bool = False,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args],
+        cwd=str(cwd),
+        check=check,
+        stdout=subprocess.PIPE if capture_output else None,
+        stderr=subprocess.STDOUT if capture_output else None,
+        text=True,
+    )
+
+
+def _chunked(items: list[str], size: int = 200) -> list[list[str]]:
+    if size <= 0:
+        return [items]
+    return [items[index : index + size] for index in range(0, len(items), size)]
+
+
+def _git_current_branch(repo_root: Path) -> str:
+    completed = _run_git(["branch", "--show-current"], cwd=repo_root, capture_output=True)
+    return str(completed.stdout or "").strip()
+
+
+def _git_remote_url(repo_root: Path, remote_name: str) -> str:
+    completed = _run_git(["remote", "get-url", remote_name], cwd=repo_root, capture_output=True)
+    return str(completed.stdout or "").strip()
+
+
+def _build_authenticated_remote_url(repo_url: str, token: str) -> str:
+    parsed = urlsplit(str(repo_url or "").strip())
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise RuntimeError(
+            "GitHub auto-push currently supports only HTTPS remotes. "
+            "Set origin to an https:// URL or disable auto-push."
+        )
+    netloc = parsed.netloc.split("@", 1)[-1]
+    return urlunsplit((parsed.scheme, f"{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+
+
 def mirror_path_to_repo(
     source_path: str | Path,
     destination_path: str | Path,
@@ -243,6 +289,104 @@ def mirror_checkpoint_state_to_repo(
         )
 
     return mirrored_root
+
+
+def resolve_github_token() -> Optional[str]:
+    """Resolve a GitHub token from env vars first, then Colab secrets."""
+    for env_name in GITHUB_TOKEN_NAMES:
+        token = str(os.environ.get(env_name, "")).strip()
+        if token:
+            os.environ.setdefault("GH_TOKEN", token)
+            return token
+
+    if not running_in_colab():
+        return None
+
+    try:
+        from google.colab import userdata
+    except Exception:
+        return None
+
+    for secret_name in GITHUB_TOKEN_NAMES:
+        try:
+            token = str(userdata.get(secret_name) or "").strip()
+        except Exception:
+            token = ""
+        if token:
+            os.environ["GH_TOKEN"] = token
+            return token
+
+    return None
+
+
+def push_repo_run_to_github(
+    repo_root: str | Path,
+    run_id: str,
+    *,
+    remote_name: str = "origin",
+    branch: Optional[str] = None,
+    commit_message: Optional[str] = None,
+    token: Optional[str] = None,
+    print_fn: Optional[Callable[[str], None]] = None,
+) -> dict[str, object]:
+    """Commit and push one mirrored runs/<RUN_ID> tree, excluding .pt checkpoint blobs."""
+    emit = print if print_fn is None else print_fn
+    repo = Path(repo_root).expanduser().resolve()
+    run_dir = repo / "runs" / str(run_id)
+    if not is_repo_root(repo):
+        raise FileNotFoundError(f"Repository root not found: {repo}")
+    if not run_dir.is_dir():
+        raise FileNotFoundError(f"Run export directory not found: {run_dir}")
+
+    resolved_token = str(token or resolve_github_token() or "").strip()
+    if not resolved_token:
+        raise RuntimeError("GitHub auto-push requires GH_TOKEN or GITHUB_TOKEN in env vars or Colab secrets.")
+
+    resolved_branch = str(branch or os.environ.get("AADS_REPO_PUSH_BRANCH") or _git_current_branch(repo) or "").strip()
+    if not resolved_branch:
+        raise RuntimeError("Could not determine the target git branch for auto-push.")
+
+    remote_url = _git_remote_url(repo, remote_name)
+    push_url = _build_authenticated_remote_url(remote_url, resolved_token)
+    relative_run_dir = run_dir.relative_to(repo)
+    tracked_files = [
+        str(path.relative_to(repo))
+        for path in sorted(run_dir.rglob("*"))
+        if path.is_file() and path.suffix.lower() != ".pt"
+    ]
+
+    _run_git(["config", "user.name", os.environ.get("AADS_GIT_USER_NAME", "AADS Colab")], cwd=repo)
+    _run_git(["config", "user.email", os.environ.get("AADS_GIT_USER_EMAIL", "aads-colab@local")], cwd=repo)
+
+    if tracked_files:
+        for chunk in _chunked(tracked_files):
+            _run_git(["add", "--", *chunk], cwd=repo)
+
+    staged = _run_git(["diff", "--cached", "--name-only", "--", str(relative_run_dir)], cwd=repo, capture_output=True)
+    staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
+    if not staged_files:
+        emit(f"[GIT] No eligible repo mirror changes to push for runs/{run_id}.")
+        return {
+            "enabled": True,
+            "pushed": False,
+            "branch": resolved_branch,
+            "remote_name": remote_name,
+            "run_dir": str(run_dir),
+            "staged_files": [],
+        }
+
+    message = str(commit_message or f"Add notebook 2 outputs for run {run_id}")
+    _run_git(["commit", "-m", message], cwd=repo)
+    _run_git(["push", push_url, f"HEAD:{resolved_branch}"], cwd=repo)
+    emit(f"[GIT] Pushed {len(staged_files)} file(s) from runs/{run_id} to {remote_name}/{resolved_branch}.")
+    return {
+        "enabled": True,
+        "pushed": True,
+        "branch": resolved_branch,
+        "remote_name": remote_name,
+        "run_dir": str(run_dir),
+        "staged_files": staged_files,
+    }
 
 
 def resolve_hf_token() -> Optional[str]:

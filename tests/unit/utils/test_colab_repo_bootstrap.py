@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -30,6 +31,30 @@ def test_resolve_hf_token_reads_colab_secret(monkeypatch):
 
     assert bootstrap.resolve_hf_token() == "secret-token"
     assert os.environ["HF_TOKEN"] == "secret-token"
+
+
+def test_resolve_github_token_prefers_existing_env(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "gh-env-token")
+    monkeypatch.setattr(bootstrap, "running_in_colab", lambda: False)
+
+    assert bootstrap.resolve_github_token() == "gh-env-token"
+
+
+def test_resolve_github_token_reads_colab_secret(monkeypatch):
+    monkeypatch.delenv("GH_TOKEN", raising=False)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    monkeypatch.setattr(bootstrap, "running_in_colab", lambda: True)
+
+    fake_colab = ModuleType("google.colab")
+    fake_colab.userdata = SimpleNamespace(get=lambda name: "gh-secret" if name == "GH_TOKEN" else None)
+    fake_google = ModuleType("google")
+    fake_google.colab = fake_colab
+
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.colab", fake_colab)
+
+    assert bootstrap.resolve_github_token() == "gh-secret"
+    assert os.environ["GH_TOKEN"] == "gh-secret"
 
 
 def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
@@ -118,3 +143,47 @@ def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: P
     assert mirrored_best["path"] == str(destination_root / "checkpoints" / "ckpt_best")
     assert mirrored_latest["path"] == str(destination_root / "checkpoints" / "ckpt_best")
     assert "ckpt_other" not in mirrored_index
+
+
+def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    (repo_root / "src").mkdir(parents=True)
+    (repo_root / "config").mkdir(parents=True)
+    (repo_root / "scripts").mkdir(parents=True)
+    run_dir = repo_root / "runs" / "run_1"
+    keep_file = run_dir / "outputs" / "colab_notebook_training" / "artifacts" / "summary.json"
+    pt_file = run_dir / "checkpoint_state" / "checkpoints" / "best" / "checkpoint.pt"
+    keep_file.parent.mkdir(parents=True, exist_ok=True)
+    pt_file.parent.mkdir(parents=True, exist_ok=True)
+    keep_file.write_text("{}", encoding="utf-8")
+    pt_file.write_text("weights", encoding="utf-8")
+
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    calls: list[list[str]] = []
+
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None):
+        calls.append(list(command))
+        args = list(command[1:])
+        if args == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
+        if args[:4] == ["diff", "--cached", "--name-only", "--"]:
+            return subprocess.CompletedProcess(command, 0, stdout="runs/run_1/outputs/colab_notebook_training/artifacts/summary.json\n")
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    result = bootstrap.push_repo_run_to_github(repo_root, "run_1", print_fn=lambda _: None)
+
+    assert result["pushed"] is True
+    add_calls = [call for call in calls if call[1] == "add"]
+    assert add_calls
+    added_args = " ".join(" ".join(call) for call in add_calls)
+    assert "summary.json" in added_args
+    assert "checkpoint.pt" not in added_args
+
+    push_calls = [call for call in calls if call[1] == "push"]
+    assert push_calls
+    assert "gh-secret@" in push_calls[0][2]

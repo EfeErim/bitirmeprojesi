@@ -199,6 +199,7 @@ def test_colab_helpers() -> bool:
             export_current_colab_notebook,
             mirror_checkpoint_state_to_repo,
             mirror_path_to_repo,
+            push_repo_run_to_github,
         )
         from scripts.evaluate_dataset_layout import evaluate_layout
 
@@ -206,6 +207,7 @@ def test_colab_helpers() -> bool:
         assert callable(export_current_colab_notebook)
         assert callable(mirror_checkpoint_state_to_repo)
         assert callable(mirror_path_to_repo)
+        assert callable(push_repo_run_to_github)
         _ = (TrainingCheckpointManager, prepare_runtime_dataset_layout, ColabLiveTelemetry, evaluate_layout)
         print(f"PASS {gate_label(step_id, 'Colab helper surfaces imported successfully')}")
         return True

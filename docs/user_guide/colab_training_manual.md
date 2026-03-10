@@ -61,7 +61,8 @@ This is the current Notebook 2 flow from start to finish:
 11. use real `ood/` data when present, otherwise run the held-out fallback benchmark when enabled
 12. write `production_readiness.json`
 13. mirror outputs into `runs/<RUN_ID>/`
-14. optionally auto-disconnect the Colab runtime after final exports succeed
+14. optionally auto-push the mirrored run record to GitHub
+15. optionally auto-disconnect the Colab runtime after final exports succeed
 
 ## The Dataset Format Notebook 2 Accepts
 
@@ -249,9 +250,9 @@ Notebook 2 also exposes a small set of notebook-level toggles:
 
 These are convenience controls for the notebook surface. The canonical workflow still lives in `TrainingWorkflow.run(...)`.
 
-## Hugging Face Token Resolution
+## Token Resolution
 
-Notebook 2 looks for a token in these sources:
+Notebook 2 resolves the Hugging Face token from these sources:
 
 - `HF_TOKEN`
 - `HUGGINGFACE_TOKEN`
@@ -259,6 +260,14 @@ Notebook 2 looks for a token in these sources:
 - matching Colab secrets when running inside Colab
 
 The notebook validates the token before model access.
+
+Notebook 2 also resolves the GitHub push token from:
+
+- `GH_TOKEN`
+- `GITHUB_TOKEN`
+- matching Colab secrets when running inside Colab
+
+If auto-push is enabled, the notebook uses that token after the repo mirror step.
 
 ## What Notebook 2 Produces
 
@@ -300,6 +309,11 @@ Important detail:
 
 - `checkpoint_state/` keeps checkpoint metadata plus only the mirrored best checkpoint
 - the actual rolling checkpoint tree stays under the Drive checkpoint root
+
+Optional current behavior:
+
+- if `AUTO_PUSH_TO_GITHUB` is enabled and `GH_TOKEN` or `GITHUB_TOKEN` is available, Notebook 2 commits and pushes `runs/<RUN_ID>/` after the mirror step
+- the auto-push helper skips `.pt` checkpoint blobs, so large resume weights stay out of the normal GitHub history
 
 ### 3. Drive telemetry
 
