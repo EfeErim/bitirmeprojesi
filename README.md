@@ -15,6 +15,8 @@ The workflow layer delegates to `src/pipeline/router_adapter_runtime.py`, `src/t
 
 User-facing OOD behavior, dataset layout, fallback benchmarking, and readiness outputs are documented in [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md). Historical design notes live under `docs/architecture/`, including `docs/architecture/experimental_leave_one_class_out_ood.md`.
 
+Use [docs/README.md](docs/README.md) as the documentation index and the repo hygiene reference for tracked vs local-generated files.
+
 ## Core Model Behavior
 
 The training engine is a continual SD-LoRA adapter pipeline:
@@ -75,7 +77,7 @@ Training surfaces and output paths differ by entrypoint:
 	- local outputs stay under `outputs/colab_notebook_training/`
 		- adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
 		- notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-	- when the run finishes, non-checkpoint outputs are mirrored into `runs/<RUN_ID>/`
+	- when the run finishes, non-checkpoint outputs are mirrored into the local `runs/<RUN_ID>/` export tree
 		- notebook export: `runs/<RUN_ID>/notebooks/2_interactive_adapter_training.executed.ipynb`
 		- local notebook outputs: `runs/<RUN_ID>/outputs/colab_notebook_training/`
 		- telemetry logs and artifacts: `runs/<RUN_ID>/telemetry/`
@@ -109,12 +111,21 @@ Training surfaces and output paths differ by entrypoint:
 ## Colab
 
 - Root Colab dependencies live in `requirements_colab.txt`
+- `colab_notebooks/requirements_colab.txt` is a thin wrapper around the root file so notebook bootstrap stays relative to the notebook directory
 - Notebook bootstrap helpers live in `scripts/colab_repo_bootstrap.py`
 - Notebooks 1 and 2 now resolve `HF_TOKEN` from env or Colab secrets in their second code cell and validate the login before model access
-- Notebook 2 now mirrors all non-checkpoint run outputs into `runs/<RUN_ID>/` inside the repo
+- Notebook 2 now mirrors all non-checkpoint run outputs into the local `runs/<RUN_ID>/` export tree inside the repo
+- Notebook 2 can now auto-disconnect the Colab runtime after final evaluation, telemetry close, repo mirroring, and executed-notebook export succeed
 - Telemetry and checkpoints live in `scripts/colab_live_telemetry.py` and `scripts/colab_checkpointing.py`
 - Notebook and script wrappers now sit on top of the workflow layer instead of owning the core orchestration
 - Adapter smoke-test helpers live in `scripts/colab_adapter_smoke_test.py`
+
+## Repo Hygiene
+
+- Commit source, docs, config, and maintained notebooks.
+- Keep generated run exports under `runs/` local-only.
+- Keep deployed adapter bundles under `models/adapters/` local-only.
+- Keep notebook/workflow outputs under `outputs/` local-only.
 
 ## Adapter Smoke Test
 

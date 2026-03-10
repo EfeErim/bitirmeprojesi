@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -314,3 +315,133 @@ def persist_production_readiness_artifact(
         context=context,
         telemetry=telemetry,
     )
+
+
+def _resolve_colab_runtime_api() -> Any:
+    try:
+        from google.colab import runtime
+    except Exception:
+        return None
+    return runtime
+
+
+def build_notebook_completion_report(
+    *,
+    state: Optional[Dict[str, Any]] = None,
+    telemetry: Any = None,
+    repo_run_exports: Optional[Dict[str, str]] = None,
+    notebook_export_path: Optional[str | Path] = None,
+) -> Dict[str, Any]:
+    resolved_state = dict(state or {})
+    resolved_exports = dict(repo_run_exports or {})
+
+    evaluation_artifacts = resolved_state.get("evaluation_artifacts")
+    evaluation_splits = sorted(evaluation_artifacts.keys()) if isinstance(evaluation_artifacts, dict) else []
+
+    summary_path = getattr(telemetry, "local_summary_path", None)
+    expected_repo_exports = ("outputs", "telemetry", "checkpoint_state")
+    repo_export_checks = {
+        name: bool(resolved_exports.get(name) and Path(str(resolved_exports.get(name))).expanduser().exists())
+        for name in expected_repo_exports
+    }
+    repo_exports_complete = bool(resolved_exports) and all(repo_export_checks.get(name, False) for name in expected_repo_exports)
+
+    checks = {
+        "evaluation_artifacts": bool(evaluation_splits),
+        "production_readiness": isinstance(resolved_state.get("production_readiness"), dict)
+        and bool(resolved_state.get("production_readiness")),
+        "telemetry_summary": bool(summary_path and Path(summary_path).expanduser().exists()),
+        "repo_exports": repo_exports_complete,
+        "executed_notebook_export": bool(
+            notebook_export_path and Path(notebook_export_path).expanduser().exists()
+        ),
+    }
+    missing = [name for name, passed in checks.items() if not passed]
+    readiness = resolved_state.get("production_readiness") or {}
+    return {
+        "ready": not missing,
+        "checks": checks,
+        "missing": missing,
+        "evaluation_splits": evaluation_splits,
+        "repo_exports": repo_export_checks,
+        "production_readiness_status": str(readiness.get("status", "")),
+        "ood_evidence_source": readiness.get("ood_evidence_source"),
+    }
+
+
+def maybe_auto_disconnect_colab_runtime(
+    *,
+    enabled: bool,
+    grace_period_sec: float = 20.0,
+    state: Optional[Dict[str, Any]] = None,
+    telemetry: Any = None,
+    repo_run_exports: Optional[Dict[str, str]] = None,
+    notebook_export_path: Optional[str | Path] = None,
+    completion_report: Optional[Dict[str, Any]] = None,
+    print_fn: Optional[Callable[[str], None]] = None,
+) -> Dict[str, Any]:
+    emit = print if print_fn is None else print_fn
+    report = (
+        completion_report
+        if completion_report is not None
+        else build_notebook_completion_report(
+            state=state,
+            telemetry=telemetry,
+            repo_run_exports=repo_run_exports,
+            notebook_export_path=notebook_export_path,
+        )
+    )
+    report["auto_disconnect_enabled"] = bool(enabled)
+    report.setdefault("disconnect_requested", False)
+
+    if not enabled:
+        emit("[COLAB] Auto-disconnect disabled.")
+        return report
+
+    if not bool(report.get("ready")):
+        missing = ", ".join(str(item) for item in report.get("missing", [])) or "unknown"
+        emit(f"[COLAB] Auto-disconnect skipped. Incomplete checks: {missing}")
+        return report
+
+    runtime_api = _resolve_colab_runtime_api()
+    if runtime_api is None or not hasattr(runtime_api, "unassign"):
+        emit("[COLAB] Auto-disconnect skipped. google.colab.runtime.unassign is unavailable.")
+        return report
+
+    delay = max(0.0, float(grace_period_sec or 0.0))
+    report["disconnect_requested"] = True
+    report["grace_period_sec"] = delay
+
+    update_latest = getattr(telemetry, "update_latest", None)
+    if callable(update_latest):
+        try:
+            update_latest(
+                {
+                    "phase": "auto_disconnect_pending",
+                    "auto_disconnect": True,
+                    "grace_period_sec": delay,
+                    "completion_checks": dict(report.get("checks", {})),
+                }
+            )
+        except Exception:
+            pass
+    sync_pending = getattr(telemetry, "sync_pending", None)
+    if callable(sync_pending):
+        try:
+            sync_pending()
+        except Exception:
+            pass
+
+    if delay > 0:
+        emit(f"[COLAB] Work complete. Disconnecting runtime in {delay:.0f}s to avoid idle credit use.")
+        time.sleep(delay)
+    else:
+        emit("[COLAB] Work complete. Disconnecting runtime now to avoid idle credit use.")
+
+    try:
+        runtime_api.unassign()
+    except Exception as exc:
+        report["disconnect_requested"] = False
+        report["disconnect_error"] = f"{exc.__class__.__name__}: {exc}"
+        emit(f"[COLAB] Auto-disconnect failed: {report['disconnect_error']}")
+    return report

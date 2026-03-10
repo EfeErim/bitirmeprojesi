@@ -58,6 +58,11 @@ Colab runtime-only controls live in `colab.training`:
 
 Legacy `checkpoint_interval` is still accepted as an alias for `checkpoint_every_n_steps`.
 
+Notebook-only top-cell completion controls:
+
+- `AUTO_DISCONNECT_RUNTIME`
+- `AUTO_DISCONNECT_GRACE_SECONDS`
+
 ## What The Notebook Trains
 
 Notebook 2 trains a continual SD-LoRA adapter rather than fine-tuning the full backbone.
@@ -151,11 +156,12 @@ Notebook 2 (`colab_notebooks/2_interactive_adapter_training.ipynb`) writes:
 - Local outputs stay under `outputs/colab_notebook_training/`
   - adapter: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
   - notebook artifacts: `outputs/colab_notebook_training/artifacts/`
-- When the run finishes, all non-checkpoint outputs are mirrored into `runs/<RUN_ID>/` in the repo
+- When the run finishes, all non-checkpoint outputs are mirrored into the local `runs/<RUN_ID>/` export tree in the repo
   - notebook export: `runs/<RUN_ID>/notebooks/2_interactive_adapter_training.executed.ipynb`
   - local notebook outputs: `runs/<RUN_ID>/outputs/colab_notebook_training/`
   - telemetry logs and artifacts: `runs/<RUN_ID>/telemetry/`
   - checkpoint metadata only: `runs/<RUN_ID>/checkpoint_state/`
+- After the final evaluation, telemetry close, repo mirroring, and executed-notebook export all succeed, Notebook 2 can automatically disconnect the Colab runtime to avoid idle credit usage.
 - Drive outputs stay under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
   Default root: `/content/drive/MyDrive/aads_ulora/telemetry/<RUN_ID>/`
   - `artifacts/adapter/`
@@ -185,6 +191,11 @@ Inference default adapter lookup remains:
 - `models/adapters/<crop>/continual_sd_lora_adapter/`
 
 If your adapter was produced by Notebook 2, copy or move it from either the local notebook export or the Drive telemetry adapter export under `models/adapters/<crop>/`, or use inference `--adapter-root`.
+
+Repo hygiene note:
+
+- `runs/`, `models/adapters/`, and `outputs/` are generated local workspaces and should not be committed.
+- `colab_notebooks/requirements_colab.txt` is only a notebook-local wrapper around the canonical root `requirements_colab.txt`.
 
 ## Adapter Smoke Test
 

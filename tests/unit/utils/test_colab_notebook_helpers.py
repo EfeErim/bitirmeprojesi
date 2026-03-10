@@ -3,7 +3,9 @@ from pathlib import Path
 from scripts.colab_checkpointing import TrainingCheckpointManager
 from scripts.colab_notebook_helpers import (
     NotebookTrainingStatusPrinter,
+    build_notebook_completion_report,
     ensure_notebook_checkpoint_manager,
+    maybe_auto_disconnect_colab_runtime,
     persist_validation_artifacts,
 )
 
@@ -157,4 +159,125 @@ def test_notebook_training_status_printer_emits_validation_best_and_stop():
         "[VALID] 2/4 val_loss=0.2100 val_acc=0.9300 macro_f1=0.9100 bal_acc=0.9200 gap=0.0400",
         "[BEST] 2/4 val_loss=0.2100",
         "[STOP] epoch=3 step=120 reason=early_stopping",
+    ]
+
+
+class _FakeTelemetry:
+    def __init__(self, summary_path: Path):
+        self.local_summary_path = summary_path
+        self.latest_payloads = []
+        self.sync_calls = 0
+
+    def update_latest(self, payload):
+        self.latest_payloads.append(dict(payload))
+
+    def sync_pending(self):
+        self.sync_calls += 1
+
+
+def test_build_notebook_completion_report_marks_ready_when_outputs_exist(tmp_path: Path):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+    notebook_export_path = tmp_path / "notebooks" / "executed.ipynb"
+    notebook_export_path.parent.mkdir(parents=True, exist_ok=True)
+    notebook_export_path.write_text("{}", encoding="utf-8")
+
+    repo_run_exports = {}
+    for name in ("outputs", "telemetry", "checkpoint_state"):
+        path = tmp_path / name
+        path.mkdir(parents=True, exist_ok=True)
+        repo_run_exports[name] = str(path)
+
+    report = build_notebook_completion_report(
+        state={
+            "evaluation_artifacts": {"test": {"metric_gate": {}}},
+            "production_readiness": {"status": "failed", "ood_evidence_source": "held_out_benchmark"},
+        },
+        telemetry=_FakeTelemetry(summary_path),
+        repo_run_exports=repo_run_exports,
+        notebook_export_path=notebook_export_path,
+    )
+
+    assert report["ready"] is True
+    assert report["missing"] == []
+    assert report["evaluation_splits"] == ["test"]
+    assert report["production_readiness_status"] == "failed"
+
+
+def test_maybe_auto_disconnect_colab_runtime_calls_unassign_when_ready(tmp_path: Path, monkeypatch):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+    notebook_export_path = tmp_path / "executed.ipynb"
+    notebook_export_path.write_text("{}", encoding="utf-8")
+
+    repo_run_exports = {}
+    for name in ("outputs", "telemetry", "checkpoint_state"):
+        path = tmp_path / name
+        path.mkdir(parents=True, exist_ok=True)
+        repo_run_exports[name] = str(path)
+
+    telemetry = _FakeTelemetry(summary_path)
+    completion_report = build_notebook_completion_report(
+        state={
+            "evaluation_artifacts": {"test": {"metric_gate": {}}},
+            "production_readiness": {"status": "ready"},
+        },
+        telemetry=telemetry,
+        repo_run_exports=repo_run_exports,
+        notebook_export_path=notebook_export_path,
+    )
+
+    calls = []
+
+    class _FakeRuntime:
+        def unassign(self):
+            calls.append("unassign")
+
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers._resolve_colab_runtime_api",
+        lambda: _FakeRuntime(),
+    )
+
+    lines = []
+    result = maybe_auto_disconnect_colab_runtime(
+        enabled=True,
+        grace_period_sec=0.0,
+        telemetry=telemetry,
+        completion_report=completion_report,
+        print_fn=lines.append,
+    )
+
+    assert result["disconnect_requested"] is True
+    assert calls == ["unassign"]
+    assert telemetry.sync_calls == 1
+    assert telemetry.latest_payloads[-1]["phase"] == "auto_disconnect_pending"
+    assert lines == ["[COLAB] Work complete. Disconnecting runtime now to avoid idle credit use."]
+
+
+def test_maybe_auto_disconnect_colab_runtime_skips_when_checks_are_incomplete(tmp_path: Path, monkeypatch):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+
+    telemetry = _FakeTelemetry(summary_path)
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers._resolve_colab_runtime_api",
+        lambda: None,
+    )
+
+    lines = []
+    result = maybe_auto_disconnect_colab_runtime(
+        enabled=True,
+        grace_period_sec=0.0,
+        state={"evaluation_artifacts": {}, "production_readiness": {}},
+        telemetry=telemetry,
+        repo_run_exports={},
+        notebook_export_path=tmp_path / "missing.ipynb",
+        print_fn=lines.append,
+    )
+
+    assert result["ready"] is False
+    assert result["disconnect_requested"] is not True
+    assert telemetry.sync_calls == 0
+    assert lines == [
+        "[COLAB] Auto-disconnect skipped. Incomplete checks: evaluation_artifacts, production_readiness, repo_exports, executed_notebook_export"
     ]
