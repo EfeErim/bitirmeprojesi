@@ -158,7 +158,7 @@ Notebook 2 writes the same artifact names under:
 outputs/colab_notebook_training/artifacts/
 ```
 
-and mirrors them into the matching `runs/<RUN_ID>/...` export tree.
+and mirrors them into the matching local `runs/<RUN_ID>/...` export tree.
 
 How to read them:
 

@@ -27,7 +27,13 @@ outputs/
 logs/
 wandb/
 tensorboard/
-models/
+# Local deploy targets and run exports are generated assets, not source files.
+models/*
+!models/adapters/
+models/adapters/*
+!models/adapters/.gitkeep
+runs/*
+!runs/.gitkeep
 data/archive.zip
 data/*.xlsx
 data/*.csv
@@ -45,6 +51,4 @@ data/metadata.json
 *.pdf
 *.tmp
 *.temp
-!runs/
-!runs/**
 !colab_notebooks/*.ipynb

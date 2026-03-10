@@ -99,7 +99,7 @@ User-facing operational guidance for real OOD data, fallback benchmarking, and f
 
 Output locations are surface-specific:
 
-- Notebook 2 writes adapter + notebook artifacts under `outputs/colab_notebook_training/` and writes rolling checkpoints to Drive telemetry (`.../telemetry/<RUN_ID>/checkpoints/`).
+- Notebook 2 writes adapter + notebook artifacts under `outputs/colab_notebook_training/`, mirrors non-checkpoint exports into the local `runs/<RUN_ID>/` tree, and writes rolling checkpoints to Drive telemetry (`.../telemetry/<RUN_ID>/checkpoints/`).
 - `TrainingWorkflow.run(...)` (including `python -m src.app.cli training ...`) writes adapter and metrics under the provided `<output_dir>` (`<output_dir>/continual_sd_lora_adapter/` and `<output_dir>/training_metrics/`).
 
 ## Inference
