@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
@@ -23,6 +24,13 @@ from src.shared.contracts import InferenceResult
 StatusCallback = Callable[[str], None]
 
 
+@dataclass(frozen=True)
+class _CachedAdapter:
+    adapter: IndependentCropAdapter
+    adapter_dir: Path
+    adapter_meta_mtime_ns: int
+
+
 class RouterAdapterRuntime:
     """Minimal inference surface for router -> adapter -> OOD."""
 
@@ -41,7 +49,7 @@ class RouterAdapterRuntime:
         self.adapter_root = Path(adapter_root or inference_cfg.get("adapter_root", "models/adapters"))
         self.target_size = int(inference_cfg.get("target_size", 224))
         self.router: Optional[Any] = None
-        self.adapters: Dict[str, IndependentCropAdapter] = {}
+        self.adapters: Dict[str, _CachedAdapter] = {}
         self.status_callback = status_callback
 
     def _emit_status(self, message: str) -> None:
@@ -73,16 +81,31 @@ class RouterAdapterRuntime:
             return root
         raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
 
+    @staticmethod
+    def _adapter_cache_token(adapter_dir: Path) -> tuple[Path, int]:
+        resolved_dir = adapter_dir.resolve()
+        meta_mtime_ns = int((resolved_dir / "adapter_meta.json").stat().st_mtime_ns)
+        return resolved_dir, meta_mtime_ns
+
     def load_adapter(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> IndependentCropAdapter:
         crop_key = str(crop_name).strip().lower()
-        if crop_key in self.adapters:
-            return self.adapters[crop_key]
-
-        self._emit_status(f"[ADAPTER] Loading adapter for crop={crop_key}...")
         resolved_dir = self._resolve_adapter_dir(crop_key, adapter_dir=adapter_dir)
+        resolved_cache_dir, meta_mtime_ns = self._adapter_cache_token(resolved_dir)
+        cached = self.adapters.get(crop_key)
+        if cached is not None:
+            if cached.adapter_dir == resolved_cache_dir and cached.adapter_meta_mtime_ns == meta_mtime_ns:
+                return cached.adapter
+            self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key}...")
+        else:
+            self._emit_status(f"[ADAPTER] Loading adapter for crop={crop_key}...")
+
         adapter = self._build_adapter(crop_key)
         adapter.load_adapter(str(resolved_dir))
-        self.adapters[crop_key] = adapter
+        self.adapters[crop_key] = _CachedAdapter(
+            adapter=adapter,
+            adapter_dir=resolved_cache_dir,
+            adapter_meta_mtime_ns=meta_mtime_ns,
+        )
         self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter
 
@@ -151,12 +174,12 @@ class RouterAdapterRuntime:
             return result
 
         image_tensor = preprocess_image(prepared_image, target_size=self.target_size)
-        result = adapter.predict_with_ood(image_tensor)
+        adapter_result = adapter.predict_with_ood(image_tensor)
         payload = build_success_result(
             crop_name=crop_name,
             part_name=part_name,
             router_confidence=router_confidence,
-            result=result,
+            result=adapter_result,
             include_ood=return_ood,
         )
         status_bits = [

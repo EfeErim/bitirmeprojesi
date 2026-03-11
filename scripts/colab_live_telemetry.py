@@ -45,6 +45,23 @@ def _append_line(path: Path, line: str) -> None:
             handle.write("\n")
 
 
+def _requires_google_drive_mount(path: Path) -> bool:
+    drive_mount = Path("/content/drive")
+    try:
+        resolved = Path(path).expanduser().resolve()
+    except Exception:
+        resolved = Path(path).expanduser()
+    try:
+        resolved.relative_to(drive_mount)
+        return True
+    except ValueError:
+        return False
+
+
+def _google_drive_is_mounted() -> bool:
+    return os.path.ismount("/content/drive")
+
+
 class _TeeTextStream:
     def __init__(self, *streams: Any) -> None:
         self._streams = [stream for stream in streams if stream is not None]
@@ -127,13 +144,13 @@ class ColabLiveTelemetry:
         self.sync_interval_sec = float(max(0.5, sync_interval_sec))
         self.latest_status_min_interval_sec = float(max(0.0, latest_status_min_interval_sec))
 
-        drive_base = Path(
+        self.drive_root = Path(
             drive_root
             or os.environ.get("AADS_DRIVE_LOG_ROOT", "/content/drive/MyDrive/aads_ulora")
         )
         local_base = Path(local_root or "/content/aads_ulora/telemetry_spool")
 
-        self.drive_run_dir = drive_base / "telemetry" / self.run_id
+        self.drive_run_dir = self.drive_root / "telemetry" / self.run_id
         self.local_run_dir = local_base / self.run_id
         self.artifacts_dir = self.drive_run_dir / "artifacts"
         self.local_artifacts_dir = self.local_run_dir / "artifacts"
@@ -149,11 +166,12 @@ class ColabLiveTelemetry:
         self.local_artifact_index_path = self.local_run_dir / "artifact_index.json"
         self.drive_artifact_index_path = self.drive_run_dir / "artifact_index.json"
         self.local_sync_state_path = self.local_run_dir / "sync_state.json"
+        self._drive_mount_required = _requires_google_drive_mount(self.drive_root)
 
         self._sync_state = _SyncState.from_path(self.local_sync_state_path)
         self._artifact_index: List[Dict[str, Any]] = self._load_artifact_index()
         self._last_sync_attempt = 0.0
-        self._drive_available = True
+        self._drive_available = False
         self._sequence = 0
         self._repo_output_dir: Optional[Path] = None
         self._repo_notebook_path: Optional[Path] = None
@@ -162,9 +180,9 @@ class ColabLiveTelemetry:
         self._pending_latest_payload: Optional[Dict[str, Any]] = None
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
-        self.drive_run_dir.mkdir(parents=True, exist_ok=True)
         self._local_artifact_store = ArtifactStore(self.local_artifacts_dir)
-        self._drive_artifact_store = ArtifactStore(self.artifacts_dir)
+        self._drive_artifact_store: Optional[ArtifactStore] = None
+        self._ensure_drive_surface()
         self.emit_event(
             "run_started",
             {
@@ -175,6 +193,25 @@ class ColabLiveTelemetry:
             },
             phase="bootstrap",
         )
+
+    def _ensure_drive_surface(self) -> bool:
+        if self._drive_mount_required and not _google_drive_is_mounted():
+            self._drive_available = False
+            self._drive_artifact_store = None
+            return False
+        try:
+            self.drive_run_dir.mkdir(parents=True, exist_ok=True)
+            if self._drive_artifact_store is None:
+                self._drive_artifact_store = ArtifactStore(self.artifacts_dir)
+            self._drive_available = True
+            return True
+        except Exception:
+            self._drive_available = False
+            self._drive_artifact_store = None
+            return False
+
+    def _current_artifacts_dir(self) -> Path:
+        return self.artifacts_dir if self._ensure_drive_surface() else self.local_artifacts_dir
 
     def configure_repo_output_export(
         self,
@@ -252,10 +289,12 @@ class ColabLiveTelemetry:
 
     def _store_artifact_index(self) -> None:
         write_json(self.local_artifact_index_path, self._artifact_index, sort_keys=True)
-        try:
-            write_json(self.drive_artifact_index_path, self._artifact_index, sort_keys=True)
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface():
+            try:
+                write_json(self.drive_artifact_index_path, self._artifact_index, sort_keys=True)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
 
     def _periodic_sync(self, force: bool = False) -> None:
         now = time.time()
@@ -284,11 +323,12 @@ class ColabLiveTelemetry:
 
     def _write_latest_payload(self, payload: Dict[str, Any]) -> None:
         write_json(self.local_latest_path, payload, sort_keys=True)
-        try:
-            write_json(self.drive_latest_path, payload, sort_keys=True)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface():
+            try:
+                write_json(self.drive_latest_path, payload, sort_keys=True)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
         self._last_latest_write_at = time.monotonic()
         self._pending_latest_payload = None
 
@@ -359,7 +399,7 @@ class ColabLiveTelemetry:
         sys.stdout = _TeeTextStream(original_stdout, stdout_buffer)
         sys.stderr = _TeeTextStream(original_stderr, stderr_buffer)
         try:
-            yield self.artifacts_dir / relative_path
+            yield self._current_artifacts_dir() / relative_path
         except Exception as exc:
             failure_message = f"{exc.__class__.__name__}: {exc}"
             self.emit_event(
@@ -433,11 +473,12 @@ class ColabLiveTelemetry:
         rel = Path(relative_path)
         local_path = self._local_artifact_store.write_text(rel, text)
         drive_path = self.artifacts_dir / rel
-        try:
-            drive_path = self._drive_artifact_store.write_text(rel, text)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface() and self._drive_artifact_store is not None:
+            try:
+                drive_path = self._drive_artifact_store.write_text(rel, text)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
         self._artifact_index.append(
             {
                 "ts": _utc_now_iso(),
@@ -453,11 +494,12 @@ class ColabLiveTelemetry:
         rel = Path(relative_path)
         local_path = self._local_artifact_store.write_bytes(rel, content)
         drive_path = self.artifacts_dir / rel
-        try:
-            drive_path = self._drive_artifact_store.write_bytes(rel, content)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface() and self._drive_artifact_store is not None:
+            try:
+                drive_path = self._drive_artifact_store.write_bytes(rel, content)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
         self._artifact_index.append(
             {
                 "ts": _utc_now_iso(),
@@ -476,11 +518,12 @@ class ColabLiveTelemetry:
         rel = Path(relative_path)
         local_path = self._local_artifact_store.copy_file(src, rel)
         drive_path = self.artifacts_dir / rel
-        try:
-            drive_path = self._drive_artifact_store.copy_file(src, rel)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface() and self._drive_artifact_store is not None:
+            try:
+                drive_path = self._drive_artifact_store.copy_file(src, rel)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
         self._artifact_index.append(
             {
                 "ts": _utc_now_iso(),
@@ -496,7 +539,6 @@ class ColabLiveTelemetry:
         pending = self._pending_latest_payload
         if pending is not None and self._should_write_latest_now(pending, force=False):
             self._write_latest_payload(pending)
-        self.drive_run_dir.mkdir(parents=True, exist_ok=True)
         self._sync_events()
         self._sync_logs()
         self._store_artifact_index()
@@ -510,15 +552,16 @@ class ColabLiveTelemetry:
         if start >= len(lines):
             return
         unsynced = lines[start:]
-        try:
-            ensure_parent(self.drive_events_path)
-            with self.drive_events_path.open("a", encoding="utf-8") as handle:
-                for line in unsynced:
-                    handle.write(line + "\n")
-            self._sync_state.events_synced = len(lines)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface():
+            try:
+                ensure_parent(self.drive_events_path)
+                with self.drive_events_path.open("a", encoding="utf-8") as handle:
+                    for line in unsynced:
+                        handle.write(line + "\n")
+                self._sync_state.events_synced = len(lines)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
 
     def _sync_logs(self) -> None:
         if not self.local_log_path.exists():
@@ -528,14 +571,15 @@ class ColabLiveTelemetry:
         if offset >= len(local_bytes):
             return
         chunk = local_bytes[offset:]
-        try:
-            ensure_parent(self.drive_log_path)
-            with self.drive_log_path.open("ab") as handle:
-                handle.write(chunk)
-            self._sync_state.logs_synced_bytes = len(local_bytes)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface():
+            try:
+                ensure_parent(self.drive_log_path)
+                with self.drive_log_path.open("ab") as handle:
+                    handle.write(chunk)
+                self._sync_state.logs_synced_bytes = len(local_bytes)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
 
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
         pending = self._pending_latest_payload
@@ -551,10 +595,11 @@ class ColabLiveTelemetry:
             "drive_available": bool(self._drive_available),
         }
         write_json(self.local_summary_path, summary, sort_keys=True)
-        try:
-            write_json(self.drive_summary_path, summary, sort_keys=True)
-            self._drive_available = True
-        except Exception:
-            self._drive_available = False
+        if self._ensure_drive_surface():
+            try:
+                write_json(self.drive_summary_path, summary, sort_keys=True)
+                self._drive_available = True
+            except Exception:
+                self._drive_available = False
         self.emit_event("run_finished", summary, phase="final", force_sync=False)
         self.sync_pending()

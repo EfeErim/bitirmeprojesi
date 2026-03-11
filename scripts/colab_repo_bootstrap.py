@@ -345,9 +345,9 @@ def push_repo_run_to_github(
 
     remote_url = _git_remote_url(repo, remote_name)
     push_url = _build_authenticated_remote_url(remote_url, resolved_token)
-    relative_run_dir = run_dir.relative_to(repo)
+    relative_run_dir = run_dir.relative_to(repo).as_posix()
     tracked_files = [
-        str(path.relative_to(repo))
+        path.relative_to(repo).as_posix()
         for path in sorted(run_dir.rglob("*"))
         if path.is_file() and path.suffix.lower() != ".pt"
     ]
@@ -359,7 +359,7 @@ def push_repo_run_to_github(
         for chunk in _chunked(tracked_files):
             _run_git(["add", "--", *chunk], cwd=repo)
 
-    staged = _run_git(["diff", "--cached", "--name-only", "--", str(relative_run_dir)], cwd=repo, capture_output=True)
+    staged = _run_git(["diff", "--cached", "--name-only", "--", relative_run_dir], cwd=repo, capture_output=True)
     staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
     if not staged_files:
         emit(f"[GIT] No eligible repo mirror changes to push for runs/{run_id}.")
@@ -373,7 +373,7 @@ def push_repo_run_to_github(
         }
 
     message = str(commit_message or f"Add notebook 2 outputs for run {run_id}")
-    _run_git(["commit", "-m", message], cwd=repo)
+    _run_git(["commit", "-m", message, "--", relative_run_dir], cwd=repo)
     _run_git(["push", push_url, f"HEAD:{resolved_branch}"], cwd=repo)
     emit(f"[GIT] Pushed {len(staged_files)} file(s) from runs/{run_id} to {remote_name}/{resolved_branch}.")
     return {

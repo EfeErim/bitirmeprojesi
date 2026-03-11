@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from PIL import Image
@@ -248,3 +249,38 @@ def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_pat
         "[ADAPTER] Ready crop=tomato",
         "[RESULT] status=success crop=tomato diagnosis=healthy confidence=0.910 ood=False",
     ]
+
+
+def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    adapter_dir = _write_adapter_meta(adapter_root, "tomato")
+    built_adapters = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    def _build_adapter(crop_name):
+        adapter = FakeAdapter(crop_name, device="cpu")
+        built_adapters.append(adapter)
+        return adapter
+
+    monkeypatch.setattr(runtime, "_build_adapter", _build_adapter)
+
+    first = runtime.load_adapter("tomato")
+    meta_path = adapter_dir / "adapter_meta.json"
+    stat_before = meta_path.stat()
+    meta_path.write_text('{"schema_version":"v6"}', encoding="utf-8")
+    os.utime(meta_path, ns=(stat_before.st_atime_ns, stat_before.st_mtime_ns + 1_000_000_000))
+
+    second = runtime.load_adapter("tomato")
+
+    assert first is not second
+    assert len(built_adapters) == 2

@@ -170,7 +170,8 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
         if args == ["remote", "get-url", "origin"]:
             return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
         if args[:4] == ["diff", "--cached", "--name-only", "--"]:
-            return subprocess.CompletedProcess(command, 0, stdout="runs/run_1/outputs/colab_notebook_training/artifacts/summary.json\n")
+            staged_stdout = "runs/run_1/outputs/colab_notebook_training/artifacts/summary.json\n"
+            return subprocess.CompletedProcess(command, 0, stdout=staged_stdout)
         return subprocess.CompletedProcess(command, 0, stdout="")
 
     monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
@@ -183,6 +184,10 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     added_args = " ".join(" ".join(call) for call in add_calls)
     assert "summary.json" in added_args
     assert "checkpoint.pt" not in added_args
+
+    commit_calls = [call for call in calls if call[1] == "commit"]
+    assert commit_calls
+    assert commit_calls[0][-2:] == ["--", "runs/run_1"]
 
     push_calls = [call for call in calls if call[1] == "push"]
     assert push_calls

@@ -326,6 +326,7 @@ Important detail:
 Optional current behavior:
 
 - if `AUTO_PUSH_TO_GITHUB` is enabled and `GH_TOKEN` or `GITHUB_TOKEN` is available, Notebook 2 commits and pushes `runs/<RUN_ID>/` after the mirror step
+- the auto-push commit is scoped to `runs/<RUN_ID>/`, so unrelated staged repo changes are not included
 - the auto-push helper skips `.pt` checkpoint blobs, so large resume weights stay out of the normal GitHub history
 
 ### 3. Drive telemetry
@@ -352,6 +353,11 @@ Current Drive telemetry layout:
 ```
 
 Use this when you need durable notebook logs and checkpoint recovery across sessions.
+
+Important durability guardrail:
+
+- Drive telemetry is only treated as durable when the target is backed by an actual mounted Google Drive path
+- if Drive is not mounted yet, telemetry continues in the local spool instead of creating a fake `/content/drive/...` tree that would disappear with the runtime
 
 Important current-state note:
 

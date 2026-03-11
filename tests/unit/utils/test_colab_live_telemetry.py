@@ -142,3 +142,28 @@ def test_capture_cell_output_persists_output_on_exception(tmp_path):
     body = artifacts[0].read_text(encoding="utf-8")
     assert "about to fail" in body
     assert "[EXCEPTION] RuntimeError: boom" in body
+
+
+def test_live_telemetry_spools_locally_when_drive_mount_is_missing(tmp_path, monkeypatch):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    monkeypatch.setattr("scripts.colab_live_telemetry._requires_google_drive_mount", lambda path: True)
+    monkeypatch.setattr("scripts.colab_live_telemetry._google_drive_is_mounted", lambda: False)
+
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_005",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=0.1,
+    )
+    telemetry.emit_event("train_batch", {"global_step": 1}, phase="train")
+    telemetry.write_json_artifact("training/history.json", {"train_loss": [0.1]})
+    telemetry.close({"status": "ok"})
+
+    drive_run_dir = drive_root / "telemetry" / "run_005"
+    local_run_dir = local_root / "run_005"
+    assert not drive_run_dir.exists()
+    assert (local_run_dir / "events.jsonl").exists()
+    assert (local_run_dir / "summary.json").exists()
+    assert (local_run_dir / "artifacts" / "training" / "history.json").exists()
