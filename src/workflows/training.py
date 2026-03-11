@@ -533,7 +533,10 @@ class TrainingWorkflow:
             phase="training",
         )
 
-        history = session.run()
+        try:
+            history = session.run()
+        finally:
+            batch_recorder.flush()
         history_payload = history.to_dict()
         if int(history_payload.get("optimizer_steps", 0)) <= 0:
             raise RuntimeError(

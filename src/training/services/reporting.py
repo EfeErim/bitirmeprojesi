@@ -137,16 +137,29 @@ def load_batch_metrics_history(batch_metrics_csv: Path | str) -> List[Dict[str, 
 
 
 class BatchMetricsRecorder:
-    """Append batch metrics directly to CSV to avoid retaining the full history in memory."""
+    """Append batch metrics to CSV in buffered chunks."""
 
-    def __init__(self, *, artifact_root: Path) -> None:
+    def __init__(self, *, artifact_root: Path, flush_interval: int = 64) -> None:
         training_dir = _artifact_dir(Path(artifact_root), "training")
         self.output_path = _write_csv(training_dir / "batch_metrics.csv", _BATCH_KEYS, [])
+        self._flush_interval = max(1, int(flush_interval))
+        self._pending_rows: List[List[Any]] = []
 
     def append(self, payload: Dict[str, Any]) -> None:
         row = [payload.get(key, "") for key in _BATCH_KEYS]
+        self._pending_rows.append(row)
+        if len(self._pending_rows) >= self._flush_interval:
+            self.flush()
+
+    def flush(self) -> None:
+        if not self._pending_rows:
+            return
         with self.output_path.open("a", encoding="utf-8", newline="") as handle:
-            csv.writer(handle).writerow(row)
+            csv.writer(handle).writerows(self._pending_rows)
+        self._pending_rows.clear()
+
+    def close(self) -> None:
+        self.flush()
 
 
 def _resolve_output_subdirs(artifact_subdir: str, telemetry_subdir: str | None) -> tuple[str, str]:

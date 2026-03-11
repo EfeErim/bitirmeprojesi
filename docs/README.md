@@ -69,6 +69,7 @@ Use this when you need:
 
 - a beginner explanation of OOD
 - the current readiness policy
+- how to structure and curate a real `ood/` pool
 - the difference between `metric_gate.json` and `production_readiness.json`
 - the fallback held-out benchmark behavior
 - the default readiness targets

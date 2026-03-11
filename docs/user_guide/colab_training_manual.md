@@ -125,12 +125,19 @@ If you also provide unknown examples, the runtime layout can include:
 data/runtime_notebook_datasets/<crop>/ood/*
 ```
 
+Important distinction:
+
+- the flat class-root notebook input is only for supported disease classes
+- the real `ood/` pool is separate unknown-input evidence, not another class
+- do not create an `ood` class folder inside the flat notebook input root
+- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/runtime_notebook_datasets/<crop>/ood/`
+
 The generated runtime dataset includes:
 
 - `split_manifest.json`
 - `_split_metadata.json`
 
-Important distinction:
+Contract reminder:
 
 - Notebook 2 accepts the flat class-root layout
 - `TrainingWorkflow.run(...)` and CLI training expect the runtime split layout

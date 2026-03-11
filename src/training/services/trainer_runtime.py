@@ -54,6 +54,7 @@ def refresh_optimizer_after_model_change(trainer: Any) -> None:
         if trainer.scheduler is not None:
             trainer.scheduler.load_state_dict(previous_scheduler_state)
     trainer.optimizer.zero_grad(set_to_none=True)
+    trainer._last_grad_norm = 0.0
 
 
 def initialize_trainer_engine(
@@ -109,6 +110,7 @@ def initialize_trainer_engine(
     trainer.scaler = build_grad_scaler(trainer.device, trainer.config.mixed_precision)
     trainer.optimizer_steps = 0
     trainer._accumulation_counter = 0
+    trainer._last_grad_norm = 0.0
     trainer._trainable_params_cache = None
     trainer._refresh_class_index_cache()
     logger.info(
@@ -170,6 +172,7 @@ def _apply_optimizer_step(trainer: Any) -> float:
         trainer._step_scheduler()
     trainer.optimizer.zero_grad(set_to_none=True)
     trainer._accumulation_counter = 0
+    trainer._last_grad_norm = float(grad_norm)
     return float(grad_norm)
 
 

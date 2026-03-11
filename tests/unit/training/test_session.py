@@ -243,6 +243,22 @@ def test_train_batch_computes_grad_norm_once_when_step_is_applied():
     assert calls == ["compute"]
 
 
+def test_train_batch_skips_grad_norm_scan_on_non_step_microbatch():
+    trainer, _ = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
+    calls = []
+
+    trainer._compute_grad_norm = lambda: calls.append("compute") or 0.2  # type: ignore[assignment]
+
+    first_stats = trainer.train_batch(_make_loader(1)[0])
+    second_stats = trainer.train_batch(_make_loader(1)[0])
+
+    assert first_stats.optimizer_step_applied is False
+    assert first_stats.grad_norm == pytest.approx(0.0)
+    assert second_stats.optimizer_step_applied is True
+    assert second_stats.grad_norm == pytest.approx(0.2)
+    assert calls == ["compute"]
+
+
 def test_session_resume_matches_uninterrupted_training_mid_epoch():
     uninterrupted_trainer, uninterrupted_param = _build_minimal_trainer(num_epochs=1, grad_accumulation_steps=2)
     uninterrupted_session = ContinualTrainingSession(uninterrupted_trainer, _make_loader(3), 1)

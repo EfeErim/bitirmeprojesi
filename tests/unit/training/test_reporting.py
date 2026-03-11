@@ -2,6 +2,8 @@ from pathlib import Path
 import csv
 
 from src.training.services.reporting import (
+    BatchMetricsRecorder,
+    load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_training_history_artifacts,
     persist_training_results_figure,
@@ -123,3 +125,34 @@ def test_batch_metrics_artifacts_include_optional_ber_columns(tmp_path: Path):
     assert rows[0]["ber_ce_loss"] == "0.7"
     assert rows[0]["ber_old_loss"] == "0.02"
     assert rows[0]["ber_new_loss"] == "0.03"
+
+
+def test_batch_metrics_recorder_flushes_buffered_rows(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+    recorder = BatchMetricsRecorder(artifact_root=artifact_root, flush_interval=8)
+
+    recorder.append(
+        {
+            "epoch": 1,
+            "batch": 1,
+            "global_step": 1,
+            "optimizer_steps": 0,
+            "loss": 0.8,
+            "lr": 1e-3,
+            "grad_norm": 0.0,
+            "step_time_sec": 0.1,
+            "samples_per_sec": 10.0,
+            "batch_size": 2,
+            "accumulation_step": 1,
+            "optimizer_step_applied": False,
+        }
+    )
+
+    assert load_batch_metrics_history(recorder.output_path) == []
+
+    recorder.flush()
+
+    rows = load_batch_metrics_history(recorder.output_path)
+    assert len(rows) == 1
+    assert rows[0]["loss"] == 0.8
+    assert rows[0]["optimizer_step_applied"] is False

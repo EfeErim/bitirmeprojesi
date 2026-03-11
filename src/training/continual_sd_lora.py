@@ -452,6 +452,7 @@ class ContinualSDLoRATrainer:
         self._planned_scheduler_steps = 0
         self._planned_epochs = int(max(1, self.config.num_epochs))
         self._accumulation_counter = 0
+        self._last_grad_norm = 0.0
         self.best_metric_state: Dict[str, Any] = {}
         self._idx_to_class: Dict[int, str] = {}
         self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
@@ -471,12 +472,10 @@ class ContinualSDLoRATrainer:
         refresh_optimizer_after_model_change(self)
 
     def _reported_grad_norm(self, *, gradients_unscaled: bool) -> float:
-        grad_norm = self._compute_grad_norm()
-        if self.scaler.is_enabled() and not gradients_unscaled:
-            scale = float(self.scaler.get_scale())
-            if scale > 0.0:
-                grad_norm /= scale
-        return grad_norm
+        del gradients_unscaled
+        # Non-step microbatches only need a stable telemetry value. Reuse the
+        # last measured post-step norm instead of scanning all gradients again.
+        return float(getattr(self, "_last_grad_norm", 0.0))
 
     def set_preferred_ood_calibration_loader(self, loader: Iterable[Dict[str, torch.Tensor]]) -> None:
         self._ood_calibration_loader = loader

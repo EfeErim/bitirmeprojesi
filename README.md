@@ -190,6 +190,8 @@ data/runtime_notebook_datasets/<crop>/
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+
 ## Training, Step By Step
 
 The canonical training entrypoint is `TrainingWorkflow.run(...)` in `src/workflows/training.py`.

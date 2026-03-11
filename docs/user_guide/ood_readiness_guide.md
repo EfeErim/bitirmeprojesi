@@ -110,6 +110,64 @@ Current behavior:
 - nested folder names inside `ood/` are not treated as class labels
 - one shared `ood/` pool can be reused across runs for the same crop
 
+## How To Build A Real `ood/` Pool
+
+Treat `data/<crop>/ood/` as one shared pool of unsupported inputs for that crop adapter.
+
+These images are used as unknown-input evidence during readiness evaluation. They are not another supported disease class and they are not part of the known-class training split.
+
+### What belongs in `ood/`
+
+Good candidates include:
+
+- diseases of the same crop that are not in the adapter's supported label set
+- images from other crops or other plant species
+- plant parts or viewpoints that fall outside the supported training coverage
+- abiotic damage, blur, occlusion, clutter, or other realistic failure cases
+- a minority slice of clearly non-plant or random-object images
+
+### What does not belong in `ood/`
+
+Do not put these into `ood/`:
+
+- images from the exact supported classes already used under `continual/`, `val/`, or `test/`
+- another copy of the normal validation or test split
+- images you intend the adapter to support for this run
+- an `ood` class label inside the known-class train or notebook input layout
+
+If a category should become a supported class in the next experiment, move it into the normal known-class split layout for that run instead of keeping it in `ood/`.
+
+### Practical curation rules
+
+Use these rules when building the pool:
+
+1. Prefer realistic hard negatives over easy random negatives.
+2. Keep the pool clean and reusable even if it starts small.
+3. Reuse the same `ood/` pool across comparable runs so readiness comparisons stay meaningful.
+4. Use nested folders only for organization, not for labels.
+5. Keep random non-plant images as a minority slice rather than the whole pool.
+
+Important current repo behavior:
+
+- the repo does not require a fixed OOD count or class-balance ratio
+- a small clean `ood/` pool is better than a large noisy one
+- plant-like unknowns are usually more valuable than only easy random objects
+
+### Example organization
+
+One practical pattern is:
+
+```text
+data/tomato/ood/
+  unsupported_tomato_diseases/*
+  other_crops/*
+  abiotic_damage/*
+  blur_occlusion_clutter/*
+  non_plant_misc/*
+```
+
+The folder names above are only for human organization. The workflow evaluates everything under `ood/` as one shared unknown pool.
+
 ## What Happens When Real OOD Data Exists
 
 This is the strongest current evidence path.

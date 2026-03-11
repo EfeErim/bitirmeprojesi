@@ -370,6 +370,7 @@ def test_train_batch_emits_step_metrics():
         fusion_layers=[2],
         fusion_output_dim=4,
         device="cpu",
+        grad_accumulation_steps=1,
     )
     trainer = ContinualSDLoRATrainer(cfg)
 

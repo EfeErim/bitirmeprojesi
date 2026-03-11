@@ -230,6 +230,7 @@ def setup_optimizer(trainer: Any) -> None:
     trainer.scaler = build_grad_scaler(trainer.device, trainer.config.mixed_precision)
     ensure_scheduler(trainer)
     trainer.optimizer.zero_grad(set_to_none=True)
+    trainer._last_grad_norm = 0.0
 
 
 def compute_grad_norm(optimizer: Optional[torch.optim.Optimizer]) -> float:
