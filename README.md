@@ -207,7 +207,7 @@ In practice, the flow is:
 7. Calibrate OOD using the chosen calibration split.
 8. Save the adapter.
 9. Write evaluation artifacts for validation and test.
-10. Use real `ood/` data if it exists, otherwise run the held-out fallback benchmark when enabled.
+10. Use real `ood/` data if it exists, otherwise run the held-out fallback benchmark automatically.
 11. Write the final readiness verdict to `production_readiness.json`.
 
 ## Inference, Step By Step

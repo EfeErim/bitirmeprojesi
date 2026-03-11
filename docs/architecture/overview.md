@@ -72,7 +72,7 @@ src/workflows/training.py -> TrainingWorkflow.run(...)
    - OOD calibration
 6. `src/training/session.py` runs epochs and emits observer events for progress, telemetry, and checkpoints.
 7. `src/training/services/reporting.py` writes plots, CSV files, JSON metrics, confusion matrices, and readiness artifacts.
-8. `src/training/services/ood_benchmark.py` runs the held-out fallback benchmark when real OOD data is missing and the config allows it.
+8. `src/training/services/ood_benchmark.py` runs the held-out fallback benchmark when real OOD data is missing.
 9. The workflow saves the adapter and returns a structured `TrainingWorkflowResult`.
 
 ### What the training stack is optimizing

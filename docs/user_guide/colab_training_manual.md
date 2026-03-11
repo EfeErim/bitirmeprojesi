@@ -58,7 +58,7 @@ This is the current Notebook 2 flow from start to finish:
 8. restore the best model state
 9. calibrate OOD
 10. write validation and test artifacts
-11. use real `ood/` data when present, otherwise run the held-out fallback benchmark when enabled
+11. use real `ood/` data when present, otherwise run the held-out fallback benchmark automatically
 12. write `production_readiness.json`
 13. mirror outputs into `runs/<RUN_ID>/`
 14. optionally auto-push the mirrored run record to GitHub
@@ -251,9 +251,8 @@ Current Colab default tradeoffs:
 
 - the Colab environment now ships a high-VRAM large-batch profile: `batch_size=96`, `grad_accumulation_steps=1`, `mixed_precision="bf16"`, and `num_workers=12`
 - the Colab environment disables deterministic training so CuDNN can use faster kernels
-- automatic held-out OOD fallback benchmarking is disabled by default for faster iteration
 - the Colab environment validates every 2 epochs by default, while still forcing validation on the final epoch
-- if you do not provide a real `ood/` split and leave that fallback disabled, `production_readiness.json` will stay failed until you re-enable the benchmark or add real OOD data
+- if you do not provide a real `ood/` split, the workflow now falls back to the held-out benchmark automatically; readiness still fails when that benchmark is impossible or below target
 - Notebook 2 can also validate every `N` epochs instead of every epoch; this reduces runtime but makes best-model and early-stopping decisions less responsive between validation checkpoints
 - checkpointing and live batch-progress cadence are scaled for the larger per-step sample count so resume points and logs do not become too sparse
 - the Colab environment now uses a much larger cache budget and can cache the continual train split too, which is intended for high-RAM A100 sessions to reduce repeated image decode and disk I/O
@@ -413,7 +412,7 @@ Notebook 2 does more than train a classifier. It also:
 
 - calibrates OOD state after training
 - evaluates real `ood/` data when present
-- otherwise runs the held-out fallback benchmark when enabled
+- otherwise runs the held-out fallback benchmark automatically
 - writes the final readiness artifact to `production_readiness.json`
 
 Important guardrails:

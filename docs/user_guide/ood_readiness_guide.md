@@ -56,7 +56,7 @@ The supported path is:
 3. save the adapter together with its OOD state
 4. look for real OOD evidence under the runtime dataset
 5. if real OOD data exists, evaluate against it
-6. if real OOD data does not exist, run the held-out fallback benchmark when enabled
+6. if real OOD data does not exist, run the held-out fallback benchmark automatically
 7. combine classification evidence and OOD evidence into a final verdict
 8. write `production_readiness.json`
 
@@ -353,7 +353,8 @@ Current shipped defaults include:
 Practical meaning:
 
 - if OOD evidence is required and missing, the final readiness artifact fails
-- if the fallback benchmark is enabled and possible, the workflow will try to generate OOD evidence automatically
+- if no real `ood/` split exists and the fallback is possible, the workflow runs the held-out benchmark automatically
+- `ood_benchmark_auto_run` is retained on the config surface for compatibility, but the maintained workflow no longer uses it to skip fallback evidence when real `ood/` data is absent
 
 ## Typical Readiness Outcomes
 
@@ -377,7 +378,6 @@ Common reasons:
 Common reasons:
 
 - no real `ood/` split exists
-- fallback benchmarking was disabled
 - fewer than 3 classes were available for the fallback benchmark
 
 ### Outcome 4: failed because OOD behavior is below target

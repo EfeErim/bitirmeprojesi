@@ -41,7 +41,7 @@
       },
       "evaluation": {
         "ood_fallback_strategy": "held_out_benchmark",
-        "ood_benchmark_auto_run": false,
+        "ood_benchmark_auto_run": true,
         "ood_benchmark_min_classes": 3
       },
       "data": {

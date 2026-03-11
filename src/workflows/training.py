@@ -385,12 +385,12 @@ class TrainingWorkflow:
             )
             return "real_ood_split", ood_metrics, {}
 
-        should_run_benchmark = (
-            str(evaluation_cfg.get("ood_fallback_strategy", "held_out_benchmark")) == "held_out_benchmark"
-            and bool(evaluation_cfg.get("ood_benchmark_auto_run", True))
-        )
-        if not should_run_benchmark:
-            return "unavailable", {}, {}
+        # Real OOD evidence is preferred, but when it is missing the workflow
+        # always falls back to the held-out benchmark so readiness does not
+        # silently skip its only OOD evidence path.
+        requested_strategy = str(evaluation_cfg.get("ood_fallback_strategy", "held_out_benchmark"))
+        auto_run_requested = bool(evaluation_cfg.get("ood_benchmark_auto_run", True))
+        forced_benchmark = requested_strategy != "held_out_benchmark" or not auto_run_requested
 
         self._emit_telemetry(
             telemetry,
@@ -400,6 +400,15 @@ class TrainingWorkflow:
                 "crop_name": crop_name,
                 "estimated_fold_trainings": int(len(detected_classes)),
                 "class_count": int(len(detected_classes)),
+                "primary_score_method": str(
+                    self.config.get("training", {})
+                    .get("continual", {})
+                    .get("ood", {})
+                    .get("primary_score_method", "ensemble")
+                ),
+                "forced_benchmark": bool(forced_benchmark),
+                "requested_strategy": requested_strategy,
+                "requested_auto_run": bool(auto_run_requested),
             },
             phase="evaluation",
         )
@@ -608,6 +617,12 @@ class TrainingWorkflow:
                 "calibration_split_name": calibration_split_name,
                 "best_state_restored": bool(best_state_restored),
                 "classification_split": authoritative_split,
+                "ood_primary_score_method": str(
+                    self.config.get("training", {})
+                    .get("continual", {})
+                    .get("ood", {})
+                    .get("primary_score_method", "ensemble")
+                ),
                 "ood_benchmark_status": ood_benchmark.get("status"),
                 "ood_benchmark_passed": ood_benchmark.get("passed"),
             },

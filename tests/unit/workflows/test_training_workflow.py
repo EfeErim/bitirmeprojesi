@@ -359,6 +359,7 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
 
 
 def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch, tmp_path: Path):
+    benchmark_calls = []
     monkeypatch.setattr(
         "src.workflows.training.create_training_loaders",
         lambda **kwargs: {
@@ -374,7 +375,7 @@ def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch,
     )
     monkeypatch.setattr(
         "src.workflows.training.run_leave_one_class_out_benchmark",
-        lambda **kwargs: {},
+        lambda **kwargs: benchmark_calls.append(dict(kwargs)) or {},
     )
 
     workflow = TrainingWorkflow(
@@ -403,9 +404,77 @@ def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch,
         output_dir=tmp_path / "outputs",
     )
 
-    assert result.ood_evidence_source == "unavailable"
+    assert len(benchmark_calls) == 1
+    assert result.ood_evidence_source == "held_out_benchmark"
     assert result.production_readiness["passed"] is True
     assert result.production_readiness["ood_evidence"]["evaluation"]["require_ood"] is False
+
+
+def test_training_workflow_forces_held_out_benchmark_when_config_requests_no_fallback(monkeypatch, tmp_path: Path):
+    benchmark_calls = []
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a", "disease_b"]),
+            "val": FakeLoader(["healthy", "disease_a", "disease_b"]),
+            "test": FakeLoader(["healthy", "disease_a", "disease_b"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr(
+        "src.workflows.training.run_leave_one_class_out_benchmark",
+        lambda **kwargs: benchmark_calls.append(dict(kwargs)) or {
+            "status": "completed",
+            "passed": True,
+            "metrics": {
+                "ood_auroc": 0.96,
+                "ood_false_positive_rate": 0.03,
+                "sure_ds_f1": 0.94,
+                "conformal_empirical_coverage": 0.97,
+            },
+            "paths": {
+                "summary_json": str(
+                    tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json"
+                )
+            },
+        },
+    )
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {
+                        "require_ood_for_gate": True,
+                        "ood_fallback_strategy": "none",
+                        "ood_benchmark_auto_run": False,
+                        "ood_benchmark_min_classes": 3,
+                    },
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert len(benchmark_calls) == 1
+    assert benchmark_calls[0]["min_classes"] == 3
+    assert result.ood_evidence_source == "held_out_benchmark"
+    assert result.production_readiness["passed"] is True
 
 
 def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp_path: Path):
