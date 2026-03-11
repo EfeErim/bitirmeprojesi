@@ -110,10 +110,13 @@ class ConfigurationManager:
         # Sync extended OOD flags between top-level and continual
         for key in (
             "primary_score_method",
-            "radial_l2_enabled", "sure_enabled", "conformal_enabled", "conformal_alpha",
+            "radial_l2_enabled", "sure_enabled", "conformal_enabled", "conformal_alpha", "conformal_method",
             "ber_enabled", "ber_lambda_old", "ber_lambda_new",
             "radial_beta_range", "radial_beta_steps",
             "sure_semantic_percentile", "sure_confidence_percentile",
+            "conformal_raps_lambda", "conformal_raps_k_reg",
+            "energy_temperature_mode", "energy_temperature", "energy_temperature_range", "energy_temperature_steps",
+            "knn_backend", "knn_chunk_size",
         ):
             top_val = top_level_ood.get(key)
             cont_val = continual_ood.get(key)

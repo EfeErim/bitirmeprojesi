@@ -216,14 +216,23 @@ def _resume_relevant_ood_config(config: Dict[str, Any]) -> Dict[str, Any]:
             ood_cfg.get("primary_score_method", "auto")
         ),
         "threshold_factor": float(ood_cfg.get("threshold_factor", 2.0)),
+        "energy_temperature_mode": str(ood_cfg.get("energy_temperature_mode", "fixed")),
+        "energy_temperature": float(ood_cfg.get("energy_temperature", 1.0)),
+        "energy_temperature_range": list(ood_cfg.get("energy_temperature_range", [0.5, 3.0])),
+        "energy_temperature_steps": int(ood_cfg.get("energy_temperature_steps", 16)),
         "radial_l2_enabled": bool(ood_cfg.get("radial_l2_enabled", False)),
         "radial_beta_range": list(ood_cfg.get("radial_beta_range", [0.5, 2.0])),
         "radial_beta_steps": int(ood_cfg.get("radial_beta_steps", 16)),
+        "knn_backend": str(ood_cfg.get("knn_backend", "auto")),
+        "knn_chunk_size": int(ood_cfg.get("knn_chunk_size", 2048)),
         "sure_enabled": bool(ood_cfg.get("sure_enabled", False)),
         "sure_semantic_percentile": float(ood_cfg.get("sure_semantic_percentile", 95.0)),
         "sure_confidence_percentile": float(ood_cfg.get("sure_confidence_percentile", 90.0)),
         "conformal_enabled": bool(ood_cfg.get("conformal_enabled", False)),
         "conformal_alpha": float(ood_cfg.get("conformal_alpha", 0.05)),
+        "conformal_method": str(ood_cfg.get("conformal_method", "threshold")),
+        "conformal_raps_lambda": float(ood_cfg.get("conformal_raps_lambda", 0.0)),
+        "conformal_raps_k_reg": int(ood_cfg.get("conformal_raps_k_reg", 1)),
     }
 
 

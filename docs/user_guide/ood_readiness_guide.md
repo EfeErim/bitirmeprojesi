@@ -109,6 +109,7 @@ Current behavior:
 - images under `ood/` are loaded recursively
 - nested folder names inside `ood/` are not treated as class labels
 - one shared `ood/` pool can be reused across runs for the same crop
+- when real `ood/` data is evaluated, the top-level folder under `ood/` is emitted as `ood_type` in validation and test artifacts so you can inspect near/far/non-plant/blur-style slices without turning them into supported labels
 
 ## How To Build A Real `ood/` Pool
 
@@ -167,6 +168,11 @@ data/tomato/ood/
 ```
 
 The folder names above are only for human organization. The workflow evaluates everything under `ood/` as one shared unknown pool.
+
+Reporting detail:
+
+- the workflow still computes the main OOD gate on the pooled `ood/` split
+- additional `ood_type_breakdown.json` artifacts summarize AUROC and FPR by top-level `ood/` folder when that structure exists
 
 ## What Happens When Real OOD Data Exists
 
@@ -324,6 +330,37 @@ The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/se
 - `sure_ds_f1 >= 0.90`
 - `conformal_empirical_coverage >= 0.95`
 
+## Conformal Modes
+
+The repo now separates two different conformal use cases.
+
+### Mode 1: `threshold`
+
+This conformalizes the detector's OOD residual score. It helps stabilize the rejection threshold, but it is not the same thing as standard set-valued classification.
+
+Guarantee conditions to keep in mind:
+
+- calibration and evaluation samples still need to be exchangeable for the split-conformal quantile argument to make sense
+- the guarantee is about the calibrated score residual, not about APS/RAPS-style label-set coverage
+- if you calibrate on `val`, do not treat the same `val` split as final deployment evidence
+
+### Mode 2: `aps`
+
+This is standard Adaptive Prediction Sets over class probabilities.
+
+### Mode 3: `raps`
+
+This is Regularized Adaptive Prediction Sets with an explicit set-size penalty.
+
+APS/RAPS are the standard choice when your real goal is set-valued classification rather than OOD-threshold conformalization.
+
+Current repo configuration keys:
+
+- `training.continual.ood.conformal_method`
+- `training.continual.ood.conformal_alpha`
+- `training.continual.ood.conformal_raps_lambda`
+- `training.continual.ood.conformal_raps_k_reg`
+
 These targets are the default bar used unless a different target spec is loaded.
 
 ## Configuration That Controls Readiness
@@ -387,6 +424,16 @@ Common reasons:
 - AUROC too low
 - false positive rate too high
 - SURE or conformal coverage below threshold
+
+## Method Naming Note
+
+The repo label `SURE+` should be read as `SURE+/DS-F1-inspired double scoring`.
+
+That means:
+
+- the code combines a semantic OOD score and a confidence rejection score
+- DS-F1 is the joint reporting metric for that path
+- the repo does not advertise this implementation as an exact reproduction of a separately versioned "SURE+" paper unless that citation is pinned explicitly in downstream reporting
 
 ## Common Questions
 

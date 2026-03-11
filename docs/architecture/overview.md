@@ -189,12 +189,19 @@ The supported path is:
 
 - detector logic: `src/ood/continual_ood.py`
 - radial normalization: `src/ood/radial_normalization.py`
-- SURE+ scoring: `src/ood/sure_scoring.py`
+- SURE+/DS-F1-inspired double scoring: `src/ood/sure_scoring.py`
 - conformal prediction: `src/ood/conformal_prediction.py`
 - BER loss wrapper: `src/training/ber_loss.py`
 - OOD calibration orchestration: `src/training/services/ood_calibration.py`
 - readiness metrics and gates: `src/training/services/metrics.py`
 - held-out fallback benchmark: `src/training/services/ood_benchmark.py`
+
+Important current detail:
+
+- the "SURE+" label in this repo is shorthand for a two-threshold semantic-plus-confidence rejection path; it is not documented as a paper-faithful reproduction claim
+- conformal mode can now be threshold conformalization on OOD residuals, or standard APS/RAPS set-valued classification
+- the energy detector can optionally calibrate a temperature on the calibration split before thresholds are written
+- kNN distance scoring supports `cdist`, chunked distance search, and optional FAISS when available
 
 ### Why there are multiple JSON artifacts
 

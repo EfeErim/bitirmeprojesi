@@ -86,6 +86,8 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
         "class_stats": class_stats_payload,
         "knn_k": int(getattr(ood_detector, "knn_k", 10)),
         "knn_bank_cap": int(getattr(ood_detector, "knn_bank_cap", 256)),
+        "knn_backend": str(getattr(ood_detector, "knn_backend", "auto") or "auto"),
+        "knn_chunk_size": int(getattr(ood_detector, "knn_chunk_size", 2048)),
         "radial_l2_enabled": bool(getattr(ood_detector, "radial_l2_enabled", False)),
         "radial_beta": (
             None
@@ -105,9 +107,16 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
         ),
         "conformal_enabled": bool(getattr(ood_detector, "conformal_enabled", False)),
         "conformal_alpha": _float_field(getattr(ood_detector, "conformal_alpha", 0.05), default=0.05),
+        "conformal_method": str(getattr(ood_detector, "conformal_method", "threshold") or "threshold"),
+        "conformal_raps_lambda": _float_field(getattr(ood_detector, "conformal_raps_lambda", 0.0), default=0.0),
+        "conformal_raps_k_reg": int(getattr(ood_detector, "conformal_raps_k_reg", 1)),
         "conformal_qhat": (
             None
             if getattr(ood_detector, "conformal_qhat", None) is None
             else _float_field(getattr(ood_detector, "conformal_qhat"), default=0.0)
         ),
+        "energy_temperature": _float_field(getattr(ood_detector, "energy_temperature", 1.0), default=1.0),
+        "energy_temperature_mode": str(getattr(ood_detector, "energy_temperature_mode", "fixed") or "fixed"),
+        "energy_temperature_range": list(getattr(ood_detector, "energy_temperature_range", (0.5, 3.0))),
+        "energy_temperature_steps": int(getattr(ood_detector, "energy_temperature_steps", 16)),
     }

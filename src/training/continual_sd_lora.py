@@ -208,18 +208,28 @@ class ContinualSDLoRAConfig:
     ber_lambda_old: float = 0.1
     ber_lambda_new: float = 0.1
     ber_warmup_steps: int = 50
+    energy_temperature_mode: str = "fixed"
+    energy_temperature: float = 1.0
+    energy_temperature_min: float = 0.5
+    energy_temperature_max: float = 3.0
+    energy_temperature_steps: int = 16
     # --- Radially Scaled L2 Normalization ---
     radial_l2_enabled: bool = True
     radial_beta_min: float = 0.5
     radial_beta_max: float = 2.0
     radial_beta_steps: int = 16
-    # --- SURE+ Double Scoring ---
+    knn_backend: str = "auto"
+    knn_chunk_size: int = 2048
+    # --- SURE+/DS-F1-inspired Double Scoring ---
     sure_enabled: bool = True
     sure_semantic_percentile: float = 95.0
     sure_confidence_percentile: float = 90.0
     # --- Conformal Prediction ---
     conformal_enabled: bool = True
     conformal_alpha: float = 0.05
+    conformal_method: str = "threshold"
+    conformal_raps_lambda: float = 0.0
+    conformal_raps_k_reg: int = 1
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
@@ -259,14 +269,34 @@ class ContinualSDLoRAConfig:
             raise ValueError("BER lambda values must be non-negative.")
         if self.ber_warmup_steps < 0:
             raise ValueError("ber_warmup_steps must be non-negative.")
+        if self.energy_temperature_mode not in {"fixed", "auto"}:
+            raise ValueError("energy_temperature_mode must be 'fixed' or 'auto'.")
+        if self.energy_temperature <= 0.0:
+            raise ValueError("energy_temperature must be positive.")
+        if self.energy_temperature_min <= 0.0 or self.energy_temperature_max <= 0.0:
+            raise ValueError("energy_temperature_range values must be positive.")
+        if self.energy_temperature_min > self.energy_temperature_max:
+            raise ValueError("energy_temperature_min must be less than or equal to energy_temperature_max.")
+        if self.energy_temperature_steps < 2:
+            raise ValueError("energy_temperature_steps must be at least 2.")
         if self.radial_beta_min <= 0.0 or self.radial_beta_max <= 0.0:
             raise ValueError("Radial beta range values must be positive.")
         if self.radial_beta_min >= self.radial_beta_max:
             raise ValueError("radial_beta_min must be less than radial_beta_max.")
         if self.radial_beta_steps < 2:
             raise ValueError("radial_beta_steps must be at least 2.")
+        if self.knn_backend not in {"auto", "cdist", "chunked", "faiss"}:
+            raise ValueError("knn_backend must be one of: auto, cdist, chunked, faiss.")
+        if self.knn_chunk_size < 1:
+            raise ValueError("knn_chunk_size must be positive.")
         if not (0.0 < self.conformal_alpha < 1.0):
             raise ValueError("conformal_alpha must be in (0, 1).")
+        if self.conformal_method not in {"threshold", "aps", "raps"}:
+            raise ValueError("conformal_method must be one of: threshold, aps, raps.")
+        if self.conformal_raps_lambda < 0.0:
+            raise ValueError("conformal_raps_lambda must be non-negative.")
+        if self.conformal_raps_k_reg < 1:
+            raise ValueError("conformal_raps_k_reg must be at least 1.")
         if not (0.0 < self.sure_semantic_percentile <= 100.0):
             raise ValueError("sure_semantic_percentile must be in (0, 100].")
         if not (0.0 < self.sure_confidence_percentile <= 100.0):
@@ -295,14 +325,23 @@ class ContinualSDLoRAConfig:
                 "ber_lambda_old": self.ber_lambda_old,
                 "ber_lambda_new": self.ber_lambda_new,
                 "ber_warmup_steps": self.ber_warmup_steps,
+                "energy_temperature_mode": self.energy_temperature_mode,
+                "energy_temperature": self.energy_temperature,
+                "energy_temperature_range": [self.energy_temperature_min, self.energy_temperature_max],
+                "energy_temperature_steps": self.energy_temperature_steps,
                 "radial_l2_enabled": self.radial_l2_enabled,
                 "radial_beta_range": [self.radial_beta_min, self.radial_beta_max],
                 "radial_beta_steps": self.radial_beta_steps,
+                "knn_backend": self.knn_backend,
+                "knn_chunk_size": self.knn_chunk_size,
                 "sure_enabled": self.sure_enabled,
                 "sure_semantic_percentile": self.sure_semantic_percentile,
                 "sure_confidence_percentile": self.sure_confidence_percentile,
                 "conformal_enabled": self.conformal_enabled,
                 "conformal_alpha": self.conformal_alpha,
+                "conformal_method": self.conformal_method,
+                "conformal_raps_lambda": self.conformal_raps_lambda,
+                "conformal_raps_k_reg": self.conformal_raps_k_reg,
             },
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
@@ -362,6 +401,9 @@ class ContinualSDLoRAConfig:
         early_stopping = normalized.get("early_stopping", {})
         evaluation = normalized.get("evaluation", {})
         radial_beta_min, radial_beta_max = _resolve_radial_beta_range(ood)
+        raw_energy_temperature_range = list(ood.get("energy_temperature_range", [0.5, 3.0]))
+        if len(raw_energy_temperature_range) < 2:
+            raw_energy_temperature_range = [0.5, 3.0]
         early_stopping_metric, early_stopping_mode = _resolve_early_stopping_surface(
             early_stopping,
             evaluation,
@@ -391,15 +433,25 @@ class ContinualSDLoRAConfig:
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
             ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
             ber_warmup_steps=int(ood.get("ber_warmup_steps", 50)),
+            energy_temperature_mode=str(ood.get("energy_temperature_mode", "fixed")),
+            energy_temperature=float(ood.get("energy_temperature", 1.0)),
+            energy_temperature_min=float(raw_energy_temperature_range[0]),
+            energy_temperature_max=float(raw_energy_temperature_range[1]),
+            energy_temperature_steps=int(ood.get("energy_temperature_steps", 16)),
             radial_l2_enabled=bool(ood.get("radial_l2_enabled", True)),
             radial_beta_min=radial_beta_min,
             radial_beta_max=radial_beta_max,
             radial_beta_steps=int(ood.get("radial_beta_steps", 16)),
+            knn_backend=str(ood.get("knn_backend", "auto")),
+            knn_chunk_size=int(ood.get("knn_chunk_size", 2048)),
             sure_enabled=bool(ood.get("sure_enabled", True)),
             sure_semantic_percentile=float(ood.get("sure_semantic_percentile", 95.0)),
             sure_confidence_percentile=float(ood.get("sure_confidence_percentile", 90.0)),
             conformal_enabled=bool(ood.get("conformal_enabled", True)),
             conformal_alpha=float(ood.get("conformal_alpha", 0.05)),
+            conformal_method=str(ood.get("conformal_method", "threshold")),
+            conformal_raps_lambda=float(ood.get("conformal_raps_lambda", 0.0)),
+            conformal_raps_k_reg=int(ood.get("conformal_raps_k_reg", 1)),
             seed=int(normalized.get("seed", 42)),
             deterministic=bool(normalized.get("deterministic", True)),
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 4)),
@@ -449,6 +501,8 @@ class ContinualSDLoRATrainer:
         self.ood_detector = ContinualOODDetector(
             threshold_factor=self.config.ood_threshold_factor,
             primary_score_method=resolve_runtime_primary_score_method(self.config.ood_primary_score_method),
+            knn_backend=self.config.knn_backend,
+            knn_chunk_size=self.config.knn_chunk_size,
             radial_l2_enabled=self.config.radial_l2_enabled,
             radial_beta_range=(self.config.radial_beta_min, self.config.radial_beta_max),
             radial_beta_steps=self.config.radial_beta_steps,
@@ -457,6 +511,13 @@ class ContinualSDLoRATrainer:
             sure_confidence_percentile=self.config.sure_confidence_percentile,
             conformal_enabled=self.config.conformal_enabled,
             conformal_alpha=self.config.conformal_alpha,
+            conformal_method=self.config.conformal_method,
+            conformal_raps_lambda=self.config.conformal_raps_lambda,
+            conformal_raps_k_reg=self.config.conformal_raps_k_reg,
+            energy_temperature=self.config.energy_temperature,
+            energy_temperature_mode=self.config.energy_temperature_mode,
+            energy_temperature_range=(self.config.energy_temperature_min, self.config.energy_temperature_max),
+            energy_temperature_steps=self.config.energy_temperature_steps,
         )
         self.ber_loss: Optional[BERLoss] = None
         self._is_initialized = False

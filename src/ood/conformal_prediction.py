@@ -1,10 +1,15 @@
-"""Conformal Prediction guarantees for OOD detection.
+"""Conformal helpers for thresholded OOD scores and set-valued classification.
 
-Casts OOD ensemble scores into the split conformal prediction framework,
-providing dynamic prediction sets with rigorous statistical coverage
-guarantees: P(y_true ∈ C(x)) ≥ 1 − α under exchangeability.
+This module supports three split-conformal modes:
 
-Reference: Conformal Prediction for OOD detection via statistical hypothesis testing.
+- ``threshold``: conformalized OOD-threshold residuals based on the detector's
+  ensemble score. This calibrates a score threshold, not a standard
+  label-prediction set method.
+- ``aps``: adaptive prediction sets on class probabilities.
+- ``raps``: regularized adaptive prediction sets.
+
+The usual finite-sample coverage guarantee for APS/RAPS requires exchangeable
+calibration and evaluation samples drawn from the same label space.
 """
 
 from __future__ import annotations
@@ -16,49 +21,72 @@ import torch
 
 from src.ood._scoring_utils import energy_from_logits, ensemble_z_score, mahalanobis_distance
 
+SUPPORTED_CONFORMAL_METHODS = ("threshold", "aps", "raps")
+
+
+def normalize_conformal_method(value: Any) -> str:
+    resolved = str(value or "threshold").strip().lower()
+    if resolved not in SUPPORTED_CONFORMAL_METHODS:
+        raise ValueError(
+            "conformal_method must be one of: " + ", ".join(SUPPORTED_CONFORMAL_METHODS) + "."
+        )
+    return resolved
+
 
 def compute_nonconformity_scores(
     ensemble_scores: torch.Tensor,
     class_thresholds: torch.Tensor,
 ) -> torch.Tensor:
-    """Convert OOD ensemble scores to non-conformity scores.
-
-    For each calibration sample, the non-conformity score is the signed distance
-    from the per-class decision boundary:  s_i = ensemble_i − threshold_{y_i}.
-
-    Positive values indicate the sample exceeds the OOD boundary (more non-conforming).
-
-    Args:
-        ensemble_scores: Per-sample ensemble z-scores ``[N]``.
-        class_thresholds: Per-sample class thresholds ``[N]`` (looked up from predicted label).
-
-    Returns:
-        Non-conformity scores ``[N]``.
-    """
+    """Convert OOD ensemble scores to threshold-mode non-conformity scores."""
     return ensemble_scores - class_thresholds
+
+
+def _sorted_probability_payload(logits: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+    probabilities = torch.softmax(logits.float(), dim=-1)
+    return torch.sort(probabilities, dim=-1, descending=True)
+
+
+def _label_ranks(sorted_indices: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    labels = labels.reshape(-1, 1).to(device=sorted_indices.device, dtype=torch.long)
+    return torch.argmax((sorted_indices == labels).to(dtype=torch.long), dim=1)
+
+
+def compute_prediction_set_nonconformity_scores(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    *,
+    method: str = "aps",
+    raps_lambda: float = 0.0,
+    raps_k_reg: int = 1,
+) -> torch.Tensor:
+    resolved_method = normalize_conformal_method(method)
+    if resolved_method == "threshold":
+        raise ValueError("threshold mode uses compute_nonconformity_scores(...), not APS/RAPS logits scoring.")
+    if logits.ndim != 2:
+        raise ValueError("logits must be [N, C].")
+    if logits.shape[0] <= 0:
+        return torch.empty(0, dtype=torch.float32, device=logits.device)
+
+    sorted_probs, sorted_indices = _sorted_probability_payload(logits)
+    ranks = _label_ranks(sorted_indices, labels)
+    cumulative = torch.cumsum(sorted_probs, dim=1)
+    row_indices = torch.arange(logits.shape[0], device=logits.device, dtype=torch.long)
+    scores = cumulative[row_indices, ranks]
+    if resolved_method == "raps":
+        penalties = torch.clamp(ranks.to(dtype=torch.float32) + 1.0 - float(max(int(raps_k_reg), 1)), min=0.0)
+        scores = scores + (float(raps_lambda) * penalties)
+    return scores.to(dtype=torch.float32)
 
 
 def calibrate_conformal_qhat(
     nonconformity_scores: torch.Tensor,
     alpha: float = 0.05,
 ) -> float:
-    """Compute the conformal quantile q̂ for split conformal prediction.
-
-    q̂ = Quantile(s, ⌈(1−α)(1+1/n)⌉ / 1)  — the adjusted (1−α) quantile
-    of the calibration non-conformity scores.
-
-    Args:
-        nonconformity_scores: Calibration non-conformity scores ``[N]``.
-        alpha: Desired miscoverage rate (e.g. 0.05 for 95% coverage).
-
-    Returns:
-        The conformal quantile threshold q̂.
-    """
+    """Compute the split-conformal quantile q-hat."""
     if nonconformity_scores.numel() == 0:
         return float("inf")
 
     n = nonconformity_scores.numel()
-    # Adjusted quantile level for finite-sample coverage
     adjusted_quantile = min(1.0, math.ceil((1 - alpha) * (n + 1)) / n)
 
     return float(
@@ -69,26 +97,35 @@ def calibrate_conformal_qhat(
     )
 
 
+def calibrate_prediction_set_qhat(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    *,
+    alpha: float = 0.05,
+    method: str = "aps",
+    raps_lambda: float = 0.0,
+    raps_k_reg: int = 1,
+) -> float:
+    scores = compute_prediction_set_nonconformity_scores(
+        logits,
+        labels,
+        method=method,
+        raps_lambda=raps_lambda,
+        raps_k_reg=raps_k_reg,
+    )
+    return calibrate_conformal_qhat(scores, alpha=alpha)
+
+
 def score_all_classes(
     features: torch.Tensor,
     logits: torch.Tensor,
     class_stats: Dict[int, Any],
+    *,
+    energy_temperature: float = 1.0,
 ) -> Dict[int, float]:
-    """Score a single sample against every calibrated class.
-
-    For each known class, computes the ensemble z-score as if that class were
-    the predicted class.  This is needed to build the conformal prediction set.
-
-    Args:
-        features: Single feature vector ``[D]``.
-        logits: Single logit vector ``[C]``.
-        class_stats: Mapping ``{class_id: ClassCalibration}``.
-
-    Returns:
-        ``{class_id: ensemble_score}`` for every calibrated class.
-    """
+    """Score a single sample against every calibrated class for threshold mode."""
     scores: Dict[int, float] = {}
-    energy = energy_from_logits(logits.unsqueeze(0))[0]
+    energy = energy_from_logits(logits.unsqueeze(0), temperature=energy_temperature)[0]
 
     for class_id, stats in class_stats.items():
         mean = stats.mean.to(device=features.device, dtype=features.dtype)
@@ -113,29 +150,35 @@ def build_prediction_set(
     qhat: float,
     class_stats: Dict[int, Any],
     idx_to_class: Dict[int, str],
+    *,
+    method: str = "threshold",
+    raps_lambda: float = 0.0,
+    raps_k_reg: int = 1,
+    energy_temperature: float = 1.0,
 ) -> List[str]:
-    """Build the conformal prediction set for a single test sample.
-
-    A class k is included in the set if its non-conformity score ≤ q̂, i.e.
-    the sample is *not sufficiently non-conforming* w.r.t. class k to exclude it.
-
-    By construction, P(y_true ∈ C(x)) ≥ 1 − α under exchangeability.
-
-    Args:
-        features: Single feature vector ``[D]``.
-        logits: Single logit vector ``[C]``.
-        qhat: Conformal quantile from calibration.
-        class_stats: ``{class_id: ClassCalibration}`` with per-class OOD stats.
-        idx_to_class: ``{class_id: class_name}`` mapping.
-
-    Returns:
-        List of class names included in the prediction set, sorted by score (ascending).
-    """
+    """Build the conformal prediction set for a single sample."""
+    resolved_method = normalize_conformal_method(method)
     if qhat == float("inf"):
-        # No valid calibration — return all classes
-        return sorted(idx_to_class.values())
+        return [idx_to_class[class_id] for class_id in sorted(idx_to_class)]
 
-    all_scores = score_all_classes(features, logits, class_stats)
+    if resolved_method in {"aps", "raps"}:
+        if logits.ndim != 1:
+            raise ValueError("APS/RAPS prediction-set building expects logits [C].")
+        sorted_probs, sorted_indices = _sorted_probability_payload(logits.unsqueeze(0))
+        cumulative = torch.cumsum(sorted_probs[0], dim=0)
+        included: List[str] = []
+        for rank, class_id in enumerate(sorted_indices[0].tolist(), start=1):
+            score = float(cumulative[rank - 1].item())
+            if resolved_method == "raps":
+                score += float(raps_lambda) * max(rank - max(int(raps_k_reg), 1), 0)
+            if score <= float(qhat):
+                included.append(idx_to_class.get(int(class_id), str(int(class_id))))
+        if not included and sorted_indices.shape[1] > 0:
+            top_class = int(sorted_indices[0, 0].item())
+            return [idx_to_class.get(top_class, str(top_class))]
+        return included
+
+    all_scores = score_all_classes(features, logits, class_stats, energy_temperature=energy_temperature)
 
     included: List[tuple[float, str]] = []
     for class_id, ensemble_score in all_scores.items():
@@ -145,24 +188,29 @@ def build_prediction_set(
             class_name = idx_to_class.get(class_id, str(class_id))
             included.append((ensemble_score, class_name))
 
-    # Sort by ensemble score ascending (most conforming first)
     included.sort(key=lambda x: x[0])
     return [name for _, name in included]
+
+
+def describe_conformal_method(
+    method: str,
+    *,
+    raps_lambda: float = 0.0,
+    raps_k_reg: int = 1,
+) -> str:
+    resolved_method = normalize_conformal_method(method)
+    if resolved_method == "threshold":
+        return "threshold-conformalized OOD residual sets"
+    if resolved_method == "aps":
+        return "APS set-valued classification"
+    return f"RAPS set-valued classification (lambda={float(raps_lambda):.3g}, k_reg={int(raps_k_reg)})"
 
 
 def compute_empirical_coverage(
     true_labels: torch.Tensor,
     prediction_sets: List[List[int]],
 ) -> float:
-    """Compute empirical coverage: fraction of samples where true label ∈ prediction set.
-
-    Args:
-        true_labels: Ground-truth class indices ``[N]``.
-        prediction_sets: List of N prediction sets (each a list of class indices).
-
-    Returns:
-        Empirical coverage in [0, 1].
-    """
+    """Compute empirical coverage: fraction of samples where true label is in the prediction set."""
     if len(prediction_sets) == 0:
         return 0.0
 

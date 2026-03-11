@@ -2,20 +2,59 @@
 
 from __future__ import annotations
 
-from typing import Final
+from typing import Final, Iterable
 
 import torch
 
 MAHALANOBIS_WEIGHT: Final[float] = 0.6
 ENERGY_WEIGHT: Final[float] = 0.4
+_MIN_TEMPERATURE: Final[float] = 1e-3
 
 
 def safe_std(value: torch.Tensor) -> torch.Tensor:
     return value.clamp_min(1e-6)
 
 
-def energy_from_logits(logits: torch.Tensor) -> torch.Tensor:
-    return -torch.logsumexp(logits, dim=1)
+def normalize_temperature(value: float) -> float:
+    return max(float(value), _MIN_TEMPERATURE)
+
+
+def temperature_scale_logits(logits: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
+    return logits / normalize_temperature(float(temperature))
+
+
+def energy_from_logits(logits: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
+    resolved_temperature = normalize_temperature(float(temperature))
+    scaled_logits = logits / resolved_temperature
+    return -resolved_temperature * torch.logsumexp(scaled_logits, dim=1)
+
+
+def select_temperature_from_logits(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    *,
+    candidate_temperatures: Iterable[float],
+) -> tuple[float, float]:
+    resolved_labels = labels.reshape(-1).to(dtype=torch.long, device=logits.device)
+    if logits.ndim != 2 or logits.shape[0] != resolved_labels.shape[0] or logits.shape[0] <= 0:
+        return 1.0, float("inf")
+
+    best_temperature = 1.0
+    best_nll = float("inf")
+    for candidate in candidate_temperatures:
+        temperature = normalize_temperature(float(candidate))
+        try:
+            loss = torch.nn.functional.cross_entropy(
+                temperature_scale_logits(logits, temperature),
+                resolved_labels,
+            )
+        except Exception:
+            continue
+        loss_value = float(loss.item())
+        if loss_value < best_nll:
+            best_temperature = temperature
+            best_nll = loss_value
+    return best_temperature, best_nll
 
 
 def mahalanobis_distance(

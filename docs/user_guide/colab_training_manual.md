@@ -208,20 +208,32 @@ These control how OOD calibration and scoring behave:
 
 - `training.continual.ood.threshold_factor`
 - `training.continual.ood.primary_score_method`
+- `training.continual.ood.energy_temperature_mode`
+- `training.continual.ood.energy_temperature`
+- `training.continual.ood.energy_temperature_range`
+- `training.continual.ood.energy_temperature_steps`
 - `training.continual.ood.radial_l2_enabled`
 - `training.continual.ood.radial_beta_range`
 - `training.continual.ood.radial_beta_steps`
+- `training.continual.ood.knn_backend`
+- `training.continual.ood.knn_chunk_size`
 - `training.continual.ood.sure_enabled`
 - `training.continual.ood.sure_semantic_percentile`
 - `training.continual.ood.sure_confidence_percentile`
 - `training.continual.ood.conformal_enabled`
 - `training.continual.ood.conformal_alpha`
+- `training.continual.ood.conformal_method`
+- `training.continual.ood.conformal_raps_lambda`
+- `training.continual.ood.conformal_raps_k_reg`
 
 Current shipped default:
 
 - the raw config surface ships `training.continual.ood.primary_score_method: "auto"`
 - the trainer starts with the concrete detector path on `"ensemble"` until OOD evidence exists
 - when real `ood/` data or the held-out fallback benchmark is available, the workflow auto-selects the concrete winning method and exports that chosen method into the adapter
+- energy scoring can optionally keep a fixed temperature or auto-calibrate one from the calibration split
+- kNN scoring can use `cdist`, chunked search, or optional FAISS when available
+- conformal mode can be threshold conformalization, APS, or RAPS depending on whether you want rejection calibration or set-valued classification
 
 ### Readiness policy
 
@@ -404,6 +416,7 @@ These folders help you understand how the model performed on known-class data.
 - `per_class_metrics.csv`: per-class summary
 - `confusion_matrix.csv` and `.png`: where predictions are confused
 - `metric_gate.json`: split-local threshold checks
+- `ood_type_breakdown.json`: optional real-OOD slice metrics keyed by the top-level folder under `ood/`
 
 ### `ood_benchmark/`
 
@@ -432,6 +445,12 @@ Important guardrails:
 - the best in-memory weights are restored before final calibration, evaluation, and adapter export
 - if `val` was used for OOD calibration, an isolated `test/` split is needed for a final readiness verdict
 - if no real `ood/` split exists, the fallback benchmark may retrain once per known class
+- if your real goal is set-valued classification, prefer `conformal_method: "aps"` or `"raps"` instead of the threshold mode
+
+Naming note:
+
+- the repo label `SURE+` means `SURE+/DS-F1-inspired double scoring`
+- it should not be read as a claim that Notebook 2 exports a paper-faithful reimplementation of a separately named SURE+ method
 
 Read [ood_readiness_guide.md](ood_readiness_guide.md) for the full readiness logic.
 

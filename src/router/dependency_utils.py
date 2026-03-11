@@ -1,9 +1,9 @@
 import re
 from typing import Any, Callable, Dict, Optional
 
-_SUPPORTED_TRANSFORMERS_MIN = (4, 56, 0)
-_SUPPORTED_TRANSFORMERS_MAX_EXCLUSIVE = (6, 0, 0)
-_SUPPORTED_TRANSFORMERS_RANGE = ">=4.56.0,<6.0.0"
+_SUPPORTED_TRANSFORMERS_MIN = (5, 1, 0)
+_SUPPORTED_TRANSFORMERS_MAX_EXCLUSIVE = (5, 2, 0)
+_SUPPORTED_TRANSFORMERS_RANGE = ">=5.1.0,<5.2.0"
 
 
 def _parse_transformers_version(version: str) -> tuple[int, int, int]:
@@ -34,9 +34,9 @@ def check_vlm_dependencies(
         parsed_version = _parse_transformers_version(version)
         if not (_SUPPORTED_TRANSFORMERS_MIN <= parsed_version < _SUPPORTED_TRANSFORMERS_MAX_EXCLUSIVE):
             result["transformers_warning"] = (
-                f"transformers {version} is outside the supported range {_SUPPORTED_TRANSFORMERS_RANGE}. "
-                "DINOv3 backbone support landed in 4.56.0+, and this repo is not yet validated on "
-                "Transformers 6.x. Install: !pip install 'transformers>=4.56,<6'"
+                f"transformers {version} is outside the repo's validated range {_SUPPORTED_TRANSFORMERS_RANGE}. "
+                "DINOv3 landed in Transformers 4.56.0+, but the maintained baseline is the latest validated 5.1.x "
+                "line for the repo's DINOv3 + SAM3 surface. Install: !pip install 'transformers~=5.1.0'"
             )
     except Exception as exc:
         result["transformers_warning"] = f"Could not check transformers version: {exc}"

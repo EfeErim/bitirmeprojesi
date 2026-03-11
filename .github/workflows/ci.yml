@@ -9,6 +9,10 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dependency-profile: [preferred, latest-patch]
     steps:
       - uses: actions/checkout@v4
 
@@ -22,6 +26,36 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Refresh latest validated patch dependencies
+        if: matrix.dependency-profile == 'latest-patch'
+        run: |
+          pip install --upgrade \
+            "torch>=2.10,<2.11" \
+            "torchvision>=0.25,<0.26" \
+            "transformers>=5.1,<5.2" \
+            "peft>=0.18,<0.19" \
+            "accelerate>=1.13,<1.14" \
+            "huggingface-hub>=1.4,<1.5"
+
+      - name: Show dependency profile
+        run: |
+          python - <<'PY'
+          import importlib
+
+          packages = [
+              "torch",
+              "torchvision",
+              "transformers",
+              "peft",
+              "accelerate",
+              "huggingface_hub",
+          ]
+          print("dependency_profile=${{ matrix.dependency-profile }}")
+          for name in packages:
+              module = importlib.import_module(name)
+              print(f"{name}={getattr(module, '__version__', 'unknown')}")
+          PY
 
       - name: Validate notebook/runtime imports
         run: python scripts/validate_notebook_imports.py

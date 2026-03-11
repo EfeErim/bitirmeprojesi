@@ -8,6 +8,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 import torch
 
 from src.ood.sure_scoring import compute_ds_f1
+from src.training.services.metrics import compute_ood_detection_metrics
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
 
 
@@ -19,6 +20,7 @@ class _ArtifactMetricState:
     mixed_ood_labels: List[int] = field(default_factory=list)
     mixed_ood_scores: List[float] = field(default_factory=list)
     mixed_ood_scores_by_method: Dict[str, List[float]] = field(default_factory=dict)
+    mixed_ood_sample_types: List[Optional[str]] = field(default_factory=list)
     primary_score_method: str = "ensemble"
     semantic_labels: List[int] = field(default_factory=list)
     semantic_preds: List[int] = field(default_factory=list)
@@ -74,6 +76,7 @@ def _update_detector_artifact_state_for_batch(
     predictions: torch.Tensor,
     ood_loader_present: bool,
     is_ood_loader: bool,
+    batch_sample_types: Optional[List[Optional[str]]] = None,
 ) -> None:
     ood = detector.score(features, logits, predicted_labels=predictions)
     primary_method, candidate_scores = _resolve_candidate_score_payload(detector, ood)
@@ -86,6 +89,10 @@ def _update_detector_artifact_state_for_batch(
     if ood_loader_present:
         batch_ood_labels = [1 if is_ood_loader else 0] * int(labels.shape[0])
         state.mixed_ood_labels.extend(batch_ood_labels)
+        if batch_sample_types is not None and len(batch_sample_types) == int(labels.shape[0]):
+            state.mixed_ood_sample_types.extend(list(batch_sample_types))
+        else:
+            state.mixed_ood_sample_types.extend([None] * int(labels.shape[0]))
         state.primary_score_method = primary_method
         if torch.is_tensor(primary_scores):
             state.mixed_ood_scores.extend(float(score) for score in primary_scores.detach().cpu().tolist())
@@ -113,6 +120,83 @@ def _update_detector_artifact_state_for_batch(
             state.conformal_hits += int(true_label in pred_set)
             state.conformal_total += 1
             state.conformal_set_size_total += len(pred_set)
+
+
+def _infer_ood_type_from_path(image_path: Any, *, split_name: str) -> str:
+    try:
+        parts = list(getattr(image_path, "parts", []))
+    except Exception:
+        parts = []
+    if not parts:
+        text = str(image_path)
+        parts = [part for part in text.replace("\\", "/").split("/") if part]
+    split_index = -1
+    for index, part in enumerate(parts):
+        if str(part).lower() == str(split_name).lower():
+            split_index = index
+            break
+    if split_index < 0:
+        return "unlabeled"
+    relative_parts = parts[split_index + 1 :]
+    if len(relative_parts) <= 1:
+        return "unlabeled"
+    return str(relative_parts[0])
+
+
+def _resolve_loader_sample_types(eval_loader: Iterable[Dict[str, torch.Tensor]], *, is_ood_loader: bool) -> Optional[List[str]]:
+    if not is_ood_loader:
+        return None
+    dataset = getattr(eval_loader, "dataset", None)
+    image_paths = getattr(dataset, "image_paths", None)
+    split_name = str(getattr(dataset, "split", "") or "")
+    if not image_paths or split_name.lower() != "ood":
+        return None
+    return [_infer_ood_type_from_path(path, split_name=split_name) for path in list(image_paths)]
+
+
+def _build_ood_type_breakdown(state: _ArtifactMetricState) -> Dict[str, Any]:
+    if not state.mixed_ood_sample_types or not state.mixed_ood_scores_by_method:
+        return {}
+
+    id_indices = [idx for idx, label in enumerate(state.mixed_ood_labels) if int(label) == 0]
+    ood_types = sorted(
+        {
+            str(sample_type)
+            for sample_type, label in zip(state.mixed_ood_sample_types, state.mixed_ood_labels)
+            if sample_type and int(label) == 1
+        }
+    )
+    if not id_indices or not ood_types:
+        return {}
+
+    breakdown: Dict[str, Any] = {}
+    for ood_type in ood_types:
+        ood_indices = [
+            idx
+            for idx, (sample_type, label) in enumerate(zip(state.mixed_ood_sample_types, state.mixed_ood_labels))
+            if int(label) == 1 and sample_type == ood_type
+        ]
+        if not ood_indices:
+            continue
+        method_metrics: Dict[str, Any] = {}
+        for method_name, all_scores in state.mixed_ood_scores_by_method.items():
+            labels = ([0] * len(id_indices)) + ([1] * len(ood_indices))
+            scores = [float(all_scores[idx]) for idx in id_indices] + [float(all_scores[idx]) for idx in ood_indices]
+            metrics = compute_ood_detection_metrics(ood_labels=labels, ood_scores=scores)
+            method_metrics[str(method_name)] = {
+                "ood_auroc": metrics["ood_auroc"],
+                "ood_false_positive_rate": metrics["ood_false_positive_rate"],
+                "ood_samples": int(metrics["ood_samples"]),
+                "in_distribution_samples": int(metrics["in_distribution_samples"]),
+            }
+        breakdown[str(ood_type)] = {
+            "ood_type": str(ood_type),
+            "sample_count": int(len(ood_indices)),
+            "primary_score_method": str(state.primary_score_method or "ensemble"),
+            "metrics": dict(method_metrics.get(str(state.primary_score_method or "ensemble"), {})),
+            "method_metrics": method_metrics,
+        }
+    return breakdown
 
 
 def _compute_classification_metrics(
@@ -215,6 +299,8 @@ def _update_detector_artifact_state(
     ood_loader_present: bool,
     is_ood_loader: bool,
 ) -> None:
+    sample_types = _resolve_loader_sample_types(eval_loader, is_ood_loader=is_ood_loader)
+    sample_offset = 0
     trainer.set_eval_mode()
     with torch.inference_mode():
         for batch in eval_loader:
@@ -223,6 +309,11 @@ def _update_detector_artifact_state(
             features = trainer.encode(images)
             logits = trainer.classifier(features)
             predictions = torch.argmax(logits, dim=1)
+            batch_size = int(labels.shape[0])
+            batch_sample_types = None
+            if sample_types is not None:
+                batch_sample_types = [str(value) for value in sample_types[sample_offset : sample_offset + batch_size]]
+                sample_offset += batch_size
             _update_detector_artifact_state_for_batch(
                 state,
                 detector=detector,
@@ -233,6 +324,7 @@ def _update_detector_artifact_state(
                 predictions=predictions,
                 ood_loader_present=ood_loader_present,
                 is_ood_loader=is_ood_loader,
+                batch_sample_types=batch_sample_types,
             )
 
 
@@ -250,10 +342,13 @@ def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: 
             str(method_name): list(values)
             for method_name, values in state.mixed_ood_scores_by_method.items()
         }
+        payload.ood_type_breakdown = _build_ood_type_breakdown(state)
         payload.context["ood_eval_in_distribution_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 0))
         payload.context["ood_eval_ood_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 1))
         payload.context["ood_primary_score_method"] = payload.ood_primary_score_method
         payload.context["ood_score_methods"] = sorted(payload.ood_scores_by_method.keys())
+        if payload.ood_type_breakdown:
+            payload.context["ood_types"] = sorted(payload.ood_type_breakdown.keys())
 
     if state.semantic_labels and 0 in state.semantic_labels and 1 in state.semantic_labels and state.confidence_labels:
         ds_f1 = compute_ds_f1(

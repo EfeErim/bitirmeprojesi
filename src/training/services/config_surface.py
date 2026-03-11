@@ -35,14 +35,23 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
             "ber_warmup_steps": 50,
+            "energy_temperature_mode": "fixed",
+            "energy_temperature": 1.0,
+            "energy_temperature_range": [0.5, 3.0],
+            "energy_temperature_steps": 16,
             "radial_l2_enabled": True,
             "radial_beta_range": [0.5, 2.0],
             "radial_beta_steps": 16,
+            "knn_backend": "auto",
+            "knn_chunk_size": 2048,
             "sure_enabled": True,
             "sure_semantic_percentile": 95.0,
             "sure_confidence_percentile": 90.0,
             "conformal_enabled": True,
             "conformal_alpha": 0.05,
+            "conformal_method": "threshold",
+            "conformal_raps_lambda": 0.0,
+            "conformal_raps_k_reg": 1,
         },
         "optimization": {
             "grad_accumulation_steps": 4,
@@ -171,17 +180,29 @@ def normalize_continual_training_config(
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))
     ood["ber_warmup_steps"] = int(ood.get("ber_warmup_steps", 50))
+    ood["energy_temperature_mode"] = str(ood.get("energy_temperature_mode", "fixed"))
+    ood["energy_temperature"] = float(ood.get("energy_temperature", 1.0))
+    raw_energy_range = list(ood.get("energy_temperature_range", [0.5, 3.0]))
+    if len(raw_energy_range) < 2:
+        raw_energy_range = [0.5, 3.0]
+    ood["energy_temperature_range"] = [float(raw_energy_range[0]), float(raw_energy_range[1])]
+    ood["energy_temperature_steps"] = int(ood.get("energy_temperature_steps", 16))
     ood["radial_l2_enabled"] = bool(ood.get("radial_l2_enabled", True))
     raw_beta_range = list(ood.get("radial_beta_range", [0.5, 2.0]))
     if len(raw_beta_range) < 2:
         raw_beta_range = [0.5, 2.0]
     ood["radial_beta_range"] = [float(raw_beta_range[0]), float(raw_beta_range[1])]
     ood["radial_beta_steps"] = int(ood.get("radial_beta_steps", 16))
+    ood["knn_backend"] = str(ood.get("knn_backend", "auto"))
+    ood["knn_chunk_size"] = int(ood.get("knn_chunk_size", 2048))
     ood["sure_enabled"] = bool(ood.get("sure_enabled", True))
     ood["sure_semantic_percentile"] = float(ood.get("sure_semantic_percentile", 95.0))
     ood["sure_confidence_percentile"] = float(ood.get("sure_confidence_percentile", 90.0))
     ood["conformal_enabled"] = bool(ood.get("conformal_enabled", True))
     ood["conformal_alpha"] = float(ood.get("conformal_alpha", 0.05))
+    ood["conformal_method"] = str(ood.get("conformal_method", "threshold"))
+    ood["conformal_raps_lambda"] = float(ood.get("conformal_raps_lambda", 0.0))
+    ood["conformal_raps_k_reg"] = int(ood.get("conformal_raps_k_reg", 1))
 
     optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 4))
     optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))

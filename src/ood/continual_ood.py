@@ -3,7 +3,9 @@
 
 The detector keeps the legacy Mahalanobis + energy ensemble path, but also
 calibrates raw energy and per-class kNN distance scores from the same feature
-materialization. SURE+ and conformal prediction remain ensemble-based.
+materialization. The repo's SURE+/DS-F1-inspired double scoring remains
+ensemble-based, while conformal prediction now supports threshold, APS, and
+RAPS modes.
 """
 
 from __future__ import annotations
@@ -18,12 +20,17 @@ from src.ood._scoring_utils import (
     energy_from_logits,
     ensemble_z_score,
     mahalanobis_distance,
+    normalize_temperature,
     safe_std,
+    select_temperature_from_logits,
 )
 from src.ood.conformal_prediction import (
     build_prediction_set,
+    calibrate_prediction_set_qhat,
     calibrate_conformal_qhat,
+    describe_conformal_method,
     compute_nonconformity_scores,
+    normalize_conformal_method,
 )
 from src.ood.radial_normalization import auto_tune_beta, radial_l2_normalize
 from src.ood.sure_scoring import (
@@ -34,9 +41,25 @@ from src.ood.sure_scoring import (
 )
 
 SUPPORTED_OOD_SCORE_METHODS = ("ensemble", "energy", "knn")
+SUPPORTED_KNN_BACKENDS = ("auto", "cdist", "chunked", "faiss")
 DEFAULT_KNN_K = 10
 DEFAULT_KNN_BANK_CAP = 256
+DEFAULT_KNN_CHUNK_SIZE = 2048
 _FLOAT_EPS = 1e-6
+
+try:
+    import faiss as _faiss
+except Exception:  # pragma: no cover - optional acceleration
+    _faiss = None
+
+
+def normalize_knn_backend(value: Any) -> str:
+    resolved = str(value or "auto").strip().lower()
+    if resolved not in SUPPORTED_KNN_BACKENDS:
+        raise ValueError("knn_backend must be one of: " + ", ".join(SUPPORTED_KNN_BACKENDS) + ".")
+    return resolved
+
+
 _BASE_SCORE_FIELDS = (
     "mahalanobis_z",
     "energy_z",
@@ -104,6 +127,8 @@ class ContinualOODDetector:
         primary_score_method: str = "ensemble",
         knn_k: int = DEFAULT_KNN_K,
         knn_bank_cap: int = DEFAULT_KNN_BANK_CAP,
+        knn_backend: str = "auto",
+        knn_chunk_size: int = DEFAULT_KNN_CHUNK_SIZE,
         radial_l2_enabled: bool = False,
         radial_beta_range: Tuple[float, float] = (0.5, 2.0),
         radial_beta_steps: int = 16,
@@ -112,11 +137,20 @@ class ContinualOODDetector:
         sure_confidence_percentile: float = 90.0,
         conformal_enabled: bool = False,
         conformal_alpha: float = 0.05,
+        conformal_method: str = "threshold",
+        conformal_raps_lambda: float = 0.0,
+        conformal_raps_k_reg: int = 1,
+        energy_temperature: float = 1.0,
+        energy_temperature_mode: str = "fixed",
+        energy_temperature_range: Tuple[float, float] = (0.5, 3.0),
+        energy_temperature_steps: int = 16,
     ) -> None:
         self.threshold_factor = float(threshold_factor)
         self.primary_score_method = normalize_primary_score_method(primary_score_method)
         self.knn_k = int(knn_k)
         self.knn_bank_cap = int(knn_bank_cap)
+        self.knn_backend = normalize_knn_backend(knn_backend)
+        self.knn_chunk_size = int(knn_chunk_size)
         self.class_stats: Dict[int, ClassCalibration] = {}
         self.calibration_version = 0
 
@@ -131,15 +165,25 @@ class ContinualOODDetector:
 
         self.conformal_enabled = bool(conformal_enabled)
         self.conformal_alpha = float(conformal_alpha)
+        self.conformal_method = normalize_conformal_method(conformal_method)
+        self.conformal_raps_lambda = float(conformal_raps_lambda)
+        self.conformal_raps_k_reg = int(conformal_raps_k_reg)
         self.conformal_qhat: Optional[float] = None
+
+        self.energy_temperature = normalize_temperature(float(energy_temperature))
+        self.energy_temperature_mode = str(energy_temperature_mode or "fixed").strip().lower()
+        self.energy_temperature_range = (
+            normalize_temperature(float(energy_temperature_range[0])),
+            normalize_temperature(float(energy_temperature_range[1])),
+        )
+        self.energy_temperature_steps = int(energy_temperature_steps)
 
     @staticmethod
     def _safe_std(value: torch.Tensor) -> torch.Tensor:
         return safe_std(value)
 
-    @staticmethod
-    def _energy(logits: torch.Tensor) -> torch.Tensor:
-        return energy_from_logits(logits)
+    def _energy(self, logits: torch.Tensor) -> torch.Tensor:
+        return energy_from_logits(logits, temperature=self.energy_temperature)
 
     @staticmethod
     def _calibrated_class_ids(labels: torch.Tensor) -> List[int]:
@@ -155,6 +199,10 @@ class ContinualOODDetector:
         conformal_qhat: Optional[float],
         knn_k: int,
         knn_bank_cap: int,
+        knn_backend: str,
+        knn_chunk_size: int,
+        conformal_method: str,
+        energy_temperature: float,
     ) -> Dict[str, float | str]:
         result: Dict[str, float | str] = {
             "num_classes": float(class_count),
@@ -162,6 +210,11 @@ class ContinualOODDetector:
             "primary_score_method": str(primary_score_method),
             "knn_k": float(knn_k),
             "knn_bank_cap": float(knn_bank_cap),
+            "knn_backend": str(knn_backend),
+            "knn_chunk_size": float(knn_chunk_size),
+            "conformal_method": str(conformal_method),
+            "conformal_method_description": describe_conformal_method(conformal_method),
+            "energy_temperature": float(energy_temperature),
         }
         if radial_beta is not None:
             result["radial_beta"] = float(radial_beta)
@@ -260,7 +313,77 @@ class ContinualOODDetector:
         return self._subsample_evenly(class_features, self.knn_bank_cap)
 
     @staticmethod
+    def _resolve_neighbor_count(bank_size: int, k: int, *, exclude_self: bool) -> int:
+        if exclude_self:
+            return min(max(1, int(k)), max(1, int(bank_size) - 1))
+        return min(max(1, int(k)), int(bank_size))
+
+    @staticmethod
+    def _pairwise_l2(query: torch.Tensor, ref_bank: torch.Tensor) -> torch.Tensor:
+        query_norm = (query * query).sum(dim=1, keepdim=True)
+        ref_norm = (ref_bank * ref_bank).sum(dim=1).unsqueeze(0)
+        distances_sq = (query_norm + ref_norm - (2.0 * query @ ref_bank.transpose(0, 1))).clamp_min(0.0)
+        return distances_sq.sqrt()
+
+    @classmethod
+    def _chunked_knn_distances(
+        cls,
+        query: torch.Tensor,
+        ref_bank: torch.Tensor,
+        *,
+        neighbor_count: int,
+        chunk_size: int,
+        exclude_self: bool,
+    ) -> torch.Tensor:
+        topk_values: Optional[torch.Tensor] = None
+        resolved_chunk_size = max(1, int(chunk_size))
+        for start in range(0, int(ref_bank.shape[0]), resolved_chunk_size):
+            distances = cls._pairwise_l2(query, ref_bank[start:start + resolved_chunk_size])
+            if exclude_self:
+                distances = distances.clone()
+                zero_mask = distances <= _FLOAT_EPS
+                if bool(zero_mask.any().item()):
+                    distances[zero_mask] = float("inf")
+            if topk_values is None:
+                first_k = min(neighbor_count, int(distances.shape[1]))
+                topk_values = torch.topk(distances, k=first_k, largest=False, dim=1).values
+            else:
+                merged = torch.cat([topk_values, distances], dim=1)
+                topk_values = torch.topk(merged, k=neighbor_count, largest=False, dim=1).values
+        if topk_values is None:
+            return torch.zeros(query.shape[0], dtype=query.dtype, device=query.device)
+        return topk_values.mean(dim=1)
+
+    @staticmethod
+    def _faiss_knn_distances(
+        query: torch.Tensor,
+        ref_bank: torch.Tensor,
+        *,
+        neighbor_count: int,
+        exclude_self: bool,
+    ) -> torch.Tensor:
+        if _faiss is None:  # pragma: no cover - optional dependency
+            raise RuntimeError("faiss backend requested but faiss is not installed.")
+        index = _faiss.IndexFlatL2(int(ref_bank.shape[1]))
+        bank_np = ref_bank.detach().cpu().numpy().astype("float32", copy=False)
+        query_np = query.detach().cpu().numpy().astype("float32", copy=False)
+        index.add(bank_np)
+        search_k = min(int(ref_bank.shape[0]), neighbor_count + (1 if exclude_self else 0))
+        distances_sq, _ = index.search(query_np, search_k)
+        distances = torch.from_numpy(distances_sq).to(device=query.device, dtype=query.dtype).clamp_min(0.0).sqrt()
+        if exclude_self and distances.shape[1] > neighbor_count:
+            distances = distances[:, 1:]
+        return distances[:, :neighbor_count].mean(dim=1)
+
+    def _resolve_knn_backend(self, bank: torch.Tensor) -> str:
+        if self.knn_backend != "auto":
+            return self.knn_backend
+        if _faiss is not None and bank.device.type == "cpu" and int(bank.shape[0]) >= 4096:
+            return "faiss"
+        return "chunked" if int(bank.shape[0]) >= max(self.knn_chunk_size, 512) else "cdist"
+
     def _knn_distances_from_bank(
+        self,
         features: torch.Tensor,
         bank: Optional[torch.Tensor],
         *,
@@ -275,18 +398,34 @@ class ContinualOODDetector:
 
         query = features.to(dtype=torch.float32)
         ref_bank = bank.to(device=features.device, dtype=torch.float32)
+        neighbor_count = self._resolve_neighbor_count(int(ref_bank.shape[0]), int(k), exclude_self=exclude_self)
+        backend = self._resolve_knn_backend(ref_bank)
+
+        if backend == "faiss":
+            nearest = self._faiss_knn_distances(
+                query,
+                ref_bank,
+                neighbor_count=neighbor_count,
+                exclude_self=exclude_self,
+            )
+            return nearest.to(device=features.device, dtype=features.dtype)
+
+        if backend == "chunked":
+            nearest = self._chunked_knn_distances(
+                query,
+                ref_bank,
+                neighbor_count=neighbor_count,
+                chunk_size=self.knn_chunk_size,
+                exclude_self=exclude_self,
+            )
+            return nearest.to(device=features.device, dtype=features.dtype)
+
         distances = torch.cdist(query, ref_bank, p=2)
-
-        if exclude_self and int(ref_bank.shape[0]) > 1:
+        if exclude_self:
             distances = distances.clone()
-            for row_index in range(int(distances.shape[0])):
-                zero_indices = torch.nonzero(distances[row_index] <= _FLOAT_EPS, as_tuple=False).reshape(-1)
-                if int(zero_indices.numel()) > 0:
-                    distances[row_index, int(zero_indices[0].item())] = float("inf")
-            neighbor_count = min(max(1, int(k)), max(1, int(ref_bank.shape[0]) - 1))
-        else:
-            neighbor_count = min(max(1, int(k)), int(ref_bank.shape[0]))
-
+            zero_mask = distances <= _FLOAT_EPS
+            if bool(zero_mask.any().item()):
+                distances[zero_mask] = float("inf")
         nearest = torch.topk(distances, k=neighbor_count, largest=False, dim=1).values
         return nearest.mean(dim=1).to(device=features.device, dtype=features.dtype)
 
@@ -326,6 +465,18 @@ class ContinualOODDetector:
             return
         raise RuntimeError(f"{issue} Run calibrate_ood(...) before {operation}.")
 
+    def _maybe_calibrate_energy_temperature(self, logits: torch.Tensor, labels: torch.Tensor) -> None:
+        if self.energy_temperature_mode != "auto":
+            self.energy_temperature = normalize_temperature(self.energy_temperature)
+            return
+        min_temp, max_temp = self.energy_temperature_range
+        if max_temp < min_temp:
+            min_temp, max_temp = max_temp, min_temp
+        steps = max(2, int(self.energy_temperature_steps))
+        candidates = torch.linspace(min_temp, max_temp, steps=steps, dtype=torch.float32).tolist()
+        best_temperature, _best_nll = select_temperature_from_logits(logits, labels, candidate_temperatures=candidates)
+        self.energy_temperature = normalize_temperature(best_temperature)
+
     def calibrate(self, features: torch.Tensor, logits: torch.Tensor, labels: torch.Tensor) -> Dict[str, Any]:
         if features.ndim != 2:
             raise ValueError("features must be [N, D]")
@@ -333,6 +484,8 @@ class ContinualOODDetector:
             raise ValueError("logits must be [N, C]")
         if labels.ndim != 1:
             labels = labels.reshape(-1)
+
+        self._maybe_calibrate_energy_temperature(logits, labels)
 
         if self.radial_l2_enabled:
             self.radial_beta = auto_tune_beta(
@@ -434,25 +587,35 @@ class ContinualOODDetector:
                 )
 
         if self.conformal_enabled and self.class_stats:
-            all_ensemble_scores = []
-            all_class_thresholds = []
-            for class_id in class_ids:
-                mask = labels == class_id
-                if class_id not in self.class_stats:
-                    continue
-                stats = self.class_stats[class_id]
-                class_features = features[mask]
-                class_energy = energies[mask]
+            if self.conformal_method == "threshold":
+                all_ensemble_scores = []
+                all_class_thresholds = []
+                for class_id in class_ids:
+                    mask = labels == class_id
+                    if class_id not in self.class_stats:
+                        continue
+                    stats = self.class_stats[class_id]
+                    class_features = features[mask]
+                    class_energy = energies[mask]
 
-                ensemble_scores = self._class_ensemble_scores(class_features, class_energy, stats)
-                all_ensemble_scores.append(ensemble_scores)
-                all_class_thresholds.append(torch.full_like(ensemble_scores, stats.threshold))
+                    ensemble_scores = self._class_ensemble_scores(class_features, class_energy, stats)
+                    all_ensemble_scores.append(ensemble_scores)
+                    all_class_thresholds.append(torch.full_like(ensemble_scores, stats.threshold))
 
-            if all_ensemble_scores:
-                cat_scores = torch.cat(all_ensemble_scores)
-                cat_thresholds = torch.cat(all_class_thresholds)
-                nc_scores = compute_nonconformity_scores(cat_scores, cat_thresholds)
-                self.conformal_qhat = calibrate_conformal_qhat(nc_scores, alpha=self.conformal_alpha)
+                if all_ensemble_scores:
+                    cat_scores = torch.cat(all_ensemble_scores)
+                    cat_thresholds = torch.cat(all_class_thresholds)
+                    nc_scores = compute_nonconformity_scores(cat_scores, cat_thresholds)
+                    self.conformal_qhat = calibrate_conformal_qhat(nc_scores, alpha=self.conformal_alpha)
+            else:
+                self.conformal_qhat = calibrate_prediction_set_qhat(
+                    logits,
+                    labels,
+                    alpha=self.conformal_alpha,
+                    method=self.conformal_method,
+                    raps_lambda=self.conformal_raps_lambda,
+                    raps_k_reg=self.conformal_raps_k_reg,
+                )
 
         self.calibration_version += 1
         return self._build_calibration_summary(
@@ -463,6 +626,10 @@ class ContinualOODDetector:
             conformal_qhat=self.conformal_qhat,
             knn_k=self.knn_k,
             knn_bank_cap=self.knn_bank_cap,
+            knn_backend=self.knn_backend,
+            knn_chunk_size=self.knn_chunk_size,
+            conformal_method=self.conformal_method,
+            energy_temperature=self.energy_temperature,
         )
 
     def _score_class(self, class_id: int, feature: torch.Tensor, logit: torch.Tensor) -> Dict[str, Any]:
@@ -552,6 +719,10 @@ class ContinualOODDetector:
             qhat=self.conformal_qhat,
             class_stats=self.class_stats,
             idx_to_class=idx_to_class,
+            method=self.conformal_method,
+            raps_lambda=self.conformal_raps_lambda,
+            raps_k_reg=self.conformal_raps_k_reg,
+            energy_temperature=self.energy_temperature,
         )
 
     def score(

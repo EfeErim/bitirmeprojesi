@@ -287,6 +287,7 @@ class TrainingWorkflow:
             sure_ds_f1=evaluation_result.sure_ds_f1,
             conformal_empirical_coverage=evaluation_result.conformal_empirical_coverage,
             conformal_avg_set_size=evaluation_result.conformal_avg_set_size,
+            ood_type_breakdown=evaluation_result.ood_type_breakdown,
             context=metric_context,
         )
 

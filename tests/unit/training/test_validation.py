@@ -1,6 +1,7 @@
 import pytest
 import torch
 import torch.nn as nn
+from pathlib import Path
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 from src.training.validation import evaluate_model, evaluate_model_with_artifact_metrics, evaluate_model_with_predictions
@@ -42,6 +43,19 @@ class FakeOODDetector:
         del features
         predicted = int(torch.argmax(logits).item())
         return [idx_to_class[predicted]]
+
+
+class FakeOODLoader(list):
+    def __init__(self, batches, image_paths):
+        super().__init__(batches)
+        self.dataset = type(
+            "FakeOODDataset",
+            (),
+            {
+                "image_paths": list(image_paths),
+                "split": "ood",
+            },
+        )()
 
 
 def test_evaluate_model_reports_expected_metrics():
@@ -149,3 +163,32 @@ def test_evaluate_model_with_artifact_metrics_keeps_ood_fields_empty_without_ood
     assert result.ood_scores is None
     assert result.sure_ds_f1 is None
     assert result.conformal_empirical_coverage == pytest.approx(1.0)
+
+
+def test_evaluate_model_with_artifact_metrics_builds_ood_type_breakdown():
+    trainer = type("FakeTrainer", (), {})()
+    trainer.device = "cpu"
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer.adapter_model = IdentityModule()
+    trainer.classifier = IdentityModule()
+    trainer.fusion = IdentityModule()
+    trainer.ood_detector = FakeOODDetector()
+    trainer.set_eval_mode = lambda: None
+    trainer.encode = lambda images: images.float()
+    trainer.forward_logits = lambda images: images.float()
+
+    id_loader = [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}]
+    ood_loader = FakeOODLoader(
+        [{"images": torch.tensor([[0.2, 0.1], [0.1, 0.2]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}],
+        [
+            Path("runtime/tomato/ood/blur/sample1.jpg"),
+            Path("runtime/tomato/ood/non_plant/sample2.jpg"),
+        ],
+    )
+
+    result = evaluate_model_with_artifact_metrics(trainer, id_loader, ood_loader=ood_loader)
+
+    assert result is not None
+    assert result.ood_type_breakdown["blur"]["sample_count"] == 1
+    assert result.ood_type_breakdown["non_plant"]["sample_count"] == 1
+    assert result.context["ood_types"] == ["blur", "non_plant"]

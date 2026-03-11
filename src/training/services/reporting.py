@@ -487,6 +487,7 @@ def persist_validation_artifacts(
     sure_ds_f1: float | None = None,
     conformal_empirical_coverage: float | None = None,
     conformal_avg_set_size: float | None = None,
+    ood_type_breakdown: Dict[str, Any] | None = None,
     context: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     resolved_classes = [str(name) for name in classes]
@@ -558,7 +559,17 @@ def persist_validation_artifacts(
         ],
     )
 
+    if isinstance(ood_type_breakdown, dict) and ood_type_breakdown:
+        breakdown_json = store.write_json("ood_type_breakdown.json", ood_type_breakdown)
+        paths["ood_type_breakdown_json"] = breakdown_json
+        _copy_artifacts_to_telemetry(
+            telemetry,
+            [(breakdown_json, f"{resolved_telemetry_subdir}/ood_type_breakdown.json")],
+        )
+
     metric_context = dict(context or {"num_classes": len(resolved_classes)})
+    if isinstance(ood_type_breakdown, dict) and ood_type_breakdown:
+        metric_context["ood_type_breakdown"] = dict(ood_type_breakdown)
     metrics = compute_plan_metrics(
         y_true=y_true,
         y_pred=y_pred,

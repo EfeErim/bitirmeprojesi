@@ -23,14 +23,23 @@
         "ber_lambda_old": 0.1,
         "ber_lambda_new": 0.1,
         "ber_warmup_steps": 50,
+        "energy_temperature_mode": "fixed",
+        "energy_temperature": 1.0,
+        "energy_temperature_range": [0.5, 3.0],
+        "energy_temperature_steps": 16,
         "radial_l2_enabled": true,
         "radial_beta_range": [0.5, 2.0],
         "radial_beta_steps": 16,
+        "knn_backend": "auto",
+        "knn_chunk_size": 2048,
         "sure_enabled": true,
         "sure_semantic_percentile": 95.0,
         "sure_confidence_percentile": 90.0,
         "conformal_enabled": true,
-        "conformal_alpha": 0.05
+        "conformal_alpha": 0.05,
+        "conformal_method": "threshold",
+        "conformal_raps_lambda": 0.0,
+        "conformal_raps_k_reg": 1
       },
       "learning_rate": 0.0001,
       "weight_decay": 0.01,
@@ -115,7 +124,10 @@
     "radial_l2_enabled": true,
     "sure_enabled": true,
     "conformal_enabled": true,
-    "conformal_alpha": 0.05
+    "conformal_alpha": 0.05,
+    "conformal_method": "threshold",
+    "energy_temperature": 1.0,
+    "knn_backend": "auto"
   },
   "inference": {
     "adapter_root": "models/adapters",

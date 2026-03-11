@@ -97,6 +97,20 @@ def test_reporting_can_skip_metric_gate_artifact_emission(tmp_path: Path):
     assert not (tmp_path / "training_metrics" / "validation" / "metric_gate.json").exists()
 
 
+def test_reporting_writes_ood_type_breakdown_artifact(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        ood_type_breakdown={
+            "blur": {"sample_count": 2, "metrics": {"ood_auroc": 0.8}},
+        },
+    )
+
+    assert result["paths"]["ood_type_breakdown_json"].exists()
+
+
 def test_batch_metrics_artifacts_include_optional_ber_columns(tmp_path: Path):
     artifact_root = tmp_path / "training_metrics"
     batch_history = [

@@ -53,6 +53,10 @@ def _build_calibration_summary(detector: ContinualOODDetector) -> Dict[str, floa
         "primary_score_method": str(detector.primary_score_method),
         "knn_k": float(detector.knn_k),
         "knn_bank_cap": float(detector.knn_bank_cap),
+        "knn_backend": str(getattr(detector, "knn_backend", "auto")),
+        "knn_chunk_size": float(getattr(detector, "knn_chunk_size", 2048)),
+        "conformal_method": str(getattr(detector, "conformal_method", "threshold")),
+        "energy_temperature": float(getattr(detector, "energy_temperature", 1.0)),
     }
     if detector.radial_beta is not None:
         summary["radial_beta"] = float(detector.radial_beta)

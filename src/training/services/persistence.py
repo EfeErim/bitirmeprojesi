@@ -139,11 +139,14 @@ def restore_ood_state(
 
     # Restore extended flags with backward-compatible defaults
     radial_beta_range_raw = payload.get("radial_beta_range", [0.5, 2.0])
+    energy_temperature_range_raw = payload.get("energy_temperature_range", [0.5, 3.0])
     detector = ContinualOODDetector(
         threshold_factor=threshold_factor,
         primary_score_method=str(payload.get("primary_score_method", "ensemble") or "ensemble"),
         knn_k=int(payload.get("knn_k", 10)),
         knn_bank_cap=int(payload.get("knn_bank_cap", 256)),
+        knn_backend=str(payload.get("knn_backend", "auto") or "auto"),
+        knn_chunk_size=int(payload.get("knn_chunk_size", 2048)),
         radial_l2_enabled=bool(payload.get("radial_l2_enabled", False)),
         radial_beta_range=(float(radial_beta_range_raw[0]), float(radial_beta_range_raw[1])),
         radial_beta_steps=int(payload.get("radial_beta_steps", 16)),
@@ -152,6 +155,16 @@ def restore_ood_state(
         sure_confidence_percentile=float(payload.get("sure_confidence_percentile", 90.0)),
         conformal_enabled=bool(payload.get("conformal_enabled", False)),
         conformal_alpha=float(payload.get("conformal_alpha", 0.05)),
+        conformal_method=str(payload.get("conformal_method", "threshold") or "threshold"),
+        conformal_raps_lambda=float(payload.get("conformal_raps_lambda", 0.0)),
+        conformal_raps_k_reg=int(payload.get("conformal_raps_k_reg", 1)),
+        energy_temperature=float(payload.get("energy_temperature", 1.0)),
+        energy_temperature_mode=str(payload.get("energy_temperature_mode", "fixed") or "fixed"),
+        energy_temperature_range=(
+            float(energy_temperature_range_raw[0]),
+            float(energy_temperature_range_raw[1]),
+        ),
+        energy_temperature_steps=int(payload.get("energy_temperature_steps", 16)),
     )
     detector.calibration_version = int(payload.get("calibration_version", 0))
 

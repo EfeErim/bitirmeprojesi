@@ -147,6 +147,12 @@ When docs, older notes, or generated outputs disagree, prefer this order:
 
 Windows PowerShell should prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv`.
 
+Dependency policy:
+
+- root `requirements.txt` and `requirements_colab.txt` pin the maintained ML stack to validated minor lines
+- CI checks both the pinned baseline and the newest patch releases within those same minor lines
+- do not replace this with open-ended `latest` upgrades unless the repo surface has been revalidated
+
 Use the narrow maintained validation surface first:
 
 ```powershell

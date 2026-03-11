@@ -101,25 +101,11 @@ def _collect_missing_requirements(
     return missing_requirements
 
 
-def compute_plan_metrics(
+def compute_ood_detection_metrics(
     *,
-    y_true: Sequence[int],
-    y_pred: Sequence[int],
     ood_labels: Optional[Sequence[int]] = None,
     ood_scores: Optional[Sequence[float]] = None,
-    sure_ds_f1: Optional[float] = None,
-    conformal_empirical_coverage: Optional[float] = None,
-    conformal_avg_set_size: Optional[float] = None,
-) -> Dict[str, Optional[float]]:
-    if len(y_true) == 0:
-        raise ValueError("y_true must not be empty")
-    if len(y_true) != len(y_pred):
-        raise ValueError("y_true and y_pred must have same length")
-
-    y_true_t = torch.tensor(list(y_true), dtype=torch.long)
-    y_pred_t = torch.tensor(list(y_pred), dtype=torch.long)
-    accuracy = float((y_true_t == y_pred_t).float().mean().item())
-
+) -> Dict[str, Any]:
     ood_auroc: Optional[float] = None
     ood_fpr: Optional[float] = None
     ood_total = 0
@@ -144,14 +130,42 @@ def compute_plan_metrics(
                 except Exception:
                     ood_auroc = None
                     ood_fpr = None
+    return {
+        "ood_auroc": ood_auroc,
+        "ood_false_positive_rate": ood_fpr,
+        "ood_samples": int(ood_total),
+        "in_distribution_samples": int(in_dist_total),
+    }
+
+
+def compute_plan_metrics(
+    *,
+    y_true: Sequence[int],
+    y_pred: Sequence[int],
+    ood_labels: Optional[Sequence[int]] = None,
+    ood_scores: Optional[Sequence[float]] = None,
+    sure_ds_f1: Optional[float] = None,
+    conformal_empirical_coverage: Optional[float] = None,
+    conformal_avg_set_size: Optional[float] = None,
+) -> Dict[str, Optional[float]]:
+    if len(y_true) == 0:
+        raise ValueError("y_true must not be empty")
+    if len(y_true) != len(y_pred):
+        raise ValueError("y_true and y_pred must have same length")
+
+    y_true_t = torch.tensor(list(y_true), dtype=torch.long)
+    y_pred_t = torch.tensor(list(y_pred), dtype=torch.long)
+    accuracy = float((y_true_t == y_pred_t).float().mean().item())
+
+    ood_metrics = compute_ood_detection_metrics(ood_labels=ood_labels, ood_scores=ood_scores)
 
     return {
         "accuracy": accuracy,
-        "ood_auroc": ood_auroc,
-        "ood_false_positive_rate": ood_fpr,
+        "ood_auroc": ood_metrics["ood_auroc"],
+        "ood_false_positive_rate": ood_metrics["ood_false_positive_rate"],
         "classification_samples": int(y_true_t.numel()),
-        "ood_samples": int(ood_total),
-        "in_distribution_samples": int(in_dist_total),
+        "ood_samples": int(ood_metrics["ood_samples"]),
+        "in_distribution_samples": int(ood_metrics["in_distribution_samples"]),
         "sure_ds_f1": sure_ds_f1,
         "conformal_empirical_coverage": conformal_empirical_coverage,
         "conformal_avg_set_size": conformal_avg_set_size,

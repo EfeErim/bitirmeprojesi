@@ -32,7 +32,15 @@ def test_config_from_training_config_accepts_v6_contract():
             "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
             "adapter": {"target_modules_strategy": "all_linear_transformer", "lora_r": 4, "lora_alpha": 8},
             "fusion": {"layers": [2, 5, 8, 11]},
-            "ood": {"ber_enabled": True, "ber_lambda_old": 0.05, "ber_lambda_new": 0.2},
+            "ood": {
+                "ber_enabled": True,
+                "ber_lambda_old": 0.05,
+                "ber_lambda_new": 0.2,
+                "energy_temperature_mode": "auto",
+                "energy_temperature": 1.2,
+                "knn_backend": "chunked",
+                "conformal_method": "aps",
+            },
             "optimization": {"grad_accumulation_steps": 2, "scheduler": {"name": "linear"}},
             "evaluation": {"best_metric": "macro_f1"},
             "device": "cpu",
@@ -43,6 +51,10 @@ def test_config_from_training_config_accepts_v6_contract():
     assert cfg.ber_enabled is True
     assert cfg.ber_lambda_old == pytest.approx(0.05)
     assert cfg.ber_lambda_new == pytest.approx(0.2)
+    assert cfg.energy_temperature_mode == "auto"
+    assert cfg.energy_temperature == pytest.approx(1.2)
+    assert cfg.knn_backend == "chunked"
+    assert cfg.conformal_method == "aps"
     assert cfg.grad_accumulation_steps == 2
     assert cfg.scheduler_name == "linear"
     assert cfg.evaluation_best_metric == "macro_f1"
@@ -62,6 +74,12 @@ def test_as_contract_dict_emits_normalized_training_surface():
         ber_enabled=True,
         ber_lambda_old=0.05,
         ber_lambda_new=0.2,
+        energy_temperature_mode="auto",
+        energy_temperature=1.1,
+        knn_backend="chunked",
+        conformal_method="raps",
+        conformal_raps_lambda=0.02,
+        conformal_raps_k_reg=2,
     )
 
     payload = cfg.as_contract_dict()
@@ -70,6 +88,12 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["ood"]["ber_enabled"] is True
     assert payload["ood"]["ber_lambda_old"] == pytest.approx(0.05)
     assert payload["ood"]["ber_lambda_new"] == pytest.approx(0.2)
+    assert payload["ood"]["energy_temperature_mode"] == "auto"
+    assert payload["ood"]["energy_temperature"] == pytest.approx(1.1)
+    assert payload["ood"]["knn_backend"] == "chunked"
+    assert payload["ood"]["conformal_method"] == "raps"
+    assert payload["ood"]["conformal_raps_lambda"] == pytest.approx(0.02)
+    assert payload["ood"]["conformal_raps_k_reg"] == 2
     assert payload["ood"]["primary_score_method"] == "auto"
     assert payload["optimization"]["grad_accumulation_steps"] == 2
     assert payload["optimization"]["scheduler"]["name"] == "linear"

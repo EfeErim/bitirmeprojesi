@@ -130,6 +130,34 @@ That launcher prefers the repo `.venv` and avoids the Microsoft Store `python.ex
 .\scripts\python.cmd -m pip install -r requirements-dev.txt
 ```
 
+### Dependency baseline
+
+The root dependency files intentionally pin the maintained ML stack to validated minor lines instead of using open-ended latest releases.
+
+Current preferred baseline:
+
+- `Python 3.11`
+- `torch 2.10.x`
+- `torchvision 0.25.x`
+- `torchaudio 2.10.x` in Colab/runtime helper installs
+- `transformers 5.1.x`
+- `peft 0.18.x`
+- `accelerate 1.13.x`
+- `huggingface-hub 1.4.x`
+- `open-clip-torch 3.2.x`
+- `ultralytics 8.4.x`
+
+Why this repo does it this way:
+
+- DINOv3 requires modern Transformers support
+- SAM3 and adapter-loading behavior are sensitive to upstream API drift
+- reproducible notebook, CI, and local workflow behavior matters more than chasing every new upstream release
+
+CI validates both:
+
+- the pinned preferred baseline from `requirements*.txt`
+- the latest available patch releases inside the same validated minor lines
+
 ### 4. Run the narrow validation commands
 
 ```powershell
@@ -190,7 +218,7 @@ data/runtime_notebook_datasets/<crop>/
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 ## Training, Step By Step
 
@@ -311,6 +339,7 @@ What these files mean:
 - `continual_sd_lora_adapter/`: the exported adapter bundle you can deploy
 - `training/`: training curves and summary data
 - `validation/` and `test/`: split-specific evaluation reports
+- `validation/ood_type_breakdown.json` and `test/ood_type_breakdown.json`: optional OOD breakdown by top-level folder under `ood/`
 - `ood_benchmark/`: fallback OOD evidence when no real `ood/` split exists
 - `production_readiness.json`: the final deployment verdict
 
@@ -392,6 +421,11 @@ production_readiness.json
 ```
 
 Use this file as the final go/no-go artifact.
+
+Current naming note:
+
+- The repo label `SURE+` means `SURE+/DS-F1-inspired double scoring`, not a claim that this code is a paper-faithful reproduction of a standalone upstream method.
+- The conformal surface now distinguishes threshold conformalization from set-valued APS/RAPS classification.
 
 Do not use only these files for the final decision:
 

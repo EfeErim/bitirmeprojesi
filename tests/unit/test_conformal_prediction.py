@@ -6,9 +6,13 @@ import torch
 
 from src.ood.conformal_prediction import (
     build_prediction_set,
+    calibrate_prediction_set_qhat,
     calibrate_conformal_qhat,
+    compute_prediction_set_nonconformity_scores,
     compute_empirical_coverage,
     compute_nonconformity_scores,
+    describe_conformal_method,
+    normalize_conformal_method,
     score_all_classes,
 )
 
@@ -43,6 +47,59 @@ class TestCalibrateConformalQhat:
         q1 = calibrate_conformal_qhat(scores, alpha=0.1)
         q2 = calibrate_conformal_qhat(scores, alpha=0.1)
         assert q1 == q2
+
+
+class TestPredictionSetConformal:
+    def test_normalize_conformal_method(self):
+        assert normalize_conformal_method("APS") == "aps"
+
+    def test_aps_nonconformity_scores(self):
+        logits = torch.tensor([[4.0, 1.0, 0.0], [0.1, 3.5, 0.0]], dtype=torch.float32)
+        labels = torch.tensor([0, 1], dtype=torch.long)
+
+        scores = compute_prediction_set_nonconformity_scores(logits, labels, method="aps")
+
+        assert scores.shape == (2,)
+        assert torch.all(scores > 0.0)
+
+    def test_raps_scores_include_regularization(self):
+        logits = torch.tensor([[0.5, 0.4, 0.3]], dtype=torch.float32)
+        labels = torch.tensor([2], dtype=torch.long)
+
+        aps = compute_prediction_set_nonconformity_scores(logits, labels, method="aps")
+        raps = compute_prediction_set_nonconformity_scores(
+            logits,
+            labels,
+            method="raps",
+            raps_lambda=0.1,
+            raps_k_reg=1,
+        )
+
+        assert raps.item() >= aps.item()
+
+    def test_calibrate_prediction_set_qhat(self):
+        logits = torch.tensor([[4.0, 1.0], [0.5, 2.0], [3.0, 0.1]], dtype=torch.float32)
+        labels = torch.tensor([0, 1, 0], dtype=torch.long)
+
+        qhat = calibrate_prediction_set_qhat(logits, labels, method="aps", alpha=0.1)
+
+        assert isinstance(qhat, float)
+
+    def test_build_prediction_set_aps(self):
+        idx_to_class = {0: "healthy", 1: "diseased", 2: "other"}
+        pred_set = build_prediction_set(
+            torch.randn(3),
+            torch.tensor([5.0, 1.0, 0.0], dtype=torch.float32),
+            qhat=0.95,
+            class_stats={},
+            idx_to_class=idx_to_class,
+            method="aps",
+        )
+
+        assert "healthy" in pred_set
+
+    def test_describe_conformal_method(self):
+        assert "APS" in describe_conformal_method("aps")
 
 
 class TestScoreAllClasses:
