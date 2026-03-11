@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
@@ -33,6 +34,7 @@ SKIP_DISCOVERY_DIR_NAMES = {
 }
 
 
+@lru_cache(maxsize=None)
 def _load_config(config_env: Optional[str]) -> Dict[str, Any]:
     return dict(get_config(environment=config_env))
 
@@ -195,6 +197,26 @@ def _build_adapter(crop_name: str, *, device: str) -> IndependentCropAdapter:
     return IndependentCropAdapter(crop_name=_normalize_crop_name(crop_name), device=device)
 
 
+def _load_adapter_context(
+    crop_name: Optional[str],
+    *,
+    adapter_dir: Optional[str | Path] = None,
+    adapter_root: Optional[str | Path] = None,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+) -> tuple[Path, str, IndependentCropAdapter]:
+    resolved_dir = _resolve_adapter_dir(
+        crop_name,
+        adapter_dir=adapter_dir,
+        adapter_root=adapter_root,
+        config_env=config_env,
+    )
+    crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
+    adapter = _build_adapter(crop_key, device=device)
+    adapter.load_adapter(str(resolved_dir))
+    return resolved_dir, crop_key, adapter
+
+
 def _read_adapter_meta(adapter_dir: Path) -> Dict[str, Any]:
     return read_json_dict(adapter_dir / "adapter_meta.json")
 
@@ -339,16 +361,14 @@ def load_adapter_summary(
     device: str = "cuda",
 ) -> Dict[str, Any]:
     """Load an adapter and return a compact runtime + metadata summary."""
-    resolved_dir = _resolve_adapter_dir(
+    resolved_dir, crop_key, adapter = _load_adapter_context(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
         config_env=config_env,
+        device=device,
     )
-    crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
     meta = _read_adapter_meta(resolved_dir)
-    adapter = _build_adapter(crop_key, device=device)
-    adapter.load_adapter(str(resolved_dir))
     summary = dict(adapter.get_summary())
     summary.update(_summary_from_meta(meta))
     summary["crop_name"] = crop_key
@@ -365,15 +385,13 @@ def predict_single_image(
     device: str = "cuda",
 ) -> Dict[str, Any]:
     """Run a single direct adapter prediction for a smoke test."""
-    resolved_dir = _resolve_adapter_dir(
+    resolved_dir, _, adapter = _load_adapter_context(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
         config_env=config_env,
+        device=device,
     )
-    crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
-    adapter = _build_adapter(crop_key, device=device)
-    adapter.load_adapter(str(resolved_dir))
 
     image_ref = Path(image_path)
     with Image.open(image_ref) as image:
@@ -405,15 +423,13 @@ def predict_image_folder(
             f"image_dir must be a directory containing images, but got: {folder}"
         )
 
-    resolved_dir = _resolve_adapter_dir(
+    resolved_dir, _, adapter = _load_adapter_context(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
         config_env=config_env,
+        device=device,
     )
-    crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
-    adapter = _build_adapter(crop_key, device=device)
-    adapter.load_adapter(str(resolved_dir))
     target_size = _target_size(config_env)
 
     rows: List[Dict[str, Any]] = []

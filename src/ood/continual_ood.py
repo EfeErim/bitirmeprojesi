@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import torch
 
 from src.ood._scoring_utils import (
+    distribution_threshold,
     energy_from_logits,
     ensemble_z_score,
     mahalanobis_distance,
@@ -66,11 +67,6 @@ def normalize_primary_score_method(value: Any) -> str:
             + "."
         )
     return resolved
-
-
-def _distribution_threshold(values: torch.Tensor, threshold_factor: float) -> float:
-    std = float(safe_std(values.std(unbiased=False)).item())
-    return float(values.mean().item() + (float(threshold_factor) * std))
 
 
 @dataclass
@@ -376,8 +372,8 @@ class ContinualOODDetector:
                 energy_mu=energy_mu,
                 energy_sigma=energy_sigma,
             )
-            ensemble_threshold_value = _distribution_threshold(ensemble_scores, self.threshold_factor)
-            energy_threshold_value = _distribution_threshold(class_energy, self.threshold_factor)
+            ensemble_threshold_value = distribution_threshold(ensemble_scores, self.threshold_factor)
+            energy_threshold_value = distribution_threshold(class_energy, self.threshold_factor)
 
             knn_bank = self._build_knn_bank(class_features)
             knn_distances = self._knn_distances_from_bank(
@@ -388,7 +384,7 @@ class ContinualOODDetector:
             )
             knn_distance_mu = float(knn_distances.mean().item())
             knn_distance_sigma = float(self._safe_std(knn_distances.std(unbiased=False)).item())
-            knn_threshold_value = _distribution_threshold(knn_distances, self.threshold_factor)
+            knn_threshold_value = distribution_threshold(knn_distances, self.threshold_factor)
 
             self.class_stats[int(class_id)] = ClassCalibration(
                 mean=mean,

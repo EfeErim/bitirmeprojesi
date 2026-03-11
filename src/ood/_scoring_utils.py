@@ -41,6 +41,10 @@ def ensemble_z_score(
     return (MAHALANOBIS_WEIGHT * mahalanobis_z) + (ENERGY_WEIGHT * energy_z)
 
 
+def distribution_threshold(values: torch.Tensor, threshold_factor: float) -> float:
+    std = float(safe_std(values.std(unbiased=False)).item())
+    return float(values.mean().item() + (float(threshold_factor) * std))
+
+
 def ensemble_threshold(ensemble_scores: torch.Tensor, threshold_factor: float) -> float:
-    std = float(safe_std(ensemble_scores.std(unbiased=False)).item())
-    return float(ensemble_scores.mean().item() + (float(threshold_factor) * std))
+    return distribution_threshold(ensemble_scores, threshold_factor)
