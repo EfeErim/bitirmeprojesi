@@ -100,12 +100,12 @@ class CropDataset(Dataset):
             return [], []
 
         if self.split == "ood":
-            image_paths = sorted(
+            ood_paths = sorted(
                 path
                 for path in base_dir.rglob("*")
                 if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
             )
-            return image_paths, [-1] * len(image_paths)
+            return ood_paths, [-1] * len(ood_paths)
 
         image_paths: List[Path] = []
         labels: List[int] = []
@@ -163,18 +163,19 @@ class CropDataset(Dataset):
         return Image.fromarray(rgb)
 
     def _load_image(self, img_path: Path) -> Image.Image:
-        cache_enabled_for_split = self.use_cache and self.cache is not None and (
+        cache = self.cache
+        cache_enabled_for_split = self.use_cache and cache is not None and (
             self.split != "continual" or self.cache_train_split
         )
-        if cache_enabled_for_split:
-            cached = self.cache.get(str(img_path))
+        if cache_enabled_for_split and cache is not None:
+            cached = cache.get(str(img_path))
             if cached is not None:
                 return cached.copy()
 
         image = self._decode_image(img_path)
 
-        if cache_enabled_for_split:
-            self.cache.put(str(img_path), image.copy())
+        if cache_enabled_for_split and cache is not None:
+            cache.put(str(img_path), image.copy())
         return image
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:

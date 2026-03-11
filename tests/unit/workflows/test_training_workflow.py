@@ -30,7 +30,15 @@ class FakeSession:
         self.best_state_restored = False
 
     def snapshot_state(self):
-        return {"progress_state": {"epoch": 1, "batch": 1, "total_batches": 1, "global_step": 2}, "history": {"train_loss": [0.1]}}
+        return {
+            "progress_state": {
+                "epoch": 1,
+                "batch": 1,
+                "total_batches": 1,
+                "global_step": 2,
+            },
+            "history": {"train_loss": [0.1]},
+        }
 
     def run(self):
         for observer in self.observers:
@@ -676,7 +684,11 @@ def test_training_workflow_restores_best_state_before_export(monkeypatch, tmp_pa
                     "batch_size": 2,
                     "seed": 7,
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
-                    "evaluation": {"require_ood_for_gate": False, "ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
+                    "evaluation": {
+                        "require_ood_for_gate": False,
+                        "ood_fallback_strategy": "none",
+                        "ood_benchmark_auto_run": False,
+                    },
                 }
             },
             "colab": {"training": {"num_workers": 0, "pin_memory": False}},
@@ -717,7 +729,11 @@ def test_training_workflow_requires_isolated_eval_split_when_val_used_for_calibr
                     "batch_size": 2,
                     "seed": 7,
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
-                    "evaluation": {"require_ood_for_gate": False, "ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
+                    "evaluation": {
+                        "require_ood_for_gate": False,
+                        "ood_fallback_strategy": "none",
+                        "ood_benchmark_auto_run": False,
+                    },
                 }
             },
             "colab": {"training": {"num_workers": 0, "pin_memory": False}},

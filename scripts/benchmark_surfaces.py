@@ -102,8 +102,8 @@ def _build_trainer(config_cls, trainer_cls):
 
 
 def collect_benchmarks() -> dict[str, float]:
-    from src.router.vlm_pipeline import VLMPipeline
     from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
+    from src.router.vlm_pipeline import VLMPipeline
     from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 
     def trainer_factory():

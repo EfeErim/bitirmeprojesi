@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from collections import Counter
 import hashlib
 import json
-from pathlib import Path
 import time
 import traceback
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
+from collections import Counter
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import torch
 from torch.utils.data import DataLoader, Dataset, RandomSampler, WeightedRandomSampler
@@ -26,9 +26,7 @@ from src.training.services.ood_score_selection import (
     resolve_runtime_primary_score_method,
     select_best_ood_score_method,
 )
-from src.training.services.reporting import (
-    persist_ood_benchmark_artifacts,
-)
+from src.training.services.reporting import persist_ood_benchmark_artifacts
 from src.training.validation import evaluate_model_with_artifact_metrics
 
 _OOD_BENCHMARK_METRIC_NAMES = (
@@ -407,7 +405,12 @@ def _persist_fold_metric_gate(
 ) -> Dict[str, Any]:
     fold_dir = Path(artifact_root) / "ood_benchmark" / "folds" / held_out_class
     primary_score_method = str(
-        getattr(evaluation, "ood_primary_score_method", context.get("ood_primary_score_method", "ensemble")) or "ensemble"
+        getattr(
+            evaluation,
+            "ood_primary_score_method",
+            context.get("ood_primary_score_method", "ensemble"),
+        )
+        or "ensemble"
     )
     metrics = compute_plan_metrics(
         y_true=evaluation.y_true,
@@ -517,7 +520,9 @@ def _build_fold_payload(
     return payload
 
 
-def _aggregate_fold_metric_stats(folds: Sequence[Dict[str, Any]]) -> tuple[Dict[str, Optional[float]], Dict[str, Optional[float]]]:
+def _aggregate_fold_metric_stats(
+    folds: Sequence[Dict[str, Any]],
+) -> tuple[Dict[str, Optional[float]], Dict[str, Optional[float]]]:
     aggregate_metrics: Dict[str, Optional[float]] = {}
     metric_std: Dict[str, Optional[float]] = {}
     successful_folds = list(folds)
@@ -637,7 +642,13 @@ def run_leave_one_class_out_benchmark(
             telemetry=telemetry,
         )
 
-    class_to_idx = dict(getattr(train_dataset, "class_to_idx", {name: idx for idx, name in enumerate(resolved_classes)}))
+    class_to_idx = dict(
+        getattr(
+            train_dataset,
+            "class_to_idx",
+            {name: idx for idx, name in enumerate(resolved_classes)},
+        )
+    )
     train_labels = _dataset_labels(train_dataset)
     calibration_labels = _dataset_labels(calibration_dataset)
     eval_labels = _dataset_labels(eval_dataset)

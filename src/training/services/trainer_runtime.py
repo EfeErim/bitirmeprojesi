@@ -12,8 +12,8 @@ import torch.nn as nn
 
 from src.training.ber_loss import BERLoss
 from src.training.services.runtime import (
-    build_grad_scaler,
     build_adamw_optimizer,
+    build_grad_scaler,
     build_train_batch_stats,
     clip_gradients,
     collect_trainable_parameters,

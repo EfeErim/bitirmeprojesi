@@ -36,7 +36,9 @@ def resolve_runtime_primary_score_method(value: Any) -> str:
     return requested
 
 
-def compute_method_metrics_from_evaluation(evaluation: Optional[EvaluationArtifactsPayload]) -> Dict[str, Dict[str, Optional[float]]]:
+def compute_method_metrics_from_evaluation(
+    evaluation: Optional[EvaluationArtifactsPayload],
+) -> Dict[str, Dict[str, Optional[float]]]:
     if evaluation is None or not evaluation.ood_labels:
         return {}
     method_metrics: Dict[str, Dict[str, Optional[float]]] = {}
@@ -93,7 +95,12 @@ def apply_primary_score_method_to_evaluation(
     if evaluation is None:
         return None
     resolved_method = resolve_runtime_primary_score_method(primary_score_method)
-    selected_scores = list(dict(evaluation.ood_scores_by_method or {}).get(resolved_method, evaluation.ood_scores or []))
+    selected_scores = list(
+        dict(evaluation.ood_scores_by_method or {}).get(
+            resolved_method,
+            evaluation.ood_scores or [],
+        )
+    )
     updated_context = dict(evaluation.context)
     updated_context["ood_primary_score_method"] = resolved_method
     if requested_primary_score_method is not None:

@@ -94,6 +94,8 @@ def create_training_loaders(
     loaders: Dict[str, DataLoader] = {}
     worker_init_fn = worker_seed_factory(int(seed))
     for split in ("train", "val", "test"):
+        split_seed_offset = 0 if split == "train" else 10 if split == "val" else 20
+        sampler_seed_offset = 100 if split == "train" else 110 if split == "val" else 120
         dataset = dataset_cls(
             data_dir=data_dir,
             crop=crop,
@@ -108,7 +110,7 @@ def create_training_loaders(
             validate_images_on_init=validate_images_on_init,
         )
         loader_generator = torch.Generator()
-        loader_generator.manual_seed(int(seed) + (0 if split == "train" else 10 if split == "val" else 20))
+        loader_generator.manual_seed(int(seed) + split_seed_offset)
 
         split_sampler = None
         shuffle = split == "train"
@@ -138,8 +140,8 @@ def create_training_loaders(
             drop_last=drop_last,
             **extra_kwargs,
         )
-        setattr(loaders[split], "_seed_base", int(seed) + (0 if split == "train" else 10 if split == "val" else 20))
-        setattr(loaders[split], "_sampler_seed_base", int(seed) + (100 if split == "train" else 110 if split == "val" else 120))
+        setattr(loaders[split], "_seed_base", int(seed) + split_seed_offset)
+        setattr(loaders[split], "_sampler_seed_base", int(seed) + sampler_seed_offset)
 
     ood_root = Path(data_dir) / crop / "ood"
     if ood_root.exists():
