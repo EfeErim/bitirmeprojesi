@@ -18,6 +18,7 @@
       },
       "ood": {
         "threshold_factor": 2.0,
+        "primary_score_method": "ensemble",
         "ber_enabled": false,
         "ber_lambda_old": 0.1,
         "ber_lambda_new": 0.1,
@@ -110,6 +111,7 @@
     "enabled": true,
     "method": "ensemble",
     "threshold_factor": 2.0,
+    "primary_score_method": "ensemble",
     "radial_l2_enabled": true,
     "sure_enabled": true,
     "conformal_enabled": true,

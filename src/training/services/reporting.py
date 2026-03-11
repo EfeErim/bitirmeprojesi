@@ -382,9 +382,16 @@ def persist_ood_benchmark_artifacts(
         "held_out_class",
         "status",
         "reason",
+        "primary_score_method",
         "accuracy",
         "ood_auroc",
         "ood_false_positive_rate",
+        "ensemble_ood_auroc",
+        "ensemble_ood_false_positive_rate",
+        "energy_ood_auroc",
+        "energy_ood_false_positive_rate",
+        "knn_ood_auroc",
+        "knn_ood_false_positive_rate",
         "sure_ds_f1",
         "conformal_empirical_coverage",
         "conformal_avg_set_size",
@@ -392,19 +399,28 @@ def persist_ood_benchmark_artifacts(
         "calibration_samples",
         "eval_in_distribution_samples",
         "eval_ood_samples",
+        "resume_key",
     ]
     rows: List[List[Any]] = []
     for fold in folds:
         metrics = dict(fold.get("metrics", {}))
+        method_metrics = dict(fold.get("method_metrics", {}))
         sample_counts = dict(fold.get("sample_counts", {}))
         rows.append(
             [
                 fold.get("held_out_class", ""),
                 fold.get("status", ""),
                 fold.get("reason", ""),
+                fold.get("primary_score_method", ""),
                 metrics.get("accuracy", ""),
                 metrics.get("ood_auroc", ""),
                 metrics.get("ood_false_positive_rate", ""),
+                dict(method_metrics.get("ensemble", {})).get("ood_auroc", ""),
+                dict(method_metrics.get("ensemble", {})).get("ood_false_positive_rate", ""),
+                dict(method_metrics.get("energy", {})).get("ood_auroc", ""),
+                dict(method_metrics.get("energy", {})).get("ood_false_positive_rate", ""),
+                dict(method_metrics.get("knn", {})).get("ood_auroc", ""),
+                dict(method_metrics.get("knn", {})).get("ood_false_positive_rate", ""),
                 metrics.get("sure_ds_f1", ""),
                 metrics.get("conformal_empirical_coverage", ""),
                 metrics.get("conformal_avg_set_size", ""),
@@ -412,6 +428,7 @@ def persist_ood_benchmark_artifacts(
                 sample_counts.get("calibration_samples", ""),
                 sample_counts.get("eval_in_distribution_samples", ""),
                 sample_counts.get("eval_ood_samples", ""),
+                fold.get("resume_key", ""),
             ]
         )
     per_fold_csv = _write_csv(benchmark_dir / "per_fold.csv", headers, rows)

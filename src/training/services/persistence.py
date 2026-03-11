@@ -141,6 +141,9 @@ def restore_ood_state(
     radial_beta_range_raw = payload.get("radial_beta_range", [0.5, 2.0])
     detector = ContinualOODDetector(
         threshold_factor=threshold_factor,
+        primary_score_method=str(payload.get("primary_score_method", "ensemble") or "ensemble"),
+        knn_k=int(payload.get("knn_k", 10)),
+        knn_bank_cap=int(payload.get("knn_bank_cap", 256)),
         radial_l2_enabled=bool(payload.get("radial_l2_enabled", False)),
         radial_beta_range=(float(radial_beta_range_raw[0]), float(radial_beta_range_raw[1])),
         radial_beta_steps=int(payload.get("radial_beta_steps", 16)),
@@ -173,6 +176,19 @@ def restore_ood_state(
             energy_mu=float(stats.get("energy_mu", 0.0)),
             energy_sigma=float(stats.get("energy_sigma", 1.0)),
             threshold=float(stats.get("threshold", 0.0)),
+            energy_threshold=float(
+                stats.get(
+                    "energy_threshold",
+                    float(stats.get("energy_mu", 0.0)) + (
+                        detector.threshold_factor * max(float(stats.get("energy_sigma", 1.0)), 1e-6)
+                    ),
+                )
+            ),
+            knn_distance_mu=float(stats.get("knn_distance_mu", 0.0)),
+            knn_distance_sigma=float(stats.get("knn_distance_sigma", 1.0)),
+            knn_threshold=float(stats.get("knn_threshold", 0.0)),
+            knn_bank=torch.tensor(stats.get("knn_bank", []), dtype=torch.float32, device=target_device),
+            knn_k=int(stats.get("knn_k", detector.knn_k)),
             sure_semantic_threshold=float(stats.get("sure_semantic_threshold", 0.0)),
             sure_confidence_threshold=float(stats.get("sure_confidence_threshold", 0.0)),
         )

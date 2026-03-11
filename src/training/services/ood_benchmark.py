@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections import Counter
+import hashlib
+import json
 from pathlib import Path
 import time
 import traceback
@@ -190,6 +192,101 @@ def _empty_metric_map() -> Dict[str, None]:
     return {name: None for name in _OOD_BENCHMARK_METRIC_NAMES}
 
 
+def _primary_score_method(config: Dict[str, Any]) -> str:
+    return str(
+        config.get("training", {})
+        .get("continual", {})
+        .get("ood", {})
+        .get("primary_score_method", "ensemble")
+        or "ensemble"
+    ).strip().lower()
+
+
+def _resume_relevant_ood_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    ood_cfg = (
+        config.get("training", {})
+        .get("continual", {})
+        .get("ood", {})
+    )
+    return {
+        "primary_score_method": str(ood_cfg.get("primary_score_method", "ensemble") or "ensemble"),
+        "threshold_factor": float(ood_cfg.get("threshold_factor", 2.0)),
+        "radial_l2_enabled": bool(ood_cfg.get("radial_l2_enabled", False)),
+        "radial_beta_range": list(ood_cfg.get("radial_beta_range", [0.5, 2.0])),
+        "radial_beta_steps": int(ood_cfg.get("radial_beta_steps", 16)),
+        "sure_enabled": bool(ood_cfg.get("sure_enabled", False)),
+        "sure_semantic_percentile": float(ood_cfg.get("sure_semantic_percentile", 95.0)),
+        "sure_confidence_percentile": float(ood_cfg.get("sure_confidence_percentile", 90.0)),
+        "conformal_enabled": bool(ood_cfg.get("conformal_enabled", False)),
+        "conformal_alpha": float(ood_cfg.get("conformal_alpha", 0.05)),
+    }
+
+
+def _build_resume_key(
+    *,
+    crop_name: str,
+    held_out_class: str,
+    seen_classes: Sequence[str],
+    sample_counts: Dict[str, int],
+    config: Dict[str, Any],
+    num_epochs: Optional[int],
+) -> str:
+    payload = {
+        "crop_name": str(crop_name),
+        "held_out_class": str(held_out_class),
+        "seen_classes": [str(name) for name in seen_classes],
+        "sample_counts": {str(key): int(value) for key, value in sample_counts.items()},
+        "ood": _resume_relevant_ood_config(config),
+        "num_epochs": None if num_epochs is None else int(num_epochs),
+    }
+    body = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def _load_existing_benchmark_summary(artifact_root: Path) -> Dict[str, Any]:
+    summary_path = Path(artifact_root) / "ood_benchmark" / "summary.json"
+    if not summary_path.exists():
+        return {}
+    try:
+        return json.loads(summary_path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def _build_resumable_fold_index(summary_payload: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    fold_index: Dict[str, Dict[str, Any]] = {}
+    for fold in list(summary_payload.get("folds", [])) if isinstance(summary_payload, dict) else []:
+        if not isinstance(fold, dict):
+            continue
+        if str(fold.get("status", "")) != "completed":
+            continue
+        held_out_class = str(fold.get("held_out_class", "")).strip()
+        resume_key = str(fold.get("resume_key", "")).strip()
+        metric_gate_path = str(dict(fold.get("paths", {})).get("metric_gate_json", "")).strip()
+        if not held_out_class or not resume_key or not metric_gate_path:
+            continue
+        if not Path(metric_gate_path).exists():
+            continue
+        fold_index[f"{held_out_class}:{resume_key}"] = fold
+    return fold_index
+
+
+def _compute_method_metrics(evaluation: Any) -> Dict[str, Dict[str, Optional[float]]]:
+    method_scores = dict(getattr(evaluation, "ood_scores_by_method", {}) or {})
+    method_metrics: Dict[str, Dict[str, Optional[float]]] = {}
+    for method_name, scores in method_scores.items():
+        method_metrics[str(method_name)] = compute_plan_metrics(
+            y_true=evaluation.y_true,
+            y_pred=evaluation.y_pred,
+            ood_labels=evaluation.ood_labels,
+            ood_scores=scores,
+            sure_ds_f1=evaluation.sure_ds_f1,
+            conformal_empirical_coverage=evaluation.conformal_empirical_coverage,
+            conformal_avg_set_size=evaluation.conformal_avg_set_size,
+        )
+    return method_metrics
+
+
 def _persist_benchmark_summary(
     *,
     artifact_root: Path,
@@ -302,6 +399,9 @@ def _persist_fold_metric_gate(
     context: Dict[str, Any],
 ) -> Dict[str, Any]:
     fold_dir = Path(artifact_root) / "ood_benchmark" / "folds" / held_out_class
+    primary_score_method = str(
+        getattr(evaluation, "ood_primary_score_method", context.get("ood_primary_score_method", "ensemble")) or "ensemble"
+    )
     metrics = compute_plan_metrics(
         y_true=evaluation.y_true,
         y_pred=evaluation.y_pred,
@@ -320,6 +420,7 @@ def _persist_fold_metric_gate(
         require_ood=True,
         context={
             "num_classes": len(list(seen_classes)),
+            "ood_primary_score_method": primary_score_method,
             **dict(context),
         },
     )
@@ -327,6 +428,8 @@ def _persist_fold_metric_gate(
         telemetry.copy_artifact_file(metric_gate_json, f"ood_benchmark/folds/{held_out_class}/metric_gate.json")
     return {
         "metric_gate": metric_gate,
+        "primary_score_method": primary_score_method,
+        "method_metrics": _compute_method_metrics(evaluation),
         "paths": {"metric_gate_json": str(metric_gate_json)},
     }
 
@@ -346,6 +449,8 @@ def _build_failed_summary(
         "reason": str(reason),
         "metrics": _empty_metric_map(),
         "metric_std": {},
+        "method_comparison_metrics": {},
+        "method_comparison_metric_std": {},
         "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
         "successful_folds": 0,
         "failed_folds": 0,
@@ -379,7 +484,10 @@ def _build_fold_payload(
     reason: str,
     seen_classes: Sequence[str],
     sample_counts: Dict[str, int],
+    primary_score_method: str = "ensemble",
+    resume_key: str = "",
     metrics: Optional[Dict[str, Any]] = None,
+    method_metrics: Optional[Dict[str, Any]] = None,
     evaluation: Optional[Dict[str, Any]] = None,
     paths: Optional[Dict[str, Any]] = None,
     diagnostics: Optional[Dict[str, Any]] = None,
@@ -389,7 +497,10 @@ def _build_fold_payload(
         "status": status,
         "reason": reason,
         "seen_classes": list(seen_classes),
+        "primary_score_method": str(primary_score_method or "ensemble"),
+        "resume_key": str(resume_key),
         "metrics": dict(metrics or {}),
+        "method_metrics": dict(method_metrics or {}),
         "sample_counts": dict(sample_counts),
         "paths": dict(paths or {}),
         "diagnostics": dict(diagnostics or {}),
@@ -414,6 +525,36 @@ def _aggregate_fold_metric_stats(folds: Sequence[Dict[str, Any]]) -> tuple[Dict[
     return aggregate_metrics, metric_std
 
 
+def _aggregate_method_metric_stats(
+    folds: Sequence[Dict[str, Any]],
+) -> tuple[Dict[str, Dict[str, Optional[float]]], Dict[str, Dict[str, Optional[float]]]]:
+    aggregate_by_method: Dict[str, Dict[str, Optional[float]]] = {}
+    std_by_method: Dict[str, Dict[str, Optional[float]]] = {}
+    successful_folds = list(folds)
+    method_names = sorted(
+        {
+            str(method_name)
+            for fold in successful_folds
+            for method_name in dict(fold.get("method_metrics", {})).keys()
+        }
+    )
+    for method_name in method_names:
+        method_metric_values: Dict[str, Optional[float]] = {}
+        method_metric_std: Dict[str, Optional[float]] = {}
+        for metric_name in _OOD_BENCHMARK_METRIC_NAMES:
+            values = [
+                float(fold["method_metrics"][method_name][metric_name])
+                for fold in successful_folds
+                if method_name in dict(fold.get("method_metrics", {}))
+                and dict(fold["method_metrics"][method_name]).get(metric_name) is not None
+            ]
+            method_metric_values[metric_name] = _mean(values) if len(values) == len(successful_folds) else None
+            method_metric_std[metric_name] = _std(values) if len(values) == len(successful_folds) else None
+        aggregate_by_method[method_name] = method_metric_values
+        std_by_method[method_name] = method_metric_std
+    return aggregate_by_method, std_by_method
+
+
 def run_leave_one_class_out_benchmark(
     *,
     crop_name: str,
@@ -433,6 +574,7 @@ def run_leave_one_class_out_benchmark(
     target_values = load_plan_targets()
     artifact_root = Path(artifact_root)
     emit = emit_event or (lambda _event_type, _payload: None)
+    primary_score_method = _primary_score_method(config)
     train_loader = loaders.get("train")
     calibration_split_name, calibration_loader = _select_calibration_loader(loaders)
     eval_split_name, eval_loader = _select_eval_loader(loaders, calibration_split_name=calibration_split_name)
@@ -444,7 +586,10 @@ def run_leave_one_class_out_benchmark(
         "calibration_split_name": calibration_split_name,
         "class_count": len(resolved_classes),
         "estimated_fold_trainings": len(resolved_classes),
+        "primary_score_method": primary_score_method,
     }
+    existing_summary = _load_existing_benchmark_summary(artifact_root)
+    resumable_folds = _build_resumable_fold_index(existing_summary)
 
     if len(resolved_classes) < int(min_classes):
         return _persist_benchmark_summary(
@@ -533,6 +678,14 @@ def run_leave_one_class_out_benchmark(
             eval_id_indices,
             eval_ood_indices,
         )
+        resume_key = _build_resume_key(
+            crop_name=crop_name,
+            held_out_class=held_out_class,
+            seen_classes=seen_classes,
+            sample_counts=sample_counts,
+            config=config,
+            num_epochs=num_epochs,
+        )
         emit(
             "ood_benchmark_fold_started",
             {
@@ -582,6 +735,8 @@ def run_leave_one_class_out_benchmark(
                 reason="missing_fold_samples",
                 seen_classes=seen_classes,
                 sample_counts=sample_counts,
+                primary_score_method=primary_score_method,
+                resume_key=resume_key,
                 diagnostics={"failed_stage": "fold_started"},
             )
             folds.append(fold_payload)
@@ -599,6 +754,49 @@ def run_leave_one_class_out_benchmark(
                     "completed_folds": completed_fold_count,
                     "failed_folds": failed_fold_count,
                     "last_error": "missing_fold_samples",
+                    "elapsed_sec": round(time.time() - benchmark_started_at, 3),
+                    "resource_snapshot": _resource_snapshot(device),
+                },
+            )
+            emit(
+                "ood_benchmark_fold_completed",
+                {
+                    **base_context,
+                    "fold_index": fold_index,
+                    "fold_total": len(resolved_classes),
+                    **fold_payload,
+                },
+            )
+            continue
+
+        resumed_fold = resumable_folds.get(f"{held_out_class}:{resume_key}")
+        if resumed_fold is not None:
+            fold_payload = dict(resumed_fold)
+            diagnostics = dict(fold_payload.get("diagnostics", {}))
+            diagnostics["resume_hit"] = True
+            fold_payload["diagnostics"] = diagnostics
+            folds.append(fold_payload)
+            completed_fold_count += 1
+            _emit_telemetry_log(
+                telemetry,
+                (
+                    f"OOD benchmark fold {fold_index}/{len(resolved_classes)} resumed from cached "
+                    f"artifacts for held_out_class={held_out_class}."
+                ),
+            )
+            _persist_benchmark_progress(
+                artifact_root=artifact_root,
+                telemetry=telemetry,
+                payload={
+                    **base_context,
+                    "status": "running",
+                    "stage": "fold_resumed",
+                    "fold_index": fold_index,
+                    "fold_total": len(resolved_classes),
+                    "held_out_class": held_out_class,
+                    "completed_folds": completed_fold_count,
+                    "failed_folds": failed_fold_count,
+                    "last_completed_fold": held_out_class,
                     "elapsed_sec": round(time.time() - benchmark_started_at, 3),
                     "resource_snapshot": _resource_snapshot(device),
                 },
@@ -686,6 +884,10 @@ def run_leave_one_class_out_benchmark(
                     **base_context,
                     "held_out_class": held_out_class,
                     "seen_classes": list(seen_classes),
+                    "resume_key": resume_key,
+                    "ood_primary_score_method": str(
+                        getattr(evaluation, "ood_primary_score_method", primary_score_method) or primary_score_method
+                    ),
                     **sample_counts,
                     **dict(evaluation.context),
                 },
@@ -697,7 +899,10 @@ def run_leave_one_class_out_benchmark(
                 reason="",
                 seen_classes=seen_classes,
                 sample_counts=sample_counts,
+                primary_score_method=str(artifacts.get("primary_score_method", primary_score_method)),
+                resume_key=resume_key,
                 metrics=dict(metric_gate.get("metrics", {})),
+                method_metrics=dict(artifacts.get("method_metrics", {})),
                 evaluation=dict(metric_gate.get("evaluation", {})),
                 paths=dict(artifacts.get("paths", {})),
                 diagnostics={
@@ -739,6 +944,8 @@ def run_leave_one_class_out_benchmark(
                 reason=failure_reason,
                 seen_classes=seen_classes,
                 sample_counts=sample_counts,
+                primary_score_method=primary_score_method,
+                resume_key=resume_key,
                 paths=failure_paths,
                 diagnostics={
                     "failed_stage": current_stage,
@@ -784,6 +991,7 @@ def run_leave_one_class_out_benchmark(
     successful_folds = [fold for fold in folds if fold.get("status") == "completed"]
     failed_folds = [fold for fold in folds if fold.get("status") != "completed"]
     aggregate_metrics, metric_std = _aggregate_fold_metric_stats(successful_folds)
+    method_comparison_metrics, method_comparison_metric_std = _aggregate_method_metric_stats(successful_folds)
 
     ood_validation = validate_ood_metrics(aggregate_metrics, target_values, require_ood=True)
     passed = bool(not failed_folds and ood_validation["passed"])
@@ -792,8 +1000,11 @@ def run_leave_one_class_out_benchmark(
         "status": "completed" if not failed_folds else "failed",
         "passed": passed,
         "ood_evidence_source": "held_out_benchmark",
+        "primary_score_method": primary_score_method,
         "metrics": aggregate_metrics,
         "metric_std": metric_std,
+        "method_comparison_metrics": method_comparison_metrics,
+        "method_comparison_metric_std": method_comparison_metric_std,
         "evaluation": ood_validation,
         "successful_folds": len(successful_folds),
         "failed_folds": len(failed_folds),

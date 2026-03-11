@@ -29,6 +29,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
         },
         "ood": {
             "threshold_factor": 2.0,
+            "primary_score_method": "ensemble",
             "ber_enabled": False,
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
@@ -105,7 +106,10 @@ def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, 
             "dropout": float(flat_config.get("fusion_dropout", 0.1)),
             "gating": str(flat_config.get("fusion_gating", "softmax")),
         },
-        "ood": {"threshold_factor": float(flat_config.get("ood_threshold_factor", 2.0))},
+        "ood": {
+            "threshold_factor": float(flat_config.get("ood_threshold_factor", 2.0)),
+            "primary_score_method": str(flat_config.get("primary_score_method", "ensemble")),
+        },
         "learning_rate": float(flat_config.get("learning_rate", 1e-4)),
         "weight_decay": float(flat_config.get("weight_decay", 0.01)),
         "num_epochs": int(flat_config.get("num_epochs", 10)),
@@ -159,6 +163,7 @@ def normalize_continual_training_config(
     normalized["deterministic"] = bool(normalized.get("deterministic", False))
 
     ood["threshold_factor"] = float(ood.get("threshold_factor", 2.0))
+    ood["primary_score_method"] = str(ood.get("primary_score_method", "ensemble")).strip().lower() or "ensemble"
     ood["ber_enabled"] = bool(ood.get("ber_enabled", False))
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))

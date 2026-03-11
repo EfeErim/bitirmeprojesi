@@ -109,6 +109,7 @@ class ConfigurationManager:
 
         # Sync extended OOD flags between top-level and continual
         for key in (
+            "primary_score_method",
             "radial_l2_enabled", "sure_enabled", "conformal_enabled", "conformal_alpha",
             "ber_enabled", "ber_lambda_old", "ber_lambda_new",
             "radial_beta_range", "radial_beta_steps",

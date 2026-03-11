@@ -135,8 +135,11 @@ def build_runtime_adapter_metadata(
         if hasattr(ood_detector, "class_stats")
         else {
             "threshold_factor": 2.0,
+            "primary_score_method": "ensemble",
             "calibration_version": ood_calibration_version,
             "class_stats": {},
+            "knn_k": 10,
+            "knn_bank_cap": 256,
         }
     )
     return AdapterMetadata(

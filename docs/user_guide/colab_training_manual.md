@@ -206,6 +206,7 @@ These affect image loading and error tolerance:
 These control how OOD calibration and scoring behave:
 
 - `training.continual.ood.threshold_factor`
+- `training.continual.ood.primary_score_method`
 - `training.continual.ood.radial_l2_enabled`
 - `training.continual.ood.radial_beta_range`
 - `training.continual.ood.radial_beta_steps`
@@ -214,6 +215,10 @@ These control how OOD calibration and scoring behave:
 - `training.continual.ood.sure_confidence_percentile`
 - `training.continual.ood.conformal_enabled`
 - `training.continual.ood.conformal_alpha`
+
+Current shipped default:
+
+- `training.continual.ood.primary_score_method: "ensemble"`
 
 ### Readiness policy
 

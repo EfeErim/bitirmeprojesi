@@ -131,6 +131,8 @@ class EvaluationArtifactsPayload:
     y_pred: List[int]
     ood_labels: Optional[List[int]] = None
     ood_scores: Optional[List[float]] = None
+    ood_primary_score_method: str = "ensemble"
+    ood_scores_by_method: Dict[str, List[float]] = field(default_factory=dict)
     sure_ds_f1: Optional[float] = None
     conformal_empirical_coverage: Optional[float] = None
     conformal_avg_set_size: Optional[float] = None

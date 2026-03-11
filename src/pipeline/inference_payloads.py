@@ -17,25 +17,16 @@ def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
 
 def build_default_ood(*, is_ood: bool) -> OODAnalysis:
     return OODAnalysis(
-        ensemble_score=1.0 if is_ood else 0.0,
-        class_threshold=1.0 if is_ood else 0.0,
+        score_method="ensemble",
+        primary_score=1.0 if is_ood else 0.0,
+        decision_threshold=1.0 if is_ood else 0.0,
         is_ood=bool(is_ood),
         calibration_version=0,
     )
 
 
 def normalize_ood_analysis(payload: Dict[str, Any] | None) -> OODAnalysis:
-    data = dict(payload or {})
-    return OODAnalysis(
-        ensemble_score=float(data.get("ensemble_score", 0.0)),
-        class_threshold=float(data.get("class_threshold", 0.0)),
-        is_ood=bool(data.get("is_ood", False)),
-        calibration_version=int(data.get("calibration_version", 0)),
-        mahalanobis_z=(
-            None if data.get("mahalanobis_z") is None else float(data.get("mahalanobis_z", 0.0))
-        ),
-        energy_z=None if data.get("energy_z") is None else float(data.get("energy_z", 0.0)),
-    )
+    return OODAnalysis.from_dict(payload)
 
 
 def build_unknown_crop_result(*, part_name: str | None, router_confidence: float, include_ood: bool) -> InferenceResult:

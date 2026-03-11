@@ -300,8 +300,19 @@ def _flatten_prediction(
         "predicted_index": disease.get("class_index"),
         "confidence": float(disease.get("confidence", 0.0)),
         "is_ood": bool(ood.get("is_ood", False)),
-        "ensemble_score": float(ood.get("ensemble_score", 0.0)),
-        "class_threshold": float(ood.get("class_threshold", 0.0)),
+        "score_method": str(ood.get("score_method", "ensemble")),
+        "primary_score": float(
+            ood.get(
+                "primary_score",
+                ood.get("ensemble_score", 0.0),
+            )
+        ),
+        "decision_threshold": float(
+            ood.get(
+                "decision_threshold",
+                ood.get("class_threshold", 0.0),
+            )
+        ),
         "calibration_version": int(ood.get("calibration_version", 0)),
         "ood_analysis": ood,
         "raw_payload": payload,
@@ -412,8 +423,9 @@ def predict_image_folder(
                 "predicted_index": None,
                 "confidence": 0.0,
                 "is_ood": None,
-                "ensemble_score": None,
-                "class_threshold": None,
+                "score_method": None,
+                "primary_score": None,
+                "decision_threshold": None,
                 "calibration_version": None,
                 "ood_analysis": None,
                 "raw_payload": None,

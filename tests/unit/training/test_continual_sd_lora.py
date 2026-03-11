@@ -46,6 +46,7 @@ def test_config_from_training_config_accepts_v6_contract():
     assert cfg.grad_accumulation_steps == 2
     assert cfg.scheduler_name == "linear"
     assert cfg.evaluation_best_metric == "macro_f1"
+    assert cfg.ood_primary_score_method == "ensemble"
 
 
 def test_as_contract_dict_emits_normalized_training_surface():
@@ -69,6 +70,7 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["ood"]["ber_enabled"] is True
     assert payload["ood"]["ber_lambda_old"] == pytest.approx(0.05)
     assert payload["ood"]["ber_lambda_new"] == pytest.approx(0.2)
+    assert payload["ood"]["primary_score_method"] == "ensemble"
     assert payload["optimization"]["grad_accumulation_steps"] == 2
     assert payload["optimization"]["scheduler"]["name"] == "linear"
     assert payload["evaluation"]["best_metric"] == "macro_f1"
@@ -242,7 +244,9 @@ def test_predict_payload_contains_v6_ood_keys():
     result = trainer.predict_with_ood(torch.zeros(1, 3, 224, 224))
 
     assert "ood_analysis" in result
-    assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(result["ood_analysis"].keys())
+    assert {"score_method", "primary_score", "decision_threshold", "is_ood", "calibration_version"} <= set(
+        result["ood_analysis"].keys()
+    )
 
 
 def test_predict_payload_refreshes_cached_class_index_after_class_update():
@@ -683,7 +687,9 @@ def test_trainer_end_to_end_surface_with_dummy_backbone(monkeypatch):
 
     pred = trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
     assert pred["status"] == "success"
-    assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(pred["ood_analysis"].keys())
+    assert {"score_method", "primary_score", "decision_threshold", "is_ood", "calibration_version"} <= set(
+        pred["ood_analysis"].keys()
+    )
 
 
 def test_save_and_load_adapter_roundtrip_restores_raw_adapter_weights(monkeypatch, tmp_path):

@@ -245,14 +245,64 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         trainer._refresh_class_index_cache()
     predicted_idx = int(indices[0].item()) if indices.numel() else 0
 
+    primary_score_method = str(
+        ood.get("primary_score_method", getattr(trainer.ood_detector, "primary_score_method", "ensemble")) or "ensemble"
+    )
+    candidate_scores = {
+        name: float(values[0].item())
+        for name, values in dict(ood.get("candidate_scores", {})).items()
+        if torch.is_tensor(values) and values.numel() > 0
+    }
+    if not candidate_scores:
+        if torch.is_tensor(ood.get("ensemble_score")) and ood["ensemble_score"].numel() > 0:
+            candidate_scores["ensemble"] = float(ood["ensemble_score"][0].item())
+        if torch.is_tensor(ood.get("energy_score")) and ood["energy_score"].numel() > 0:
+            candidate_scores["energy"] = float(ood["energy_score"][0].item())
+        if torch.is_tensor(ood.get("knn_distance")) and ood["knn_distance"].numel() > 0:
+            candidate_scores["knn"] = float(ood["knn_distance"][0].item())
+    candidate_thresholds = {
+        name: float(values[0].item())
+        for name, values in dict(ood.get("candidate_thresholds", {})).items()
+        if torch.is_tensor(values) and values.numel() > 0
+    }
+    if not candidate_thresholds:
+        if torch.is_tensor(ood.get("class_threshold")) and ood["class_threshold"].numel() > 0:
+            candidate_thresholds["ensemble"] = float(ood["class_threshold"][0].item())
+        if torch.is_tensor(ood.get("energy_threshold")) and ood["energy_threshold"].numel() > 0:
+            candidate_thresholds["energy"] = float(ood["energy_threshold"][0].item())
+        if torch.is_tensor(ood.get("knn_threshold")) and ood["knn_threshold"].numel() > 0:
+            candidate_thresholds["knn"] = float(ood["knn_threshold"][0].item())
+    primary_score_tensor = ood.get("primary_score")
+    if not torch.is_tensor(primary_score_tensor):
+        if primary_score_method in candidate_scores:
+            primary_score = float(candidate_scores[primary_score_method])
+        else:
+            primary_score = float(candidate_scores.get("ensemble", 0.0))
+    else:
+        primary_score = float(primary_score_tensor[0].item())
+    decision_threshold_tensor = ood.get("decision_threshold")
+    if not torch.is_tensor(decision_threshold_tensor):
+        if primary_score_method in candidate_thresholds:
+            decision_threshold = float(candidate_thresholds[primary_score_method])
+        else:
+            decision_threshold = float(candidate_thresholds.get("ensemble", 0.0))
+    else:
+        decision_threshold = float(decision_threshold_tensor[0].item())
     ood_analysis: Dict[str, Any] = {
-        "ensemble_score": float(ood["ensemble_score"][0].item()),
-        "class_threshold": float(ood["class_threshold"][0].item()),
+        "score_method": primary_score_method,
+        "primary_score": primary_score,
+        "decision_threshold": decision_threshold,
         "is_ood": bool(ood["is_ood"][0].item()),
-        "mahalanobis_z": float(ood["mahalanobis_z"][0].item()),
-        "energy_z": float(ood["energy_z"][0].item()),
+        "candidate_scores": candidate_scores,
+        "candidate_thresholds": candidate_thresholds,
         "calibration_version": int(ood["calibration_version"][0].item()),
     }
+    if torch.is_tensor(ood.get("mahalanobis_z")) and ood["mahalanobis_z"].numel() > 0:
+        ood_analysis["mahalanobis_z"] = float(ood["mahalanobis_z"][0].item())
+    if torch.is_tensor(ood.get("energy_z")) and ood["energy_z"].numel() > 0:
+        ood_analysis["energy_z"] = float(ood["energy_z"][0].item())
+    if torch.is_tensor(ood.get("knn_distance")) and ood["knn_distance"].numel() > 0:
+        ood_analysis["knn_distance"] = float(ood["knn_distance"][0].item())
 
     if trainer.ood_detector.radial_beta is not None:
         ood_analysis["radial_beta"] = float(trainer.ood_detector.radial_beta)

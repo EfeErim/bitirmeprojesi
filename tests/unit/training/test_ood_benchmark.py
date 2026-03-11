@@ -102,6 +102,12 @@ def _fake_evaluate_model_with_artifact_metrics(_trainer, loader, *, ood_loader=N
         y_pred=y_pred,
         ood_labels=([0] * len(y_true)) + ([1] * ood_count) if ood_loader is not None else None,
         ood_scores=([0.1] * len(y_true)) + ([0.9] * ood_count) if ood_loader is not None else None,
+        ood_primary_score_method="ensemble",
+        ood_scores_by_method={
+            "ensemble": ([0.1] * len(y_true)) + ([0.9] * ood_count) if ood_loader is not None else [],
+            "energy": ([0.2] * len(y_true)) + ([0.8] * ood_count) if ood_loader is not None else [],
+            "knn": ([0.15] * len(y_true)) + ([0.85] * ood_count) if ood_loader is not None else [],
+        },
         sure_ds_f1=0.95,
         conformal_empirical_coverage=0.97,
         conformal_avg_set_size=1.0,
@@ -138,6 +144,8 @@ def test_run_leave_one_class_out_benchmark_writes_aggregate_artifacts(monkeypatc
     assert summary["passed"] is True
     assert summary["successful_folds"] == 3
     assert summary["failed_folds"] == 0
+    assert summary["primary_score_method"] == "ensemble"
+    assert {"ensemble", "energy", "knn"} <= set(summary["method_comparison_metrics"].keys())
     assert all(fold["status"] == "completed" for fold in summary["folds"])
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "summary.json").exists()
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "per_fold.csv").exists()
@@ -259,3 +267,50 @@ def test_run_leave_one_class_out_benchmark_persists_traceback_for_fold_failures(
     assert traceback_path.exists()
     assert failure_json_path.exists()
     assert "RuntimeError: eval boom" in traceback_path.read_text(encoding="utf-8")
+
+
+def test_run_leave_one_class_out_benchmark_resumes_completed_folds(monkeypatch, tmp_path: Path):
+    monkeypatch.setattr(
+        "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
+        _fake_evaluate_model_with_artifact_metrics,
+    )
+
+    call_count = {"count": 0}
+
+    class CountingSession(FakeSession):
+        def run(self):
+            call_count["count"] += 1
+            return None
+
+    class CountingAdapter(FakeAdapter):
+        def build_training_session(self, train_loader, **kwargs):
+            del train_loader, kwargs
+            return CountingSession(self._trainer)
+
+    kwargs = {
+        "crop_name": "tomato",
+        "class_names": ["healthy", "disease_a", "disease_b"],
+        "loaders": _build_loaders(["healthy", "disease_a", "disease_b"]),
+        "config": {
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "ood": {"primary_score_method": "ensemble"},
+                }
+            }
+        },
+        "device": "cpu",
+        "artifact_root": tmp_path / "training_metrics",
+        "adapter_factory": CountingAdapter,
+        "run_id": "run_resume",
+        "min_classes": 3,
+    }
+
+    first = run_leave_one_class_out_benchmark(**kwargs)
+    assert first["successful_folds"] == 3
+    assert call_count["count"] == 3
+
+    second = run_leave_one_class_out_benchmark(**kwargs)
+    assert second["successful_folds"] == 3
+    assert call_count["count"] == 3
+    assert all(fold["diagnostics"].get("resume_hit") for fold in second["folds"])

@@ -49,6 +49,7 @@ class TestExtendedCalibration:
 
         assert "num_classes" in result
         assert float(result["num_classes"]) == 2.0
+        assert result["primary_score_method"] == "ensemble"
         assert "radial_beta" in result
         assert "conformal_qhat" in result
         assert detector.radial_beta is not None
@@ -58,6 +59,8 @@ class TestExtendedCalibration:
             assert isinstance(stats, ClassCalibration)
             assert stats.sure_semantic_threshold != 0.0 or stats.sure_confidence_threshold != 0.0
             assert stats.threshold != 0.0
+            assert stats.knn_bank is not None
+            assert int(stats.knn_bank.shape[0]) <= detector.knn_bank_cap
 
     def test_score_returns_sure_fields(self, detector, synthetic_data):
         features, logits, labels = synthetic_data
@@ -69,6 +72,8 @@ class TestExtendedCalibration:
         assert "sure_semantic_ood" in ood
         assert "sure_confidence_reject" in ood
         assert "radial_beta" in ood
+        assert "primary_score" in ood
+        assert "knn_distance" in ood
 
     def test_conformal_set_built(self, detector, synthetic_data):
         features, logits, labels = synthetic_data
@@ -122,3 +127,20 @@ class TestExtendedCalibration:
 
         pred_set = detector.build_conformal_set(features[0], logits[0], {0: "a", 1: "b"})
         assert pred_set == []
+
+    def test_knn_bank_is_deterministically_capped(self):
+        detector = ContinualOODDetector(knn_bank_cap=8)
+        torch.manual_seed(7)
+        features = torch.randn(60, 6)
+        logits = torch.randn(60, 2)
+        labels = torch.cat([torch.zeros(30), torch.ones(30)]).long()
+
+        detector.calibrate(features, logits, labels)
+        first_banks = {class_id: stats.knn_bank.clone() for class_id, stats in detector.class_stats.items()}
+
+        detector.calibrate(features, logits, labels)
+        second_banks = {class_id: stats.knn_bank.clone() for class_id, stats in detector.class_stats.items()}
+
+        for class_id in first_banks:
+            assert first_banks[class_id].shape[0] == 8
+            assert torch.equal(first_banks[class_id], second_banks[class_id])

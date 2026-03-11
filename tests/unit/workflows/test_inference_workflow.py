@@ -19,8 +19,9 @@ class FakeRuntime:
             diagnosis_index=0,
             confidence=0.9,
             ood_analysis=OODAnalysis(
-                ensemble_score=0.1,
-                class_threshold=0.8,
+                score_method="ensemble",
+                primary_score=0.1,
+                decision_threshold=0.8,
                 is_ood=False,
                 calibration_version=2,
             ),

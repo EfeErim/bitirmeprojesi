@@ -79,7 +79,11 @@ def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     assert result["crop"] == "tomato"
     assert result["part"] == "leaf"
     assert result["diagnosis"] == "healthy"
-    assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(result["ood_analysis"].keys())
+    assert result["ood_analysis"]["score_method"] == "ensemble"
+    assert result["ood_analysis"]["primary_score"] == 0.12
+    assert {"score_method", "primary_score", "decision_threshold", "is_ood", "calibration_version"} <= set(
+        result["ood_analysis"].keys()
+    )
 
 
 def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tmp_path):

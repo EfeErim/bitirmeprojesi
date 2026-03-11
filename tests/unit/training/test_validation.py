@@ -121,6 +121,8 @@ def test_evaluate_model_with_artifact_metrics_collects_optional_ood_and_conforma
     assert result.report.val_accuracy == 1.0
     assert result.ood_labels == [0, 0, 1, 1]
     assert result.ood_scores == pytest.approx([0.1, 0.2, 0.9, 1.1])
+    assert result.ood_primary_score_method == "ensemble"
+    assert result.ood_scores_by_method["ensemble"] == pytest.approx([0.1, 0.2, 0.9, 1.1])
     assert result.sure_ds_f1 == pytest.approx(1.0)
     assert result.conformal_empirical_coverage == pytest.approx(1.0)
     assert result.conformal_avg_set_size == pytest.approx(1.0)

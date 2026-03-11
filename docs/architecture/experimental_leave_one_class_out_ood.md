@@ -16,7 +16,7 @@ Given a dataset with `N` classes:
 4. Evaluate on a mixed set:
    - samples from the `N-1` seen classes have `ood_label = 0`
    - samples from the held-out class have `ood_label = 1`
-   - model `ensemble_score` is used as `ood_score`
+   - the calibrated primary OOD score is used as `ood_score`
 5. Record classification metrics on seen classes and OOD metrics on the mixed set.
 6. Repeat for each class.
 7. After benchmarking, train the production adapter on all `N` classes.
@@ -72,7 +72,7 @@ Suggested high-level loop:
 ## Current Repo Mapping
 
 - Train/evaluate canonical adapter: `src/workflows/training.py`
-- OOD detector and `ensemble_score`: `src/ood/continual_ood.py`
+- OOD detector and calibrated primary OOD score: `src/ood/continual_ood.py`
 - OOD calibration: `src/training/services/ood_calibration.py`
 - Metric computation for `ood_labels` / `ood_scores`: `src/training/services/metrics.py`
 - Validation artifact persistence: `src/training/services/reporting.py`

@@ -9,12 +9,16 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class OODAnalysis:
-    ensemble_score: float = 0.0
-    class_threshold: float = 0.0
+    score_method: str = "ensemble"
+    primary_score: float = 0.0
+    decision_threshold: float = 0.0
     is_ood: bool = False
     calibration_version: int = 0
+    candidate_scores: Optional[Dict[str, float]] = None
+    candidate_thresholds: Optional[Dict[str, float]] = None
     mahalanobis_z: Optional[float] = None
     energy_z: Optional[float] = None
+    knn_distance: Optional[float] = None
     # --- Radially Scaled L2 Normalization ---
     radial_beta: Optional[float] = None
     # --- SURE+ Double Scoring ---
@@ -29,15 +33,25 @@ class OODAnalysis:
 
     def to_dict(self) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
-            "ensemble_score": float(self.ensemble_score),
-            "class_threshold": float(self.class_threshold),
+            "score_method": str(self.score_method or "ensemble"),
+            "primary_score": float(self.primary_score),
+            "decision_threshold": float(self.decision_threshold),
             "is_ood": bool(self.is_ood),
             "calibration_version": int(self.calibration_version),
         }
+        if self.candidate_scores is not None:
+            payload["candidate_scores"] = {str(key): float(value) for key, value in self.candidate_scores.items()}
+        if self.candidate_thresholds is not None:
+            payload["candidate_thresholds"] = {
+                str(key): float(value)
+                for key, value in self.candidate_thresholds.items()
+            }
         if self.mahalanobis_z is not None:
             payload["mahalanobis_z"] = float(self.mahalanobis_z)
         if self.energy_z is not None:
             payload["energy_z"] = float(self.energy_z)
+        if self.knn_distance is not None:
+            payload["knn_distance"] = float(self.knn_distance)
         if self.radial_beta is not None:
             payload["radial_beta"] = float(self.radial_beta)
         if self.sure_semantic_score is not None:
@@ -60,15 +74,42 @@ class OODAnalysis:
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "OODAnalysis":
         data = dict(payload or {})
         conformal_set_raw = data.get("conformal_set")
+        legacy_score = data.get("ensemble_score")
+        legacy_threshold = data.get("class_threshold")
+        primary_score = data.get("primary_score", legacy_score if legacy_score is not None else 0.0)
+        decision_threshold = data.get(
+            "decision_threshold",
+            legacy_threshold if legacy_threshold is not None else 0.0,
+        )
+        candidate_scores_raw = data.get("candidate_scores")
+        candidate_thresholds_raw = data.get("candidate_thresholds")
+        if not isinstance(candidate_scores_raw, dict) and legacy_score is not None:
+            candidate_scores_raw = {"ensemble": legacy_score}
+        if not isinstance(candidate_thresholds_raw, dict) and legacy_threshold is not None:
+            candidate_thresholds_raw = {"ensemble": legacy_threshold}
         return cls(
-            ensemble_score=float(data.get("ensemble_score", 0.0)),
-            class_threshold=float(data.get("class_threshold", 0.0)),
+            score_method=str(data.get("score_method", "ensemble") or "ensemble"),
+            primary_score=float(primary_score),
+            decision_threshold=float(decision_threshold),
             is_ood=bool(data.get("is_ood", False)),
             calibration_version=int(data.get("calibration_version", 0)),
+            candidate_scores=(
+                None
+                if not isinstance(candidate_scores_raw, dict)
+                else {str(key): float(value) for key, value in candidate_scores_raw.items()}
+            ),
+            candidate_thresholds=(
+                None
+                if not isinstance(candidate_thresholds_raw, dict)
+                else {str(key): float(value) for key, value in candidate_thresholds_raw.items()}
+            ),
             mahalanobis_z=(
                 None if data.get("mahalanobis_z") is None else float(data.get("mahalanobis_z", 0.0))
             ),
             energy_z=None if data.get("energy_z") is None else float(data.get("energy_z", 0.0)),
+            knn_distance=(
+                None if data.get("knn_distance") is None else float(data.get("knn_distance", 0.0))
+            ),
             radial_beta=(
                 None if data.get("radial_beta") is None else float(data.get("radial_beta", 0.0))
             ),

@@ -176,6 +176,7 @@ class ContinualSDLoRAConfig:
     device: str = "cuda"
     strict_model_loading: bool = False
     ood_threshold_factor: float = 2.0
+    ood_primary_score_method: str = "ensemble"
     seed: int = 42
     deterministic: bool = True
     grad_accumulation_steps: int = 4
@@ -245,6 +246,8 @@ class ContinualSDLoRAConfig:
             raise ValueError("evaluation_ood_fallback_strategy must be 'held_out_benchmark' or 'none'.")
         if self.evaluation_ood_benchmark_min_classes < 1:
             raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
+        if self.ood_primary_score_method not in {"ensemble", "energy", "knn"}:
+            raise ValueError("ood.primary_score_method must be one of: ensemble, energy, knn.")
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
         if self.ber_warmup_steps < 0:
@@ -280,6 +283,7 @@ class ContinualSDLoRAConfig:
             },
             "ood": {
                 "threshold_factor": self.ood_threshold_factor,
+                "primary_score_method": self.ood_primary_score_method,
                 "ber_enabled": self.ber_enabled,
                 "ber_lambda_old": self.ber_lambda_old,
                 "ber_lambda_new": self.ber_lambda_new,
@@ -373,6 +377,7 @@ class ContinualSDLoRAConfig:
             device=str(normalized.get("device", "cuda")),
             strict_model_loading=bool(normalized.get("strict_model_loading", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
+            ood_primary_score_method=str(ood.get("primary_score_method", "ensemble")).strip().lower() or "ensemble",
             ber_enabled=bool(ood.get("ber_enabled", False)),
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
             ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
@@ -434,6 +439,7 @@ class ContinualSDLoRATrainer:
         self.target_modules_resolved: List[str] = []
         self.ood_detector = ContinualOODDetector(
             threshold_factor=self.config.ood_threshold_factor,
+            primary_score_method=self.config.ood_primary_score_method,
             radial_l2_enabled=self.config.radial_l2_enabled,
             radial_beta_range=(self.config.radial_beta_min, self.config.radial_beta_max),
             radial_beta_steps=self.config.radial_beta_steps,

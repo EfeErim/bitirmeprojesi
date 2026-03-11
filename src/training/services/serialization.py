@@ -58,6 +58,17 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
             "energy_mu": _float_field(_read_mapping_or_attr(stats, "energy_mu"), default=0.0),
             "energy_sigma": _float_field(_read_mapping_or_attr(stats, "energy_sigma"), default=1.0),
             "threshold": _float_field(_read_mapping_or_attr(stats, "threshold"), default=0.0),
+            "energy_threshold": _float_field(_read_mapping_or_attr(stats, "energy_threshold"), default=0.0),
+            "knn_distance_mu": _float_field(_read_mapping_or_attr(stats, "knn_distance_mu"), default=0.0),
+            "knn_distance_sigma": _float_field(_read_mapping_or_attr(stats, "knn_distance_sigma"), default=1.0),
+            "knn_threshold": _float_field(_read_mapping_or_attr(stats, "knn_threshold"), default=0.0),
+            "knn_bank": _tensor_to_list(
+                _read_mapping_or_attr(stats, "knn_bank"),
+                strict=False,
+                class_id=class_key,
+                field_name="knn_bank",
+            ),
+            "knn_k": int(_read_mapping_or_attr(stats, "knn_k") or 10),
             "sure_semantic_threshold": _float_field(
                 _read_mapping_or_attr(stats, "sure_semantic_threshold"),
                 default=0.0,
@@ -70,8 +81,11 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
 
     return {
         "threshold_factor": _float_field(getattr(ood_detector, "threshold_factor", 2.0), default=2.0),
+        "primary_score_method": str(getattr(ood_detector, "primary_score_method", "ensemble") or "ensemble"),
         "calibration_version": int(getattr(ood_detector, "calibration_version", 0)),
         "class_stats": class_stats_payload,
+        "knn_k": int(getattr(ood_detector, "knn_k", 10)),
+        "knn_bank_cap": int(getattr(ood_detector, "knn_bank_cap", 256)),
         "radial_l2_enabled": bool(getattr(ood_detector, "radial_l2_enabled", False)),
         "radial_beta": (
             None

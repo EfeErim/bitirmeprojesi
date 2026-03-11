@@ -18,10 +18,34 @@ class _ArtifactMetricState:
     conformal_set_size_total: int = 0
     mixed_ood_labels: List[int] = field(default_factory=list)
     mixed_ood_scores: List[float] = field(default_factory=list)
+    mixed_ood_scores_by_method: Dict[str, List[float]] = field(default_factory=dict)
+    primary_score_method: str = "ensemble"
     semantic_labels: List[int] = field(default_factory=list)
     semantic_preds: List[int] = field(default_factory=list)
     confidence_labels: List[int] = field(default_factory=list)
     confidence_preds: List[int] = field(default_factory=list)
+
+
+def _resolve_candidate_score_payload(detector: Any, ood: Dict[str, Any]) -> tuple[str, Dict[str, torch.Tensor]]:
+    primary_method = str(
+        ood.get("primary_score_method", getattr(detector, "primary_score_method", "ensemble")) or "ensemble"
+    ).strip().lower()
+    candidate_scores = ood.get("candidate_scores")
+    if isinstance(candidate_scores, dict) and candidate_scores:
+        return primary_method, {
+            str(name): value
+            for name, value in candidate_scores.items()
+            if torch.is_tensor(value)
+        }
+
+    fallback_scores: Dict[str, torch.Tensor] = {}
+    if torch.is_tensor(ood.get("ensemble_score")):
+        fallback_scores["ensemble"] = ood["ensemble_score"]
+    if torch.is_tensor(ood.get("energy_score")):
+        fallback_scores["energy"] = ood["energy_score"]
+    if torch.is_tensor(ood.get("knn_distance")):
+        fallback_scores["knn"] = ood["knn_distance"]
+    return primary_method, fallback_scores
 
 
 def _build_confusion_matrix(labels: torch.Tensor, preds: torch.Tensor, num_classes: int) -> torch.Tensor:
@@ -52,11 +76,22 @@ def _update_detector_artifact_state_for_batch(
     is_ood_loader: bool,
 ) -> None:
     ood = detector.score(features, logits, predicted_labels=predictions)
+    primary_method, candidate_scores = _resolve_candidate_score_payload(detector, ood)
+    primary_scores = ood.get("primary_score")
+    if not torch.is_tensor(primary_scores):
+        primary_scores = candidate_scores.get(primary_method)
+        if not torch.is_tensor(primary_scores):
+            primary_scores = candidate_scores.get("ensemble")
 
     if ood_loader_present:
         batch_ood_labels = [1 if is_ood_loader else 0] * int(labels.shape[0])
         state.mixed_ood_labels.extend(batch_ood_labels)
-        state.mixed_ood_scores.extend(float(score) for score in ood["ensemble_score"].detach().cpu().tolist())
+        state.primary_score_method = primary_method
+        if torch.is_tensor(primary_scores):
+            state.mixed_ood_scores.extend(float(score) for score in primary_scores.detach().cpu().tolist())
+        for method_name, method_scores in candidate_scores.items():
+            bucket = state.mixed_ood_scores_by_method.setdefault(str(method_name), [])
+            bucket.extend(float(score) for score in method_scores.detach().cpu().tolist())
 
     if getattr(detector, "sure_enabled", False) and ood_loader_present and "sure_semantic_ood" in ood:
         state.semantic_labels.extend([1 if is_ood_loader else 0] * int(labels.shape[0]))
@@ -210,8 +245,15 @@ def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: 
     if state.mixed_ood_labels and 0 in state.mixed_ood_labels and 1 in state.mixed_ood_labels:
         payload.ood_labels = list(state.mixed_ood_labels)
         payload.ood_scores = list(state.mixed_ood_scores)
+        payload.ood_primary_score_method = str(state.primary_score_method or "ensemble")
+        payload.ood_scores_by_method = {
+            str(method_name): list(values)
+            for method_name, values in state.mixed_ood_scores_by_method.items()
+        }
         payload.context["ood_eval_in_distribution_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 0))
         payload.context["ood_eval_ood_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 1))
+        payload.context["ood_primary_score_method"] = payload.ood_primary_score_method
+        payload.context["ood_score_methods"] = sorted(payload.ood_scores_by_method.keys())
 
     if state.semantic_labels and 0 in state.semantic_labels and 1 in state.semantic_labels and state.confidence_labels:
         ds_f1 = compute_ds_f1(

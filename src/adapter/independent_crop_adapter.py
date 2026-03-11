@@ -268,9 +268,10 @@ class IndependentCropAdapter:
         result = self.predict_with_ood(image)
         ood = result.get("ood_analysis", {})
         return {
+            "score_method": str(ood.get("score_method", "ensemble")),
+            "primary_score": float(ood.get("primary_score", 0.0)),
+            "decision_threshold": float(ood.get("decision_threshold", 0.0)),
             "is_ood": bool(ood.get("is_ood", False)),
-            "ensemble_score": float(ood.get("ensemble_score", 0.0)),
-            "class_threshold": float(ood.get("class_threshold", 0.0)),
             "calibration_version": int(ood.get("calibration_version", 0)),
         }
 

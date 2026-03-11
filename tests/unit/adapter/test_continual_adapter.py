@@ -105,6 +105,9 @@ class FakeTrainer:
             "status": "success",
             "disease": {"class_index": 0, "name": "healthy", "confidence": 0.9},
             "ood_analysis": {
+                "score_method": "ensemble",
+                "primary_score": 0.2,
+                "decision_threshold": 0.8,
                 "ensemble_score": 0.2,
                 "class_threshold": 0.8,
                 "is_ood": False,
@@ -136,7 +139,9 @@ def test_adapter_lifecycle_surface(monkeypatch):
     assert added["num_classes"] == 2
 
     pred = adapter.predict_with_ood(torch.zeros(3, 224, 224))
-    assert {"ensemble_score", "class_threshold", "is_ood", "calibration_version"} <= set(pred["ood_analysis"].keys())
+    assert {"score_method", "primary_score", "decision_threshold", "is_ood", "calibration_version"} <= set(
+        pred["ood_analysis"].keys()
+    )
 
 
 def test_adapter_builds_training_session(monkeypatch):
@@ -243,6 +248,8 @@ def test_adapter_metadata_golden_contract_with_exportable_ood_state(monkeypatch,
     assert meta["engine"] == "continual_sd_lora"
     assert meta["class_to_idx"] == {"healthy": 0}
     assert meta["ood_calibration"]["version"] == 5
+    assert meta["ood_state"]["primary_score_method"] == "ensemble"
+    assert meta["ood_state"]["knn_k"] == 10
     assert meta["ood_state"]["class_stats"]["0"]["mean"] == [0.10000000149011612, 0.20000000298023224]
     assert meta["ood_state"]["class_stats"]["0"]["threshold"] == 0.7
 
