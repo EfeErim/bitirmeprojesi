@@ -11,16 +11,17 @@ from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
 from src.training.services.reporting import (
     persist_production_readiness_artifact as persist_production_readiness_artifact_core,
+)
+from src.training.services.reporting import (
     persist_training_history_artifacts as persist_training_history_artifacts_core,
 )
 from src.training.services.reporting import (
     persist_validation_artifacts as persist_validation_artifacts_core,
 )
+
+matplotlib.use("Agg")
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
@@ -47,7 +48,7 @@ def ensure_notebook_checkpoint_manager(
 
     from scripts.colab_checkpointing import TrainingCheckpointManager
 
-    resolved_run_id = str(run_id or datetime.now().strftime("%Y%m%d_%H%M%S"))
+    resolved_run_id = str(run_id or datetime.now().strftime("%Y%m%d_%H%M%S_%f"))
     resolved_drive_root = Path(
         drive_root or os.environ.get("AADS_DRIVE_LOG_ROOT", "/content/drive/MyDrive/aads_ulora")
     )
@@ -220,6 +221,8 @@ def persist_training_history_artifacts(
 
 
 def persist_training_curve_figure(*, root: Path, epoch_done: int, telemetry: Any = None) -> Dict[str, Path]:
+    import matplotlib.pyplot as plt
+
     train_dir = _artifact_dir(root, "training")
     latest_curve = train_dir / "training_curves_latest.png"
     epoch_curve = train_dir / f"training_curves_epoch_{int(epoch_done):03d}.png"
@@ -344,7 +347,9 @@ def build_notebook_completion_report(
         name: bool(resolved_exports.get(name) and Path(str(resolved_exports.get(name))).expanduser().exists())
         for name in expected_repo_exports
     }
-    repo_exports_complete = bool(resolved_exports) and all(repo_export_checks.get(name, False) for name in expected_repo_exports)
+    repo_exports_complete = bool(resolved_exports) and all(
+        repo_export_checks.get(name, False) for name in expected_repo_exports
+    )
 
     checks = {
         "evaluation_artifacts": bool(evaluation_splits),

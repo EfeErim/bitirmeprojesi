@@ -51,6 +51,19 @@ def build_unknown_crop_result(*, part_name: str | None, router_confidence: float
     )
 
 
+def build_router_unavailable_result(*, message: str, include_ood: bool) -> InferenceResult:
+    return InferenceResult(
+        status="router_unavailable",
+        crop=None,
+        part=None,
+        router_confidence=0.0,
+        diagnosis=None,
+        confidence=0.0,
+        message=str(message),
+        ood_analysis=build_default_ood(is_ood=False) if include_ood else None,
+    )
+
+
 def build_adapter_unavailable_result(
     *,
     crop_name: str,

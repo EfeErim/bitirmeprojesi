@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -21,6 +22,12 @@ class FakeLoader:
 
     def __len__(self):
         return self._batch_count
+
+
+class FakeAdapter:
+    def initialize_engine(self, *, class_names=None, config=None):
+        self.initialized = {"class_names": list(class_names or []), "config": dict(config or {})}
+        return self.initialized
 
 
 def _base_config():
@@ -58,7 +65,7 @@ def test_prepare_training_run_rejects_zero_train_batches():
             error_policy=None,
             run_id="run_1",
             loader_factory=lambda **kwargs: loaders,
-            adapter_factory=lambda **kwargs: None,
+            adapter_factory=lambda **kwargs: FakeAdapter(),
         )
 
 
@@ -83,5 +90,59 @@ def test_prepare_training_run_rejects_eval_only_classes():
             error_policy=None,
             run_id="run_1",
             loader_factory=lambda **kwargs: loaders,
-            adapter_factory=lambda **kwargs: None,
+            adapter_factory=lambda **kwargs: FakeAdapter(),
         )
+
+
+def test_prepare_training_run_generates_microsecond_resolution_run_ids(monkeypatch):
+    loaders = {
+        "train": FakeLoader(["healthy"], [0], 1),
+        "val": FakeLoader(["healthy"], [0], 1),
+        "test": FakeLoader(["healthy"], [0], 1),
+    }
+
+    class _FakeDateTime:
+        values = [
+            datetime(2026, 3, 11, 12, 0, 0, 1),
+            datetime(2026, 3, 11, 12, 0, 0, 2),
+        ]
+
+        @classmethod
+        def utcnow(cls):
+            return cls.values.pop(0)
+
+    monkeypatch.setattr("src.workflows.training_support.datetime", _FakeDateTime)
+
+    first = prepare_training_run(
+        config=_base_config(),
+        device="cpu",
+        crop_name="tomato",
+        data_dir=Path("runtime"),
+        class_names=None,
+        num_workers=0,
+        pin_memory=False,
+        use_cache=False,
+        sampler=None,
+        error_policy=None,
+        run_id="",
+        loader_factory=lambda **kwargs: loaders,
+        adapter_factory=lambda **kwargs: FakeAdapter(),
+    )
+    second = prepare_training_run(
+        config=_base_config(),
+        device="cpu",
+        crop_name="tomato",
+        data_dir=Path("runtime"),
+        class_names=None,
+        num_workers=0,
+        pin_memory=False,
+        use_cache=False,
+        sampler=None,
+        error_policy=None,
+        run_id="",
+        loader_factory=lambda **kwargs: loaders,
+        adapter_factory=lambda **kwargs: FakeAdapter(),
+    )
+
+    assert first.run_id == "tomato_20260311_120000_000001"
+    assert second.run_id == "tomato_20260311_120000_000002"

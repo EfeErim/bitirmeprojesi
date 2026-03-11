@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 
 from scripts.colab_checkpointing import TrainingCheckpointManager
@@ -59,6 +60,26 @@ def test_ensure_notebook_checkpoint_manager_builds_manager_when_missing(tmp_path
     assert isinstance(resolved, TrainingCheckpointManager)
     assert resolved.root_dir == tmp_path / "telemetry" / "run_2"
     assert resolved.retention == 4
+
+
+def test_ensure_notebook_checkpoint_manager_generates_microsecond_run_ids(tmp_path: Path, monkeypatch):
+    class _FakeDateTime:
+        values = [
+            datetime(2026, 3, 11, 12, 0, 0, 1),
+            datetime(2026, 3, 11, 12, 0, 0, 2),
+        ]
+
+        @classmethod
+        def now(cls):
+            return cls.values.pop(0)
+
+    monkeypatch.setattr("scripts.colab_notebook_helpers.datetime", _FakeDateTime)
+
+    first = ensure_notebook_checkpoint_manager(None, drive_root=tmp_path)
+    second = ensure_notebook_checkpoint_manager(None, drive_root=tmp_path)
+
+    assert first.root_dir.name == "20260311_120000_000001"
+    assert second.root_dir.name == "20260311_120000_000002"
 
 
 def test_notebook_training_status_printer_throttles_batch_updates():
@@ -279,5 +300,8 @@ def test_maybe_auto_disconnect_colab_runtime_skips_when_checks_are_incomplete(tm
     assert result["disconnect_requested"] is not True
     assert telemetry.sync_calls == 0
     assert lines == [
-        "[COLAB] Auto-disconnect skipped. Incomplete checks: evaluation_artifacts, production_readiness, repo_exports, executed_notebook_export"
+        (
+            "[COLAB] Auto-disconnect skipped. Incomplete checks: "
+            "evaluation_artifacts, production_readiness, repo_exports, executed_notebook_export"
+        )
     ]

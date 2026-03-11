@@ -149,6 +149,9 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 8. The adapter predicts disease plus OOD information.
 9. `src/pipeline/inference_payloads.py` converts the raw output into the public payload.
 
+If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
+If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
+
 ### Default adapter resolution
 
 The default deployment path is:

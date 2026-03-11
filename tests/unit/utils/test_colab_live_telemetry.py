@@ -1,6 +1,7 @@
 import json
 import re
 import sys
+from datetime import datetime
 
 import pytest
 
@@ -167,3 +168,30 @@ def test_live_telemetry_spools_locally_when_drive_mount_is_missing(tmp_path, mon
     assert (local_run_dir / "events.jsonl").exists()
     assert (local_run_dir / "summary.json").exists()
     assert (local_run_dir / "artifacts" / "training" / "history.json").exists()
+
+
+def test_live_telemetry_auto_run_ids_do_not_collide_within_same_second(tmp_path, monkeypatch):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+
+    class _FakeDateTime:
+        values = [
+            datetime(2026, 3, 11, 12, 0, 0, 1),
+            datetime(2026, 3, 11, 12, 0, 0, 2),
+        ]
+
+        @classmethod
+        def now(cls, tz=None):
+            value = cls.values.pop(0) if cls.values else datetime(2026, 3, 11, 12, 0, 0, 3)
+            if tz is not None:
+                return value.replace(tzinfo=tz)
+            return value
+
+    monkeypatch.setattr("scripts.colab_live_telemetry.datetime", _FakeDateTime)
+    monkeypatch.setattr("scripts.colab_live_telemetry._utc_now_iso", lambda: "2026-03-11T12:00:00Z")
+
+    first = ColabLiveTelemetry(notebook_name="nb2", drive_root=drive_root, local_root=local_root)
+    second = ColabLiveTelemetry(notebook_name="nb2", drive_root=drive_root, local_root=local_root)
+
+    assert first.run_id == "20260311_120000_000001"
+    assert second.run_id == "20260311_120000_000002"

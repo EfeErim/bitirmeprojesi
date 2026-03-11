@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from collections import Counter
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 
@@ -162,7 +162,7 @@ def prepare_training_run(
     training_cfg = dict(config.get("training", {}).get("continual", {}))
     data_cfg = dict(training_cfg.get("data", {}))
     colab_cfg = dict(config.get("colab", {}).get("training", {}))
-    resolved_run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}")
+    resolved_run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}")
 
     loaders = loader_factory(
         data_dir=str(data_dir),

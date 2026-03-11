@@ -223,6 +223,7 @@ In practice, the runtime does this:
 7. Return OOD information together with the prediction.
 
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
+If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
 
 ## Common Commands
 

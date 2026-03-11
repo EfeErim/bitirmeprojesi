@@ -140,7 +140,7 @@ class ColabLiveTelemetry:
         latest_status_min_interval_sec: float = 15.0,
     ) -> None:
         self.notebook_name = str(notebook_name)
-        self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.run_id = run_id or datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         self.sync_interval_sec = float(max(0.5, sync_interval_sec))
         self.latest_status_min_interval_sec = float(max(0.0, latest_status_min_interval_sec))
 

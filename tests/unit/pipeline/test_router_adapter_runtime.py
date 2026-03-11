@@ -299,3 +299,34 @@ def test_runtime_rejects_unavailable_cuda(monkeypatch, tmp_path):
         assert "CUDA is not available" in str(exc)
     else:
         raise AssertionError("RouterAdapterRuntime was expected to reject unavailable CUDA.")
+
+
+def test_predict_returns_router_unavailable_when_router_never_becomes_ready(monkeypatch, tmp_path):
+    status_lines = []
+
+    class UnreadyRouter(FakeRouter):
+        def is_ready(self):
+            return False
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(tmp_path / "models"), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=tmp_path / "models",
+        status_callback=status_lines.append,
+    )
+    monkeypatch.setattr(runtime, "_build_router", lambda: UnreadyRouter())
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "router_unavailable"
+    assert "Router runtime unavailable" in result["message"]
+    assert status_lines == [
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Unavailable.",
+        f"[RESULT] status=router_unavailable message={result['message']}",
+    ]

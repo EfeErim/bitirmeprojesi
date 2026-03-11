@@ -15,6 +15,7 @@ from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
     best_detection_from_analysis,
     build_adapter_unavailable_result,
+    build_router_unavailable_result,
     build_success_result,
     build_unknown_crop_result,
 )
@@ -69,6 +70,13 @@ class RouterAdapterRuntime:
             self._emit_status(f"[ROUTER] Loading models on {self.device}...")
             self.router = self._build_router()
             self.router.load_models()
+            readiness_probe = getattr(self.router, "is_ready", None)
+            if callable(readiness_probe) and not bool(readiness_probe()):
+                self._emit_status("[ROUTER] Unavailable.")
+                raise RuntimeError(
+                    "Router models failed to become ready for inference. "
+                    "Check router.vlm.enabled, model availability, and VLM dependency installation."
+                )
             self._emit_status("[ROUTER] Ready.")
         return self.router
 
@@ -136,7 +144,15 @@ class RouterAdapterRuntime:
                 f"[ROUTER] Skipped; using crop hint crop={crop_name} part={part_name or 'unknown'}"
             )
         else:
-            detection = self._route(prepared_image)
+            try:
+                detection = self._route(prepared_image)
+            except Exception as exc:
+                result = build_router_unavailable_result(
+                    message=f"Router runtime unavailable: {exc}",
+                    include_ood=return_ood,
+                )
+                self._emit_status(f"[RESULT] status={result.status} message={result.message}")
+                return result
             crop_name = str(detection.get("crop", "")).strip().lower() or None
             part_name = part_name or str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
