@@ -199,6 +199,7 @@ These affect image loading and error tolerance:
 - `training.continual.data.loader_error_policy`
 - `training.continual.data.target_size`
 - `training.continual.data.cache_size`
+- `training.continual.data.cache_train_split`
 - `training.continual.data.validate_images_on_init`
 
 ### OOD behavior
@@ -218,7 +219,9 @@ These control how OOD calibration and scoring behave:
 
 Current shipped default:
 
-- `training.continual.ood.primary_score_method: "ensemble"`
+- the raw config surface ships `training.continual.ood.primary_score_method: "auto"`
+- the trainer starts with the concrete detector path on `"ensemble"` until OOD evidence exists
+- when real `ood/` data or the held-out fallback benchmark is available, the workflow auto-selects the concrete winning method and exports that chosen method into the adapter
 
 ### Readiness policy
 
@@ -267,9 +270,13 @@ Current Colab default tradeoffs:
 
 Notebook 2 also exposes a small set of notebook-level toggles:
 
+- `CACHE_TRAIN_SPLIT`
 - `BER_ENABLED`
 - `BER_LAMBDA_OLD`
 - `BER_LAMBDA_NEW`
+- `AUTO_PUSH_TO_GITHUB`
+- `AUTO_PUSH_REMOTE_NAME`
+- `AUTO_PUSH_BRANCH`
 - `AUTO_DISCONNECT_RUNTIME`
 - `AUTO_DISCONNECT_GRACE_SECONDS`
 
@@ -471,6 +478,8 @@ Current accepted `ADAPTER_DIR` patterns include:
 
 - direct asset dir: `.../continual_sd_lora_adapter/`
 - parent export dir: `outputs/colab_notebook_training/`
+- telemetry run dir: `.../telemetry/<RUN_ID>/`
+- telemetry artifacts dir: `.../telemetry/<RUN_ID>/artifacts/`
 - current Drive export dir: `.../telemetry/<RUN_ID>/artifacts/adapter_export/`
 - older telemetry adapter dir when present: `.../telemetry/<RUN_ID>/artifacts/adapter/`
 - direct metadata file: `.../adapter_meta.json`
@@ -481,7 +490,7 @@ Current accepted `ADAPTER_ROOT` pattern:
 
 Important caveat:
 
-- if a telemetry run only contains the current `adapter_export/continual_sd_lora_adapter/` layout, point `ADAPTER_DIR` at `adapter_export/` or the `continual_sd_lora_adapter/` folder itself
+- current helper resolution accepts the telemetry run dir, the `artifacts/` dir, the `adapter_export/` dir, or the `continual_sd_lora_adapter/` folder itself for the current export layout
 - `ADAPTER_ROOT` is for deployed adapters under `models/adapters/<crop>/...`, not for telemetry run roots
 
 ### Image input rules

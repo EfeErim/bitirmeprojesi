@@ -68,7 +68,14 @@ def _read_json_if_exists(path: Path) -> Dict[str, Any]:
 def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_crop = adapter_dir.parent.name.strip().lower()
-        if parent_crop not in {"adapter", "artifacts", "colab_notebook_training", "models", "outputs"}:
+        if parent_crop not in {
+            "adapter",
+            "adapter_export",
+            "artifacts",
+            "colab_notebook_training",
+            "models",
+            "outputs",
+        }:
             return parent_crop
 
     crop_info_candidates = [
@@ -116,7 +123,11 @@ def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
 
     yield path
     yield path / "continual_sd_lora_adapter"
+    yield path / "adapter_export"
+    yield path / "adapter_export" / "continual_sd_lora_adapter"
     yield path / "adapter"
+    yield path / "artifacts" / "adapter_export"
+    yield path / "artifacts" / "adapter_export" / "continual_sd_lora_adapter"
     yield path / "artifacts" / "adapter"
     yield path / "artifacts" / "continual_sd_lora_adapter"
 
@@ -155,7 +166,8 @@ def _resolve_adapter_dir(
         raise FileNotFoundError(
             "Could not resolve an adapter bundle from "
             f"adapter_dir={root}. Pass the adapter asset directory, its parent export directory, "
-            "the telemetry run directory, the telemetry artifacts directory, or adapter_meta.json."
+            "the telemetry run directory, the telemetry artifacts or adapter_export directory, "
+            "or adapter_meta.json."
         )
 
     base_root = Path(adapter_root) if adapter_root is not None else _default_adapter_root(config_env)
