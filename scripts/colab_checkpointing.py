@@ -74,7 +74,7 @@ class TrainingCheckpointManager:
     ) -> Dict[str, Any]:
         session_state = session.snapshot_state()
         progress_state = dict(session_state.get("progress_state", {}))
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
         epoch = int(progress_state.get("epoch", 0))
         global_step = int(progress_state.get("global_step", 0))
         name = f"ckpt_e{epoch}_s{global_step}_{timestamp}"

@@ -284,3 +284,18 @@ def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path
 
     assert first is not second
     assert len(built_adapters) == 2
+
+
+def test_runtime_rejects_unavailable_cuda(monkeypatch, tmp_path):
+    monkeypatch.setattr("src.training.services.runtime.torch.cuda.is_available", lambda: False)
+
+    try:
+        RouterAdapterRuntime(
+            config={"inference": {"adapter_root": str(tmp_path / "models"), "target_size": 224}},
+            device="cuda",
+            adapter_root=tmp_path / "models",
+        )
+    except RuntimeError as exc:
+        assert "CUDA is not available" in str(exc)
+    else:
+        raise AssertionError("RouterAdapterRuntime was expected to reject unavailable CUDA.")

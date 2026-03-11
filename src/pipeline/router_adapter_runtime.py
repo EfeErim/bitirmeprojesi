@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
-import torch
 from PIL import Image
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
@@ -20,6 +19,7 @@ from src.pipeline.inference_payloads import (
     build_unknown_crop_result,
 )
 from src.shared.contracts import InferenceResult
+from src.training.services.runtime import resolve_runtime_device
 
 StatusCallback = Callable[[str], None]
 
@@ -44,7 +44,7 @@ class RouterAdapterRuntime:
         status_callback: Optional[StatusCallback] = None,
     ) -> None:
         self.config = dict(config or get_config(environment=environment))
-        self.device = torch.device(device if torch.cuda.is_available() and str(device).startswith("cuda") else "cpu")
+        self.device = resolve_runtime_device(device)
         inference_cfg = self.config.get("inference", {})
         self.adapter_root = Path(adapter_root or inference_cfg.get("adapter_root", "models/adapters"))
         self.target_size = int(inference_cfg.get("target_size", 224))
