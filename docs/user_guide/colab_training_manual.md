@@ -249,11 +249,13 @@ Legacy compatibility note:
 
 Current Colab default tradeoffs:
 
+- the Colab environment now ships a high-VRAM large-batch profile: `batch_size=96`, `grad_accumulation_steps=1`, `mixed_precision="bf16"`, and `num_workers=12`
 - the Colab environment disables deterministic training so CuDNN can use faster kernels
 - automatic held-out OOD fallback benchmarking is disabled by default for faster iteration
 - the Colab environment validates every 2 epochs by default, while still forcing validation on the final epoch
 - if you do not provide a real `ood/` split and leave that fallback disabled, `production_readiness.json` will stay failed until you re-enable the benchmark or add real OOD data
 - Notebook 2 can also validate every `N` epochs instead of every epoch; this reduces runtime but makes best-model and early-stopping decisions less responsive between validation checkpoints
+- checkpointing and live batch-progress cadence are scaled for the larger per-step sample count so resume points and logs do not become too sparse
 - the Colab environment now uses a much larger cache budget and can cache the continual train split too, which is intended for high-RAM A100 sessions to reduce repeated image decode and disk I/O
 - live batch-status telemetry is throttled so Drive does not get a tiny `latest_status.json` rewrite on every batch
 

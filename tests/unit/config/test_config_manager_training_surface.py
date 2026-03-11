@@ -6,11 +6,12 @@ def test_colab_training_surface_normalizes_runtime_aliases():
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
     colab_training = cfg["colab"]["training"]
-    assert colab_training["checkpoint_every_n_steps"] == 500
-    assert colab_training["checkpoint_interval"] == 500
+    assert colab_training["num_workers"] == 12
+    assert colab_training["checkpoint_every_n_steps"] == 250
+    assert colab_training["checkpoint_interval"] == 250
     assert colab_training["checkpoint_on_exception"] is True
     assert colab_training["validation_every_n_epochs"] == 2
-    assert colab_training["stdout_progress_batch_interval"] == 50
+    assert colab_training["stdout_progress_batch_interval"] == 12
     assert colab_training["stdout_progress_min_interval_sec"] == 15.0
 
 
@@ -23,6 +24,8 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
     assert continual["seed"] == 42
+    assert continual["batch_size"] == 96
+    assert continual["learning_rate"] == 0.0002
     assert continual["deterministic"] is False
     assert continual["optimization"]["grad_accumulation_steps"] == 1
     assert continual["optimization"]["scheduler"]["name"] == "cosine"

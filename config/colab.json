@@ -11,19 +11,20 @@
     },
     "training": {
       "pin_memory": true,
-      "num_workers": 8,
+      "num_workers": 12,
       "validation_every_n_epochs": 2,
-      "checkpoint_every_n_steps": 500,
-      "checkpoint_interval": 500,
+      "checkpoint_every_n_steps": 250,
+      "checkpoint_interval": 250,
       "checkpoint_on_exception": true,
-      "stdout_progress_batch_interval": 50,
+      "stdout_progress_batch_interval": 12,
       "stdout_progress_min_interval_sec": 15.0
     }
   },
   "training": {
     "continual": {
       "num_epochs": 12,
-      "batch_size": 24,
+      "batch_size": 96,
+      "learning_rate": 0.0002,
       "device": "cuda",
       "strict_model_loading": true,
       "deterministic": false,
