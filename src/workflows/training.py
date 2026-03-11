@@ -10,6 +10,14 @@ from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
+from src.training.services.ood_score_selection import (
+    apply_primary_score_method_to_evaluation,
+    compute_method_metrics_from_evaluation,
+    is_auto_primary_score_method,
+    normalize_requested_primary_score_method,
+    resolve_runtime_primary_score_method,
+    select_best_ood_score_method,
+)
 from src.training.services.reporting import (
     BatchMetricsRecorder,
     load_batch_metrics_history,
@@ -229,11 +237,24 @@ class TrainingWorkflow:
         split_name: str,
         artifact_subdir: str,
         telemetry_subdir: Optional[str] = None,
+        evaluation_result: Any = None,
+        requested_primary_score_method: str = "ensemble",
+        selected_primary_score_method: str = "ensemble",
+        selection_source: str = "",
     ) -> Dict[str, Any]:
         if trainer is None or _loader_size(loader) <= 0:
             return {}
 
-        evaluation_result = evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
+        if evaluation_result is None:
+            evaluation_result = evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
+        if evaluation_result is None:
+            return {}
+        evaluation_result = apply_primary_score_method_to_evaluation(
+            evaluation_result,
+            selected_primary_score_method,
+            requested_primary_score_method=requested_primary_score_method,
+            selection_source=selection_source,
+        )
         if evaluation_result is None:
             return {}
 
@@ -269,6 +290,17 @@ class TrainingWorkflow:
             context=metric_context,
         )
 
+    @staticmethod
+    def _evaluate_split(
+        *,
+        trainer: Any,
+        loader: Any,
+        ood_loader: Any,
+    ) -> Any:
+        if trainer is None or _loader_size(loader) <= 0:
+            return None
+        return evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
+
     def _persist_split_artifacts(
         self,
         *,
@@ -280,6 +312,10 @@ class TrainingWorkflow:
         run_id: str,
         crop_name: str,
         loader_sizes: Dict[str, int],
+        evaluation_results: Dict[str, Any],
+        requested_primary_score_method: str,
+        selected_primary_score_method: str,
+        selection_source: str,
     ) -> Dict[str, Dict[str, Any]]:
         split_specs = (
             ("val", loaders.get("val"), "validation"),
@@ -298,6 +334,10 @@ class TrainingWorkflow:
                 loader_sizes=loader_sizes,
                 split_name=split_name,
                 artifact_subdir=artifact_subdir,
+                evaluation_result=evaluation_results.get(split_name),
+                requested_primary_score_method=requested_primary_score_method,
+                selected_primary_score_method=selected_primary_score_method,
+                selection_source=selection_source,
             )
             for split_name, loader, artifact_subdir in split_specs
         }
@@ -321,6 +361,9 @@ class TrainingWorkflow:
         ood_benchmark: Dict[str, Any],
         production_readiness: Dict[str, Any],
         best_state_restored: bool,
+        requested_primary_score_method: str,
+        selected_primary_score_method: str,
+        primary_score_selection_source: str,
     ) -> Dict[str, Any]:
         return {
             "run_id": run_id,
@@ -342,6 +385,9 @@ class TrainingWorkflow:
             "best_metric_value": history_payload.get("best_metric_value"),
             "best_epoch": int(history_payload.get("best_epoch", 0)),
             "best_state_restored": bool(best_state_restored),
+            "ood_requested_primary_score_method": str(requested_primary_score_method),
+            "ood_primary_score_method": str(selected_primary_score_method),
+            "ood_primary_score_selection_source": str(primary_score_selection_source),
             "ood_evidence_source": str(ood_evidence_source or ""),
             "ood_benchmark": dict(ood_benchmark),
             "production_readiness": dict(production_readiness),
@@ -362,6 +408,37 @@ class TrainingWorkflow:
         if isinstance(validation_artifacts, dict) and isinstance(validation_artifacts.get("metric_gate"), dict):
             return "val", validation_artifacts
         return "", {}
+
+    @staticmethod
+    def _select_authoritative_evaluation_result(
+        validation_evaluation: Any,
+        test_evaluation: Any,
+        *,
+        calibration_split_name: str,
+    ) -> tuple[str, Any]:
+        if test_evaluation is not None and list(getattr(test_evaluation, "y_true", []) or []):
+            return "test", test_evaluation
+        if calibration_split_name == "val":
+            return "", None
+        if validation_evaluation is not None and list(getattr(validation_evaluation, "y_true", []) or []):
+            return "val", validation_evaluation
+        return "", None
+
+    @staticmethod
+    def _apply_primary_score_method_to_trainer(trainer: Any, primary_score_method: str) -> str:
+        resolved = resolve_runtime_primary_score_method(primary_score_method)
+        if trainer is None:
+            return resolved
+        setter = getattr(trainer, "set_ood_primary_score_method", None)
+        if callable(setter):
+            return str(setter(resolved))
+        config = getattr(trainer, "config", None)
+        if config is not None and hasattr(config, "ood_primary_score_method"):
+            setattr(config, "ood_primary_score_method", resolved)
+        detector = getattr(trainer, "ood_detector", None)
+        if detector is not None and hasattr(detector, "primary_score_method"):
+            setattr(detector, "primary_score_method", resolved)
+        return resolved
 
     def _resolve_ood_evidence(
         self,
@@ -558,7 +635,6 @@ class TrainingWorkflow:
         ood_calibration = {}
         if _loader_size(calibration_loader) > 0:
             ood_calibration = adapter.calibrate_ood(calibration_loader)
-        adapter_dir = adapter.save_adapter(str(output_dir))
 
         training_artifacts = self._persist_training_artifacts(
             artifact_dir=artifact_dir,
@@ -567,6 +643,44 @@ class TrainingWorkflow:
             telemetry=telemetry,
         )
         trainer_for_artifacts = getattr(session, "trainer", None)
+        requested_primary_score_method = normalize_requested_primary_score_method(
+            training_cfg.get("ood", {}).get("primary_score_method", "auto")
+        )
+        selected_primary_score_method = resolve_runtime_primary_score_method(requested_primary_score_method)
+        selection_source = "configured"
+        split_evaluations = {
+            "val": self._evaluate_split(
+                trainer=trainer_for_artifacts,
+                loader=loaders.get("val"),
+                ood_loader=loaders.get("ood"),
+            ),
+            "test": self._evaluate_split(
+                trainer=trainer_for_artifacts,
+                loader=loaders.get("test"),
+                ood_loader=loaders.get("ood"),
+            ),
+        }
+        if _loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(requested_primary_score_method):
+            _, authoritative_evaluation = self._select_authoritative_evaluation_result(
+                split_evaluations.get("val"),
+                split_evaluations.get("test"),
+                calibration_split_name=calibration_split_name,
+            )
+            authoritative_method_metrics = compute_method_metrics_from_evaluation(authoritative_evaluation)
+            selected_primary_score_method = select_best_ood_score_method(
+                authoritative_method_metrics,
+                fallback=selected_primary_score_method,
+            )
+            if authoritative_method_metrics:
+                selection_source = "real_ood_split"
+        selected_primary_score_method = self._apply_primary_score_method_to_trainer(
+            trainer_for_artifacts,
+            selected_primary_score_method,
+        )
+        if isinstance(ood_calibration.get("ood_calibration"), dict):
+            ood_calibration["ood_calibration"]["requested_primary_score_method"] = requested_primary_score_method
+            ood_calibration["ood_calibration"]["primary_score_method"] = selected_primary_score_method
+            ood_calibration["ood_calibration"]["selection_source"] = selection_source
         split_artifacts = self._persist_split_artifacts(
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
@@ -576,6 +690,10 @@ class TrainingWorkflow:
             run_id=run_id,
             crop_name=crop_name,
             loader_sizes=loader_sizes,
+            evaluation_results=split_evaluations,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
         )
         validation_artifacts = split_artifacts["val"]
         test_artifacts = split_artifacts["test"]
@@ -597,6 +715,44 @@ class TrainingWorkflow:
             num_epochs=num_epochs,
             telemetry=telemetry,
         )
+        if ood_evidence_source == "held_out_benchmark" and is_auto_primary_score_method(requested_primary_score_method):
+            benchmark_method_metrics = dict(ood_benchmark.get("method_comparison_metrics", {}))
+            selected_primary_score_method = select_best_ood_score_method(
+                benchmark_method_metrics,
+                fallback=selected_primary_score_method,
+            )
+            if benchmark_method_metrics:
+                selection_source = "held_out_benchmark"
+                selected_primary_score_method = self._apply_primary_score_method_to_trainer(
+                    trainer_for_artifacts,
+                    selected_primary_score_method,
+                )
+                if isinstance(ood_calibration.get("ood_calibration"), dict):
+                    ood_calibration["ood_calibration"]["primary_score_method"] = selected_primary_score_method
+                    ood_calibration["ood_calibration"]["selection_source"] = selection_source
+                split_artifacts = self._persist_split_artifacts(
+                    artifact_dir=artifact_dir,
+                    trainer=trainer_for_artifacts,
+                    loaders=loaders,
+                    detected_classes=detected_classes,
+                    telemetry=telemetry,
+                    run_id=run_id,
+                    crop_name=crop_name,
+                    loader_sizes=loader_sizes,
+                    evaluation_results=split_evaluations,
+                    requested_primary_score_method=requested_primary_score_method,
+                    selected_primary_score_method=selected_primary_score_method,
+                    selection_source=selection_source,
+                )
+                validation_artifacts = split_artifacts["val"]
+                test_artifacts = split_artifacts["test"]
+                authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
+                    validation_artifacts,
+                    test_artifacts,
+                    calibration_split_name=calibration_split_name,
+                )
+
+        adapter_dir = adapter.save_adapter(str(output_dir))
 
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
@@ -617,12 +773,9 @@ class TrainingWorkflow:
                 "calibration_split_name": calibration_split_name,
                 "best_state_restored": bool(best_state_restored),
                 "classification_split": authoritative_split,
-                "ood_primary_score_method": str(
-                    self.config.get("training", {})
-                    .get("continual", {})
-                    .get("ood", {})
-                    .get("primary_score_method", "ensemble")
-                ),
+                "ood_requested_primary_score_method": requested_primary_score_method,
+                "ood_primary_score_method": selected_primary_score_method,
+                "ood_primary_score_selection_source": selection_source,
                 "ood_benchmark_status": ood_benchmark.get("status"),
                 "ood_benchmark_passed": ood_benchmark.get("passed"),
             },
@@ -660,6 +813,9 @@ class TrainingWorkflow:
             ood_benchmark=ood_benchmark,
             production_readiness=production_readiness,
             best_state_restored=best_state_restored,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            primary_score_selection_source=selection_source,
         )
         summary_artifacts = persist_training_summary_artifact(
             artifact_root=artifact_dir,

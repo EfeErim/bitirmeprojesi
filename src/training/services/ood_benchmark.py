@@ -20,6 +20,12 @@ from src.training.services.metrics import (
     validate_ood_metrics,
     write_plan_metric_artifact,
 )
+from src.training.services.ood_score_selection import (
+    is_auto_primary_score_method,
+    normalize_requested_primary_score_method,
+    resolve_runtime_primary_score_method,
+    select_best_ood_score_method,
+)
 from src.training.services.reporting import (
     persist_ood_benchmark_artifacts,
 )
@@ -193,13 +199,12 @@ def _empty_metric_map() -> Dict[str, None]:
 
 
 def _primary_score_method(config: Dict[str, Any]) -> str:
-    return str(
+    return normalize_requested_primary_score_method(
         config.get("training", {})
         .get("continual", {})
         .get("ood", {})
-        .get("primary_score_method", "ensemble")
-        or "ensemble"
-    ).strip().lower()
+        .get("primary_score_method", "auto")
+    )
 
 
 def _resume_relevant_ood_config(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -209,7 +214,9 @@ def _resume_relevant_ood_config(config: Dict[str, Any]) -> Dict[str, Any]:
         .get("ood", {})
     )
     return {
-        "primary_score_method": str(ood_cfg.get("primary_score_method", "ensemble") or "ensemble"),
+        "primary_score_method": normalize_requested_primary_score_method(
+            ood_cfg.get("primary_score_method", "auto")
+        ),
         "threshold_factor": float(ood_cfg.get("threshold_factor", 2.0)),
         "radial_l2_enabled": bool(ood_cfg.get("radial_l2_enabled", False)),
         "radial_beta_range": list(ood_cfg.get("radial_beta_range", [0.5, 2.0])),
@@ -574,7 +581,8 @@ def run_leave_one_class_out_benchmark(
     target_values = load_plan_targets()
     artifact_root = Path(artifact_root)
     emit = emit_event or (lambda _event_type, _payload: None)
-    primary_score_method = _primary_score_method(config)
+    requested_primary_score_method = _primary_score_method(config)
+    primary_score_method = resolve_runtime_primary_score_method(requested_primary_score_method)
     train_loader = loaders.get("train")
     calibration_split_name, calibration_loader = _select_calibration_loader(loaders)
     eval_split_name, eval_loader = _select_eval_loader(loaders, calibration_split_name=calibration_split_name)
@@ -586,6 +594,7 @@ def run_leave_one_class_out_benchmark(
         "calibration_split_name": calibration_split_name,
         "class_count": len(resolved_classes),
         "estimated_fold_trainings": len(resolved_classes),
+        "requested_primary_score_method": requested_primary_score_method,
         "primary_score_method": primary_score_method,
     }
     existing_summary = _load_existing_benchmark_summary(artifact_root)
@@ -992,17 +1001,32 @@ def run_leave_one_class_out_benchmark(
     failed_folds = [fold for fold in folds if fold.get("status") != "completed"]
     aggregate_metrics, metric_std = _aggregate_fold_metric_stats(successful_folds)
     method_comparison_metrics, method_comparison_metric_std = _aggregate_method_metric_stats(successful_folds)
+    selected_primary_score_method = primary_score_method
+    selected_metrics = dict(aggregate_metrics)
+    selected_metric_std = dict(metric_std)
+    selection_source = "configured"
+    if is_auto_primary_score_method(requested_primary_score_method):
+        selected_primary_score_method = select_best_ood_score_method(
+            method_comparison_metrics,
+            fallback=primary_score_method,
+        )
+        if method_comparison_metrics:
+            selection_source = "held_out_benchmark"
+            selected_metrics = dict(method_comparison_metrics.get(selected_primary_score_method, aggregate_metrics))
+            selected_metric_std = dict(method_comparison_metric_std.get(selected_primary_score_method, metric_std))
 
-    ood_validation = validate_ood_metrics(aggregate_metrics, target_values, require_ood=True)
+    ood_validation = validate_ood_metrics(selected_metrics, target_values, require_ood=True)
     passed = bool(not failed_folds and ood_validation["passed"])
     summary_payload = {
         "schema_version": "v6_ood_benchmark",
         "status": "completed" if not failed_folds else "failed",
         "passed": passed,
         "ood_evidence_source": "held_out_benchmark",
-        "primary_score_method": primary_score_method,
-        "metrics": aggregate_metrics,
-        "metric_std": metric_std,
+        "requested_primary_score_method": requested_primary_score_method,
+        "primary_score_method": selected_primary_score_method,
+        "primary_score_selection_source": selection_source,
+        "metrics": selected_metrics,
+        "metric_std": selected_metric_std,
         "method_comparison_metrics": method_comparison_metrics,
         "method_comparison_metric_std": method_comparison_metric_std,
         "evaluation": ood_validation,

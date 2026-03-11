@@ -46,7 +46,7 @@ def test_config_from_training_config_accepts_v6_contract():
     assert cfg.grad_accumulation_steps == 2
     assert cfg.scheduler_name == "linear"
     assert cfg.evaluation_best_metric == "macro_f1"
-    assert cfg.ood_primary_score_method == "ensemble"
+    assert cfg.ood_primary_score_method == "auto"
 
 
 def test_as_contract_dict_emits_normalized_training_surface():
@@ -70,10 +70,27 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["ood"]["ber_enabled"] is True
     assert payload["ood"]["ber_lambda_old"] == pytest.approx(0.05)
     assert payload["ood"]["ber_lambda_new"] == pytest.approx(0.2)
-    assert payload["ood"]["primary_score_method"] == "ensemble"
+    assert payload["ood"]["primary_score_method"] == "auto"
     assert payload["optimization"]["grad_accumulation_steps"] == 2
     assert payload["optimization"]["scheduler"]["name"] == "linear"
     assert payload["evaluation"]["best_metric"] == "macro_f1"
+
+
+def test_set_ood_primary_score_method_updates_runtime_and_contract():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        device="cpu",
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+
+    resolved = trainer.set_ood_primary_score_method("knn")
+
+    assert resolved == "knn"
+    assert trainer.config.ood_primary_score_method == "knn"
+    assert trainer.ood_detector.primary_score_method == "knn"
+    assert trainer._contract["ood"]["primary_score_method"] == "knn"
 
 
 def test_trainer_seed_configuration_is_repeatable():

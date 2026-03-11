@@ -23,7 +23,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["ber_lambda_old"] == 0.1
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
-    assert continual["ood"]["primary_score_method"] == "ensemble"
+    assert continual["ood"]["primary_score_method"] == "auto"
     assert continual["seed"] == 42
     assert continual["batch_size"] == 96
     assert continual["learning_rate"] == 0.0002
@@ -39,7 +39,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["data"]["cache_size"] == 20000
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
-    assert cfg["ood"]["primary_score_method"] == "ensemble"
+    assert cfg["ood"]["primary_score_method"] == "auto"
 
 
 def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
@@ -64,7 +64,7 @@ def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
     assert root_normalized["backbone"]["model_name"] == "demo-model"
     assert root_normalized["evaluation"]["best_metric"] == "macro_f1"
     assert root_normalized["optimization"]["scheduler"]["name"] == "cosine"
-    assert root_normalized["ood"]["primary_score_method"] == "ensemble"
+    assert root_normalized["ood"]["primary_score_method"] == "auto"
     assert legacy_normalized["backbone"]["model_name"] == "legacy-model"
     assert legacy_normalized["adapter"]["lora_r"] == 4
     assert legacy_normalized["fusion"]["output_dim"] == 256

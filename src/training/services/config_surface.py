@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from src.shared.json_utils import deep_merge
+from src.training.services.ood_score_selection import normalize_requested_primary_score_method
 
 DEFAULT_BACKBONE_MODEL_NAME = "facebook/dinov3-vitl16-pretrain-lvd1689m"
 DEFAULT_FUSION_LAYERS = [2, 5, 8, 11]
@@ -29,7 +30,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
         },
         "ood": {
             "threshold_factor": 2.0,
-            "primary_score_method": "ensemble",
+            "primary_score_method": "auto",
             "ber_enabled": False,
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
@@ -108,7 +109,9 @@ def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, 
         },
         "ood": {
             "threshold_factor": float(flat_config.get("ood_threshold_factor", 2.0)),
-            "primary_score_method": str(flat_config.get("primary_score_method", "ensemble")),
+            "primary_score_method": normalize_requested_primary_score_method(
+                flat_config.get("primary_score_method", "auto")
+            ),
         },
         "learning_rate": float(flat_config.get("learning_rate", 1e-4)),
         "weight_decay": float(flat_config.get("weight_decay", 0.01)),
@@ -163,7 +166,7 @@ def normalize_continual_training_config(
     normalized["deterministic"] = bool(normalized.get("deterministic", False))
 
     ood["threshold_factor"] = float(ood.get("threshold_factor", 2.0))
-    ood["primary_score_method"] = str(ood.get("primary_score_method", "ensemble")).strip().lower() or "ensemble"
+    ood["primary_score_method"] = normalize_requested_primary_score_method(ood.get("primary_score_method", "auto"))
     ood["ber_enabled"] = bool(ood.get("ber_enabled", False))
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))

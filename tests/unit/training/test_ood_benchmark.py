@@ -144,11 +144,62 @@ def test_run_leave_one_class_out_benchmark_writes_aggregate_artifacts(monkeypatc
     assert summary["passed"] is True
     assert summary["successful_folds"] == 3
     assert summary["failed_folds"] == 0
+    assert summary["requested_primary_score_method"] == "auto"
     assert summary["primary_score_method"] == "ensemble"
     assert {"ensemble", "energy", "knn"} <= set(summary["method_comparison_metrics"].keys())
     assert all(fold["status"] == "completed" for fold in summary["folds"])
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "summary.json").exists()
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "per_fold.csv").exists()
+
+
+def test_run_leave_one_class_out_benchmark_auto_selects_best_method(monkeypatch, tmp_path: Path):
+    def _energy_wins(_trainer, loader, *, ood_loader=None):
+        y_true = [int(label) for label in getattr(loader.dataset, "labels", [])]
+        y_pred = list(y_true)
+        ood_count = len(getattr(getattr(ood_loader, "dataset", None), "labels", [])) if ood_loader is not None else 0
+        report = ValidationReport.from_dict({"val_accuracy": 1.0})
+        return EvaluationArtifactsPayload(
+            report=report,
+            y_true=y_true,
+            y_pred=y_pred,
+            ood_labels=([0] * len(y_true)) + ([1] * ood_count) if ood_loader is not None else None,
+            ood_scores=([0.7] * len(y_true)) + ([0.6, 0.9][:ood_count]) if ood_loader is not None else None,
+            ood_primary_score_method="ensemble",
+            ood_scores_by_method={
+                "ensemble": ([0.7] * len(y_true)) + ([0.6, 0.9][:ood_count]) if ood_loader is not None else [],
+                "energy": ([0.1] * len(y_true)) + ([0.9] * ood_count) if ood_loader is not None else [],
+                "knn": ([0.3] * len(y_true)) + ([0.7] * ood_count) if ood_loader is not None else [],
+            },
+        )
+
+    monkeypatch.setattr(
+        "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
+        _energy_wins,
+    )
+
+    summary = run_leave_one_class_out_benchmark(
+        crop_name="tomato",
+        class_names=["healthy", "disease_a", "disease_b"],
+        loaders=_build_loaders(["healthy", "disease_a", "disease_b"]),
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "ood": {"primary_score_method": "auto"},
+                }
+            }
+        },
+        device="cpu",
+        artifact_root=tmp_path / "training_metrics",
+        adapter_factory=FakeAdapter,
+        run_id="run_auto_pick",
+        min_classes=3,
+    )
+
+    assert summary["requested_primary_score_method"] == "auto"
+    assert summary["primary_score_method"] == "energy"
+    assert summary["primary_score_selection_source"] == "held_out_benchmark"
+    assert summary["metrics"] == summary["method_comparison_metrics"]["energy"]
 
 
 def test_run_leave_one_class_out_benchmark_fails_when_class_count_is_too_small(monkeypatch, tmp_path: Path):

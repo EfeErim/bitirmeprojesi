@@ -18,7 +18,7 @@ except Exception:  # pragma: no cover - optional dependency in some local sandbo
     np = None  # type: ignore[assignment]
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
-from src.ood.continual_ood import ContinualOODDetector
+from src.ood.continual_ood import ContinualOODDetector, normalize_primary_score_method
 from src.training.ber_loss import BERLoss
 from src.training.quantization import assert_no_prohibited_4bit_flags
 from src.training.services.config_surface import (
@@ -26,6 +26,11 @@ from src.training.services.config_surface import (
     normalize_continual_training_config,
 )
 from src.training.services.ood_calibration import calibrate_trainer_ood
+from src.training.services.ood_score_selection import (
+    SUPPORTED_REQUESTED_OOD_SCORE_METHODS,
+    normalize_requested_primary_score_method,
+    resolve_runtime_primary_score_method,
+)
 from src.training.services.persistence import (
     build_trainer_metadata_payload,
     compute_config_hash,
@@ -176,7 +181,7 @@ class ContinualSDLoRAConfig:
     device: str = "cuda"
     strict_model_loading: bool = False
     ood_threshold_factor: float = 2.0
-    ood_primary_score_method: str = "ensemble"
+    ood_primary_score_method: str = "auto"
     seed: int = 42
     deterministic: bool = True
     grad_accumulation_steps: int = 4
@@ -246,8 +251,10 @@ class ContinualSDLoRAConfig:
             raise ValueError("evaluation_ood_fallback_strategy must be 'held_out_benchmark' or 'none'.")
         if self.evaluation_ood_benchmark_min_classes < 1:
             raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
-        if self.ood_primary_score_method not in {"ensemble", "energy", "knn"}:
-            raise ValueError("ood.primary_score_method must be one of: ensemble, energy, knn.")
+        if self.ood_primary_score_method not in SUPPORTED_REQUESTED_OOD_SCORE_METHODS:
+            raise ValueError(
+                "ood.primary_score_method must be one of: " + ", ".join(SUPPORTED_REQUESTED_OOD_SCORE_METHODS) + "."
+            )
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
         if self.ber_warmup_steps < 0:
@@ -377,7 +384,9 @@ class ContinualSDLoRAConfig:
             device=str(normalized.get("device", "cuda")),
             strict_model_loading=bool(normalized.get("strict_model_loading", False)),
             ood_threshold_factor=float(ood.get("threshold_factor", 2.0)),
-            ood_primary_score_method=str(ood.get("primary_score_method", "ensemble")).strip().lower() or "ensemble",
+            ood_primary_score_method=normalize_requested_primary_score_method(
+                ood.get("primary_score_method", "auto")
+            ),
             ber_enabled=bool(ood.get("ber_enabled", False)),
             ber_lambda_old=float(ood.get("ber_lambda_old", 0.1)),
             ber_lambda_new=float(ood.get("ber_lambda_new", 0.1)),
@@ -439,7 +448,7 @@ class ContinualSDLoRATrainer:
         self.target_modules_resolved: List[str] = []
         self.ood_detector = ContinualOODDetector(
             threshold_factor=self.config.ood_threshold_factor,
-            primary_score_method=self.config.ood_primary_score_method,
+            primary_score_method=resolve_runtime_primary_score_method(self.config.ood_primary_score_method),
             radial_l2_enabled=self.config.radial_l2_enabled,
             radial_beta_range=(self.config.radial_beta_min, self.config.radial_beta_max),
             radial_beta_steps=self.config.radial_beta_steps,
@@ -465,6 +474,14 @@ class ContinualSDLoRATrainer:
         self._ood_calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
         configure_runtime_reproducibility(self.config, np_module=np)
         self._refresh_class_index_cache()
+
+    def set_ood_primary_score_method(self, primary_score_method: str) -> str:
+        resolved = normalize_primary_score_method(primary_score_method)
+        self.config.ood_primary_score_method = resolved
+        self.ood_detector.primary_score_method = resolved
+        self._contract = self.config.as_contract_dict()
+        self._config_hash = compute_config_hash(self._contract)
+        return resolved
 
     def _refresh_class_index_cache(self) -> None:
         self._idx_to_class = build_idx_to_class(self.class_to_idx)
