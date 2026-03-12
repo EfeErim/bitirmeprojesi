@@ -26,6 +26,37 @@ def gate_label(step_id: str, name: str) -> str:
     return f"[{step_id}] {name}"
 
 
+def _check_runtime_dependencies() -> bool:
+    step_id = "ENV"
+    print(f"Testing {gate_label(step_id, 'runtime dependencies')}...")
+    required = (
+        "torch",
+        "torchvision",
+        "transformers",
+        "peft",
+        "accelerate",
+        "huggingface_hub",
+        "PIL",
+    )
+    missing = []
+    for module_name in required:
+        try:
+            __import__(module_name)
+        except Exception:
+            missing.append(module_name)
+
+    if missing:
+        missing_display = ", ".join(sorted(missing))
+        print(
+            f"FAIL {gate_label(step_id, f'Missing dependencies: {missing_display}. '
+                 'Install requirements.txt before running this validation.')}"
+        )
+        return False
+
+    print(f"PASS {gate_label(step_id, 'Runtime dependencies available')}")
+    return True
+
+
 def test_config_surface() -> bool:
     step_id = "CONFIG"
     print(f"Testing {gate_label(step_id, 'minimal config load')}...")
@@ -221,15 +252,19 @@ def main() -> int:
     print("AADS v6 Minimal Surface Validation")
     print("=" * 60)
 
-    results = [
-        ("Minimal Config", test_config_surface()),
-        ("Continual Trainer", test_continual_trainer_imports()),
-        ("Quantization Guard", test_quantization_guard()),
-        ("Adapter Lifecycle", test_adapter_surface()),
-        ("Router Runtime", test_runtime_surface()),
-        ("Adapter Smoke Notebook", test_adapter_smoke_notebook_surface()),
-        ("Colab Helpers", test_colab_helpers()),
-    ]
+    results = [("Runtime Dependencies", _check_runtime_dependencies())]
+    if results[-1][1]:
+        results.extend(
+            [
+                ("Minimal Config", test_config_surface()),
+                ("Continual Trainer", test_continual_trainer_imports()),
+                ("Quantization Guard", test_quantization_guard()),
+                ("Adapter Lifecycle", test_adapter_surface()),
+                ("Router Runtime", test_runtime_surface()),
+                ("Adapter Smoke Notebook", test_adapter_smoke_notebook_surface()),
+                ("Colab Helpers", test_colab_helpers()),
+            ]
+        )
 
     print("\n" + "=" * 60)
     print("VALIDATION SUMMARY")
