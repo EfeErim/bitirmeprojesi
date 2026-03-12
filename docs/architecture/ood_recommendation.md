@@ -38,6 +38,7 @@ Inference for this repo:
 
 - a small clean `ood/` set is more valuable than endlessly extending only the held-out benchmark
 - that `ood/` set should emphasize plant-like unknowns and realistic failure cases, not only easy random objects
+- if deployment is crop-gated upstream, most of that set should be same-crop unknowns and same-crop failure cases first, with other plant species used as secondary negatives
 
 ### 2. A small auxiliary outlier set is literature-backed
 
@@ -106,8 +107,8 @@ Recommendation:
 - create a small reusable `data/<crop>/ood/` pool for each crop
 - prefer realistic hard negatives:
   - unseen diseases for the crop
-  - other plant species
-  - non-disease damage
+  - non-disease damage and same-crop off-coverage views
+  - other plant species as secondary negatives when the deployment contract is crop-gated
   - poor crops, blur, occlusion, background clutter
 - continue allowing random non-plant images, but only as a minority slice
 

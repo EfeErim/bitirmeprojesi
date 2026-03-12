@@ -47,6 +47,12 @@ Possible OOD inputs include:
 
 The practical goal is to reduce confident wrong predictions on unsupported inputs.
 
+Deployment assumption note:
+
+- if an upstream router or trusted `crop_hint` guarantees that the tomato adapter only receives tomato images, then off-crop inputs like potato become lower-priority adapter negatives rather than the main deployment risk
+- in that crop-gated setup, the highest-value OOD evidence is usually unsupported tomato diseases plus realistic tomato-image failure cases such as blur, occlusion, clutter, or unusual viewpoints
+- this does not remove the OOD requirement entirely because the adapter can still be overconfident on unsupported tomato inputs
+
 ## The Current Readiness Workflow
 
 The supported path is:
@@ -122,9 +128,9 @@ These images are used as unknown-input evidence during readiness evaluation. The
 Good candidates include:
 
 - diseases of the same crop that are not in the adapter's supported label set
+- realistic same-crop failure cases such as unusual viewpoints, heavy blur, occlusion, clutter, or abiotic damage
 - images from other crops or other plant species
-- plant parts or viewpoints that fall outside the supported training coverage
-- abiotic damage, blur, occlusion, clutter, or other realistic failure cases
+- plant parts that fall outside the supported training coverage
 - a minority slice of clearly non-plant or random-object images
 
 ### What does not belong in `ood/`
@@ -147,6 +153,7 @@ Use these rules when building the pool:
 3. Reuse the same `ood/` pool across comparable runs so readiness comparisons stay meaningful.
 4. Use nested folders only for organization, not for labels.
 5. Keep random non-plant images as a minority slice rather than the whole pool.
+6. Match the pool to the deployment contract. If the adapter is crop-gated upstream, make most of the pool same-crop unknowns and same-crop failure cases first, then add off-crop images as secondary evidence.
 
 Important current repo behavior:
 
@@ -161,9 +168,10 @@ One practical pattern is:
 ```text
 data/tomato/ood/
   unsupported_tomato_diseases/*
-  other_crops/*
+  off_coverage_views/*
   abiotic_damage/*
   blur_occlusion_clutter/*
+  other_crops_optional/*
   non_plant_misc/*
 ```
 
@@ -476,9 +484,10 @@ Evaluate BER by comparing runs on the same:
 1. Train on the exact disease classes you intend to support.
 2. Keep an isolated `test/` split for final classification evidence.
 3. Add a realistic shared `ood/` pool whenever possible.
-4. Use the fallback benchmark only when real OOD data is missing.
-5. Read `production_readiness.json` before deployment.
-6. Treat split-local gates as diagnostics, not final approval.
+4. If deployment is crop-gated upstream, prioritize same-crop unknowns and same-crop failure cases inside that pool.
+5. Use the fallback benchmark only when real OOD data is missing.
+6. Read `production_readiness.json` before deployment.
+7. Treat split-local gates as diagnostics, not final approval.
 
 ## Related Files
 

@@ -218,7 +218,7 @@ data/runtime_notebook_datasets/<crop>/
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 ## Training, Step By Step
 
@@ -280,6 +280,8 @@ If the router backend itself is unavailable, the runtime returns `router_unavail
 ```powershell
 .\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab --crop tomato
 ```
+
+Passing `--crop` means you are asserting that crop selection is already handled upstream. That narrows the most relevant OOD cases toward unsupported tomato inputs and tomato-image failure cases, but it does not turn off the repo's OOD-readiness expectations.
 
 ## Configuration Overview
 
