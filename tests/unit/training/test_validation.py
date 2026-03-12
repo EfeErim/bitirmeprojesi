@@ -1,10 +1,15 @@
+from pathlib import Path
+
 import pytest
 import torch
 import torch.nn as nn
-from pathlib import Path
 
 from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
-from src.training.validation import evaluate_model, evaluate_model_with_artifact_metrics, evaluate_model_with_predictions
+from src.training.validation import (
+    evaluate_model,
+    evaluate_model_with_artifact_metrics,
+    evaluate_model_with_predictions,
+)
 
 
 class IdentityModule(nn.Module):
@@ -126,8 +131,12 @@ def test_evaluate_model_with_artifact_metrics_collects_optional_ood_and_conforma
     trainer.encode = lambda images: images.float()
     trainer.forward_logits = lambda images: images.float()
 
-    id_loader = [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}]
-    ood_loader = [{"images": torch.tensor([[0.2, 0.1], [0.1, 0.2]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}]
+    id_loader = [
+        {"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    ]
+    ood_loader = [
+        {"images": torch.tensor([[0.2, 0.1], [0.1, 0.2]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}
+    ]
 
     result = evaluate_model_with_artifact_metrics(trainer, id_loader, ood_loader=ood_loader)
 
@@ -154,7 +163,9 @@ def test_evaluate_model_with_artifact_metrics_keeps_ood_fields_empty_without_ood
     trainer.encode = lambda images: images.float()
     trainer.forward_logits = lambda images: images.float()
 
-    id_loader = [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}]
+    id_loader = [
+        {"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    ]
 
     result = evaluate_model_with_artifact_metrics(trainer, id_loader)
 

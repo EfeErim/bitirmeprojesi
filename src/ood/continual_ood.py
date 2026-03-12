@@ -26,10 +26,10 @@ from src.ood._scoring_utils import (
 )
 from src.ood.conformal_prediction import (
     build_prediction_set,
-    calibrate_prediction_set_qhat,
     calibrate_conformal_qhat,
-    describe_conformal_method,
+    calibrate_prediction_set_qhat,
     compute_nonconformity_scores,
+    describe_conformal_method,
     normalize_conformal_method,
 )
 from src.ood.radial_normalization import auto_tune_beta, radial_l2_normalize
@@ -760,7 +760,9 @@ class ContinualOODDetector:
             "knn_distance": torch.tensor(result["knn_distance"], dtype=torch.float32, device=features.device),
             "knn_threshold": torch.tensor(result["knn_threshold"], dtype=torch.float32, device=features.device),
             "primary_score": torch.tensor(result["primary_score"], dtype=torch.float32, device=features.device),
-            "decision_threshold": torch.tensor(result["decision_threshold"], dtype=torch.float32, device=features.device),
+            "decision_threshold": torch.tensor(
+                result["decision_threshold"], dtype=torch.float32, device=features.device
+            ),
             "is_ood": torch.tensor(result["is_ood"], dtype=torch.bool, device=features.device),
             "calibration_version": torch.full(
                 (features.size(0),),

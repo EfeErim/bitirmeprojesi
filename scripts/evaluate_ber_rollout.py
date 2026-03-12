@@ -9,11 +9,6 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from src.training.services.ber_rollout import evaluate_ber_candidate
-
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -26,6 +21,12 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    root = Path(__file__).resolve().parents[1]
+    if str(root) not in sys.path:
+        sys.path.insert(0, str(root))
+
+    from src.training.services.ber_rollout import evaluate_ber_candidate
+
     args = _parse_args(argv)
     baseline_root = Path(args.baseline_artifact_root)
     exit_code = 0

@@ -11,7 +11,11 @@ class IdentityModule(nn.Module):
         return x
 
 
-def _build_minimal_trainer(*, num_epochs: int = 2, grad_accumulation_steps: int = 1) -> tuple[ContinualSDLoRATrainer, nn.Parameter]:
+def _build_minimal_trainer(
+    *,
+    num_epochs: int = 2,
+    grad_accumulation_steps: int = 1,
+) -> tuple[ContinualSDLoRATrainer, nn.Parameter]:
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
         target_modules_strategy="all_linear_transformer",

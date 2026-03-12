@@ -143,7 +143,9 @@ def _infer_ood_type_from_path(image_path: Any, *, split_name: str) -> str:
     return str(relative_parts[0])
 
 
-def _resolve_loader_sample_types(eval_loader: Iterable[Dict[str, torch.Tensor]], *, is_ood_loader: bool) -> Optional[List[str]]:
+def _resolve_loader_sample_types(
+    eval_loader: Iterable[Dict[str, torch.Tensor]], *, is_ood_loader: bool
+) -> Optional[List[str]]:
     if not is_ood_loader:
         return None
     dataset = getattr(eval_loader, "dataset", None)
@@ -343,8 +345,12 @@ def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: 
             for method_name, values in state.mixed_ood_scores_by_method.items()
         }
         payload.ood_type_breakdown = _build_ood_type_breakdown(state)
-        payload.context["ood_eval_in_distribution_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 0))
-        payload.context["ood_eval_ood_samples"] = int(sum(1 for item in state.mixed_ood_labels if item == 1))
+        payload.context["ood_eval_in_distribution_samples"] = int(
+            sum(1 for item in state.mixed_ood_labels if item == 0)
+        )
+        payload.context["ood_eval_ood_samples"] = int(
+            sum(1 for item in state.mixed_ood_labels if item == 1)
+        )
         payload.context["ood_primary_score_method"] = payload.ood_primary_score_method
         payload.context["ood_score_methods"] = sorted(payload.ood_scores_by_method.keys())
         if payload.ood_type_breakdown:

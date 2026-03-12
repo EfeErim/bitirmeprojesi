@@ -143,7 +143,11 @@ class ContinualTrainingSession:
         sampler_seed_base = getattr(loader, "_sampler_seed_base", seed_base)
         sampler = getattr(loader, "sampler", None)
         sampler_generator = getattr(sampler, "generator", None)
-        if sampler_seed_base is not None and sampler_generator is not None and hasattr(sampler_generator, "manual_seed"):
+        if (
+            sampler_seed_base is not None
+            and sampler_generator is not None
+            and hasattr(sampler_generator, "manual_seed")
+        ):
             sampler_generator.manual_seed(int(sampler_seed_base) + (int(epoch_idx) * 1000))
 
     def _resolve_resume_position(self, total_batches: int) -> tuple[int, int]:
