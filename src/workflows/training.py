@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, TypeVar
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
@@ -31,23 +31,14 @@ from src.training.services.reporting import (
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_support import (
     build_artifact_payload,
+    loader_size,
     prepare_training_run,
     select_calibration_source,
     stringify_paths,
 )
-from src.workflows.training_support import (
-    loader_size as workflow_loader_size,
-)
 
 Observer = Callable[[Dict[str, Any]], None]
-
-
-def _loader_size(loader: Any) -> int:
-    return workflow_loader_size(loader)
-
-
-def _stringify_paths(value: Any) -> Any:
-    return stringify_paths(value)
+T = TypeVar("T")
 
 
 def _last_history_value(history_payload: Dict[str, Any], key: str) -> Optional[float]:
@@ -107,11 +98,11 @@ class TrainingWorkflowResult:
             "loader_sizes": {str(k): int(v) for k, v in self.loader_sizes.items()},
             "adapter_dir": str(self.adapter_dir),
             "artifact_dir": ("" if self.artifact_dir is None else str(self.artifact_dir)),
-            "artifacts": _stringify_paths(self.artifacts),
+            "artifacts": stringify_paths(self.artifacts),
             "ood_calibration": dict(self.ood_calibration),
             "checkpoint_records": [dict(item) for item in self.checkpoint_records],
             "ood_evidence_source": str(self.ood_evidence_source),
-            "ood_benchmark": _stringify_paths(self.ood_benchmark),
+            "ood_benchmark": stringify_paths(self.ood_benchmark),
             "production_readiness": dict(self.production_readiness),
         }
 
@@ -242,7 +233,7 @@ class TrainingWorkflow:
         selected_primary_score_method: str = "ensemble",
         selection_source: str = "",
     ) -> Dict[str, Any]:
-        if trainer is None or _loader_size(loader) <= 0:
+        if trainer is None or loader_size(loader) <= 0:
             return {}
 
         if evaluation_result is None:
@@ -298,7 +289,7 @@ class TrainingWorkflow:
         loader: Any,
         ood_loader: Any,
     ) -> Any:
-        if trainer is None or _loader_size(loader) <= 0:
+        if trainer is None or loader_size(loader) <= 0:
             return None
         return evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
 
@@ -396,34 +387,74 @@ class TrainingWorkflow:
         }
 
     @staticmethod
-    def _select_authoritative_evaluation(
+    def _has_metric_gate(candidate: Dict[str, Any]) -> bool:
+        return isinstance(candidate, dict) and isinstance(candidate.get("metric_gate"), dict)
+
+    @staticmethod
+    def _has_evaluation_labels(candidate: Any) -> bool:
+        return candidate is not None and bool(list(getattr(candidate, "y_true", []) or []))
+
+    @staticmethod
+    def _select_authoritative_value(
+        validation_value: T,
+        test_value: T,
+        *,
+        calibration_split_name: str,
+        is_present: Callable[[T], bool],
+        empty_value: T,
+    ) -> tuple[str, T]:
+        if is_present(test_value):
+            return "test", test_value
+        if calibration_split_name != "val" and is_present(validation_value):
+            return "val", validation_value
+        return "", empty_value
+
+    @classmethod
+    def _select_authoritative_artifacts(
+        cls,
         validation_artifacts: Dict[str, Any],
         test_artifacts: Dict[str, Any],
         *,
         calibration_split_name: str,
     ) -> tuple[str, Dict[str, Any]]:
-        if isinstance(test_artifacts, dict) and isinstance(test_artifacts.get("metric_gate"), dict):
-            return "test", test_artifacts
-        if calibration_split_name == "val":
-            return "", {}
-        if isinstance(validation_artifacts, dict) and isinstance(validation_artifacts.get("metric_gate"), dict):
-            return "val", validation_artifacts
-        return "", {}
+        return cls._select_authoritative_value(
+            validation_artifacts,
+            test_artifacts,
+            calibration_split_name=calibration_split_name,
+            is_present=cls._has_metric_gate,
+            empty_value={},
+        )
 
-    @staticmethod
-    def _select_authoritative_evaluation_result(
+    @classmethod
+    def _select_authoritative_evaluation(
+        cls,
         validation_evaluation: Any,
         test_evaluation: Any,
         *,
         calibration_split_name: str,
     ) -> tuple[str, Any]:
-        if test_evaluation is not None and list(getattr(test_evaluation, "y_true", []) or []):
-            return "test", test_evaluation
-        if calibration_split_name == "val":
-            return "", None
-        if validation_evaluation is not None and list(getattr(validation_evaluation, "y_true", []) or []):
-            return "val", validation_evaluation
-        return "", None
+        return cls._select_authoritative_value(
+            validation_evaluation,
+            test_evaluation,
+            calibration_split_name=calibration_split_name,
+            is_present=cls._has_evaluation_labels,
+            empty_value=None,
+        )
+
+    @staticmethod
+    def _record_primary_score_selection(
+        ood_calibration: Dict[str, Any],
+        *,
+        requested_primary_score_method: str,
+        selected_primary_score_method: str,
+        selection_source: str,
+    ) -> None:
+        calibration = ood_calibration.get("ood_calibration")
+        if not isinstance(calibration, dict):
+            return
+        calibration["requested_primary_score_method"] = requested_primary_score_method
+        calibration["primary_score_method"] = selected_primary_score_method
+        calibration["selection_source"] = selection_source
 
     @staticmethod
     def _apply_primary_score_method_to_trainer(trainer: Any, primary_score_method: str) -> str:
@@ -441,6 +472,52 @@ class TrainingWorkflow:
             setattr(detector, "primary_score_method", resolved)
         return resolved
 
+    def _refresh_split_artifacts(
+        self,
+        *,
+        artifact_dir: Path,
+        trainer: Any,
+        loaders: Dict[str, Any],
+        detected_classes: List[str],
+        telemetry: Any,
+        run_id: str,
+        crop_name: str,
+        loader_sizes: Dict[str, int],
+        evaluation_results: Dict[str, Any],
+        requested_primary_score_method: str,
+        selected_primary_score_method: str,
+        selection_source: str,
+        calibration_split_name: str,
+    ) -> tuple[Dict[str, Dict[str, Any]], Dict[str, Any], Dict[str, Any], str, Dict[str, Any]]:
+        split_artifacts = self._persist_split_artifacts(
+            artifact_dir=artifact_dir,
+            trainer=trainer,
+            loaders=loaders,
+            detected_classes=detected_classes,
+            telemetry=telemetry,
+            run_id=run_id,
+            crop_name=crop_name,
+            loader_sizes=loader_sizes,
+            evaluation_results=evaluation_results,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
+        )
+        validation_artifacts = split_artifacts["val"]
+        test_artifacts = split_artifacts["test"]
+        authoritative_split, authoritative_artifacts = self._select_authoritative_artifacts(
+            validation_artifacts,
+            test_artifacts,
+            calibration_split_name=calibration_split_name,
+        )
+        return (
+            split_artifacts,
+            validation_artifacts,
+            test_artifacts,
+            authoritative_split,
+            authoritative_artifacts,
+        )
+
     def _resolve_ood_evidence(
         self,
         *,
@@ -454,7 +531,7 @@ class TrainingWorkflow:
         num_epochs: Optional[int],
         telemetry: Any,
     ) -> tuple[str, Dict[str, Any], Dict[str, Any]]:
-        real_ood_present = _loader_size(loaders.get("ood")) > 0
+        real_ood_present = loader_size(loaders.get("ood")) > 0
         if real_ood_present:
             ood_metrics = (
                 dict(authoritative_artifacts.get("metric_gate", {}).get("metrics", {}))
@@ -634,7 +711,7 @@ class TrainingWorkflow:
         best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
         calibration_split_name, calibration_loader = select_calibration_source(loaders, loader_sizes)
         ood_calibration = {}
-        if _loader_size(calibration_loader) > 0:
+        if loader_size(calibration_loader) > 0:
             ood_calibration = adapter.calibrate_ood(calibration_loader)
 
         training_artifacts = self._persist_training_artifacts(
@@ -661,8 +738,8 @@ class TrainingWorkflow:
                 ood_loader=loaders.get("ood"),
             ),
         }
-        if _loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(requested_primary_score_method):
-            _, authoritative_evaluation = self._select_authoritative_evaluation_result(
+        if loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(requested_primary_score_method):
+            _, authoritative_evaluation = self._select_authoritative_evaluation(
                 split_evaluations.get("val"),
                 split_evaluations.get("test"),
                 calibration_split_name=calibration_split_name,
@@ -678,11 +755,19 @@ class TrainingWorkflow:
             trainer_for_artifacts,
             selected_primary_score_method,
         )
-        if isinstance(ood_calibration.get("ood_calibration"), dict):
-            ood_calibration["ood_calibration"]["requested_primary_score_method"] = requested_primary_score_method
-            ood_calibration["ood_calibration"]["primary_score_method"] = selected_primary_score_method
-            ood_calibration["ood_calibration"]["selection_source"] = selection_source
-        split_artifacts = self._persist_split_artifacts(
+        self._record_primary_score_selection(
+            ood_calibration,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
+        )
+        (
+            _split_artifacts,
+            validation_artifacts,
+            test_artifacts,
+            authoritative_split,
+            authoritative_artifacts,
+        ) = self._refresh_split_artifacts(
             artifact_dir=artifact_dir,
             trainer=trainer_for_artifacts,
             loaders=loaders,
@@ -695,16 +780,9 @@ class TrainingWorkflow:
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=selected_primary_score_method,
             selection_source=selection_source,
-        )
-        validation_artifacts = split_artifacts["val"]
-        test_artifacts = split_artifacts["test"]
-
-        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
-        authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
-            validation_artifacts,
-            test_artifacts,
             calibration_split_name=calibration_split_name,
         )
+        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
         ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
             crop_name=crop_name,
             detected_classes=detected_classes,
@@ -728,10 +806,19 @@ class TrainingWorkflow:
                     trainer_for_artifacts,
                     selected_primary_score_method,
                 )
-                if isinstance(ood_calibration.get("ood_calibration"), dict):
-                    ood_calibration["ood_calibration"]["primary_score_method"] = selected_primary_score_method
-                    ood_calibration["ood_calibration"]["selection_source"] = selection_source
-                split_artifacts = self._persist_split_artifacts(
+                self._record_primary_score_selection(
+                    ood_calibration,
+                    requested_primary_score_method=requested_primary_score_method,
+                    selected_primary_score_method=selected_primary_score_method,
+                    selection_source=selection_source,
+                )
+                (
+                    _split_artifacts,
+                    validation_artifacts,
+                    test_artifacts,
+                    authoritative_split,
+                    authoritative_artifacts,
+                ) = self._refresh_split_artifacts(
                     artifact_dir=artifact_dir,
                     trainer=trainer_for_artifacts,
                     loaders=loaders,
@@ -744,12 +831,6 @@ class TrainingWorkflow:
                     requested_primary_score_method=requested_primary_score_method,
                     selected_primary_score_method=selected_primary_score_method,
                     selection_source=selection_source,
-                )
-                validation_artifacts = split_artifacts["val"]
-                test_artifacts = split_artifacts["test"]
-                authoritative_split, authoritative_artifacts = self._select_authoritative_evaluation(
-                    validation_artifacts,
-                    test_artifacts,
                     calibration_split_name=calibration_split_name,
                 )
 

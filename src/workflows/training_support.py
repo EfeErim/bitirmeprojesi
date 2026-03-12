@@ -216,11 +216,6 @@ def prepare_training_run(
         adapter=adapter,
     )
 
-
-def select_calibration_loader(loaders: Dict[str, Any], loader_sizes: Dict[str, int]) -> Any:
-    return select_calibration_source(loaders, loader_sizes)[1]
-
-
 def build_artifact_payload(
     *,
     training_artifacts: Dict[str, Any],
