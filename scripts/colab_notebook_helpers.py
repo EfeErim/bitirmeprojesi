@@ -23,6 +23,8 @@ from src.training.services.reporting import (
 
 matplotlib.use("Agg")
 
+_EXPECTED_REPO_EXPORTS = ("outputs", "telemetry", "checkpoint_state")
+
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
     target = root / "outputs" / "colab_notebook_training" / "artifacts"
@@ -66,6 +68,20 @@ def _format_duration(seconds: float) -> str:
     return f"{sec}s"
 
 
+def _path_exists(path_like: Optional[str | Path]) -> bool:
+    return bool(path_like and Path(path_like).expanduser().exists())
+
+
+def _call_if_present(target: Any, method_name: str, *args, **kwargs) -> None:
+    method = getattr(target, method_name, None)
+    if not callable(method):
+        return
+    try:
+        method(*args, **kwargs)
+    except Exception:
+        pass
+
+
 class NotebookTrainingStatusPrinter:
     """Emit low-frequency, notebook-friendly training status lines."""
 
@@ -86,6 +102,19 @@ class NotebookTrainingStatusPrinter:
     def _emit(self, message: str) -> None:
         self.print_fn(str(message))
 
+    @staticmethod
+    def _append_advisory(
+        parts: List[str],
+        payload: Dict[str, Any],
+        *,
+        message_key: str,
+        severity_key: str,
+    ) -> None:
+        advisory = str(payload.get(message_key, "")).strip()
+        severity = str(payload.get(severity_key, "")).strip().lower()
+        if advisory and severity in {"warning", "critical"}:
+            parts.append(f"{severity}={advisory}")
+
     def _metric_fragment(self, payload: Dict[str, Any], key: str, label: str) -> Optional[str]:
         value = payload.get(key)
         if value is None:
@@ -95,17 +124,14 @@ class NotebookTrainingStatusPrinter:
     def handle(self, event_type: str, payload: Optional[Dict[str, Any]] = None) -> None:
         event_name = str(event_type or "")
         event = dict(payload or {})
-        if event_name == "batch_end":
-            self._handle_batch_end(event)
-            return
-        if event_name == "validation_end":
-            self._handle_validation_end(event)
-            return
-        if event_name == "best_metric_updated":
-            self._handle_best_metric(event)
-            return
-        if event_name == "stop_requested":
-            self._handle_stop_requested(event)
+        handler = {
+            "batch_end": self._handle_batch_end,
+            "validation_end": self._handle_validation_end,
+            "best_metric_updated": self._handle_best_metric,
+            "stop_requested": self._handle_stop_requested,
+        }.get(event_name)
+        if handler is not None:
+            handler(event)
 
     def _handle_batch_end(self, payload: Dict[str, Any]) -> None:
         batch = int(payload.get("batch", 0))
@@ -133,10 +159,7 @@ class NotebookTrainingStatusPrinter:
             f"elapsed={_format_duration(elapsed_sec)}",
             f"eta={_format_duration(float(payload.get('eta_sec', 0.0)))}",
         ]
-        advisory = str(payload.get("advisory", "")).strip()
-        severity = str(payload.get("severity", "")).strip().lower()
-        if advisory and severity in {"warning", "critical"}:
-            parts.append(f"{severity}={advisory}")
+        self._append_advisory(parts, payload, message_key="advisory", severity_key="severity")
         self._emit(" ".join(parts))
 
     def _handle_validation_end(self, payload: Dict[str, Any]) -> None:
@@ -152,10 +175,7 @@ class NotebookTrainingStatusPrinter:
             metric = self._metric_fragment(payload, key, label)
             if metric is not None:
                 parts.append(metric)
-        advisory = str(payload.get("epoch_advisory", "")).strip()
-        severity = str(payload.get("epoch_severity", "")).strip().lower()
-        if advisory and severity in {"warning", "critical"}:
-            parts.append(f"{severity}={advisory}")
+        self._append_advisory(parts, payload, message_key="epoch_advisory", severity_key="epoch_severity")
         self._emit(" ".join(parts))
 
     def _handle_best_metric(self, payload: Dict[str, Any]) -> None:
@@ -342,24 +362,21 @@ def build_notebook_completion_report(
     evaluation_splits = sorted(evaluation_artifacts.keys()) if isinstance(evaluation_artifacts, dict) else []
 
     summary_path = getattr(telemetry, "local_summary_path", None)
-    expected_repo_exports = ("outputs", "telemetry", "checkpoint_state")
     repo_export_checks = {
-        name: bool(resolved_exports.get(name) and Path(str(resolved_exports.get(name))).expanduser().exists())
-        for name in expected_repo_exports
+        name: _path_exists(resolved_exports.get(name))
+        for name in _EXPECTED_REPO_EXPORTS
     }
     repo_exports_complete = bool(resolved_exports) and all(
-        repo_export_checks.get(name, False) for name in expected_repo_exports
+        repo_export_checks.get(name, False) for name in _EXPECTED_REPO_EXPORTS
     )
 
     checks = {
         "evaluation_artifacts": bool(evaluation_splits),
         "production_readiness": isinstance(resolved_state.get("production_readiness"), dict)
         and bool(resolved_state.get("production_readiness")),
-        "telemetry_summary": bool(summary_path and Path(summary_path).expanduser().exists()),
+        "telemetry_summary": _path_exists(summary_path),
         "repo_exports": repo_exports_complete,
-        "executed_notebook_export": bool(
-            notebook_export_path and Path(notebook_export_path).expanduser().exists()
-        ),
+        "executed_notebook_export": _path_exists(notebook_export_path),
     }
     missing = [name for name, passed in checks.items() if not passed]
     readiness = resolved_state.get("production_readiness") or {}
@@ -417,25 +434,17 @@ def maybe_auto_disconnect_colab_runtime(
     report["disconnect_requested"] = True
     report["grace_period_sec"] = delay
 
-    update_latest = getattr(telemetry, "update_latest", None)
-    if callable(update_latest):
-        try:
-            update_latest(
-                {
-                    "phase": "auto_disconnect_pending",
-                    "auto_disconnect": True,
-                    "grace_period_sec": delay,
-                    "completion_checks": dict(report.get("checks", {})),
-                }
-            )
-        except Exception:
-            pass
-    sync_pending = getattr(telemetry, "sync_pending", None)
-    if callable(sync_pending):
-        try:
-            sync_pending()
-        except Exception:
-            pass
+    _call_if_present(
+        telemetry,
+        "update_latest",
+        {
+            "phase": "auto_disconnect_pending",
+            "auto_disconnect": True,
+            "grace_period_sec": delay,
+            "completion_checks": dict(report.get("checks", {})),
+        },
+    )
+    _call_if_present(telemetry, "sync_pending")
 
     if delay > 0:
         emit(f"[COLAB] Work complete. Disconnecting runtime in {delay:.0f}s to avoid idle credit use.")

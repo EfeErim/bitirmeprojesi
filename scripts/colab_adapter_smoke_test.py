@@ -35,20 +35,20 @@ SKIP_DISCOVERY_DIR_NAMES = {
 
 
 @lru_cache(maxsize=None)
-def _load_config(config_env: Optional[str]) -> Dict[str, Any]:
-    return dict(get_config(environment=config_env))
+def _load_inference_settings(config_env: Optional[str]) -> tuple[Path, int]:
+    inference_cfg = dict(dict(get_config(environment=config_env)).get("inference", {}))
+    return (
+        Path(str(inference_cfg.get("adapter_root", "models/adapters"))),
+        int(inference_cfg.get("target_size", 224)),
+    )
 
 
 def _default_adapter_root(config_env: Optional[str]) -> Path:
-    config = _load_config(config_env)
-    inference_cfg = config.get("inference", {})
-    return Path(str(inference_cfg.get("adapter_root", "models/adapters")))
+    return _load_inference_settings(config_env)[0]
 
 
 def _target_size(config_env: Optional[str]) -> int:
-    config = _load_config(config_env)
-    inference_cfg = config.get("inference", {})
-    return int(inference_cfg.get("target_size", 224))
+    return _load_inference_settings(config_env)[1]
 
 
 def _normalize_crop_name(crop_name: str) -> str:
@@ -353,6 +353,41 @@ def _flatten_prediction(
     }
 
 
+def _predict_image_row(
+    image_path: Path,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    resolved_adapter_dir: Path,
+) -> Dict[str, Any]:
+    with Image.open(image_path) as image:
+        image_tensor = preprocess_image(image.convert("RGB"), target_size=target_size)
+    payload = adapter.predict_with_ood(image_tensor)
+    row = _flatten_prediction(image_path.name, payload, resolved_adapter_dir=resolved_adapter_dir)
+    row["image_path"] = str(image_path)
+    return row
+
+
+def _error_row(image_path: Path, *, resolved_adapter_dir: Path, error: Exception) -> Dict[str, Any]:
+    return {
+        "image_name": image_path.name,
+        "image_path": str(image_path),
+        "adapter_dir": str(resolved_adapter_dir),
+        "status": "error",
+        "predicted_class": None,
+        "predicted_index": None,
+        "confidence": 0.0,
+        "is_ood": None,
+        "score_method": None,
+        "primary_score": None,
+        "decision_threshold": None,
+        "calibration_version": None,
+        "ood_analysis": None,
+        "raw_payload": None,
+        "error": str(error),
+    }
+
+
 def load_adapter_summary(
     crop_name: Optional[str],
     adapter_dir: Optional[str | Path] = None,
@@ -392,14 +427,13 @@ def predict_single_image(
         config_env=config_env,
         device=device,
     )
-
     image_ref = Path(image_path)
-    with Image.open(image_ref) as image:
-        image_tensor = preprocess_image(image.convert("RGB"), target_size=_target_size(config_env))
-    payload = adapter.predict_with_ood(image_tensor)
-    result = _flatten_prediction(image_ref.name, payload, resolved_adapter_dir=resolved_dir)
-    result["image_path"] = str(image_ref)
-    return result
+    return _predict_image_row(
+        image_ref,
+        adapter=adapter,
+        target_size=_target_size(config_env),
+        resolved_adapter_dir=resolved_dir,
+    )
 
 
 def _iter_image_candidates(root: Path) -> Iterable[Path]:
@@ -435,30 +469,15 @@ def predict_image_folder(
     rows: List[Dict[str, Any]] = []
     for image_path in _iter_image_candidates(folder):
         try:
-            with Image.open(image_path) as image:
-                image_tensor = preprocess_image(image.convert("RGB"), target_size=target_size)
-            payload = adapter.predict_with_ood(image_tensor)
-            row = _flatten_prediction(image_path.name, payload, resolved_adapter_dir=resolved_dir)
-            row["image_path"] = str(image_path)
+            row = _predict_image_row(
+                image_path,
+                adapter=adapter,
+                target_size=target_size,
+                resolved_adapter_dir=resolved_dir,
+            )
             row["error"] = ""
         except (OSError, UnidentifiedImageError, ValueError, RuntimeError) as exc:
-            row = {
-                "image_name": image_path.name,
-                "image_path": str(image_path),
-                "adapter_dir": str(resolved_dir),
-                "status": "error",
-                "predicted_class": None,
-                "predicted_index": None,
-                "confidence": 0.0,
-                "is_ood": None,
-                "score_method": None,
-                "primary_score": None,
-                "decision_threshold": None,
-                "calibration_version": None,
-                "ood_analysis": None,
-                "raw_payload": None,
-                "error": str(exc),
-            }
+            row = _error_row(image_path, resolved_adapter_dir=resolved_dir, error=exc)
         rows.append(row)
     return rows
 
