@@ -55,3 +55,65 @@ def test_runtime_integration_with_config_manager_and_fake_router(monkeypatch, tm
     assert result["diagnosis"] == "healthy"
     assert result["router"]["status"] == "ok"
     assert result["router"]["primary_detection"]["crop"] == "tomato"
+
+
+def test_runtime_retries_with_fresh_router_after_startup_failure(monkeypatch, tmp_path):
+    cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
+
+    adapter_root = tmp_path / "models" / "adapters"
+    adapter_dir = adapter_root / "tomato" / "continual_sd_lora_adapter"
+    adapter_dir.mkdir(parents=True, exist_ok=True)
+    (adapter_dir / "adapter_meta.json").write_text("{}", encoding="utf-8")
+
+    runtime = RouterAdapterRuntime(config=cfg, device="cpu", adapter_root=adapter_root)
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    build_calls = {"count": 0}
+
+    class FailingRouter:
+        def load_models(self):
+            return None
+
+        def is_ready(self):
+            return False
+
+        def analyze_image(self, image):
+            del image
+            return {"detections": []}
+
+    class HealthyRouter:
+        def load_models(self):
+            return None
+
+        def is_ready(self):
+            return True
+
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {"crop": "tomato", "part": "leaf", "crop_confidence": 0.96}
+                ]
+            }
+
+    def _build_router():
+        build_calls["count"] += 1
+        if build_calls["count"] == 1:
+            return FailingRouter()
+        return HealthyRouter()
+
+    monkeypatch.setattr(runtime, "_build_router", _build_router)
+
+    first = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+    second = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert first["status"] == "router_unavailable"
+    assert first["router"] == {
+        "status": "unavailable",
+        "message": first["message"],
+        "detections_count": 0,
+    }
+    assert second["status"] == "success"
+    assert second["crop"] == "tomato"
+    assert second["router"]["primary_detection"]["crop"] == "tomato"
+    assert build_calls["count"] == 2

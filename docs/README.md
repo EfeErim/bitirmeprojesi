@@ -52,6 +52,7 @@ Use this when you need:
 - the dataset formats
 - the quick start commands
 - the output and deployment paths
+- the router-driven inference response shape, including the structured `router` summary block
 
 ### [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
 
@@ -83,6 +84,7 @@ Use this when you need:
 - the current config flow
 - the artifact writing path
 - the main file-to-responsibility map
+- the canonical primary-detection rule and router retry semantics after startup failures
 
 ## Supporting Notes
 
@@ -130,6 +132,10 @@ models/adapters/<crop>/continual_sd_lora_adapter/
 ### Which inference file is canonical?
 
 `src/workflows/inference.py`
+
+### Where is the router inference payload contract defined?
+
+Read `src/shared/contracts.py` for the typed contract and [../README.md](../README.md) for the maintained user-facing explanation.
 
 ## Current Source Of Truth
 
