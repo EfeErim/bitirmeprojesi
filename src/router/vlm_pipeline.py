@@ -17,7 +17,6 @@ from src.router.batch_output_utils import analysis_to_batch_item
 from src.router.dependency_utils import check_vlm_dependencies
 from src.router.pipeline_flow_utils import (
     build_process_image_response,
-    empty_analysis_result,
     resolve_active_analyzer,
 )
 from src.router.policy_taxonomy_utils import (
@@ -34,6 +33,7 @@ from src.router.sam3_output_utils import (
     normalize_sam3_results,
     sam3_error_result,
 )
+from src.shared.contracts import RouterAnalysisResult, RouterRequestOptions
 
 logger = logging.getLogger(__name__)
 
@@ -504,21 +504,117 @@ class VLMPipeline:
             
         return clip_runtime.clip_score_labels(self, image, labels, label_type=label_type)
 
-    def process_image(self, image_tensor: torch.Tensor) -> Dict[str, Any]:
+    def _resolve_request_options(
+        self,
+        *,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+        options: Optional[RouterRequestOptions] = None,
+    ) -> RouterRequestOptions:
+        if options is not None:
+            return RouterRequestOptions(
+                confidence_threshold=float(options.confidence_threshold),
+                max_detections=None if options.max_detections is None else int(options.max_detections),
+            )
+        resolved_confidence_threshold = (
+            self.confidence_threshold if confidence_threshold is None else float(confidence_threshold)
+        )
+        resolved_max_detections = self.max_detections if max_detections is None else max_detections
+        return RouterRequestOptions(
+            confidence_threshold=float(resolved_confidence_threshold),
+            max_detections=None if resolved_max_detections is None else int(resolved_max_detections),
+        )
+
+    def _normalize_router_analysis(
+        self,
+        analysis: RouterAnalysisResult | Dict[str, Any],
+        *,
+        request: RouterRequestOptions,
+        status: str = "ok",
+        message: str = "",
+    ) -> RouterAnalysisResult:
+        if isinstance(analysis, RouterAnalysisResult):
+            result = analysis
+        else:
+            result = RouterAnalysisResult.from_dict(analysis)
+        if not result.status:
+            result.status = status
+        if message and not result.message:
+            result.message = message
+        result.request = request
+        return result
+
+    def process_image(
+        self,
+        image_tensor: torch.Tensor,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+    ) -> Dict[str, Any]:
         """High-level processing entrypoint expected by tests.
 
         Returns a small summary dict including a 'status' and 'scenario'.
         If the pipeline is enabled, tests expect the scenario to be
         'diagnostic_scouting'.
         """
-        analysis = self.analyze_image(image_tensor)
+        analysis = self.analyze_image(
+            image_tensor,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        )
         return build_process_image_response(analysis, enabled=bool(getattr(self, 'enabled', False)))
+
+    def analyze_image_result(
+        self,
+        image_tensor: Any,
+        *,
+        options: Optional[RouterRequestOptions] = None,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+    ) -> RouterAnalysisResult:
+        """Analyze one image and return the typed router contract."""
+        request = self._resolve_request_options(
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+            options=options,
+        )
+        pil_image, image_size = coerce_image_input(image_tensor)
+
+        if not (self.enabled and self.models_loaded):
+            return RouterAnalysisResult(
+                status="unavailable",
+                message="vlm_pipeline_unavailable",
+                detections=[],
+                image_size=image_size,
+                processing_time_ms=0.0,
+                request=request,
+            )
+
+        analyzer = self._resolve_analyzer_for_active_pipeline()
+        if analyzer is None:
+            return RouterAnalysisResult(
+                status="unavailable",
+                message="vlm_pipeline_analyzer_unavailable",
+                detections=[],
+                image_size=image_size,
+                processing_time_ms=0.0,
+                request=request,
+            )
+
+        return self._normalize_router_analysis(
+            analyzer(
+                pil_image,
+                image_size,
+                request.confidence_threshold,
+                request.max_detections,
+            ),
+            request=request,
+        )
 
     def analyze_image(
         self,
         image_tensor: Any,
-        confidence_threshold: float = 0.8,
-        max_detections: Optional[int] = None
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Analyze an image using SAM3 + BioCLIP-2.5.
@@ -531,20 +627,43 @@ class VLMPipeline:
         Returns:
             Dictionary with analysis results
         """
-        pil_image, image_size = coerce_image_input(image_tensor)
+        return self.analyze_image_result(
+            image_tensor,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        ).to_dict()
 
-        if not (self.enabled and self.models_loaded):
-            return empty_analysis_result(image_size)
+    def analyze_batch_result(
+        self,
+        batch: torch.Tensor,
+        *,
+        options: Optional[RouterRequestOptions] = None,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+    ) -> List[RouterAnalysisResult]:
+        """Analyze a tensor batch and return typed router results."""
+        request = self._resolve_request_options(
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+            options=options,
+        )
+        if self.enabled and self.models_loaded and self.actual_pipeline == 'sam3':
+            analyses = sam3_runtime.analyze_sam3_batch(
+                self,
+                batch,
+                confidence_threshold=request.confidence_threshold,
+                max_detections=request.max_detections,
+            )
+            return [self._normalize_router_analysis(analysis, request=request) for analysis in analyses]
 
-        analyzer = self._resolve_analyzer_for_active_pipeline()
-        if analyzer is None:
-            return empty_analysis_result(image_size)
+        return [
+            self.analyze_image_result(batch[index], options=request)
+            for index in range(int(batch.shape[0]))
+        ]
 
-        return analyzer(pil_image, image_size, confidence_threshold, max_detections)
-
-    def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any]]]:
+    def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any] | RouterAnalysisResult]]:
         """Resolve analysis function for active pipeline."""
-        analyzers: Dict[str, Callable[..., Dict[str, Any]]] = {
+        analyzers: Dict[str, Callable[..., Dict[str, Any] | RouterAnalysisResult]] = {
             'sam3': self._analyze_image_sam3,
         }
         return resolve_active_analyzer(self.actual_pipeline, analyzers)
@@ -553,15 +672,15 @@ class VLMPipeline:
         self,
         pil_image: Image.Image,
         image_size: Tuple[int, int, int],
-        confidence_threshold: float = 0.8,
-        max_detections: Optional[int] = None
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Analyze using SAM3 + BioCLIP-2.5 pipeline."""
         context = sam3_runtime.build_request_context(
             self,
             pil_image=pil_image,
             image_size=image_size,
-            confidence_threshold=confidence_threshold,
+            confidence_threshold=self.confidence_threshold if confidence_threshold is None else confidence_threshold,
             max_detections=max_detections,
         )
         return sam3_runtime.analyze_sam3_image(self, context)
@@ -625,7 +744,12 @@ class VLMPipeline:
             for result in raw_results
         ]
     
-    def route_batch(self, batch: torch.Tensor) -> Tuple[List[Dict], List[float]]:
+    def route_batch(
+        self,
+        batch: torch.Tensor,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+    ) -> Tuple[List[Dict], List[float]]:
         """Process a batch of images through the VLM pipeline.
         
         Args:
@@ -636,10 +760,11 @@ class VLMPipeline:
             - crops_out: List of crop prediction dicts for each image
             - confs: List of confidence scores for each image
         """
-        if self.enabled and self.models_loaded and self.actual_pipeline == 'sam3':
-            analyses = sam3_runtime.analyze_sam3_batch(self, batch)
-        else:
-            analyses = [self.analyze_image(batch[i]) for i in range(int(batch.shape[0]))]
+        analyses = self.analyze_batch_result(
+            batch,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        )
 
         crops_out: List[Dict[str, Any]] = []
         confs: List[float] = []

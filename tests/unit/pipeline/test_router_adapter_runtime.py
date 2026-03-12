@@ -78,6 +78,9 @@ def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     assert result["status"] == "success"
     assert result["crop"] == "tomato"
     assert result["part"] == "leaf"
+    assert result["router"]["status"] == "ok"
+    assert result["router"]["detections_count"] == 1
+    assert result["router"]["primary_detection"]["crop"] == "tomato"
     assert result["diagnosis"] == "healthy"
     assert result["ood_analysis"]["score_method"] == "ensemble"
     assert result["ood_analysis"]["primary_score"] == 0.12
@@ -103,6 +106,7 @@ def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tm
 
     assert result["status"] == "adapter_unavailable"
     assert result["crop"] == "tomato"
+    assert result["router"]["primary_detection"]["crop"] == "tomato"
 
 
 def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
@@ -130,6 +134,17 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
 
     assert result["status"] == "success"
     assert result["router_confidence"] == 1.0
+    assert result["router"] == {
+        "status": "skipped",
+        "message": "Router skipped because crop_hint was provided.",
+        "detections_count": 1,
+        "primary_detection": {
+            "crop": "tomato",
+            "part": "leaf",
+            "crop_confidence": 1.0,
+            "part_confidence": 1.0,
+        },
+    }
 
 
 def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path):
@@ -154,6 +169,11 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
 
     assert result["status"] == "unknown_crop"
     assert result["crop"] is None
+    assert result["router"] == {
+        "status": "ok",
+        "message": "",
+        "detections_count": 0,
+    }
 
 
 def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
@@ -178,6 +198,8 @@ def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     assert isinstance(result, InferenceResult)
     assert result.status == "success"
     assert result.ood_analysis is not None
+    assert result.router is not None
+    assert result.router.primary_detection is not None
 
 
 def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path):
@@ -220,6 +242,7 @@ def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path)
     assert result["status"] == "success"
     assert result["crop"] == "tomato"
     assert result["router_confidence"] == 0.61
+    assert result["router"]["primary_detection"]["crop"] == "tomato"
 
 
 def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_path):
@@ -325,12 +348,27 @@ def test_predict_returns_router_unavailable_when_router_never_becomes_ready(monk
     )
     monkeypatch.setattr(runtime, "_build_router", lambda: UnreadyRouter())
 
-    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+    first = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+    second = runtime.predict(Image.new("RGB", (32, 32), color="green"))
 
-    assert result["status"] == "router_unavailable"
-    assert "Router runtime unavailable" in result["message"]
+    assert first["status"] == "router_unavailable"
+    assert second["status"] == "router_unavailable"
+    assert first["router"] == {
+        "status": "unavailable",
+        "message": first["message"],
+        "detections_count": 0,
+    }
+    assert second["router"] == {
+        "status": "unavailable",
+        "message": second["message"],
+        "detections_count": 0,
+    }
+    assert "Router runtime unavailable" in first["message"]
     assert status_lines == [
         "[ROUTER] Loading models on cpu...",
         "[ROUTER] Unavailable.",
-        f"[RESULT] status=router_unavailable message={result['message']}",
+        f"[RESULT] status=router_unavailable message={first['message']}",
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Unavailable.",
+        f"[RESULT] status=router_unavailable message={second['message']}",
     ]

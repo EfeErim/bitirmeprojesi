@@ -35,7 +35,22 @@ def test_run_inference_dispatches_workflow(monkeypatch, tmp_path: Path):
                 "part_hint": part_hint,
                 "return_ood": return_ood,
             }
-            return {"status": "success", "crop": "tomato", "diagnosis": "healthy"}
+            return {
+                "status": "success",
+                "crop": "tomato",
+                "diagnosis": "healthy",
+                "router": {
+                    "status": "skipped",
+                    "message": "Router skipped because crop_hint was provided.",
+                    "detections_count": 1,
+                    "primary_detection": {
+                        "crop": "tomato",
+                        "part": "leaf",
+                        "crop_confidence": 1.0,
+                        "part_confidence": 1.0,
+                    },
+                },
+            }
 
     def _open_image(path: Path):
         calls["opened_image"] = Path(path)
@@ -54,7 +69,8 @@ def test_run_inference_dispatches_workflow(monkeypatch, tmp_path: Path):
         status_printer=status_messages.append,
     )
 
-    assert result == {"status": "success", "crop": "tomato", "diagnosis": "healthy"}
+    assert result["status"] == "success"
+    assert result["router"]["primary_detection"]["crop"] == "tomato"
     assert status_messages == ["[INFER] image=leaf.png device=cpu"]
     assert calls["opened_image"] == tmp_path / "leaf.png"
     assert fake_image.convert_mode == "RGB"
@@ -94,7 +110,16 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "device": device,
             "status_printer": status_printer,
         }
-        return {"status": "success", "crop": "tomato"}
+        return {
+            "status": "success",
+            "crop": "tomato",
+            "router": {
+                "status": "ok",
+                "message": "",
+                "detections_count": 1,
+                "primary_detection": {"crop": "tomato", "part": "leaf", "crop_confidence": 0.95},
+            },
+        }
 
     monkeypatch.setattr(router_script, "run_inference", _run_inference)
     monkeypatch.setattr(
@@ -128,4 +153,13 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         "device": "cpu",
         "status_printer": None,
     }
-    assert json.loads(capsys.readouterr().out) == {"status": "success", "crop": "tomato"}
+    assert json.loads(capsys.readouterr().out) == {
+        "status": "success",
+        "crop": "tomato",
+        "router": {
+            "status": "ok",
+            "message": "",
+            "detections_count": 1,
+            "primary_detection": {"crop": "tomato", "part": "leaf", "crop_confidence": 0.95},
+        },
+    }

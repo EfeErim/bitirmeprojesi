@@ -114,7 +114,9 @@ def postprocess_sam3_detections(
     if context.effective_max_detections is not None:
         ordered = ordered[: context.effective_max_detections]
     for det in ordered:
-        det.pop("_quality_score", None)
+        quality_score = det.pop("_quality_score", None)
+        if quality_score is not None:
+            det["quality_score"] = float(quality_score)
     return ordered
 
 

@@ -69,6 +69,7 @@ Inference works like this:
 2. The runtime loads the adapter for that crop.
 3. The adapter predicts the disease class.
 4. The runtime also reports whether the image looks OOD.
+5. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
 
 Notebook 3 is different:
 
@@ -246,14 +247,16 @@ In practice, the runtime does this:
 
 1. Load config and locate the adapter root.
 2. Run the router unless you pass `crop_hint`.
-3. Resolve the crop adapter directory.
-4. Load the adapter for that crop.
-5. Preprocess the image to the configured target size.
-6. Predict the disease class.
-7. Return OOD information together with the prediction.
+3. Normalize router detections once and keep one canonical primary detection.
+4. Resolve the crop adapter directory.
+5. Load the adapter for that crop.
+6. Preprocess the image to the configured target size.
+7. Predict the disease class.
+8. Return OOD information together with the prediction plus the structured `router` summary block.
 
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
 If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
+When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
 
 ## Common Commands
 

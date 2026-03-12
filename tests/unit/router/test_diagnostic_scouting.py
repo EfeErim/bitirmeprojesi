@@ -1,6 +1,7 @@
 import torch
 
 from src.router.diagnostic_scouting import DiagnosticScoutingAnalyzer
+from src.shared.contracts import RouterAnalysisResult, RouterDetection
 
 
 class _FakePipeline:
@@ -54,3 +55,26 @@ def test_analyze_image_normalizes_detections_and_selects_best():
     assert out["part"] == "leaf"
     assert out["confidence"] == 0.91
     assert len(out["detections"]) == 2
+
+
+def test_analyze_image_uses_shared_primary_detection_when_available():
+    analyzer = DiagnosticScoutingAnalyzer(config={}, device="cpu")
+
+    class _TypedPipeline(_FakePipeline):
+        def analyze_image_result(self, _image, confidence_threshold=None, max_detections=None):
+            del confidence_threshold, max_detections
+            return RouterAnalysisResult(
+                detections=[
+                    RouterDetection(crop="tomato", part="leaf", crop_confidence=0.61),
+                    RouterDetection(crop="potato", part="leaf", crop_confidence=0.95),
+                ],
+                primary_detection=RouterDetection(crop="tomato", part="leaf", crop_confidence=0.61),
+            )
+
+    analyzer.vlm_pipeline = _TypedPipeline(enabled=True)
+
+    out = analyzer.analyze_image(torch.randn(1, 3, 16, 16))
+
+    assert out["status"] == "ok"
+    assert out["crop"] == "tomato"
+    assert out["confidence"] == 0.61

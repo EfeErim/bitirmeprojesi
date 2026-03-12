@@ -37,11 +37,12 @@ class FakeOpenClipModel:
 def _build_pipeline() -> VLMPipeline:
     return VLMPipeline(
         config={
-            "vlm_enabled": True,
             "router": {
                 "crop_mapping": {"tomato": {"parts": ["leaf"]}},
                 "vlm": {
                     "enabled": True,
+                    "confidence_threshold": 0.25,
+                    "max_detections": 7,
                     "crop_labels": ["tomato", "potato"],
                     "part_labels": ["leaf"],
                     "prompt_templates": {
@@ -153,7 +154,11 @@ def test_route_batch_preserves_order_and_uses_batched_runtime(monkeypatch):
         {"detections": [{"crop": "pepper", "part": "leaf", "bbox": [2, 2, 3, 3], "crop_confidence": 0.7}]},
     ]
 
-    monkeypatch.setattr(sam3_runtime, "analyze_sam3_batch", lambda runtime, batch: analyses)
+    monkeypatch.setattr(
+        sam3_runtime,
+        "analyze_sam3_batch",
+        lambda runtime, batch, confidence_threshold=0.8, max_detections=None: analyses,
+    )
     monkeypatch.setattr(
         pipeline,
         "analyze_image",
@@ -164,6 +169,75 @@ def test_route_batch_preserves_order_and_uses_batched_runtime(monkeypatch):
 
     assert [item["crop"] for item in crops_out] == ["tomato", "potato", "pepper"]
     assert confs == [0.9, 0.8, 0.7]
+
+
+def test_analyze_image_uses_config_default_request_options_when_omitted():
+    pipeline = _build_pipeline()
+    pipeline.models_loaded = True
+    pipeline.actual_pipeline = "sam3"
+
+    captured = {}
+
+    def fake_analyze(pil_image, image_size, confidence_threshold=0.8, max_detections=None):
+        del pil_image, image_size
+        captured["confidence_threshold"] = confidence_threshold
+        captured["max_detections"] = max_detections
+        return {"detections": [{"crop": "tomato", "part": "leaf", "crop_confidence": 0.9}]}
+
+    pipeline._analyze_image_sam3 = fake_analyze
+
+    payload = pipeline.analyze_image(torch.zeros(3, 8, 8))
+
+    assert captured == {"confidence_threshold": 0.25, "max_detections": 7}
+    assert payload["primary_detection"]["crop"] == "tomato"
+    assert payload["detections_count"] == 1
+
+
+def test_process_image_uses_config_default_request_options_when_omitted():
+    pipeline = _build_pipeline()
+    pipeline.models_loaded = True
+    pipeline.actual_pipeline = "sam3"
+
+    captured = {}
+
+    def fake_analyze(pil_image, image_size, confidence_threshold=0.8, max_detections=None):
+        del pil_image, image_size
+        captured["confidence_threshold"] = confidence_threshold
+        captured["max_detections"] = max_detections
+        return {"detections": [{"crop": "tomato", "part": "leaf", "crop_confidence": 0.88}]}
+
+    pipeline._analyze_image_sam3 = fake_analyze
+
+    payload = pipeline.process_image(torch.zeros(3, 8, 8))
+
+    assert captured == {"confidence_threshold": 0.25, "max_detections": 7}
+    assert payload["analysis"]["primary_detection"]["crop"] == "tomato"
+    assert payload["scenario"] == "diagnostic_scouting"
+
+
+def test_route_batch_uses_config_default_request_options_when_omitted(monkeypatch):
+    pipeline = _build_pipeline()
+    pipeline.models_loaded = True
+    pipeline.actual_pipeline = "sam3"
+
+    captured = {}
+
+    def fake_batch(runtime, batch, confidence_threshold=0.8, max_detections=None):
+        del runtime, batch
+        captured["confidence_threshold"] = confidence_threshold
+        captured["max_detections"] = max_detections
+        return [
+            {"detections": [{"crop": "tomato", "part": "leaf", "crop_confidence": 0.9}]},
+            {"detections": [{"crop": "potato", "part": "leaf", "crop_confidence": 0.8}]},
+        ]
+
+    monkeypatch.setattr(sam3_runtime, "analyze_sam3_batch", fake_batch)
+
+    crops_out, confs = pipeline.route_batch(torch.zeros(2, 3, 8, 8))
+
+    assert captured == {"confidence_threshold": 0.25, "max_detections": 7}
+    assert [item["crop"] for item in crops_out] == ["tomato", "potato"]
+    assert confs == [0.9, 0.8]
 
 
 def test_analyze_sam3_batch_reduces_sam_call_count_under_batch_support(monkeypatch):

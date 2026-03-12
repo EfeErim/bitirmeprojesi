@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -144,6 +144,217 @@ class OODAnalysis:
 
 
 @dataclass
+class RouterRequestOptions:
+    confidence_threshold: float = 0.0
+    max_detections: Optional[int] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "confidence_threshold": float(self.confidence_threshold),
+        }
+        if self.max_detections is not None:
+            payload["max_detections"] = int(self.max_detections)
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "RouterRequestOptions":
+        data = dict(payload or {})
+        max_detections = data.get("max_detections")
+        return cls(
+            confidence_threshold=float(data.get("confidence_threshold", 0.0)),
+            max_detections=None if max_detections is None else int(max_detections),
+        )
+
+
+@dataclass
+class RouterDetection:
+    crop: str = "unknown"
+    part: str = "unknown"
+    crop_confidence: float = 0.0
+    part_confidence: float = 0.0
+    bbox: Optional[List[float]] = None
+    mask: Any = None
+    sam3_score: Optional[float] = None
+    quality_score: Optional[float] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def sort_key(self) -> Tuple[float, float, float]:
+        quality = float("-inf") if self.quality_score is None else float(self.quality_score)
+        return (quality, float(self.crop_confidence), float(self.part_confidence))
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "crop": str(self.crop or "unknown"),
+            "part": str(self.part or "unknown"),
+            "crop_confidence": float(self.crop_confidence),
+            "part_confidence": float(self.part_confidence),
+        }
+        if self.bbox is not None:
+            payload["bbox"] = [float(value) for value in self.bbox]
+        if self.mask is not None:
+            payload["mask"] = self.mask
+        if self.sam3_score is not None:
+            payload["sam3_score"] = float(self.sam3_score)
+        if self.quality_score is not None:
+            payload["quality_score"] = float(self.quality_score)
+        for key, value in self.metadata.items():
+            if key not in payload:
+                payload[key] = value
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "RouterDetection":
+        data = dict(payload or {})
+        bbox_raw = data.pop("bbox", None)
+        mask = data.pop("mask", None)
+        sam3_score = data.pop("sam3_score", None)
+        quality_score = data.pop("quality_score", data.pop("_quality_score", None))
+        crop = data.pop("crop", "unknown")
+        part = data.pop("part", "unknown")
+        crop_confidence = data.pop("crop_confidence", data.pop("confidence", 0.0))
+        part_confidence = data.pop("part_confidence", 0.0)
+        return cls(
+            crop=str(crop or "unknown"),
+            part=str(part or "unknown"),
+            crop_confidence=float(crop_confidence),
+            part_confidence=float(part_confidence),
+            bbox=(
+                None
+                if bbox_raw is None
+                else [float(value) for value in list(bbox_raw)]
+            ),
+            mask=mask,
+            sam3_score=None if sam3_score is None else float(sam3_score),
+            quality_score=None if quality_score is None else float(quality_score),
+            metadata=data,
+        )
+
+
+@dataclass
+class RouterAnalysisResult:
+    status: str = "ok"
+    message: str = ""
+    detections: List[RouterDetection] = field(default_factory=list)
+    primary_detection: Optional[RouterDetection] = None
+    detections_count: Optional[int] = None
+    image_size: Optional[Tuple[int, int, int]] = None
+    processing_time_ms: float = 0.0
+    request: Optional[RouterRequestOptions] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        normalized_detections: List[RouterDetection] = []
+        for detection in self.detections:
+            if isinstance(detection, RouterDetection):
+                normalized_detections.append(detection)
+            else:
+                normalized_detections.append(RouterDetection.from_dict(detection))
+        indexed_detections = list(enumerate(normalized_detections))
+        indexed_detections.sort(
+            key=lambda item: (
+                0 if item[1].quality_score is not None else 1,
+                0.0 if item[1].quality_score is None else -float(item[1].quality_score),
+                item[0],
+            ),
+        )
+        self.detections = [detection for _index, detection in indexed_detections]
+
+        if self.primary_detection is not None and not isinstance(self.primary_detection, RouterDetection):
+            self.primary_detection = RouterDetection.from_dict(self.primary_detection)
+        if self.detections:
+            self.primary_detection = self.detections[0]
+
+        if self.detections_count is None:
+            if self.detections:
+                self.detections_count = len(self.detections)
+            elif self.primary_detection is not None:
+                self.detections_count = 1
+            else:
+                self.detections_count = 0
+
+        if self.image_size is not None:
+            self.image_size = tuple(int(value) for value in self.image_size)
+        if self.request is not None and not isinstance(self.request, RouterRequestOptions):
+            self.request = RouterRequestOptions.from_dict(self.request)
+
+    def to_dict(self, *, include_request: bool = False) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "status": str(self.status or "ok"),
+            "detections": [detection.to_dict() for detection in self.detections],
+            "detections_count": int(self.detections_count or 0),
+            "processing_time_ms": float(self.processing_time_ms),
+        }
+        if self.message:
+            payload["message"] = str(self.message)
+        if self.primary_detection is not None:
+            payload["primary_detection"] = self.primary_detection.to_dict()
+        if self.image_size is not None:
+            payload["image_size"] = tuple(int(value) for value in self.image_size)
+        if include_request and self.request is not None:
+            payload["request"] = self.request.to_dict()
+        for key, value in self.metadata.items():
+            if key not in payload:
+                payload[key] = value
+        return payload
+
+    def to_summary_dict(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "status": str(self.status or "ok"),
+            "message": str(self.message or ""),
+            "detections_count": int(self.detections_count or 0),
+        }
+        if self.primary_detection is not None:
+            payload["primary_detection"] = self.primary_detection.to_dict()
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "RouterAnalysisResult":
+        data = dict(payload or {})
+        detections_raw = data.pop("detections", [])
+        primary_detection_raw = data.pop("primary_detection", None)
+        detections_count = data.pop("detections_count", None)
+        image_size_raw = data.pop("image_size", None)
+        processing_time_ms = data.pop("processing_time_ms", 0.0)
+        request_raw = data.pop("request", None)
+        status = data.pop("status", "ok")
+        message = data.pop("message", "")
+        return cls(
+            status=str(status or "ok"),
+            message=str(message or ""),
+            detections=[
+                detection if isinstance(detection, RouterDetection) else RouterDetection.from_dict(detection)
+                for detection in list(detections_raw or [])
+            ],
+            primary_detection=(
+                None
+                if primary_detection_raw is None
+                else (
+                    primary_detection_raw
+                    if isinstance(primary_detection_raw, RouterDetection)
+                    else RouterDetection.from_dict(primary_detection_raw)
+                )
+            ),
+            detections_count=None if detections_count is None else int(detections_count),
+            image_size=(
+                None
+                if image_size_raw is None
+                else tuple(int(value) for value in list(image_size_raw))
+            ),
+            processing_time_ms=float(processing_time_ms),
+            request=(
+                None
+                if request_raw is None
+                else (
+                    request_raw
+                    if isinstance(request_raw, RouterRequestOptions)
+                    else RouterRequestOptions.from_dict(request_raw)
+                )
+            ),
+            metadata=data,
+        )
+
+
+@dataclass
 class InferenceResult:
     status: str
     crop: Optional[str] = None
@@ -155,6 +366,7 @@ class InferenceResult:
     message: str = ""
     ood_analysis: Optional[OODAnalysis] = None
     conformal_set: Optional[List[str]] = None
+    router: Optional[RouterAnalysisResult] = None
 
     def to_dict(self, *, include_ood: bool = True) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -173,6 +385,8 @@ class InferenceResult:
             payload["ood_analysis"] = self.ood_analysis.to_dict()
         if self.conformal_set is not None:
             payload["conformal_set"] = list(self.conformal_set)
+        if self.router is not None:
+            payload["router"] = self.router.to_summary_dict()
         return payload
 
     @classmethod
@@ -196,6 +410,11 @@ class InferenceResult:
             ),
             conformal_set=(
                 None if conformal_set_raw is None else [str(c) for c in conformal_set_raw]
+            ),
+            router=(
+                RouterAnalysisResult.from_dict(data.get("router"))
+                if data.get("router") is not None
+                else None
             ),
         )
 

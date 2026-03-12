@@ -142,15 +142,17 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 1. `InferenceWorkflow` builds `src/pipeline/router_adapter_runtime.py`.
 2. The runtime loads config and resolves the adapter root.
 3. If the caller did not supply `crop_hint`, the runtime loads `src/router/vlm_pipeline.py`.
-4. The router analyzes the image and proposes the crop and plant part.
-5. The runtime resolves the crop adapter directory.
-6. The runtime loads that adapter through `IndependentCropAdapter`.
-7. The image is preprocessed to the configured target size.
-8. The adapter predicts disease plus OOD information.
-9. `src/pipeline/inference_payloads.py` converts the raw output into the public payload.
+4. The router analyzes the image and produces a typed router result with normalized detections.
+5. The router keeps one canonical primary detection using router quality ranking when available, otherwise preserving router order.
+6. The runtime resolves the crop adapter directory from that primary detection.
+7. The runtime loads that adapter through `IndependentCropAdapter`.
+8. The image is preprocessed to the configured target size.
+9. The adapter predicts disease plus OOD information.
+10. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
 
 If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
 If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
+If router initialization fails, the runtime discards that router instance and retries a clean load on the next request.
 
 ### Default adapter resolution
 
@@ -161,6 +163,7 @@ models/adapters/<crop>/continual_sd_lora_adapter/
 ```
 
 If `crop_hint` is provided, the router step is skipped.
+In that case the payload still includes a `router` summary block with status `skipped` so callers can migrate to the structured router view without losing mirrored crop fields.
 
 `part_hint` is metadata only. It is not a separate adapter selector.
 

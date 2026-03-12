@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 
 import torch
 
+from src.shared.contracts import RouterAnalysisResult
+
 logger = logging.getLogger(__name__)
 
 
@@ -70,41 +72,52 @@ class DiagnosticScoutingAnalyzer:
             }
 
         try:
-            analysis = self.vlm_pipeline.analyze_image(
-                image_tensor,
-                confidence_threshold=self.confidence_threshold,
-                max_detections=self.max_detections,
-            )
+            if hasattr(self.vlm_pipeline, "analyze_image_result"):
+                analysis_result = self.vlm_pipeline.analyze_image_result(
+                    image_tensor,
+                    confidence_threshold=self.confidence_threshold,
+                    max_detections=self.max_detections,
+                )
+            else:
+                analysis_result = RouterAnalysisResult.from_dict(
+                    self.vlm_pipeline.analyze_image(
+                        image_tensor,
+                        confidence_threshold=self.confidence_threshold,
+                        max_detections=self.max_detections,
+                    )
+                )
 
-            detections = analysis.get("detections", []) or []
+            detections = analysis_result.detections
             normalized_detections = []
-            best = None
-            best_confidence = -1.0
+            best = analysis_result.primary_detection
 
             for det in detections:
-                crop_conf = float(det.get("crop_confidence", det.get("confidence", 0.0)))
+                crop_conf = float(det.crop_confidence)
                 normalized = {
-                    "crop": det.get("crop", "unknown"),
-                    "part": det.get("part", "unknown"),
+                    "crop": det.crop,
+                    "part": det.part,
                     "confidence": crop_conf,
-                    "bbox": det.get("bbox"),
-                    "mask": det.get("mask"),
+                    "bbox": det.bbox,
+                    "mask": det.mask,
                 }
                 normalized_detections.append(normalized)
-                if crop_conf > best_confidence:
-                    best_confidence = crop_conf
-                    best = normalized
 
             if best is None:
-                best = {"crop": "unknown", "part": "unknown", "confidence": 0.0}
+                best_crop = "unknown"
+                best_part = "unknown"
+                best_confidence = 0.0
+            else:
+                best_crop = best.crop
+                best_part = best.part
+                best_confidence = float(best.crop_confidence)
 
             return {
-                "status": "ok",
-                "crop": best.get("crop", "unknown"),
-                "part": best.get("part", "unknown"),
-                "confidence": float(best.get("confidence", 0.0)),
+                "status": str(analysis_result.status or "ok"),
+                "crop": best_crop,
+                "part": best_part,
+                "confidence": best_confidence,
                 "detections": normalized_detections,
-                "processing_time_ms": analysis.get("processing_time_ms", 0.0),
+                "processing_time_ms": float(analysis_result.processing_time_ms),
             }
         except Exception as e:
             return {

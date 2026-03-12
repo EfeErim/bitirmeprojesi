@@ -13,13 +13,14 @@ from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
-    best_detection_from_analysis,
     build_adapter_unavailable_result,
+    build_router_skipped_analysis,
     build_router_unavailable_result,
     build_success_result,
     build_unknown_crop_result,
+    normalize_router_analysis,
 )
-from src.shared.contracts import InferenceResult
+from src.shared.contracts import InferenceResult, RouterAnalysisResult
 from src.training.services.runtime import resolve_runtime_device
 
 StatusCallback = Callable[[str], None]
@@ -66,17 +67,26 @@ class RouterAdapterRuntime:
         return IndependentCropAdapter(crop_name=crop_name, device=str(self.device))
 
     def load_router(self) -> Any:
-        if self.router is None:
-            self._emit_status(f"[ROUTER] Loading models on {self.device}...")
-            self.router = self._build_router()
-            self.router.load_models()
+        if self.router is not None:
             readiness_probe = getattr(self.router, "is_ready", None)
             if callable(readiness_probe) and not bool(readiness_probe()):
-                self._emit_status("[ROUTER] Unavailable.")
-                raise RuntimeError(
-                    "Router models failed to become ready for inference. "
-                    "Check router.vlm.enabled, model availability, and VLM dependency installation."
-                )
+                self.router = None
+        if self.router is None:
+            self._emit_status(f"[ROUTER] Loading models on {self.device}...")
+            router = self._build_router()
+            try:
+                router.load_models()
+                readiness_probe = getattr(router, "is_ready", None)
+                if callable(readiness_probe) and not bool(readiness_probe()):
+                    self._emit_status("[ROUTER] Unavailable.")
+                    raise RuntimeError(
+                        "Router models failed to become ready for inference. "
+                        "Check router.vlm.enabled, model availability, and VLM dependency installation."
+                    )
+            except Exception:
+                self.router = None
+                raise
+            self.router = router
             self._emit_status("[ROUTER] Ready.")
         return self.router
 
@@ -122,10 +132,13 @@ class RouterAdapterRuntime:
             return Image.open(image).convert("RGB")
         return image
 
-    def _route(self, image: Any) -> Dict[str, Any]:
+    def _route(self, image: Any) -> RouterAnalysisResult:
         router = self.load_router()
-        analysis = router.analyze_image(image)
-        return best_detection_from_analysis(analysis)
+        if hasattr(router, "analyze_image_result"):
+            analysis = router.analyze_image_result(image)
+        else:
+            analysis = router.analyze_image(image)
+        return normalize_router_analysis(analysis)
 
     def predict_result(
         self,
@@ -138,14 +151,20 @@ class RouterAdapterRuntime:
         crop_name = str(crop_hint).strip().lower() if crop_hint else None
         part_name = str(part_hint).strip().lower() if part_hint else None
         router_confidence = 1.0 if crop_name else 0.0
+        router_analysis: RouterAnalysisResult
 
         if crop_name:
             self._emit_status(
                 f"[ROUTER] Skipped; using crop hint crop={crop_name} part={part_name or 'unknown'}"
             )
+            router_analysis = build_router_skipped_analysis(
+                crop_name=crop_name,
+                part_name=part_name,
+                router_confidence=router_confidence,
+            )
         else:
             try:
-                detection = self._route(prepared_image)
+                router_analysis = self._route(prepared_image)
             except Exception as exc:
                 result = build_router_unavailable_result(
                     message=f"Router runtime unavailable: {exc}",
@@ -153,6 +172,7 @@ class RouterAdapterRuntime:
                 )
                 self._emit_status(f"[RESULT] status={result.status} message={result.message}")
                 return result
+            detection = router_analysis.primary_detection.to_dict() if router_analysis.primary_detection else {}
             crop_name = str(detection.get("crop", "")).strip().lower() or None
             part_name = part_name or str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
@@ -170,6 +190,7 @@ class RouterAdapterRuntime:
                 part_name=part_name,
                 router_confidence=router_confidence,
                 include_ood=return_ood,
+                router_analysis=router_analysis,
             )
             self._emit_status(
                 f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f}"
@@ -185,6 +206,7 @@ class RouterAdapterRuntime:
                 router_confidence=router_confidence,
                 message=str(exc),
                 include_ood=return_ood,
+                router_analysis=router_analysis,
             )
             self._emit_status(f"[RESULT] status={result.status} crop={crop_name} message={result.message}")
             return result
@@ -197,6 +219,7 @@ class RouterAdapterRuntime:
             router_confidence=router_confidence,
             result=adapter_result,
             include_ood=return_ood,
+            router_analysis=router_analysis,
         )
         status_bits = [
             f"[RESULT] status={payload.status}",

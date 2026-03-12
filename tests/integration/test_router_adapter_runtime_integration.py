@@ -53,3 +53,5 @@ def test_runtime_integration_with_config_manager_and_fake_router(monkeypatch, tm
     assert result["status"] == "success"
     assert result["crop"] == "tomato"
     assert result["diagnosis"] == "healthy"
+    assert result["router"]["status"] == "ok"
+    assert result["router"]["primary_detection"]["crop"] == "tomato"

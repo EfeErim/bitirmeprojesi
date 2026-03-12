@@ -1,6 +1,6 @@
 from PIL import Image
 
-from src.shared.contracts import InferenceResult, OODAnalysis
+from src.shared.contracts import InferenceResult, OODAnalysis, RouterAnalysisResult, RouterDetection
 from src.workflows.inference import InferenceWorkflow
 
 
@@ -25,6 +25,17 @@ class FakeRuntime:
                 is_ood=False,
                 calibration_version=2,
             ),
+            router=RouterAnalysisResult(
+                status="skipped",
+                message="Router skipped because crop_hint was provided.",
+                primary_detection=RouterDetection(
+                    crop="tomato",
+                    part="leaf",
+                    crop_confidence=1.0,
+                    part_confidence=1.0,
+                ),
+                detections_count=1,
+            ),
         )
 
 
@@ -40,3 +51,5 @@ def test_inference_workflow_wraps_runtime_result():
     payload = workflow.predict(Image.new("RGB", (8, 8)), crop_hint="tomato", part_hint="leaf")
     assert payload["diagnosis"] == "healthy"
     assert payload["ood_analysis"]["calibration_version"] == 2
+    assert payload["router"]["status"] == "skipped"
+    assert payload["router"]["primary_detection"]["crop"] == "tomato"

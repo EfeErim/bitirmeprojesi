@@ -4,15 +4,20 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from src.shared.contracts import InferenceResult, OODAnalysis
+from src.shared.contracts import (
+    InferenceResult,
+    OODAnalysis,
+    RouterAnalysisResult,
+    RouterDetection,
+)
 
 
 def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
     """Return the runtime-selected primary detection from an analysis payload."""
-    detections = analysis.get("detections", []) if isinstance(analysis, dict) else []
-    if not detections:
+    router_analysis = normalize_router_analysis(analysis)
+    if router_analysis.primary_detection is None:
         return {}
-    return detections[0]
+    return router_analysis.primary_detection.to_dict()
 
 
 def build_default_ood(*, is_ood: bool) -> OODAnalysis:
@@ -29,7 +34,52 @@ def normalize_ood_analysis(payload: Dict[str, Any] | None) -> OODAnalysis:
     return OODAnalysis.from_dict(payload)
 
 
-def build_unknown_crop_result(*, part_name: str | None, router_confidence: float, include_ood: bool) -> InferenceResult:
+def normalize_router_analysis(
+    payload: Any,
+    *,
+    status: str = "ok",
+    message: str = "",
+) -> RouterAnalysisResult:
+    if isinstance(payload, RouterAnalysisResult):
+        result = payload
+    elif isinstance(payload, dict):
+        result = RouterAnalysisResult.from_dict(payload)
+    else:
+        result = RouterAnalysisResult(status=status, message=message)
+    if not result.status:
+        result.status = status
+    if message and not result.message:
+        result.message = message
+    return result
+
+
+def build_router_skipped_analysis(
+    *,
+    crop_name: str,
+    part_name: str | None,
+    router_confidence: float,
+) -> RouterAnalysisResult:
+    return RouterAnalysisResult(
+        status="skipped",
+        message="Router skipped because crop_hint was provided.",
+        primary_detection=RouterDetection(
+            crop=str(crop_name or "unknown"),
+            part=str(part_name or "unknown"),
+            crop_confidence=float(router_confidence),
+            part_confidence=1.0 if part_name else 0.0,
+        ),
+        detections_count=1,
+    )
+
+
+def build_unknown_crop_result(
+    *,
+    part_name: str | None,
+    router_confidence: float,
+    include_ood: bool,
+    router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
+) -> InferenceResult:
+    normalized_router = normalize_router_analysis(router_analysis)
     return InferenceResult(
         status="unknown_crop",
         crop=None,
@@ -39,10 +89,16 @@ def build_unknown_crop_result(*, part_name: str | None, router_confidence: float
         confidence=0.0,
         message="Router could not resolve a supported crop.",
         ood_analysis=build_default_ood(is_ood=True) if include_ood else None,
+        router=normalized_router,
     )
 
 
 def build_router_unavailable_result(*, message: str, include_ood: bool) -> InferenceResult:
+    router_analysis = RouterAnalysisResult(
+        status="unavailable",
+        message=str(message),
+        detections_count=0,
+    )
     return InferenceResult(
         status="router_unavailable",
         crop=None,
@@ -52,6 +108,7 @@ def build_router_unavailable_result(*, message: str, include_ood: bool) -> Infer
         confidence=0.0,
         message=str(message),
         ood_analysis=build_default_ood(is_ood=False) if include_ood else None,
+        router=router_analysis,
     )
 
 
@@ -62,7 +119,9 @@ def build_adapter_unavailable_result(
     router_confidence: float,
     message: str,
     include_ood: bool,
+    router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
 ) -> InferenceResult:
+    normalized_router = normalize_router_analysis(router_analysis)
     return InferenceResult(
         status="adapter_unavailable",
         crop=crop_name,
@@ -72,6 +131,7 @@ def build_adapter_unavailable_result(
         confidence=0.0,
         message=str(message),
         ood_analysis=build_default_ood(is_ood=False) if include_ood else None,
+        router=normalized_router,
     )
 
 
@@ -82,9 +142,11 @@ def build_success_result(
     router_confidence: float,
     result: Dict[str, Any],
     include_ood: bool,
+    router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
 ) -> InferenceResult:
     disease = result.get("disease", {}) if isinstance(result, dict) else {}
     raw_ood = result.get("ood_analysis", {}) if isinstance(result, dict) else {}
+    normalized_router = normalize_router_analysis(router_analysis)
     return InferenceResult(
         status=str(result.get("status", "success")),
         crop=crop_name,
@@ -96,4 +158,5 @@ def build_success_result(
         ),
         confidence=float(disease.get("confidence", 0.0)),
         ood_analysis=normalize_ood_analysis(raw_ood) if include_ood else None,
+        router=normalized_router,
     )
