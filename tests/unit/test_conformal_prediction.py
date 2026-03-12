@@ -6,11 +6,11 @@ import torch
 
 from src.ood.conformal_prediction import (
     build_prediction_set,
-    calibrate_prediction_set_qhat,
     calibrate_conformal_qhat,
-    compute_prediction_set_nonconformity_scores,
+    calibrate_prediction_set_qhat,
     compute_empirical_coverage,
     compute_nonconformity_scores,
+    compute_prediction_set_nonconformity_scores,
     describe_conformal_method,
     normalize_conformal_method,
     score_all_classes,

@@ -9,7 +9,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List
 
-
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 SPLIT_NAMES = ("train", "val", "test")
 

@@ -876,7 +876,10 @@ def test_predict_with_ood_raises_when_ood_not_calibrated():
     trainer.classifier = nn.Linear(4, 1)
     trainer.encode = lambda images: torch.zeros(images.shape[0], 4)  # type: ignore[assignment]
 
-    with pytest.raises(RuntimeError, match="No calibration loader is available for automatic OOD calibration before predict_with_ood\\(\\)"):
+    with pytest.raises(
+        RuntimeError,
+        match="No calibration loader is available for automatic OOD calibration before predict_with_ood\\(\\)",
+    ):
         trainer.predict_with_ood(torch.zeros(1, 3, 8, 8))
 
 
@@ -901,5 +904,8 @@ def test_save_adapter_rejects_uncalibrated_ood_state(monkeypatch, tmp_path):
     trainer = ContinualSDLoRATrainer(cfg)
     trainer.initialize_engine(class_to_idx={"healthy": 0})
 
-    with pytest.raises(RuntimeError, match="No calibration loader is available for automatic OOD calibration before save_adapter\\(\\)"):
+    with pytest.raises(
+        RuntimeError,
+        match="No calibration loader is available for automatic OOD calibration before save_adapter\\(\\)",
+    ):
         trainer.save_adapter(str(tmp_path / "adapter"))
