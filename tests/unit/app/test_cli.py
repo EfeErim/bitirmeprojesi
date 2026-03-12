@@ -35,7 +35,22 @@ def test_cli_inference_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
                 "part_hint": part_hint,
                 "return_ood": return_ood,
             }
-            return {"status": "success", "diagnosis": "healthy", "crop": "tomato"}
+            return {
+                "status": "success",
+                "diagnosis": "healthy",
+                "crop": "tomato",
+                "router": {
+                    "status": "skipped",
+                    "message": "Router skipped because crop_hint was provided.",
+                    "detections_count": 1,
+                    "primary_detection": {
+                        "crop": "tomato",
+                        "part": "leaf",
+                        "crop_confidence": 1.0,
+                        "part_confidence": 1.0,
+                    },
+                },
+            }
 
     def _open_image(path: Path):
         calls["opened_image"] = Path(path)
@@ -83,6 +98,17 @@ def test_cli_inference_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
         "status": "success",
         "diagnosis": "healthy",
         "crop": "tomato",
+        "router": {
+            "status": "skipped",
+            "message": "Router skipped because crop_hint was provided.",
+            "detections_count": 1,
+            "primary_detection": {
+                "crop": "tomato",
+                "part": "leaf",
+                "crop_confidence": 1.0,
+                "part_confidence": 1.0,
+            },
+        },
     }
 
 
