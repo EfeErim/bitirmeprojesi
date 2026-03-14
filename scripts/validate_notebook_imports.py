@@ -82,7 +82,7 @@ def test_config_surface() -> None:
     from src.core.config_manager import ConfigurationManager
 
     cfg = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()
-    assert {"training", "router", "ood", "colab", "inference"} <= set(cfg.keys())
+    assert {"training", "router", "colab", "inference"} <= set(cfg.keys())
 
 
 def test_continual_trainer_imports() -> None:
@@ -165,7 +165,6 @@ def test_runtime_surface() -> None:
                     "ood": {"threshold_factor": 2.0},
                 }
             },
-            "ood": {"threshold_factor": 2.0},
             "inference": {"adapter_root": "models/adapters", "target_size": 224},
         },
         device="cpu",

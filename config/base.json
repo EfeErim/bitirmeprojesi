@@ -80,8 +80,6 @@
         "best_metric": "val_loss",
         "emit_ood_gate": true,
         "require_ood_for_gate": true,
-        "ood_fallback_strategy": "held_out_benchmark",
-        "ood_benchmark_auto_run": true,
         "ood_benchmark_min_classes": 3
       }
     }
@@ -162,19 +160,6 @@
         "bioclip": "imageomics/bioclip-2.5-vith14"
       }
     }
-  },
-  "ood": {
-    "enabled": true,
-    "method": "ensemble",
-    "threshold_factor": 2.0,
-    "primary_score_method": "auto",
-    "radial_l2_enabled": true,
-    "sure_enabled": true,
-    "conformal_enabled": true,
-    "conformal_alpha": 0.05,
-    "conformal_method": "threshold",
-    "energy_temperature": 1.0,
-    "knn_backend": "auto"
   },
   "inference": {
     "adapter_root": "models/adapters",

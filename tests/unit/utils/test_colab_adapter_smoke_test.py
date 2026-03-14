@@ -69,31 +69,6 @@ def _write_adapter_export_with_crop_info(root: Path, crop_name: str = "tomato") 
     return asset_dir
 
 
-def _write_drive_adapter_export(root: Path, crop_name: str = "tomato") -> Path:
-    asset_dir = root / "artifacts" / "adapter"
-    asset_dir.mkdir(parents=True, exist_ok=True)
-    (root / "artifacts" / "crop_info.json").write_text(
-        f'{{"crop": "{crop_name}", "run_id": "{root.name}"}}',
-        encoding="utf-8",
-    )
-    (asset_dir / "adapter_meta.json").write_text(
-        """
-        {
-          "schema_version": "v6",
-          "engine": "continual_sd_lora",
-          "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
-          "fusion": {"layers": [2, 5, 8, 11], "output_dim": 768, "dropout": 0.1, "gating": "softmax"},
-          "class_to_idx": {"healthy": 0, "blight": 1},
-          "ood_calibration": {"version": 3},
-          "target_modules_resolved": ["encoder.layer.0.attention.q_proj"],
-          "adapter_runtime": {"adapter_wrapped": true}
-        }
-        """.strip(),
-        encoding="utf-8",
-    )
-    return asset_dir
-
-
 def _write_current_drive_adapter_export(root: Path, crop_name: str = "tomato") -> Path:
     asset_dir = root / "artifacts" / "adapter_export" / "continual_sd_lora_adapter"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -152,34 +127,12 @@ def test_load_adapter_summary_accepts_adapter_meta_file(monkeypatch, tmp_path: P
     assert summary["resolved_adapter_dir"] == str(asset_dir)
 
 
-def test_load_adapter_summary_accepts_drive_run_dir_and_infers_crop(monkeypatch, tmp_path: Path):
-    run_dir = tmp_path / "telemetry" / "run_123"
-    asset_dir = _write_drive_adapter_export(run_dir, crop_name="tomato")
-    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
-
-    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir, device="cpu")
-
-    assert summary["resolved_adapter_dir"] == str(asset_dir)
-    assert summary["crop_name"] == "tomato"
-
-
-def test_load_adapter_summary_accepts_current_drive_run_dir_and_infers_crop(monkeypatch, tmp_path: Path):
+def test_load_adapter_summary_accepts_current_drive_export_dir_and_infers_crop(monkeypatch, tmp_path: Path):
     run_dir = tmp_path / "telemetry" / "run_789"
     asset_dir = _write_current_drive_adapter_export(run_dir, crop_name="tomato")
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
 
-    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir, device="cpu")
-
-    assert summary["resolved_adapter_dir"] == str(asset_dir)
-    assert summary["crop_name"] == "tomato"
-
-
-def test_load_adapter_summary_accepts_current_drive_artifacts_dir(monkeypatch, tmp_path: Path):
-    run_dir = tmp_path / "telemetry" / "run_790"
-    asset_dir = _write_current_drive_adapter_export(run_dir, crop_name="tomato")
-    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
-
-    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir / "artifacts", device="cpu")
+    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir / "artifacts" / "adapter_export", device="cpu")
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
@@ -220,7 +173,7 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
 
 
 def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_path: Path):
-    asset_dir = _write_drive_adapter_export(tmp_path / "telemetry" / "run_123", crop_name="tomato")
+    asset_dir = _write_current_drive_adapter_export(tmp_path / "telemetry" / "run_123", crop_name="tomato")
     image_path = tmp_path / "leaf.png"
     Image.new("RGB", (8, 8), color="green").save(image_path)
 
@@ -262,20 +215,6 @@ def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, t
     assert ok_row["error"] == ""
     assert broken_row["status"] == "error"
     assert broken_row["error"]
-
-
-def test_discover_adapter_candidates_reads_drive_exports(tmp_path: Path):
-    drive_root = tmp_path / "drive_root"
-    asset_dir = _write_drive_adapter_export(drive_root / "telemetry" / "run_456", crop_name="tomato")
-
-    candidates = smoke.discover_adapter_candidates([drive_root], crop_name="tomato")
-
-    assert len(candidates) == 1
-    candidate = candidates[0]
-    assert candidate["adapter_dir"] == str(asset_dir)
-    assert candidate["crop_name"] == "tomato"
-    assert candidate["run_id"] == "run_456"
-    assert "run=run_456" in candidate["display_name"]
 
 
 def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path):

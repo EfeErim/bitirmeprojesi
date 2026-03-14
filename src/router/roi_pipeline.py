@@ -3,6 +3,7 @@
 
 import logging
 import time
+from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
@@ -17,6 +18,21 @@ BoundingBox = List[float]
 Detection = Dict[str, Any]
 Candidate = Dict[str, Any]
 
+@dataclass(frozen=True)
+class RoiClassificationHooks:
+    policy_enabled: Callable[[str, bool], bool]
+    extract_roi: Callable[..., Image.Image]
+    clip_score_labels_ensemble: Callable[..., Tuple[str, float, Dict[str, float]]]
+    compute_leaf_likeness: Callable[..., float]
+    rebalance_part_scores_for_leaf_like_roi: Callable[..., Dict[str, float]]
+    select_best_crop_with_fallback: Callable[..., Tuple[str, float]]
+    compatible_parts_for_crop: Callable[[str], List[str]]
+    score_parts_conditioned_on_crop: Callable[..., Dict[str, float]]
+    score_label_candidates: Callable[..., Dict[str, Any]]
+    apply_generic_part_penalty: Callable[[Dict[str, float], List[str], float], Dict[str, float]]
+    select_part_label_with_specificity: Callable[..., Tuple[Optional[str], float]]
+    apply_leaf_like_override: Callable[..., Tuple[str, float]]
+
 LEAF_VISUAL_GENERIC_LABELS = {
     'whole plant',
     'whole',
@@ -29,6 +45,7 @@ __all__ = [
     'classify_sam3_roi_candidate',
     'finalize_sam3_roi_candidate',
     'filter_classified_sam3_detections',
+    'RoiClassificationHooks',
     'run_sam3_roi_classification_stage',
 ]
 
@@ -324,23 +341,14 @@ def classify_sam3_roi_candidate(
     settings: Dict[str, Any],
     part_labels: List[str],
     crop_labels: List[str],
-    policy_enabled_fn: Callable[[str, bool], bool],
-    extract_roi_fn: Callable[..., Image.Image],
-    clip_score_labels_ensemble_fn: Callable[..., Tuple[str, float, Dict[str, float]]],
-    compute_leaf_likeness_fn: Callable[..., float],
-    rebalance_part_scores_for_leaf_like_roi_fn: Callable[..., Dict[str, float]],
-    select_best_crop_with_fallback_fn: Callable[..., Tuple[str, float]],
-    compatible_parts_for_crop_fn: Callable[[str], List[str]],
-    score_parts_conditioned_on_crop_fn: Callable[..., Dict[str, float]],
-    score_label_candidates_fn: Callable[..., Dict[str, Any]],
-    apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
-    select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
-    apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
+    hooks: RoiClassificationHooks,
     global_crop_scores: Optional[Dict[str, float]] = None,
 ) -> Tuple[Optional[Detection], int]:
     """Classify a single ROI candidate and return detection payload + call count."""
     part_num_prompts = settings.get('part_num_prompts')
     crop_num_prompts = settings.get('crop_num_prompts')
+    extract_roi_fn = hooks.extract_roi
+    clip_score_labels_ensemble_fn = hooks.clip_score_labels_ensemble
 
     bbox = candidate['bbox']
     roi_image = extract_roi_fn(pil_image, bbox, pad_ratio=0.08)
@@ -361,22 +369,13 @@ def classify_sam3_roi_candidate(
         image_width=image_width,
         image_height=image_height,
         settings=settings,
-        policy_enabled_fn=policy_enabled_fn,
+        hooks=hooks,
         part_label=part_label,
         part_conf=part_conf,
         part_scores=part_scores,
         crop_label=crop_label,
         crop_conf=crop_conf,
         crop_scores=crop_scores,
-        compute_leaf_likeness_fn=compute_leaf_likeness_fn,
-        rebalance_part_scores_for_leaf_like_roi_fn=rebalance_part_scores_for_leaf_like_roi_fn,
-        select_best_crop_with_fallback_fn=select_best_crop_with_fallback_fn,
-        compatible_parts_for_crop_fn=compatible_parts_for_crop_fn,
-        score_parts_conditioned_on_crop_fn=score_parts_conditioned_on_crop_fn,
-        score_label_candidates_fn=score_label_candidates_fn,
-        apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
-        select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
-        apply_leaf_like_override_fn=apply_leaf_like_override_fn,
         global_crop_scores=global_crop_scores,
     )
     return detection, classification_calls
@@ -389,26 +388,27 @@ def finalize_sam3_roi_candidate(
     image_width: int,
     image_height: int,
     settings: Dict[str, Any],
-    policy_enabled_fn: Callable[[str, bool], bool],
+    hooks: RoiClassificationHooks,
     part_label: str,
     part_conf: float,
     part_scores: Dict[str, float],
     crop_label: str,
     crop_conf: float,
     crop_scores: Dict[str, float],
-    compute_leaf_likeness_fn: Callable[..., float],
-    rebalance_part_scores_for_leaf_like_roi_fn: Callable[..., Dict[str, float]],
-    select_best_crop_with_fallback_fn: Callable[..., Tuple[str, float]],
-    compatible_parts_for_crop_fn: Callable[[str], List[str]],
-    score_parts_conditioned_on_crop_fn: Callable[..., Dict[str, float]],
-    score_label_candidates_fn: Callable[..., Dict[str, Any]],
-    apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
-    select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
-    apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
     global_crop_scores: Optional[Dict[str, float]] = None,
 ) -> Detection:
     """Finalize ROI detection from precomputed crop/part scores."""
     part_num_prompts = settings.get('part_num_prompts')
+    policy_enabled_fn = hooks.policy_enabled
+    compute_leaf_likeness_fn = hooks.compute_leaf_likeness
+    rebalance_part_scores_for_leaf_like_roi_fn = hooks.rebalance_part_scores_for_leaf_like_roi
+    select_best_crop_with_fallback_fn = hooks.select_best_crop_with_fallback
+    compatible_parts_for_crop_fn = hooks.compatible_parts_for_crop
+    score_parts_conditioned_on_crop_fn = hooks.score_parts_conditioned_on_crop
+    score_label_candidates_fn = hooks.score_label_candidates
+    apply_generic_part_penalty_fn = hooks.apply_generic_part_penalty
+    select_part_label_with_specificity_fn = hooks.select_part_label_with_specificity
+    apply_leaf_like_override_fn = hooks.apply_leaf_like_override
 
     compatibility_fusion_enabled = policy_enabled_fn('compatibility_fusion', True)
     conditioned_part_weight = float(settings['conditioned_part_weight'])

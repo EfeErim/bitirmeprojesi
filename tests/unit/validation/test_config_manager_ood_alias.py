@@ -13,12 +13,11 @@ def _write_base_config(path, *, training_ood=None, top_level_ood=None):
                 "fusion": {"layers": [2, 5, 8, 11]},
             }
         },
-        "ood": {"enabled": True, "method": "ensemble"},
     }
     if training_ood is not None:
         payload["training"]["continual"]["ood"] = training_ood
     if top_level_ood is not None:
-        payload["ood"].update(top_level_ood)
+        payload["ood"] = dict(top_level_ood)
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -31,7 +30,7 @@ def test_config_manager_backfills_training_ood_threshold_from_top_level(tmp_path
     merged = manager.load_all_configs()
 
     assert merged["training"]["continual"]["ood"]["threshold_factor"] == 2.5
-    assert merged["ood"]["threshold_factor"] == 2.5
+    assert "ood" not in merged
 
 
 def test_config_manager_prefers_training_ood_threshold_on_conflict(tmp_path):
@@ -47,4 +46,4 @@ def test_config_manager_prefers_training_ood_threshold_on_conflict(tmp_path):
     merged = manager.load_all_configs()
 
     assert merged["training"]["continual"]["ood"]["threshold_factor"] == 1.8
-    assert merged["ood"]["threshold_factor"] == 1.8
+    assert "ood" not in merged

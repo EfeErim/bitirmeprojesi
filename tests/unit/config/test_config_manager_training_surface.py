@@ -10,7 +10,6 @@ def test_colab_training_surface_normalizes_runtime_aliases():
     colab_training = cfg["colab"]["training"]
     assert colab_training["num_workers"] == 12
     assert colab_training["checkpoint_every_n_steps"] == 250
-    assert colab_training["checkpoint_interval"] == 250
     assert colab_training["checkpoint_on_exception"] is True
     assert colab_training["validation_every_n_epochs"] == 2
     assert colab_training["stdout_progress_batch_interval"] == 12
@@ -35,14 +34,11 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["optimization"]["scheduler"]["name"] == "cosine"
     assert continual["evaluation"]["best_metric"] == "val_loss"
     assert continual["evaluation"]["require_ood_for_gate"] is True
-    assert continual["evaluation"]["ood_fallback_strategy"] == "held_out_benchmark"
-    assert continual["evaluation"]["ood_benchmark_auto_run"] is True
     assert continual["evaluation"]["ood_benchmark_min_classes"] == 3
     assert continual["data"]["loader_error_policy"] == "tolerant"
     assert continual["data"]["cache_size"] == 20000
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
-    assert cfg["ood"]["primary_score_method"] == "auto"
 
 
 def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():

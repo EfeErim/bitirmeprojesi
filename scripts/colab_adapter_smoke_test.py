@@ -116,7 +116,7 @@ def _infer_run_id(adapter_dir: Path) -> str:
 
 
 def _is_adapter_dir(path: Path) -> bool:
-    return path.is_dir() and (path / "adapter_meta.json").exists()
+    return path.is_dir() and path.name == "continual_sd_lora_adapter" and (path / "adapter_meta.json").exists()
 
 
 def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
@@ -125,13 +125,6 @@ def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
 
     yield path
     yield path / "continual_sd_lora_adapter"
-    yield path / "adapter_export"
-    yield path / "adapter_export" / "continual_sd_lora_adapter"
-    yield path / "adapter"
-    yield path / "artifacts" / "adapter_export"
-    yield path / "artifacts" / "adapter_export" / "continual_sd_lora_adapter"
-    yield path / "artifacts" / "adapter"
-    yield path / "artifacts" / "continual_sd_lora_adapter"
 
 
 def _iter_adapter_root_candidates(path: Path, *, crop_key: str) -> Iterable[Path]:
@@ -168,7 +161,6 @@ def _resolve_adapter_dir(
         raise FileNotFoundError(
             "Could not resolve an adapter bundle from "
             f"adapter_dir={root}. Pass the adapter asset directory, its parent export directory, "
-            "the telemetry run directory, the telemetry artifacts or adapter_export directory, "
             "or adapter_meta.json."
         )
 
@@ -282,6 +274,8 @@ def discover_adapter_candidates(
     for root in roots:
         for meta_path in sorted(_iter_adapter_meta_paths(root)):
             adapter_dir = meta_path.parent
+            if not _is_adapter_dir(adapter_dir):
+                continue
             adapter_key = str(adapter_dir.resolve())
             if adapter_key in seen:
                 continue

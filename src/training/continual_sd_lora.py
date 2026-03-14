@@ -200,8 +200,6 @@ class ContinualSDLoRAConfig:
     evaluation_best_metric: str = "val_loss"
     evaluation_emit_ood_gate: bool = True
     evaluation_require_ood_for_gate: bool = True
-    evaluation_ood_fallback_strategy: str = "held_out_benchmark"
-    evaluation_ood_benchmark_auto_run: bool = True
     evaluation_ood_benchmark_min_classes: int = 3
     # --- Bi-directional Energy Regularization (BER) ---
     ber_enabled: bool = False
@@ -257,8 +255,6 @@ class ContinualSDLoRAConfig:
             raise ValueError("early_stopping.patience must be non-negative.")
         if self.early_stopping_min_delta < 0.0:
             raise ValueError("early_stopping.min_delta must be non-negative.")
-        if self.evaluation_ood_fallback_strategy not in {"held_out_benchmark", "none"}:
-            raise ValueError("evaluation_ood_fallback_strategy must be 'held_out_benchmark' or 'none'.")
         if self.evaluation_ood_benchmark_min_classes < 1:
             raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
         if self.ood_primary_score_method not in SUPPORTED_REQUESTED_OOD_SCORE_METHODS:
@@ -374,8 +370,6 @@ class ContinualSDLoRAConfig:
                 "best_metric": self.evaluation_best_metric,
                 "emit_ood_gate": self.evaluation_emit_ood_gate,
                 "require_ood_for_gate": self.evaluation_require_ood_for_gate,
-                "ood_fallback_strategy": self.evaluation_ood_fallback_strategy,
-                "ood_benchmark_auto_run": self.evaluation_ood_benchmark_auto_run,
                 "ood_benchmark_min_classes": self.evaluation_ood_benchmark_min_classes,
             },
         }
@@ -470,8 +464,6 @@ class ContinualSDLoRAConfig:
             evaluation_best_metric=str(evaluation.get("best_metric", "val_loss")),
             evaluation_emit_ood_gate=bool(evaluation.get("emit_ood_gate", True)),
             evaluation_require_ood_for_gate=bool(evaluation.get("require_ood_for_gate", True)),
-            evaluation_ood_fallback_strategy=str(evaluation.get("ood_fallback_strategy", "held_out_benchmark")),
-            evaluation_ood_benchmark_auto_run=bool(evaluation.get("ood_benchmark_auto_run", True)),
             evaluation_ood_benchmark_min_classes=int(evaluation.get("ood_benchmark_min_classes", 3)),
             extra=_collect_extra_training_fields(normalized),
         )

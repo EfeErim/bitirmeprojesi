@@ -15,7 +15,6 @@
       "num_workers": 12,
       "validation_every_n_epochs": 2,
       "checkpoint_every_n_steps": 250,
-      "checkpoint_interval": 250,
       "checkpoint_on_exception": true,
       "stdout_progress_batch_interval": 12,
       "stdout_progress_min_interval_sec": 15.0
@@ -41,8 +40,6 @@
         }
       },
       "evaluation": {
-        "ood_fallback_strategy": "held_out_benchmark",
-        "ood_benchmark_auto_run": true,
         "ood_benchmark_min_classes": 3
       },
       "data": {

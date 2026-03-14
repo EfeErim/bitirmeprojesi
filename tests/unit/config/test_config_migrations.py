@@ -37,8 +37,7 @@ def test_manager_migrates_unversioned_top_level_ood_aliases(tmp_path):
     assert merged["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     assert merged["training"]["continual"]["ood"]["threshold_factor"] == 2.5
     assert merged["training"]["continual"]["ood"]["primary_score_method"] == "knn"
-    assert merged["ood"]["threshold_factor"] == 2.5
-    assert merged["ood"]["primary_score_method"] == "knn"
+    assert "ood" not in merged
 
 
 def test_manager_migrates_environment_legacy_aliases_before_merge(tmp_path):
@@ -76,10 +75,7 @@ def test_manager_migrates_environment_legacy_aliases_before_merge(tmp_path):
     assert merged["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     assert merged["training"]["continual"]["ood"]["threshold_factor"] == 3.0
     assert merged["training"]["continual"]["ood"]["primary_score_method"] == "energy"
-    assert merged["ood"]["threshold_factor"] == 3.0
-    assert merged["ood"]["primary_score_method"] == "energy"
     assert merged["colab"]["training"]["checkpoint_every_n_steps"] == 321
-    assert merged["colab"]["training"]["checkpoint_interval"] == 321
 
 
 def test_validate_merged_config_requires_current_schema_version(tmp_path):
@@ -97,7 +93,6 @@ def test_validate_merged_config_requires_current_schema_version(tmp_path):
                     "fusion": {"layers": [2, 5, 8, 11]},
                 }
             },
-            "ood": {"enabled": True},
         },
     )
 

@@ -38,6 +38,7 @@ from src.router.roi_helpers import (
     suppress_overlapping_detections,
 )
 from src.router.roi_pipeline import (
+    RoiClassificationHooks,
     classify_sam3_roi_candidate,
     collect_sam3_roi_candidates,
     filter_classified_sam3_detections,
@@ -340,7 +341,7 @@ def _collect_chunk_roi_candidates(
     return candidates_per_image, roi_seen_per_image, roi_filter_ms_per_image, mask_count_per_image
 
 
-def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
+def _build_roi_classification_hooks(runtime: Any) -> RoiClassificationHooks:
     def _clip_score(
         roi_image: Image.Image,
         labels: List[str],
@@ -399,19 +400,20 @@ def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
             unknown_label=unknown_label,
         )
 
-    return {
-        "policy_enabled_fn": runtime._policy_enabled,
-        "clip_score_labels_ensemble_fn": _clip_score,
-        "compute_leaf_likeness_fn": compute_leaf_likeness,
-        "rebalance_part_scores_for_leaf_like_roi_fn": rebalance_part_scores_for_leaf_like_roi,
-        "select_best_crop_with_fallback_fn": _select_best_crop,
-        "compatible_parts_for_crop_fn": _compatible_parts,
-        "score_parts_conditioned_on_crop_fn": runtime._score_parts_conditioned_on_crop,
-        "score_label_candidates_fn": _score_label_candidates,
-        "apply_generic_part_penalty_fn": apply_generic_part_penalty,
-        "select_part_label_with_specificity_fn": select_part_label_with_specificity,
-        "apply_leaf_like_override_fn": apply_leaf_like_override,
-    }
+    return RoiClassificationHooks(
+        policy_enabled=runtime._policy_enabled,
+        extract_roi=extract_roi,
+        clip_score_labels_ensemble=_clip_score,
+        compute_leaf_likeness=compute_leaf_likeness,
+        rebalance_part_scores_for_leaf_like_roi=rebalance_part_scores_for_leaf_like_roi,
+        select_best_crop_with_fallback=_select_best_crop,
+        compatible_parts_for_crop=_compatible_parts,
+        score_parts_conditioned_on_crop=runtime._score_parts_conditioned_on_crop,
+        score_label_candidates=_score_label_candidates,
+        apply_generic_part_penalty=apply_generic_part_penalty,
+        select_part_label_with_specificity=select_part_label_with_specificity,
+        apply_leaf_like_override=apply_leaf_like_override,
+    )
 
 
 def _score_global_crop_context(
@@ -441,7 +443,6 @@ def _classify_chunk_candidates_batched(
     """Batch-score ROI candidates, then finalize/filter detections per image."""
     records: List[Dict[str, Any]] = []
     hooks = _build_roi_classification_hooks(runtime)
-    finalize_hooks = {key: value for key, value in hooks.items() if key != "clip_score_labels_ensemble_fn"}
     roi_score_batch_size = _resolve_positive_int(runtime.vlm_config.get("roi_score_batch_size", 32), 32)
     for image_index, (context, candidates) in enumerate(zip(contexts, candidates_per_image)):
         for candidate_index, candidate in enumerate(candidates):
@@ -504,7 +505,7 @@ def _classify_chunk_candidates_batched(
             image_width=context.image_width,
             image_height=context.image_height,
             settings=context.settings,
-            **finalize_hooks,
+            hooks=hooks,
             part_label=part_result[0],
             part_conf=part_result[1],
             part_scores=part_result[2],
@@ -586,9 +587,8 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
                 settings=context.settings,
                 part_labels=runtime.part_labels,
                 crop_labels=runtime.crop_labels,
-                extract_roi_fn=extract_roi,
+                hooks=hooks,
                 global_crop_scores=global_crop_scores,
-                **hooks,
             ),
             passes_open_set_gate_fn=passes_open_set_gate,
         )

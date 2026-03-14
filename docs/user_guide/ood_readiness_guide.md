@@ -384,22 +384,17 @@ Important keys:
 - `best_metric`
 - `emit_ood_gate`
 - `require_ood_for_gate`
-- `ood_fallback_strategy`
-- `ood_benchmark_auto_run`
 - `ood_benchmark_min_classes`
 
 Current shipped defaults include:
 
 - `require_ood_for_gate: true`
-- `ood_fallback_strategy: "held_out_benchmark"`
-- `ood_benchmark_auto_run: true`
 - `ood_benchmark_min_classes: 3`
 
 Practical meaning:
 
 - if OOD evidence is required and missing, the final readiness artifact fails
 - if no real `ood/` split exists and the fallback is possible, the workflow runs the held-out benchmark automatically
-- `ood_benchmark_auto_run` is retained on the config surface for compatibility, but the maintained workflow no longer uses it to skip fallback evidence when real `ood/` data is absent
 
 ## Typical Readiness Outcomes
 

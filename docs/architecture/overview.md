@@ -37,7 +37,7 @@ The configuration path is intentionally simple.
 2. If an environment is requested, such as `colab`, it deep-merges `config/colab.json` on top.
 3. `src/core/config_migrations.py` upgrades each config file through the declared `config_schema_version`.
 4. `src/training/services/config_surface.py` normalizes the public training surface under `training.continual`.
-5. Top-level `ood` is projected back from `training.continual.ood` as a compatibility view for legacy callers.
+5. Legacy top-level `ood` and `checkpoint_interval` aliases are migrated on read, but the active config stays canonical.
 6. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
 
 Why this matters:
@@ -273,7 +273,7 @@ Current adapter export detail:
 - local notebook export: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
 - workflow export: `<output_dir>/continual_sd_lora_adapter/`
 - Drive telemetry export: `artifacts/adapter_export/continual_sd_lora_adapter/`
-- some smoke-test helper paths also accept `artifacts/adapter/`
+
 
 ## Colab Support Layer
 

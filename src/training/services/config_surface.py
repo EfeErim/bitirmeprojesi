@@ -83,8 +83,6 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "best_metric": "val_loss",
             "emit_ood_gate": True,
             "require_ood_for_gate": True,
-            "ood_fallback_strategy": "held_out_benchmark",
-            "ood_benchmark_auto_run": True,
             "ood_benchmark_min_classes": 3,
         },
         "learning_rate": 1e-4,
@@ -224,9 +222,9 @@ def normalize_continual_training_config(
     evaluation["best_metric"] = evaluation_best_metric
     evaluation["emit_ood_gate"] = bool(evaluation.get("emit_ood_gate", True))
     evaluation["require_ood_for_gate"] = bool(evaluation.get("require_ood_for_gate", True))
-    evaluation["ood_fallback_strategy"] = str(evaluation.get("ood_fallback_strategy", "held_out_benchmark"))
-    evaluation["ood_benchmark_auto_run"] = bool(evaluation.get("ood_benchmark_auto_run", True))
     evaluation["ood_benchmark_min_classes"] = int(evaluation.get("ood_benchmark_min_classes", 3))
+    evaluation.pop("ood_fallback_strategy", None)
+    evaluation.pop("ood_benchmark_auto_run", None)
 
     early_metric = str(early_stopping.get("metric", evaluation_best_metric))
     inferred_mode = "min" if early_metric in {"val_loss", "generalization_gap"} else "max"

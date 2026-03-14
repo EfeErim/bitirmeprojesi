@@ -112,18 +112,3 @@ def migrate_config_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     migrated[CONFIG_SCHEMA_VERSION_KEY] = CURRENT_CONFIG_SCHEMA_VERSION
     return migrated
-
-
-def project_compatibility_aliases(merged_config: Dict[str, Any]) -> None:
-    merged_config[CONFIG_SCHEMA_VERSION_KEY] = CURRENT_CONFIG_SCHEMA_VERSION
-
-    top_level_ood = _ensure_nested_dict(merged_config, "ood")
-    continual_ood = _ensure_nested_dict(merged_config, "training", "continual", "ood")
-    for key in _LEGACY_OOD_ALIAS_KEYS:
-        if key in continual_ood:
-            top_level_ood[key] = copy.deepcopy(continual_ood[key])
-
-    colab_training = _ensure_nested_dict(merged_config, "colab", "training")
-    checkpoint_every_n_steps = colab_training.get("checkpoint_every_n_steps")
-    if checkpoint_every_n_steps is not None:
-        colab_training["checkpoint_interval"] = copy.deepcopy(checkpoint_every_n_steps)

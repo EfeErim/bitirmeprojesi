@@ -318,7 +318,7 @@ The config flow is:
 2. `config/<environment>.json` is merged on top when requested.
 3. `ConfigurationManager` applies the versioned migration step declared by `config_schema_version`.
 4. `ConfigurationManager` normalizes the training surface.
-5. Top-level `ood` remains a compatibility mirror of `training.continual.ood` for legacy callers.
+5. Legacy top-level `ood` and `checkpoint_interval` aliases are migrated on read, but the active config stays canonical.
 6. Prohibited 4-bit flags are rejected before use.
 
 The most important config areas are:
@@ -421,7 +421,6 @@ runs/<RUN_ID>/
 Important current detail:
 
 - Notebook 2 exports the Drive adapter bundle under `artifacts/adapter_export/continual_sd_lora_adapter/`.
-- Some older helper paths still accept `artifacts/adapter/`.
 
 ## How Deployment Handoff Works
 

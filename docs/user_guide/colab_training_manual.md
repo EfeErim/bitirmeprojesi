@@ -247,8 +247,6 @@ These control how strict the final deployment verdict is:
 - `training.continual.evaluation.best_metric`
 - `training.continual.evaluation.emit_ood_gate`
 - `training.continual.evaluation.require_ood_for_gate`
-- `training.continual.evaluation.ood_fallback_strategy`
-- `training.continual.evaluation.ood_benchmark_auto_run`
 - `training.continual.evaluation.ood_benchmark_min_classes`
 
 Practical interpretation:
@@ -267,10 +265,6 @@ These do not change the model itself. They change the notebook runtime behavior:
 - `colab.training.checkpoint_on_exception`
 - `colab.training.stdout_progress_batch_interval`
 - `colab.training.stdout_progress_min_interval_sec`
-
-Legacy compatibility note:
-
-- `checkpoint_interval` is still normalized as an alias for `checkpoint_every_n_steps`
 
 Current Colab default tradeoffs:
 
@@ -401,7 +395,6 @@ Important durability guardrail:
 Important current-state note:
 
 - Notebook 2 currently exports adapter assets to `artifacts/adapter_export/continual_sd_lora_adapter/`
-- some older helpers and fixtures also support `artifacts/adapter/`
 - Drive telemetry manifests point to the best rolling checkpoint; they do not maintain a second duplicated best-checkpoint tree
 
 ## How To Read The Main Training Artifacts
@@ -504,10 +497,7 @@ Current accepted `ADAPTER_DIR` patterns include:
 
 - direct asset dir: `.../continual_sd_lora_adapter/`
 - parent export dir: `outputs/colab_notebook_training/`
-- telemetry run dir: `.../telemetry/<RUN_ID>/`
-- telemetry artifacts dir: `.../telemetry/<RUN_ID>/artifacts/`
 - current Drive export dir: `.../telemetry/<RUN_ID>/artifacts/adapter_export/`
-- older telemetry adapter dir when present: `.../telemetry/<RUN_ID>/artifacts/adapter/`
 - direct metadata file: `.../adapter_meta.json`
 
 Current accepted `ADAPTER_ROOT` pattern:
@@ -516,7 +506,7 @@ Current accepted `ADAPTER_ROOT` pattern:
 
 Important caveat:
 
-- current helper resolution accepts the telemetry run dir, the `artifacts/` dir, the `adapter_export/` dir, or the `continual_sd_lora_adapter/` folder itself for the current export layout
+- current helper resolution accepts the `adapter_export/` dir or the `continual_sd_lora_adapter/` folder itself for the current export layout
 - `ADAPTER_ROOT` is for deployed adapters under `models/adapters/<crop>/...`, not for telemetry run roots
 
 ### Image input rules

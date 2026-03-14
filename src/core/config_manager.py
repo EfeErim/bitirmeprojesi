@@ -14,7 +14,6 @@ from src.core.config_migrations import (
     CURRENT_CONFIG_SCHEMA_VERSION,
     is_versioned_config_surface_payload,
     migrate_config_payload,
-    project_compatibility_aliases,
 )
 from src.shared.json_utils import deep_merge, read_json_dict
 from src.training.quantization import assert_no_prohibited_4bit_flags
@@ -72,7 +71,8 @@ class ConfigurationManager:
         if self._environment:
             merged = _deep_merge(merged, self.get_environment_config(self._environment))
         self._normalize_training_surface(merged)
-        project_compatibility_aliases(merged)
+        merged.pop("ood", None)
+        merged[CONFIG_SCHEMA_VERSION_KEY] = CURRENT_CONFIG_SCHEMA_VERSION
         assert_no_prohibited_4bit_flags(merged)
         self._merged_config = merged
         return copy.deepcopy(merged)
@@ -95,7 +95,7 @@ class ConfigurationManager:
         config = self._merged_config if self._merged_config is not None else self.load_all_configs()
         if int(config.get(CONFIG_SCHEMA_VERSION_KEY, 0)) != CURRENT_CONFIG_SCHEMA_VERSION:
             return False
-        required = ("training", "router", "ood")
+        required = ("training", "router")
         if any(section not in config for section in required):
             return False
         continual = config.get("training", {}).get("continual")

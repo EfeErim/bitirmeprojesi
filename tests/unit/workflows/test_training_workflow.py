@@ -196,7 +196,6 @@ def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_
                     "batch_size": 2,
                     "seed": 7,
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
-                    "evaluation": {"ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
                 }
             },
             "colab": {"training": {"num_workers": 0, "pin_memory": False, "checkpoint_every_n_steps": 1}},
@@ -246,7 +245,6 @@ def test_training_workflow_uses_colab_validation_cadence(monkeypatch, tmp_path: 
                     "batch_size": 2,
                     "seed": 7,
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
-                    "evaluation": {"ood_fallback_strategy": "none", "ood_benchmark_auto_run": False},
                 }
             },
             "colab": {
@@ -512,8 +510,6 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
                     "evaluation": {
                         "require_ood_for_gate": True,
-                        "ood_fallback_strategy": "held_out_benchmark",
-                        "ood_benchmark_auto_run": True,
                         "ood_benchmark_min_classes": 3,
                     },
                 }
@@ -565,8 +561,6 @@ def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch,
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
                     "evaluation": {
                         "require_ood_for_gate": False,
-                        "ood_fallback_strategy": "none",
-                        "ood_benchmark_auto_run": False,
                     },
                 }
             },
@@ -587,7 +581,7 @@ def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch,
     assert result.production_readiness["ood_evidence"]["evaluation"]["require_ood"] is False
 
 
-def test_training_workflow_forces_held_out_benchmark_when_config_requests_no_fallback(monkeypatch, tmp_path: Path):
+def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp_path: Path):
     benchmark_calls = []
     monkeypatch.setattr(
         "src.workflows.training.create_training_loaders",
@@ -631,8 +625,6 @@ def test_training_workflow_forces_held_out_benchmark_when_config_requests_no_fal
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
                     "evaluation": {
                         "require_ood_for_gate": True,
-                        "ood_fallback_strategy": "none",
-                        "ood_benchmark_auto_run": False,
                         "ood_benchmark_min_classes": 3,
                     },
                 }
@@ -684,8 +676,6 @@ def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp
                     "evaluation": {
                         "emit_ood_gate": False,
                         "require_ood_for_gate": False,
-                        "ood_fallback_strategy": "none",
-                        "ood_benchmark_auto_run": False,
                     },
                 }
             },
@@ -749,8 +739,6 @@ def test_training_workflow_restores_best_state_before_export(monkeypatch, tmp_pa
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
                     "evaluation": {
                         "require_ood_for_gate": False,
-                        "ood_fallback_strategy": "none",
-                        "ood_benchmark_auto_run": False,
                     },
                 }
             },
@@ -794,8 +782,6 @@ def test_training_workflow_requires_isolated_eval_split_when_val_used_for_calibr
                     "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
                     "evaluation": {
                         "require_ood_for_gate": False,
-                        "ood_fallback_strategy": "none",
-                        "ood_benchmark_auto_run": False,
                     },
                 }
             },

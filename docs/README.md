@@ -196,4 +196,3 @@ Local or generated:
 - `requirements_colab.txt` at the repo root is the canonical Colab dependency list.
 - `colab_notebooks/requirements_colab.txt` is only a wrapper so notebook-local bootstrap can find the root file.
 - Notebook 2 currently exports Drive adapter assets under `artifacts/adapter_export/continual_sd_lora_adapter/`.
-- Some older helpers also accept `artifacts/adapter/`.
