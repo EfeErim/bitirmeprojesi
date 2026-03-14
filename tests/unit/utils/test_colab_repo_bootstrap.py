@@ -84,6 +84,61 @@ def test_maybe_clone_repo_uses_github_token_for_https_clone(tmp_path: Path, monk
     assert calls[0][4] == "https://gh-secret@github.com/EfeErim/bitirmeprojesi.git"
 
 
+def test_flatten_colab_safe_requirements_expands_nested_files_and_skips_torch_family(tmp_path: Path):
+    root_req = tmp_path / "requirements_colab.txt"
+    base_req = tmp_path / "requirements.txt"
+    nested_req = tmp_path / "extras.txt"
+
+    base_req.write_text(
+        "\n".join(
+            [
+                "torch~=2.10.0",
+                "torchvision~=0.25.0",
+                "transformers~=5.1.0",
+                "-r extras.txt",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    nested_req.write_text(
+        "\n".join(
+            [
+                "open-clip-torch~=3.2.0",
+                "torchaudio~=2.10.0",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    root_req.write_text("-r requirements.txt\npsutil>=5.9.0\n", encoding="utf-8")
+
+    flattened = bootstrap._flatten_colab_safe_requirements(root_req)
+
+    assert flattened == [
+        "transformers~=5.1.0",
+        "open-clip-torch~=3.2.0",
+        "psutil>=5.9.0",
+    ]
+
+
+def test_install_colab_requirements_raises_when_filtered_pip_install_fails(tmp_path: Path, monkeypatch):
+    req = tmp_path / "requirements_colab.txt"
+    req.write_text("open-clip-torch~=3.2.0\n", encoding="utf-8")
+
+    def fake_run(command, check=False, stdout=None, stderr=None, text=None):
+        return subprocess.CompletedProcess(command, 1, stdout="pip failure details")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    try:
+        bootstrap.install_colab_requirements(req, in_colab=True)
+    except RuntimeError as exc:
+        assert "Colab dependency installation failed" in str(exc)
+    else:
+        raise AssertionError("Expected install_colab_requirements to raise on pip failure")
+
+
 def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
     monkeypatch.setattr(bootstrap, "resolve_hf_token", lambda: None)
     lines: list[str] = []

@@ -8,12 +8,14 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import Callable, Optional
 from urllib.parse import urlsplit, urlunsplit
 
 HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
 GITHUB_TOKEN_NAMES = ("GH_TOKEN", "GITHUB_TOKEN")
+TORCH_REQUIREMENT_PREFIXES = ("torch", "torchvision", "torchaudio")
 
 
 def is_repo_root(path: Path) -> bool:
@@ -70,17 +72,49 @@ def install_colab_requirements(req_path: Path, in_colab: bool) -> None:
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(req)], check=False)
         return
 
-    lines = req.read_text(encoding="utf-8").splitlines()
-    filtered: list[str] = []
-    for line in lines:
-        stripped = line.strip().lower()
-        if stripped.startswith("torch") or stripped.startswith("torchvision") or stripped.startswith("torchaudio"):
-            continue
-        filtered.append(line)
-
-    tmp_req = Path("/tmp/aads_colab_requirements_no_torch.txt")
+    filtered = _flatten_colab_safe_requirements(req)
+    tmp_req = Path(tempfile.gettempdir()) / "aads_colab_requirements_no_torch.txt"
+    tmp_req.parent.mkdir(parents=True, exist_ok=True)
     tmp_req.write_text("\n".join(filtered) + "\n", encoding="utf-8")
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", str(tmp_req)], check=False)
+    completed = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-r", str(tmp_req)],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+    )
+    if completed.returncode != 0:
+        output = str(completed.stdout or "").strip()
+        if output:
+            print(output)
+        raise RuntimeError(
+            "Colab dependency installation failed for the filtered requirements set. "
+            "See pip output above for details."
+        )
+
+
+def _flatten_colab_safe_requirements(req_path: Path, _seen: Optional[set[Path]] = None) -> list[str]:
+    resolved_path = Path(req_path).expanduser().resolve()
+    seen = set() if _seen is None else _seen
+    if resolved_path in seen:
+        return []
+    seen.add(resolved_path)
+
+    filtered: list[str] = []
+    for raw_line in resolved_path.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        lowered = stripped.lower()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if lowered.startswith(("-r ", "--requirement ")):
+            _, include_path = stripped.split(maxsplit=1)
+            nested_path = (resolved_path.parent / include_path.strip()).resolve()
+            filtered.extend(_flatten_colab_safe_requirements(nested_path, seen))
+            continue
+        if lowered.startswith(TORCH_REQUIREMENT_PREFIXES):
+            continue
+        filtered.append(stripped)
+    return filtered
 
 
 def resolve_repo_root() -> Path:
