@@ -209,6 +209,49 @@ def test_colab_helpers() -> None:
     _ = (TrainingCheckpointManager, prepare_runtime_dataset_layout, ColabLiveTelemetry, evaluate_layout)
 
 
+def test_training_notebook_bootstrap_contract() -> None:
+    import json
+
+    notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
+    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    cells = payload.get("cells", [])
+    bootstrap_source = ""
+    parameter_source = ""
+    for cell in cells:
+        if cell.get("cell_type") != "code":
+            continue
+        source = "".join(cell.get("source", []))
+        if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
+            bootstrap_source = source
+        if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
+            parameter_source = source
+
+    assert bootstrap_source, "Notebook 2 bootstrap cell was not found"
+    assert parameter_source, "Notebook 2 parameter cell was not found"
+    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
+
+    required_bootstrap_snippets = (
+        "RUN_ID =",
+        "TELEMETRY = ColabLiveTelemetry(",
+        "CHECKPOINT_MANAGER =",
+        "DEVICE =",
+        "def rt(",
+        "REPO_RUN_DIR =",
+        "REPO_NOTEBOOK_OUTPUT_PATH =",
+        "def save_run_outputs_to_repo()",
+    )
+    missing = [snippet for snippet in required_bootstrap_snippets if snippet not in bootstrap_source]
+    if missing:
+        raise AssertionError(f"Notebook 2 bootstrap cell is missing required setup: {', '.join(missing)}")
+
+    assert 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in parameter_source
+    assert full_source.index("TELEMETRY = ColabLiveTelemetry(") < full_source.index(
+        'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):'
+    )
+    assert full_source.index("RUN_ID =") < full_source.index("run_id = RUN_ID")
+    assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
+
+
 CHECKS = (
     ValidationCheck(
         result_name="Runtime Dependencies",
@@ -274,6 +317,15 @@ CHECKS = (
         success_message="Colab helper surfaces imported successfully",
         failure_prefix="Colab helper import failed",
         callback=test_colab_helpers,
+    ),
+    ValidationCheck(
+        result_name="Notebook 2 Bootstrap",
+        step_id="NB2_BOOTSTRAP",
+        description="Notebook 2 bootstrap contract",
+        success_message="Notebook 2 bootstrap globals are defined before use",
+        failure_prefix="Notebook 2 bootstrap contract failed",
+        callback=test_training_notebook_bootstrap_contract,
+        requires_runtime_dependencies=False,
     ),
 )
 
