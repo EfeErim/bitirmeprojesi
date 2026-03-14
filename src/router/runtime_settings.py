@@ -57,9 +57,9 @@ def build_sam3_runtime_settings(
         policy_value_fn("part_resolution", "specific_part_min_confidence", 0.12)
     )
 
-    preferred_part_labels_raw = policy_value_fn("part_resolution", "preferred_part_labels", ["leaf"])
+    preferred_part_labels_raw = policy_value_fn("part_resolution", "preferred_part_labels", [])
     settings["preferred_part_labels"] = (
-        [str(label) for label in preferred_part_labels_raw] if isinstance(preferred_part_labels_raw, list) else ["leaf"]
+        [str(label) for label in preferred_part_labels_raw] if isinstance(preferred_part_labels_raw, list) else []
     )
     settings["preferred_part_override_ratio"] = float(
         policy_value_fn("part_resolution", "preferred_part_override_ratio", 0.50)
@@ -71,17 +71,20 @@ def build_sam3_runtime_settings(
     leaf_override_target_raw = policy_value_fn(
         "part_resolution",
         "leaf_override_target_labels",
-        ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"],
+        ["whole plant", "whole", "plant", "entire plant"],
     )
     settings["leaf_override_target_labels"] = (
         [str(label) for label in leaf_override_target_raw]
         if isinstance(leaf_override_target_raw, list)
-        else ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"]
+        else ["whole plant", "whole", "plant", "entire plant"]
     )
 
-    settings["leaf_override_ratio"] = float(policy_value_fn("part_resolution", "leaf_override_ratio", 0.35))
+    settings["leaf_override_ratio"] = float(policy_value_fn("part_resolution", "leaf_override_ratio", 0.90))
     settings["leaf_override_min_confidence"] = float(
-        policy_value_fn("part_resolution", "leaf_override_min_confidence", 0.10)
+        policy_value_fn("part_resolution", "leaf_override_min_confidence", 0.16)
+    )
+    settings["leaf_override_min_margin"] = float(
+        policy_value_fn("part_resolution", "leaf_override_min_margin", 0.04)
     )
     settings["leaf_override_min_area_ratio"] = float(
         policy_value_fn("part_resolution", "leaf_override_min_area_ratio", 0.02)
@@ -93,12 +96,13 @@ def build_sam3_runtime_settings(
         policy_value_fn("part_resolution", "leaf_visual_override_enabled", True)
     )
     settings["leaf_visual_likeness_threshold"] = float(
-        policy_value_fn("part_resolution", "leaf_visual_likeness_threshold", 0.44)
+        policy_value_fn("part_resolution", "leaf_visual_likeness_threshold", 0.58)
     )
-    settings["leaf_visual_green_min"] = float(policy_value_fn("part_resolution", "leaf_visual_green_min", 0.12))
+    settings["leaf_visual_green_min"] = float(policy_value_fn("part_resolution", "leaf_visual_green_min", 0.18))
+    settings["leaf_visual_min_margin"] = float(policy_value_fn("part_resolution", "leaf_visual_min_margin", 0.05))
     settings["leaf_visual_force_generic"] = bool(policy_value_fn("part_resolution", "leaf_visual_force_generic", True))
     settings["leaf_visual_force_without_leaf_score"] = bool(
-        policy_value_fn("part_resolution", "leaf_visual_force_without_leaf_score", True)
+        policy_value_fn("part_resolution", "leaf_visual_force_without_leaf_score", False)
     )
     settings["leaf_visual_force_conf_floor"] = float(
         policy_value_fn("part_resolution", "leaf_visual_force_conf_floor", 0.16)
@@ -122,12 +126,18 @@ def build_sam3_runtime_settings(
         policy_value_fn("part_resolution", "leaf_part_rebalance_enabled", True)
     )
     settings["leaf_part_rebalance_threshold"] = float(
-        policy_value_fn("part_resolution", "leaf_part_rebalance_threshold", 0.34)
+        policy_value_fn("part_resolution", "leaf_part_rebalance_threshold", 0.52)
     )
     settings["leaf_part_rebalance_penalty"] = float(
-        policy_value_fn("part_resolution", "leaf_part_rebalance_penalty", 0.55)
+        policy_value_fn("part_resolution", "leaf_part_rebalance_penalty", 0.80)
     )
-    settings["leaf_part_rebalance_boost"] = float(policy_value_fn("part_resolution", "leaf_part_rebalance_boost", 1.35))
+    settings["leaf_part_rebalance_boost"] = float(policy_value_fn("part_resolution", "leaf_part_rebalance_boost", 1.15))
+    settings["leaf_part_rebalance_min_confidence"] = float(
+        policy_value_fn("part_resolution", "leaf_part_rebalance_min_confidence", 0.18)
+    )
+    settings["leaf_part_rebalance_support_ratio"] = float(
+        policy_value_fn("part_resolution", "leaf_part_rebalance_support_ratio", 0.75)
+    )
 
     max_rois_raw = policy_value_fn("roi_filter", "max_rois_for_classification", 0)
     try:
@@ -157,6 +167,12 @@ def build_sam3_runtime_settings(
     settings["weight_crop"] = float(quality_weights.get("crop_confidence", 0.65))
     settings["weight_part"] = float(quality_weights.get("part_confidence", 0.20))
     settings["weight_sam3"] = float(quality_weights.get("sam3_score", 0.15))
+    settings["global_crop_context_enabled"] = bool(
+        policy_value_fn("crop_evidence", "global_crop_context_enabled", True)
+    )
+    settings["global_crop_context_weight"] = float(
+        policy_value_fn("crop_evidence", "global_crop_context_weight", 0.65)
+    )
 
     settings["focus_part_mode_enabled"] = bool(policy_value_fn("focus_mode", "focus_part_mode_enabled", False))
     focus_parts_raw = policy_value_fn("focus_mode", "focus_parts", ["leaf"])

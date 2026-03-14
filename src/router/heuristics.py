@@ -130,11 +130,12 @@ def apply_leaf_like_override(
     override_target_labels: Optional[List[str]] = None,
     leaf_score_ratio: float = 0.35,
     leaf_min_confidence: float = 0.10,
+    leaf_min_margin: float = 0.0,
     leaf_min_area_ratio: float = 0.02,
     leaf_aspect_min: float = 0.30,
     leaf_aspect_max: float = 3.20,
 ) -> Tuple[str, float]:
-    """Prefer leaf part for leaf-like ROIs when selected label is generic or broad."""
+    """Prefer leaf part only when leaf evidence dominates broad/generic alternatives."""
     if not part_scores:
         return selected_label, float(selected_score)
 
@@ -152,7 +153,7 @@ def apply_leaf_like_override(
 
     leaf_name, leaf_score = max(leaf_candidates.items(), key=lambda item: item[1])
 
-    target_labels = override_target_labels or ["whole plant", "whole", "plant", "entire plant", "fruit", "berry"]
+    target_labels = override_target_labels or ["whole plant", "whole", "plant", "entire plant"]
     target_set = _normalized_label_set(target_labels)
     current_key = str(selected_label).strip().lower()
     if current_key not in target_set:
@@ -172,7 +173,20 @@ def apply_leaf_like_override(
 
     ratio = _clamp_unit_interval(leaf_score_ratio)
     min_conf = _clamp_unit_interval(leaf_min_confidence)
-    if leaf_score >= min_conf and leaf_score >= float(selected_score) * ratio:
+    min_margin = max(0.0, float(leaf_min_margin))
+    strongest_alternative = max(
+        (
+            float(score)
+            for label, score in part_scores.items()
+            if str(label).strip().lower() != leaf_key
+        ),
+        default=0.0,
+    )
+    if (
+        leaf_score >= min_conf
+        and leaf_score >= float(selected_score) * ratio
+        and leaf_score >= strongest_alternative + min_margin
+    ):
         return leaf_name, leaf_score
 
     return selected_label, float(selected_score)
@@ -237,8 +251,10 @@ def rebalance_part_scores_for_leaf_like_roi(
     activation_threshold: float = 0.34,
     non_foliar_penalty: float = 0.55,
     leaf_boost: float = 1.35,
+    leaf_min_confidence: float = 0.10,
+    leaf_support_ratio: float = 0.0,
 ) -> Dict[str, float]:
-    """Boost leaf and suppress non-foliar labels for leaf-like ROIs."""
+    """Rebalance part scores only when visual and classifier evidence agree on leaf."""
     if not part_scores:
         return {}
 
@@ -248,6 +264,26 @@ def rebalance_part_scores_for_leaf_like_roi(
 
     leaf_key = str(leaf_label).strip().lower()
     if not leaf_key:
+        return dict(part_scores)
+
+    leaf_name = None
+    leaf_score = 0.0
+    strongest_other = 0.0
+    for part_name, score in part_scores.items():
+        key = str(part_name).strip().lower()
+        value = float(score)
+        if key == leaf_key and value >= leaf_score:
+            leaf_name = part_name
+            leaf_score = value
+        elif value > strongest_other:
+            strongest_other = value
+
+    if leaf_name is None:
+        return dict(part_scores)
+
+    min_leaf_conf = _clamp_unit_interval(leaf_min_confidence)
+    support_ratio = _clamp_unit_interval(leaf_support_ratio)
+    if leaf_score < max(min_leaf_conf, strongest_other * support_ratio):
         return dict(part_scores)
 
     default_non_foliar = [
@@ -272,8 +308,12 @@ def rebalance_part_scores_for_leaf_like_roi(
         non_foliar_part_labels if isinstance(non_foliar_part_labels, list) else default_non_foliar
     )
 
-    penalty = _clamp_unit_interval(non_foliar_penalty)
-    boost = max(1.0, float(leaf_boost))
+    evidence = (float(leaf_likeness) - threshold) / max(1e-6, 1.0 - threshold)
+    evidence = _clamp_unit_interval(evidence)
+    penalty_floor = _clamp_unit_interval(non_foliar_penalty)
+    penalty = 1.0 - ((1.0 - penalty_floor) * evidence)
+    boost_ceiling = max(1.0, float(leaf_boost))
+    boost = 1.0 + ((boost_ceiling - 1.0) * evidence)
 
     adjusted: Dict[str, float] = {}
     for part_name, score in part_scores.items():
@@ -293,26 +333,44 @@ def select_best_crop_with_fallback(
     part_scores: Dict[str, float],
     crop_part_compatibility: Dict[str, List[str]],
     part_labels: List[str],
+    *,
+    global_crop_scores: Optional[Dict[str, float]] = None,
+    global_crop_context_weight: float = 0.0,
 ) -> Tuple[str, float]:
-    """Rerank crop scores by compatible-part evidence when crop confidence is uncertain."""
+    """Rerank crop scores by part compatibility and whole-image crop context."""
     if not crop_scores:
         return "unknown", 0.0
 
-    best_crop_raw, best_score_raw = max(crop_scores.items(), key=lambda item: item[1])
-    if not part_scores:
-        return best_crop_raw, best_score_raw
+    reranked_scores: Dict[str, float] = {crop_name: float(score) for crop_name, score in crop_scores.items()}
+    best_crop_raw, best_score_raw = max(reranked_scores.items(), key=lambda item: item[1])
 
-    sorted_crop_scores = sorted(float(v) for v in crop_scores.values())
-    second_best = sorted_crop_scores[-2] if len(sorted_crop_scores) > 1 else 0.0
-    uncertainty = max(0.0, 1.0 - max(0.0, min(1.0, best_score_raw - second_best)))
+    if part_scores:
+        sorted_crop_scores = sorted(float(v) for v in reranked_scores.values())
+        second_best = sorted_crop_scores[-2] if len(sorted_crop_scores) > 1 else 0.0
+        uncertainty = max(0.0, 1.0 - max(0.0, min(1.0, best_score_raw - second_best)))
 
-    reranked_scores: Dict[str, float] = {}
-    for crop_name, base_score in crop_scores.items():
-        compatible_parts = compatible_parts_for_crop(crop_name, crop_part_compatibility, part_labels)
-        compatible_part_score = 0.0
-        if compatible_parts:
-            compatible_part_score = max(float(part_scores.get(part, 0.0)) for part in compatible_parts)
-        reranked_scores[crop_name] = float(base_score) + (1.0 - float(base_score)) * compatible_part_score * uncertainty
+        reranked_with_parts: Dict[str, float] = {}
+        for crop_name, base_score in reranked_scores.items():
+            compatible_parts = compatible_parts_for_crop(crop_name, crop_part_compatibility, part_labels)
+            compatible_part_score = 0.0
+            if compatible_parts:
+                compatible_part_score = max(float(part_scores.get(part, 0.0)) for part in compatible_parts)
+            reranked_with_parts[crop_name] = (
+                float(base_score) + (1.0 - float(base_score)) * compatible_part_score * uncertainty
+            )
+        reranked_scores = reranked_with_parts
+
+    context_weight = _clamp_unit_interval(global_crop_context_weight)
+    if global_crop_scores and context_weight > 0.0:
+        normalized_context_scores = {
+            str(crop_name).strip().lower(): float(score)
+            for crop_name, score in global_crop_scores.items()
+        }
+        reranked_scores = {
+            crop_name: ((1.0 - context_weight) * float(score))
+            + (context_weight * float(normalized_context_scores.get(str(crop_name).strip().lower(), 0.0)))
+            for crop_name, score in reranked_scores.items()
+        }
 
     best_crop, best_score = max(reranked_scores.items(), key=lambda item: item[1])
     return best_crop, best_score

@@ -19,8 +19,6 @@ LEAF_VISUAL_GENERIC_LABELS = {
     'whole',
     'plant',
     'entire plant',
-    'fruit',
-    'berry',
 }
 
 __all__ = [
@@ -207,6 +205,7 @@ def classify_sam3_roi_candidate(
     apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
     select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
     apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
+    global_crop_scores: Optional[Dict[str, float]] = None,
 ) -> Tuple[Optional[Detection], int]:
     """Classify a single ROI candidate and return detection payload + call count."""
     part_num_prompts = settings.get('part_num_prompts')
@@ -246,6 +245,7 @@ def classify_sam3_roi_candidate(
         apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
         select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
         apply_leaf_like_override_fn=apply_leaf_like_override_fn,
+        global_crop_scores=global_crop_scores,
     )
     return detection, classification_calls
 
@@ -272,6 +272,7 @@ def finalize_sam3_roi_candidate(
     apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
     select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
     apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
+    global_crop_scores: Optional[Dict[str, float]] = None,
 ) -> Detection:
     """Finalize ROI detection from precomputed crop/part scores."""
     part_num_prompts = settings.get('part_num_prompts')
@@ -313,6 +314,8 @@ def finalize_sam3_roi_candidate(
             activation_threshold=settings['leaf_part_rebalance_threshold'],
             non_foliar_penalty=settings['leaf_part_rebalance_penalty'],
             leaf_boost=settings['leaf_part_rebalance_boost'],
+            leaf_min_confidence=settings.get('leaf_part_rebalance_min_confidence', 0.18),
+            leaf_support_ratio=settings.get('leaf_part_rebalance_support_ratio', 0.75),
         )
         if part_scores:
             part_label = max(part_scores, key=lambda label: float(part_scores.get(label, 0.0)))
@@ -321,6 +324,8 @@ def finalize_sam3_roi_candidate(
     crop_label, crop_conf = select_best_crop_with_fallback_fn(
         crop_scores,
         part_scores,
+        global_crop_scores=global_crop_scores if settings.get('global_crop_context_enabled', True) else None,
+        global_crop_context_weight=float(settings.get('global_crop_context_weight', 0.65)),
     )
 
     compatible_parts = compatible_parts_for_crop_fn(crop_label)
@@ -377,6 +382,7 @@ def finalize_sam3_roi_candidate(
             override_target_labels=settings['leaf_override_target_labels'],
             leaf_score_ratio=settings['leaf_override_ratio'],
             leaf_min_confidence=settings['leaf_override_min_confidence'],
+            leaf_min_margin=settings.get('leaf_override_min_margin', 0.04),
             leaf_min_area_ratio=settings['leaf_override_min_area_ratio'],
             leaf_aspect_min=settings['leaf_override_aspect_min'],
             leaf_aspect_max=settings['leaf_override_aspect_max'],
@@ -397,16 +403,28 @@ def finalize_sam3_roi_candidate(
 
         threshold = max(0.0, min(1.0, settings['leaf_visual_likeness_threshold']))
         min_leaf_score = max(0.0, min(1.0, settings['leaf_visual_green_min']))
+        min_leaf_margin = max(0.0, float(settings.get('leaf_visual_min_margin', 0.05)))
+        strongest_non_leaf = max(
+            (
+                float(score_value)
+                for score_label, score_value in resolved_part_scores.items()
+                if str(score_label).strip().lower() != leaf_key
+            ),
+            default=0.0,
+        )
+        leaf_margin_ok = leaf_score >= strongest_non_leaf + min_leaf_margin
         if leaf_likeness >= threshold:
             leaf_score_ok = leaf_score >= min_leaf_score
-            if leaf_score_ok or settings.get('leaf_visual_force_without_leaf_score', True):
+            if (leaf_score_ok and leaf_margin_ok) or (
+                settings.get('leaf_visual_force_without_leaf_score', False) and leaf_margin_ok
+            ):
                 if settings.get('leaf_visual_force_generic', True):
                     floor_conf = max(0.0, min(1.0, settings['leaf_visual_force_conf_floor']))
                     part_factor = max(0.0, min(1.0, settings['leaf_visual_force_part_factor']))
                     forced_conf = max(leaf_score, float(part_conf) * part_factor, floor_conf)
                     part_label = leaf_override_label
                     part_conf = forced_conf
-                elif leaf_score_ok:
+                elif leaf_score_ok and leaf_margin_ok:
                     part_label = leaf_override_label
                     part_conf = max(part_conf, leaf_score)
 

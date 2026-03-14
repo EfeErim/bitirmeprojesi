@@ -36,7 +36,7 @@ If you are completely new, read in this order:
 This repository is intentionally narrow. The maintained user surfaces are:
 
 - Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
-- Notebook 1 router inference: `colab_notebooks/1_router_adapter_inference.ipynb`
+- Notebook 1 router-only crop and part identification: `colab_notebooks/1_router_adapter_inference.ipynb`
 - Notebook 3 direct adapter smoke test: `colab_notebooks/3_adapter_smoke_test.ipynb`
 - CLI training: `.\scripts\python.cmd -m src.app.cli training ...`
 - CLI inference: `.\scripts\python.cmd -m src.app.cli inference ...`
@@ -66,10 +66,17 @@ Training works like this:
 Inference works like this:
 
 1. The router looks at the image and guesses the crop and part.
-2. The runtime loads the adapter for that crop.
-3. The adapter predicts the disease class.
-4. The runtime also reports whether the image looks OOD.
-5. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
+2. The router fuses whole-image crop evidence with SAM3 ROI evidence so one misleading patch does not dominate by itself.
+3. The runtime loads the adapter for that crop.
+4. The adapter predicts the disease class.
+5. The runtime also reports whether the image looks OOD.
+6. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
+
+Notebook 1 is different:
+
+- It stops after the router.
+- It is used to inspect crop and part identification only.
+- It does not load a crop adapter.
 
 Notebook 3 is different:
 
@@ -272,7 +279,7 @@ When router startup fails, the next request retries a fresh router load instead 
 .\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab
 ```
 
-### Run the script wrapper for inference
+### Run the script wrapper for router-only identification
 
 ```powershell
 .\scripts\python.cmd scripts/colab_router_adapter_inference.py path\to\image.jpg --config-env colab

@@ -343,12 +343,17 @@ def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
             num_prompts=num_prompts,
         )
 
-    def _select_best_crop(crop_scores: Dict[str, float], part_scores: Dict[str, float]) -> Tuple[str, float]:
+    def _select_best_crop(
+        crop_scores: Dict[str, float],
+        part_scores: Dict[str, float],
+        **kwargs: Any,
+    ) -> Tuple[str, float]:
         return select_best_crop_with_fallback(
             crop_scores,
             part_scores,
             runtime.crop_part_compatibility,
             runtime.part_labels,
+            **kwargs,
         )
 
     def _compatible_parts(crop_label: str) -> List[str]:
@@ -370,6 +375,24 @@ def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
         "select_part_label_with_specificity_fn": select_part_label_with_specificity,
         "apply_leaf_like_override_fn": apply_leaf_like_override,
     }
+
+
+def _score_global_crop_context(
+    runtime: Any,
+    image: Image.Image,
+    *,
+    num_prompts: Optional[int] = None,
+) -> Dict[str, float]:
+    if not runtime.crop_labels:
+        return {}
+    _label, _score, score_map = clip_runtime.clip_score_labels_ensemble(
+        runtime,
+        image,
+        runtime.crop_labels,
+        label_type="crop",
+        num_prompts=num_prompts,
+    )
+    return score_map
 
 
 def _classify_chunk_candidates_batched(
@@ -400,6 +423,19 @@ def _classify_chunk_candidates_batched(
         return [_empty_classification_result() for _ in contexts]
 
     roi_images = [record["roi_image"] for record in records]
+    if contexts and contexts[0].settings.get("global_crop_context_enabled", True) and runtime.crop_labels:
+        global_crop_results = clip_runtime.clip_score_labels_ensemble_batch(
+            runtime,
+            [context.pil_image for context in contexts],
+            runtime.crop_labels,
+            label_type="crop",
+            num_prompts=contexts[0].settings.get("crop_num_prompts"),
+            image_batch_size=roi_score_batch_size,
+        )
+        global_crop_scores_by_image: List[Dict[str, float]] = [result[2] for result in global_crop_results]
+    else:
+        global_crop_scores_by_image = [{} for _ in contexts]
+
     scoring_started_at = time.perf_counter()
     part_results = clip_runtime.clip_score_labels_ensemble_batch(
         runtime,
@@ -438,6 +474,7 @@ def _classify_chunk_candidates_batched(
             crop_label=crop_result[0],
             crop_conf=crop_result[1],
             crop_scores=crop_result[2],
+            global_crop_scores=global_crop_scores_by_image[image_index],
         )
         per_image_all_detections[image_index].append(detection)
         per_image_calls[image_index] += 2
@@ -491,6 +528,11 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     roi_kept = 0
     roi_classification_calls = 0
     if mask_count > 0:
+        global_crop_scores = _score_global_crop_context(
+            runtime,
+            context.pil_image,
+            num_prompts=context.settings.get("crop_num_prompts"),
+        )
         roi_stage_start = time.perf_counter()
         candidates, roi_seen = run_sam3_roi_filter_stage(runtime, boxes, scores, context=context)
 
@@ -508,6 +550,7 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
                 part_labels=runtime.part_labels,
                 crop_labels=runtime.crop_labels,
                 extract_roi_fn=extract_roi,
+                global_crop_scores=global_crop_scores,
                 **hooks,
             ),
             passes_open_set_gate_fn=passes_open_set_gate,

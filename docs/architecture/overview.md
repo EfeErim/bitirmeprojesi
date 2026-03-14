@@ -172,9 +172,21 @@ In that case the payload still includes a `router` summary block with status `sk
 These are intentionally separate surfaces:
 
 - router-driven inference uses the router first, then the crop adapter
+- Notebook 1 and `scripts/colab_router_adapter_inference.py` are router-only diagnostic surfaces that stop after crop/part identification
 - direct adapter smoke testing loads one adapter directly and bypasses the router
 
 Notebook 3 and `scripts/colab_adapter_smoke_test.py` are for the second case.
+
+### Router evidence policy
+
+The maintained router now follows two evidence rules:
+
+- whole-image crop evidence is fused with SAM3 ROI evidence before choosing the crop
+- leaf-like visual cues can only rewrite a broad part label when the classifier also gives explicit leaf support with a positive score margin
+
+This is intentional and crop-agnostic. It follows plant-vision literature that combines local symptom evidence with global plant context instead of trusting one patch alone, for example [Local and Global Feature-Aware Dual-Branch Networks for Plant Disease Recognition (LGNet)](https://pmc.ncbi.nlm.nih.gov/articles/PMC11315374/) and [Deep Learning-Based Phenotyping System With Glocal Description of Plant Anomalies and Symptoms](https://www.frontiersin.org/journals/plant-science/articles/10.3389/fpls.2019.01321/full).
+
+The conservative part-resolution rule is also aligned with calibration and selective-prediction literature: ambiguous evidence should not be turned into a confident organ label by heuristic force alone. See [On Calibration of Modern Neural Networks](https://proceedings.mlr.press/v70/guo17a.html) and [SelectiveNet: A Deep Neural Network with an Integrated Reject Option](https://proceedings.mlr.press/v97/geifman19a.html).
 
 ## OOD And Readiness Architecture
 

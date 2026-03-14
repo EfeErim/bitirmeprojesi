@@ -111,6 +111,28 @@
       "sam3_text_prompt": "plant",
       "sam3_expand_with_supported_parts": true,
       "sam3_prompt_limit": 6,
+      "policy_graph": {
+        "crop_evidence": {
+          "global_crop_context_enabled": true,
+          "global_crop_context_weight": 0.65
+        },
+        "part_resolution": {
+          "preferred_part_labels": [],
+          "leaf_override_target_labels": ["whole plant", "whole", "plant", "entire plant"],
+          "leaf_override_ratio": 0.9,
+          "leaf_override_min_confidence": 0.16,
+          "leaf_override_min_margin": 0.04,
+          "leaf_visual_likeness_threshold": 0.58,
+          "leaf_visual_green_min": 0.18,
+          "leaf_visual_min_margin": 0.05,
+          "leaf_visual_force_without_leaf_score": false,
+          "leaf_part_rebalance_threshold": 0.52,
+          "leaf_part_rebalance_penalty": 0.8,
+          "leaf_part_rebalance_boost": 1.15,
+          "leaf_part_rebalance_min_confidence": 0.18,
+          "leaf_part_rebalance_support_ratio": 0.75
+        }
+      },
       "profiles": {
         "balanced": {
           "sam3_prompt_limit": 6,
