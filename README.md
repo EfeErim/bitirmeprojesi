@@ -299,9 +299,10 @@ The config flow is:
 
 1. `config/base.json` is always loaded.
 2. `config/<environment>.json` is merged on top when requested.
-3. `ConfigurationManager` normalizes the training surface.
-4. Legacy top-level OOD keys are kept in sync with `training.continual.ood`.
-5. Prohibited 4-bit flags are rejected before use.
+3. `ConfigurationManager` applies the versioned migration step declared by `config_schema_version`.
+4. `ConfigurationManager` normalizes the training surface.
+5. Top-level `ood` remains a compatibility mirror of `training.continual.ood` for legacy callers.
+6. Prohibited 4-bit flags are rejected before use.
 
 The most important config areas are:
 

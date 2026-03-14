@@ -3,11 +3,18 @@
 
 from __future__ import annotations
 
+import copy
 import logging
 from pathlib import Path
 from threading import RLock
 from typing import Any, Dict, Optional
 
+from src.core.config_migrations import (
+    CONFIG_SCHEMA_VERSION_KEY,
+    CURRENT_CONFIG_SCHEMA_VERSION,
+    migrate_config_payload,
+    project_compatibility_aliases,
+)
 from src.shared.json_utils import deep_merge, read_json_dict
 from src.training.quantization import assert_no_prohibited_4bit_flags
 from src.training.services.config_surface import (
@@ -37,8 +44,8 @@ class ConfigurationManager:
 
     def load_base_config(self) -> Dict[str, Any]:
         base_path = self.config_dir / "base.json"
-        self._base_config = _read_json(base_path)
-        return dict(self._base_config)
+        self._base_config = migrate_config_payload(_read_json(base_path))
+        return copy.deepcopy(self._base_config)
 
     def load_config_file(self, filename: str, schema_name: Optional[str] = None) -> Dict[str, Any]:
         config_path = self.config_dir / filename
@@ -55,20 +62,17 @@ class ConfigurationManager:
         env_path = self.config_dir / f"{env}.json"
         if not env_path.exists():
             return {}
-        return _read_json(env_path)
+        return migrate_config_payload(_read_json(env_path))
 
     def load_all_configs(self) -> Dict[str, Any]:
         merged = self.load_base_config()
         if self._environment:
             merged = _deep_merge(merged, self.get_environment_config(self._environment))
-        # Backfill legacy top-level OOD keys before defaults materialize on the
-        # canonical training surface, then resync after normalization.
-        self._normalize_ood_surface(merged)
         self._normalize_training_surface(merged)
-        self._normalize_ood_surface(merged)
+        project_compatibility_aliases(merged)
         assert_no_prohibited_4bit_flags(merged)
         self._merged_config = merged
-        return dict(merged)
+        return copy.deepcopy(merged)
 
     def reload_config(self) -> Dict[str, Any]:
         self._base_config = None
@@ -86,44 +90,13 @@ class ConfigurationManager:
 
     def validate_merged_config(self) -> bool:
         config = self._merged_config if self._merged_config is not None else self.load_all_configs()
+        if int(config.get(CONFIG_SCHEMA_VERSION_KEY, 0)) != CURRENT_CONFIG_SCHEMA_VERSION:
+            return False
         required = ("training", "router", "ood")
         if any(section not in config for section in required):
             return False
         continual = config.get("training", {}).get("continual")
         return isinstance(continual, dict)
-
-    def _normalize_ood_surface(self, merged_config: Dict[str, Any]) -> None:
-        training = merged_config.setdefault("training", {})
-        continual = training.setdefault("continual", {})
-        continual_ood = continual.setdefault("ood", {})
-        top_level_ood = merged_config.setdefault("ood", {})
-
-        legacy_threshold = top_level_ood.get("threshold_factor")
-        canonical_threshold = continual_ood.get("threshold_factor")
-
-        if canonical_threshold is None and legacy_threshold is not None:
-            continual_ood["threshold_factor"] = float(legacy_threshold)
-            canonical_threshold = float(legacy_threshold)
-        if canonical_threshold is not None:
-            top_level_ood["threshold_factor"] = float(canonical_threshold)
-
-        # Sync extended OOD flags between top-level and continual
-        for key in (
-            "primary_score_method",
-            "radial_l2_enabled", "sure_enabled", "conformal_enabled", "conformal_alpha", "conformal_method",
-            "ber_enabled", "ber_lambda_old", "ber_lambda_new",
-            "radial_beta_range", "radial_beta_steps",
-            "sure_semantic_percentile", "sure_confidence_percentile",
-            "conformal_raps_lambda", "conformal_raps_k_reg",
-            "energy_temperature_mode", "energy_temperature", "energy_temperature_range", "energy_temperature_steps",
-            "knn_backend", "knn_chunk_size",
-        ):
-            top_val = top_level_ood.get(key)
-            cont_val = continual_ood.get(key)
-            if cont_val is None and top_val is not None:
-                continual_ood[key] = top_val
-            elif cont_val is not None:
-                top_level_ood[key] = cont_val
 
     def _normalize_training_surface(self, merged_config: Dict[str, Any]) -> None:
         training = merged_config.setdefault("training", {})
@@ -141,8 +114,7 @@ class ConfigurationManager:
 
         colab = merged_config.setdefault("colab", {})
         colab_training = colab.setdefault("training", {})
-        legacy_checkpoint_interval = colab_training.get("checkpoint_interval")
-        checkpoint_every_n_steps = colab_training.get("checkpoint_every_n_steps", legacy_checkpoint_interval)
+        checkpoint_every_n_steps = colab_training.get("checkpoint_every_n_steps")
 
         colab_training["num_workers"] = int(colab_training.get("num_workers", 2))
         colab_training["pin_memory"] = bool(colab_training.get("pin_memory", True))
@@ -157,7 +129,6 @@ class ConfigurationManager:
         colab_training["checkpoint_every_n_steps"] = int(
             checkpoint_every_n_steps if checkpoint_every_n_steps is not None else 200
         )
-        colab_training["checkpoint_interval"] = int(colab_training["checkpoint_every_n_steps"])
         colab_training["checkpoint_on_exception"] = bool(colab_training.get("checkpoint_on_exception", True))
 
 

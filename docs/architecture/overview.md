@@ -35,15 +35,16 @@ The configuration path is intentionally simple.
 
 1. `src/core/config_manager.py` loads `config/base.json`.
 2. If an environment is requested, such as `colab`, it deep-merges `config/colab.json` on top.
-3. `src/training/services/config_surface.py` normalizes the public training surface under `training.continual`.
-4. Legacy top-level OOD aliases are backfilled into `training.continual.ood` and then kept in sync.
-5. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
+3. `src/core/config_migrations.py` upgrades each config file through the declared `config_schema_version`.
+4. `src/training/services/config_surface.py` normalizes the public training surface under `training.continual`.
+5. Top-level `ood` is projected back from `training.continual.ood` as a compatibility view for legacy callers.
+6. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
 
 Why this matters:
 
 - users edit a small public config surface
 - workflow code sees a normalized shape
-- older top-level OOD keys do not silently drift away from the canonical training surface
+- legacy aliases are migrated explicitly instead of being repaired by repeated hidden mutation
 
 ## Training Architecture
 

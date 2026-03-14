@@ -1,0 +1,128 @@
+import json
+
+import pytest
+
+from src.core.config_manager import ConfigurationManager
+from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION
+
+
+def _write_json(path, payload):
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def test_manager_migrates_unversioned_top_level_ood_aliases(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "base.json",
+        {
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                }
+            },
+            "ood": {
+                "enabled": True,
+                "threshold_factor": "2.5",
+                "primary_score_method": "KNN",
+            },
+        },
+    )
+
+    merged = ConfigurationManager(config_dir=str(config_dir)).load_all_configs()
+
+    assert merged["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
+    assert merged["training"]["continual"]["ood"]["threshold_factor"] == 2.5
+    assert merged["training"]["continual"]["ood"]["primary_score_method"] == "knn"
+    assert merged["ood"]["threshold_factor"] == 2.5
+    assert merged["ood"]["primary_score_method"] == "knn"
+
+
+def test_manager_migrates_environment_legacy_aliases_before_merge(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "base.json",
+        {
+            "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION,
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                    "ood": {"threshold_factor": 2.0, "primary_score_method": "auto"},
+                }
+            },
+            "ood": {"enabled": True, "threshold_factor": 2.0, "primary_score_method": "auto"},
+        },
+    )
+    _write_json(
+        config_dir / "legacy.json",
+        {
+            "ood": {
+                "threshold_factor": 3.0,
+                "primary_score_method": "energy",
+            },
+            "colab": {"training": {"checkpoint_interval": 321}},
+        },
+    )
+
+    merged = ConfigurationManager(config_dir=str(config_dir), environment="legacy").load_all_configs()
+
+    assert merged["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
+    assert merged["training"]["continual"]["ood"]["threshold_factor"] == 3.0
+    assert merged["training"]["continual"]["ood"]["primary_score_method"] == "energy"
+    assert merged["ood"]["threshold_factor"] == 3.0
+    assert merged["ood"]["primary_score_method"] == "energy"
+    assert merged["colab"]["training"]["checkpoint_every_n_steps"] == 321
+    assert merged["colab"]["training"]["checkpoint_interval"] == 321
+
+
+def test_validate_merged_config_requires_current_schema_version(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "base.json",
+        {
+            "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION,
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                }
+            },
+            "ood": {"enabled": True},
+        },
+    )
+
+    manager = ConfigurationManager(config_dir=str(config_dir))
+    assert manager.validate_merged_config() is True
+
+
+def test_manager_rejects_future_config_schema_version(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "base.json",
+        {
+            "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION + 1,
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                }
+            },
+            "ood": {"enabled": True},
+        },
+    )
+
+    with pytest.raises(ValueError, match="Unsupported config_schema_version"):
+        ConfigurationManager(config_dir=str(config_dir)).load_all_configs()

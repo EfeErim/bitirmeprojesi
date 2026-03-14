@@ -1,10 +1,12 @@
 from src.core.config_manager import ConfigurationManager
+from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION
 from src.training.services.config_surface import extract_continual_training_config
 
 
 def test_colab_training_surface_normalizes_runtime_aliases():
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
+    assert cfg["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     colab_training = cfg["colab"]["training"]
     assert colab_training["num_workers"] == 12
     assert colab_training["checkpoint_every_n_steps"] == 250
@@ -18,6 +20,7 @@ def test_colab_training_surface_normalizes_runtime_aliases():
 def test_training_continual_surface_exposes_reliability_defaults():
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
+    assert cfg["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     continual = cfg["training"]["continual"]
     assert continual["ood"]["ber_enabled"] is False
     assert continual["ood"]["ber_lambda_old"] == 0.1
