@@ -275,6 +275,19 @@ def _build_empty_detection_message(
     )
 
 
+def _build_part_abstention_message(detections: List[Dict[str, Any]]) -> str:
+    if not detections:
+        return ""
+    primary = detections[0]
+    if str(primary.get("part", "")).strip().lower() != "unknown":
+        return ""
+    reason = str(primary.get("part_rejection_reason", "")).strip()
+    if not reason:
+        return ""
+    crop_name = str(primary.get("crop", "unknown") or "unknown")
+    return f"Part abstained for crop={crop_name}: {reason}"
+
+
 def _build_batch_contexts(
     runtime: Any,
     batch: torch.Tensor,
@@ -363,6 +376,29 @@ def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
             runtime.part_labels,
         )
 
+    def _score_label_candidates(
+        roi_image: Image.Image,
+        labels: List[str],
+        *,
+        label_type: str = "generic",
+        num_prompts: Optional[int] = None,
+        open_set_enabled: bool = False,
+        open_set_min_confidence: Optional[float] = None,
+        open_set_margin: Optional[float] = None,
+        unknown_label: str = "unknown",
+    ) -> Dict[str, Any]:
+        return clip_runtime.clip_score_labels_open_set(
+            runtime,
+            roi_image,
+            labels,
+            label_type=label_type,
+            num_prompts=num_prompts,
+            open_set_enabled=open_set_enabled,
+            open_set_min_confidence=open_set_min_confidence,
+            open_set_margin=open_set_margin,
+            unknown_label=unknown_label,
+        )
+
     return {
         "policy_enabled_fn": runtime._policy_enabled,
         "clip_score_labels_ensemble_fn": _clip_score,
@@ -371,6 +407,7 @@ def _build_roi_classification_hooks(runtime: Any) -> Dict[str, Any]:
         "select_best_crop_with_fallback_fn": _select_best_crop,
         "compatible_parts_for_crop_fn": _compatible_parts,
         "score_parts_conditioned_on_crop_fn": runtime._score_parts_conditioned_on_crop,
+        "score_label_candidates_fn": _score_label_candidates,
         "apply_generic_part_penalty_fn": apply_generic_part_penalty,
         "select_part_label_with_specificity_fn": select_part_label_with_specificity,
         "apply_leaf_like_override_fn": apply_leaf_like_override,
@@ -569,6 +606,8 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
             roi_seen=roi_seen,
             roi_kept=roi_kept,
         )
+    else:
+        message = _build_part_abstention_message(detections)
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
@@ -682,6 +721,8 @@ def analyze_sam3_batch(
                     roi_seen=roi_seen,
                     roi_kept=int(classification_result["roi_kept"]),
                 )
+            else:
+                message = _build_part_abstention_message(detections)
             analyses.append(
                 _build_sam3_analysis_payload(
                     context=context,

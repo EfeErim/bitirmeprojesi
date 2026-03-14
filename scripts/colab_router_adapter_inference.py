@@ -16,6 +16,9 @@ from src.router.vlm_pipeline import VLMPipeline
 from src.shared.contracts import RouterAnalysisResult
 
 StatusPrinter = Callable[[str], None]
+RouterCacheKey = tuple[str, str]
+
+_ROUTER_SESSION_CACHE: dict[RouterCacheKey, VLMPipeline] = {}
 
 
 def _emit_status(status_printer: Optional[StatusPrinter], message: str) -> None:
@@ -35,6 +38,47 @@ def _build_router_payload(analysis: RouterAnalysisResult) -> Dict[str, Any]:
     }
 
 
+def _router_cache_key(*, config_env: Optional[str], device: str) -> RouterCacheKey:
+    return (str(config_env or ""), str(device or "cuda").strip().lower())
+
+
+def clear_router_cache() -> None:
+    """Drop any router instance cached for this Python session."""
+    _ROUTER_SESSION_CACHE.clear()
+
+
+def ensure_router_ready(
+    *,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = None,
+    reuse_cached: bool = True,
+) -> VLMPipeline:
+    cache_key = _router_cache_key(config_env=config_env, device=device)
+    cached_router = _ROUTER_SESSION_CACHE.get(cache_key) if reuse_cached else None
+    if cached_router is not None:
+        if cached_router.is_ready():
+            _emit_status(status_printer, f"[ROUTER] Reusing cached models on {device}.")
+            _emit_status(status_printer, "[ROUTER] Ready.")
+            return cached_router
+        _ROUTER_SESSION_CACHE.pop(cache_key, None)
+
+    _emit_status(status_printer, f"[ROUTER] Loading models on {device}...")
+    config = get_config(environment=config_env)
+    router = VLMPipeline(config=config, device=device)
+    router.load_models()
+    if not router.is_ready():
+        raise RuntimeError(
+            "Router models failed to become ready for inference. "
+            "Check router.vlm.enabled, model availability, and VLM dependency installation."
+        )
+
+    if reuse_cached:
+        _ROUTER_SESSION_CACHE[cache_key] = router
+    _emit_status(status_printer, "[ROUTER] Ready.")
+    return router
+
+
 def run_inference(
     image_path: str | Path,
     *,
@@ -44,11 +88,11 @@ def run_inference(
     adapter_root: Optional[str | Path] = None,
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
+    reuse_router: bool = True,
 ) -> Dict[str, Any]:
     del adapter_root
     image_ref = Path(image_path)
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
-    config = get_config(environment=config_env)
     image = Image.open(image_path).convert("RGB")
 
     if crop_hint:
@@ -71,15 +115,12 @@ def run_inference(
         )
         return payload
 
-    _emit_status(status_printer, f"[ROUTER] Loading models on {device}...")
-    router = VLMPipeline(config=config, device=device)
-    router.load_models()
-    if not router.is_ready():
-        raise RuntimeError(
-            "Router models failed to become ready for inference. "
-            "Check router.vlm.enabled, model availability, and VLM dependency installation."
-        )
-    _emit_status(status_printer, "[ROUTER] Ready.")
+    router = ensure_router_ready(
+        config_env=config_env,
+        device=device,
+        status_printer=status_printer,
+        reuse_cached=reuse_router,
+    )
 
     analysis = router.analyze_image_result(image)
     payload = _build_router_payload(analysis)

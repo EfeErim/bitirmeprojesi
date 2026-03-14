@@ -14,6 +14,7 @@ from PIL import Image
 from src.router import clip_runtime, sam3_runtime
 from src.router.batch_output_utils import analysis_to_batch_item
 from src.router.dependency_utils import check_vlm_dependencies
+from src.router.label_normalization import normalize_part_label
 from src.router.pipeline_flow_utils import build_process_image_response
 from src.router.policy_taxonomy_utils import (
     apply_runtime_profile,
@@ -52,7 +53,11 @@ def _normalize_crop_part_compatibility(crop_mapping: Dict[str, Any]) -> Dict[str
         if not isinstance(parts, list):
             continue
         normalized_crop = str(crop_name).strip().lower()
-        normalized_parts = [str(part).strip().lower() for part in parts if str(part).strip()]
+        normalized_parts: List[str] = []
+        for part_name in parts:
+            normalized_part = normalize_part_label(part_name)
+            if normalized_part:
+                normalized_parts.append(normalized_part)
         if normalized_crop and normalized_parts:
             compatibility[normalized_crop] = normalized_parts
     return compatibility
@@ -126,8 +131,27 @@ class VLMPipeline:
             self._try_load_crop_part_compatibility()
         if not taxonomy_available:
             self._load_labels_from_config(crop_mapping)
+        self._merge_configured_router_surface(crop_mapping)
         if not self.crop_part_compatibility:
             self.crop_part_compatibility = _normalize_crop_part_compatibility(crop_mapping)
+
+    def _merge_configured_router_surface(self, crop_mapping: Dict[str, Any]) -> None:
+        configured_compatibility = _normalize_crop_part_compatibility(crop_mapping)
+        if not configured_compatibility:
+            return
+
+        part_labels_by_lower = {
+            str(part).strip().lower(): part
+            for part in self.part_labels
+            if str(part).strip()
+        }
+        for crop_name, parts in configured_compatibility.items():
+            for part_name in parts:
+                if part_name not in part_labels_by_lower:
+                    self.part_labels.append(part_name)
+                    part_labels_by_lower[part_name] = part_name
+            # Keep explicit router.crop_mapping authoritative for maintained crop-part surfaces.
+            self.crop_part_compatibility[crop_name] = list(parts)
 
     def _try_load_taxonomy(self) -> bool:
         if not (self.use_dynamic_taxonomy or not self.vlm_config.get('crop_labels')):

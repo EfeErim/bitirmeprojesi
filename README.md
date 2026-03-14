@@ -76,6 +76,7 @@ Notebook 1 is different:
 
 - It stops after the router.
 - It is used to inspect crop and part identification only.
+- `part` is an advisory organ label; when the router is not confident it now returns `part=unknown` instead of forcing a wrong organ.
 - It does not load a crop adapter.
 
 Notebook 3 is different:
@@ -265,6 +266,7 @@ In practice, the runtime does this:
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
 If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
 When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
+If the crop is known but the organ evidence is ambiguous, the router keeps the crop and returns `part=unknown` plus a short guardrail message instead of inventing a confident part label.
 
 ## Common Commands
 
@@ -285,6 +287,20 @@ When router startup fails, the next request retries a fresh router load instead 
 ```powershell
 .\scripts\python.cmd scripts/colab_router_adapter_inference.py path\to\image.jpg --config-env colab
 ```
+
+### Evaluate and sweep router part thresholds
+
+```powershell
+.\scripts\python.cmd scripts/evaluate_router_part_surface.py --root data\router_part_eval --config-env colab --output .runtime_tmp\router_part_eval.json
+```
+
+This eval-only dataset uses:
+
+```text
+data/router_part_eval/<crop>/<part>/*
+```
+
+The script reports per-crop part confusion, abstention rate, unsupported-part emissions, and an offline threshold sweep based on the raw router part evidence.
 
 ### Bypass the router with a known crop
 

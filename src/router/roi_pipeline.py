@@ -8,6 +8,9 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 import torch
 from PIL import Image
 
+from src.router.confidence_utils import build_open_set_rejection_reasons
+from src.router.label_normalization import normalize_part_label
+
 logger = logging.getLogger(__name__)
 
 BoundingBox = List[float]
@@ -130,6 +133,25 @@ def _classify_candidates(
     return all_detections, roi_classification_calls, roi_classification_ms
 
 
+def _resolve_top_part_metrics(
+    part_scores: Dict[str, float],
+    *,
+    selected_label: str,
+    selected_score: float,
+) -> tuple[str, float, float, float]:
+    """Return normalized top-label metrics from a part score map."""
+    raw_label = str(selected_label or "unknown")
+    raw_confidence = float(selected_score)
+    label_key = str(selected_label).strip().lower()
+    normalized_scores = [
+        float(score)
+        for part_name, score in part_scores.items()
+        if str(part_name).strip().lower() != label_key
+    ]
+    second_confidence = max(normalized_scores, default=0.0)
+    return raw_label, raw_confidence, float(second_confidence), float(raw_confidence - second_confidence)
+
+
 def collect_sam3_roi_candidates(
     boxes: Any,
     scores: Any,
@@ -202,6 +224,7 @@ def classify_sam3_roi_candidate(
     select_best_crop_with_fallback_fn: Callable[..., Tuple[str, float]],
     compatible_parts_for_crop_fn: Callable[[str], List[str]],
     score_parts_conditioned_on_crop_fn: Callable[..., Dict[str, float]],
+    score_label_candidates_fn: Callable[..., Dict[str, Any]],
     apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
     select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
     apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
@@ -242,6 +265,7 @@ def classify_sam3_roi_candidate(
         select_best_crop_with_fallback_fn=select_best_crop_with_fallback_fn,
         compatible_parts_for_crop_fn=compatible_parts_for_crop_fn,
         score_parts_conditioned_on_crop_fn=score_parts_conditioned_on_crop_fn,
+        score_label_candidates_fn=score_label_candidates_fn,
         apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
         select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
         apply_leaf_like_override_fn=apply_leaf_like_override_fn,
@@ -269,6 +293,7 @@ def finalize_sam3_roi_candidate(
     select_best_crop_with_fallback_fn: Callable[..., Tuple[str, float]],
     compatible_parts_for_crop_fn: Callable[[str], List[str]],
     score_parts_conditioned_on_crop_fn: Callable[..., Dict[str, float]],
+    score_label_candidates_fn: Callable[..., Dict[str, Any]],
     apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
     select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
     apply_leaf_like_override_fn: Callable[..., Tuple[str, float]],
@@ -329,37 +354,73 @@ def finalize_sam3_roi_candidate(
     )
 
     compatible_parts = compatible_parts_for_crop_fn(crop_label)
-    resolved_part_scores = dict(part_scores)
-    if compatible_parts and compatibility_fusion_enabled:
+    part_unknown_label = str(settings.get('part_unknown_label', 'unknown') or 'unknown')
+    part_open_set_enabled = bool(settings.get('part_open_set_enabled', True))
+    resolved_part_scores: Dict[str, float] = {}
+    conditioned_part_scores: Dict[str, float] = {}
+    part_unknown_confidence = 0.0
+    part_rejection_reasons: List[str] = []
+    if not crop_label or str(crop_label).strip().lower() == part_unknown_label:
+        part_rejection_reasons.append("crop unresolved for part surface")
+    elif not compatible_parts:
+        part_rejection_reasons.append(f"no compatible parts configured for crop ({crop_label})")
+    else:
         compatible_part_scores = {
             part_name: float(part_scores.get(part_name, 0.0))
             for part_name in compatible_parts
         }
-        conditioned_part_scores = score_parts_conditioned_on_crop_fn(
+        conditioned_terms = [f"{crop_label} {part_name}".strip() for part_name in compatible_parts]
+        term_to_part = {
+            term: part_name
+            for term, part_name in zip(conditioned_terms, compatible_parts)
+        }
+        conditioned_result = score_label_candidates_fn(
             roi_image,
-            crop_label,
-            compatible_parts,
+            conditioned_terms,
+            label_type='part',
             num_prompts=part_num_prompts,
+            open_set_enabled=part_open_set_enabled,
+            open_set_min_confidence=settings.get('part_open_set_min_confidence', 0.40),
+            open_set_margin=settings.get('part_open_set_margin', 0.10),
+            unknown_label=part_unknown_label,
         )
+        part_unknown_confidence = float(conditioned_result.get('unknown_confidence', 0.0))
+        for term, score in conditioned_result.get('label_scores', {}).items():
+            part_name = term_to_part.get(str(term).strip())
+            if part_name:
+                conditioned_part_scores[part_name] = float(score)
+        if not conditioned_part_scores:
+            conditioned_part_scores = score_parts_conditioned_on_crop_fn(
+                roi_image,
+                crop_label,
+                compatible_parts,
+                num_prompts=part_num_prompts,
+            )
         if conditioned_part_scores:
-            blended_scores: Dict[str, float] = {}
-            for part_name in compatible_parts:
-                generic_score = float(compatible_part_scores.get(part_name, 0.0))
-                conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
-                blended_scores[part_name] = (
-                    one_minus_conditioned_weight * generic_score
-                    + conditioned_part_weight * conditioned_score
-                )
-            compatible_part_scores = blended_scores
-        compatible_part_scores = apply_generic_part_penalty_fn(
-            compatible_part_scores,
+            if compatibility_fusion_enabled and compatible_part_scores:
+                for part_name in compatible_parts:
+                    generic_score = float(compatible_part_scores.get(part_name, 0.0))
+                    conditioned_score = float(conditioned_part_scores.get(part_name, 0.0))
+                    resolved_part_scores[part_name] = (
+                        one_minus_conditioned_weight * generic_score
+                        + conditioned_part_weight * conditioned_score
+                    )
+            else:
+                resolved_part_scores = {
+                    part_name: float(conditioned_part_scores.get(part_name, 0.0))
+                    for part_name in compatible_parts
+                }
+        else:
+            resolved_part_scores = compatible_part_scores
+
+        resolved_part_scores = apply_generic_part_penalty_fn(
+            resolved_part_scores,
             generic_part_labels,
             generic_part_penalty,
         )
-        resolved_part_scores = dict(compatible_part_scores)
-        if compatible_part_scores:
+        if resolved_part_scores:
             refined_part_label, refined_part_conf = select_part_label_with_specificity_fn(
-                compatible_part_scores,
+                resolved_part_scores,
                 generic_part_labels,
                 specific_override_ratio=specific_part_override_ratio,
                 specific_min_confidence=specific_part_min_confidence,
@@ -369,6 +430,9 @@ def finalize_sam3_roi_candidate(
             if refined_part_label:
                 part_label = refined_part_label
                 part_conf = refined_part_conf
+        else:
+            part_label = part_unknown_label
+            part_conf = 0.0
 
     if leaf_override_enabled:
         part_label, part_conf = apply_leaf_like_override_fn(
@@ -428,17 +492,51 @@ def finalize_sam3_roi_candidate(
                     part_label = leaf_override_label
                     part_conf = max(part_conf, leaf_score)
 
+    if part_label:
+        part_label = normalize_part_label(part_label)
+    compatible_part_surface = {normalize_part_label(part_name) for part_name in compatible_parts}
+    if compatible_part_surface and part_label not in compatible_part_surface:
+        part_rejection_reasons.append(f"part '{part_label}' not allowed for crop ({crop_label})")
+
+    raw_part_label, raw_part_conf, raw_part_second_conf, raw_part_margin = _resolve_top_part_metrics(
+        resolved_part_scores,
+        selected_label=part_label,
+        selected_score=part_conf,
+    )
+    if compatible_part_surface and str(raw_part_label).strip().lower() not in compatible_part_surface:
+        part_rejection_reasons.append(f"raw part '{raw_part_label}' not compatible with crop ({crop_label})")
+    if not resolved_part_scores and not part_rejection_reasons:
+        part_rejection_reasons.append("no compatible part evidence survived conditioning")
+    if part_open_set_enabled and not part_rejection_reasons:
+        part_rejection_reasons.extend(
+            build_open_set_rejection_reasons(
+                label=raw_part_label,
+                confidence=raw_part_conf,
+                second_confidence=raw_part_second_conf,
+                unknown_confidence=part_unknown_confidence,
+                min_confidence=settings.get('part_open_set_min_confidence', 0.40),
+                margin_threshold=settings.get('part_open_set_margin', 0.10),
+                unknown_label=part_unknown_label,
+            )
+        )
+
+    exposed_part_label = raw_part_label
+    exposed_part_conf = raw_part_conf
+    if part_rejection_reasons:
+        exposed_part_label = part_unknown_label
+        exposed_part_conf = 0.0
+
     quality_score = (
         weight_crop * float(crop_conf)
-        + weight_part * float(part_conf)
+        + weight_part * float(raw_part_conf)
         + weight_sam3 * sam3_score
     )
 
-    return {
+    detection: Detection = {
         'crop': crop_label,
-        'part': part_label,
+        'part': exposed_part_label,
         'crop_confidence': crop_conf,
-        'part_confidence': part_conf,
+        'part_confidence': exposed_part_conf,
         'disease': None,
         'disease_confidence': 0.0,
         'bbox': bbox,
@@ -446,6 +544,15 @@ def finalize_sam3_roi_candidate(
         'sam3_score': sam3_score,
         '_quality_score': quality_score,
     }
+    if settings.get('part_rejection_metadata_enabled', True):
+        detection['raw_part_label'] = raw_part_label
+        detection['raw_part_confidence'] = raw_part_conf
+        detection['raw_part_second_confidence'] = raw_part_second_conf
+        detection['part_unknown_confidence'] = part_unknown_confidence
+        detection['raw_part_margin'] = raw_part_margin
+        if part_rejection_reasons:
+            detection['part_rejection_reason'] = "; ".join(part_rejection_reasons)
+    return detection
 
 
 def filter_classified_sam3_detections(

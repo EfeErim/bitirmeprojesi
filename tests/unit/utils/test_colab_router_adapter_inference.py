@@ -2,6 +2,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts import colab_router_adapter_inference as router_script
 from src.shared.contracts import RouterAnalysisResult, RouterDetection
 
@@ -13,6 +15,13 @@ class _FakeImage:
     def convert(self, mode: str):
         self.convert_mode = str(mode)
         return self
+
+
+@pytest.fixture(autouse=True)
+def _clear_router_session_cache():
+    router_script.clear_router_cache()
+    yield
+    router_script.clear_router_cache()
 
 
 def test_run_inference_runs_router_only_pipeline(monkeypatch, tmp_path: Path):
@@ -144,6 +153,153 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
         "[INFER] image=leaf.png device=cpu",
         "[ROUTER] Skipped; using crop hint crop=tomato part=leaf",
         "[RESULT] status=skipped crop=tomato part=leaf router_confidence=1.000",
+    ]
+
+
+def test_run_inference_surfaces_part_abstention_message(monkeypatch, tmp_path: Path):
+    fake_image = _FakeImage()
+    status_messages: list[str] = []
+
+    class FakeRouter:
+        def __init__(self, *, config=None, device="cuda"):
+            del config, device
+
+        def load_models(self):
+            return None
+
+        def is_ready(self):
+            return True
+
+        def analyze_image_result(self, image):
+            assert image is fake_image
+            return RouterAnalysisResult(
+                status="ok",
+                message="Part abstained for crop=tomato: unknown_confidence (0.4600) >= confidence (0.4100)",
+                detections=[
+                    RouterDetection(
+                        crop="tomato",
+                        part="unknown",
+                        crop_confidence=0.95,
+                        part_confidence=0.0,
+                        metadata={
+                            "raw_part_label": "fruit",
+                            "raw_part_confidence": 0.41,
+                            "part_rejection_reason": "unknown_confidence (0.4600) >= confidence (0.4100)",
+                        },
+                    )
+                ],
+            )
+
+    monkeypatch.setattr(router_script, "get_config", lambda environment=None: {"environment": environment})
+    monkeypatch.setattr(router_script, "VLMPipeline", FakeRouter)
+    monkeypatch.setattr(router_script.Image, "open", lambda _path: fake_image)
+
+    result = router_script.run_inference(
+        tmp_path / "fruit.png",
+        config_env="colab",
+        device="cpu",
+        status_printer=status_messages.append,
+    )
+
+    assert result["part"] == "unknown"
+    assert result["message"] == "Part abstained for crop=tomato: unknown_confidence (0.4600) >= confidence (0.4100)"
+    assert result["router"]["primary_detection"]["raw_part_label"] == "fruit"
+    assert status_messages == [
+        "[INFER] image=fruit.png device=cpu",
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Ready.",
+        (
+            "[ROUTER] crop=tomato part=unknown confidence=0.950 "
+            "message=Part abstained for crop=tomato: unknown_confidence (0.4600) >= confidence (0.4100)"
+        ),
+        "[RESULT] status=ok crop=tomato part=unknown router_confidence=0.950",
+    ]
+
+
+def test_run_inference_reuses_cached_router_between_images(monkeypatch, tmp_path: Path):
+    calls = {
+        "init": 0,
+        "load_models": 0,
+        "analyze_image_result": 0,
+        "get_config": 0,
+    }
+    status_messages: list[str] = []
+
+    class FakeRouter:
+        def __init__(self, *, config=None, device="cuda"):
+            calls["init"] += 1
+            calls["last_init"] = {
+                "config": config,
+                "device": device,
+            }
+
+        def load_models(self):
+            calls["load_models"] += 1
+
+        def is_ready(self):
+            return True
+
+        def analyze_image_result(self, image):
+            calls["analyze_image_result"] += 1
+            calls["last_image"] = image
+            return RouterAnalysisResult(
+                status="ok",
+                message="",
+                detections=[
+                    RouterDetection(
+                        crop="tomato",
+                        part="leaf",
+                        crop_confidence=0.88,
+                        part_confidence=0.73,
+                    )
+                ],
+            )
+
+    def _get_config(environment=None):
+        calls["get_config"] += 1
+        return {"environment": environment}
+
+    def _open_image(_path: Path):
+        return _FakeImage()
+
+    monkeypatch.setattr(router_script, "get_config", _get_config)
+    monkeypatch.setattr(router_script, "VLMPipeline", FakeRouter)
+    monkeypatch.setattr(router_script.Image, "open", _open_image)
+
+    first = router_script.run_inference(
+        tmp_path / "first.png",
+        config_env="colab",
+        device="cpu",
+        status_printer=status_messages.append,
+    )
+    second = router_script.run_inference(
+        tmp_path / "second.png",
+        config_env="colab",
+        device="cpu",
+        status_printer=status_messages.append,
+    )
+
+    assert first["crop"] == "tomato"
+    assert second["crop"] == "tomato"
+    assert calls["init"] == 1
+    assert calls["load_models"] == 1
+    assert calls["get_config"] == 1
+    assert calls["analyze_image_result"] == 2
+    assert calls["last_init"] == {
+        "config": {"environment": "colab"},
+        "device": "cpu",
+    }
+    assert status_messages == [
+        "[INFER] image=first.png device=cpu",
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Ready.",
+        "[ROUTER] crop=tomato part=leaf confidence=0.880",
+        "[RESULT] status=ok crop=tomato part=leaf router_confidence=0.880",
+        "[INFER] image=second.png device=cpu",
+        "[ROUTER] Reusing cached models on cpu.",
+        "[ROUTER] Ready.",
+        "[ROUTER] crop=tomato part=leaf confidence=0.880",
+        "[RESULT] status=ok crop=tomato part=leaf router_confidence=0.880",
     ]
 
 

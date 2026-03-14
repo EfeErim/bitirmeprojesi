@@ -74,3 +74,8 @@ def test_build_sam3_runtime_settings_uses_conservative_leaf_defaults():
     assert settings['leaf_part_rebalance_threshold'] == 0.52
     assert settings['leaf_part_rebalance_min_confidence'] == 0.18
     assert settings['leaf_part_rebalance_support_ratio'] == 0.75
+    assert settings['part_open_set_enabled'] is True
+    assert settings['part_open_set_min_confidence'] == 0.40
+    assert settings['part_open_set_margin'] == 0.10
+    assert settings['part_unknown_label'] == 'unknown'
+    assert settings['part_rejection_metadata_enabled'] is True

@@ -64,6 +64,17 @@ def build_sam3_runtime_settings(
     settings["preferred_part_override_ratio"] = float(
         policy_value_fn("part_resolution", "preferred_part_override_ratio", 0.50)
     )
+    settings["part_open_set_enabled"] = bool(policy_value_fn("part_resolution", "part_open_set_enabled", True))
+    settings["part_open_set_min_confidence"] = float(
+        policy_value_fn("part_resolution", "part_open_set_min_confidence", 0.40)
+    )
+    settings["part_open_set_margin"] = float(
+        policy_value_fn("part_resolution", "part_open_set_margin", 0.10)
+    )
+    settings["part_unknown_label"] = str(policy_value_fn("part_resolution", "part_unknown_label", "unknown"))
+    settings["part_rejection_metadata_enabled"] = bool(
+        policy_value_fn("part_resolution", "part_rejection_metadata_enabled", True)
+    )
 
     settings["leaf_override_enabled"] = bool(policy_value_fn("part_resolution", "leaf_override_enabled", True))
     settings["leaf_override_label"] = str(policy_value_fn("part_resolution", "leaf_override_label", "leaf"))

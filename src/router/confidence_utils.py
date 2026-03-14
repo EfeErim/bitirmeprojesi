@@ -41,3 +41,36 @@ def passes_open_set_gate(crop_label: str, crop_confidence: float, min_confidence
     if str(crop_label).strip().lower() == 'unknown':
         return False
     return float(crop_confidence) >= float(min_confidence)
+
+
+def build_open_set_rejection_reasons(
+    *,
+    label: str,
+    confidence: float,
+    second_confidence: float,
+    unknown_confidence: float,
+    min_confidence: float,
+    margin_threshold: float,
+    unknown_label: str = "unknown",
+) -> list[str]:
+    """Return ordered rejection reasons for a label-vs-unknown open-set decision."""
+    resolved_label = str(label).strip().lower()
+    resolved_unknown = str(unknown_label).strip().lower() or "unknown"
+    reasons: list[str] = []
+    if resolved_label == resolved_unknown:
+        reasons.append(f"label resolved to {resolved_unknown}")
+
+    best_confidence = float(confidence)
+    unknown_score = float(unknown_confidence)
+    if unknown_score >= best_confidence:
+        reasons.append(f"unknown_confidence ({unknown_score:.4f}) >= confidence ({best_confidence:.4f})")
+
+    threshold = _clamp_unit_interval(min_confidence, default=0.0)
+    if best_confidence < threshold:
+        reasons.append(f"confidence ({best_confidence:.4f}) < threshold ({threshold:.4f})")
+
+    margin_floor = _coerce_non_negative_float(margin_threshold, default=0.0)
+    margin = best_confidence - float(second_confidence)
+    if margin < margin_floor:
+        reasons.append(f"margin ({margin:.4f}) < threshold ({margin_floor:.4f})")
+    return reasons

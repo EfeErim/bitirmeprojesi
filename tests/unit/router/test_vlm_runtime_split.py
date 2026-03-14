@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import torch
@@ -65,6 +66,40 @@ def _attach_open_clip_runtime(pipeline: VLMPipeline) -> FakeOpenClipModel:
         "tokenizer": FakeTokenizer(),
     }
     return model
+
+
+def test_pipeline_keeps_configured_crop_part_surface_when_dynamic_taxonomy_is_enabled(tmp_path):
+    taxonomy_path = tmp_path / "taxonomy.json"
+    taxonomy_path.write_text(
+        json.dumps(
+            {
+                "crops": ["tomato"],
+                "parts": {"core": ["leaf", "fruit", "flower", "stem", "whole plant"]},
+                "crop_part_compatibility": {
+                    "tomato": ["leaf", "fruit", "flower", "stem", "whole plant"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    pipeline = VLMPipeline(
+        config={
+            "router": {
+                "crop_mapping": {"tomato": {"parts": ["leaf", "fruit", "stem", "whole"]}},
+                "vlm": {
+                    "enabled": True,
+                    "use_dynamic_taxonomy": True,
+                    "taxonomy_path": str(taxonomy_path),
+                },
+            },
+        },
+        device="cpu",
+    )
+
+    assert pipeline.crop_part_compatibility["tomato"] == ["leaf", "fruit", "stem", "whole plant"]
+    assert "flower" not in pipeline.crop_part_compatibility["tomato"]
+    assert "whole plant" in pipeline.part_labels
 
 
 def test_clip_score_labels_ensemble_reuses_open_clip_image_embedding():

@@ -101,6 +101,11 @@ def test_finalize_sam3_roi_candidate_does_not_force_leaf_from_visual_bias_alone(
         "specific_part_min_confidence": 0.12,
         "preferred_part_labels": [],
         "preferred_part_override_ratio": 0.50,
+        "part_open_set_enabled": False,
+        "part_open_set_min_confidence": 0.40,
+        "part_open_set_margin": 0.10,
+        "part_unknown_label": "unknown",
+        "part_rejection_metadata_enabled": True,
         "leaf_override_label": "leaf",
         "leaf_override_enabled": False,
         "leaf_visual_override_enabled": True,
@@ -135,6 +140,19 @@ def test_finalize_sam3_roi_candidate_does_not_force_leaf_from_visual_bias_alone(
         select_best_crop_with_fallback_fn=lambda crop_scores, part_scores, **_: ("tomato", crop_scores["tomato"]),
         compatible_parts_for_crop_fn=lambda _crop: ["leaf", "fruit", "whole plant"],
         score_parts_conditioned_on_crop_fn=lambda *_args, **_kwargs: {},
+        score_label_candidates_fn=lambda *_args, **_kwargs: {
+            "label": "tomato whole plant",
+            "confidence": 0.42,
+            "second_confidence": 0.35,
+            "unknown_confidence": 0.08,
+            "margin": 0.07,
+            "label_scores": {
+                "tomato leaf": 0.16,
+                "tomato fruit": 0.35,
+                "tomato whole plant": 0.42,
+            },
+            "rejection_reasons": [],
+        },
         apply_generic_part_penalty_fn=lambda scores, *_args, **_kwargs: scores,
         select_part_label_with_specificity_fn=lambda scores, *_args, **_kwargs: max(
             scores.items(), key=lambda item: item[1]
@@ -145,3 +163,80 @@ def test_finalize_sam3_roi_candidate_does_not_force_leaf_from_visual_bias_alone(
 
     assert detection["part"] == "whole plant"
     assert detection["part_confidence"] == 0.42
+
+
+def test_finalize_sam3_roi_candidate_abstains_part_without_losing_quality_score():
+    settings = {
+        "conditioned_part_weight": 0.45,
+        "generic_part_labels": ["whole plant", "whole", "plant", "entire plant"],
+        "generic_part_penalty": 0.78,
+        "specific_part_override_ratio": 0.45,
+        "specific_part_min_confidence": 0.12,
+        "preferred_part_labels": [],
+        "preferred_part_override_ratio": 0.50,
+        "part_open_set_enabled": True,
+        "part_open_set_min_confidence": 0.40,
+        "part_open_set_margin": 0.10,
+        "part_unknown_label": "unknown",
+        "part_rejection_metadata_enabled": True,
+        "leaf_override_label": "leaf",
+        "leaf_override_enabled": False,
+        "leaf_visual_override_enabled": False,
+        "leaf_part_rebalance_enabled": False,
+        "weight_crop": 0.65,
+        "weight_part": 0.20,
+        "weight_sam3": 0.15,
+    }
+
+    detection = finalize_sam3_roi_candidate(
+        roi_image=Image.new("RGB", (80, 80), color="orange"),
+        candidate={"bbox": [10.0, 10.0, 90.0, 90.0], "sam3_score": 0.91},
+        image_width=100,
+        image_height=100,
+        settings=settings,
+        policy_enabled_fn=lambda *_args, **_kwargs: True,
+        part_label="flower",
+        part_conf=0.92,
+        part_scores={"flower": 0.92, "fruit": 0.36, "leaf": 0.08},
+        crop_label="tomato",
+        crop_conf=0.94,
+        crop_scores={"tomato": 0.94, "wheat": 0.08},
+        compute_leaf_likeness_fn=lambda **_: 0.10,
+        rebalance_part_scores_for_leaf_like_roi_fn=lambda **kwargs: kwargs["part_scores"],
+        select_best_crop_with_fallback_fn=lambda crop_scores, part_scores, **_: ("tomato", crop_scores["tomato"]),
+        compatible_parts_for_crop_fn=lambda _crop: ["leaf", "fruit", "whole plant"],
+        score_parts_conditioned_on_crop_fn=lambda *_args, **_kwargs: {"leaf": 0.05, "fruit": 0.41, "whole plant": 0.35},
+        score_label_candidates_fn=lambda *_args, **_kwargs: {
+            "label": "tomato fruit",
+            "confidence": 0.41,
+            "second_confidence": 0.35,
+            "unknown_confidence": 0.46,
+            "margin": 0.06,
+            "label_scores": {
+                "tomato leaf": 0.05,
+                "tomato fruit": 0.41,
+                "tomato whole plant": 0.35,
+            },
+            "rejection_reasons": [
+                "unknown_confidence (0.4600) >= confidence (0.4100)",
+                "margin (0.0600) < threshold (0.1000)",
+            ],
+        },
+        apply_generic_part_penalty_fn=lambda scores, *_args, **_kwargs: scores,
+        select_part_label_with_specificity_fn=lambda scores, *_args, **_kwargs: max(
+            scores.items(), key=lambda item: item[1]
+        ),
+        apply_leaf_like_override_fn=lambda **kwargs: (kwargs["selected_label"], kwargs["selected_score"]),
+        global_crop_scores={"tomato": 0.95},
+    )
+
+    assert detection["part"] == "unknown"
+    assert detection["part_confidence"] == 0.0
+    assert detection["raw_part_label"] == "fruit"
+    assert detection["raw_part_confidence"] == 0.3825
+    assert detection["part_unknown_confidence"] == 0.46
+    assert detection["part_rejection_reason"] == (
+        "unknown_confidence (0.4600) >= confidence (0.3825); "
+        "confidence (0.3825) < threshold (0.4000)"
+    )
+    assert detection["_quality_score"] == ((0.65 * 0.94) + (0.20 * 0.3825) + (0.15 * 0.91))

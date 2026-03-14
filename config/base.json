@@ -119,6 +119,11 @@
         },
         "part_resolution": {
           "preferred_part_labels": [],
+          "part_open_set_enabled": true,
+          "part_open_set_min_confidence": 0.4,
+          "part_open_set_margin": 0.1,
+          "part_unknown_label": "unknown",
+          "part_rejection_metadata_enabled": true,
           "leaf_override_target_labels": ["whole plant", "whole", "plant", "entire plant"],
           "leaf_override_ratio": 0.9,
           "leaf_override_min_confidence": 0.16,

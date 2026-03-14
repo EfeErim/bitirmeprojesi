@@ -14,10 +14,12 @@ from PIL import Image
 from src.router.prompt_clip_utils import (
     aggregate_prompt_logits,
     build_prompt_batch,
+    build_prompt_ensemble,
     get_clip_logit_scale,
     get_prompt_templates_for_type,
     open_set_unknown_prompts,
 )
+from src.router.confidence_utils import build_open_set_rejection_reasons
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +100,44 @@ def _average_label_scores(label_score_lists: Dict[str, List[float]]) -> Dict[str
 def _best_label_and_score(label_scores: Dict[str, float]) -> tuple[str, float]:
     best_label = max(label_scores, key=lambda label: label_scores[label]) if label_scores else "unknown"
     return best_label, label_scores.get(best_label, 0.0)
+
+
+def _build_limited_prompt_batch(
+    labels: List[str],
+    *,
+    label_type: str,
+    vlm_config: Dict[str, Any],
+    num_prompts: Optional[int],
+) -> tuple[List[str], List[int]]:
+    if num_prompts is None:
+        return build_prompt_batch(labels=labels, label_type=label_type, vlm_config=vlm_config)
+
+    prompt_templates = get_prompt_templates_for_type(vlm_config, label_type)
+    try:
+        prompt_limit = int(num_prompts)
+    except Exception:
+        prompt_limit = 0
+    if prompt_limit > 0:
+        prompt_templates = prompt_templates[:prompt_limit]
+    prompt_vlm_config = dict(vlm_config)
+    prompt_templates_cfg = prompt_vlm_config.get("prompt_templates", {})
+    prompt_templates_cfg = dict(prompt_templates_cfg) if isinstance(prompt_templates_cfg, dict) else {}
+    prompt_templates_cfg[label_type] = list(prompt_templates)
+    prompt_vlm_config["prompt_templates"] = prompt_templates_cfg
+
+    prompt_texts: List[str] = []
+    prompt_to_class: List[int] = []
+    for class_index, label in enumerate(labels):
+        class_prompts = build_prompt_ensemble(
+            label=label,
+            label_type=label_type,
+            vlm_config=prompt_vlm_config,
+        )
+        if not class_prompts:
+            class_prompts = [str(label)]
+        prompt_texts.extend(class_prompts)
+        prompt_to_class.extend([class_index] * len(class_prompts))
+    return prompt_texts, prompt_to_class
 
 
 def _score_processor_batch(
@@ -326,6 +366,106 @@ def clip_score_labels_ensemble(
     return best_label, best_score, label_avg_scores
 
 
+def clip_score_labels_open_set(
+    runtime: Any,
+    image: Image.Image,
+    labels: List[str],
+    *,
+    label_type: str = "generic",
+    num_prompts: Optional[int] = None,
+    open_set_enabled: bool = False,
+    open_set_min_confidence: Optional[float] = None,
+    open_set_margin: Optional[float] = None,
+    unknown_label: str = "unknown",
+    unknown_prompts: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Score labels once and return open-set diagnostics for downstream gating."""
+    if not labels:
+        return {
+            "label": str(unknown_label),
+            "confidence": 0.0,
+            "second_confidence": 0.0,
+            "unknown_confidence": 1.0 if open_set_enabled else 0.0,
+            "margin": 0.0,
+            "label_scores": {},
+            "rejection_reasons": [f"label resolved to {str(unknown_label).strip().lower() or 'unknown'}"],
+        }
+
+    text_prompts, prompt_to_class = _build_limited_prompt_batch(
+        labels=labels,
+        label_type=label_type,
+        vlm_config=runtime.vlm_config,
+        num_prompts=num_prompts,
+    )
+    if not text_prompts:
+        return {
+            "label": str(unknown_label),
+            "confidence": 0.0,
+            "second_confidence": 0.0,
+            "unknown_confidence": 1.0 if open_set_enabled else 0.0,
+            "margin": 0.0,
+            "label_scores": {},
+            "rejection_reasons": [f"label resolved to {str(unknown_label).strip().lower() or 'unknown'}"],
+        }
+
+    known_class_count = len(labels)
+    class_count = known_class_count
+    unknown_class_index: Optional[int] = None
+    if open_set_enabled:
+        unknown_class_index = class_count
+        text_prompts.extend(
+            list(unknown_prompts)
+            if isinstance(unknown_prompts, list) and unknown_prompts
+            else open_set_unknown_prompts(label_type=label_type, known_labels=labels)
+        )
+        prompt_to_class.extend([unknown_class_index] * max(0, len(text_prompts) - len(prompt_to_class)))
+        class_count += 1
+
+    request = ClipScoreRequest(image=image)
+    probabilities = _aggregate_prompt_probabilities(
+        runtime,
+        request=request,
+        text_prompts=text_prompts,
+        prompt_to_class=prompt_to_class,
+        class_count=class_count,
+    )
+    known_probs = probabilities[:, :known_class_count]
+    label_scores = {
+        labels[index]: float(known_probs[0, index].item())
+        for index in range(known_class_count)
+    }
+    best_label, confidence = _best_label_and_score(label_scores)
+    sorted_scores = sorted((float(score) for score in label_scores.values()), reverse=True)
+    second_confidence = sorted_scores[1] if len(sorted_scores) > 1 else 0.0
+    unknown_confidence = 0.0
+    if open_set_enabled and unknown_class_index is not None:
+        unknown_confidence = float(probabilities[:, unknown_class_index].item())
+
+    margin = float(confidence) - float(second_confidence)
+    rejection_reasons = (
+        build_open_set_rejection_reasons(
+            label=best_label,
+            confidence=confidence,
+            second_confidence=second_confidence,
+            unknown_confidence=unknown_confidence,
+            min_confidence=0.0 if open_set_min_confidence is None else float(open_set_min_confidence),
+            margin_threshold=0.0 if open_set_margin is None else float(open_set_margin),
+            unknown_label=unknown_label,
+        )
+        if open_set_enabled
+        else []
+    )
+    return {
+        "label": best_label,
+        "confidence": float(confidence),
+        "second_confidence": float(second_confidence),
+        "unknown_confidence": float(unknown_confidence),
+        "margin": float(margin),
+        "label_scores": label_scores,
+        "rejection_reasons": rejection_reasons,
+    }
+
+
 def clip_score_labels_ensemble_batch(
     runtime: Any,
     images: List[Image.Image],
@@ -419,89 +559,39 @@ def clip_score_labels(
     label_type: str = "generic",
 ) -> Tuple[str, float]:
     """Score text labels against image using CLIP/BioCLIP."""
-    if not labels:
-        return "unknown", 0.0
-
-    text_prompts, prompt_to_class = build_prompt_batch(
-        labels=labels,
-        label_type=label_type,
-        vlm_config=runtime.vlm_config,
-    )
-    if not text_prompts:
-        return "unknown", 0.0
-
-    known_class_count = len(labels)
-    use_open_set = bool(runtime.open_set_enabled and label_type == "crop")
-    unknown_class_index = known_class_count
-    if use_open_set:
-        unknown_prompts = open_set_unknown_prompts(label_type=label_type, known_labels=labels)
-        text_prompts.extend(unknown_prompts)
-        prompt_to_class.extend([unknown_class_index] * len(unknown_prompts))
-        class_count = known_class_count + 1
-    else:
-        class_count = known_class_count
-
-    request = ClipScoreRequest(image=image)
-    probabilities = _aggregate_prompt_probabilities(
+    outcome = clip_score_labels_open_set(
         runtime,
-        request=request,
-        text_prompts=text_prompts,
-        prompt_to_class=prompt_to_class,
-        class_count=class_count,
+        image,
+        labels,
+        label_type=label_type,
+        open_set_enabled=bool(runtime.open_set_enabled and label_type == "crop"),
+        open_set_min_confidence=getattr(runtime, "open_set_min_confidence", 0.0),
+        open_set_margin=getattr(runtime, "open_set_margin", 0.0),
+        unknown_label="unknown",
     )
-
-    if use_open_set:
-        known_probs = probabilities[:, :known_class_count]
-        unknown_prob = probabilities[:, unknown_class_index]
-        best_confidence, best_index = torch.max(known_probs, dim=-1)
-
-        if known_class_count > 1:
-            topk_conf, _ = torch.topk(known_probs, k=2, dim=-1)
-            second_confidence = topk_conf[:, 1]
-        else:
-            second_confidence = torch.zeros_like(best_confidence)
-
-        class_index = int(best_index.item())
-        confidence = float(best_confidence.item())
-        unknown_confidence = float(unknown_prob.item())
-        margin = confidence - float(second_confidence.item())
-
-        rejection_reasons: List[str] = []
-        if unknown_confidence >= confidence:
-            rejection_reasons.append(
-                f"unknown_confidence ({unknown_confidence:.4f}) >= confidence ({confidence:.4f})"
-            )
-        if confidence < runtime.open_set_min_confidence:
-            rejection_reasons.append(
-                f"confidence ({confidence:.4f}) < threshold ({runtime.open_set_min_confidence:.4f})"
-            )
-        if margin < runtime.open_set_margin:
-            rejection_reasons.append(
-                f"margin ({margin:.4f}) < threshold ({runtime.open_set_margin:.4f})"
-            )
-
+    if bool(runtime.open_set_enabled and label_type == "crop"):
+        known_probs = torch.tensor(
+            [[float(outcome["label_scores"].get(label, 0.0)) for label in labels]],
+            dtype=torch.float32,
+        )
+        try:
+            class_index = labels.index(str(outcome["label"]))
+        except ValueError:
+            class_index = 0
         _log_open_set_debug(
             label_type=label_type,
             labels=labels,
             known_probs=known_probs,
-            known_class_count=known_class_count,
-            unknown_confidence=unknown_confidence,
+            known_class_count=len(labels),
+            unknown_confidence=float(outcome["unknown_confidence"]),
             class_index=class_index,
-            confidence=confidence,
-            second_confidence=second_confidence,
-            margin=margin,
-            open_set_min_confidence=runtime.open_set_min_confidence,
-            open_set_margin=runtime.open_set_margin,
-            rejection_reasons=rejection_reasons,
+            confidence=float(outcome["confidence"]),
+            second_confidence=torch.tensor([float(outcome["second_confidence"])], dtype=torch.float32),
+            margin=float(outcome["margin"]),
+            open_set_min_confidence=float(getattr(runtime, "open_set_min_confidence", 0.0)),
+            open_set_margin=float(getattr(runtime, "open_set_margin", 0.0)),
+            rejection_reasons=list(outcome["rejection_reasons"]),
         )
-
-        if rejection_reasons:
-            return "unknown", max(unknown_confidence, confidence)
-        label = labels[class_index] if class_index < len(labels) else "unknown"
-        return label, confidence
-
-    best_confidence, best_index = torch.max(probabilities, dim=-1)
-    class_index = int(best_index.item())
-    confidence = float(best_confidence.item())
-    label = labels[class_index] if class_index < len(labels) else "unknown"
-    return label, confidence
+        if outcome["rejection_reasons"]:
+            return "unknown", max(float(outcome["unknown_confidence"]), float(outcome["confidence"]))
+    return str(outcome["label"]), float(outcome["confidence"])
