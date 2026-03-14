@@ -281,14 +281,16 @@ def prepare_runtime_dataset_layout(
     *,
     seed: int = 42,
     allowed: Optional[Iterable[str]] = None,
+    ood_root: Optional[Path] = None,
     runtime_root: Optional[Path] = None,
     materialization_strategy: str = "auto",
 ) -> Path:
-    """Split class-root data into `continual/val/test` under the runtime dataset root."""
+    """Split class-root data into runtime layout and optionally materialize `ood/`."""
     runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "runtime_notebook_datasets")
     crop_root = runtime_dataset_root / str(crop_name)
     split_manifest_path = crop_root / "split_manifest.json"
     legacy_manifest_path = crop_root / "_split_metadata.json"
+    resolved_ood_root = Path(ood_root) if ood_root is not None else None
 
     source_manifest = build_runtime_split_manifest(
         class_root=Path(class_root),
@@ -297,6 +299,26 @@ def prepare_runtime_dataset_layout(
         allowed=allowed,
     )
     comparison_manifest = _public_manifest(source_manifest)
+    comparison_manifest["ood"] = None
+    ood_images: List[Path] = []
+    if resolved_ood_root is not None:
+        if not resolved_ood_root.exists():
+            raise FileNotFoundError(f"OOD root not found: {resolved_ood_root}")
+        if not resolved_ood_root.is_dir():
+            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
+        ood_images = sorted(
+            [
+                path
+                for path in resolved_ood_root.rglob("*")
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+            ],
+            key=lambda path: str(path).lower(),
+        )
+        comparison_manifest["ood"] = {
+            "source_root": str(resolved_ood_root.resolve()),
+            "image_count": len(ood_images),
+            "image_fingerprint": _fingerprint_paths(ood_images, root=resolved_ood_root),
+        }
 
     if crop_root.exists() and split_manifest_path.exists():
         try:
@@ -341,6 +363,15 @@ def prepare_runtime_dataset_layout(
                 _materialize_image(source_path, destination_path, materialization_strategy)
 
     public_manifest = _public_manifest(source_manifest)
+    public_manifest["ood"] = comparison_manifest["ood"]
+    if resolved_ood_root is not None:
+        ood_dir = crop_root / "ood"
+        ood_dir.mkdir(parents=True, exist_ok=True)
+        for source_path in ood_images:
+            destination_relative_path = source_path.relative_to(resolved_ood_root)
+            destination_path = ood_dir / destination_relative_path
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            _materialize_image(source_path, destination_path, materialization_strategy)
     write_json(split_manifest_path, public_manifest, ensure_ascii=False)
     write_json(legacy_manifest_path, public_manifest, ensure_ascii=False)
     return runtime_dataset_root
