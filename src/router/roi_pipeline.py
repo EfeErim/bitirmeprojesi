@@ -152,6 +152,114 @@ def _resolve_top_part_metrics(
     return raw_label, raw_confidence, float(second_confidence), float(raw_confidence - second_confidence)
 
 
+def _resolve_surface_part_metrics(
+    part_scores: Dict[str, float],
+    *,
+    generic_part_labels: List[str],
+    generic_part_penalty: float,
+    specific_part_override_ratio: float,
+    specific_part_min_confidence: float,
+    preferred_part_labels: List[str],
+    preferred_part_override_ratio: float,
+    apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
+    select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
+) -> tuple[str, float, float, float]:
+    if not part_scores:
+        return "unknown", 0.0, 0.0, 0.0
+
+    adjusted_scores = apply_generic_part_penalty_fn(
+        part_scores,
+        generic_part_labels,
+        generic_part_penalty,
+    )
+    if not adjusted_scores:
+        return "unknown", 0.0, 0.0, 0.0
+
+    selected_label, selected_score = select_part_label_with_specificity_fn(
+        adjusted_scores,
+        generic_part_labels,
+        specific_override_ratio=specific_part_override_ratio,
+        specific_min_confidence=specific_part_min_confidence,
+        preferred_part_labels=preferred_part_labels,
+        preferred_override_ratio=preferred_part_override_ratio,
+    )
+    if not selected_label:
+        return "unknown", 0.0, 0.0, 0.0
+
+    return _resolve_top_part_metrics(
+        adjusted_scores,
+        selected_label=selected_label,
+        selected_score=selected_score,
+    )
+
+
+def _can_restore_part_after_unknown_open_set_rejection(
+    *,
+    open_set_rejection_reasons: List[str],
+    raw_part_label: str,
+    raw_part_confidence: float,
+    raw_part_margin: float,
+    generic_part_scores: Dict[str, float],
+    conditioned_part_scores: Dict[str, float],
+    generic_part_labels: List[str],
+    generic_part_penalty: float,
+    specific_part_override_ratio: float,
+    specific_part_min_confidence: float,
+    preferred_part_labels: List[str],
+    preferred_part_override_ratio: float,
+    min_confidence: float,
+    margin_threshold: float,
+    unknown_label: str,
+    apply_generic_part_penalty_fn: Callable[[Dict[str, float], List[str], float], Dict[str, float]],
+    select_part_label_with_specificity_fn: Callable[..., Tuple[Optional[str], float]],
+) -> bool:
+    normalized_reasons = [str(reason).strip() for reason in open_set_rejection_reasons if str(reason).strip()]
+    if not normalized_reasons:
+        return False
+    if any(not reason.startswith("unknown_confidence") for reason in normalized_reasons):
+        return False
+
+    normalized_raw_label = normalize_part_label(raw_part_label)
+    normalized_unknown = normalize_part_label(unknown_label) or "unknown"
+    if not normalized_raw_label or normalized_raw_label == normalized_unknown:
+        return False
+
+    if float(raw_part_confidence) < float(min_confidence):
+        return False
+
+    strong_margin_floor = max(float(margin_threshold) * 2.0, 0.20)
+    if float(raw_part_margin) < strong_margin_floor:
+        return False
+
+    generic_label, _generic_conf, _generic_second_conf, _generic_margin = _resolve_surface_part_metrics(
+        generic_part_scores,
+        generic_part_labels=generic_part_labels,
+        generic_part_penalty=generic_part_penalty,
+        specific_part_override_ratio=specific_part_override_ratio,
+        specific_part_min_confidence=specific_part_min_confidence,
+        preferred_part_labels=preferred_part_labels,
+        preferred_part_override_ratio=preferred_part_override_ratio,
+        apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
+        select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
+    )
+    conditioned_label, _conditioned_conf, _conditioned_second_conf, _conditioned_margin = _resolve_surface_part_metrics(
+        conditioned_part_scores,
+        generic_part_labels=generic_part_labels,
+        generic_part_penalty=generic_part_penalty,
+        specific_part_override_ratio=specific_part_override_ratio,
+        specific_part_min_confidence=specific_part_min_confidence,
+        preferred_part_labels=preferred_part_labels,
+        preferred_part_override_ratio=preferred_part_override_ratio,
+        apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
+        select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
+    )
+
+    return (
+        normalize_part_label(generic_label) == normalized_raw_label
+        and normalize_part_label(conditioned_label) == normalized_raw_label
+    )
+
+
 def collect_sam3_roi_candidates(
     boxes: Any,
     scores: Any,
@@ -357,6 +465,7 @@ def finalize_sam3_roi_candidate(
     part_unknown_label = str(settings.get('part_unknown_label', 'unknown') or 'unknown')
     part_open_set_enabled = bool(settings.get('part_open_set_enabled', True))
     resolved_part_scores: Dict[str, float] = {}
+    compatible_part_scores: Dict[str, float] = {}
     conditioned_part_scores: Dict[str, float] = {}
     part_unknown_confidence = 0.0
     part_rejection_reasons: List[str] = []
@@ -507,18 +616,45 @@ def finalize_sam3_roi_candidate(
         part_rejection_reasons.append(f"raw part '{raw_part_label}' not compatible with crop ({crop_label})")
     if not resolved_part_scores and not part_rejection_reasons:
         part_rejection_reasons.append("no compatible part evidence survived conditioning")
+    open_set_rejection_reasons: List[str] = []
+    part_recovery_reason = ""
     if part_open_set_enabled and not part_rejection_reasons:
-        part_rejection_reasons.extend(
-            build_open_set_rejection_reasons(
-                label=raw_part_label,
-                confidence=raw_part_conf,
-                second_confidence=raw_part_second_conf,
-                unknown_confidence=part_unknown_confidence,
-                min_confidence=settings.get('part_open_set_min_confidence', 0.40),
-                margin_threshold=settings.get('part_open_set_margin', 0.10),
-                unknown_label=part_unknown_label,
-            )
+        open_set_rejection_reasons = build_open_set_rejection_reasons(
+            label=raw_part_label,
+            confidence=raw_part_conf,
+            second_confidence=raw_part_second_conf,
+            unknown_confidence=part_unknown_confidence,
+            min_confidence=settings.get('part_open_set_min_confidence', 0.40),
+            margin_threshold=settings.get('part_open_set_margin', 0.10),
+            unknown_label=part_unknown_label,
         )
+        if open_set_rejection_reasons and not _can_restore_part_after_unknown_open_set_rejection(
+            open_set_rejection_reasons=open_set_rejection_reasons,
+            raw_part_label=raw_part_label,
+            raw_part_confidence=raw_part_conf,
+            raw_part_margin=raw_part_margin,
+            generic_part_scores=compatible_part_scores,
+            conditioned_part_scores=conditioned_part_scores,
+            generic_part_labels=generic_part_labels,
+            generic_part_penalty=generic_part_penalty,
+            specific_part_override_ratio=specific_part_override_ratio,
+            specific_part_min_confidence=specific_part_min_confidence,
+            preferred_part_labels=preferred_part_labels,
+            preferred_part_override_ratio=preferred_part_override_ratio,
+            min_confidence=settings.get('part_open_set_min_confidence', 0.40),
+            margin_threshold=settings.get('part_open_set_margin', 0.10),
+            unknown_label=part_unknown_label,
+            apply_generic_part_penalty_fn=apply_generic_part_penalty_fn,
+            select_part_label_with_specificity_fn=select_part_label_with_specificity_fn,
+        ):
+            part_rejection_reasons.extend(open_set_rejection_reasons)
+        elif open_set_rejection_reasons:
+            # Keep the supported organ when both compatible-part scorers agree and
+            # only the unknown proxy would have forced abstention.
+            part_recovery_reason = (
+                "retained compatible part because generic and crop-conditioned part "
+                "surfaces agreed despite the unknown proxy"
+            )
 
     exposed_part_label = raw_part_label
     exposed_part_conf = raw_part_conf
@@ -552,6 +688,9 @@ def finalize_sam3_roi_candidate(
         detection['raw_part_margin'] = raw_part_margin
         if part_rejection_reasons:
             detection['part_rejection_reason'] = "; ".join(part_rejection_reasons)
+        elif part_recovery_reason:
+            detection['part_recovery_reason'] = part_recovery_reason
+            detection['part_open_set_rejection_reason'] = "; ".join(open_set_rejection_reasons)
     return detection
 
 

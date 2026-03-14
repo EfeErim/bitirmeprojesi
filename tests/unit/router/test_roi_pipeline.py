@@ -1,4 +1,5 @@
 from PIL import Image
+import pytest
 
 from src.router.roi_helpers import bbox_area_ratio, sanitize_bbox
 from src.router.roi_pipeline import (
@@ -240,3 +241,85 @@ def test_finalize_sam3_roi_candidate_abstains_part_without_losing_quality_score(
         "confidence (0.3825) < threshold (0.4000)"
     )
     assert detection["_quality_score"] == ((0.65 * 0.94) + (0.20 * 0.3825) + (0.15 * 0.91))
+
+
+def test_finalize_sam3_roi_candidate_keeps_supported_part_when_surfaces_agree_despite_unknown_proxy():
+    settings = {
+        "conditioned_part_weight": 0.45,
+        "generic_part_labels": ["whole plant", "whole", "plant", "entire plant"],
+        "generic_part_penalty": 0.78,
+        "specific_part_override_ratio": 0.45,
+        "specific_part_min_confidence": 0.12,
+        "preferred_part_labels": [],
+        "preferred_part_override_ratio": 0.50,
+        "part_open_set_enabled": True,
+        "part_open_set_min_confidence": 0.40,
+        "part_open_set_margin": 0.10,
+        "part_unknown_label": "unknown",
+        "part_rejection_metadata_enabled": True,
+        "leaf_override_label": "leaf",
+        "leaf_override_enabled": False,
+        "leaf_visual_override_enabled": False,
+        "leaf_part_rebalance_enabled": False,
+        "weight_crop": 0.65,
+        "weight_part": 0.20,
+        "weight_sam3": 0.15,
+    }
+
+    detection = finalize_sam3_roi_candidate(
+        roi_image=Image.new("RGB", (80, 80), color="orange"),
+        candidate={"bbox": [10.0, 10.0, 90.0, 90.0], "sam3_score": 0.91},
+        image_width=100,
+        image_height=100,
+        settings=settings,
+        policy_enabled_fn=lambda *_args, **_kwargs: True,
+        part_label="fruit",
+        part_conf=0.62,
+        part_scores={"fruit": 0.62, "leaf": 0.07, "whole plant": 0.24},
+        crop_label="tomato",
+        crop_conf=0.94,
+        crop_scores={"tomato": 0.94, "wheat": 0.08},
+        compute_leaf_likeness_fn=lambda **_: 0.10,
+        rebalance_part_scores_for_leaf_like_roi_fn=lambda **kwargs: kwargs["part_scores"],
+        select_best_crop_with_fallback_fn=lambda crop_scores, part_scores, **_: ("tomato", crop_scores["tomato"]),
+        compatible_parts_for_crop_fn=lambda _crop: ["leaf", "fruit", "whole plant"],
+        score_parts_conditioned_on_crop_fn=lambda *_args, **_kwargs: {
+            "leaf": 0.05,
+            "fruit": 0.56,
+            "whole plant": 0.16,
+        },
+        score_label_candidates_fn=lambda *_args, **_kwargs: {
+            "label": "tomato fruit",
+            "confidence": 0.56,
+            "second_confidence": 0.16,
+            "unknown_confidence": 0.82,
+            "margin": 0.40,
+            "label_scores": {
+                "tomato leaf": 0.05,
+                "tomato fruit": 0.56,
+                "tomato whole plant": 0.16,
+            },
+            "rejection_reasons": [
+                "unknown_confidence (0.8200) >= confidence (0.5600)",
+            ],
+        },
+        apply_generic_part_penalty_fn=lambda scores, generic_labels, penalty: {
+            label: (score * penalty if label in set(generic_labels) else score)
+            for label, score in scores.items()
+        },
+        select_part_label_with_specificity_fn=lambda scores, *_args, **_kwargs: max(
+            scores.items(), key=lambda item: item[1]
+        ),
+        apply_leaf_like_override_fn=lambda **kwargs: (kwargs["selected_label"], kwargs["selected_score"]),
+        global_crop_scores={"tomato": 0.95},
+    )
+
+    assert detection["part"] == "fruit"
+    assert detection["part_confidence"] == pytest.approx(0.593)
+    assert detection["raw_part_label"] == "fruit"
+    assert detection["part_unknown_confidence"] == 0.82
+    assert "part_rejection_reason" not in detection
+    assert detection["part_open_set_rejection_reason"] == "unknown_confidence (0.8200) >= confidence (0.5930)"
+    assert detection["part_recovery_reason"] == (
+        "retained compatible part because generic and crop-conditioned part surfaces agreed despite the unknown proxy"
+    )

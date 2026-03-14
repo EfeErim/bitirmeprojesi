@@ -76,7 +76,7 @@ Notebook 1 is different:
 
 - It stops after the router.
 - It is used to inspect crop and part identification only.
-- `part` is an advisory organ label; when the router is not confident it now returns `part=unknown` instead of forcing a wrong organ.
+- `part` is an advisory organ label; when organ evidence is ambiguous the router returns `part=unknown`, but it can keep a supported part when the generic and crop-conditioned organ surfaces agree on the same compatible label.
 - It does not load a crop adapter.
 
 Notebook 3 is different:
@@ -266,7 +266,7 @@ In practice, the runtime does this:
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
 If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
 When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
-If the crop is known but the organ evidence is ambiguous, the router keeps the crop and returns `part=unknown` plus a short guardrail message instead of inventing a confident part label.
+If the crop is known but the organ evidence is ambiguous, the router keeps the crop and may return `part=unknown` plus a short guardrail message instead of inventing a confident part label. A compatible part is only retained when the generic and crop-conditioned organ surfaces independently agree on it.
 
 ## Common Commands
 
