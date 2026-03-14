@@ -108,6 +108,25 @@
       "open_set_min_confidence": 0.25,
       "open_set_margin": 0.01,
       "use_dynamic_taxonomy": true,
+      "sam3_text_prompt": "plant",
+      "sam3_expand_with_supported_parts": true,
+      "sam3_prompt_limit": 6,
+      "profiles": {
+        "balanced": {
+          "sam3_prompt_limit": 6,
+          "ensemble_config": {
+            "crop_num_prompts": 4,
+            "part_num_prompts": 4
+          }
+        },
+        "fast": {
+          "sam3_prompt_limit": 4,
+          "ensemble_config": {
+            "crop_num_prompts": 2,
+            "part_num_prompts": 2
+          }
+        }
+      },
       "taxonomy_path": "config/plant_taxonomy.json",
       "model_ids": {
         "grounding_dino": "IDEA-Research/grounding-dino-base",

@@ -249,6 +249,54 @@ class VLMPipeline:
             model.eval()
         return model
 
+    @staticmethod
+    def _coerce_sam3_prompt_sequence(prompt: Any) -> List[str]:
+        raw_prompts = prompt if isinstance(prompt, (list, tuple)) else [prompt]
+        cleaned: List[str] = []
+        seen: set[str] = set()
+        for item in raw_prompts:
+            normalized = str(item).strip()
+            if not normalized:
+                continue
+            key = normalized.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            cleaned.append(normalized)
+        return cleaned or ['plant']
+
+    @staticmethod
+    def _merge_sam3_field(chunks: List[Any]) -> Any:
+        tensors: List[torch.Tensor] = []
+        for chunk in chunks:
+            if torch.is_tensor(chunk):
+                tensor = chunk
+            elif isinstance(chunk, (list, tuple)) and not chunk:
+                continue
+            else:
+                try:
+                    tensor = torch.as_tensor(chunk)
+                except Exception:
+                    continue
+            if tensor.numel() <= 0:
+                continue
+            if tensor.ndim == 0:
+                tensor = tensor.reshape(1)
+            tensors.append(tensor)
+        if not tensors:
+            return torch.tensor([])
+        return torch.cat(tensors, dim=0)
+
+    @classmethod
+    def _merge_sam3_results(cls, result_chunks: List[Dict[str, Any]]) -> Dict[str, Any]:
+        if not result_chunks:
+            return normalize_sam3_results({}, empty_tensor_factory=lambda: torch.tensor([]))
+        return {
+            'masks': cls._merge_sam3_field([chunk.get('masks', []) for chunk in result_chunks]),
+            'boxes': cls._merge_sam3_field([chunk.get('boxes', []) for chunk in result_chunks]),
+            'scores': cls._merge_sam3_field([chunk.get('scores', []) for chunk in result_chunks]),
+        }
+
     def _set_sam_runtime(self, processor: Any, model: Any, *, backend: str) -> None:
         self.sam_processor = processor
         self.sam_model = model
@@ -685,8 +733,8 @@ class VLMPipeline:
         )
         return sam3_runtime.analyze_sam3_image(self, context)
     
-    def _run_sam3(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
-        """Run SAM3 instance segmentation with text prompt."""
+    def _run_sam3_single_prompt(self, image: Image.Image, prompt: str, threshold: float = 0.7) -> Dict[str, Any]:
+        """Run SAM3 instance segmentation for one text prompt."""
         try:
             processor = self.sam_processor
             model = self.sam_model
@@ -711,8 +759,30 @@ class VLMPipeline:
             logger.error(f"SAM3 inference failed: {e}")
             return sam3_error_result(e)
 
-    def _run_sam3_batch(self, images: List[Image.Image], prompt: str, threshold: float = 0.7) -> List[Dict[str, Any]]:
-        """Run SAM3 instance segmentation on many images when the backend supports batching."""
+    def _run_sam3(self, image: Image.Image, prompt: Any, threshold: float = 0.7) -> Dict[str, Any]:
+        """Run SAM3 instance segmentation with one or more text prompts."""
+        prompt_sequence = self._coerce_sam3_prompt_sequence(prompt)
+        results_by_prompt: List[Dict[str, Any]] = []
+        errors: List[str] = []
+        for text_prompt in prompt_sequence:
+            result = self._run_sam3_single_prompt(image, text_prompt, threshold=threshold)
+            if result.get('error'):
+                errors.append(str(result.get('error')))
+                continue
+            results_by_prompt.append(result)
+        if results_by_prompt:
+            return self._merge_sam3_results(results_by_prompt)
+        if errors:
+            return sam3_error_result(RuntimeError("; ".join(errors)))
+        return normalize_sam3_results({}, empty_tensor_factory=lambda: torch.tensor([]))
+
+    def _run_sam3_batch_single_prompt(
+        self,
+        images: List[Image.Image],
+        prompt: str,
+        threshold: float = 0.7,
+    ) -> List[Dict[str, Any]]:
+        """Run SAM3 instance segmentation on many images for one text prompt."""
         processor = self.sam_processor
         model = self.sam_model
         if processor is None or model is None:
@@ -743,6 +813,29 @@ class VLMPipeline:
             normalize_sam3_results(result, empty_tensor_factory=lambda: torch.tensor([]))
             for result in raw_results
         ]
+
+    def _run_sam3_batch(self, images: List[Image.Image], prompt: Any, threshold: float = 0.7) -> List[Dict[str, Any]]:
+        """Run SAM3 instance segmentation on many images with one or more text prompts."""
+        prompt_sequence = self._coerce_sam3_prompt_sequence(prompt)
+        if not images:
+            return []
+
+        merged_by_image: List[List[Dict[str, Any]]] = [[] for _ in images]
+        errors: List[str] = []
+        for text_prompt in prompt_sequence:
+            try:
+                prompt_results = self._run_sam3_batch_single_prompt(images, text_prompt, threshold=threshold)
+            except Exception as exc:
+                errors.append(str(exc))
+                continue
+            for index, result in enumerate(prompt_results):
+                merged_by_image[index].append(result)
+
+        if any(result_chunks for result_chunks in merged_by_image):
+            return [self._merge_sam3_results(result_chunks) for result_chunks in merged_by_image]
+        if errors:
+            raise RuntimeError("; ".join(errors))
+        return [normalize_sam3_results({}, empty_tensor_factory=lambda: torch.tensor([])) for _ in images]
     
     def route_batch(
         self,

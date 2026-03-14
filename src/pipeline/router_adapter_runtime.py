@@ -181,6 +181,8 @@ class RouterAdapterRuntime:
                 f"part={part_name or 'unknown'} "
                 f"confidence={router_confidence:.3f}"
             )
+            if router_analysis.message:
+                status_message = f"{status_message} message={router_analysis.message}"
             self._emit_status(
                 status_message
             )

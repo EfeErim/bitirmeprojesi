@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
-from src.shared.contracts import InferenceResult
+from src.shared.contracts import InferenceResult, RouterAnalysisResult
 
 
 class FakeRouter:
@@ -174,6 +174,48 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
         "message": "",
         "detections_count": 0,
     }
+
+
+def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_path):
+    status_lines = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(tmp_path / "models"), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=tmp_path / "models",
+        status_callback=status_lines.append,
+    )
+
+    class DiagnosticRouter(FakeRouter):
+        def analyze_image_result(self, image):
+            del image
+            return RouterAnalysisResult(
+                status="ok",
+                message="No SAM3 instances for prompts=plant,leaf threshold=0.60.",
+                detections=[],
+            )
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: DiagnosticRouter())
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "unknown_crop"
+    assert result["router"] == {
+        "status": "ok",
+        "message": "No SAM3 instances for prompts=plant,leaf threshold=0.60.",
+        "detections_count": 0,
+    }
+    assert status_lines == [
+        "[ROUTER] Loading models on cpu...",
+        "[ROUTER] Ready.",
+        "[ROUTER] crop=unknown part=unknown confidence=0.000 message=No SAM3 instances for prompts=plant,leaf threshold=0.60.",
+        "[RESULT] status=unknown_crop router_confidence=0.000",
+    ]
 
 
 def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):

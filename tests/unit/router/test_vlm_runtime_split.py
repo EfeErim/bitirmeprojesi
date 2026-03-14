@@ -143,6 +143,70 @@ def test_analyze_image_sam3_delegates_to_runtime_helpers(monkeypatch):
     assert result == expected
 
 
+def test_run_sam3_merges_results_across_prompt_sequence():
+    pipeline = _build_pipeline()
+    calls = []
+
+    def fake_single(_image, prompt, threshold=0.7):
+        calls.append((prompt, threshold))
+        index = len(calls)
+        return {
+            "masks": torch.ones(1, 2, 2, dtype=torch.float32) * float(index),
+            "boxes": torch.tensor([[index, index, index + 1, index + 1]], dtype=torch.float32),
+            "scores": torch.tensor([0.9 - (0.1 * index)], dtype=torch.float32),
+        }
+
+    pipeline._run_sam3_single_prompt = fake_single
+
+    result = pipeline._run_sam3(Image.new("RGB", (8, 8), color="green"), prompt=["plant", "leaf"], threshold=0.55)
+
+    assert calls == [("plant", 0.55), ("leaf", 0.55)]
+    assert tuple(result["boxes"].shape) == (2, 4)
+    assert tuple(result["scores"].shape) == (2,)
+    assert tuple(result["masks"].shape) == (2, 2, 2)
+
+
+def test_analyze_image_reports_empty_sam3_diagnostics_with_prompt_sequence():
+    pipeline = VLMPipeline(
+        config={
+            "router": {
+                "crop_mapping": {"tomato": {"parts": ["leaf", "fruit", "whole"]}},
+                "vlm": {
+                    "enabled": True,
+                    "confidence_threshold": 0.25,
+                    "crop_labels": ["tomato"],
+                    "part_labels": ["leaf", "fruit", "whole plant"],
+                },
+            },
+        },
+        device="cpu",
+    )
+    pipeline.models_loaded = True
+    pipeline.actual_pipeline = "sam3"
+
+    captured = {}
+
+    def fake_run_sam3(_image, prompt, threshold=0.7):
+        captured["prompt"] = prompt
+        captured["threshold"] = threshold
+        return {
+            "masks": torch.tensor([]),
+            "boxes": torch.tensor([]),
+            "scores": torch.tensor([]),
+        }
+
+    pipeline._run_sam3 = fake_run_sam3
+
+    result = pipeline.analyze_image_result(Image.new("RGB", (8, 8), color="green"))
+
+    assert captured == {
+        "prompt": ("plant", "leaf", "fruit", "whole plant"),
+        "threshold": 0.6,
+    }
+    assert result.detections_count == 0
+    assert result.message == "No SAM3 instances for prompts=plant,leaf,fruit,whole plant threshold=0.60."
+
+
 def test_route_batch_preserves_order_and_uses_batched_runtime(monkeypatch):
     pipeline = _build_pipeline()
     pipeline.models_loaded = True

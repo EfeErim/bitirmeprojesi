@@ -59,10 +59,21 @@ class Sam3RequestContext:
     effective_max_detections: Optional[int]
     stage_order: List[str]
     settings: Dict[str, Any]
-    sam3_prompt: str
+    sam3_prompts: Tuple[str, ...]
     sam3_threshold: float
     timing_logs_enabled: bool
     preprocess_ms: float
+
+
+def _normalize_sam3_prompt_label(label: Any) -> str:
+    normalized = str(label).strip().lower()
+    if not normalized:
+        return ""
+    aliases = {
+        "whole": "whole plant",
+        "entire plant": "whole plant",
+    }
+    return aliases.get(normalized, normalized)
 
 
 def build_request_context(
@@ -90,7 +101,7 @@ def build_request_context(
         effective_max_detections=effective_max_detections,
         stage_order=stage_order,
         settings=settings,
-        sam3_prompt=str(runtime.vlm_config.get("sam3_text_prompt", "plant")),
+        sam3_prompts=resolve_sam3_text_prompts(runtime),
         sam3_threshold=settings["sam3_threshold"],
         timing_logs_enabled=bool(runtime.vlm_config.get("timing_logs_enabled", True)),
         preprocess_ms=preprocess_ms,
@@ -157,6 +168,57 @@ def _resolve_positive_int(value: Any, default: int) -> int:
     return max(1, resolved)
 
 
+def resolve_sam3_text_prompts(runtime: Any) -> Tuple[str, ...]:
+    """Resolve ordered SAM3 prompts from config and the supported crop-part surface."""
+    prompt_candidates: List[str] = []
+
+    raw_prompts = runtime.vlm_config.get("sam3_text_prompts")
+    if isinstance(raw_prompts, list):
+        prompt_candidates.extend(str(prompt).strip() for prompt in raw_prompts if str(prompt).strip())
+
+    base_prompt = str(runtime.vlm_config.get("sam3_text_prompt", "plant")).strip() or "plant"
+    if not prompt_candidates:
+        prompt_candidates.append(base_prompt)
+
+    if bool(runtime.vlm_config.get("sam3_expand_with_supported_parts", True)):
+        raw_part_prompts = runtime.vlm_config.get("sam3_part_prompts")
+        if isinstance(raw_part_prompts, list):
+            prompt_candidates.extend(str(prompt).strip() for prompt in raw_part_prompts if str(prompt).strip())
+        else:
+            router_cfg = runtime.config.get("router", {}) if isinstance(runtime.config, dict) else {}
+            crop_mapping = router_cfg.get("crop_mapping", {}) if isinstance(router_cfg, dict) else {}
+            if isinstance(crop_mapping, dict) and crop_mapping:
+                for crop_data in crop_mapping.values():
+                    if not isinstance(crop_data, dict):
+                        continue
+                    for part_name in crop_data.get("parts", []):
+                        normalized = _normalize_sam3_prompt_label(part_name)
+                        if normalized:
+                            prompt_candidates.append(normalized)
+
+    deduped: List[str] = []
+    seen: set[str] = set()
+    for prompt in prompt_candidates:
+        normalized = str(prompt).strip()
+        if not normalized:
+            continue
+        key = normalized.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(normalized)
+
+    raw_limit = runtime.vlm_config.get("sam3_prompt_limit")
+    try:
+        prompt_limit = int(raw_limit)
+    except Exception:
+        prompt_limit = 0
+    if prompt_limit > 0:
+        deduped = deduped[:prompt_limit]
+
+    return tuple(deduped or ["plant"])
+
+
 def _empty_classification_result() -> Dict[str, Any]:
     return {
         "detections": [],
@@ -176,9 +238,10 @@ def _build_sam3_analysis_payload(
     roi_kept: int,
     roi_classification_calls: int,
     mask_count: int,
+    message: str = "",
 ) -> Dict[str, Any]:
     stage_summary = summarize_sam3_stage_timings(stage_timings_ms, roi_seen, roi_classification_calls)
-    return build_sam3_analysis_result(
+    result = build_sam3_analysis_result(
         detections=detections,
         image_size=context.image_size,
         elapsed_ms=elapsed_ms,
@@ -188,6 +251,27 @@ def _build_sam3_analysis_payload(
         roi_classification_calls=roi_classification_calls,
         mask_count=mask_count,
         sam3_threshold=context.sam3_threshold,
+    )
+    if message:
+        result["message"] = str(message)
+    return result
+
+
+def _build_empty_detection_message(
+    *,
+    context: Sam3RequestContext,
+    mask_count: int,
+    roi_seen: int,
+    roi_kept: int,
+) -> str:
+    prompt_text = ",".join(context.sam3_prompts)
+    if mask_count <= 0:
+        return f"No SAM3 instances for prompts={prompt_text} threshold={context.sam3_threshold:.2f}."
+    return (
+        f"SAM3 produced {mask_count} instances for prompts={prompt_text} "
+        f"but retained 0 detections after ROI filtering/classification "
+        f"(roi_seen={roi_seen}, roi_kept={roi_kept}, "
+        f"classification_min_confidence={float(context.settings['classification_min_confidence']):.2f})."
     )
 
 
@@ -215,7 +299,7 @@ def _build_batch_contexts(
 
 
 def _chunk_supports_batched_sam3(contexts: List[Sam3RequestContext]) -> bool:
-    prompts = {context.sam3_prompt for context in contexts}
+    prompts = {context.sam3_prompts for context in contexts}
     thresholds = {context.sam3_threshold for context in contexts}
     return len(prompts) == 1 and len(thresholds) == 1
 
@@ -392,7 +476,7 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     stage_start = time.perf_counter()
     sam3_results = runtime._run_sam3(
         context.pil_image,
-        prompt=context.sam3_prompt,
+        prompt=context.sam3_prompts,
         threshold=context.sam3_threshold,
     )
     stage_timings_ms["sam3_inference"] = (time.perf_counter() - stage_start) * 1000.0
@@ -434,6 +518,14 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
     stage_start = time.perf_counter()
     detections = postprocess_sam3_detections(runtime, detections, context=context)
     stage_timings_ms["postprocess"] = (time.perf_counter() - stage_start) * 1000.0
+    message = ""
+    if not detections:
+        message = _build_empty_detection_message(
+            context=context,
+            mask_count=mask_count,
+            roi_seen=roi_seen,
+            roi_kept=roi_kept,
+        )
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
@@ -460,6 +552,7 @@ def analyze_sam3_image(runtime: Any, context: Sam3RequestContext) -> Dict[str, A
         roi_kept=roi_kept,
         roi_classification_calls=roi_classification_calls,
         mask_count=mask_count,
+        message=message,
     )
 
 
@@ -494,12 +587,12 @@ def analyze_sam3_batch(
             sam3_started_at = time.perf_counter()
             batched_results = runtime._run_sam3_batch(
                 [context.pil_image for context in chunk_contexts],
-                prompt=chunk_contexts[0].sam3_prompt,
+                prompt=chunk_contexts[0].sam3_prompts,
                 threshold=chunk_contexts[0].sam3_threshold,
             )
             sam3_total_ms = (time.perf_counter() - sam3_started_at) * 1000.0
         except Exception as exc:
-            logger.info("Falling back to per-image SAM3 analysis for chunk: %s", exc)
+            logger.info("Retrying chunk with per-image SAM3 analysis: %s", exc)
             analyses.extend(analyze_sam3_image(runtime, context) for context in chunk_contexts)
             continue
 
@@ -538,6 +631,14 @@ def analyze_sam3_batch(
             )
             stage_timings_ms["postprocess"] = (time.perf_counter() - postprocess_started_at) * 1000.0
             elapsed_ms = sum(float(value) for value in stage_timings_ms.values())
+            message = ""
+            if not detections:
+                message = _build_empty_detection_message(
+                    context=context,
+                    mask_count=mask_count,
+                    roi_seen=roi_seen,
+                    roi_kept=int(classification_result["roi_kept"]),
+                )
             analyses.append(
                 _build_sam3_analysis_payload(
                     context=context,
@@ -548,6 +649,7 @@ def analyze_sam3_batch(
                     roi_kept=int(classification_result["roi_kept"]),
                     roi_classification_calls=int(classification_result["roi_classification_calls"]),
                     mask_count=mask_count,
+                    message=message,
                 )
             )
     return analyses
