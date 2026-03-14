@@ -3,7 +3,7 @@ import json
 import pytest
 
 from src.core.config_manager import ConfigurationManager
-from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION
+from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION, is_versioned_config_surface_payload
 
 
 def _write_json(path, payload):
@@ -126,3 +126,43 @@ def test_manager_rejects_future_config_schema_version(tmp_path):
 
     with pytest.raises(ValueError, match="Unsupported config_schema_version"):
         ConfigurationManager(config_dir=str(config_dir)).load_all_configs()
+
+
+def test_load_config_file_migrates_versioned_surface(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "legacy.json",
+        {
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                }
+            },
+            "ood": {"enabled": True, "threshold_factor": 2.75},
+        },
+    )
+
+    payload = ConfigurationManager(config_dir=str(config_dir)).load_config_file("legacy.json")
+
+    assert payload["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
+    assert payload["training"]["continual"]["ood"]["threshold_factor"] == 2.75
+
+
+def test_load_config_file_leaves_non_surface_payload_untouched(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(config_dir / "plant_taxonomy.json", {"crops": {"tomato": ["leaf"]}})
+
+    payload = ConfigurationManager(config_dir=str(config_dir)).load_config_file("plant_taxonomy.json")
+
+    assert payload == {"crops": {"tomato": ["leaf"]}}
+
+
+def test_is_versioned_config_surface_payload_matches_supported_sections():
+    assert is_versioned_config_surface_payload({"training": {}}) is True
+    assert is_versioned_config_surface_payload({"colab": {}}) is True
+    assert is_versioned_config_surface_payload({"crops": {"tomato": ["leaf"]}}) is False

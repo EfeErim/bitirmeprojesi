@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict
+from typing import Any, Dict, Mapping
 
 CONFIG_SCHEMA_VERSION_KEY = "config_schema_version"
 CURRENT_CONFIG_SCHEMA_VERSION = 1
@@ -32,6 +32,14 @@ _LEGACY_OOD_ALIAS_KEYS = (
     "knn_backend",
     "knn_chunk_size",
 )
+
+_CONFIG_SURFACE_KEYS = frozenset({"training", "router", "ood", "inference", "colab"})
+
+
+def is_versioned_config_surface_payload(payload: Mapping[str, Any] | None) -> bool:
+    if not isinstance(payload, Mapping):
+        return False
+    return bool(_CONFIG_SURFACE_KEYS & set(payload.keys()))
 
 
 def _read_config_schema_version(payload: Dict[str, Any]) -> int:

@@ -6,12 +6,10 @@ from __future__ import annotations
 import builtins
 import sys
 from pathlib import Path
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-
-CONFIG_SURFACE_KEYS = frozenset({"training", "router", "ood", "inference", "colab"})
 
 
 def _safe_print(*args, **kwargs):
@@ -25,11 +23,13 @@ def _safe_print(*args, **kwargs):
 print = _safe_print
 
 
-def _is_versioned_config_surface(payload: Dict[str, object]) -> bool:
-    return bool(CONFIG_SURFACE_KEYS & set(payload.keys()))
+def _is_versioned_config_surface(payload: Dict[str, Any]) -> bool:
+    from src.core.config_migrations import is_versioned_config_surface_payload
+
+    return is_versioned_config_surface_payload(payload)
 
 
-def _iter_config_payloads(config_dir: str | Path) -> Iterable[Tuple[Path, Dict[str, object]]]:
+def _iter_config_payloads(config_dir: str | Path) -> Iterable[Tuple[Path, Dict[str, Any]]]:
     from src.shared.json_utils import read_json_dict
 
     for path in sorted(Path(config_dir).glob("*.json")):

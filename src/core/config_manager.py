@@ -12,6 +12,7 @@ from typing import Any, Dict, Optional
 from src.core.config_migrations import (
     CONFIG_SCHEMA_VERSION_KEY,
     CURRENT_CONFIG_SCHEMA_VERSION,
+    is_versioned_config_surface_payload,
     migrate_config_payload,
     project_compatibility_aliases,
 )
@@ -52,6 +53,8 @@ class ConfigurationManager:
         if not config_path.exists():
             return {}
         payload = _read_json(config_path)
+        if is_versioned_config_surface_payload(payload):
+            payload = migrate_config_payload(payload)
         if schema_name and schema_name not in payload:
             return {schema_name: payload}
         return payload
