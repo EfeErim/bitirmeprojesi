@@ -47,7 +47,7 @@ Do not edit generated outputs as if they were maintained source unless the user 
 - Training, OOD calibration, readiness artifacts, BER, and training-side adapter export: start from `src/workflows/training.py`, `config/base.json`, and `src/training/services/`
 - Notebook 1, 2, or 3 issues, dataset materialization, Hugging Face token handling, Drive telemetry, or notebook export paths: inspect the matching notebook plus `scripts/colab_*`
 - Router inference, adapter lookup, deployment handoff, smoke testing, or inference payload behavior: start from `src/workflows/inference.py`, `src/pipeline/router_adapter_runtime.py`, `src/pipeline/inference_payloads.py`, and `src/router/vlm_pipeline.py`
-- CI, tests, benchmark capture, and docs consistency: inspect `.github/workflows/ci.yml`, `pyproject.toml`, `scripts/validate_notebook_imports.py`, and `scripts/benchmark_surfaces.py`
+- CI, tests, benchmark capture, and docs consistency: inspect `.github/workflows/ci.yml`, `pyproject.toml`, `scripts/validate_notebook_imports.py`, `scripts/validate_config_schema.py`, and `scripts/benchmark_surfaces.py`
 
 ## Validation defaults
 
@@ -55,6 +55,7 @@ Use the narrowest relevant validation first:
 
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
+- `.\scripts\python.cmd scripts/validate_config_schema.py`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
 - `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`

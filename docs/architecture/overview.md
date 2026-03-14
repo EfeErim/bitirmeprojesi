@@ -314,6 +314,7 @@ Use this as the quick code map.
 The repo validates the maintained surface through:
 
 - `scripts/validate_notebook_imports.py`
+- `scripts/validate_config_schema.py`
 - `scripts/evaluate_dataset_layout.py`
 - `scripts/benchmark_surfaces.py`
 - `tests/unit/`

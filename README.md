@@ -170,6 +170,7 @@ CI validates both:
 
 ```powershell
 .\scripts\python.cmd scripts/validate_notebook_imports.py
+.\scripts\python.cmd scripts/validate_config_schema.py
 pytest tests/unit tests/colab/test_smoke_training.py -q
 pytest tests/integration -q --runintegration
 .\scripts\python.cmd scripts/benchmark_surfaces.py

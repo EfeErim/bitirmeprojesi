@@ -19,7 +19,7 @@ Read these before making repo-wide assumptions:
 - Notebook training surface: `colab_notebooks/2_interactive_adapter_training.ipynb`
 - Notebook inference surface: `colab_notebooks/1_router_adapter_inference.ipynb`
 - Direct adapter validation: `colab_notebooks/3_adapter_smoke_test.ipynb` and `scripts/colab_adapter_smoke_test.py`
-- Repo validation and automation: `.github/workflows/ci.yml`, `scripts/validate_notebook_imports.py`, `scripts/benchmark_surfaces.py`
+- Repo validation and automation: `.github/workflows/ci.yml`, `scripts/validate_notebook_imports.py`, `scripts/validate_config_schema.py`, `scripts/benchmark_surfaces.py`
 
 ## Tracked Vs Local-Generated
 
@@ -71,6 +71,7 @@ Start with the narrowest relevant subset:
 
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
+- `.\scripts\python.cmd scripts/validate_config_schema.py`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
 - `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`

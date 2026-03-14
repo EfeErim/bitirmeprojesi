@@ -565,6 +565,7 @@ Run these before or after notebook-related changes:
 
 ```powershell
 .\scripts\python.cmd scripts/validate_notebook_imports.py
+.\scripts\python.cmd scripts/validate_config_schema.py
 .\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\<your_flat_class_root>
 pytest tests/colab/test_smoke_training.py -q
 ```
