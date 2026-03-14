@@ -39,6 +39,11 @@ Make sure you have these things ready:
 3. A Hugging Face token if the required models need authenticated access.
 4. Enough storage for outputs, telemetry, and checkpoints if you enable Drive logging.
 
+Private repo note:
+
+- if the notebook starts outside the repo workspace and this GitHub repo is private, set `GH_TOKEN` or `GITHUB_TOKEN` as a Colab secret before running the bootstrap cell
+- alternatively, mount Drive and set `AADS_REPO_ROOT` to an existing checkout so the notebook does not need to clone
+
 Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
@@ -312,6 +317,8 @@ Notebook 2 also resolves the GitHub push token from:
 - matching Colab secrets when running inside Colab
 
 If auto-push is enabled, the notebook uses that token after the repo mirror step.
+
+The same token is also used by the notebook bootstrap when it needs to clone a private GitHub repo into the Colab runtime.
 
 ## What Notebook 2 Produces
 

@@ -57,6 +57,33 @@ def test_resolve_github_token_reads_colab_secret(monkeypatch):
     assert os.environ["GH_TOKEN"] == "gh-secret"
 
 
+def test_maybe_clone_repo_uses_github_token_for_https_clone(tmp_path: Path, monkeypatch):
+    clone_target = tmp_path / "bitirmeprojesi"
+    monkeypatch.delenv("AADS_DISABLE_AUTO_CLONE", raising=False)
+    monkeypatch.setenv("AADS_REPO_URL", "https://github.com/EfeErim/bitirmeprojesi.git")
+    monkeypatch.setenv("AADS_REPO_CLONE_TARGET", str(clone_target))
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    calls: list[list[str]] = []
+
+    def fake_run(command, check=False, stdout=None, stderr=None, text=None):
+        calls.append(list(command))
+        clone_target.mkdir(parents=True, exist_ok=True)
+        (clone_target / "src").mkdir(exist_ok=True)
+        (clone_target / "config").mkdir(exist_ok=True)
+        (clone_target / "scripts").mkdir(exist_ok=True)
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    resolved = bootstrap.maybe_clone_repo()
+
+    assert resolved == clone_target
+    assert calls
+    assert calls[0][:3] == ["git", "clone", "--depth"]
+    assert calls[0][4] == "https://gh-secret@github.com/EfeErim/bitirmeprojesi.git"
+
+
 def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
     monkeypatch.setattr(bootstrap, "resolve_hf_token", lambda: None)
     lines: list[str] = []

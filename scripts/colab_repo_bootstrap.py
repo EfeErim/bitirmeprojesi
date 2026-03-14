@@ -38,8 +38,9 @@ def maybe_clone_repo() -> Optional[Path]:
 
     clone_target.parent.mkdir(parents=True, exist_ok=True)
     print(f"Repository not found locally. Auto-cloning from: {repo_url}")
+    clone_url = _build_repo_access_url(repo_url, resolve_github_token())
     completed = subprocess.run(
-        ["git", "clone", "--depth", "1", repo_url, str(clone_target)],
+        ["git", "clone", "--depth", "1", clone_url, str(clone_target)],
         check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -50,6 +51,12 @@ def maybe_clone_repo() -> Optional[Path]:
 
     if completed.returncode == 0 and is_repo_root(clone_target):
         return clone_target
+
+    if completed.returncode != 0 and "github.com" in str(repo_url):
+        print(
+            "Auto-clone failed. If this repository is private, set GH_TOKEN or GITHUB_TOKEN "
+            "as an env var or Colab secret, or point AADS_REPO_ROOT to an existing repo checkout."
+        )
     return None
 
 
@@ -107,7 +114,8 @@ def resolve_repo_root() -> Path:
 
     raise FileNotFoundError(
         "Repository root not found and auto-clone failed. "
-        "Set AADS_REPO_ROOT, or set AADS_REPO_URL/AADS_REPO_CLONE_TARGET."
+        "Set AADS_REPO_ROOT, or set AADS_REPO_URL/AADS_REPO_CLONE_TARGET. "
+        "Private GitHub repos also require GH_TOKEN or GITHUB_TOKEN for auto-clone."
     )
 
 
@@ -201,6 +209,16 @@ def _build_authenticated_remote_url(repo_url: str, token: str) -> str:
         )
     netloc = parsed.netloc.split("@", 1)[-1]
     return urlunsplit((parsed.scheme, f"{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+
+
+def _build_repo_access_url(repo_url: str, token: Optional[str]) -> str:
+    cleaned_url = str(repo_url or "").strip()
+    if not cleaned_url or not token:
+        return cleaned_url
+    try:
+        return _build_authenticated_remote_url(cleaned_url, token)
+    except RuntimeError:
+        return cleaned_url
 
 
 def mirror_path_to_repo(
@@ -299,16 +317,8 @@ def resolve_github_token() -> Optional[str]:
     if not running_in_colab():
         return None
 
-    try:
-        from google.colab import userdata
-    except Exception:
-        return None
-
     for secret_name in GITHUB_TOKEN_NAMES:
-        try:
-            token = str(userdata.get(secret_name) or "").strip()
-        except Exception:
-            token = ""
+        token = _resolve_colab_secret(secret_name)
         if token:
             os.environ["GH_TOKEN"] = token
             return token
@@ -397,21 +407,28 @@ def resolve_hf_token() -> Optional[str]:
     if not running_in_colab():
         return None
 
-    try:
-        from google.colab import userdata
-    except Exception:
-        return None
-
     for secret_name in HF_TOKEN_NAMES:
-        try:
-            token = str(userdata.get(secret_name) or "").strip()
-        except Exception:
-            token = ""
+        token = _resolve_colab_secret(secret_name)
         if token:
             os.environ["HF_TOKEN"] = token
             return token
 
     return None
+
+
+def _resolve_colab_secret(secret_name: str) -> str:
+    if not running_in_colab():
+        return ""
+
+    try:
+        from google.colab import userdata
+    except Exception:
+        return ""
+
+    try:
+        return str(userdata.get(secret_name) or "").strip()
+    except Exception:
+        return ""
 
 
 def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None) -> bool:
