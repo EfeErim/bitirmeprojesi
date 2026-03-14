@@ -11,6 +11,7 @@ Use this skill for changes around `TrainingWorkflow.run(...)`, `config/base.json
 
 - `README.md`
 - `docs/architecture/overview.md`
+- `docs/architecture/ood_recommendation.md`
 - `docs/user_guide/ood_readiness_guide.md`
 - `config/base.json`
 - `src/workflows/training.py`
@@ -25,13 +26,15 @@ Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 2, 
 3. Treat `production_readiness.json` as the deployment verdict. `validation/metric_gate.json` and `test/metric_gate.json` are split-local diagnostics.
 4. Keep the adapter bundle contract coherent: LoRA weights, classifier or fusion state, config metadata, and serialized OOD state should move together.
 5. When BER is involved, compare runs on the same crop, seed, split layout, and OOD evidence source. Use `scripts/evaluate_ber_rollout.py` when a rollout comparison is needed.
-6. If training outputs or readiness semantics change, update the matching docs instead of leaving behavior implicit.
+6. Back OOD scoring, calibration, readiness-policy, and rejection-method changes with primary literature when possible. If the repo adapts an idea rather than reproducing a paper exactly, say so explicitly.
+7. If training outputs or readiness semantics change, update the matching docs instead of leaving behavior implicit.
 
 ## Boundaries
 
 - Do not treat notebook-only behavior as canonical if it conflicts with workflow code.
 - Do not change inference payload shape here unless the task explicitly spans inference. Load `aads-inference-runtime` too in that case.
 - Keep generated outputs under `outputs/`, `runs/`, and `models/adapters/` out of tracked edits.
+- Do not describe a training or OOD implementation as literature-faithful unless the cited method, config surface, and behavior actually match.
 
 ## Validate
 

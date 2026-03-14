@@ -27,12 +27,14 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1 or Notebook 3 wrapper
 3. Keep router-driven inference and direct adapter smoke testing as separate supported surfaces.
 4. Preserve the typed inference payload contract and OOD metadata semantics when changing runtime behavior.
 5. If a change touches the crop-routing boundary, inspect both `src/router/vlm_pipeline.py` and `src/pipeline/router_adapter_runtime.py` before editing.
+6. Back router evidence policy, reject-option behavior, calibration logic, and other non-trivial inference heuristics with literature when credible sources exist. Mark repo-specific engineering inference explicitly instead of overstating the citation.
 
 ## Boundaries
 
 - Do not fold adapter smoke testing into router inference unless the user explicitly asks for that product change.
 - Do not change training-side readiness policy here without also loading `aads-training-ood`.
 - Keep generated adapters under `models/adapters/` treated as local deployment artifacts, not tracked fixtures.
+- Do not present runtime heuristics as citation-backed guarantees unless the linked literature actually supports the claimed behavior.
 
 ## Validate
 

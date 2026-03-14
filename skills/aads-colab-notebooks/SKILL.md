@@ -29,12 +29,14 @@ Load `skills/aads-training-ood/SKILL.md` for Notebook 2 training or readiness be
 4. Notebook 2 writes local outputs under `outputs/colab_notebook_training/`, mirrors non-checkpoint exports into `runs/<RUN_ID>/`, and keeps rolling checkpoints under the Drive telemetry root.
 5. Notebook 3 is direct adapter validation. It is separate from router-driven inference and should stay usable without the router.
 6. Keep Hugging Face token resolution aligned with the maintained sources documented in the Colab manual.
+7. When notebook prose, defaults, or exposed controls imply methodological claims about training, OOD handling, or inference behavior, align them with the canonical workflow docs and literature-backed rationale where available. Avoid notebook-only scientific claims.
 
 ## Boundaries
 
 - Do not make notebook behavior the primary source of truth when workflow code already defines the contract.
 - Do not rewrite local run exports or checkpoint trees as tracked repo fixtures.
 - Use `aads-repo-hygiene` too if the task changes CI coverage, maintained validation commands, or contributor-facing docs.
+- Do not imply a paper-faithful method or benchmark claim from notebook UX alone unless the underlying workflow and docs substantiate it.
 
 ## Validate
 

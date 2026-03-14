@@ -12,6 +12,15 @@ Read these before making repo-wide assumptions:
 - `docs/user_guide/colab_training_manual.md`
 - `docs/user_guide/ood_readiness_guide.md`
 
+## Evidence Standard
+
+- Treat repo docs and code as the source of truth for current product behavior.
+- Back method choices, evaluation policy, threshold logic, data-curation guidance, and other substantive ML claims with literature when credible sources exist.
+- Prefer primary sources: peer-reviewed papers, official standards, and first-party technical documentation. Reuse literature already cited in maintained docs before adding new references.
+- Separate current repo behavior, literature-backed rationale, and engineering inference made to fit repo constraints. Do not present an implementation as paper-faithful unless the citation and code actually support that claim.
+- If strong literature is not available, say so briefly and fall back to repo docs, tests, benchmarks, and measured behavior.
+- When adding new literature-backed rationale, place it in maintained docs or succinct code comments near non-obvious logic instead of ad hoc notes.
+
 ## Maintained Entrypoints
 
 - Training: `src/workflows/training.py` via `TrainingWorkflow.run(...)`

@@ -25,12 +25,14 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 3. Prefer the narrowest validation that proves the change. Expand to smoke or integration coverage only when the touched surface requires it.
 4. Run `scripts/benchmark_surfaces.py` when workflow entrypoints, router runtime orchestration, or benchmarked interfaces change.
 5. When docs drift from code, update the canonical docs in the repo instead of adding duplicate side notes.
+6. Preserve or improve literature-backed rationale when the task changes ML methods, benchmark claims, evaluation policy, or contributor guidance about model behavior. Prefer primary sources and label engineering inference explicitly.
 
 ## Boundaries
 
 - Do not rewrite generated artifacts just to satisfy hygiene work unless the user asked for generated-output maintenance.
 - Do not treat CI automation as a replacement for repo-local skills or agent routing.
 - Keep new process documentation minimal and attach it to maintained files, not ad hoc extras.
+- Do not add unsupported performance, readiness, or methodology claims just because a workflow passes locally. Use repo evidence and literature when available.
 
 ## Validate
 
