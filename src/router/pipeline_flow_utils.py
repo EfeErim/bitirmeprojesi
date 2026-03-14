@@ -1,4 +1,13 @@
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Optional,
+    Tuple,
+    TypeVar,
+)
+
+TAnalyzer = TypeVar("TAnalyzer", bound=Callable[..., Any])
 
 
 def build_process_image_response(analysis: Dict[str, Any], enabled: bool) -> Dict[str, Any]:
@@ -26,8 +35,8 @@ def empty_analysis_result(image_size: Tuple[int, int, int]) -> Dict[str, Any]:
 
 def resolve_active_analyzer(
     actual_pipeline: Optional[str],
-    analyzers: Dict[str, Callable[..., Dict[str, Any]]],
-) -> Optional[Callable[..., Dict[str, Any]]]:
+    analyzers: Dict[str, TAnalyzer],
+) -> Optional[TAnalyzer]:
     """Resolve analyzer callable by normalized active pipeline key."""
     active_pipeline = str(actual_pipeline or '').strip().lower()
     return analyzers.get(active_pipeline)

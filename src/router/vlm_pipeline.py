@@ -6,8 +6,7 @@ SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 
 import copy
 import logging
-import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import torch
 from PIL import Image
@@ -15,10 +14,7 @@ from PIL import Image
 from src.router import clip_runtime, sam3_runtime
 from src.router.batch_output_utils import analysis_to_batch_item
 from src.router.dependency_utils import check_vlm_dependencies
-from src.router.pipeline_flow_utils import (
-    build_process_image_response,
-    resolve_active_analyzer,
-)
+from src.router.pipeline_flow_utils import build_process_image_response
 from src.router.policy_taxonomy_utils import (
     apply_runtime_profile,
     build_policy_graph,
@@ -29,6 +25,15 @@ from src.router.policy_taxonomy_utils import (
     resolve_requested_profile,
 )
 from src.router.roi_helpers import coerce_image_input
+from src.router.runtime_surface import (
+    RouterAnalyzer,
+    normalize_router_analysis_result,
+    resolve_router_analyzer,
+    resolve_runtime_controls,
+)
+from src.router.runtime_surface import (
+    resolve_request_options as resolve_router_request_options,
+)
 from src.router.sam3_output_utils import (
     normalize_sam3_results,
     sam3_error_result,
@@ -36,20 +41,6 @@ from src.router.sam3_output_utils import (
 from src.shared.contracts import RouterAnalysisResult, RouterRequestOptions
 
 logger = logging.getLogger(__name__)
-
-
-def _coerce_float(value: Any, default: float) -> float:
-    try:
-        return float(default if value is None else value)
-    except Exception:
-        return float(default)
-
-
-def _coerce_non_negative_int(value: Any, default: int = 0) -> int:
-    try:
-        return max(0, int(default if value is None else value))
-    except Exception:
-        return int(default)
 
 
 def _normalize_crop_part_compatibility(crop_mapping: Dict[str, Any]) -> Dict[str, List[str]]:
@@ -178,48 +169,16 @@ class VLMPipeline:
 
     def _refresh_runtime_controls(self) -> None:
         """Refresh config-derived runtime controls after profile changes."""
-        self.enabled = self.config.get('vlm_enabled', self.vlm_config.get('enabled', False))
-        self.confidence_threshold = self.config.get(
-            'vlm_confidence_threshold',
-            self.vlm_config.get('confidence_threshold', 0.7),
-        )
-        configured_max = self.config.get('vlm_max_detections', self.vlm_config.get('max_detections', 0))
-        configured_max_int = _coerce_non_negative_int(configured_max, default=0)
-        self.max_detections = None if configured_max_int <= 0 else configured_max_int
-        self.open_set_enabled = self.config.get(
-            'vlm_open_set_enabled',
-            self.vlm_config.get('open_set_enabled', True),
-        )
-        self.open_set_min_confidence = _coerce_float(
-            self.config.get('vlm_open_set_min_confidence', self.vlm_config.get('open_set_min_confidence', 0.55)),
-            0.55,
-        )
-        self.open_set_margin = _coerce_float(
-            self.config.get('vlm_open_set_margin', self.vlm_config.get('open_set_margin', 0.10)),
-            0.10,
-        )
-        strict_from_env = (
-            str(os.getenv('AADS_ULORA_STRICT_MODEL_LOADING', '0')).strip().lower() in {'1', 'true', 'yes', 'on'}
-        )
-        self.strict_model_loading = self.config.get(
-            'vlm_strict_model_loading',
-            self.vlm_config.get('strict_model_loading', strict_from_env),
-        )
-        self.model_source = self.config.get(
-            'vlm_model_source',
-            self.vlm_config.get('model_source', 'huggingface'),
-        )
-
-        defaults = {
-            'sam': 'facebook/sam3',
-            'bioclip': 'imageomics/bioclip-2.5-vith14',
-        }
-        raw_model_ids = self.vlm_config.get('model_ids', {})
-        configured_ids = raw_model_ids if isinstance(raw_model_ids, dict) else {}
-        self.model_ids = {
-            'sam': configured_ids.get('sam', defaults['sam']),
-            'bioclip': configured_ids.get('bioclip', defaults['bioclip']),
-        }
+        controls = resolve_runtime_controls(self.config, self.vlm_config)
+        self.enabled = bool(controls["enabled"])
+        self.confidence_threshold = float(controls["confidence_threshold"])
+        self.max_detections = controls["max_detections"]
+        self.open_set_enabled = bool(controls["open_set_enabled"])
+        self.open_set_min_confidence = float(controls["open_set_min_confidence"])
+        self.open_set_margin = float(controls["open_set_margin"])
+        self.strict_model_loading = bool(controls["strict_model_loading"])
+        self.model_source = str(controls["model_source"])
+        self.model_ids = dict(controls["model_ids"])
 
     def set_runtime_profile(self, profile_name: Optional[str], suppress_warning: bool = False) -> bool:
         """Apply named runtime profile to VLM config. Returns True if a profile was applied."""
@@ -559,18 +518,12 @@ class VLMPipeline:
         max_detections: Optional[int] = None,
         options: Optional[RouterRequestOptions] = None,
     ) -> RouterRequestOptions:
-        if options is not None:
-            return RouterRequestOptions(
-                confidence_threshold=float(options.confidence_threshold),
-                max_detections=None if options.max_detections is None else int(options.max_detections),
-            )
-        resolved_confidence_threshold = (
-            self.confidence_threshold if confidence_threshold is None else float(confidence_threshold)
-        )
-        resolved_max_detections = self.max_detections if max_detections is None else max_detections
-        return RouterRequestOptions(
-            confidence_threshold=float(resolved_confidence_threshold),
-            max_detections=None if resolved_max_detections is None else int(resolved_max_detections),
+        return resolve_router_request_options(
+            default_confidence_threshold=self.confidence_threshold,
+            default_max_detections=self.max_detections,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+            options=options,
         )
 
     def _normalize_router_analysis(
@@ -581,16 +534,12 @@ class VLMPipeline:
         status: str = "ok",
         message: str = "",
     ) -> RouterAnalysisResult:
-        if isinstance(analysis, RouterAnalysisResult):
-            result = analysis
-        else:
-            result = RouterAnalysisResult.from_dict(analysis)
-        if not result.status:
-            result.status = status
-        if message and not result.message:
-            result.message = message
-        result.request = request
-        return result
+        return normalize_router_analysis_result(
+            analysis,
+            request=request,
+            status=status,
+            message=message,
+        )
 
     def process_image(
         self,
@@ -709,12 +658,12 @@ class VLMPipeline:
             for index in range(int(batch.shape[0]))
         ]
 
-    def _resolve_analyzer_for_active_pipeline(self) -> Optional[Callable[..., Dict[str, Any] | RouterAnalysisResult]]:
+    def _resolve_analyzer_for_active_pipeline(self) -> Optional[RouterAnalyzer]:
         """Resolve analysis function for active pipeline."""
-        analyzers: Dict[str, Callable[..., Dict[str, Any] | RouterAnalysisResult]] = {
+        analyzers: Dict[str, RouterAnalyzer] = {
             'sam3': self._analyze_image_sam3,
         }
-        return resolve_active_analyzer(self.actual_pipeline, analyzers)
+        return resolve_router_analyzer(self.actual_pipeline, analyzers)
 
     def _analyze_image_sam3(
         self,
@@ -728,7 +677,9 @@ class VLMPipeline:
             self,
             pil_image=pil_image,
             image_size=image_size,
-            confidence_threshold=self.confidence_threshold if confidence_threshold is None else confidence_threshold,
+            confidence_threshold=float(
+                self.confidence_threshold if confidence_threshold is None else confidence_threshold
+            ),
             max_detections=max_detections,
         )
         return sam3_runtime.analyze_sam3_image(self, context)

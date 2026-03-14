@@ -29,6 +29,33 @@ from src.training.services.reporting import (
     persist_validation_artifacts,
 )
 from src.training.validation import evaluate_model_with_artifact_metrics
+from src.workflows.training_readiness import (
+    build_production_readiness_context as build_production_readiness_context_payload,
+)
+from src.workflows.training_readiness import (
+    build_training_summary_payload as build_training_summary_payload_dict,
+)
+from src.workflows.training_readiness import (
+    has_evaluation_labels as has_readiness_evaluation_labels,
+)
+from src.workflows.training_readiness import (
+    has_metric_gate as has_readiness_metric_gate,
+)
+from src.workflows.training_readiness import (
+    record_adapter_export_metadata as record_adapter_export_metadata_payload,
+)
+from src.workflows.training_readiness import (
+    record_primary_score_selection as record_primary_score_selection_payload,
+)
+from src.workflows.training_readiness import (
+    select_authoritative_artifacts as select_authoritative_artifacts_payload,
+)
+from src.workflows.training_readiness import (
+    select_authoritative_evaluation as select_authoritative_evaluation_payload,
+)
+from src.workflows.training_readiness import (
+    select_authoritative_value as select_authoritative_value_payload,
+)
 from src.workflows.training_support import (
     build_artifact_payload,
     loader_size,
@@ -357,42 +384,36 @@ class TrainingWorkflow:
         selected_primary_score_method: str,
         primary_score_selection_source: str,
     ) -> Dict[str, Any]:
-        return {
-            "run_id": run_id,
-            "crop_name": crop_name,
-            "class_names": list(detected_classes),
-            "class_count": len(detected_classes),
-            "loader_sizes": loader_sizes,
-            "loader_batch_counts": loader_batch_counts,
-            "split_class_counts": split_class_counts,
-            "adapter_dir": str(adapter_dir),
-            "artifact_dir": str(artifact_dir),
-            "checkpoint_count": len(checkpoint_records),
-            "ood_calibration": dict(ood_calibration),
-            "calibration_split_name": str(calibration_split_name),
-            "stopped_early": bool(history_payload.get("stopped_early", False)),
-            "global_step": int(history_payload.get("global_step", 0)),
-            "optimizer_steps": int(history_payload.get("optimizer_steps", 0)),
-            "best_metric_name": str(history_payload.get("best_metric_name", "")),
-            "best_metric_value": history_payload.get("best_metric_value"),
-            "best_epoch": int(history_payload.get("best_epoch", 0)),
-            "best_state_restored": bool(best_state_restored),
-            "ood_requested_primary_score_method": str(requested_primary_score_method),
-            "ood_primary_score_method": str(selected_primary_score_method),
-            "ood_primary_score_selection_source": str(primary_score_selection_source),
-            "ood_evidence_source": str(ood_evidence_source or ""),
-            "ood_benchmark": dict(ood_benchmark),
-            "production_readiness": dict(production_readiness),
-            "final_metrics": _collect_final_metrics(history_payload),
-        }
+        return build_training_summary_payload_dict(
+            run_id=run_id,
+            crop_name=crop_name,
+            detected_classes=detected_classes,
+            loader_sizes=loader_sizes,
+            loader_batch_counts=loader_batch_counts,
+            split_class_counts=split_class_counts,
+            adapter_dir=str(adapter_dir),
+            artifact_dir=str(artifact_dir),
+            checkpoint_records=checkpoint_records,
+            ood_calibration=ood_calibration,
+            history_payload=history_payload,
+            calibration_split_name=calibration_split_name,
+            ood_evidence_source=ood_evidence_source,
+            ood_benchmark=ood_benchmark,
+            production_readiness=production_readiness,
+            best_state_restored=best_state_restored,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            primary_score_selection_source=primary_score_selection_source,
+            final_metrics=_collect_final_metrics(history_payload),
+        )
 
     @staticmethod
     def _has_metric_gate(candidate: Dict[str, Any]) -> bool:
-        return isinstance(candidate, dict) and isinstance(candidate.get("metric_gate"), dict)
+        return has_readiness_metric_gate(candidate)
 
     @staticmethod
     def _has_evaluation_labels(candidate: Any) -> bool:
-        return candidate is not None and bool(list(getattr(candidate, "y_true", []) or []))
+        return has_readiness_evaluation_labels(candidate)
 
     @staticmethod
     def _select_authoritative_value(
@@ -403,11 +424,13 @@ class TrainingWorkflow:
         is_present: Callable[[T], bool],
         empty_value: T,
     ) -> tuple[str, T]:
-        if is_present(test_value):
-            return "test", test_value
-        if calibration_split_name != "val" and is_present(validation_value):
-            return "val", validation_value
-        return "", empty_value
+        return select_authoritative_value_payload(
+            validation_value,
+            test_value,
+            calibration_split_name=calibration_split_name,
+            is_present=is_present,
+            empty_value=empty_value,
+        )
 
     @classmethod
     def _select_authoritative_artifacts(
@@ -417,12 +440,10 @@ class TrainingWorkflow:
         *,
         calibration_split_name: str,
     ) -> tuple[str, Dict[str, Any]]:
-        return cls._select_authoritative_value(
+        return select_authoritative_artifacts_payload(
             validation_artifacts,
             test_artifacts,
             calibration_split_name=calibration_split_name,
-            is_present=cls._has_metric_gate,
-            empty_value={},
         )
 
     @classmethod
@@ -433,12 +454,10 @@ class TrainingWorkflow:
         *,
         calibration_split_name: str,
     ) -> tuple[str, Any]:
-        return cls._select_authoritative_value(
+        return select_authoritative_evaluation_payload(
             validation_evaluation,
             test_evaluation,
             calibration_split_name=calibration_split_name,
-            is_present=cls._has_evaluation_labels,
-            empty_value=None,
         )
 
     @staticmethod
@@ -449,12 +468,39 @@ class TrainingWorkflow:
         selected_primary_score_method: str,
         selection_source: str,
     ) -> None:
-        calibration = ood_calibration.get("ood_calibration")
-        if not isinstance(calibration, dict):
-            return
-        calibration["requested_primary_score_method"] = requested_primary_score_method
-        calibration["primary_score_method"] = selected_primary_score_method
-        calibration["selection_source"] = selection_source
+        record_primary_score_selection_payload(
+            ood_calibration,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
+        )
+
+    @staticmethod
+    def _record_adapter_export_metadata(
+        adapter: Any,
+        *,
+        ood_calibration: Dict[str, Any],
+        calibration_split_name: str,
+        calibration_loader: Any,
+        authoritative_split: str,
+        ood_evidence_source: str,
+        requested_primary_score_method: str,
+        selected_primary_score_method: str,
+        selection_source: str,
+        best_state_restored: bool,
+    ) -> None:
+        record_adapter_export_metadata_payload(
+            adapter,
+            ood_calibration=ood_calibration,
+            calibration_split_name=calibration_split_name,
+            calibration_loader_size=loader_size(calibration_loader),
+            authoritative_split=authoritative_split,
+            ood_evidence_source=ood_evidence_source,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
+            best_state_restored=best_state_restored,
+        )
 
     @staticmethod
     def _apply_primary_score_method_to_trainer(trainer: Any, primary_score_method: str) -> str:
@@ -834,8 +880,6 @@ class TrainingWorkflow:
                     calibration_split_name=calibration_split_name,
                 )
 
-        adapter_dir = adapter.save_adapter(str(output_dir))
-
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
             classification_metric_gate=(
@@ -846,25 +890,37 @@ class TrainingWorkflow:
             classification_split=authoritative_split,
             ood_evidence_source=ood_evidence_source,
             ood_metrics=ood_evidence_metrics,
-            context={
-                "run_id": run_id,
-                "crop_name": crop_name,
-                "loader_sizes": loader_sizes,
-                "loader_batch_counts": loader_batch_counts,
-                "split_class_counts": split_class_counts,
-                "calibration_split_name": calibration_split_name,
-                "best_state_restored": bool(best_state_restored),
-                "classification_split": authoritative_split,
-                "ood_requested_primary_score_method": requested_primary_score_method,
-                "ood_primary_score_method": selected_primary_score_method,
-                "ood_primary_score_selection_source": selection_source,
-                "ood_benchmark_status": ood_benchmark.get("status"),
-                "ood_benchmark_passed": ood_benchmark.get("passed"),
-            },
+            context=build_production_readiness_context_payload(
+                run_id=run_id,
+                crop_name=crop_name,
+                loader_sizes=loader_sizes,
+                loader_batch_counts=loader_batch_counts,
+                split_class_counts=split_class_counts,
+                calibration_split_name=calibration_split_name,
+                best_state_restored=best_state_restored,
+                classification_split=authoritative_split,
+                requested_primary_score_method=requested_primary_score_method,
+                selected_primary_score_method=selected_primary_score_method,
+                selection_source=selection_source,
+                ood_benchmark=ood_benchmark,
+            ),
             require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
             telemetry=telemetry,
         )
         production_readiness = dict(readiness_artifacts.get("payload", {}))
+        self._record_adapter_export_metadata(
+            adapter,
+            ood_calibration=ood_calibration,
+            calibration_split_name=calibration_split_name,
+            calibration_loader=calibration_loader,
+            authoritative_split=authoritative_split,
+            ood_evidence_source=ood_evidence_source,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=selected_primary_score_method,
+            selection_source=selection_source,
+            best_state_restored=best_state_restored,
+        )
+        adapter_dir = adapter.save_adapter(str(output_dir))
         self._emit_telemetry(
             telemetry,
             "production_readiness_ready",

@@ -147,6 +147,7 @@ def build_success_result(
     disease = result.get("disease", {}) if isinstance(result, dict) else {}
     raw_ood = result.get("ood_analysis", {}) if isinstance(result, dict) else {}
     normalized_router = normalize_router_analysis(router_analysis)
+    normalized_ood = normalize_ood_analysis(raw_ood) if include_ood else None
     return InferenceResult(
         status=str(result.get("status", "success")),
         crop=crop_name,
@@ -157,6 +158,11 @@ def build_success_result(
             None if disease.get("class_index") is None else int(disease.get("class_index"))
         ),
         confidence=float(disease.get("confidence", 0.0)),
-        ood_analysis=normalize_ood_analysis(raw_ood) if include_ood else None,
+        ood_analysis=normalized_ood,
+        conformal_set=(
+            None
+            if normalized_ood is None or normalized_ood.conformal_set is None
+            else list(normalized_ood.conformal_set)
+        ),
         router=normalized_router,
     )

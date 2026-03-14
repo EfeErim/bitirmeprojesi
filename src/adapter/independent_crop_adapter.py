@@ -21,7 +21,7 @@ from src.adapter.checkpointing import (
     save_training_checkpoint as save_adapter_training_checkpoint,
 )
 from src.shared.contracts import AdapterMetadata
-from src.shared.json_utils import read_json_dict, write_json
+from src.shared.json_utils import deep_merge, read_json_dict, write_json
 from src.training.services.config_surface import extract_continual_training_config
 from src.training.services.runtime import resolve_runtime_device, resolve_session_num_epochs
 
@@ -70,6 +70,7 @@ class IndependentCropAdapter:
         self.is_trained = False
         self._trainer: Optional["ContinualSDLoRATrainer"] = None
         self._calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self._metadata_overrides: Dict[str, Any] = {}
 
         logger.info("IndependentCropAdapter initialized for %s on %s", self.crop_name, self.device)
 
@@ -246,6 +247,20 @@ class IndependentCropAdapter:
             },
         }
 
+    def set_export_metadata(
+        self,
+        *,
+        ood_calibration: Optional[Dict[str, Any]] = None,
+        adapter_runtime: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        overrides: Dict[str, Any] = {}
+        if isinstance(ood_calibration, dict) and ood_calibration:
+            overrides["ood_calibration"] = dict(ood_calibration)
+        if isinstance(adapter_runtime, dict) and adapter_runtime:
+            overrides["adapter_runtime"] = dict(adapter_runtime)
+        if overrides:
+            self._metadata_overrides = deep_merge(self._metadata_overrides, overrides)
+
     def _ensure_ood_calibrated_for_export(self) -> None:
         trainer = self._require_trainer()
         issue = trainer.ood_detector.calibration_issue()
@@ -295,9 +310,10 @@ class IndependentCropAdapter:
         root = Path(checkpoint_dir)
         asset_dir = trainer.save_adapter(str(root))
         meta_path = asset_dir / "adapter_meta.json"
-        if not meta_path.exists():
-            metadata = self._metadata_payload()
-            write_json(meta_path, metadata)
+        metadata = read_json_dict(meta_path) if meta_path.exists() else self._metadata_payload()
+        if self._metadata_overrides:
+            metadata = deep_merge(metadata, self._metadata_overrides)
+        write_json(meta_path, metadata)
         return asset_dir
 
     def load_adapter(self, checkpoint_dir: str) -> None:

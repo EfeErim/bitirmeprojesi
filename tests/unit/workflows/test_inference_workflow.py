@@ -24,6 +24,7 @@ class FakeRuntime:
                 decision_threshold=0.8,
                 is_ood=False,
                 calibration_version=2,
+                conformal_set=["healthy"],
             ),
             router=RouterAnalysisResult(
                 status="skipped",
@@ -51,5 +52,6 @@ def test_inference_workflow_wraps_runtime_result():
     payload = workflow.predict(Image.new("RGB", (8, 8)), crop_hint="tomato", part_hint="leaf")
     assert payload["diagnosis"] == "healthy"
     assert payload["ood_analysis"]["calibration_version"] == 2
+    assert payload["conformal_set"] == ["healthy"]
     assert payload["router"]["status"] == "skipped"
     assert payload["router"]["primary_detection"]["crop"] == "tomato"

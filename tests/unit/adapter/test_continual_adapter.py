@@ -254,6 +254,34 @@ def test_adapter_metadata_golden_contract_with_exportable_ood_state(monkeypatch,
     assert meta["ood_state"]["class_stats"]["0"]["threshold"] == 0.7
 
 
+def test_save_adapter_merges_export_metadata_overrides(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+    adapter.trainer.ood_detector.class_stats = {0: FakeCalibrationStats()}
+    adapter.trainer.ood_detector.calibration_version = 4
+    adapter.set_export_metadata(
+        ood_calibration={
+            "source_split": "val",
+            "source_loader_size": 8,
+            "primary_score_method": "energy",
+            "selection_source": "real_ood_split",
+        },
+        adapter_runtime={"best_state_restored": True},
+    )
+
+    save_dir = tmp_path / "merged_metadata_model"
+    adapter.save_adapter(str(save_dir))
+    meta = json.loads((save_dir / "continual_sd_lora_adapter" / "adapter_meta.json").read_text(encoding="utf-8"))
+
+    assert meta["ood_calibration"]["version"] == 4
+    assert meta["ood_calibration"]["source_split"] == "val"
+    assert meta["ood_calibration"]["source_loader_size"] == 8
+    assert meta["ood_calibration"]["primary_score_method"] == "energy"
+    assert meta["adapter_runtime"]["best_state_restored"] is True
+
+
 def test_save_adapter_raises_without_loader_when_ood_uncalibrated(monkeypatch, tmp_path):
     monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
 

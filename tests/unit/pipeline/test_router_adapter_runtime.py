@@ -44,6 +44,7 @@ class FakeAdapter:
                 "class_threshold": 0.8,
                 "is_ood": False,
                 "calibration_version": 3,
+                "conformal_set": ["healthy"],
             },
         }
 
@@ -82,6 +83,7 @@ def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     assert result["router"]["detections_count"] == 1
     assert result["router"]["primary_detection"]["crop"] == "tomato"
     assert result["diagnosis"] == "healthy"
+    assert result["conformal_set"] == ["healthy"]
     assert result["ood_analysis"]["score_method"] == "ensemble"
     assert result["ood_analysis"]["primary_score"] == 0.12
     assert {"score_method", "primary_score", "decision_threshold", "is_ood", "calibration_version"} <= set(
@@ -213,7 +215,10 @@ def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_pat
     assert status_lines == [
         "[ROUTER] Loading models on cpu...",
         "[ROUTER] Ready.",
-        "[ROUTER] crop=unknown part=unknown confidence=0.000 message=No SAM3 instances for prompts=plant,leaf threshold=0.60.",
+        (
+            "[ROUTER] crop=unknown part=unknown confidence=0.000 "
+            "message=No SAM3 instances for prompts=plant,leaf threshold=0.60."
+        ),
         "[RESULT] status=unknown_crop router_confidence=0.000",
     ]
 

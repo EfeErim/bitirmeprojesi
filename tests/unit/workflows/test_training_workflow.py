@@ -58,11 +58,14 @@ class FakeSession:
 
 
 class FakeAdapter:
+    last_export_metadata = None
+
     def __init__(self, crop_name, model_name="model", device="cpu"):
         self.crop_name = crop_name
         self.model_name = model_name
         self.device = device
         self.initialized = None
+        self.export_metadata = None
 
     def initialize_engine(self, *, class_names=None, config=None):
         self.initialized = {"class_names": list(class_names or []), "config": dict(config or {})}
@@ -88,6 +91,13 @@ class FakeAdapter:
 
     def calibrate_ood(self, loader):
         return {"status": "calibrated", "ood_calibration": {"version": 1}}
+
+    def set_export_metadata(self, *, ood_calibration=None, adapter_runtime=None):
+        self.export_metadata = {
+            "ood_calibration": dict(ood_calibration or {}),
+            "adapter_runtime": dict(adapter_runtime or {}),
+        }
+        type(self).last_export_metadata = dict(self.export_metadata)
 
     def save_adapter(self, output_dir):
         path = Path(output_dir) / "continual_sd_lora_adapter"
@@ -295,7 +305,7 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
     monkeypatch.setattr(
         "src.workflows.training.evaluate_model_with_artifact_metrics",
-        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=ood_loader is not None),
+        lambda trainer, loader, *, ood_loader=None: _fake_auto_pick_evaluation_result(),
     )
     monkeypatch.setattr(
         "src.workflows.training.run_leave_one_class_out_benchmark",
@@ -403,6 +413,59 @@ def test_training_workflow_auto_selects_primary_score_method_from_real_ood(monke
     assert result.production_readiness["context"]["ood_requested_primary_score_method"] == "auto"
     assert result.production_readiness["context"]["ood_primary_score_method"] == "energy"
     assert saved_methods == [{"config": "energy", "detector": "energy"}]
+
+
+def test_training_workflow_records_export_metadata_for_adapter(monkeypatch, tmp_path: Path):
+    FakeAdapter.last_export_metadata = None
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+            "ood": FakeLoader(["unknown"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=ood_loader is not None),
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "ood": {"primary_score_method": "auto"},
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": True},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert FakeAdapter.last_export_metadata is not None
+    assert FakeAdapter.last_export_metadata["ood_calibration"]["source_split"] == "val"
+    assert FakeAdapter.last_export_metadata["ood_calibration"]["source_loader_size"] == 2
+    assert FakeAdapter.last_export_metadata["ood_calibration"]["ood_evidence_source"] == "real_ood_split"
+    assert FakeAdapter.last_export_metadata["ood_calibration"]["authoritative_classification_split"] == "test"
+    assert (
+        FakeAdapter.last_export_metadata["ood_calibration"]["primary_score_method"]
+        == result.production_readiness["context"]["ood_primary_score_method"]
+    )
+    assert FakeAdapter.last_export_metadata["adapter_runtime"]["best_state_restored"] is True
 
 
 def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monkeypatch, tmp_path: Path):

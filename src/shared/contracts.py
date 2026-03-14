@@ -7,6 +7,13 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
+def _coerce_image_size_triplet(payload: Any) -> Tuple[int, int, int]:
+    raw = tuple(int(value) for value in list(payload))
+    if len(raw) != 3:
+        raise ValueError(f"image_size must contain exactly 3 integers, got {raw!r}")
+    return (raw[0], raw[1], raw[2])
+
+
 @dataclass
 class OODAnalysis:
     score_method: str = "ensemble"
@@ -273,7 +280,7 @@ class RouterAnalysisResult:
                 self.detections_count = 0
 
         if self.image_size is not None:
-            self.image_size = tuple(int(value) for value in self.image_size)
+            self.image_size = _coerce_image_size_triplet(self.image_size)
         if self.request is not None and not isinstance(self.request, RouterRequestOptions):
             self.request = RouterRequestOptions.from_dict(self.request)
 
@@ -289,7 +296,11 @@ class RouterAnalysisResult:
         if self.primary_detection is not None:
             payload["primary_detection"] = self.primary_detection.to_dict()
         if self.image_size is not None:
-            payload["image_size"] = tuple(int(value) for value in self.image_size)
+            payload["image_size"] = (
+                int(self.image_size[0]),
+                int(self.image_size[1]),
+                int(self.image_size[2]),
+            )
         if include_request and self.request is not None:
             payload["request"] = self.request.to_dict()
         for key, value in self.metadata.items():
@@ -338,7 +349,7 @@ class RouterAnalysisResult:
             image_size=(
                 None
                 if image_size_raw is None
-                else tuple(int(value) for value in list(image_size_raw))
+                else _coerce_image_size_triplet(image_size_raw)
             ),
             processing_time_ms=float(processing_time_ms),
             request=(
@@ -383,8 +394,11 @@ class InferenceResult:
             payload["message"] = str(self.message)
         if include_ood and self.ood_analysis is not None:
             payload["ood_analysis"] = self.ood_analysis.to_dict()
-        if self.conformal_set is not None:
-            payload["conformal_set"] = list(self.conformal_set)
+        resolved_conformal_set = self.conformal_set
+        if resolved_conformal_set is None and self.ood_analysis is not None:
+            resolved_conformal_set = self.ood_analysis.conformal_set
+        if resolved_conformal_set is not None:
+            payload["conformal_set"] = list(resolved_conformal_set)
         if self.router is not None:
             payload["router"] = self.router.to_summary_dict()
         return payload
