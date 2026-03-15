@@ -4,7 +4,7 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
+from src.training.services.ood_benchmark import _build_resume_key, run_leave_one_class_out_benchmark
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
 
 
@@ -365,3 +365,96 @@ def test_run_leave_one_class_out_benchmark_resumes_completed_folds(monkeypatch, 
     assert second["successful_folds"] == 3
     assert call_count["count"] == 3
     assert all(fold["diagnostics"].get("resume_hit") for fold in second["folds"])
+
+
+def test_resume_key_changes_when_training_config_changes():
+    common = {
+        "crop_name": "tomato",
+        "held_out_class": "healthy",
+        "seen_classes": ["disease_a", "disease_b"],
+        "sample_counts": {
+            "train_samples": 12,
+            "calibration_samples": 4,
+            "eval_in_distribution_samples": 4,
+            "eval_ood_samples": 2,
+        },
+        "dataset_fingerprints": {
+            "train": {"label_sequence_sha256": "train", "path_signature_sha256": "train_paths"},
+            "calibration": {"label_sequence_sha256": "val", "path_signature_sha256": "val_paths"},
+            "evaluation": {"label_sequence_sha256": "test", "path_signature_sha256": "test_paths"},
+        },
+        "device": "cpu",
+        "num_epochs": 5,
+    }
+    first = _build_resume_key(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "model_a"},
+                    "batch_size": 8,
+                    "seed": 7,
+                    "ood": {"primary_score_method": "auto"},
+                }
+            }
+        },
+        **common,
+    )
+    second = _build_resume_key(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "model_b"},
+                    "batch_size": 64,
+                    "seed": 999,
+                    "ood": {"primary_score_method": "auto"},
+                }
+            }
+        },
+        **common,
+    )
+
+    assert first != second
+
+
+def test_resume_key_changes_when_dataset_fingerprint_changes():
+    common = {
+        "crop_name": "tomato",
+        "held_out_class": "healthy",
+        "seen_classes": ["disease_a", "disease_b"],
+        "sample_counts": {
+            "train_samples": 12,
+            "calibration_samples": 4,
+            "eval_in_distribution_samples": 4,
+            "eval_ood_samples": 2,
+        },
+        "config": {
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "model_a"},
+                    "batch_size": 8,
+                    "seed": 7,
+                    "ood": {"primary_score_method": "auto"},
+                }
+            }
+        },
+        "device": "cpu",
+        "num_epochs": 5,
+    }
+    first = _build_resume_key(
+        dataset_fingerprints={
+            "train": {"label_sequence_sha256": "train", "path_signature_sha256": "train_paths_v1"},
+            "calibration": {"label_sequence_sha256": "val", "path_signature_sha256": "val_paths"},
+            "evaluation": {"label_sequence_sha256": "test", "path_signature_sha256": "test_paths"},
+        },
+        **common,
+    )
+    second = _build_resume_key(
+        dataset_fingerprints={
+            "train": {"label_sequence_sha256": "train", "path_signature_sha256": "train_paths_v2"},
+            "calibration": {"label_sequence_sha256": "val", "path_signature_sha256": "val_paths"},
+            "evaluation": {"label_sequence_sha256": "test", "path_signature_sha256": "test_paths"},
+        },
+        **common,
+    )
+
+    assert first != second

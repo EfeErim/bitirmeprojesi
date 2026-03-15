@@ -1,4 +1,4 @@
-"""Held-out OOD evidence helpers for production readiness."""
+﻿"""Held-out OOD evidence helpers for production readiness."""
 
 from __future__ import annotations
 
@@ -205,35 +205,76 @@ def _primary_score_method(config: Dict[str, Any]) -> str:
     )
 
 
-def _resume_relevant_ood_config(config: Dict[str, Any]) -> Dict[str, Any]:
-    ood_cfg = (
-        config.get("training", {})
-        .get("continual", {})
-        .get("ood", {})
-    )
-    return {
-        "primary_score_method": normalize_requested_primary_score_method(
-            ood_cfg.get("primary_score_method", "auto")
-        ),
-        "threshold_factor": float(ood_cfg.get("threshold_factor", 2.0)),
-        "energy_temperature_mode": str(ood_cfg.get("energy_temperature_mode", "fixed")),
-        "energy_temperature": float(ood_cfg.get("energy_temperature", 1.0)),
-        "energy_temperature_range": list(ood_cfg.get("energy_temperature_range", [0.5, 3.0])),
-        "energy_temperature_steps": int(ood_cfg.get("energy_temperature_steps", 16)),
-        "radial_l2_enabled": bool(ood_cfg.get("radial_l2_enabled", False)),
-        "radial_beta_range": list(ood_cfg.get("radial_beta_range", [0.5, 2.0])),
-        "radial_beta_steps": int(ood_cfg.get("radial_beta_steps", 16)),
-        "knn_backend": str(ood_cfg.get("knn_backend", "auto")),
-        "knn_chunk_size": int(ood_cfg.get("knn_chunk_size", 2048)),
-        "sure_enabled": bool(ood_cfg.get("sure_enabled", False)),
-        "sure_semantic_percentile": float(ood_cfg.get("sure_semantic_percentile", 95.0)),
-        "sure_confidence_percentile": float(ood_cfg.get("sure_confidence_percentile", 90.0)),
-        "conformal_enabled": bool(ood_cfg.get("conformal_enabled", False)),
-        "conformal_alpha": float(ood_cfg.get("conformal_alpha", 0.05)),
-        "conformal_method": str(ood_cfg.get("conformal_method", "threshold")),
-        "conformal_raps_lambda": float(ood_cfg.get("conformal_raps_lambda", 0.0)),
-        "conformal_raps_k_reg": int(ood_cfg.get("conformal_raps_k_reg", 1)),
+def _normalize_resume_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {
+            str(key): _normalize_resume_value(item)
+            for key, item in sorted(value.items(), key=lambda entry: str(entry[0]))
+        }
+    if isinstance(value, (list, tuple)):
+        return [_normalize_resume_value(item) for item in value]
+    if isinstance(value, Path):
+        return str(value)
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    return repr(value)
+
+
+def _resume_relevant_training_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    training_cfg = config.get("training", {}).get("continual", {})
+    return dict(_normalize_resume_value(training_cfg))
+
+
+def _hash_sequence(values: Sequence[str]) -> str:
+    digest = hashlib.sha256()
+    for value in values:
+        digest.update(str(value).encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _dataset_file_signature(dataset: Any) -> str:
+    image_paths = getattr(dataset, "image_paths", None)
+    if not isinstance(image_paths, list):
+        return ""
+
+    digest = hashlib.sha256()
+    for raw_path in image_paths:
+        path = Path(raw_path)
+        digest.update(str(path).encode("utf-8"))
+        digest.update(b"\0")
+        try:
+            stat = path.stat()
+            digest.update(str(int(stat.st_size)).encode("utf-8"))
+            digest.update(b":")
+            digest.update(str(int(stat.st_mtime_ns)).encode("utf-8"))
+        except Exception as exc:
+            digest.update(f"missing:{exc.__class__.__name__}".encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def _dataset_resume_fingerprint(dataset: Any) -> Dict[str, Any]:
+    labels = _dataset_labels(dataset)
+    label_counts = {
+        str(label): int(count)
+        for label, count in sorted(Counter(int(label) for label in labels).items(), key=lambda item: item[0])
     }
+    fingerprint: Dict[str, Any] = {
+        "dataset_type": type(dataset).__name__,
+        "size": len(labels),
+        "classes": [str(name) for name in getattr(dataset, "classes", [])],
+        "label_counts": label_counts,
+        "label_sequence_sha256": _hash_sequence([str(label) for label in labels]),
+    }
+    for attr_name in ("data_dir", "crop", "split"):
+        attr_value = getattr(dataset, attr_name, None)
+        if attr_value is not None:
+            fingerprint[attr_name] = str(attr_value)
+    path_signature = _dataset_file_signature(dataset)
+    if path_signature:
+        fingerprint["path_signature_sha256"] = path_signature
+    return fingerprint
 
 
 def _build_resume_key(
@@ -242,15 +283,20 @@ def _build_resume_key(
     held_out_class: str,
     seen_classes: Sequence[str],
     sample_counts: Dict[str, int],
+    dataset_fingerprints: Dict[str, Any],
     config: Dict[str, Any],
+    device: str,
     num_epochs: Optional[int],
 ) -> str:
     payload = {
+        "resume_key_schema": "v2",
         "crop_name": str(crop_name),
         "held_out_class": str(held_out_class),
         "seen_classes": [str(name) for name in seen_classes],
         "sample_counts": {str(key): int(value) for key, value in sample_counts.items()},
-        "ood": _resume_relevant_ood_config(config),
+        "dataset_fingerprints": _normalize_resume_value(dataset_fingerprints),
+        "training": _resume_relevant_training_config(config),
+        "device": str(device),
         "num_epochs": None if num_epochs is None else int(num_epochs),
     }
     body = json.dumps(payload, sort_keys=True, separators=(",", ":"))
@@ -538,7 +584,9 @@ def _resolve_fold_context(
     train_labels: Sequence[int],
     calibration_labels: Sequence[int],
     eval_labels: Sequence[int],
+    dataset_fingerprints: Dict[str, Any],
     config: Dict[str, Any],
+    device: str,
     num_epochs: Optional[int],
 ) -> Dict[str, Any]:
     seen_classes = [name for name in resolved_classes if name != held_out_class]
@@ -559,7 +607,9 @@ def _resolve_fold_context(
         held_out_class=held_out_class,
         seen_classes=seen_classes,
         sample_counts=sample_counts,
+        dataset_fingerprints=dataset_fingerprints,
         config=config,
+        device=device,
         num_epochs=num_epochs,
     )
     return {
@@ -1124,6 +1174,17 @@ def run_leave_one_class_out_benchmark(
     train_labels = _dataset_labels(train_dataset)
     calibration_labels = _dataset_labels(calibration_dataset)
     eval_labels = _dataset_labels(eval_dataset)
+    dataset_fingerprints = {
+        "train": _dataset_resume_fingerprint(train_dataset),
+        "calibration": {
+            "split_name": calibration_split_name,
+            **_dataset_resume_fingerprint(calibration_dataset),
+        },
+        "evaluation": {
+            "split_name": eval_split_name,
+            **_dataset_resume_fingerprint(eval_dataset),
+        },
+    }
     folds: List[Dict[str, Any]] = []
     completed_fold_count = 0
     failed_fold_count = 0
@@ -1164,7 +1225,9 @@ def run_leave_one_class_out_benchmark(
             train_labels=train_labels,
             calibration_labels=calibration_labels,
             eval_labels=eval_labels,
+            dataset_fingerprints=dataset_fingerprints,
             config=config,
+            device=device,
             num_epochs=num_epochs,
         )
         _record_fold_started(
@@ -1315,3 +1378,4 @@ def run_leave_one_class_out_benchmark(
         },
     )
     return summary_payload
+

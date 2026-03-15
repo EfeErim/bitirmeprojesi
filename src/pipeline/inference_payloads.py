@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.shared.contracts import (
     InferenceResult,
@@ -30,7 +30,11 @@ def build_default_ood(*, is_ood: bool) -> OODAnalysis:
     )
 
 
-def normalize_ood_analysis(payload: Dict[str, Any] | None) -> OODAnalysis:
+def normalize_ood_analysis(payload: Any) -> Optional[OODAnalysis]:
+    if isinstance(payload, OODAnalysis):
+        return payload
+    if not isinstance(payload, dict) or not payload:
+        return None
     return OODAnalysis.from_dict(payload)
 
 
@@ -107,7 +111,7 @@ def build_router_unavailable_result(*, message: str, include_ood: bool) -> Infer
         diagnosis=None,
         confidence=0.0,
         message=str(message),
-        ood_analysis=build_default_ood(is_ood=False) if include_ood else None,
+        ood_analysis=None,
         router=router_analysis,
     )
 
@@ -130,7 +134,7 @@ def build_adapter_unavailable_result(
         diagnosis=None,
         confidence=0.0,
         message=str(message),
-        ood_analysis=build_default_ood(is_ood=False) if include_ood else None,
+        ood_analysis=None,
         router=normalized_router,
     )
 
@@ -145,7 +149,7 @@ def build_success_result(
     router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
 ) -> InferenceResult:
     disease = result.get("disease", {}) if isinstance(result, dict) else {}
-    raw_ood = result.get("ood_analysis", {}) if isinstance(result, dict) else {}
+    raw_ood = result.get("ood_analysis") if isinstance(result, dict) else None
     normalized_router = normalize_router_analysis(router_analysis)
     normalized_ood = normalize_ood_analysis(raw_ood) if include_ood else None
     return InferenceResult(

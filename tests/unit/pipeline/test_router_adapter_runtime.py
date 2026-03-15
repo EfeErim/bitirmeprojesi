@@ -104,11 +104,14 @@ def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tm
     )
     monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
 
+    typed_result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
     result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
 
     assert result["status"] == "adapter_unavailable"
     assert result["crop"] == "tomato"
     assert result["router"]["primary_detection"]["crop"] == "tomato"
+    assert typed_result.ood_analysis is None
+    assert "ood_analysis" not in result
 
 
 def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
@@ -176,6 +179,64 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
         "message": "",
         "detections_count": 0,
     }
+
+
+def test_predict_returns_router_unavailable_when_router_returns_no_payload(monkeypatch, tmp_path):
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(tmp_path / "models"), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=tmp_path / "models",
+    )
+
+    class NullRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return None
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: NullRouter())
+
+    typed_result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "router_unavailable"
+    assert "Router returned no analysis payload" in result["message"]
+    assert result["router"]["status"] == "unavailable"
+    assert typed_result.ood_analysis is None
+    assert "ood_analysis" not in result
+
+
+def test_predict_returns_router_unavailable_when_router_reports_unavailable_status(monkeypatch, tmp_path):
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(tmp_path / "models"), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=tmp_path / "models",
+    )
+
+    class UnavailableAnalysisRouter(FakeRouter):
+        def analyze_image_result(self, image):
+            del image
+            return RouterAnalysisResult(status="unavailable", message="router backend missing", detections=[])
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: UnavailableAnalysisRouter())
+
+    typed_result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "router_unavailable"
+    assert "router backend missing" in result["message"]
+    assert result["router"]["status"] == "unavailable"
+    assert typed_result.ood_analysis is None
+    assert "ood_analysis" not in result
 
 
 def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_path):
@@ -247,6 +308,41 @@ def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     assert result.ood_analysis is not None
     assert result.router is not None
     assert result.router.primary_detection is not None
+
+
+def test_predict_does_not_fabricate_ood_payload_when_adapter_response_omits_it(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class MissingOODAdapter(FakeAdapter):
+        def predict_with_ood(self, image):
+            del image
+            return {
+                "status": "success",
+                "disease": {"class_index": 0, "name": "healthy", "confidence": 0.91},
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: MissingOODAdapter(crop_name, device="cpu"))
+
+    typed_result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
+    payload = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert typed_result.status == "success"
+    assert typed_result.ood_analysis is None
+    assert "ood_analysis" not in payload
+    assert "conformal_set" not in payload
 
 
 def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path):
@@ -353,6 +449,42 @@ def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path
     stat_before = meta_path.stat()
     meta_path.write_text('{"schema_version":"v6"}', encoding="utf-8")
     os.utime(meta_path, ns=(stat_before.st_atime_ns, stat_before.st_mtime_ns + 1_000_000_000))
+
+    second = runtime.load_adapter("tomato")
+
+    assert first is not second
+    assert len(built_adapters) == 2
+
+
+def test_load_adapter_reloads_when_non_metadata_bundle_file_changes(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    adapter_dir = _write_adapter_meta(adapter_root, "tomato")
+    classifier_path = adapter_dir / "classifier.pth"
+    classifier_path.write_text("v1", encoding="utf-8")
+    built_adapters = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    def _build_adapter(crop_name):
+        adapter = FakeAdapter(crop_name, device="cpu")
+        built_adapters.append(adapter)
+        return adapter
+
+    monkeypatch.setattr(runtime, "_build_adapter", _build_adapter)
+
+    first = runtime.load_adapter("tomato")
+    stat_before = classifier_path.stat()
+    classifier_path.write_text("v2", encoding="utf-8")
+    os.utime(classifier_path, ns=(stat_before.st_atime_ns, stat_before.st_mtime_ns + 1_000_000_000))
 
     second = runtime.load_adapter("tomato")
 

@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
@@ -30,7 +31,7 @@ StatusCallback = Callable[[str], None]
 class _CachedAdapter:
     adapter: IndependentCropAdapter
     adapter_dir: Path
-    adapter_meta_mtime_ns: int
+    adapter_bundle_token: str
 
 
 class RouterAdapterRuntime:
@@ -100,18 +101,32 @@ class RouterAdapterRuntime:
         raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
 
     @staticmethod
-    def _adapter_cache_token(adapter_dir: Path) -> tuple[Path, int]:
+    def _adapter_cache_token(adapter_dir: Path) -> tuple[Path, str]:
         resolved_dir = adapter_dir.resolve()
-        meta_mtime_ns = int((resolved_dir / "adapter_meta.json").stat().st_mtime_ns)
-        return resolved_dir, meta_mtime_ns
+        digest = hashlib.sha256()
+        file_count = 0
+        for path in sorted(resolved_dir.rglob("*")):
+            if not path.is_file():
+                continue
+            stat = path.stat()
+            digest.update(path.relative_to(resolved_dir).as_posix().encode("utf-8"))
+            digest.update(b"\0")
+            digest.update(str(int(stat.st_size)).encode("utf-8"))
+            digest.update(b":")
+            digest.update(str(int(stat.st_mtime_ns)).encode("utf-8"))
+            digest.update(b"\0")
+            file_count += 1
+        if file_count <= 0:
+            raise FileNotFoundError(f"No adapter assets found under {resolved_dir}")
+        return resolved_dir, digest.hexdigest()
 
     def load_adapter(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> IndependentCropAdapter:
         crop_key = str(crop_name).strip().lower()
         resolved_dir = self._resolve_adapter_dir(crop_key, adapter_dir=adapter_dir)
-        resolved_cache_dir, meta_mtime_ns = self._adapter_cache_token(resolved_dir)
+        resolved_cache_dir, bundle_token = self._adapter_cache_token(resolved_dir)
         cached = self.adapters.get(crop_key)
         if cached is not None:
-            if cached.adapter_dir == resolved_cache_dir and cached.adapter_meta_mtime_ns == meta_mtime_ns:
+            if cached.adapter_dir == resolved_cache_dir and cached.adapter_bundle_token == bundle_token:
                 return cached.adapter
             self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key}...")
         else:
@@ -122,7 +137,7 @@ class RouterAdapterRuntime:
         self.adapters[crop_key] = _CachedAdapter(
             adapter=adapter,
             adapter_dir=resolved_cache_dir,
-            adapter_meta_mtime_ns=meta_mtime_ns,
+            adapter_bundle_token=bundle_token,
         )
         self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter
@@ -138,7 +153,15 @@ class RouterAdapterRuntime:
             analysis = router.analyze_image_result(image)
         else:
             analysis = router.analyze_image(image)
-        return normalize_router_analysis(analysis)
+        if analysis is None:
+            raise RuntimeError("Router returned no analysis payload.")
+        if not isinstance(analysis, (RouterAnalysisResult, dict)):
+            raise TypeError(f"Router returned unsupported analysis payload type: {type(analysis).__name__}")
+        normalized = normalize_router_analysis(analysis)
+        router_status = str(normalized.status or "").strip().lower()
+        if router_status in {"unavailable", "error", "failed"}:
+            raise RuntimeError(str(normalized.message or f"Router reported status={router_status}"))
+        return normalized
 
     def predict_result(
         self,
