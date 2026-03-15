@@ -259,6 +259,52 @@ If you combine multiple public tomato-leaf datasets, use these rules:
 - report whether the test slice is source-held-out, source-balanced, or only random-after-merge
 - treat random-after-merge metrics as smoke-test evidence, not deployment evidence
 
+### Roboflow and other offline augmentation tools
+
+Roboflow, offline scripts, and similar dataset-expansion tools are not the problem by themselves. The problem is when augmented images are mixed back into the full pool before the authoritative split is created.
+
+Use this rule:
+
+- split first by original-image family
+- generate or assign augmentations after the split
+- keep all derivatives of one original image in the same split
+- prefer real images for authoritative `val` and `test`
+
+For example, if you have a grape dataset and you multiplied the images with Roboflow:
+
+- it is acceptable to keep those Roboflow variants in `continual/` when you intentionally want them for training
+- it is not acceptable to mix originals and Roboflow variants into one flat folder and let Notebook 2 random-split them as the main benchmark
+
+If you want to measure whether augmentation helps, compare two controlled runs against the same clean held-out test set instead of silently mixing augmented variants into that test set.
+
+### When source separation is uncertain
+
+Public plant-disease datasets often do not provide enough metadata to prove that all sources are fully independent. Different dataset packages may reuse the same original photo, a resized copy, a crop, or an offline augmentation family.
+
+Do not claim full source independence unless you can actually verify it. Instead, use a conservative protocol that reduces leakage risk as much as possible:
+
+1. preserve whatever provenance you do have, such as dataset package, subset, filename lineage, download origin, or augmentation history
+2. run exact duplicate detection
+3. run near-duplicate detection
+4. group suspiciously similar images together even if you are not fully certain they share one original
+5. split by those groups instead of by individual images
+6. describe the evaluation honestly as source-held-out, source-balanced, grouped, or random-after-merge
+
+This is still much more trustworthy than merging everything first and relying on an image-level random split.
+
+### A conservative protocol when lineage is incomplete
+
+If you cannot fully reconstruct which augmented images came from which originals, use the most conservative practical workflow you can support:
+
+1. start from the rawest available image export rather than the already mixed training folder
+2. keep dataset-package boundaries visible in folder names or manifests
+3. run duplicate and near-duplicate audits before finalizing the runtime split
+4. keep flagged duplicate families in one split even when that lowers the apparent benchmark score
+5. reserve a clean real-image test slice that excludes synthetic and likely augmented families
+6. treat any remaining random-after-merge result as a convenience baseline, not as the headline claim
+
+When provenance is weak, the goal is not to prove perfect independence. The goal is to remove obvious leakage paths and make the benchmark defensible.
+
 ### When Notebook 2 auto-splitting is still acceptable
 
 Notebook 2 auto-splitting is still useful when you want:
