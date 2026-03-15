@@ -600,6 +600,7 @@ These folders help you understand how the model performed on known-class data.
 - `confusion_matrix.csv` and `.png`: where predictions are confused
 - `metric_gate.json`: split-local threshold checks
 - `ood_type_breakdown.json`: optional real-OOD slice metrics keyed by the top-level folder under `ood/`
+- `ood_evidence_summary.json`: pooled OOD metrics plus a compact summary of any discovered real-OOD slices
 
 ### `ood_benchmark/`
 

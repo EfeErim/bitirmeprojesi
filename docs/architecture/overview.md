@@ -330,6 +330,7 @@ The repo validates the maintained surface through:
 - `scripts/evaluate_dataset_layout.py`
 - `scripts/evaluate_router_part_surface.py`
 - `scripts/benchmark_surfaces.py`
+- `scripts/benchmark_runtime_real.py` (opt-in real-model benchmark when assets are available)
 - `tests/unit/`
 - `tests/integration/`
 - `tests/colab/test_smoke_training.py`

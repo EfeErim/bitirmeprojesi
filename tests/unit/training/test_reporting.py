@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 from src.training.services.reporting import (
@@ -170,3 +171,30 @@ def test_batch_metrics_recorder_flushes_buffered_rows(tmp_path: Path):
     assert len(rows) == 1
     assert rows[0]["loss"] == 0.8
     assert rows[0]["optimizer_step_applied"] is False
+
+def test_reporting_writes_ood_evidence_summary_artifact(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        ood_labels=[0, 0, 0, 0, 1, 1],
+        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+        sure_ds_f1=0.95,
+        conformal_empirical_coverage=0.97,
+        conformal_avg_set_size=1.0,
+        ood_type_breakdown={
+            "blur": {"sample_count": 2, "metrics": {"ood_auroc": 0.8}},
+        },
+        context={"ood_primary_score_method": "ensemble", "ood_score_methods": ["ensemble", "energy"]},
+    )
+
+    summary_path = result["paths"]["ood_evidence_summary_json"]
+    assert summary_path.exists()
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert summary["primary_score_method"] == "ensemble"
+    assert summary["score_methods"] == ["ensemble", "energy"]
+    assert summary["sample_counts"]["ood_samples"] == 2
+    assert summary["sample_counts"]["in_distribution_samples"] == 4
+    assert summary["ood_types"] == ["blur"]
+    assert summary["ood_type_count"] == 1

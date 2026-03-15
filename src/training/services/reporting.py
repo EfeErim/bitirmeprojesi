@@ -177,6 +177,42 @@ def _resolve_context_metric(value: Any, context: Dict[str, Any], key: str) -> An
     return None if context_value is None else float(context_value)
 
 
+def _build_ood_evidence_summary(
+    *,
+    split_name: str,
+    metrics: Dict[str, Any],
+    context: Dict[str, Any],
+    ood_type_breakdown: Dict[str, Any] | None,
+) -> Dict[str, Any]:
+    sample_counts = {
+        "classification_samples": (
+            None if metrics.get("classification_samples") is None else int(metrics["classification_samples"])
+        ),
+        "in_distribution_samples": (
+            None if metrics.get("in_distribution_samples") is None else int(metrics["in_distribution_samples"])
+        ),
+        "ood_samples": None if metrics.get("ood_samples") is None else int(metrics["ood_samples"]),
+    }
+    resolved_breakdown = dict(ood_type_breakdown or {})
+    ood_types = sorted(str(name) for name in resolved_breakdown.keys())
+    return {
+        "split_name": str(split_name),
+        "primary_score_method": str(context.get("ood_primary_score_method", "ensemble") or "ensemble"),
+        "score_methods": [str(name) for name in list(context.get("ood_score_methods", []))],
+        "metrics": {
+            "ood_auroc": metrics.get("ood_auroc"),
+            "ood_false_positive_rate": metrics.get("ood_false_positive_rate"),
+            "sure_ds_f1": metrics.get("sure_ds_f1"),
+            "conformal_empirical_coverage": metrics.get("conformal_empirical_coverage"),
+            "conformal_avg_set_size": metrics.get("conformal_avg_set_size"),
+        },
+        "sample_counts": sample_counts,
+        "ood_types": ood_types,
+        "ood_type_count": int(len(ood_types)),
+        "ood_type_breakdown": resolved_breakdown,
+    }
+
+
 def _write_per_class_metrics_csv(path: Path, resolved_classes: Sequence[str], report_dict: Dict[str, Any]) -> Path:
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle)
@@ -587,6 +623,20 @@ def persist_validation_artifacts(
             "conformal_avg_set_size",
         ),
     )
+    if metrics.get("ood_samples") is not None or metrics.get("in_distribution_samples") is not None:
+        ood_evidence_summary = _build_ood_evidence_summary(
+            split_name=resolved_artifact_subdir,
+            metrics=metrics,
+            context=metric_context,
+            ood_type_breakdown=ood_type_breakdown,
+        )
+        summary_json = store.write_json("ood_evidence_summary.json", ood_evidence_summary)
+        paths["ood_evidence_summary_json"] = summary_json
+        _copy_artifacts_to_telemetry(
+            telemetry,
+            [(summary_json, f"{resolved_telemetry_subdir}/ood_evidence_summary.json")],
+        )
+
     metric_gate = write_plan_metric_artifact(
         output_path=validation_dir / "metric_gate.json",
         metrics=metrics,

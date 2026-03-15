@@ -181,6 +181,7 @@ Reporting detail:
 
 - the workflow still computes the main OOD gate on the pooled `ood/` split
 - additional `ood_type_breakdown.json` artifacts summarize AUROC and FPR by top-level `ood/` folder when that structure exists
+- `ood_evidence_summary.json` records the pooled OOD metrics, sample counts, and discovered real-OOD slice names for that split
 
 ## What Happens When Real OOD Data Exists
 
