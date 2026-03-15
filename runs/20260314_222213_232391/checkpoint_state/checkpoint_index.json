@@ -1,0 +1,12 @@
+[
+  {
+    "name": "ckpt_e16_s2320_20260314_231209_505930",
+    "path": "/content/bitirmeprojesi/runs/20260314_222213_232391/checkpoint_state/ckpt_e16_s2320_20260314_231209_505930",
+    "created_at": "2026-03-14T23:12:13.860855+00:00",
+    "global_step": 2320,
+    "epoch": 16,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.053872680793878365
+  }
+]

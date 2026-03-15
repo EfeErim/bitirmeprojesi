@@ -1,0 +1,86 @@
+{
+  "schema_version": "v6_plan_metric_gate",
+  "metrics": {
+    "accuracy": 0.9918209314346313,
+    "ood_auroc": 0.9599464294255512,
+    "ood_false_positive_rate": 0.17477399913904434,
+    "classification_samples": 2323,
+    "ood_samples": 90,
+    "in_distribution_samples": 2323,
+    "sure_ds_f1": 0.5041405776610786,
+    "conformal_empirical_coverage": 0.9504950495049505,
+    "conformal_avg_set_size": 0.9922513990529488
+  },
+  "evaluation": {
+    "passed": false,
+    "require_ood": false,
+    "targets": {
+      "accuracy": 0.93,
+      "ood_auroc": 0.92,
+      "ood_false_positive_rate": 0.05,
+      "sure_ds_f1": 0.9,
+      "conformal_empirical_coverage": 0.95
+    },
+    "checks": {
+      "accuracy": {
+        "value": 0.9918209314346313,
+        "target": 0.93,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_auroc": {
+        "value": 0.9599464294255512,
+        "target": 0.92,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_false_positive_rate": {
+        "value": 0.17477399913904434,
+        "target": 0.05,
+        "operator": "<=",
+        "asserted": true,
+        "passed": false
+      },
+      "sure_ds_f1": {
+        "value": 0.5041405776610786,
+        "target": 0.9,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      },
+      "conformal_empirical_coverage": {
+        "value": 0.9504950495049505,
+        "target": 0.95,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      }
+    },
+    "gating": {
+      "status": "ready",
+      "reason": "all_metrics_present",
+      "missing_metrics": []
+    }
+  },
+  "context": {
+    "crop": "tomato",
+    "run_id": "20260314_222213_232391",
+    "split_name": "val",
+    "conformal_eval_samples": 2323,
+    "ood_eval_in_distribution_samples": 2323,
+    "ood_eval_ood_samples": 90,
+    "ood_primary_score_method": "ensemble",
+    "ood_score_methods": [
+      "energy",
+      "ensemble",
+      "knn"
+    ],
+    "ood_types": [
+      "unlabeled"
+    ],
+    "sure_semantic_f1": 0.5652173913043478,
+    "sure_confidence_f1": 0.4549763033175356
+  }
+}

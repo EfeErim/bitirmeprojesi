@@ -1,0 +1,7 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=20260314_222213_232391
+started_at=2026-03-14T22:22:45.700845+00:00
+finished_at=2026-03-14T22:22:45.710031+00:00
+duration_sec=0.009
+
+[DATASET] root=/content/drive/MyDrive/Ziraitakip Veriseti/Domates Sınıfları/Domates Yaprak  classes=12: ['Tomato_Bacterial_Spot and Speck_Leaf', 'Tomato_Early_Blight_Leaf', 'Tomato_Gray_Mold_Leaf', 'Tomato_Healthy_Leaf', 'Tomato_Late_Blight_Leaf', 'Tomato_Leaf_Mold_Leaf', 'Tomato_Mosaic_Virus_Leaf', 'Tomato_Powdery_Mildew_Leaf', 'Tomato_Septoria_Leaf_Spot_Leaf', 'Tomato_Spider_Mites_Leaf', 'Tomato_Spotted_Wilt_Virus_Leaf', 'Tomato_Yellow_Leaf_Curl_Leaf']

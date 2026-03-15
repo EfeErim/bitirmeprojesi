@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=20260314_222213_232391
+started_at=2026-03-14T23:17:43.156237+00:00
+finished_at=2026-03-14T23:24:26.979686+00:00
+duration_sec=403.823
+
+[VALIDATION (reference)] samples=2323 classes=12 accuracy=0.9918 ood_auroc=0.9599 sure_ds_f1=0.5041 conformal_cov=0.9505
+[TEST (held-out)] samples=2339 classes=12 accuracy=0.9914 ood_auroc=0.9544 sure_ds_f1=0.4662 conformal_cov=0.9427
+[OOD] evidence=real_ood_split status=failed passed=False
+[DONE] Validation reference and held-out test artifacts saved to Drive.
