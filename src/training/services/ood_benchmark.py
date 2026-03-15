@@ -33,6 +33,8 @@ _OOD_BENCHMARK_METRIC_NAMES = (
     "accuracy",
     "ood_auroc",
     "ood_false_positive_rate",
+    "ood_samples",
+    "in_distribution_samples",
     "sure_ds_f1",
     "conformal_empirical_coverage",
     "conformal_avg_set_size",
@@ -994,6 +996,55 @@ def _record_fold_completion(
     )
 
 
+def _selected_fold_metrics(
+    fold_payload: Dict[str, Any],
+    *,
+    selected_primary_score_method: str,
+    requested_primary_score_method: str,
+) -> Dict[str, Any]:
+    if is_auto_primary_score_method(requested_primary_score_method):
+        selected_method_metrics = dict(
+            dict(fold_payload.get("method_metrics", {})).get(selected_primary_score_method, {})
+        )
+        if selected_method_metrics:
+            return selected_method_metrics
+    return dict(fold_payload.get("metrics", {}))
+
+
+def _collect_fold_target_failures(
+    folds: Sequence[Dict[str, Any]],
+    *,
+    selected_primary_score_method: str,
+    requested_primary_score_method: str,
+    target_values: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    failures: List[Dict[str, Any]] = []
+    for fold_payload in folds:
+        metrics = _selected_fold_metrics(
+            fold_payload,
+            selected_primary_score_method=selected_primary_score_method,
+            requested_primary_score_method=requested_primary_score_method,
+        )
+        evaluation = validate_ood_metrics(metrics, target_values, require_ood=True)
+        missing_requirements = [
+            metric_name
+            for metric_name, detail in dict(evaluation.get("checks", {})).items()
+            if not bool(detail.get("asserted", False)) or not bool(detail.get("passed", False))
+        ]
+        if not missing_requirements:
+            continue
+        failures.append(
+            {
+                "held_out_class": str(fold_payload.get("held_out_class", "")),
+                "primary_score_method": str(selected_primary_score_method),
+                "missing_requirements": missing_requirements,
+                "metrics": metrics,
+                "evaluation": evaluation,
+            }
+        )
+    return failures
+
+
 def _build_benchmark_summary_payload(
     *,
     folds: List[Dict[str, Any]],
@@ -1021,7 +1072,13 @@ def _build_benchmark_summary_payload(
             selected_metric_std = dict(method_comparison_metric_std.get(selected_primary_score_method, metric_std))
 
     ood_validation = validate_ood_metrics(selected_metrics, target_values, require_ood=True)
-    passed = bool(not failed_folds and ood_validation["passed"])
+    fold_target_failures = _collect_fold_target_failures(
+        successful_folds,
+        selected_primary_score_method=selected_primary_score_method,
+        requested_primary_score_method=requested_primary_score_method,
+        target_values=target_values,
+    )
+    passed = bool(not failed_folds and not fold_target_failures and ood_validation["passed"])
     return {
         "schema_version": "v6_ood_benchmark",
         "status": "completed" if not failed_folds else "failed",
@@ -1035,6 +1092,7 @@ def _build_benchmark_summary_payload(
         "method_comparison_metrics": method_comparison_metrics,
         "method_comparison_metric_std": method_comparison_metric_std,
         "evaluation": ood_validation,
+        "fold_target_failures": fold_target_failures,
         "successful_folds": len(successful_folds),
         "failed_folds": len(failed_folds),
         "folds": folds,

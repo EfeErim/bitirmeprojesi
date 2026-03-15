@@ -4,12 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from src.shared.contracts import (
-    InferenceResult,
-    OODAnalysis,
-    RouterAnalysisResult,
-    RouterDetection,
-)
+from src.shared.contracts import InferenceResult, OODAnalysis, RouterAnalysisResult, RouterDetection
 
 
 def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
@@ -18,16 +13,6 @@ def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
     if router_analysis.primary_detection is None:
         return {}
     return router_analysis.primary_detection.to_dict()
-
-
-def build_default_ood(*, is_ood: bool) -> OODAnalysis:
-    return OODAnalysis(
-        score_method="ensemble",
-        primary_score=1.0 if is_ood else 0.0,
-        decision_threshold=1.0 if is_ood else 0.0,
-        is_ood=bool(is_ood),
-        calibration_version=0,
-    )
 
 
 def normalize_ood_analysis(payload: Any) -> Optional[OODAnalysis]:
@@ -92,7 +77,7 @@ def build_unknown_crop_result(
         diagnosis=None,
         confidence=0.0,
         message="Router could not resolve a supported crop.",
-        ood_analysis=build_default_ood(is_ood=True) if include_ood else None,
+        ood_analysis=None,
         router=normalized_router,
     )
 

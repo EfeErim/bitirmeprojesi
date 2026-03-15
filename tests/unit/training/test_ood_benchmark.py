@@ -4,7 +4,11 @@ from pathlib import Path
 import torch
 from torch.utils.data import DataLoader, Dataset
 
-from src.training.services.ood_benchmark import _build_resume_key, run_leave_one_class_out_benchmark
+from src.training.services.ood_benchmark import (
+    _build_benchmark_summary_payload,
+    _build_resume_key,
+    run_leave_one_class_out_benchmark,
+)
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
 
 
@@ -114,7 +118,7 @@ def _fake_evaluate_model_with_artifact_metrics(_trainer, loader, *, ood_loader=N
     )
 
 
-def _build_loaders(classes, *, train_items=3, eval_items=2):
+def _build_loaders(classes, *, train_items=3, eval_items=5):
     return {
         "train": DataLoader(ToyDataset(classes, train_items), batch_size=2, shuffle=False),
         "val": DataLoader(ToyDataset(classes, eval_items), batch_size=2, shuffle=False),
@@ -163,10 +167,10 @@ def test_run_leave_one_class_out_benchmark_auto_selects_best_method(monkeypatch,
             y_true=y_true,
             y_pred=y_pred,
             ood_labels=([0] * len(y_true)) + ([1] * ood_count) if ood_loader is not None else None,
-            ood_scores=([0.7] * len(y_true)) + ([0.6, 0.9][:ood_count]) if ood_loader is not None else None,
+            ood_scores=([0.7] * len(y_true)) + ([0.6] * ood_count) if ood_loader is not None else None,
             ood_primary_score_method="ensemble",
             ood_scores_by_method={
-                "ensemble": ([0.7] * len(y_true)) + ([0.6, 0.9][:ood_count]) if ood_loader is not None else [],
+                "ensemble": ([0.7] * len(y_true)) + ([0.6] * ood_count) if ood_loader is not None else [],
                 "energy": ([0.1] * len(y_true)) + ([0.9] * ood_count) if ood_loader is not None else [],
                 "knn": ([0.3] * len(y_true)) + ([0.7] * ood_count) if ood_loader is not None else [],
             },
@@ -365,6 +369,64 @@ def test_run_leave_one_class_out_benchmark_resumes_completed_folds(monkeypatch, 
     assert second["successful_folds"] == 3
     assert call_count["count"] == 3
     assert all(fold["diagnostics"].get("resume_hit") for fold in second["folds"])
+
+
+def test_benchmark_summary_fails_when_any_completed_fold_misses_targets():
+    summary = _build_benchmark_summary_payload(
+        folds=[
+            {
+                "held_out_class": "healthy",
+                "status": "completed",
+                "metrics": {
+                    "ood_auroc": 1.0,
+                    "ood_false_positive_rate": 0.0,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 1.0,
+                    "conformal_empirical_coverage": 1.0,
+                    "conformal_avg_set_size": 1.0,
+                },
+                "method_metrics": {},
+            },
+            {
+                "held_out_class": "disease_a",
+                "status": "completed",
+                "metrics": {
+                    "ood_auroc": 0.85,
+                    "ood_false_positive_rate": 0.0,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 1.0,
+                    "conformal_empirical_coverage": 1.0,
+                    "conformal_avg_set_size": 1.0,
+                },
+                "method_metrics": {},
+            },
+        ],
+        primary_score_method="ensemble",
+        requested_primary_score_method="ensemble",
+        target_values={
+            "accuracy": 0.93,
+            "ood_auroc": 0.92,
+            "ood_false_positive_rate": 0.05,
+            "ood_samples": 5,
+            "in_distribution_samples": 5,
+            "sure_ds_f1": 0.90,
+            "conformal_empirical_coverage": 0.95,
+            "conformal_avg_set_size": 2.0,
+        },
+        base_context={},
+    )
+
+    assert summary["status"] == "completed"
+    assert summary["passed"] is False
+    assert summary["metrics"]["ood_auroc"] == 0.925
+    assert len(summary["fold_target_failures"]) == 1
+    assert summary["fold_target_failures"][0]["held_out_class"] == "disease_a"
+    assert summary["fold_target_failures"][0]["primary_score_method"] == "ensemble"
+    assert summary["fold_target_failures"][0]["missing_requirements"] == ["ood_auroc"]
+    assert summary["fold_target_failures"][0]["metrics"]["ood_auroc"] == 0.85
+    assert summary["fold_target_failures"][0]["evaluation"]["checks"]["ood_auroc"]["passed"] is False
 
 
 def test_resume_key_changes_when_training_config_changes():

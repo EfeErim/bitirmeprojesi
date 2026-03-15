@@ -137,8 +137,8 @@ def _fake_evaluation_result(include_ood: bool) -> EvaluationArtifactsPayload:
         report=report,
         y_true=[0, 1, 0, 1],
         y_pred=[0, 1, 0, 1],
-        ood_labels=[0, 0, 1, 1] if include_ood else None,
-        ood_scores=[0.1, 0.2, 0.8, 0.9] if include_ood else None,
+        ood_labels=[0, 0, 0, 0, 0, 1, 1, 1, 1, 1] if include_ood else None,
+        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92] if include_ood else None,
         sure_ds_f1=0.95,
         conformal_empirical_coverage=0.97,
         conformal_avg_set_size=1.0,
@@ -162,13 +162,13 @@ def _fake_auto_pick_evaluation_result() -> EvaluationArtifactsPayload:
         report=report,
         y_true=[0, 1, 0, 1],
         y_pred=[0, 1, 0, 1],
-        ood_labels=[0, 0, 1, 1],
-        ood_scores=[0.7, 0.8, 0.6, 0.9],
+        ood_labels=[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+        ood_scores=[0.7, 0.75, 0.72, 0.78, 0.74, 0.6, 0.9, 0.58, 0.88, 0.92],
         ood_primary_score_method="ensemble",
         ood_scores_by_method={
-            "ensemble": [0.7, 0.8, 0.6, 0.9],
-            "energy": [0.1, 0.2, 0.8, 0.9],
-            "knn": [0.3, 0.4, 0.7, 0.8],
+            "ensemble": [0.7, 0.75, 0.72, 0.78, 0.74, 0.6, 0.9, 0.58, 0.88, 0.92],
+            "energy": [0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92],
+            "knn": [0.3, 0.4, 0.35, 0.38, 0.42, 0.7, 0.8, 0.72, 0.76, 0.84],
         },
         sure_ds_f1=0.95,
         conformal_empirical_coverage=0.97,
@@ -489,8 +489,11 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
             "metrics": {
                 "ood_auroc": 0.96,
                 "ood_false_positive_rate": 0.03,
+                "ood_samples": 5,
+                "in_distribution_samples": 5,
                 "sure_ds_f1": 0.94,
                 "conformal_empirical_coverage": 0.97,
+                "conformal_avg_set_size": 1.0,
             },
             "paths": {
                 "summary_json": str(
@@ -604,8 +607,11 @@ def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp
             "metrics": {
                 "ood_auroc": 0.96,
                 "ood_false_positive_rate": 0.03,
+                "ood_samples": 5,
+                "in_distribution_samples": 5,
                 "sure_ds_f1": 0.94,
                 "conformal_empirical_coverage": 0.97,
+                "conformal_avg_set_size": 1.0,
             },
             "paths": {
                 "summary_json": str(

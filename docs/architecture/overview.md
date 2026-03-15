@@ -148,12 +148,13 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 6. The runtime resolves the crop adapter directory from that primary detection.
 7. The runtime loads that adapter through `IndependentCropAdapter`.
 8. The image is preprocessed to the configured target size.
-9. The adapter predicts disease plus OOD information.
+9. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
 10. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
 
 If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
 If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
 If router initialization fails, the runtime discards that router instance and retries a clean load on the next request.
+`unknown_crop`, `router_unavailable`, and `adapter_unavailable` omit adapter-side `ood_analysis` because no calibrated adapter OOD verdict exists on those paths.
 
 ### Default adapter resolution
 

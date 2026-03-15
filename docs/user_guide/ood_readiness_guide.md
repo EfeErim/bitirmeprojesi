@@ -157,7 +157,7 @@ Use these rules when building the pool:
 
 Important current repo behavior:
 
-- the repo does not require a fixed OOD count or class-balance ratio
+- the repo does not require a fixed class-balance ratio, but the readiness gate now requires at least 5 in-distribution and 5 OOD evaluation examples before OOD metrics can satisfy the final target
 - a small clean `ood/` pool is better than a large noisy one
 - plant-like unknowns are usually more valuable than only easy random objects
 
@@ -222,6 +222,13 @@ If fewer than 3 classes are available, the fallback is considered too weak and r
 When this path is used, the readiness artifact records the OOD evidence source as:
 
 - `held_out_benchmark`
+
+Current pass rule for the fallback benchmark:
+
+- the selected aggregate OOD metrics must meet their targets
+- every completed held-out fold must also meet those same OOD targets
+
+This second rule is a repo-local guardrail motivated by OOD-evaluation literature that warns against trusting only pooled averages when failure behavior is heterogeneous across slices. See [In or Out? Fixing ImageNet Out-of-Distribution Detection Evaluation](https://proceedings.mlr.press/v202/bitterwolf23a.html).
 
 Diagnostic note:
 
@@ -335,8 +342,16 @@ The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/se
 - `accuracy >= 0.93`
 - `ood_auroc >= 0.92`
 - `ood_false_positive_rate <= 0.05`
+- `ood_samples >= 5`
+- `in_distribution_samples >= 5`
 - `sure_ds_f1 >= 0.90`
 - `conformal_empirical_coverage >= 0.95`
+- `conformal_avg_set_size <= 2.0`
+
+Important interpretation note:
+
+- `ood_samples` and `in_distribution_samples` are repo-local evidence-sufficiency floors, not universal thresholds copied from one paper. They are conservative engineering safeguards motivated by small-sample ROC/AUC instability studies such as [Confidence intervals for the receiver operating characteristic area in studies with small samples](https://pubmed.ncbi.nlm.nih.gov/9702267/), [Confidence bounds when the estimated ROC area is 1.0](https://pubmed.ncbi.nlm.nih.gov/12458878/), and [A comparison of confidence/credible interval methods for the area under the ROC curve for continuous diagnostic tests with small sample size](https://pubmed.ncbi.nlm.nih.gov/26323286/).
+- `conformal_avg_set_size` is also a repo-local utility bar. The exact threshold is an engineering choice for this project, but the reason it exists is literature-backed: conformal prediction quality depends on efficiency as well as coverage. See [Entropy Reweighted Conformal Classification](https://proceedings.mlr.press/v230/luo24a.html).
 
 ## Conformal Modes
 
@@ -426,7 +441,10 @@ Common reasons:
 
 - AUROC too low
 - false positive rate too high
+- too few in-distribution or OOD evaluation samples to treat the OOD metrics as sufficient evidence
 - SURE or conformal coverage below threshold
+- conformal prediction sets are too large on average to be useful
+- one completed held-out benchmark fold fell below the required OOD target even if the fold mean looked acceptable
 
 ## Method Naming Note
 

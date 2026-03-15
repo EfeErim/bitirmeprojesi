@@ -69,7 +69,7 @@ Inference works like this:
 2. The router fuses whole-image crop evidence with SAM3 ROI evidence so one misleading patch does not dominate by itself.
 3. The runtime loads the adapter for that crop.
 4. The adapter predicts the disease class.
-5. The runtime also reports whether the image looks OOD.
+5. If an adapter actually runs, the runtime also reports calibrated adapter OOD information.
 6. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
 
 Notebook 1 is different:
@@ -261,11 +261,12 @@ In practice, the runtime does this:
 5. Load the adapter for that crop.
 6. Preprocess the image to the configured target size.
 7. Predict the disease class.
-8. Return OOD information together with the prediction plus the structured `router` summary block.
+8. When the adapter produces calibrated OOD output, return that OOD information together with the prediction plus the structured `router` summary block.
 
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
 If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
 When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
+`unknown_crop`, `router_unavailable`, and `adapter_unavailable` do not fabricate adapter-side `ood_analysis` payloads.
 If the crop is known but the organ evidence is ambiguous, the router keeps the crop and may return `part=unknown` plus a short guardrail message instead of inventing a confident part label. A compatible part is only retained when the generic and crop-conditioned organ surfaces independently agree on it.
 
 ## Common Commands

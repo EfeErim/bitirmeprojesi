@@ -14,23 +14,36 @@ DEFAULT_PLAN_TARGETS = {
     "accuracy": 0.93,
     "ood_auroc": 0.92,
     "ood_false_positive_rate": 0.05,
+    "ood_samples": 5.0,
+    "in_distribution_samples": 5.0,
     "sure_ds_f1": 0.90,
     "conformal_empirical_coverage": 0.95,
+    "conformal_avg_set_size": 2.0,
 }
 
 OOD_METRIC_NAMES = (
     "ood_auroc",
     "ood_false_positive_rate",
+    "ood_samples",
+    "in_distribution_samples",
     "sure_ds_f1",
     "conformal_empirical_coverage",
+    "conformal_avg_set_size",
 )
 
 _TARGET_FALLBACK_KEYS = {
     "accuracy": ("accuracy", "continual_accuracy"),
     "ood_auroc": ("ood_auroc",),
     "ood_false_positive_rate": ("ood_false_positive_rate",),
+    "ood_samples": ("ood_samples", "ood_min_samples", "min_ood_samples"),
+    "in_distribution_samples": (
+        "in_distribution_samples",
+        "in_distribution_min_samples",
+        "min_in_distribution_samples",
+    ),
     "sure_ds_f1": ("sure_ds_f1",),
     "conformal_empirical_coverage": ("conformal_empirical_coverage",),
+    "conformal_avg_set_size": ("conformal_avg_set_size", "conformal_max_avg_set_size"),
 }
 
 
@@ -44,10 +57,7 @@ def load_plan_targets(spec_path: Optional[Path] = None) -> Dict[str, float]:
 
     payload = read_json(resolved, default={}, expect_type=dict)
     targets = payload.get("targets", {}) if isinstance(payload, dict) else {}
-    return {
-        metric_name: float(_resolve_target_value(targets, metric_name))
-        for metric_name in DEFAULT_PLAN_TARGETS
-    }
+    return _resolve_target_values(targets)
 
 
 def _resolve_target_value(targets: Dict[str, Any], metric_name: str) -> float:
@@ -55,6 +65,14 @@ def _resolve_target_value(targets: Dict[str, Any], metric_name: str) -> float:
         if key in targets:
             return float(targets[key])
     return float(DEFAULT_PLAN_TARGETS[metric_name])
+
+
+def _resolve_target_values(targets: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    raw_targets = dict(targets or {})
+    return {
+        metric_name: float(_resolve_target_value(raw_targets, metric_name))
+        for metric_name in DEFAULT_PLAN_TARGETS
+    }
 
 
 def _build_threshold_checks(
@@ -108,8 +126,8 @@ def compute_ood_detection_metrics(
 ) -> Dict[str, Any]:
     ood_auroc: Optional[float] = None
     ood_fpr: Optional[float] = None
-    ood_total = 0
-    in_dist_total = 0
+    ood_total: Optional[int] = None
+    in_dist_total: Optional[int] = None
     if ood_labels is not None and ood_scores is not None:
         if len(ood_labels) != len(ood_scores):
             raise ValueError("ood_labels and ood_scores must have same length")
@@ -133,8 +151,8 @@ def compute_ood_detection_metrics(
     return {
         "ood_auroc": ood_auroc,
         "ood_false_positive_rate": ood_fpr,
-        "ood_samples": int(ood_total),
-        "in_distribution_samples": int(in_dist_total),
+        "ood_samples": ood_total,
+        "in_distribution_samples": in_dist_total,
     }
 
 
@@ -164,8 +182,14 @@ def compute_plan_metrics(
         "ood_auroc": ood_metrics["ood_auroc"],
         "ood_false_positive_rate": ood_metrics["ood_false_positive_rate"],
         "classification_samples": int(y_true_t.numel()),
-        "ood_samples": int(ood_metrics["ood_samples"]),
-        "in_distribution_samples": int(ood_metrics["in_distribution_samples"]),
+        "ood_samples": (
+            None if ood_metrics["ood_samples"] is None else int(ood_metrics["ood_samples"])
+        ),
+        "in_distribution_samples": (
+            None
+            if ood_metrics["in_distribution_samples"] is None
+            else int(ood_metrics["in_distribution_samples"])
+        ),
         "sure_ds_f1": sure_ds_f1,
         "conformal_empirical_coverage": conformal_empirical_coverage,
         "conformal_avg_set_size": conformal_avg_set_size,
@@ -227,15 +251,18 @@ def validate_ood_metrics(
     *,
     require_ood: bool = False,
 ) -> Dict[str, Any]:
-    target_values = dict(targets or load_plan_targets())
+    target_values = _resolve_target_values(targets)
     checks = _build_threshold_checks(
         metrics,
         target_values,
         (
             ("ood_auroc", ">="),
             ("ood_false_positive_rate", "<="),
+            ("ood_samples", ">="),
+            ("in_distribution_samples", ">="),
             ("sure_ds_f1", ">="),
             ("conformal_empirical_coverage", ">="),
+            ("conformal_avg_set_size", "<="),
         ),
     )
     finalized = _finalize_validation(checks, require_metrics=require_ood)
@@ -254,7 +281,7 @@ def validate_plan_metrics(
     *,
     require_ood: bool = False,
 ) -> Dict[str, Any]:
-    target_values = dict(targets or load_plan_targets())
+    target_values = _resolve_target_values(targets)
     checks: Dict[str, Dict[str, Any]] = _build_threshold_checks(
         metrics,
         target_values,
@@ -282,7 +309,7 @@ def build_production_readiness(
     context: Optional[Dict[str, Any]] = None,
     require_ood: bool = True,
 ) -> Dict[str, Any]:
-    target_values = dict(targets or load_plan_targets())
+    target_values = _resolve_target_values(targets)
     classification_gate = dict(classification_metric_gate or {})
     classification_metrics = dict(classification_gate.get("metrics", {}))
     classification_eval = dict(classification_gate.get("evaluation", {}))

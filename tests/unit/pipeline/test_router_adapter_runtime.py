@@ -170,6 +170,7 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
 
     monkeypatch.setattr(runtime, "_build_router", lambda: EmptyRouter())
 
+    typed_result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))
     result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
 
     assert result["status"] == "unknown_crop"
@@ -179,6 +180,8 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
         "message": "",
         "detections_count": 0,
     }
+    assert typed_result.ood_analysis is None
+    assert "ood_analysis" not in result
 
 
 def test_predict_returns_router_unavailable_when_router_returns_no_payload(monkeypatch, tmp_path):
