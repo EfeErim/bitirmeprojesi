@@ -158,6 +158,120 @@ Current behavior:
 - Notebook 2 now uses the automatic materialization strategy, which prefers links over full copies on Colab and other non-Windows systems
 - on Windows, materialization defaults to copying files instead of symlinks
 
+## Prepare Trustworthy Evaluation Data Before Auto-Splitting
+
+Notebook 2 auto-splitting is convenient, but it is only an image-level random split after the flat class-root dataset has already been assembled.
+
+Use that path for quick experiments when:
+
+- each class folder contains only real, independent images
+- you are not mixing multiple public sources into one flat pool
+- you are not mixing offline augmentations or synthetic images into the same evaluation candidate set
+- you accept a random image-level split as the benchmark
+
+Do not treat Notebook 2 auto-splitting as the main benchmark path when your flat dataset was built by merging public sources, adding offline augmentations, including GAN-generated images, or mixing repeated captures of the same plant, session, or original photo family.
+
+Why this matters:
+
+- if you merge sources first and split later, source style can leak across `continual`, `val`, and `test`
+- if offline augmentations or synthetic variants are present before splitting, sibling images can land in different splits
+- if repeated captures of the same leaf or plant exist, the random split can produce an unrealistically easy test set
+
+This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR and with literature warning that PlantVillage-style plant-disease datasets can contain shortcut cues and domain bias instead of deployment-like variability.[^cifair] [^plantvillage-bias]
+
+### Recommended data-preparation workflow
+
+1. Preserve provenance before merging.
+
+   Keep a manifest for every image with fields such as:
+
+   - `source_dataset`
+   - `source_subset`
+   - `original_image_id`
+   - `augmentation_family_id`
+   - `synthetic_flag`
+   - `capture_group_id`
+
+2. Deduplicate before final splitting.
+
+   Run both:
+
+   - exact duplicate checks such as file hash comparisons
+   - near-duplicate checks such as perceptual-hash or visual-family clustering
+
+   Remove exact duplicates from the benchmark set and keep near-duplicate families together in one split.
+
+3. Split by group, not by image.
+
+   Keep these together:
+
+   - one original image and all of its offline augmentations
+   - one synthetic image family and its close variants
+   - images from the same plant, same capture session, or same collection event when that metadata exists
+
+4. Prefer real images for authoritative `val` and `test`.
+
+   A practical rule is:
+
+   - `continual/` may include curated augmentations when you intentionally want them for training
+   - `val/` and `test/` should prefer real, non-synthetic images
+   - GAN-generated images should be train-only or evaluated in a separate ablation, not mixed silently into the authoritative test split
+
+5. Keep source-aware evaluation when sources are merged.
+
+   Preferred order:
+
+   - source-held-out test split
+   - source-balanced grouped split
+   - image-level random split only as a convenience baseline
+
+   If your data comes from multiple public datasets, a held-out source or at least a source-balanced grouped test split is much more trustworthy than a random split after merge.
+
+6. Materialize the runtime dataset yourself for benchmark-quality runs.
+
+   When you need a trustworthy benchmark, build this layout directly instead of relying on Notebook 2 to random-split a merged flat dataset:
+
+   ```text
+   data/<crop>/
+     continual/<class>/*
+     val/<class>/*
+     test/<class>/*
+     ood/*
+   ```
+
+   Then train through the canonical workflow or CLI:
+
+   ```powershell
+   .\scripts\python.cmd -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
+   ```
+
+7. Keep OOD separate from classification splitting.
+
+   Do not mix unknown images into the supported class-root dataset. Keep `ood/` as a separate pool under the runtime dataset and match it to the real deployment contract.
+
+### Practical rules for merged public tomato-leaf datasets
+
+If you combine multiple public tomato-leaf datasets, use these rules:
+
+- never merge raw images, augmented variants, and GAN samples into one flat folder and trust the notebook random split as the main benchmark
+- keep all derivatives of one original image in the same split
+- keep one clean held-out test slice of real leaf images that were never used to generate training augmentations
+- report whether the test slice is source-held-out, source-balanced, or only random-after-merge
+- treat random-after-merge metrics as smoke-test evidence, not deployment evidence
+
+### When Notebook 2 auto-splitting is still acceptable
+
+Notebook 2 auto-splitting is still useful when you want:
+
+- a fast smoke run to validate training and export surfaces
+- an early baseline before building a stricter evaluation split
+- a convenience experiment on a small, clean, single-source dataset without augmentation-family leakage
+
+Use the stricter manually materialized runtime dataset when the result will be used as the main claim about model quality.
+
+[^cifair]: C. Barz and J. Denzler, "[Do We Train on Test Data? Purging CIFAR of Near-Duplicates](https://pubmed.ncbi.nlm.nih.gov/34460587/)," *Journal of Imaging*, 2021.
+[^plantvillage-bias]: A. Naqvi et al., "[Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies](https://doi.org/10.48550/arXiv.2206.04374)," arXiv, 2022.
+
 ## Training Settings, Explained By Purpose
 
 The config surface can look large when you are new. The easiest way to understand it is by what each section changes.
