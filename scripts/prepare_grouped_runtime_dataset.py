@@ -282,30 +282,70 @@ def scan_class_root_dataset(
     return records, normalization_report
 
 
-def _load_dinov3_components(model_id: str) -> tuple[Any, Any]:
+def _resolve_amp_dtype(device: str) -> Any:
+    import torch
+
+    if not str(device).startswith("cuda") or not torch.cuda.is_available():
+        return None
+    major, _minor = torch.cuda.get_device_capability()
+    return torch.bfloat16 if major >= 8 else torch.float16
+
+
+def _load_dinov3_components(model_id: str, *, device: str = "cpu") -> tuple[Any, Any]:
     from transformers import AutoImageProcessor, AutoModel
 
+    load_kwargs: Dict[str, Any] = {}
+    amp_dtype = _resolve_amp_dtype(device)
+    if amp_dtype is not None:
+        load_kwargs["torch_dtype"] = amp_dtype
     processor = AutoImageProcessor.from_pretrained(model_id)
-    model = AutoModel.from_pretrained(model_id)
+    model = AutoModel.from_pretrained(model_id, **load_kwargs)
     model.eval()
     return processor, model
 
 
-def _load_bioclip_components(model_id: str) -> tuple[Any, Any]:
+def _load_bioclip_components(model_id: str, *, device: str = "cpu") -> tuple[Any, Any]:
     import open_clip
+    import torch
 
     hub_model_id = f"hf-hub:{model_id}" if not str(model_id).startswith("hf-hub:") else str(model_id)
-    model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
+    create_kwargs: Dict[str, Any] = {}
+    amp_dtype = _resolve_amp_dtype(device)
+    if amp_dtype is not None:
+        create_kwargs["precision"] = "bf16" if amp_dtype == torch.bfloat16 else "fp16"
+    try:
+        model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id, **create_kwargs)
+    except TypeError:
+        model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
     model.eval()
     return preprocess_val, model
 
 
 def _encode_dinov3(paths: Sequence[Path], *, model_id: str, batch_size: int, device: str) -> np.ndarray:
+    processor, model = _load_dinov3_components(model_id, device=device)
+    return _encode_dinov3_with_components(
+        paths,
+        processor=processor,
+        model=model,
+        batch_size=batch_size,
+        device=device,
+        amp_dtype=_resolve_amp_dtype(device),
+    )
+
+
+def _encode_dinov3_with_components(
+    paths: Sequence[Path],
+    *,
+    processor: Any,
+    model: Any,
+    batch_size: int,
+    device: str,
+    amp_dtype: Any = None,
+) -> np.ndarray:
     import torch
 
-    processor, model = _load_dinov3_components(model_id)
-    model.to(device)
     embeddings: List[np.ndarray] = []
+    autocast_enabled = amp_dtype is not None and str(device).startswith("cuda") and torch.cuda.is_available()
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         images = []
@@ -313,24 +353,44 @@ def _encode_dinov3(paths: Sequence[Path], *, model_id: str, batch_size: int, dev
             with Image.open(path) as raw:
                 images.append(ImageOps.exif_transpose(raw.convert("RGB")))
         inputs = processor(images=images, return_tensors="pt")
-        inputs = {key: value.to(device) for key, value in inputs.items()}
-        with torch.no_grad():
-            outputs = model(**inputs)
-            if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
-                batch = outputs.pooler_output
-            else:
-                batch = outputs.last_hidden_state[:, 0]
+        inputs = {key: value.to(device, non_blocking=True) for key, value in inputs.items()}
+        with torch.inference_mode():
+            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=autocast_enabled):
+                outputs = model(**inputs)
+                if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
+                    batch = outputs.pooler_output
+                else:
+                    batch = outputs.last_hidden_state[:, 0]
         batch = torch.nn.functional.normalize(batch, dim=-1)
         embeddings.append(batch.detach().cpu().numpy())
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
 
 
 def _encode_bioclip(paths: Sequence[Path], *, model_id: str, batch_size: int, device: str) -> np.ndarray:
+    preprocess_val, model = _load_bioclip_components(model_id, device=device)
+    return _encode_bioclip_with_components(
+        paths,
+        preprocess_val=preprocess_val,
+        model=model,
+        batch_size=batch_size,
+        device=device,
+        amp_dtype=_resolve_amp_dtype(device),
+    )
+
+
+def _encode_bioclip_with_components(
+    paths: Sequence[Path],
+    *,
+    preprocess_val: Any,
+    model: Any,
+    batch_size: int,
+    device: str,
+    amp_dtype: Any = None,
+) -> np.ndarray:
     import torch
 
-    preprocess_val, model = _load_bioclip_components(model_id)
-    model.to(device)
     embeddings: List[np.ndarray] = []
+    autocast_enabled = amp_dtype is not None and str(device).startswith("cuda") and torch.cuda.is_available()
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         tensors = []
@@ -338,9 +398,10 @@ def _encode_bioclip(paths: Sequence[Path], *, model_id: str, batch_size: int, de
             with Image.open(path) as raw:
                 image = ImageOps.exif_transpose(raw.convert("RGB"))
             tensors.append(preprocess_val(image))
-        image_tensor = torch.stack(tensors, dim=0).to(device)
-        with torch.no_grad():
-            batch = model.encode_image(image_tensor)
+        image_tensor = torch.stack(tensors, dim=0).to(device, non_blocking=True)
+        with torch.inference_mode():
+            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=autocast_enabled):
+                batch = model.encode_image(image_tensor)
         batch = torch.nn.functional.normalize(batch, dim=-1)
         embeddings.append(batch.detach().cpu().numpy())
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
@@ -514,6 +575,13 @@ def build_grouped_dataset_plan(
     neighbors: int = DEFAULT_NEIGHBORS,
     progress_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
+    import gc
+
+    import torch
+
+    amp_dtype = _resolve_amp_dtype(device)
+    effective_batch_size = max(1, int(batch_size))
+
     _progress(progress_fn, "Scanning class-root dataset and computing hashes.")
     records, normalization_report = scan_class_root_dataset(
         class_root=class_root,
@@ -530,6 +598,7 @@ def build_grouped_dataset_plan(
     bioclip_scores: Dict[tuple[str, str], float] = {}
     review_pairs: List[ReviewPair] = []
     blocking_conflicts: List[ReviewPair] = []
+    class_dino_pairs_by_class: Dict[str, Dict[tuple[str, str], float]] = {}
     seen_blocking_pairs: set[tuple[str, str]] = set()
     global_exact_hash_groups = _build_hash_groups(valid_records, key_name="exact_hash")
     global_phash_groups = _build_hash_groups(valid_records, key_name="phash_hex")
@@ -560,41 +629,87 @@ def build_grouped_dataset_plan(
         for other in group[1:]:
             uf.union(base, other.relative_path)
 
+    _progress(progress_fn, "Loading DINOv3 once for the full audit run.")
+    dino_processor, dino_model = _load_dinov3_components(dino_model_id, device=device)
+    dino_model.to(device)
     for normalized_class_name, class_records in class_to_records.items():
         _progress(progress_fn, f"Processing class '{normalized_class_name}' ({len(class_records)} readable images).")
         paths = [Path(record.absolute_path) for record in class_records]
         path_keys = [record.relative_path for record in class_records]
         if len(paths) < 2:
             continue
-        record_by_path = {record.relative_path: record for record in class_records}
         _progress(progress_fn, f"Encoding DINOv3 embeddings for class '{normalized_class_name}'.")
-        dino_embeddings = _encode_dinov3(paths, model_id=dino_model_id, batch_size=batch_size, device=device)
+        dino_embeddings = _encode_dinov3_with_components(
+            paths,
+            processor=dino_processor,
+            model=dino_model,
+            batch_size=effective_batch_size,
+            device=device,
+            amp_dtype=amp_dtype,
+        )
         class_dino_pairs = _compute_neighbor_pairs(
             dino_embeddings,
             paths=path_keys,
             neighbors=neighbors,
         )
         dino_scores.update(class_dino_pairs)
+        class_dino_pairs_by_class[normalized_class_name] = class_dino_pairs
 
+    dino_model.to("cpu")
+    del dino_model
+    gc.collect()
+    if str(device).startswith("cuda") and torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+    bioclip_needed = False
+    for normalized_class_name, class_records in class_to_records.items():
+        class_dino_pairs = class_dino_pairs_by_class.get(normalized_class_name, {})
+        if not class_dino_pairs:
+            continue
+        record_by_path = {record.relative_path: record for record in class_records}
+        for pair, dino_cosine in class_dino_pairs.items():
+            record_a = record_by_path[pair[0]]
+            record_b = record_by_path[pair[1]]
+            phash_distance = _phash_distance(record_a.phash_hex, record_b.phash_hex)
+            if dino_cosine >= DINO_REVIEW_MIN and phash_distance > PHASH_AUTO_MAX_DISTANCE:
+                bioclip_needed = True
+                break
+        if bioclip_needed:
+            break
+
+    bioclip_preprocess = None
+    bioclip_model = None
+    if bioclip_needed:
+        _progress(progress_fn, "Loading BioCLIP once for candidate refinement.")
+        bioclip_preprocess, bioclip_model = _load_bioclip_components(bioclip_model_id, device=device)
+        bioclip_model.to(device)
+
+    for normalized_class_name, class_records in class_to_records.items():
+        class_dino_pairs = class_dino_pairs_by_class.get(normalized_class_name, {})
+        if not class_dino_pairs:
+            continue
+        record_by_path = {record.relative_path: record for record in class_records}
         bioclip_candidate_pairs = []
         for pair, dino_cosine in class_dino_pairs.items():
             record_a = record_by_path[pair[0]]
             record_b = record_by_path[pair[1]]
             phash_distance = _phash_distance(record_a.phash_hex, record_b.phash_hex)
-            if phash_distance <= PHASH_REVIEW_MAX_DISTANCE or dino_cosine >= DINO_REVIEW_MIN:
+            if dino_cosine >= DINO_REVIEW_MIN and phash_distance > PHASH_AUTO_MAX_DISTANCE:
                 bioclip_candidate_pairs.append(pair)
 
         unique_bioclip_paths = sorted({path for pair in bioclip_candidate_pairs for path in pair})
-        if unique_bioclip_paths:
+        if unique_bioclip_paths and bioclip_preprocess is not None and bioclip_model is not None:
             _progress(
                 progress_fn,
                 f"Encoding BioCLIP refinement embeddings for class '{normalized_class_name}' ({len(unique_bioclip_paths)} images).",
             )
-            bioclip_embeddings = _encode_bioclip(
+            bioclip_embeddings = _encode_bioclip_with_components(
                 [Path(record_by_path[path].absolute_path) for path in unique_bioclip_paths],
-                model_id=bioclip_model_id,
-                batch_size=batch_size,
+                preprocess_val=bioclip_preprocess,
+                model=bioclip_model,
+                batch_size=effective_batch_size,
                 device=device,
+                amp_dtype=amp_dtype,
             )
             bioclip_scores.update(
                 _compute_pair_similarity(
@@ -642,6 +757,13 @@ def build_grouped_dataset_plan(
                         reason="borderline same-class similarity; adjacency only affects review ordering",
                     )
                 )
+
+    if bioclip_model is not None:
+        bioclip_model.to("cpu")
+        del bioclip_model
+        gc.collect()
+        if str(device).startswith("cuda") and torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     review_pairs = sorted(
         review_pairs,

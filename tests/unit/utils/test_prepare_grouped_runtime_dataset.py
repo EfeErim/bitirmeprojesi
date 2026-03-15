@@ -27,6 +27,14 @@ def _fake_embeddings(paths, *, model_id: str, batch_size: int, device: str):  # 
     return np.eye(size, dtype=np.float32)
 
 
+class _FakeModel:
+    def eval(self):
+        return self
+
+    def to(self, *args, **kwargs):  # noqa: ARG002
+        return self
+
+
 def test_normalize_prepared_class_name_uses_taxonomy_aliases():
     normalized = normalize_prepared_class_name(
         "Tomato Healthy Leaf",
@@ -47,12 +55,20 @@ def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path:
     duplicate_target.write_bytes(image_path.read_bytes())
 
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_dinov3",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
     )
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_bioclip",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
     )
 
     summary = build_grouped_dataset_plan(
@@ -77,12 +93,20 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
         _write_pattern(source_root / "Early Blight" / f"disease_{index}.jpg", offset=offset + 1)
 
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_dinov3",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
     )
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_bioclip",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
     )
 
     summary = build_grouped_dataset_plan(
@@ -115,12 +139,20 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
         _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
 
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_dinov3",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
     )
     monkeypatch.setattr(
-        "scripts.prepare_grouped_runtime_dataset._encode_bioclip",
-        _fake_embeddings,
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
     )
     monkeypatch.setattr(
         "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
