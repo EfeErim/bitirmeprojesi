@@ -4,7 +4,6 @@ VLM Pipeline for AADS-ULoRA
 SAM3 + BioCLIP-2.5 only (fallback pipeline removed)
 """
 
-import copy
 import logging
 from typing import Any, Dict, List, Optional, Tuple, cast
 
@@ -12,8 +11,6 @@ import torch
 from PIL import Image
 
 from src.router import clip_runtime, sam3_runtime
-from src.router.batch_output_utils import analysis_to_batch_item
-from src.router.dependency_utils import check_vlm_dependencies
 from src.router.label_normalization import normalize_part_label
 from src.router.pipeline_flow_utils import build_process_image_response
 from src.router.policy_taxonomy_utils import (
@@ -38,6 +35,15 @@ from src.router.runtime_surface import (
 from src.router.sam3_output_utils import (
     normalize_sam3_results,
     sam3_error_result,
+)
+from src.router.vlm_stages import (
+    analyze_batch_results,
+    build_pipeline_surface_config,
+    load_clip_like_model as load_clip_like_model_stage,
+    load_models as load_models_stage,
+    load_sam as load_sam_stage,
+    load_sam3_bioclip25 as load_sam3_bioclip25_stage,
+    route_batch_items,
 )
 from src.shared.contracts import RouterAnalysisResult, RouterRequestOptions
 
@@ -71,11 +77,10 @@ class VLMPipeline:
     def __init__(self, config: Dict, device: str = 'cuda'):
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.config = config
-        # Accept both nested and flat config keys used by tests
-        router_config = config.get('router', {}) if isinstance(config.get('router'), dict) else {}
-        raw_vlm_config = router_config.get('vlm', {}) if isinstance(router_config, dict) else {}
-        self.vlm_config = copy.deepcopy(raw_vlm_config) if isinstance(raw_vlm_config, dict) else {}
-        self._base_vlm_config = copy.deepcopy(self.vlm_config)
+        surface_config = build_pipeline_surface_config(config)
+        router_config = surface_config.router_config
+        self.vlm_config = surface_config.vlm_config
+        self._base_vlm_config = surface_config.base_vlm_config
         self.active_profile: Optional[str] = None
         self.policy_graph: Dict[str, Dict[str, Any]] = {}
         self.set_runtime_profile(resolve_requested_profile(self.vlm_config), suppress_warning=True)
@@ -89,8 +94,8 @@ class VLMPipeline:
         # Dynamic taxonomy support
         self.use_dynamic_taxonomy = self.vlm_config.get('use_dynamic_taxonomy', False)
         self.taxonomy_path = self.vlm_config.get('taxonomy_path', 'config/plant_taxonomy.json')
-        
-        crop_mapping = router_config.get('crop_mapping', {}) if isinstance(router_config, dict) else {}
+
+        crop_mapping = surface_config.crop_mapping
         self.crop_labels: List[str] = []
         self.part_labels: List[str] = []
         self.crop_part_compatibility: Dict[str, List[str]] = {}
@@ -299,103 +304,10 @@ class VLMPipeline:
 
     def load_models(self):
         """Load SAM3 + BioCLIP-2.5 models (fallback disabled)."""
-        logger.info("Loading VLM models...")
-
-        if not self.enabled:
-            logger.info("VLM pipeline is disabled; skipping model loading")
-            self.models_loaded = False
-            return
-
-        # Check required dependencies before loading
-        diagnostics = check_vlm_dependencies()
-        transformers_warning = diagnostics.get('transformers_warning')
-        if transformers_warning:
-            logger.warning(transformers_warning)
-
-        missing_deps = diagnostics.get('missing_deps', [])
-        if missing_deps:
-            logger.warning(f"Missing optional dependencies: {', '.join(missing_deps)}")
-            install_cmd = diagnostics.get('install_command')
-            if install_cmd:
-                logger.warning(f"Install in Colab cell: {install_cmd}")
-
-        # HuggingFace authentication is handled by the caller when needed.
-        hf_token = None  # Notebook/script setup now handles HF auth explicitly.
-        if hf_token:
-            try:
-                from huggingface_hub import login
-                login(token=hf_token, add_to_git_credential=False)
-                logger.info("✅ Authenticated with HuggingFace")
-            except Exception as hf_auth_error:
-                logger.warning(f"HuggingFace authentication failed: {hf_auth_error}")
-        else:
-            pass
-
-        try:
-            if self.model_source != 'huggingface':
-                raise ValueError(
-                    f"Unsupported VLM model_source '{self.model_source}'. Currently supported: 'huggingface'"
-                )
-
-            logger.info("Loading SAM3 + BioCLIP-2.5 pipeline...")
-            logger.info("Note: First run downloads ~1-2 GB. This may take 2-5 minutes...")
-            self._load_sam3_bioclip25()
-            self.actual_pipeline = 'sam3'
-            self.models_loaded = True
-            logger.info(f"✅ SAM3 + BioCLIP-2.5 loaded successfully (pipeline={self.actual_pipeline})")
-            
-        except Exception as e:
-            self.models_loaded = False
-            if self.strict_model_loading:
-                raise RuntimeError(f"Strict VLM model loading failed: {e}") from e
-            logger.warning(f"SAM3 model loading failed. Models remain unloaded: {e}")
-    
+        return load_models_stage(self)
     def _load_sam3_bioclip25(self):
         """Load SAM3 and BioCLIP-2.5 models."""
-        sam_id = str(self.model_ids.get('sam', ''))
-        bioclip_id = str(self.model_ids.get('bioclip', ''))
-
-        # Test-friendly branch: allow fake model ids to be resolved via patched helper loaders.
-        if sam_id.startswith('fake-') or bioclip_id.startswith('fake-'):
-            logger.info("Using helper loaders for fake model ids")
-            sam_processor, sam_model = self._load_sam(sam_id)
-            bioclip_processor, bioclip_model = self._load_clip_like_model(bioclip_id)
-
-            self._set_sam_runtime(sam_processor, sam_model, backend='sam3')
-            self._set_bioclip_runtime(
-                bioclip_processor,
-                bioclip_model,
-                backend=self.bioclip_backend or 'transformers',
-            )
-            return
-
-        import open_clip
-        from transformers import Sam3Model, Sam3Processor
-        
-        # Load SAM3
-        logger.info("Loading SAM3...")
-        sam3_processor = Sam3Processor.from_pretrained(sam_id)
-        sam3_model = self._prepare_inference_model(Sam3Model.from_pretrained(sam_id))
-        
-        # Load BioCLIP-2.5
-        logger.info("Loading BioCLIP-2.5...")
-        hub_model_id = f"hf-hub:{bioclip_id}"
-        model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
-        tokenizer = open_clip.get_tokenizer(hub_model_id)
-        
-        model = self._prepare_inference_model(model)
-        
-        # Store models (sam2 field reused for sam3, bioclip_processor adapted)
-        self._set_sam_runtime(sam3_processor, sam3_model, backend='sam3')
-        self._set_bioclip_runtime(
-            {
-                'preprocess': preprocess_val,
-                'tokenizer': tokenizer,
-            },
-            model,
-            backend='open_clip',
-        )
-
+        return load_sam3_bioclip25_stage(self)
     def is_ready(self) -> bool:
         """Return whether the pipeline is ready for real inference."""
         if not self.enabled:
@@ -413,76 +325,10 @@ class VLMPipeline:
 
     def _load_sam(self, model_id: str):
         """Load SAM model and processor."""
-        sam2_requested = 'sam2' in model_id.lower() or 'hiera' in model_id.lower() or model_id.lower().endswith('.pt')
-        if sam2_requested:
-            try:
-                import importlib
-                ultralytics_module = importlib.import_module('ultralytics')
-                SAM = getattr(ultralytics_module, 'SAM')
-
-                checkpoint = model_id
-                if '/' in checkpoint and checkpoint.startswith('facebook/sam2'):
-                    checkpoint = self.vlm_config.get('sam2_checkpoint', 'sam2_b.pt')
-
-                model = SAM(checkpoint)
-                self.sam_backend = 'ultralytics'
-                return {'backend': 'ultralytics', 'checkpoint': checkpoint}, model
-            except Exception as e:
-                raise RuntimeError(
-                    "SAM-2 requires ultralytics in this pipeline configuration. "
-                    "Install ultralytics and ensure SAM-2 weights are accessible (e.g., checkpoint 'sam2_b.pt')."
-                ) from e
-        else:
-            from transformers import SamModel, SamProcessor
-            processor = SamProcessor.from_pretrained(model_id)
-            model = SamModel.from_pretrained(model_id)
-            self.sam_backend = 'transformers_sam'
-        model = self._prepare_inference_model(model)
-        return processor, model
-
+        return load_sam_stage(self, model_id)
     def _load_clip_like_model(self, model_id: str):
-        """Load CLIP/BioCLIP-like model and processor.
-        
-        Prioritizes open_clip for BioCLIP models (reference implementation pattern),
-        falls back to transformers for standard CLIP models.
-        """
-        # For BioCLIP models, use open_clip directly (reference implementation approach)
-        if 'bioclip' in model_id.lower() or 'imageomics' in model_id.lower():
-            try:
-                import open_clip
-
-                # BioCLIP-2: use hf-hub: prefix for Hugging Face model
-                hub_model_id = f'hf-hub:{model_id}' if not model_id.startswith('hf-hub:') else model_id
-                
-                # open_clip returns (model, preprocess_train, preprocess_val)
-                model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
-                tokenizer = open_clip.get_tokenizer(hub_model_id)
-                
-                model = self._prepare_inference_model(model)
-                self.bioclip_backend = 'open_clip'
-                
-                processor = {
-                    'preprocess': preprocess_val,  # Use validation preprocess for inference (no augmentation)
-                    'tokenizer': tokenizer,
-                }
-                return processor, model
-            except Exception as e:
-                logger.warning(f"open_clip loading failed for {model_id}, trying transformers: {e}")
-        
-        # For standard CLIP or other models, try transformers
-        try:
-            from transformers import AutoModel, AutoProcessor
-
-            processor = AutoProcessor.from_pretrained(model_id)
-            model = self._prepare_inference_model(AutoModel.from_pretrained(model_id))
-            self.bioclip_backend = 'transformers'
-            return processor, model
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to load CLIP/BioCLIP model '{model_id}' via both open_clip and transformers. "
-                f"For BioCLIP models, ensure open_clip_torch is installed."
-            ) from e
-
+        """Load CLIP/BioCLIP-like model and processor."""
+        return load_clip_like_model_stage(self, model_id)
     def _score_parts_conditioned_on_crop(
         self,
         roi_image: Image.Image,
@@ -668,19 +514,7 @@ class VLMPipeline:
             max_detections=max_detections,
             options=options,
         )
-        if self.enabled and self.models_loaded and self.actual_pipeline == 'sam3':
-            analyses = sam3_runtime.analyze_sam3_batch(
-                self,
-                batch,
-                confidence_threshold=request.confidence_threshold,
-                max_detections=request.max_detections,
-            )
-            return [self._normalize_router_analysis(analysis, request=request) for analysis in analyses]
-
-        return [
-            self.analyze_image_result(batch[index], options=request)
-            for index in range(int(batch.shape[0]))
-        ]
+        return analyze_batch_results(self, batch, request)
 
     def _resolve_analyzer_for_active_pipeline(self) -> Optional[RouterAnalyzer]:
         """Resolve analysis function for active pipeline."""
@@ -828,16 +662,9 @@ class VLMPipeline:
             - crops_out: List of crop prediction dicts for each image
             - confs: List of confidence scores for each image
         """
-        analyses = self.analyze_batch_result(
+        return route_batch_items(
+            self,
             batch,
             confidence_threshold=confidence_threshold,
             max_detections=max_detections,
         )
-
-        crops_out: List[Dict[str, Any]] = []
-        confs: List[float] = []
-        for analysis in analyses:
-            crop_item, confidence = analysis_to_batch_item(analysis)
-            crops_out.append(crop_item)
-            confs.append(confidence)
-        return crops_out, confs

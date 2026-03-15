@@ -32,6 +32,21 @@ class ClipScoreRequest:
     image_embedding: Optional[torch.Tensor] = None
 
 
+@dataclass(frozen=True)
+class PromptMatrixPlan:
+    labels: Tuple[str, ...]
+    templates: Tuple[str, ...]
+    flattened_prompts: Tuple[str, ...]
+
+    @property
+    def label_count(self) -> int:
+        return len(self.labels)
+
+    @property
+    def template_count(self) -> int:
+        return len(self.templates)
+
+
 def _normalize_embeddings(embeddings: torch.Tensor) -> torch.Tensor:
     return embeddings / embeddings.norm(dim=-1, keepdim=True)
 
@@ -102,6 +117,26 @@ def _best_label_and_score(label_scores: Dict[str, float]) -> tuple[str, float]:
     return best_label, label_scores.get(best_label, 0.0)
 
 
+def _build_prompt_matrix_plan(
+    runtime: Any,
+    *,
+    labels: List[str],
+    label_type: str,
+    num_prompts: Optional[int],
+) -> PromptMatrixPlan:
+    templates = tuple(_limit_prompt_templates(runtime, label_type=label_type, num_prompts=num_prompts))
+    flattened_prompts = tuple(
+        template.format(term=label)
+        for template in templates
+        for label in labels
+    )
+    return PromptMatrixPlan(
+        labels=tuple(labels),
+        templates=templates,
+        flattened_prompts=flattened_prompts,
+    )
+
+
 def _build_limited_prompt_batch(
     labels: List[str],
     *,
@@ -140,6 +175,77 @@ def _build_limited_prompt_batch(
     return prompt_texts, prompt_to_class
 
 
+def _score_prompt_probabilities(
+    runtime: Any,
+    prompts: List[str],
+    *,
+    request: Optional[ClipScoreRequest] = None,
+    images: Optional[List[Image.Image]] = None,
+    image_batch_size: Optional[int] = None,
+    image_embeddings: Optional[torch.Tensor] = None,
+) -> torch.Tensor:
+    if request is not None:
+        try:
+            if runtime.bioclip_backend == "open_clip":
+                image_embedding = ensure_open_clip_image_embedding(runtime, request)
+                text_embeds = get_open_clip_text_embeddings(runtime, prompts)
+                if runtime.bioclip is None:
+                    raise RuntimeError("open_clip scoring requested before BioCLIP runtime was initialized.")
+                logit_scale = get_clip_logit_scale(runtime.bioclip)
+                with torch.no_grad():
+                    logits_per_image = (image_embedding @ text_embeds.T) * logit_scale
+                return torch.softmax(logits_per_image, dim=-1).detach().cpu()
+            return _score_processor_batch(runtime, request.image, prompts).detach().cpu()
+        except Exception as exc:
+            logger.error("Encoding failed: %s", exc)
+            return torch.zeros((1, len(prompts)), dtype=torch.float32)
+
+    if images is None:
+        raise ValueError("Either request or images must be provided for prompt scoring.")
+    return encode_and_score_batch(
+        runtime,
+        images,
+        prompts,
+        image_batch_size=image_batch_size,
+        image_embeddings=image_embeddings,
+    )
+
+
+def _prompt_matrix_to_label_scores(
+    probabilities: torch.Tensor,
+    *,
+    labels: Tuple[str, ...],
+    template_count: int,
+) -> Dict[str, float]:
+    if probabilities.numel() <= 0 or template_count <= 0 or not labels:
+        return {}
+    score_matrix = probabilities.reshape(template_count, len(labels))
+    label_means = score_matrix.mean(dim=0)
+    return {
+        labels[index]: float(label_means[index].item())
+        for index in range(len(labels))
+    }
+
+
+def _prompt_tensor_to_batch_label_scores(
+    probabilities: torch.Tensor,
+    *,
+    labels: Tuple[str, ...],
+    template_count: int,
+) -> List[Dict[str, float]]:
+    if probabilities.numel() <= 0 or template_count <= 0 or not labels:
+        return [{} for _ in range(int(probabilities.shape[0]))]
+    score_tensor = probabilities.reshape(int(probabilities.shape[0]), template_count, len(labels))
+    label_means = score_tensor.mean(dim=1)
+    return [
+        {
+            labels[label_index]: float(label_means[image_index, label_index].item())
+            for label_index in range(len(labels))
+        }
+        for image_index in range(int(label_means.shape[0]))
+    ]
+
+
 def _score_processor_batch(
     runtime: Any,
     images: Image.Image | List[Image.Image],
@@ -168,26 +274,8 @@ def _aggregate_prompt_probabilities(
     prompt_to_class: List[int],
     class_count: int,
 ) -> torch.Tensor:
-    if runtime.bioclip_backend == "open_clip":
-        if runtime.bioclip is None:
-            raise RuntimeError("open_clip scoring requested before BioCLIP runtime was initialized.")
-        logit_scale = get_clip_logit_scale(runtime.bioclip)
-        image_embeds = ensure_open_clip_image_embedding(runtime, request)
-        text_embeds = get_open_clip_text_embeddings(runtime, text_prompts)
-        with torch.no_grad():
-            prompt_logits = (image_embeds @ text_embeds.T) * logit_scale
-    else:
-        processor, model = _processor_components(runtime)
-        model_inputs = processor(
-            text=text_prompts,
-            images=request.image,
-            return_tensors="pt",
-            padding=True,
-        )
-        model_inputs = {key: value.to(runtime.device) for key, value in model_inputs.items()}
-        with torch.no_grad():
-            model_outputs = model(**model_inputs)
-            prompt_logits = _resolve_logits_per_image(model_outputs, model)
+    probabilities = _score_prompt_probabilities(runtime, text_prompts, request=request)
+    prompt_logits = torch.log(probabilities.clamp_min(1e-12))
 
     with torch.no_grad():
         logits = aggregate_prompt_logits(prompt_logits, prompt_to_class, class_count)
@@ -351,17 +439,16 @@ def clip_score_labels_ensemble(
     if not labels:
         return "unknown", 0.0, {}
 
-    templates = _limit_prompt_templates(runtime, label_type=label_type, num_prompts=num_prompts)
-    label_ensemble_scores: Dict[str, List[float]] = {label: [] for label in labels}
-
+    plan = _build_prompt_matrix_plan(runtime, labels=labels, label_type=label_type, num_prompts=num_prompts)
+    if plan.template_count <= 0 or not plan.flattened_prompts:
+        return "unknown", 0.0, {}
     request = ClipScoreRequest(image=image)
-    for template in templates:
-        prompts = [template.format(term=label) for label in labels]
-        scores = encode_and_score(runtime, request, prompts)
-        for label, score in zip(labels, scores):
-            label_ensemble_scores[label].append(float(score))
-
-    label_avg_scores = _average_label_scores(label_ensemble_scores)
+    probabilities = _score_prompt_probabilities(runtime, list(plan.flattened_prompts), request=request)
+    label_avg_scores = _prompt_matrix_to_label_scores(
+        probabilities[0],
+        labels=plan.labels,
+        template_count=plan.template_count,
+    )
     best_label, best_score = _best_label_and_score(label_avg_scores)
     return best_label, best_score, label_avg_scores
 
@@ -481,9 +568,9 @@ def clip_score_labels_ensemble_batch(
     if not labels:
         return [("unknown", 0.0, {}) for _ in images]
 
-    templates = _limit_prompt_templates(runtime, label_type=label_type, num_prompts=num_prompts)
-
-    per_image_scores: List[Dict[str, List[float]]] = [{label: [] for label in labels} for _ in images]
+    plan = _build_prompt_matrix_plan(runtime, labels=labels, label_type=label_type, num_prompts=num_prompts)
+    if plan.template_count <= 0 or not plan.flattened_prompts:
+        return [("unknown", 0.0, {}) for _ in images]
     shared_image_embeddings: Optional[torch.Tensor] = None
     if runtime.bioclip_backend == "open_clip":
         shared_image_embeddings = ensure_open_clip_image_embeddings(
@@ -492,22 +579,20 @@ def clip_score_labels_ensemble_batch(
             image_batch_size=image_batch_size,
         )
 
-    for template in templates:
-        prompts = [template.format(term=label) for label in labels]
-        batch_scores = encode_and_score_batch(
-            runtime,
-            images,
-            prompts,
-            image_batch_size=image_batch_size,
-            image_embeddings=shared_image_embeddings,
-        )
-        for image_index, row in enumerate(batch_scores.tolist()):
-            for label, score in zip(labels, row):
-                per_image_scores[image_index][label].append(float(score))
-
+    batch_scores = _score_prompt_probabilities(
+        runtime,
+        list(plan.flattened_prompts),
+        images=images,
+        image_batch_size=image_batch_size,
+        image_embeddings=shared_image_embeddings,
+    )
+    per_image_scores = _prompt_tensor_to_batch_label_scores(
+        batch_scores,
+        labels=plan.labels,
+        template_count=plan.template_count,
+    )
     results: List[Tuple[str, float, Dict[str, float]]] = []
-    for label_score_lists in per_image_scores:
-        label_avg_scores = _average_label_scores(label_score_lists)
+    for label_avg_scores in per_image_scores:
         best_label, best_score = _best_label_and_score(label_avg_scores)
         results.append((best_label, best_score, label_avg_scores))
     return results

@@ -6,7 +6,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
 
 from PIL import Image
 
@@ -101,16 +101,42 @@ class RouterAdapterRuntime:
         raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
 
     @staticmethod
+    def _bundle_sentinel_paths(adapter_dir: Path) -> Iterable[Path]:
+        try:
+            entries = sorted(adapter_dir.iterdir())
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"No adapter assets found under {adapter_dir}") from exc
+
+        yielded: set[Path] = set()
+        for entry in entries:
+            yielded.add(entry)
+            yield entry
+            if not entry.is_dir():
+                continue
+            try:
+                children = sorted(entry.iterdir())
+            except OSError:
+                continue
+            for child in children:
+                if not child.is_file():
+                    continue
+                yielded.add(child)
+                yield child
+        meta_path = adapter_dir / "adapter_meta.json"
+        if meta_path.exists() and meta_path not in yielded:
+            yield meta_path
+
+    @staticmethod
     def _adapter_cache_token(adapter_dir: Path) -> tuple[Path, str]:
         resolved_dir = adapter_dir.resolve()
         digest = hashlib.sha256()
         file_count = 0
-        for path in sorted(resolved_dir.rglob("*")):
-            if not path.is_file():
-                continue
+        for path in RouterAdapterRuntime._bundle_sentinel_paths(resolved_dir):
             stat = path.stat()
             digest.update(path.relative_to(resolved_dir).as_posix().encode("utf-8"))
             digest.update(b"\0")
+            digest.update(b"f" if path.is_file() else b"d")
+            digest.update(b":")
             digest.update(str(int(stat.st_size)).encode("utf-8"))
             digest.update(b":")
             digest.update(str(int(stat.st_mtime_ns)).encode("utf-8"))

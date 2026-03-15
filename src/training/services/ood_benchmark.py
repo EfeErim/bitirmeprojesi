@@ -1,4 +1,4 @@
-﻿"""Held-out OOD evidence helpers for production readiness."""
+"""Held-out OOD evidence helpers for production readiness."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import hashlib
 import json
 import time
 import traceback
+from dataclasses import dataclass
 from collections import Counter
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
@@ -39,6 +40,35 @@ _OOD_BENCHMARK_METRIC_NAMES = (
     "conformal_empirical_coverage",
     "conformal_avg_set_size",
 )
+
+
+@dataclass(frozen=True)
+class _BenchmarkRunPreparation:
+    resolved_classes: List[str]
+    target_values: Dict[str, Any]
+    artifact_root: Path
+    base_context: Dict[str, Any]
+    resumable_folds: Dict[str, Dict[str, Any]]
+    train_loader: Any
+    calibration_loader: Any
+    eval_loader: Any
+    calibration_split_name: str
+    eval_split_name: str
+    requested_primary_score_method: str
+    primary_score_method: str
+
+
+@dataclass(frozen=True)
+class _BenchmarkDatasetStage:
+    train_dataset: Dataset
+    calibration_dataset: Dataset
+    eval_dataset: Dataset
+    class_to_idx: Dict[str, int]
+    train_labels: List[int]
+    calibration_labels: List[int]
+    eval_labels: List[int]
+    dataset_fingerprints: Dict[str, Any]
+
 
 
 def _loader_size(loader: Any) -> int:
@@ -1184,40 +1214,54 @@ def run_leave_one_class_out_benchmark(
     }
     existing_summary = _load_existing_benchmark_summary(artifact_root)
     resumable_folds = _build_resumable_fold_index(existing_summary)
+    run_stage = _BenchmarkRunPreparation(
+        resolved_classes=resolved_classes,
+        target_values=target_values,
+        artifact_root=artifact_root,
+        base_context=base_context,
+        resumable_folds=resumable_folds,
+        train_loader=train_loader,
+        calibration_loader=calibration_loader,
+        eval_loader=eval_loader,
+        calibration_split_name=calibration_split_name,
+        eval_split_name=eval_split_name,
+        requested_primary_score_method=requested_primary_score_method,
+        primary_score_method=primary_score_method,
+    )
 
-    if len(resolved_classes) < int(min_classes):
+    if len(run_stage.resolved_classes) < int(min_classes):
         return _persist_benchmark_summary(
-            artifact_root=artifact_root,
+            artifact_root=run_stage.artifact_root,
             summary_payload=_build_failed_summary(
                 reason="insufficient_classes_for_fallback",
-                base_context=base_context,
-                target_values=target_values,
+                base_context=run_stage.base_context,
+                target_values=run_stage.target_values,
                 extra_context={"required_min_classes": int(min_classes)},
             ),
             telemetry=telemetry,
         )
 
-    if train_loader is None or _loader_size(train_loader) <= 0:
+    if run_stage.train_loader is None or _loader_size(run_stage.train_loader) <= 0:
         return _persist_benchmark_summary(
-            artifact_root=artifact_root,
+            artifact_root=run_stage.artifact_root,
             summary_payload=_build_failed_summary(
                 reason="missing_train_loader",
-                base_context=base_context,
-                target_values=target_values,
+                base_context=run_stage.base_context,
+                target_values=run_stage.target_values,
             ),
             telemetry=telemetry,
         )
 
-    train_dataset = train_loader.dataset
+    train_dataset = run_stage.train_loader.dataset
     calibration_dataset = getattr(calibration_loader, "dataset", None)
     eval_dataset = getattr(eval_loader, "dataset", None)
     if calibration_dataset is None or eval_dataset is None:
         return _persist_benchmark_summary(
-            artifact_root=artifact_root,
+            artifact_root=run_stage.artifact_root,
             summary_payload=_build_failed_summary(
                 reason="missing_isolated_eval_loader",
-                base_context=base_context,
-                target_values=target_values,
+                base_context=run_stage.base_context,
+                target_values=run_stage.target_values,
             ),
             telemetry=telemetry,
         )
@@ -1226,7 +1270,7 @@ def run_leave_one_class_out_benchmark(
         getattr(
             train_dataset,
             "class_to_idx",
-            {name: idx for idx, name in enumerate(resolved_classes)},
+            {name: idx for idx, name in enumerate(run_stage.resolved_classes)},
         )
     )
     train_labels = _dataset_labels(train_dataset)
@@ -1235,22 +1279,32 @@ def run_leave_one_class_out_benchmark(
     dataset_fingerprints = {
         "train": _dataset_resume_fingerprint(train_dataset),
         "calibration": {
-            "split_name": calibration_split_name,
+            "split_name": run_stage.calibration_split_name,
             **_dataset_resume_fingerprint(calibration_dataset),
         },
         "evaluation": {
-            "split_name": eval_split_name,
+            "split_name": run_stage.eval_split_name,
             **_dataset_resume_fingerprint(eval_dataset),
         },
     }
+    dataset_stage = _BenchmarkDatasetStage(
+        train_dataset=train_dataset,
+        calibration_dataset=calibration_dataset,
+        eval_dataset=eval_dataset,
+        class_to_idx=class_to_idx,
+        train_labels=train_labels,
+        calibration_labels=calibration_labels,
+        eval_labels=eval_labels,
+        dataset_fingerprints=dataset_fingerprints,
+    )
     folds: List[Dict[str, Any]] = []
     completed_fold_count = 0
     failed_fold_count = 0
     benchmark_started_at = time.time()
-    fold_total = len(resolved_classes)
+    fold_total = len(run_stage.resolved_classes)
 
     _persist_benchmark_progress(
-        artifact_root=artifact_root,
+        artifact_root=run_stage.artifact_root,
         telemetry=telemetry,
         payload={
             **base_context,
@@ -1274,16 +1328,16 @@ def run_leave_one_class_out_benchmark(
         },
     )
 
-    for fold_index, held_out_class in enumerate(resolved_classes, start=1):
+    for fold_index, held_out_class in enumerate(run_stage.resolved_classes, start=1):
         fold_context = _resolve_fold_context(
             crop_name=crop_name,
             held_out_class=held_out_class,
-            resolved_classes=resolved_classes,
-            class_to_idx=class_to_idx,
-            train_labels=train_labels,
-            calibration_labels=calibration_labels,
-            eval_labels=eval_labels,
-            dataset_fingerprints=dataset_fingerprints,
+            resolved_classes=run_stage.resolved_classes,
+            class_to_idx=dataset_stage.class_to_idx,
+            train_labels=dataset_stage.train_labels,
+            calibration_labels=dataset_stage.calibration_labels,
+            eval_labels=dataset_stage.eval_labels,
+            dataset_fingerprints=dataset_stage.dataset_fingerprints,
             config=config,
             device=device,
             num_epochs=num_epochs,
@@ -1292,8 +1346,8 @@ def run_leave_one_class_out_benchmark(
             fold_index=fold_index,
             fold_total=fold_total,
             fold_context=fold_context,
-            base_context=base_context,
-            artifact_root=artifact_root,
+            base_context=run_stage.base_context,
+            artifact_root=run_stage.artifact_root,
             telemetry=telemetry,
             emit=emit,
             benchmark_started_at=benchmark_started_at,
@@ -1313,8 +1367,8 @@ def run_leave_one_class_out_benchmark(
                 fold_payload=fold_payload,
                 fold_index=fold_index,
                 fold_total=fold_total,
-                base_context=base_context,
-                artifact_root=artifact_root,
+                base_context=run_stage.base_context,
+                artifact_root=run_stage.artifact_root,
                 telemetry=telemetry,
                 emit=emit,
                 benchmark_started_at=benchmark_started_at,
@@ -1327,12 +1381,12 @@ def run_leave_one_class_out_benchmark(
 
         next_completed_fold_count = completed_fold_count + 1
         resumed_fold = _resume_completed_fold(
-            resumable_folds=resumable_folds,
+            resumable_folds=run_stage.resumable_folds,
             fold_context=fold_context,
             fold_index=fold_index,
             fold_total=fold_total,
-            base_context=base_context,
-            artifact_root=artifact_root,
+            base_context=run_stage.base_context,
+            artifact_root=run_stage.artifact_root,
             telemetry=telemetry,
             emit=emit,
             benchmark_started_at=benchmark_started_at,
@@ -1356,13 +1410,13 @@ def run_leave_one_class_out_benchmark(
             eval_dataset=eval_dataset,
             config=config,
             device=device,
-            artifact_root=artifact_root,
+            artifact_root=run_stage.artifact_root,
             adapter_factory=adapter_factory,
             run_id=run_id,
             num_epochs=num_epochs,
             telemetry=telemetry,
-            target_values=target_values,
-            base_context=base_context,
+            target_values=run_stage.target_values,
+            base_context=run_stage.base_context,
             primary_score_method=primary_score_method,
         )
         if fold_payload.get("status") != "completed":
@@ -1385,8 +1439,8 @@ def run_leave_one_class_out_benchmark(
             fold_payload=fold_payload,
             fold_index=fold_index,
             fold_total=fold_total,
-            base_context=base_context,
-            artifact_root=artifact_root,
+            base_context=run_stage.base_context,
+            artifact_root=run_stage.artifact_root,
             telemetry=telemetry,
             emit=emit,
             benchmark_started_at=benchmark_started_at,
@@ -1399,16 +1453,16 @@ def run_leave_one_class_out_benchmark(
         folds=folds,
         primary_score_method=primary_score_method,
         requested_primary_score_method=requested_primary_score_method,
-        target_values=target_values,
-        base_context=base_context,
+        target_values=run_stage.target_values,
+        base_context=run_stage.base_context,
     )
     summary_payload = _persist_benchmark_summary(
-        artifact_root=artifact_root,
+        artifact_root=run_stage.artifact_root,
         summary_payload=summary_payload,
         telemetry=telemetry,
     )
     _persist_benchmark_progress(
-        artifact_root=artifact_root,
+        artifact_root=run_stage.artifact_root,
         telemetry=telemetry,
         payload={
             **base_context,

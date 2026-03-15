@@ -262,6 +262,46 @@ class ContinualOODDetector:
             "sure_confidence_reject": None,
         }
 
+    def _default_score_batch(self, *, count: int, device: torch.device) -> Dict[str, Any]:
+        base = self._default_score_result(self.primary_score_method)
+        float_fields = {
+            "mahalanobis_z",
+            "energy_z",
+            "ensemble_score",
+            "class_threshold",
+            "energy_score",
+            "energy_threshold",
+            "knn_distance",
+            "knn_threshold",
+            "primary_score",
+            "decision_threshold",
+        }
+        result: Dict[str, Any] = {}
+        for field, value in base.items():
+            if field in {"score_method", "candidate_scores", "candidate_thresholds"}:
+                continue
+            if field == "is_ood":
+                result[field] = torch.full((count,), bool(value), dtype=torch.bool, device=device)
+                continue
+            if field in _SURE_SCORE_FIELDS:
+                if field.endswith("_ood") or field.endswith("_reject"):
+                    result[field] = torch.zeros(count, dtype=torch.bool, device=device)
+                else:
+                    result[field] = torch.zeros(count, dtype=torch.float32, device=device)
+                continue
+            if field in float_fields:
+                result[field] = torch.full((count,), float(value), dtype=torch.float32, device=device)
+        result["score_method"] = self.primary_score_method
+        result["candidate_scores"] = {
+            name: torch.zeros(count, dtype=torch.float32, device=device)
+            for name in SUPPORTED_OOD_SCORE_METHODS
+        }
+        result["candidate_thresholds"] = {
+            name: torch.full((count,), float("inf"), dtype=torch.float32, device=device)
+            for name in SUPPORTED_OOD_SCORE_METHODS
+        }
+        return result
+
     @staticmethod
     def _set_sure_thresholds(
         class_stats: Dict[int, ClassCalibration],
@@ -443,6 +483,75 @@ class ContinualOODDetector:
             k=int(stats.knn_k),
             exclude_self=exclude_self,
         )
+
+    def _score_class_batch(self, class_id: int, features: torch.Tensor, logits: torch.Tensor) -> Dict[str, Any]:
+        batch_size = int(features.shape[0])
+        if batch_size <= 0:
+            return self._default_score_batch(count=0, device=features.device)
+        if class_id not in self.class_stats:
+            return self._default_score_batch(count=batch_size, device=features.device)
+
+        score_features = self._maybe_normalize(features)
+        stats = self.class_stats[class_id]
+        distance = self._class_distances(score_features, stats).to(dtype=torch.float32)
+        energy = self._energy(logits).to(dtype=torch.float32)
+        ensemble = self._class_ensemble_scores(score_features, energy, stats).to(dtype=torch.float32)
+        knn_distance = self._class_knn_distances(score_features, stats).to(dtype=torch.float32)
+
+        mahalanobis_z = (distance - float(stats.mahalanobis_mu)) / max(float(stats.mahalanobis_sigma), _FLOAT_EPS)
+        energy_z = (energy - float(stats.energy_mu)) / max(float(stats.energy_sigma), _FLOAT_EPS)
+        candidate_scores = {
+            "ensemble": ensemble,
+            "energy": energy,
+            "knn": knn_distance,
+        }
+        candidate_thresholds = {
+            "ensemble": torch.full((batch_size,), float(stats.threshold), dtype=torch.float32, device=features.device),
+            "energy": torch.full(
+                (batch_size,),
+                float(stats.energy_threshold),
+                dtype=torch.float32,
+                device=features.device,
+            ),
+            "knn": torch.full((batch_size,), float(stats.knn_threshold), dtype=torch.float32, device=features.device),
+        }
+        primary_score = candidate_scores[self.primary_score_method]
+        decision_threshold = candidate_thresholds[self.primary_score_method]
+        is_ood = primary_score > decision_threshold
+
+        result: Dict[str, Any] = {
+            "mahalanobis_z": mahalanobis_z,
+            "energy_z": energy_z,
+            "ensemble_score": candidate_scores["ensemble"],
+            "class_threshold": candidate_thresholds["ensemble"],
+            "energy_score": candidate_scores["energy"],
+            "energy_threshold": candidate_thresholds["energy"],
+            "knn_distance": candidate_scores["knn"],
+            "knn_threshold": candidate_thresholds["knn"],
+            "primary_score": primary_score,
+            "decision_threshold": decision_threshold,
+            "is_ood": is_ood,
+            "score_method": self.primary_score_method,
+            "candidate_scores": candidate_scores,
+            "candidate_thresholds": candidate_thresholds,
+        }
+
+        if self.sure_enabled:
+            confidence_score = compute_confidence_score(logits).to(dtype=torch.float32)
+            sure_semantic_ood = candidate_scores["ensemble"] > float(stats.sure_semantic_threshold)
+            sure_confidence_reject = confidence_score > float(stats.sure_confidence_threshold)
+            result["sure_semantic_score"] = candidate_scores["ensemble"]
+            result["sure_confidence_score"] = confidence_score
+            result["sure_semantic_ood"] = sure_semantic_ood
+            result["sure_confidence_reject"] = sure_confidence_reject
+            if self.primary_score_method == "ensemble":
+                result["is_ood"] = sure_semantic_ood | sure_confidence_reject
+        else:
+            result["sure_semantic_score"] = torch.zeros(batch_size, dtype=torch.float32, device=features.device)
+            result["sure_confidence_score"] = torch.zeros(batch_size, dtype=torch.float32, device=features.device)
+            result["sure_semantic_ood"] = torch.zeros(batch_size, dtype=torch.bool, device=features.device)
+            result["sure_confidence_reject"] = torch.zeros(batch_size, dtype=torch.bool, device=features.device)
+        return result
 
     def calibration_issue(self) -> Optional[str]:
         if not self.class_stats:
@@ -633,70 +742,34 @@ class ContinualOODDetector:
         )
 
     def _score_class(self, class_id: int, feature: torch.Tensor, logit: torch.Tensor) -> Dict[str, Any]:
-        if class_id not in self.class_stats:
-            return self._default_score_result(self.primary_score_method)
-
         score_feature = feature.unsqueeze(0) if feature.ndim == 1 else feature
-        score_feature = self._maybe_normalize(score_feature)
-
-        stats = self.class_stats[class_id]
-        distance = self._class_distances(score_feature, stats)
-        energy = self._energy(logit.unsqueeze(0))
-        ensemble = self._class_ensemble_scores(score_feature, energy, stats)
-        knn_distance = self._class_knn_distances(score_feature, stats)
-
-        mahalanobis_z = float(((distance[0] - stats.mahalanobis_mu) / max(stats.mahalanobis_sigma, _FLOAT_EPS)).item())
-        energy_z = float(((energy[0] - stats.energy_mu) / max(stats.energy_sigma, _FLOAT_EPS)).item())
-        candidate_scores = {
-            "ensemble": float(ensemble[0].item()),
-            "energy": float(energy[0].item()),
-            "knn": float(knn_distance[0].item()),
-        }
-        candidate_thresholds = {
-            "ensemble": float(stats.threshold),
-            "energy": float(stats.energy_threshold),
-            "knn": float(stats.knn_threshold),
-        }
-        primary_score = float(candidate_scores[self.primary_score_method])
-        decision_threshold = float(candidate_thresholds[self.primary_score_method])
+        score_logit = logit.unsqueeze(0) if logit.ndim == 1 else logit
+        batch_result = self._score_class_batch(class_id, score_feature, score_logit)
 
         result: Dict[str, Any] = {
-            "mahalanobis_z": mahalanobis_z,
-            "energy_z": energy_z,
-            "ensemble_score": candidate_scores["ensemble"],
-            "class_threshold": candidate_thresholds["ensemble"],
-            "energy_score": candidate_scores["energy"],
-            "energy_threshold": candidate_thresholds["energy"],
-            "knn_distance": candidate_scores["knn"],
-            "knn_threshold": candidate_thresholds["knn"],
-            "primary_score": primary_score,
-            "decision_threshold": decision_threshold,
-            "is_ood": bool(primary_score > decision_threshold),
-            "score_method": self.primary_score_method,
-            "candidate_scores": candidate_scores,
-            "candidate_thresholds": candidate_thresholds,
+            "score_method": batch_result["score_method"],
+            "candidate_scores": {
+                name: float(values[0].item())
+                for name, values in batch_result["candidate_scores"].items()
+            },
+            "candidate_thresholds": {
+                name: float(values[0].item())
+                for name, values in batch_result["candidate_thresholds"].items()
+            },
         }
-
+        for field in _BASE_SCORE_FIELDS:
+            values = batch_result[field]
+            result[field] = bool(values[0].item()) if field == "is_ood" else float(values[0].item())
         if self.sure_enabled:
-            confidence_score = float((1.0 - torch.softmax(logit, dim=-1).max()).item())
-            sure_decision = apply_sure_decision(
-                candidate_scores["ensemble"],
-                confidence_score,
-                stats.sure_semantic_threshold,
-                stats.sure_confidence_threshold,
-            )
-            result["sure_semantic_score"] = candidate_scores["ensemble"]
-            result["sure_confidence_score"] = confidence_score
-            result["sure_semantic_ood"] = sure_decision["semantic_ood"]
-            result["sure_confidence_reject"] = sure_decision["confidence_reject"]
-            if self.primary_score_method == "ensemble":
-                result["is_ood"] = sure_decision["combined_reject"]
+            result["sure_semantic_score"] = float(batch_result["sure_semantic_score"][0].item())
+            result["sure_confidence_score"] = float(batch_result["sure_confidence_score"][0].item())
+            result["sure_semantic_ood"] = bool(batch_result["sure_semantic_ood"][0].item())
+            result["sure_confidence_reject"] = bool(batch_result["sure_confidence_reject"][0].item())
         else:
             result["sure_semantic_score"] = None
             result["sure_confidence_score"] = None
             result["sure_semantic_ood"] = None
             result["sure_confidence_reject"] = None
-
         return result
 
     def build_conformal_set(
@@ -737,33 +810,70 @@ class ContinualOODDetector:
         if predicted_labels is None:
             predicted_labels = torch.argmax(logits, dim=1)
         predicted_labels = predicted_labels.reshape(-1)
+        batch_size = int(features.size(0))
+        float_outputs = {
+            "mahalanobis_z": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "energy_z": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "ensemble_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "class_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "energy_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "energy_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "knn_distance": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "knn_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "primary_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            "decision_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+        }
+        bool_outputs = {
+            "is_ood": torch.empty(batch_size, dtype=torch.bool, device=features.device),
+        }
+        candidate_scores = {
+            name: torch.empty(batch_size, dtype=torch.float32, device=features.device)
+            for name in SUPPORTED_OOD_SCORE_METHODS
+        }
+        candidate_thresholds = {
+            name: torch.empty(batch_size, dtype=torch.float32, device=features.device)
+            for name in SUPPORTED_OOD_SCORE_METHODS
+        }
+        if self.sure_enabled:
+            sure_float_outputs = {
+                "sure_semantic_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+                "sure_confidence_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
+            }
+            sure_bool_outputs = {
+                "sure_semantic_ood": torch.empty(batch_size, dtype=torch.bool, device=features.device),
+                "sure_confidence_reject": torch.empty(batch_size, dtype=torch.bool, device=features.device),
+            }
+        else:
+            sure_float_outputs = {}
+            sure_bool_outputs = {}
 
-        result: Dict[str, list] = {field: [] for field in (*_BASE_SCORE_FIELDS, *_SURE_SCORE_FIELDS)}
-        candidate_scores: Dict[str, list] = {name: [] for name in SUPPORTED_OOD_SCORE_METHODS}
-        candidate_thresholds: Dict[str, list] = {name: [] for name in SUPPORTED_OOD_SCORE_METHODS}
-
-        for feat, logit, cls in zip(features, logits, predicted_labels):
-            item = self._score_class(int(cls.item()), feat, logit)
-            for field in (*_BASE_SCORE_FIELDS, *_SURE_SCORE_FIELDS):
-                result[field].append(item[field])
-            for method_name in SUPPORTED_OOD_SCORE_METHODS:
-                candidate_scores[method_name].append(item["candidate_scores"][method_name])
-                candidate_thresholds[method_name].append(item["candidate_thresholds"][method_name])
+        for class_id in torch.unique(predicted_labels):
+            mask = predicted_labels == class_id
+            indices = torch.nonzero(mask, as_tuple=False).reshape(-1)
+            if int(indices.numel()) <= 0:
+                continue
+            batch_result = self._score_class_batch(
+                int(class_id.item()),
+                features.index_select(0, indices),
+                logits.index_select(0, indices),
+            )
+            for field, storage in float_outputs.items():
+                storage.index_copy_(0, indices, batch_result[field])
+            for field, storage in bool_outputs.items():
+                storage.index_copy_(0, indices, batch_result[field])
+            for method_name, storage in candidate_scores.items():
+                storage.index_copy_(0, indices, batch_result["candidate_scores"][method_name])
+            for method_name, storage in candidate_thresholds.items():
+                storage.index_copy_(0, indices, batch_result["candidate_thresholds"][method_name])
+            if self.sure_enabled:
+                for field, storage in sure_float_outputs.items():
+                    storage.index_copy_(0, indices, batch_result[field])
+                for field, storage in sure_bool_outputs.items():
+                    storage.index_copy_(0, indices, batch_result[field])
 
         output: Dict[str, Any] = {
-            "mahalanobis_z": torch.tensor(result["mahalanobis_z"], dtype=torch.float32, device=features.device),
-            "energy_z": torch.tensor(result["energy_z"], dtype=torch.float32, device=features.device),
-            "ensemble_score": torch.tensor(result["ensemble_score"], dtype=torch.float32, device=features.device),
-            "class_threshold": torch.tensor(result["class_threshold"], dtype=torch.float32, device=features.device),
-            "energy_score": torch.tensor(result["energy_score"], dtype=torch.float32, device=features.device),
-            "energy_threshold": torch.tensor(result["energy_threshold"], dtype=torch.float32, device=features.device),
-            "knn_distance": torch.tensor(result["knn_distance"], dtype=torch.float32, device=features.device),
-            "knn_threshold": torch.tensor(result["knn_threshold"], dtype=torch.float32, device=features.device),
-            "primary_score": torch.tensor(result["primary_score"], dtype=torch.float32, device=features.device),
-            "decision_threshold": torch.tensor(
-                result["decision_threshold"], dtype=torch.float32, device=features.device
-            ),
-            "is_ood": torch.tensor(result["is_ood"], dtype=torch.bool, device=features.device),
+            **float_outputs,
+            **bool_outputs,
             "calibration_version": torch.full(
                 (features.size(0),),
                 self.calibration_version,
@@ -771,36 +881,12 @@ class ContinualOODDetector:
                 device=features.device,
             ),
             "primary_score_method": self.primary_score_method,
-            "candidate_scores": {
-                name: torch.tensor(values, dtype=torch.float32, device=features.device)
-                for name, values in candidate_scores.items()
-            },
-            "candidate_thresholds": {
-                name: torch.tensor(values, dtype=torch.float32, device=features.device)
-                for name, values in candidate_thresholds.items()
-            },
+            "candidate_scores": candidate_scores,
+            "candidate_thresholds": candidate_thresholds,
         }
         if self.sure_enabled:
-            output["sure_semantic_score"] = torch.tensor(
-                [value if value is not None else 0.0 for value in result["sure_semantic_score"]],
-                dtype=torch.float32,
-                device=features.device,
-            )
-            output["sure_confidence_score"] = torch.tensor(
-                [value if value is not None else 0.0 for value in result["sure_confidence_score"]],
-                dtype=torch.float32,
-                device=features.device,
-            )
-            output["sure_semantic_ood"] = torch.tensor(
-                [bool(value) if value is not None else False for value in result["sure_semantic_ood"]],
-                dtype=torch.bool,
-                device=features.device,
-            )
-            output["sure_confidence_reject"] = torch.tensor(
-                [bool(value) if value is not None else False for value in result["sure_confidence_reject"]],
-                dtype=torch.bool,
-                device=features.device,
-            )
+            output.update(sure_float_outputs)
+            output.update(sure_bool_outputs)
         if self.radial_beta is not None:
             output["radial_beta"] = self.radial_beta
         return output
