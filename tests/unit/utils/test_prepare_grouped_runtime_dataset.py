@@ -135,8 +135,9 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
 def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"
-    for index, offset in enumerate((2, 4, 20)):
-        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+    _write_pattern(source_root / "Healthy" / "source_a" / "healthy_0.jpg", offset=2)
+    _write_pattern(source_root / "Healthy" / "source_b" / "healthy_1.jpg", offset=4)
+    _write_pattern(source_root / "Healthy" / "source_c" / "healthy_2.jpg", offset=20)
 
     monkeypatch.setattr(
         "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
@@ -176,3 +177,55 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
     assert "adjacency_distance" in rows[0]
     assert "review_rank" in rows[0]
     assert int(rows[0]["adjacency_distance"]) <= int(rows[-1]["adjacency_distance"])
+    assert rows[0]["triage_resolution"] == "manual_review"
+
+
+def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    _write_pattern(source_root / "Healthy" / "healthy_aug_0.jpg", offset=2)
+    _write_pattern(source_root / "Healthy" / "healthy_aug_1.jpg", offset=3)
+    _write_pattern(source_root / "Healthy" / "healthy_aug_2.jpg", offset=4)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {
+            tuple(sorted((paths[0], paths[1]))): 0.97,
+            tuple(sorted((paths[1], paths[2]))): 0.969,
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._phash_distance",
+        lambda a, b: 6,
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["summary"]["same_class_review_pairs_total"] == 2
+    assert summary["summary"]["same_class_auto_resolved_clusters"] == 1
+    assert summary["summary"]["same_class_review_pairs"] == 0
+    auto_clusters_csv = artifact_root / "same_class_auto_resolved_clusters.csv"
+    with auto_clusters_csv.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[0]["resolution"] == "auto_resolve"

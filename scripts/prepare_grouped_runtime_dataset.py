@@ -98,6 +98,28 @@ class ReviewPair:
     review_rank: int
     decision: str
     reason: str
+    cluster_id: str = ""
+    triage_resolution: str = ""
+    triage_reason: str = ""
+
+
+@dataclass
+class ReviewCluster:
+    cluster_id: str
+    normalized_class_name: str
+    image_count: int
+    pair_count: int
+    source_hint_count: int
+    source_hints: str
+    synthetic_hint_count: int
+    min_phash_distance: int
+    max_phash_distance: int
+    max_dino_cosine: float
+    max_bioclip_cosine: float
+    min_adjacency_distance: Optional[int]
+    resolution: str
+    reason: str
+    relative_paths: str
 
 
 class UnionFind:
@@ -463,6 +485,122 @@ def _review_rank(a: ImageRecord, b: ImageRecord) -> int:
     return int(distance)
 
 
+def _classify_review_cluster(
+    *,
+    records: Sequence[ImageRecord],
+    pairs: Sequence[ReviewPair],
+) -> tuple[str, str]:
+    cluster_size = len(records)
+    source_hints = {record.source_hint for record in records if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN}
+    synthetic_count = sum(1 for record in records if record.synthetic_hint)
+    min_adjacency = min(
+        (pair.adjacency_distance for pair in pairs if pair.adjacency_distance is not None),
+        default=None,
+    )
+    max_phash = max((int(pair.phash_distance) for pair in pairs), default=PHASH_REVIEW_MAX_DISTANCE + 1)
+    max_dino = max((float(pair.dino_cosine) for pair in pairs), default=-1.0)
+    max_bioclip = max((float(pair.bioclip_cosine) for pair in pairs), default=-1.0)
+
+    if cluster_size > 6:
+        return "manual_review", "cluster size exceeds conservative auto-resolve threshold"
+    if len(source_hints) > 1:
+        return "manual_review", "mixed source hints in same-class review cluster"
+
+    strong_similarity = max_dino >= DINO_AUTO_MIN and (max_bioclip < 0 or max_bioclip >= BIOCLIP_REVIEW_MIN)
+    adjacency_supported = min_adjacency is not None and int(min_adjacency) <= 2 and cluster_size <= 3
+    synthetic_supported = synthetic_count > 0 and cluster_size <= 4
+
+    if synthetic_supported:
+        return "auto_resolve", "small same-class cluster has synthetic lineage hints"
+    if adjacency_supported:
+        return "auto_resolve", "very small same-class cluster is adjacency-backed"
+    if max_phash > PHASH_REVIEW_MAX_DISTANCE:
+        return "manual_review", "perceptual hash disagreement is too large"
+
+    if strong_similarity and cluster_size <= 4:
+        return "auto_resolve", "same-class low-risk cluster with strong lineage/similarity support"
+    return "manual_review", "same-class cluster lacks strong heuristic support for auto-resolution"
+
+
+def _triage_review_clusters(
+    *,
+    review_pairs: Sequence[ReviewPair],
+    record_lookup: Dict[str, ImageRecord],
+    uf: UnionFind,
+) -> tuple[List[ReviewPair], List[ReviewCluster], List[ReviewCluster]]:
+    if not review_pairs:
+        return [], [], []
+
+    cluster_uf = UnionFind()
+    for pair in review_pairs:
+        key_a = f"{pair.class_a}::{pair.path_a}"
+        key_b = f"{pair.class_b}::{pair.path_b}"
+        cluster_uf.union(key_a, key_b)
+
+    cluster_pairs: Dict[str, List[ReviewPair]] = defaultdict(list)
+    cluster_paths: Dict[str, set[str]] = defaultdict(set)
+    for pair in review_pairs:
+        root = cluster_uf.find(f"{pair.class_a}::{pair.path_a}")
+        cluster_pairs[root].append(pair)
+        cluster_paths[root].add(pair.path_a)
+        cluster_paths[root].add(pair.path_b)
+
+    cluster_rows: List[ReviewCluster] = []
+    unresolved_pairs: List[ReviewPair] = []
+    auto_resolved_clusters: List[ReviewCluster] = []
+
+    for cluster_index, root in enumerate(sorted(cluster_pairs.keys()), start=1):
+        pairs = cluster_pairs[root]
+        class_name = pairs[0].class_a
+        records = [record_lookup[path] for path in sorted(cluster_paths[root])]
+        resolution, reason = _classify_review_cluster(records=records, pairs=pairs)
+        cluster_id = f"{class_name}__review_cluster_{cluster_index:04d}"
+        source_hints = sorted(
+            {record.source_hint for record in records if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN}
+        )
+        min_adjacency = min(
+            (pair.adjacency_distance for pair in pairs if pair.adjacency_distance is not None),
+            default=None,
+        )
+        cluster_row = ReviewCluster(
+            cluster_id=cluster_id,
+            normalized_class_name=class_name,
+            image_count=len(records),
+            pair_count=len(pairs),
+            source_hint_count=len(source_hints),
+            source_hints="|".join(source_hints),
+            synthetic_hint_count=sum(1 for record in records if record.synthetic_hint),
+            min_phash_distance=min(int(pair.phash_distance) for pair in pairs),
+            max_phash_distance=max(int(pair.phash_distance) for pair in pairs),
+            max_dino_cosine=max(float(pair.dino_cosine) for pair in pairs),
+            max_bioclip_cosine=max(float(pair.bioclip_cosine) for pair in pairs),
+            min_adjacency_distance=min_adjacency,
+            resolution=resolution,
+            reason=reason,
+            relative_paths="|".join(record.relative_path for record in records),
+        )
+        cluster_rows.append(cluster_row)
+
+        if resolution == "auto_resolve":
+            base = records[0].relative_path
+            for record in records[1:]:
+                uf.union(base, record.relative_path)
+            auto_resolved_clusters.append(cluster_row)
+            for pair in pairs:
+                pair.cluster_id = cluster_id
+                pair.triage_resolution = resolution
+                pair.triage_reason = reason
+        else:
+            for pair in pairs:
+                pair.cluster_id = cluster_id
+                pair.triage_resolution = resolution
+                pair.triage_reason = reason
+                unresolved_pairs.append(pair)
+
+    high_risk_clusters = [row for row in cluster_rows if row.resolution != "auto_resolve"]
+    return unresolved_pairs, cluster_rows, auto_resolved_clusters
+
+
 def _build_hash_groups(records: Sequence[ImageRecord], *, key_name: str) -> Dict[str, List[ImageRecord]]:
     groups: Dict[str, List[ImageRecord]] = defaultdict(list)
     for record in records:
@@ -776,6 +914,15 @@ def build_grouped_dataset_plan(
         if str(device).startswith("cuda") and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+    record_lookup = {record.relative_path: record for record in valid_records}
+    review_pairs_total = len(review_pairs)
+    review_pairs, review_clusters, auto_resolved_review_clusters = _triage_review_clusters(
+        review_pairs=review_pairs,
+        record_lookup=record_lookup,
+        uf=uf,
+    )
+    high_risk_review_clusters = [row for row in review_clusters if row.resolution != "auto_resolve"]
+
     review_pairs = sorted(
         review_pairs,
         key=lambda item: (
@@ -851,6 +998,10 @@ def build_grouped_dataset_plan(
             "readable_images": len(valid_records),
             "excluded_images": len([record for record in records if record.excluded_reason]),
             "same_class_review_pairs": len(review_pairs),
+            "same_class_review_pairs_total": review_pairs_total,
+            "same_class_review_clusters_total": len(review_clusters),
+            "same_class_auto_resolved_clusters": len(auto_resolved_review_clusters),
+            "same_class_high_risk_clusters": len(high_risk_review_clusters),
             "cross_class_conflicts": len(blocking_conflicts),
             "blocking_issues": len(blocking_issues),
             "adjacency_used_for_review_ranking_only": True,
@@ -890,6 +1041,15 @@ def build_grouped_dataset_plan(
     _write_csv(artifact_root / "dataset_manifest.csv", [asdict(record) for record in records])
     _write_csv(artifact_root / "family_manifest.csv", manifest_rows)
     _write_csv(artifact_root / "same_class_review_candidates.csv", [asdict(pair) for pair in review_pairs])
+    _write_csv(artifact_root / "same_class_review_clusters.csv", [asdict(cluster) for cluster in review_clusters])
+    _write_csv(
+        artifact_root / "same_class_auto_resolved_clusters.csv",
+        [asdict(cluster) for cluster in auto_resolved_review_clusters],
+    )
+    _write_csv(
+        artifact_root / "same_class_high_risk_clusters.csv",
+        [asdict(cluster) for cluster in high_risk_review_clusters],
+    )
     _write_csv(artifact_root / "cross_class_conflicts.csv", [asdict(pair) for pair in blocking_conflicts])
     _write_csv(
         artifact_root / "exact_duplicates.csv",
