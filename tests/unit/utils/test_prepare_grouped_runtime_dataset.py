@@ -1,3 +1,4 @@
+import csv
 from pathlib import Path
 
 import numpy as np
@@ -105,3 +106,41 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
     assert (crop_root / "val").exists()
     assert (crop_root / "test").exists()
     assert (crop_root / "split_manifest.json").exists()
+
+
+def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    for index, offset in enumerate((2, 4, 20)):
+        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3",
+        _fake_embeddings,
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip",
+        _fake_embeddings,
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {
+            tuple(sorted((paths[0], paths[1]))): 0.97,
+            tuple(sorted((paths[0], paths[2]))): 0.966,
+        },
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["summary"]["adjacency_used_for_review_ranking_only"] is True
+    review_csv = artifact_root / "same_class_review_candidates.csv"
+    with review_csv.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert "adjacency_distance" in rows[0]
+    assert "review_rank" in rows[0]
+    assert int(rows[0]["adjacency_distance"]) <= int(rows[-1]["adjacency_distance"])

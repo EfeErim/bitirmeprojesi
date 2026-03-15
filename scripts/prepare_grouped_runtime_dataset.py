@@ -6,14 +6,14 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
-import io
+import itertools
 import json
 import math
 import shutil
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 from PIL import Image, ImageOps
@@ -78,6 +78,7 @@ class ImageRecord:
     brightness_mean: float
     exact_hash: str
     phash_hex: str
+    class_order_index: int
     excluded_reason: str = ""
 
 
@@ -92,6 +93,8 @@ class ReviewPair:
     phash_distance: int
     dino_cosine: float
     bioclip_cosine: float
+    adjacency_distance: Optional[int]
+    review_rank: int
     decision: str
     reason: str
 
@@ -224,7 +227,9 @@ def scan_class_root_dataset(
         normalization_report["raw_to_normalized"][class_dir.name] = normalized_class_name
         if expected_classes and normalized_class_name not in expected_classes:
             normalization_report["unmatched_raw_classes"].append(class_dir.name)
-        for image_path in sorted(class_dir.rglob("*"), key=lambda path: str(path).lower()):
+        class_image_paths = sorted(class_dir.rglob("*"), key=lambda path: str(path).lower())
+        class_order_index = 0
+        for image_path in class_image_paths:
             if not image_path.is_file() or image_path.suffix.lower() not in IMAGE_EXTENSIONS:
                 continue
             relative_path = image_path.relative_to(class_root).as_posix()
@@ -268,9 +273,11 @@ def scan_class_root_dataset(
                     brightness_mean=float(brightness_mean),
                     exact_hash=exact_hash,
                     phash_hex=phash_hex,
+                    class_order_index=int(class_order_index),
                     excluded_reason=excluded_reason,
                 )
             )
+            class_order_index += 1
     normalization_report["unmatched_raw_classes"] = sorted(set(normalization_report["unmatched_raw_classes"]))
     return records, normalization_report
 
@@ -343,9 +350,7 @@ def _compute_neighbor_pairs(
     embeddings: np.ndarray,
     *,
     paths: Sequence[str],
-    normalized_class_name: str,
     neighbors: int,
-    model_name: str,
 ) -> Dict[tuple[str, str], float]:
     if embeddings.size == 0 or len(paths) < 2:
         return {}
@@ -366,6 +371,92 @@ def _compute_neighbor_pairs(
             cosine = 1.0 - float(distance)
             pairs[pair] = max(cosine, pairs.get(pair, float("-inf")))
     return pairs
+
+
+def _progress(progress_fn: Optional[Callable[[str], None]], message: str) -> None:
+    if callable(progress_fn):
+        progress_fn(str(message))
+
+
+def _adjacency_distance(a: ImageRecord, b: ImageRecord) -> Optional[int]:
+    if a.normalized_class_name != b.normalized_class_name:
+        return None
+    return abs(int(a.class_order_index) - int(b.class_order_index))
+
+
+def _review_rank(a: ImageRecord, b: ImageRecord) -> int:
+    distance = _adjacency_distance(a, b)
+    if distance is None:
+        return 10**9
+    return int(distance)
+
+
+def _build_hash_groups(records: Sequence[ImageRecord], *, key_name: str) -> Dict[str, List[ImageRecord]]:
+    groups: Dict[str, List[ImageRecord]] = defaultdict(list)
+    for record in records:
+        key = str(getattr(record, key_name, "") or "").strip()
+        if key:
+            groups[key].append(record)
+    return groups
+
+
+def _register_cross_class_conflicts(
+    *,
+    groups: Dict[str, List[ImageRecord]],
+    conflict_reason: str,
+    blocking_conflicts: List[ReviewPair],
+    seen_pairs: set[tuple[str, str]],
+) -> None:
+    for _, values in groups.items():
+        grouped_by_class: Dict[str, List[ImageRecord]] = defaultdict(list)
+        for record in values:
+            grouped_by_class[record.normalized_class_name].append(record)
+        if len(grouped_by_class) < 2:
+            continue
+        for records_a, records_b in itertools.combinations(grouped_by_class.values(), 2):
+            for record_a in records_a:
+                for record_b in records_b:
+                    pair = tuple(sorted((record_a.relative_path, record_b.relative_path)))
+                    if pair in seen_pairs:
+                        continue
+                    seen_pairs.add(pair)
+                    blocking_conflicts.append(
+                        ReviewPair(
+                            pair_type="cross_class_conflict",
+                            class_a=record_a.normalized_class_name,
+                            class_b=record_b.normalized_class_name,
+                            path_a=record_a.relative_path,
+                            path_b=record_b.relative_path,
+                            exact_match=record_a.exact_hash == record_b.exact_hash,
+                            phash_distance=_phash_distance(record_a.phash_hex, record_b.phash_hex),
+                            dino_cosine=-1.0,
+                            bioclip_cosine=-1.0,
+                            adjacency_distance=None,
+                            review_rank=10**9,
+                            decision="block",
+                            reason=conflict_reason,
+                        )
+                    )
+
+
+def _compute_pair_similarity(
+    embeddings: np.ndarray,
+    *,
+    path_keys: Sequence[str],
+    pairs: Iterable[tuple[str, str]],
+) -> Dict[tuple[str, str], float]:
+    if embeddings.size == 0:
+        return {}
+    index_by_path = {path: idx for idx, path in enumerate(path_keys)}
+    similarities: Dict[tuple[str, str], float] = {}
+    for path_a, path_b in pairs:
+        idx_a = index_by_path.get(path_a)
+        idx_b = index_by_path.get(path_b)
+        if idx_a is None or idx_b is None:
+            continue
+        score = float(np.dot(embeddings[idx_a], embeddings[idx_b]))
+        similarities[tuple(sorted((path_a, path_b)))] = score
+    return similarities
 
 
 def _family_targets(records: Sequence[ImageRecord]) -> Dict[str, tuple[int, int, int]]:
@@ -421,7 +512,9 @@ def build_grouped_dataset_plan(
     device: str = "cpu",
     batch_size: int = 16,
     neighbors: int = DEFAULT_NEIGHBORS,
+    progress_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
+    _progress(progress_fn, "Scanning class-root dataset and computing hashes.")
     records, normalization_report = scan_class_root_dataset(
         class_root=class_root,
         crop_name=crop_name,
@@ -435,40 +528,31 @@ def build_grouped_dataset_plan(
 
     dino_scores: Dict[tuple[str, str], float] = {}
     bioclip_scores: Dict[tuple[str, str], float] = {}
-    for normalized_class_name, class_records in class_to_records.items():
-        paths = [Path(record.absolute_path) for record in class_records]
-        path_keys = [record.relative_path for record in class_records]
-        if len(paths) < 2:
-            continue
-        dino_embeddings = _encode_dinov3(paths, model_id=dino_model_id, batch_size=batch_size, device=device)
-        bioclip_embeddings = _encode_bioclip(paths, model_id=bioclip_model_id, batch_size=batch_size, device=device)
-        dino_scores.update(
-            _compute_neighbor_pairs(
-                dino_embeddings,
-                paths=path_keys,
-                normalized_class_name=normalized_class_name,
-                neighbors=neighbors,
-                model_name="dinov3",
-            )
-        )
-        bioclip_scores.update(
-            _compute_neighbor_pairs(
-                bioclip_embeddings,
-                paths=path_keys,
-                normalized_class_name=normalized_class_name,
-                neighbors=neighbors,
-                model_name="bioclip",
-            )
-        )
-
-    uf = UnionFind()
-    by_hash: Dict[tuple[str, str], List[ImageRecord]] = defaultdict(list)
     review_pairs: List[ReviewPair] = []
     blocking_conflicts: List[ReviewPair] = []
+    seen_blocking_pairs: set[tuple[str, str]] = set()
+    global_exact_hash_groups = _build_hash_groups(valid_records, key_name="exact_hash")
+    global_phash_groups = _build_hash_groups(valid_records, key_name="phash_hex")
+    _register_cross_class_conflicts(
+        groups=global_exact_hash_groups,
+        conflict_reason="cross-class exact duplicate",
+        blocking_conflicts=blocking_conflicts,
+        seen_pairs=seen_blocking_pairs,
+    )
+    _register_cross_class_conflicts(
+        groups=global_phash_groups,
+        conflict_reason="cross-class identical perceptual hash",
+        blocking_conflicts=blocking_conflicts,
+        seen_pairs=seen_blocking_pairs,
+    )
+
+    uf = UnionFind()
     for record in valid_records:
         uf.find(record.relative_path)
-        by_hash[(record.normalized_class_name, record.exact_hash)].append(record)
 
+    by_hash: Dict[tuple[str, str], List[ImageRecord]] = defaultdict(list)
+    for record in valid_records:
+        by_hash[(record.normalized_class_name, record.exact_hash)].append(record)
     for (_, _), group in by_hash.items():
         if len(group) < 2:
             continue
@@ -476,44 +560,57 @@ def build_grouped_dataset_plan(
         for other in group[1:]:
             uf.union(base, other.relative_path)
 
-    record_by_path = {record.relative_path: record for record in valid_records}
-    relative_paths = sorted(record_by_path)
-    for index, path_a in enumerate(relative_paths):
-        record_a = record_by_path[path_a]
-        for path_b in relative_paths[index + 1 :]:
+    for normalized_class_name, class_records in class_to_records.items():
+        _progress(progress_fn, f"Processing class '{normalized_class_name}' ({len(class_records)} readable images).")
+        paths = [Path(record.absolute_path) for record in class_records]
+        path_keys = [record.relative_path for record in class_records]
+        if len(paths) < 2:
+            continue
+        record_by_path = {record.relative_path: record for record in class_records}
+        _progress(progress_fn, f"Encoding DINOv3 embeddings for class '{normalized_class_name}'.")
+        dino_embeddings = _encode_dinov3(paths, model_id=dino_model_id, batch_size=batch_size, device=device)
+        class_dino_pairs = _compute_neighbor_pairs(
+            dino_embeddings,
+            paths=path_keys,
+            neighbors=neighbors,
+        )
+        dino_scores.update(class_dino_pairs)
+
+        bioclip_candidate_pairs = []
+        for pair, dino_cosine in class_dino_pairs.items():
+            record_a = record_by_path[pair[0]]
+            record_b = record_by_path[pair[1]]
+            phash_distance = _phash_distance(record_a.phash_hex, record_b.phash_hex)
+            if phash_distance <= PHASH_REVIEW_MAX_DISTANCE or dino_cosine >= DINO_REVIEW_MIN:
+                bioclip_candidate_pairs.append(pair)
+
+        unique_bioclip_paths = sorted({path for pair in bioclip_candidate_pairs for path in pair})
+        if unique_bioclip_paths:
+            _progress(
+                progress_fn,
+                f"Encoding BioCLIP refinement embeddings for class '{normalized_class_name}' ({len(unique_bioclip_paths)} images).",
+            )
+            bioclip_embeddings = _encode_bioclip(
+                [Path(record_by_path[path].absolute_path) for path in unique_bioclip_paths],
+                model_id=bioclip_model_id,
+                batch_size=batch_size,
+                device=device,
+            )
+            bioclip_scores.update(
+                _compute_pair_similarity(
+                    bioclip_embeddings,
+                    path_keys=unique_bioclip_paths,
+                    pairs=bioclip_candidate_pairs,
+                )
+            )
+
+        for path_a, path_b in sorted(class_dino_pairs.keys()):
+            record_a = record_by_path[path_a]
             record_b = record_by_path[path_b]
             phash_distance = _phash_distance(record_a.phash_hex, record_b.phash_hex)
-            dino_cosine = dino_scores.get((path_a, path_b), dino_scores.get((path_b, path_a), float("-inf")))
-            bioclip_cosine = bioclip_scores.get(
-                (path_a, path_b), bioclip_scores.get((path_b, path_a), float("-inf"))
-            )
+            dino_cosine = class_dino_pairs.get((path_a, path_b), float("-inf"))
+            bioclip_cosine = bioclip_scores.get((path_a, path_b), float("-inf"))
             exact_match = bool(record_a.exact_hash and record_a.exact_hash == record_b.exact_hash)
-            same_class = record_a.normalized_class_name == record_b.normalized_class_name
-
-            if not same_class and (
-                exact_match
-                or phash_distance <= PHASH_AUTO_MAX_DISTANCE
-                or (dino_cosine >= DINO_CROSS_CLASS_BLOCK_MIN and bioclip_cosine >= BIOCLIP_CROSS_CLASS_BLOCK_MIN)
-            ):
-                blocking_conflicts.append(
-                    ReviewPair(
-                        pair_type="cross_class_conflict",
-                        class_a=record_a.normalized_class_name,
-                        class_b=record_b.normalized_class_name,
-                        path_a=path_a,
-                        path_b=path_b,
-                        exact_match=exact_match,
-                        phash_distance=phash_distance,
-                        dino_cosine=float(dino_cosine if math.isfinite(dino_cosine) else -1.0),
-                        bioclip_cosine=float(bioclip_cosine if math.isfinite(bioclip_cosine) else -1.0),
-                        decision="block",
-                        reason="cross-class duplicate or near-duplicate",
-                    )
-                )
-                continue
-
-            if not same_class:
-                continue
 
             should_auto_merge = (
                 exact_match
@@ -539,10 +636,24 @@ def build_grouped_dataset_plan(
                         phash_distance=phash_distance,
                         dino_cosine=float(dino_cosine if math.isfinite(dino_cosine) else -1.0),
                         bioclip_cosine=float(bioclip_cosine if math.isfinite(bioclip_cosine) else -1.0),
+                        adjacency_distance=_adjacency_distance(record_a, record_b),
+                        review_rank=_review_rank(record_a, record_b),
                         decision="review",
-                        reason="borderline same-class similarity",
+                        reason="borderline same-class similarity; adjacency only affects review ordering",
                     )
                 )
+
+    review_pairs = sorted(
+        review_pairs,
+        key=lambda item: (
+            item.class_a,
+            item.review_rank,
+            -max(float(item.dino_cosine), float(item.bioclip_cosine)),
+            item.phash_distance,
+            item.path_a,
+            item.path_b,
+        ),
+    )
 
     families: Dict[tuple[str, str], List[ImageRecord]] = defaultdict(list)
     for record in valid_records:
@@ -609,6 +720,7 @@ def build_grouped_dataset_plan(
             "same_class_review_pairs": len(review_pairs),
             "cross_class_conflicts": len(blocking_conflicts),
             "blocking_issues": len(blocking_issues),
+            "adjacency_used_for_review_ranking_only": True,
         },
         "normalization_report": normalization_report,
         "class_health": class_health,
