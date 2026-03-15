@@ -11,6 +11,7 @@ import json
 import math
 import shutil
 from collections import defaultdict
+from contextlib import nullcontext
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -297,11 +298,23 @@ def _load_dinov3_components(model_id: str, *, device: str = "cpu") -> tuple[Any,
     load_kwargs: Dict[str, Any] = {}
     amp_dtype = _resolve_amp_dtype(device)
     if amp_dtype is not None:
-        load_kwargs["torch_dtype"] = amp_dtype
+        load_kwargs["dtype"] = amp_dtype
     processor = AutoImageProcessor.from_pretrained(model_id)
-    model = AutoModel.from_pretrained(model_id, **load_kwargs)
+    try:
+        model = AutoModel.from_pretrained(model_id, **load_kwargs)
+    except TypeError:
+        model = AutoModel.from_pretrained(model_id)
     model.eval()
     return processor, model
+
+
+def _autocast_context(*, device: str, amp_dtype: Any) -> Any:
+    import torch
+
+    enabled = amp_dtype is not None and str(device).startswith("cuda") and torch.cuda.is_available()
+    if not enabled:
+        return nullcontext()
+    return torch.autocast(device_type="cuda", dtype=amp_dtype)
 
 
 def _load_bioclip_components(model_id: str, *, device: str = "cpu") -> tuple[Any, Any]:
@@ -345,7 +358,6 @@ def _encode_dinov3_with_components(
     import torch
 
     embeddings: List[np.ndarray] = []
-    autocast_enabled = amp_dtype is not None and str(device).startswith("cuda") and torch.cuda.is_available()
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         images = []
@@ -355,13 +367,13 @@ def _encode_dinov3_with_components(
         inputs = processor(images=images, return_tensors="pt")
         inputs = {key: value.to(device, non_blocking=True) for key, value in inputs.items()}
         with torch.inference_mode():
-            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=autocast_enabled):
+            with _autocast_context(device=device, amp_dtype=amp_dtype):
                 outputs = model(**inputs)
                 if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
                     batch = outputs.pooler_output
                 else:
                     batch = outputs.last_hidden_state[:, 0]
-        batch = torch.nn.functional.normalize(batch, dim=-1)
+        batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
 
@@ -390,7 +402,6 @@ def _encode_bioclip_with_components(
     import torch
 
     embeddings: List[np.ndarray] = []
-    autocast_enabled = amp_dtype is not None and str(device).startswith("cuda") and torch.cuda.is_available()
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         tensors = []
@@ -400,9 +411,9 @@ def _encode_bioclip_with_components(
             tensors.append(preprocess_val(image))
         image_tensor = torch.stack(tensors, dim=0).to(device, non_blocking=True)
         with torch.inference_mode():
-            with torch.autocast(device_type="cuda", dtype=amp_dtype, enabled=autocast_enabled):
+            with _autocast_context(device=device, amp_dtype=amp_dtype):
                 batch = model.encode_image(image_tensor)
-        batch = torch.nn.functional.normalize(batch, dim=-1)
+        batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
 
