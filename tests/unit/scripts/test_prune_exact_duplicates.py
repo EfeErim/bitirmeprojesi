@@ -1,4 +1,4 @@
-﻿import csv
+import csv
 import zipfile
 from pathlib import Path
 
@@ -24,6 +24,8 @@ def test_build_cleanup_plan_selects_n_minus_one_and_variants(tmp_path: Path):
     _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
     _write_file(dataset_root / "Healthy" / "dup_b_mirror.jpg", b"bm")
     _write_file(dataset_root / "Healthy" / "dup_b-change.jpg", b"bc")
+    _write_file(dataset_root / "Healthy" / "dup_b_flip.jpg", b"bf")
+    _write_file(dataset_root / "Healthy" / "dup_b_180deg.jpg", b"b180")
 
     with csv_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=["count", "exact_hash", "normalized_class_name", "relative_paths"])
@@ -43,6 +45,93 @@ def test_build_cleanup_plan_selects_n_minus_one_and_variants(tmp_path: Path):
     assert deleted & {"Healthy/dup_a.jpg", "Healthy/dup_b.jpg"}
     assert "Healthy/dup_b_mirror.jpg" in deleted or "Healthy/dup_a_mirror.jpg" in deleted
     assert "Healthy/dup_b-change.jpg" in deleted or "Healthy/dup_a-change.jpg" in deleted
+    assert "Healthy/dup_b_flip.jpg" in deleted or "Healthy/dup_a_flip.jpg" in deleted
+    assert "Healthy/dup_b_180deg.jpg" in deleted or "Healthy/dup_a_180deg.jpg" in deleted
+
+
+def test_build_cleanup_plan_detects_flip_and_180deg_variants_without_base_variant_files(tmp_path: Path):
+    dataset_root = tmp_path / "dataset"
+    csv_path = tmp_path / "exact_duplicates.csv"
+
+    _write_file(dataset_root / "Healthy" / "dup_a.jpg", b"a")
+    _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
+    _write_file(dataset_root / "Healthy" / "dup_b_flip.jpg", b"bf")
+    _write_file(dataset_root / "Healthy" / "dup_b_180deg.jpg", b"b180")
+
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["count", "exact_hash", "normalized_class_name", "relative_paths"])
+        writer.writeheader()
+        writer.writerow(
+            {
+                "count": "2",
+                "exact_hash": "hash1",
+                "normalized_class_name": "healthy",
+                "relative_paths": "Healthy/dup_a.jpg|Healthy/dup_b.jpg",
+            }
+        )
+
+    actions = build_cleanup_plan(dataset_root=dataset_root, exact_duplicates_source=csv_path, seed=7)
+    deleted = {action.deleted_relative_path for action in actions}
+    assert "Healthy/dup_b_flip.jpg" in deleted
+    assert "Healthy/dup_b_180deg.jpg" in deleted
+
+
+def test_build_cleanup_plan_detects_extended_rotation_and_hight_variants(tmp_path: Path):
+    dataset_root = tmp_path / "dataset"
+    csv_path = tmp_path / "exact_duplicates.csv"
+
+    _write_file(dataset_root / "Healthy" / "dup_a.jpg", b"a")
+    _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
+    _write_file(dataset_root / "Healthy" / "dup_b_hight.jpg", b"bh")
+    _write_file(dataset_root / "Healthy" / "dup_b_change_180.jpg", b"bc180")
+    _write_file(dataset_root / "Healthy" / "dup_b_rotate_90.jpg", b"br90")
+
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["count", "exact_hash", "normalized_class_name", "relative_paths"])
+        writer.writeheader()
+        writer.writerow(
+            {
+                "count": "2",
+                "exact_hash": "hash1",
+                "normalized_class_name": "healthy",
+                "relative_paths": "Healthy/dup_a.jpg|Healthy/dup_b.jpg",
+            }
+        )
+
+    actions = build_cleanup_plan(dataset_root=dataset_root, exact_duplicates_source=csv_path, seed=7)
+    deleted = {action.deleted_relative_path for action in actions}
+    assert "Healthy/dup_b_hight.jpg" in deleted
+    assert "Healthy/dup_b_change_180.jpg" in deleted
+    assert "Healthy/dup_b_rotate_90.jpg" in deleted
+
+
+def test_build_cleanup_plan_detects_common_augmentation_suffixes(tmp_path: Path):
+    dataset_root = tmp_path / "dataset"
+    csv_path = tmp_path / "exact_duplicates.csv"
+
+    _write_file(dataset_root / "Healthy" / "dup_a.jpg", b"a")
+    _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
+    _write_file(dataset_root / "Healthy" / "dup_b_brightness.jpg", b"bb")
+    _write_file(dataset_root / "Healthy" / "dup_b_noise.jpg", b"bn")
+    _write_file(dataset_root / "Healthy" / "dup_b_rotated180.jpg", b"br180")
+
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["count", "exact_hash", "normalized_class_name", "relative_paths"])
+        writer.writeheader()
+        writer.writerow(
+            {
+                "count": "2",
+                "exact_hash": "hash1",
+                "normalized_class_name": "healthy",
+                "relative_paths": "Healthy/dup_a.jpg|Healthy/dup_b.jpg",
+            }
+        )
+
+    actions = build_cleanup_plan(dataset_root=dataset_root, exact_duplicates_source=csv_path, seed=7)
+    deleted = {action.deleted_relative_path for action in actions}
+    assert "Healthy/dup_b_brightness.jpg" in deleted
+    assert "Healthy/dup_b_noise.jpg" in deleted
+    assert "Healthy/dup_b_rotated180.jpg" in deleted
 
 
 def test_build_cleanup_plan_supports_zip_source(tmp_path: Path):

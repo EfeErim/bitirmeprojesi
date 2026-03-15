@@ -22,7 +22,78 @@ from scripts.prepare_grouped_runtime_dataset import (
 )
 
 DEFAULT_SEED = 42
-VARIANT_SUFFIXES = ("mirror_vertical", "mirror", "lower", "height", "change")
+VARIANT_SUFFIXES = (
+    "mirror_vertical",
+    "mirror_horizontal",
+    "mirror",
+    "vertical",
+    "horizontal",
+    "vflip",
+    "hflip",
+    "flip_vertical",
+    "flip_horizontal",
+    "lower",
+    "height",
+    "hight",
+    "bright",
+    "brighter",
+    "brightness",
+    "dark",
+    "darker",
+    "gamma",
+    "contrast",
+    "saturation",
+    "hue",
+    "pca",
+    "noise",
+    "noisy",
+    "blur",
+    "sharp",
+    "sharpen",
+    "crop",
+    "cropped",
+    "zoom",
+    "scale",
+    "scaled",
+    "flip",
+    "90",
+    "180",
+    "270",
+    "cw90",
+    "cw180",
+    "cw270",
+    "ccw90",
+    "ccw180",
+    "ccw270",
+    "180deg",
+    "90deg",
+    "270deg",
+    "change_90",
+    "change_180",
+    "change_270",
+    "change90",
+    "change180",
+    "change270",
+    "rotate_90",
+    "rotate_180",
+    "rotate_270",
+    "rot_90",
+    "rot_180",
+    "rot_270",
+    "rot90",
+    "rot180",
+    "rot270",
+    "rotated90",
+    "rotated180",
+    "rotated270",
+    "rotation_90",
+    "rotation_180",
+    "rotation_270",
+    "rotation90",
+    "rotation180",
+    "rotation270",
+    "change",
+)
 
 
 @dataclass
@@ -82,19 +153,32 @@ def _variant_pattern(base_stem: str) -> re.Pattern[str]:
     )
 
 
-def _find_variant_relpaths(dataset_root: Path, relative_path: str) -> List[str]:
+def _find_variant_relpaths(
+    dataset_root: Path,
+    relative_path: str,
+    *,
+    directory_cache: Dict[Path, List[tuple[str, str]]] | None = None,
+) -> List[str]:
     relative = Path(relative_path)
     parent_dir = (dataset_root / relative.parent)
     if not parent_dir.is_dir():
         return []
     base_stem = _strip_known_variant_suffix(relative.stem)
     pattern = _variant_pattern(base_stem)
+    if directory_cache is not None and parent_dir in directory_cache:
+        candidates = directory_cache[parent_dir]
+    else:
+        candidates = []
+        for candidate in parent_dir.iterdir():
+            if not candidate.is_file() or candidate.suffix.lower() not in IMAGE_EXTENSIONS:
+                continue
+            candidates.append((candidate.stem, candidate.relative_to(dataset_root).as_posix()))
+        if directory_cache is not None:
+            directory_cache[parent_dir] = candidates
     matches: List[str] = []
-    for candidate in parent_dir.iterdir():
-        if not candidate.is_file() or candidate.suffix.lower() not in IMAGE_EXTENSIONS:
-            continue
-        if pattern.match(candidate.stem):
-            matches.append(candidate.relative_to(dataset_root).as_posix())
+    for candidate_stem, candidate_relpath in candidates:
+        if pattern.match(candidate_stem):
+            matches.append(candidate_relpath)
     return sorted(set(matches))
 
 
@@ -107,6 +191,7 @@ def build_cleanup_plan(
     rng = random.Random(int(seed))
     rows = _load_exact_duplicate_rows(Path(exact_duplicates_source))
     actions: List[DuplicateCleanupAction] = []
+    directory_cache: Dict[Path, List[tuple[str, str]]] = {}
 
     for row_index, row in enumerate(rows, start=1):
         raw_paths = str(row.get("relative_paths", "")).strip()
@@ -119,7 +204,7 @@ def build_cleanup_plan(
         selected = sorted(rng.sample(relative_paths, delete_count))
         kept = sorted(set(relative_paths) - set(selected))
         for selected_path in selected:
-            matches = _find_variant_relpaths(Path(dataset_root), selected_path)
+            matches = _find_variant_relpaths(Path(dataset_root), selected_path, directory_cache=directory_cache)
             if selected_path not in matches:
                 matches = sorted(set(matches + [selected_path]))
             for matched in matches:
@@ -194,6 +279,7 @@ def build_review_cleanup_plan(
     rng = random.Random(int(seed))
     review_rows = _load_review_rows(Path(review_source))
     manifest_rows = _load_manifest_rows(Path(dataset_manifest_source))
+    directory_cache: Dict[Path, List[tuple[str, str]]] = {}
     record_lookup = {
         row["relative_path"]: _record_from_manifest_row(row)
         for row in manifest_rows
@@ -231,7 +317,7 @@ def build_review_cleanup_plan(
         selected = sorted(rng.sample(relative_paths, delete_count))
         kept = sorted(set(relative_paths) - set(selected))
         for selected_path in selected:
-            matches = _find_variant_relpaths(Path(dataset_root), selected_path)
+            matches = _find_variant_relpaths(Path(dataset_root), selected_path, directory_cache=directory_cache)
             if selected_path not in matches:
                 matches = sorted(set(matches + [selected_path]))
             for matched in matches:
