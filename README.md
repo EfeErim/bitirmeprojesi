@@ -35,6 +35,7 @@ If you are completely new, read in this order:
 
 This repository is intentionally narrow. The maintained user surfaces are:
 
+- Notebook 0 grouped dataset preparation: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
 - Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
 - Notebook 1 router-only crop and part identification: `colab_notebooks/1_router_adapter_inference.ipynb`
 - Notebook 3 direct adapter smoke test: `colab_notebooks/3_adapter_smoke_test.ipynb`
@@ -78,6 +79,13 @@ Notebook 1 is different:
 - It is used to inspect crop and part identification only.
 - `part` is an advisory organ label; when organ evidence is ambiguous the router returns `part=unknown`, but it can keep a supported part when the generic and crop-conditioned organ surfaces agree on the same compatible label.
 - It does not load a crop adapter.
+
+Notebook 0 is different:
+
+- It runs before training.
+- It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
+- It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
+- It can materialize a prepared runtime dataset for Notebook 2.
 
 Notebook 3 is different:
 
@@ -225,6 +233,17 @@ Notebook 2 creates that layout automatically under:
 ```text
 data/runtime_notebook_datasets/<crop>/
 ```
+
+Notebook 0 can also materialize a prepared runtime dataset under:
+
+```text
+data/prepared_runtime_datasets/<crop>/
+```
+
+Notebook 2 now supports both paths:
+
+- `DATASET_LAYOUT_MODE="class_root"` keeps the auto-split notebook path
+- `DATASET_LAYOUT_MODE="runtime"` trains directly from a prepared runtime dataset root
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 

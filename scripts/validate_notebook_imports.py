@@ -193,6 +193,11 @@ def test_colab_helpers() -> None:
     from scripts.colab_checkpointing import TrainingCheckpointManager
     from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
     from scripts.colab_live_telemetry import ColabLiveTelemetry
+    from scripts.prepare_grouped_runtime_dataset import (
+        build_grouped_dataset_plan,
+        materialize_grouped_runtime_dataset,
+        scan_class_root_dataset,
+    )
     from scripts.colab_repo_bootstrap import (
         export_current_colab_notebook,
         mirror_checkpoint_state_to_repo,
@@ -206,7 +211,69 @@ def test_colab_helpers() -> None:
     assert callable(mirror_checkpoint_state_to_repo)
     assert callable(mirror_path_to_repo)
     assert callable(push_repo_run_to_github)
-    _ = (TrainingCheckpointManager, prepare_runtime_dataset_layout, ColabLiveTelemetry, evaluate_layout)
+    _ = (
+        TrainingCheckpointManager,
+        prepare_runtime_dataset_layout,
+        ColabLiveTelemetry,
+        evaluate_layout,
+        build_grouped_dataset_plan,
+        materialize_grouped_runtime_dataset,
+        scan_class_root_dataset,
+    )
+
+
+def test_data_prep_notebook_contract() -> None:
+    import json
+
+    notebook_path = ROOT / "colab_notebooks" / "0_grouped_dataset_preparation.ipynb"
+    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    cells = payload.get("cells", [])
+    bootstrap_source = ""
+    parameter_source = ""
+    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
+    for cell in cells:
+        if cell.get("cell_type") != "code":
+            continue
+        source = "".join(cell.get("source", []))
+        if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
+            bootstrap_source = source
+        if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
+            parameter_source = source
+
+    assert bootstrap_source, "Notebook 0 bootstrap cell was not found"
+    assert parameter_source, "Notebook 0 parameter cell was not found"
+    for snippet in (
+        "RUN_ID =",
+        "TELEMETRY = ColabLiveTelemetry(",
+        "REPO_RUN_DIR =",
+        "REPO_NOTEBOOK_OUTPUT_PATH =",
+    ):
+        assert snippet in bootstrap_source, f"Notebook 0 bootstrap is missing: {snippet}"
+    for snippet in (
+        "DATASET_ROOT =",
+        "CROP_NAME =",
+        "PREP_ARTIFACT_ROOT =",
+        "PREPARED_RUNTIME_ROOT =",
+        "MATERIALIZE_AFTER_REVIEW =",
+        "PREP_DINOV3_MODEL_ID =",
+        "PREP_BIOCLIP_MODEL_ID =",
+    ):
+        assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
+    assert "build_grouped_dataset_plan" in full_source
+    assert "materialize_grouped_runtime_dataset" in full_source
+
+
+def test_training_notebook_runtime_mode_contract() -> None:
+    import json
+
+    notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
+    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in payload.get("cells", []))
+    assert 'DATASET_LAYOUT_MODE = "class_root"' in full_source
+    assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in full_source
+    assert 'if layout_mode == "runtime":' in full_source
+    assert "Prepared runtime dataset is missing split folder(s)" in full_source
+    assert "OOD_ROOT is ignored when DATASET_LAYOUT_MODE='runtime'." in full_source
 
 
 def test_training_notebook_bootstrap_contract() -> None:
@@ -325,6 +392,24 @@ CHECKS = (
         success_message="Notebook 2 bootstrap globals are defined before use",
         failure_prefix="Notebook 2 bootstrap contract failed",
         callback=test_training_notebook_bootstrap_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 0 Bootstrap",
+        step_id="NB0_BOOTSTRAP",
+        description="Notebook 0 bootstrap contract",
+        success_message="Notebook 0 bootstrap globals are defined before use",
+        failure_prefix="Notebook 0 bootstrap contract failed",
+        callback=test_data_prep_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 2 Runtime Mode",
+        step_id="NB2_RUNTIME",
+        description="Notebook 2 runtime dataset mode contract",
+        success_message="Notebook 2 runtime dataset mode is wired",
+        failure_prefix="Notebook 2 runtime contract failed",
+        callback=test_training_notebook_runtime_mode_contract,
         requires_runtime_dependencies=False,
     ),
 )

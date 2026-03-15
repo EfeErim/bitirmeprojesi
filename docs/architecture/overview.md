@@ -100,6 +100,8 @@ Notebook 2 accepts a flat class-root layout:
 
 This is easier for a beginner to prepare by hand.
 
+Notebook 0 uses this contract for duplicate-aware preparation before training.
+
 ### Contract 2: Runtime training layout
 
 Workflow and CLI training use a runtime split layout:

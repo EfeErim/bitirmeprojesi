@@ -58,9 +58,9 @@ Use this when you need:
 
 Use this when you need:
 
-- Notebook 2 and Notebook 3 explained step by step
+- Notebook 0, Notebook 2, and Notebook 3 explained step by step
 - the flat dataset input contract
-- the runtime split layout created by Notebook 2
+- the runtime split layouts created by Notebook 0 or Notebook 2
 - notebook outputs, telemetry, and adapter handoff
 - Hugging Face token behavior and notebook-specific caveats
 

@@ -4,18 +4,26 @@ This guide is written for someone who may be opening the AADS notebooks for the 
 
 It covers the maintained Colab surfaces:
 
+- Notebook 0: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
 - Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
 - Notebook 3: `colab_notebooks/3_adapter_smoke_test.ipynb`
 
-Notebook 2 trains an adapter. Notebook 3 checks an already exported adapter directly.
+Notebook 0 prepares a duplicate-aware runtime dataset. Notebook 2 trains an adapter. Notebook 3 checks an already exported adapter directly.
 
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ## What You Will Do In These Notebooks
 
+### Notebook 0
+
+Notebook 0 audits a flat class-root dataset, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset.
+
 ### Notebook 2
 
-Notebook 2 takes a folder of labeled images for one crop, prepares the runtime dataset, trains a crop adapter, evaluates it, calibrates OOD behavior, and exports the result.
+Notebook 2 can now do one of two things:
+
+- take a flat class-root dataset and auto-split it as before
+- train directly from a prepared runtime dataset root produced by Notebook 0
 
 ### Notebook 3
 
@@ -24,7 +32,7 @@ Notebook 3 loads one saved adapter directly so you can inspect it and run a quic
 ## Important Terms
 
 - `flat class-root dataset`: the simple folder layout you prepare by hand for Notebook 2
-- `runtime dataset`: the split layout Notebook 2 creates before training
+- `runtime dataset`: the split layout used by workflow training; it can be created by Notebook 0 or Notebook 2
 - `adapter bundle`: the saved training output that contains model weights, metadata, and OOD state
 - `telemetry`: the logs and mirrored artifacts saved during a notebook run
 - `OOD`: "out of distribution," meaning the image may not belong to the supported disease classes
@@ -48,6 +56,7 @@ Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
+- Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
 
 ## Notebook 2 In Plain English
 
@@ -68,6 +77,20 @@ This is the current Notebook 2 flow from start to finish:
 13. mirror outputs into `runs/<RUN_ID>/`
 14. optionally auto-push the mirrored run record to GitHub
 15. optionally auto-disconnect the Colab runtime after final exports succeed
+
+## Notebook 0 In Plain English
+
+This is the current Notebook 0 flow from start to finish:
+
+1. find or initialize the repo workspace
+2. install notebook requirements
+3. mount Google Drive when available
+4. resolve a Hugging Face token from environment variables or Colab secrets
+5. scan a flat class-root dataset
+6. normalize class names against the crop taxonomy when possible
+7. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
+8. write review artifacts and a grouped split manifest
+9. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/`
 
 ## The Dataset Format Notebook 2 Accepts
 
