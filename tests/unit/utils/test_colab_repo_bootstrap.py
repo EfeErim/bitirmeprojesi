@@ -264,6 +264,7 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     add_calls = [call for call in calls if call[1] == "add"]
     assert add_calls
     added_args = " ".join(" ".join(call) for call in add_calls)
+    assert " -f " in added_args
     assert "summary.json" in added_args
     assert "checkpoint.pt" not in added_args
 

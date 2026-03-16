@@ -401,7 +401,7 @@ def push_repo_run_to_github(
 
     if tracked_files:
         for chunk in _chunked(tracked_files):
-            _run_git(["add", "--", *chunk], cwd=repo)
+            _run_git(["add", "-f", "--", *chunk], cwd=repo)
 
     staged = _run_git(["diff", "--cached", "--name-only", "--", relative_run_dir], cwd=repo, capture_output=True)
     staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
