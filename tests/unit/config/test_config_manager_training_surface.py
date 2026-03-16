@@ -21,7 +21,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
 
     assert cfg["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     continual = cfg["training"]["continual"]
-    assert continual["ood"]["ber_enabled"] is False
+    assert continual["ood"]["ber_enabled"] is True
     assert continual["ood"]["ber_lambda_old"] == 0.1
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
