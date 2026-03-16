@@ -1,0 +1,9 @@
+[CELL_CAPTURE] cell=Cell 5b: OOD Config Verify
+run_id=20260316_200130_831311
+started_at=2026-03-16T20:08:27.912175+00:00
+finished_at=2026-03-16T20:08:27.913492+00:00
+duration_sec=0.001
+
+[VERIFY][OOD][expected] {"conformal_alpha": 0.05, "conformal_method": "threshold", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.0, "sure_confidence_percentile": 90.0, "sure_semantic_percentile": 95.0, "threshold_factor": 2.0}
+[VERIFY][OOD][resolved] {"conformal_alpha": 0.05, "conformal_method": "threshold", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.0, "sure_confidence_percentile": 90.0, "sure_semantic_percentile": 95.0, "threshold_factor": 2.0}
+[VERIFY][OOD] OK: resolved OOD config matches requested parameters.

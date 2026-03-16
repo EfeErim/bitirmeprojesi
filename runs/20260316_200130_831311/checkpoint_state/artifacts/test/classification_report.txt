@@ -1,0 +1,18 @@
+                                      precision    recall  f1-score   support
+
+                             healthy       0.99      0.98      0.99       200
+tomato_bacterial_spot_and_speck_leaf       0.98      0.97      0.97       213
+            tomato_early_blight_leaf       0.97      0.89      0.93       171
+               tomato_gray_mold_leaf       1.00      1.00      1.00         9
+             tomato_late_blight_leaf       0.96      0.98      0.97       219
+               tomato_leaf_mold_leaf       0.93      1.00      0.96       125
+            tomato_mosaic_virus_leaf       0.99      0.95      0.97       201
+          tomato_powdery_mildew_leaf       1.00      0.73      0.84        11
+      tomato_septoria_leaf_spot_leaf       0.94      1.00      0.97       207
+            tomato_spider_mites_leaf       1.00      1.00      1.00        41
+           tomato_spotted_wilt_virus       1.00      1.00      1.00        42
+        tomato_yellow_leaf_curl_leaf       0.98      0.99      0.98       203
+
+                            accuracy                           0.97      1642
+                           macro avg       0.98      0.96      0.97      1642
+                        weighted avg       0.97      0.97      0.97      1642

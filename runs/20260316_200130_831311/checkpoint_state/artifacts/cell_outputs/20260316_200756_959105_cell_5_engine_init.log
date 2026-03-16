@@ -1,0 +1,12 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=20260316_200130_831311
+started_at=2026-03-16T20:07:56.959128+00:00
+finished_at=2026-03-16T20:08:27.886397+00:00
+duration_sec=30.927
+
+[CLASSES] ['healthy', 'tomato_bacterial_spot_and_speck_leaf', 'tomato_early_blight_leaf', 'tomato_gray_mold_leaf', 'tomato_late_blight_leaf', 'tomato_leaf_mold_leaf', 'tomato_mosaic_virus_leaf', 'tomato_powdery_mildew_leaf', 'tomato_septoria_leaf_spot_leaf', 'tomato_spider_mites_leaf', 'tomato_spotted_wilt_virus', 'tomato_yellow_leaf_curl_leaf']
+[CLASSES] mode=dataset_fallback reason=partial_taxonomy_alignment_fallback matched=2 unmatched=10
+[CLASSES] taxonomy-unmatched classes kept: ['tomato_bacterial_spot_and_speck_leaf', 'tomato_early_blight_leaf', 'tomato_gray_mold_leaf', 'tomato_late_blight_leaf', 'tomato_leaf_mold_leaf', 'tomato_mosaic_virus_leaf', 'tomato_powdery_mildew_leaf', 'tomato_septoria_leaf_spot_leaf', 'tomato_spider_mites_leaf', 'tomato_yellow_leaf_curl_leaf']
+[ENGINE][OOD_CFG] {"ber_enabled": false, "ber_lambda_new": 0.1, "ber_lambda_old": 0.1, "ber_warmup_steps": 50, "conformal_alpha": 0.05, "conformal_enabled": true, "conformal_method": "threshold", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.0, "energy_temperature": 1.0, "energy_temperature_mode": "fixed", "energy_temperature_range": [0.5, 3.0], "energy_temperature_steps": 16, "knn_backend": "auto", "knn_chunk_size": 2048, "primary_score_method": "auto", "radial_beta_range": [0.5, 2.0], "radial_beta_steps": 16, "radial_l2_enabled": true, "sure_confidence_percentile": 90.0, "sure_enabled": true, "sure_semantic_percentile": 95.0, "threshold_factor": 2.0}
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Ready. trainable_params=10,237,456  classes=12
