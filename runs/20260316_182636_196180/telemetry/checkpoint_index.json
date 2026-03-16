@@ -1,0 +1,41 @@
+[
+  {
+    "name": "ckpt_e10_s1010_20260316_185252_527951",
+    "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260316_182636_196180/checkpoints/ckpt_e10_s1010_20260316_185252_527951/training_checkpoint",
+    "created_at": "2026-03-16T18:52:58.548137+00:00",
+    "global_step": 1010,
+    "epoch": 10,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.11129084163984787
+  },
+  {
+    "name": "ckpt_e16_s1600_20260316_185812_800376",
+    "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260316_182636_196180/checkpoints/ckpt_e16_s1600_20260316_185812_800376/training_checkpoint",
+    "created_at": "2026-03-16T18:58:17.953588+00:00",
+    "global_step": 1600,
+    "epoch": 16,
+    "reason": "batch_800",
+    "is_best": false
+  },
+  {
+    "name": "ckpt_e16_s1616_20260316_185832_390422",
+    "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260316_182636_196180/checkpoints/ckpt_e16_s1616_20260316_185832_390422/training_checkpoint",
+    "created_at": "2026-03-16T18:58:37.974223+00:00",
+    "global_step": 1616,
+    "epoch": 16,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.1038375047814575
+  },
+  {
+    "name": "ckpt_e20_s2020_20260316_190215_613486",
+    "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260316_182636_196180/checkpoints/ckpt_e20_s2020_20260316_190215_613486/training_checkpoint",
+    "created_at": "2026-03-16T19:02:20.723248+00:00",
+    "global_step": 2020,
+    "epoch": 20,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.10383419324795601
+  }
+]

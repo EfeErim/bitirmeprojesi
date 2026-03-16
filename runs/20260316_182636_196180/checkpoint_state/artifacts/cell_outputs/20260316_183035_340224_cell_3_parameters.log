@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 3: Parameters
+run_id=20260316_182636_196180
+started_at=2026-03-16T18:30:35.340250+00:00
+finished_at=2026-03-16T18:30:35.593042+00:00
+duration_sec=0.253
+
+[HF] Authenticated as Grizzmann
+[GIT] Auto-push preflight passed: GitHub token resolved.
+[CONFIG] crop=tomato epochs=20 bs=128 lr=0.0003 resume=fresh ber=False auto_disconnect=True auto_push=True
+[RUNTIME] profile=a100_high_ram mp=bf16 workers=12 prefetch=8 sched=cosine wd=0.01 accum=1 grad_clip=1.0 label_smooth=0.02 warmup=0.05 early_stop=5/0.001 val_every=2 cache_train=True
