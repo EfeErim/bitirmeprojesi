@@ -100,7 +100,7 @@ Notebook 2 accepts a flat class-root layout:
 
 This is easier for a beginner to prepare by hand.
 
-Notebook 0 uses this contract for duplicate-aware preparation before training.
+Notebook 0 uses this contract for duplicate-aware audit before training. Notebook 2 `class_root` mode now uses the same grouped prep logic before it materializes the runtime dataset for training.
 
 ### Contract 2: Runtime training layout
 

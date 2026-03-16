@@ -85,7 +85,7 @@ Notebook 0 is different:
 - It runs before training.
 - It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
 - It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
-- It is the canonical surface for auditing, grouping, and materializing the prepared runtime dataset for Notebook 2.
+- It is the audit-first surface for auditing, grouping, and optionally materializing the prepared runtime dataset for Notebook 2.
 
 Notebook 3 is different:
 
@@ -242,14 +242,14 @@ data/prepared_runtime_datasets/<crop>/
 
 Notebook 2 now supports both paths:
 
-- `DATASET_LAYOUT_MODE="class_root"` keeps the convenience auto-split notebook path
+- `DATASET_LAYOUT_MODE="class_root"` starts from a flat dataset, runs grouped prep/materialization, and then trains
 - `DATASET_LAYOUT_MODE="runtime"` trains directly from a prepared runtime dataset root
 
 Recommended usage:
 
-- use Notebook 0 first when you want a trustworthy prepared split written to Drive or the workspace
-- use Notebook 2 `runtime` mode for the actual training run
-- treat Notebook 2 `class_root` mode as a convenience baseline rather than the main benchmark-quality path
+- use Notebook 0 first when you want to inspect audit artifacts before training
+- use Notebook 2 `class_root` mode when you want one notebook to prepare and train in one pass
+- use Notebook 2 `runtime` mode when the prepared runtime dataset already exists
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 

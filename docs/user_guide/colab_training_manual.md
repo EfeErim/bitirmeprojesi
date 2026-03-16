@@ -8,7 +8,7 @@ It covers the maintained Colab surfaces:
 - Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
 - Notebook 3: `colab_notebooks/3_adapter_smoke_test.ipynb`
 
-Notebook 0 is the canonical data-preparation surface. It audits, groups, and materializes the runtime dataset. Notebook 2 is the training surface. Notebook 3 checks an already exported adapter directly.
+Notebook 0 is the audit-first data-preparation surface. Notebook 2 is the training surface and can materialize the grouped runtime dataset before training when you start from a flat class-root dataset. Notebook 3 checks an already exported adapter directly.
 
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
@@ -22,8 +22,8 @@ Notebook 0 audits a flat class-root dataset, groups likely duplicate and augment
 
 Notebook 2 can now do one of two things:
 
-- convenience path: take a flat class-root dataset and auto-split it as before
-- canonical path: train directly from a prepared runtime dataset root produced by Notebook 0
+- start from a flat class-root dataset, run grouped prep/materialization, and then train
+- train directly from a prepared runtime dataset root produced earlier
 
 ### Notebook 3
 
@@ -32,7 +32,7 @@ Notebook 3 loads one saved adapter directly so you can inspect it and run a quic
 ## Important Terms
 
 - `flat class-root dataset`: the simple folder layout you prepare by hand for Notebook 2
-- `runtime dataset`: the split layout used by workflow training; for benchmark-quality runs it should be created by Notebook 0
+- `runtime dataset`: the split layout used by workflow training; it can be created by Notebook 2 from a flat dataset or consumed directly in runtime mode
 - `adapter bundle`: the saved training output that contains model weights, metadata, and OOD state
 - `telemetry`: the logs and mirrored artifacts saved during a notebook run
 - `OOD`: "out of distribution," meaning the image may not belong to the supported disease classes
@@ -57,20 +57,21 @@ Important current behavior:
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
 - Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
-- `class_root` is retained as a convenience baseline path, not the recommended benchmark-quality path
-- `runtime` is the recommended path after Notebook 0 finishes and writes the prepared runtime dataset
+- `class_root` now runs grouped prep and runtime-dataset materialization before training
+- `runtime` consumes an already prepared runtime dataset without re-running prep
 
 ## Notebook 2 In Plain English
 
-This is the current Notebook 2 training flow from start to finish when you use the convenience `class_root` path:
+This is the current Notebook 2 training flow from start to finish when you use `DATASET_LAYOUT_MODE="class_root"`:
 
 1. find or initialize the repo workspace
 2. install notebook requirements
 3. mount Google Drive when available
 4. resolve a Hugging Face token from environment variables or Colab secrets
 5. validate a flat class-root dataset
-6. materialize a runtime split layout under `data/runtime_notebook_datasets/<crop>/`
-7. train the continual SD-LoRA adapter
+6. run grouped duplicate-aware prep
+7. materialize a runtime dataset under `data/prepared_runtime_datasets/<crop>/`
+8. train the continual SD-LoRA adapter
 8. restore the best model state
 9. calibrate OOD
 10. write validation and test artifacts
@@ -82,8 +83,9 @@ This is the current Notebook 2 training flow from start to finish when you use t
 
 Important recommendation:
 
-- for benchmark-quality training runs, finish Notebook 0 first and then run Notebook 2 in `DATASET_LAYOUT_MODE="runtime"`
-- use Notebook 2 `class_root` mode only for convenience experiments on simple datasets
+- use Notebook 0 first when you want to inspect the audit artifacts before training
+- use Notebook 2 `class_root` mode when you want one notebook to prepare and train in one pass
+- use Notebook 2 `runtime` mode when the prepared runtime dataset already exists
 
 ## Notebook 0 In Plain English
 
@@ -97,7 +99,7 @@ This is the current Notebook 0 flow from start to finish:
 6. normalize class names against the crop taxonomy when possible
 7. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
 8. write review artifacts and a grouped split manifest
-9. materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when the audit is clean enough to proceed
+9. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when you want Notebook 0 to complete the full prep flow itself
 
 ## The Dataset Format Notebook 2 Accepts
 
@@ -145,7 +147,7 @@ That validator checks:
 
 ## What Notebook 2 Builds From That Dataset
 
-Notebook 2 `class_root` mode converts the flat dataset into the runtime layout used by the workflow:
+Notebook 2 `class_root` mode materializes the grouped runtime layout used by the workflow:
 
 ```text
 data/runtime_notebook_datasets/<crop>/
@@ -174,9 +176,9 @@ The generated runtime dataset includes:
 
 Contract reminder:
 
-- Notebook 2 `class_root` mode accepts the flat class-root layout as a convenience surface
+- Notebook 2 `class_root` mode accepts the flat class-root layout and now runs grouped prep before training
 - Notebook 2 `runtime` mode and `TrainingWorkflow.run(...)` expect the runtime split layout
-- Notebook 0 is the maintained surface for creating that runtime split when you care about split integrity
+- Notebook 0 remains the maintained audit-first surface when you want to inspect or fix prep issues before training
 
 ## How The Split Is Created
 
@@ -193,7 +195,7 @@ Current behavior:
 
 Notebook 2 auto-splitting is convenient, but it is only an image-level random split after the flat class-root dataset has already been assembled.
 
-Use the `class_root` path only for quick experiments when:
+Use the `class_root` path when you want Notebook 2 to perform grouped prep and then train in one pass. It is most appropriate when:
 
 - each class folder contains only real, independent images
 - you are not mixing multiple public sources into one flat pool
@@ -258,9 +260,9 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
 
    If your data comes from multiple public datasets, a held-out source or at least a source-balanced grouped test split is much more trustworthy than a random split after merge.
 
-6. Materialize the runtime dataset through Notebook 0 for benchmark-quality runs.
+6. Materialize the runtime dataset through Notebook 0 when you want audit-first control.
 
-   When you need a trustworthy benchmark, let Notebook 0 write this layout directly instead of relying on Notebook 2 to random-split a merged flat dataset:
+   When you need a trustworthy benchmark and want to inspect the prep outputs before training, let Notebook 0 write this layout directly:
 
    ```text
    data/<crop>/
@@ -344,7 +346,7 @@ Notebook 2 auto-splitting is still useful when you want:
 - an early baseline before building a stricter evaluation split
 - a convenience experiment on a small, clean, single-source dataset without augmentation-family leakage
 
-Use the stricter Notebook 0 materialized runtime dataset when the result will be used as the main claim about model quality.
+Use the stricter Notebook 0 audit-first materialized runtime dataset when the result will be used as the main claim about model quality.
 
 [^cifair]: C. Barz and J. Denzler, "[Do We Train on Test Data? Purging CIFAR of Near-Duplicates](https://pubmed.ncbi.nlm.nih.gov/34460587/)," *Journal of Imaging*, 2021.
 [^plantvillage-bias]: A. Naqvi et al., "[Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies](https://doi.org/10.48550/arXiv.2206.04374)," arXiv, 2022.
