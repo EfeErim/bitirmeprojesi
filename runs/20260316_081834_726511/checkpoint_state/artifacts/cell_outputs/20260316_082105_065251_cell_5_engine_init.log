@@ -1,0 +1,59 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=20260316_081834_726511
+started_at=2026-03-16T08:21:05.065276+00:00
+finished_at=2026-03-16T08:45:19.706465+00:00
+duration_sec=1454.641
+
+[DATASET] Building grouped prep plan before training.
+Scanning class-root dataset and computing hashes.
+Loading DINOv3 once for the full audit run.
+Processing class 'tomato_bacterial_spot_and_speck_leaf' (2121 readable images).
+Encoding DINOv3 embeddings for class 'tomato_bacterial_spot_and_speck_leaf'.
+Processing class 'tomato_early_blight_leaf' (1701 readable images).
+Encoding DINOv3 embeddings for class 'tomato_early_blight_leaf'.
+Processing class 'tomato_gray_mold_leaf' (76 readable images).
+Encoding DINOv3 embeddings for class 'tomato_gray_mold_leaf'.
+Processing class 'healthy' (1995 readable images).
+Encoding DINOv3 embeddings for class 'healthy'.
+Processing class 'tomato_late_blight_leaf' (2182 readable images).
+Encoding DINOv3 embeddings for class 'tomato_late_blight_leaf'.
+Processing class 'tomato_leaf_mold_leaf' (1241 readable images).
+Encoding DINOv3 embeddings for class 'tomato_leaf_mold_leaf'.
+Processing class 'tomato_mosaic_virus_leaf' (2003 readable images).
+Encoding DINOv3 embeddings for class 'tomato_mosaic_virus_leaf'.
+Processing class 'tomato_powdery_mildew_leaf' (99 readable images).
+Encoding DINOv3 embeddings for class 'tomato_powdery_mildew_leaf'.
+Processing class 'tomato_septoria_leaf_spot_leaf' (2058 readable images).
+Encoding DINOv3 embeddings for class 'tomato_septoria_leaf_spot_leaf'.
+Processing class 'tomato_spider_mites_leaf' (404 readable images).
+Encoding DINOv3 embeddings for class 'tomato_spider_mites_leaf'.
+Processing class 'tomato_spotted_wilt_virus' (420 readable images).
+Encoding DINOv3 embeddings for class 'tomato_spotted_wilt_virus'.
+Processing class 'tomato_yellow_leaf_curl_leaf' (2016 readable images).
+Encoding DINOv3 embeddings for class 'tomato_yellow_leaf_curl_leaf'.
+Loading BioCLIP once for candidate refinement.
+Encoding BioCLIP refinement embeddings for class 'tomato_bacterial_spot_and_speck_leaf' (44 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_early_blight_leaf' (212 images).
+Encoding BioCLIP refinement embeddings for class 'healthy' (184 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_late_blight_leaf' (224 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_leaf_mold_leaf' (34 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_mosaic_virus_leaf' (149 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_septoria_leaf_spot_leaf' (120 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_spider_mites_leaf' (26 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_spotted_wilt_virus' (2 images).
+Encoding BioCLIP refinement embeddings for class 'tomato_yellow_leaf_curl_leaf' (56 images).
+[DATASET] grouped_prep runtime_ready=True cross_class_conflicts=0 same_class_high_risk_clusters=406
+[DATASET] Copied OOD examples into runtime dataset: 62
+[DATASET] Grouped runtime dataset materialized under /content/drive/MyDrive/aads_ulora/prepared_runtime_datasets/tomato
+[CLASSES] ['healthy', 'tomato_bacterial_spot_and_speck_leaf', 'tomato_early_blight_leaf', 'tomato_gray_mold_leaf', 'tomato_late_blight_leaf', 'tomato_leaf_mold_leaf', 'tomato_mosaic_virus_leaf', 'tomato_powdery_mildew_leaf', 'tomato_septoria_leaf_spot_leaf', 'tomato_spider_mites_leaf', 'tomato_spotted_wilt_virus', 'tomato_yellow_leaf_curl_leaf']
+[CLASSES] mode=dataset_fallback reason=partial_taxonomy_alignment_fallback matched=2 unmatched=10
+[CLASSES] taxonomy-unmatched classes kept: ['tomato_bacterial_spot_and_speck_leaf', 'tomato_early_blight_leaf', 'tomato_gray_mold_leaf', 'tomato_late_blight_leaf', 'tomato_leaf_mold_leaf', 'tomato_mosaic_virus_leaf', 'tomato_powdery_mildew_leaf', 'tomato_septoria_leaf_spot_leaf', 'tomato_spider_mites_leaf', 'tomato_yellow_leaf_curl_leaf']
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Ready. trainable_params=10,237,456  classes=12
+
+[STDERR]
+/usr/local/lib/python3.12/dist-packages/huggingface_hub/utils/_auth.py:104: UserWarning: 
+Error while fetching `HF_TOKEN` secret value from your vault: 'Requesting secret HF_TOKEN timed out. Secrets can only be fetched when running from the Colab UI.'.
+You are not authenticated with the Hugging Face Hub in this notebook.
+If the error persists, please let us know by opening an issue on GitHub (https://github.com/huggingface/huggingface_hub/issues/new).
+  warnings.warn(
