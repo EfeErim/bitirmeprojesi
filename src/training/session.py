@@ -241,6 +241,7 @@ class ContinualTrainingSession:
                     payload = {
                         **self.progress_state.to_dict(),
                         **stats.to_dict(),
+                        "batch_loss": float(stats.loss),
                         **advisory,
                         "epoch_progress": float((batch_idx + 1) / max(1, total_batches)),
                     }
