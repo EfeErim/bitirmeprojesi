@@ -185,7 +185,9 @@ def export_current_colab_notebook(destination_path: str | Path) -> Optional[Path
     response = _message.blocking_request("get_ipynb", timeout_sec=30)
     payload = response.get("ipynb") if isinstance(response, dict) else None
     if not isinstance(payload, dict) or not payload:
-        raise RuntimeError("Colab did not return a notebook payload for get_ipynb.")
+        # Colab occasionally returns an empty payload near runtime teardown.
+        # Treat this as a soft failure so auto-push/disconnect finalization can continue.
+        return None
 
     destination = Path(destination_path).expanduser()
     destination.parent.mkdir(parents=True, exist_ok=True)

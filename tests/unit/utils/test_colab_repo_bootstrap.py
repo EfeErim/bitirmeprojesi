@@ -84,6 +84,24 @@ def test_maybe_clone_repo_uses_github_token_for_https_clone(tmp_path: Path, monk
     assert calls[0][4] == "https://gh-secret@github.com/EfeErim/bitirmeprojesi.git"
 
 
+def test_export_current_colab_notebook_returns_none_on_empty_payload(tmp_path: Path, monkeypatch):
+    target = tmp_path / "executed.ipynb"
+    monkeypatch.setattr(bootstrap, "running_in_colab", lambda: True)
+
+    fake_colab = ModuleType("google.colab")
+    fake_colab._message = SimpleNamespace(blocking_request=lambda *_args, **_kwargs: {})
+    fake_google = ModuleType("google")
+    fake_google.colab = fake_colab
+
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.colab", fake_colab)
+
+    exported = bootstrap.export_current_colab_notebook(target)
+
+    assert exported is None
+    assert not target.exists()
+
+
 def test_flatten_colab_safe_requirements_expands_nested_files_and_skips_torch_family(tmp_path: Path):
     root_req = tmp_path / "requirements_colab.txt"
     base_req = tmp_path / "requirements.txt"
