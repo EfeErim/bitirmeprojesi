@@ -1,0 +1,16 @@
+{
+  "artifact_count": 136,
+  "drive_available": true,
+  "final_payload": {
+    "cell_outputs_dir": "/content/drive/MyDrive/aads_ulora/telemetry/20260316_212404_079273/artifacts/cell_outputs",
+    "evaluation_splits": [
+      "test",
+      "validation"
+    ],
+    "repo_run_dir": "/content/bitirmeprojesi/runs/20260316_212404_079273",
+    "status": "ok"
+  },
+  "notebook": "2_interactive_adapter_training.ipynb",
+  "run_id": "20260316_212404_079273",
+  "ts": "2026-03-16T22:09:12.933734+00:00"
+}
