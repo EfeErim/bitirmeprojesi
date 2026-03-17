@@ -1,0 +1,682 @@
+[
+  {
+    "relative_path": "cell_outputs/20260317_075348_256835_cell_3_parameters.log",
+    "ts": "2026-03-17T07:53:49.188789+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_075349_221096_cell_4_dataset_validation.log",
+    "ts": "2026-03-17T07:53:49.234433+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_075349_268867_cell_5_engine_init.log",
+    "ts": "2026-03-17T07:54:23.677503+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_075423_696858_cell_5b_ood_config_verify.log",
+    "ts": "2026-03-17T07:54:23.703790+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:13:34.496800+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_001.png",
+    "ts": "2026-03-17T08:13:34.509068+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:13:34.520353+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:13:34.530847+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:13:34.541119+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:14:40.321077+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_002.png",
+    "ts": "2026-03-17T08:14:40.333116+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:14:40.343755+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:14:40.353205+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:14:40.375835+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:15:45.781734+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_003.png",
+    "ts": "2026-03-17T08:15:45.793939+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:15:45.804237+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:15:45.829161+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:15:45.839100+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:16:47.942089+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:16:47.955818+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:16:47.967776+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:17:47.635456+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_005.png",
+    "ts": "2026-03-17T08:17:47.648140+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:17:47.673346+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:17:47.683561+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:17:47.693614+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:18:51.104471+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_006.png",
+    "ts": "2026-03-17T08:18:51.116668+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:18:51.128267+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:18:51.139413+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:18:51.150013+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:19:53.948445+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:19:53.972815+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:19:53.983930+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:20:53.048080+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_008.png",
+    "ts": "2026-03-17T08:20:53.061871+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:20:53.072998+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:20:53.083416+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:20:53.105385+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:21:57.644722+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_009.png",
+    "ts": "2026-03-17T08:21:57.659805+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:21:57.672530+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:21:57.698929+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:21:57.710603+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:23:08.492458+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_010.png",
+    "ts": "2026-03-17T08:23:08.505884+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:23:08.529617+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:23:08.539520+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:23:08.549401+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:24:11.149878+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:24:11.162199+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:24:11.174055+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:25:09.551968+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_012.png",
+    "ts": "2026-03-17T08:25:09.568598+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:25:09.582084+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:25:09.609986+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:25:09.622327+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:26:13.954068+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_013.png",
+    "ts": "2026-03-17T08:26:13.966527+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:26:13.978309+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:26:13.989140+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:26:13.999702+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:27:16.818010+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:27:16.829291+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:27:16.839798+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:28:14.854890+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_015.png",
+    "ts": "2026-03-17T08:28:14.870695+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:28:14.884597+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:28:14.897133+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:28:14.929276+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:29:18.818205+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_016.png",
+    "ts": "2026-03-17T08:29:18.851232+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:29:18.863337+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:29:18.873655+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:29:18.884248+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:30:22.789214+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_017.png",
+    "ts": "2026-03-17T08:30:22.803884+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:30:22.816827+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:30:22.828580+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:30:22.854565+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:31:24.577927+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:31:24.588753+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:31:24.599292+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:32:23.149925+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_019.png",
+    "ts": "2026-03-17T08:32:23.162909+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:32:23.174288+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:32:23.198138+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:32:23.208726+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_latest.png",
+    "ts": "2026-03-17T08:33:31.666554+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/training_curves_epoch_020.png",
+    "ts": "2026-03-17T08:33:31.695286+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:33:31.709171+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:33:31.721515+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:33:31.733817+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:34:29.036130+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:34:29.047256+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:34:29.058466+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:35:25.857480+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:35:25.868431+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:35:25.879216+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:36:22.629514+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:36:22.640503+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:36:22.650682+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:37:19.640303+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:37:19.666043+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:37:19.677997+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.json",
+    "ts": "2026-03-17T08:37:19.705568+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/results.csv",
+    "ts": "2026-03-17T08:37:19.717404+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "training/history.csv",
+    "ts": "2026-03-17T08:37:19.729096+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_075423_759311_cell_6_training.log",
+    "ts": "2026-03-17T08:37:19.745337+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_083719_783637_cell_7_ood_calibration.log",
+    "ts": "2026-03-17T08:37:25.507332+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/README.md",
+    "ts": "2026-03-17T08:37:29.661329+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_config.json",
+    "ts": "2026-03-17T08:37:29.676258+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_meta.json",
+    "ts": "2026-03-17T08:37:29.799387+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/adapter_model.safetensors",
+    "ts": "2026-03-17T08:37:29.884999+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/classifier.pth",
+    "ts": "2026-03-17T08:37:29.911905+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/continual_sd_lora_adapter/fusion.pth",
+    "ts": "2026-03-17T08:37:29.957746+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_083725_526698_cell_8_adapter_save.log",
+    "ts": "2026-03-17T08:37:29.975289+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "validation/classification_report.txt",
+    "ts": "2026-03-17T08:39:28.860144+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/classification_report.json",
+    "ts": "2026-03-17T08:39:28.872823+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/per_class_metrics.csv",
+    "ts": "2026-03-17T08:39:28.885080+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix.csv",
+    "ts": "2026-03-17T08:39:28.898344+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix.png",
+    "ts": "2026-03-17T08:39:28.910559+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/confusion_matrix_normalized.png",
+    "ts": "2026-03-17T08:39:28.935639+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/ood_evidence_summary.json",
+    "ts": "2026-03-17T08:39:28.954718+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/metric_gate.json",
+    "ts": "2026-03-17T08:39:28.969643+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/classification_report.txt",
+    "ts": "2026-03-17T08:42:44.226081+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/classification_report.json",
+    "ts": "2026-03-17T08:42:44.237866+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/per_class_metrics.csv",
+    "ts": "2026-03-17T08:42:44.249314+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix.csv",
+    "ts": "2026-03-17T08:42:44.260638+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix.png",
+    "ts": "2026-03-17T08:42:44.272282+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/confusion_matrix_normalized.png",
+    "ts": "2026-03-17T08:42:44.283892+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/ood_evidence_summary.json",
+    "ts": "2026-03-17T08:42:44.310842+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/metric_gate.json",
+    "ts": "2026-03-17T08:42:44.324087+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "production_readiness.json",
+    "ts": "2026-03-17T08:42:44.336564+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260317_083730_016860_cell_9_final_evaluation.log",
+    "ts": "2026-03-17T08:42:44.357316+00:00",
+    "type": "text"
+  }
+]

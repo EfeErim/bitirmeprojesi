@@ -1,0 +1,871 @@
+{
+  "schema_version": "v6_training_session",
+  "created_at": "2026-03-17T08:32:23.213551Z",
+  "run_id": "20260317_075215_994111",
+  "progress_state": {
+    "epoch": 19,
+    "batch": 81,
+    "total_batches": 81,
+    "global_step": 1539,
+    "optimizer_steps": 1539,
+    "elapsed_sec": 2272.778476648,
+    "eta_sec": 1315.8191180593683,
+    "resume_start_epoch": 0,
+    "stopped_early": false
+  },
+  "history": {
+    "train_loss": [
+      1.4383600413063427,
+      0.4548855354020625,
+      0.322821851497815,
+      0.27726077444759417,
+      0.2399042484201031,
+      0.22765264282991857,
+      0.20771250239125005,
+      0.19473287371205694,
+      0.18656212735323258,
+      0.1833675695054325,
+      0.1770190046525296,
+      0.1689442856076323,
+      0.16311413141680353,
+      0.16043395613446648,
+      0.1591664249146426,
+      0.1544557449258404,
+      0.1533810286610215,
+      0.1515316852816829,
+      0.14993138813678128
+    ],
+    "val_loss": [
+      0.5218968607196797,
+      0.26835258743773227,
+      0.2090472786721087,
+      0.2098186415217739,
+      0.1670028002407189,
+      0.1413683809417849,
+      0.14718121464221698,
+      0.12476057081626982,
+      0.12233954208279653,
+      0.11568791928031948,
+      0.11948930591656229,
+      0.11044780115042278,
+      0.09782504768883002,
+      0.10798697394319451,
+      0.09516921848260192,
+      0.09126944731882033,
+      0.09000156474538427,
+      0.09114734088451348,
+      0.08748020619135659
+    ],
+    "val_accuracy": [
+      0.8469575906576521,
+      0.9219422249539029,
+      0.9366933005531654,
+      0.9274738783036263,
+      0.9471419791026429,
+      0.9618930547019053,
+      0.9557467732022127,
+      0.9625076828518746,
+      0.9594345421020283,
+      0.9643515673017824,
+      0.9643515673017824,
+      0.9674247080516287,
+      0.9729563614013522,
+      0.9674247080516287,
+      0.9760295021511985,
+      0.9784880147510756,
+      0.9778733866011063,
+      0.9772587584511371,
+      0.9778733866011063
+    ],
+    "macro_precision": [
+      0.8378829956054688,
+      0.9345948100090027,
+      0.9418997168540955,
+      0.9045419096946716,
+      0.9525270462036133,
+      0.9404793381690979,
+      0.9638659954071045,
+      0.966754674911499,
+      0.9680301547050476,
+      0.9593050479888916,
+      0.9705870151519775,
+      0.9650802612304688,
+      0.9747081398963928,
+      0.9613789916038513,
+      0.9815442562103271,
+      0.9716286659240723,
+      0.9699904918670654,
+      0.9803664684295654,
+      0.9828393459320068
+    ],
+    "macro_recall": [
+      0.7511464953422546,
+      0.8446803689002991,
+      0.8710233569145203,
+      0.8855769038200378,
+      0.9146333336830139,
+      0.9354570508003235,
+      0.923884391784668,
+      0.9265636801719666,
+      0.9246743321418762,
+      0.9361245036125183,
+      0.9186983108520508,
+      0.9575846791267395,
+      0.9339501261711121,
+      0.9413426518440247,
+      0.947476863861084,
+      0.9667959809303284,
+      0.945928156375885,
+      0.9458608031272888,
+      0.955573558807373
+    ],
+    "macro_f1": [
+      0.7561349868774414,
+      0.8697857856750488,
+      0.891666829586029,
+      0.8920047283172607,
+      0.9262494444847107,
+      0.9365966320037842,
+      0.9338411688804626,
+      0.9405668377876282,
+      0.9402205348014832,
+      0.9460477828979492,
+      0.9348048567771912,
+      0.9608922004699707,
+      0.9482738375663757,
+      0.9484958648681641,
+      0.9591197371482849,
+      0.9688035845756531,
+      0.956352174282074,
+      0.9597644209861755,
+      0.9675212502479553
+    ],
+    "weighted_f1": [
+      0.8434579916064844,
+      0.9207865709751459,
+      0.9359455729966963,
+      0.9276206327788875,
+      0.9466413182573371,
+      0.9618040716714045,
+      0.9551661326684465,
+      0.9621476241981023,
+      0.9592362434935848,
+      0.9641394635688768,
+      0.9637144307967117,
+      0.9673772154223648,
+      0.9726081571479334,
+      0.9672490678539875,
+      0.9756739451684465,
+      0.9784333194481791,
+      0.9777482401467424,
+      0.9770902458992778,
+      0.9778652085654195
+    ],
+    "balanced_accuracy": [
+      0.7511464953422546,
+      0.8446803689002991,
+      0.8710233569145203,
+      0.8855769038200378,
+      0.9146333336830139,
+      0.9354570508003235,
+      0.923884391784668,
+      0.9265636801719666,
+      0.9246743321418762,
+      0.9361245036125183,
+      0.9186983108520508,
+      0.9575846791267395,
+      0.9339501261711121,
+      0.9413426518440247,
+      0.947476863861084,
+      0.9667959809303284,
+      0.945928156375885,
+      0.9458608031272888,
+      0.955573558807373
+    ],
+    "generalization_gap": [
+      -0.916463180586663,
+      -0.18653294796433023,
+      -0.1137745728257063,
+      -0.06744213292582027,
+      -0.07290144817938421,
+      -0.08628426188813368,
+      -0.060531287749033075,
+      -0.06997230289578713,
+      -0.06422258527043605,
+      -0.06767965022511303,
+      -0.057529698735967305,
+      -0.05849648445720952,
+      -0.06528908372797351,
+      -0.052446982191271974,
+      -0.0639972064320407,
+      -0.06318629760702008,
+      -0.06337946391563722,
+      -0.060384344397169415,
+      -0.06245118194542469
+    ],
+    "per_class_accuracy": [
+      {
+        "healthy": 0.9045225977897644,
+        "tomato_bacterial_spot_and_speck_leaf": 0.8962264060974121,
+        "tomato_early_blight_leaf": 0.48235294222831726,
+        "tomato_gray_mold_leaf": 0.1428571492433548,
+        "tomato_late_blight_leaf": 0.8715596199035645,
+        "tomato_leaf_mold_leaf": 0.9112903475761414,
+        "tomato_mosaic_virus_leaf": 0.8050000071525574,
+        "tomato_powdery_mildew_leaf": 0.4444444477558136,
+        "tomato_septoria_leaf_spot_leaf": 0.9707317352294922,
+        "tomato_spider_mites_leaf": 0.824999988079071,
+        "tomato_spotted_wilt_virus": 0.8095238208770752,
+        "tomato_yellow_leaf_curl_leaf": 0.9502487778663635
+      },
+      {
+        "healthy": 0.9648241400718689,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9245283007621765,
+        "tomato_early_blight_leaf": 0.7411764860153198,
+        "tomato_gray_mold_leaf": 0.4285714328289032,
+        "tomato_late_blight_leaf": 0.9495412707328796,
+        "tomato_leaf_mold_leaf": 0.9516128897666931,
+        "tomato_mosaic_virus_leaf": 0.9350000023841858,
+        "tomato_powdery_mildew_leaf": 0.4444444477558136,
+        "tomato_septoria_leaf_spot_leaf": 0.9463414549827576,
+        "tomato_spider_mites_leaf": 0.875,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9751243591308594
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9198113083839417,
+        "tomato_early_blight_leaf": 0.8235294222831726,
+        "tomato_gray_mold_leaf": 0.5714285969734192,
+        "tomato_late_blight_leaf": 0.9541284441947937,
+        "tomato_leaf_mold_leaf": 0.9677419066429138,
+        "tomato_mosaic_virus_leaf": 0.9399999976158142,
+        "tomato_powdery_mildew_leaf": 0.4444444477558136,
+        "tomato_septoria_leaf_spot_leaf": 0.9560975432395935,
+        "tomato_spider_mites_leaf": 0.925000011920929,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.96517413854599
+      },
+      {
+        "healthy": 0.9597989916801453,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9433962106704712,
+        "tomato_early_blight_leaf": 0.8470588326454163,
+        "tomato_gray_mold_leaf": 0.7142857313156128,
+        "tomato_late_blight_leaf": 0.8807339668273926,
+        "tomato_leaf_mold_leaf": 0.9596773982048035,
+        "tomato_mosaic_virus_leaf": 0.9100000262260437,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.9463414549827576,
+        "tomato_spider_mites_leaf": 0.925000011920929,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9850746393203735
+      },
+      {
+        "healthy": 0.979899525642395,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9433962106704712,
+        "tomato_early_blight_leaf": 0.8058823347091675,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9724770784378052,
+        "tomato_leaf_mold_leaf": 0.975806474685669,
+        "tomato_mosaic_virus_leaf": 0.9150000214576721,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.9853658676147461,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9850746393203735
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.948113203048706,
+        "tomato_early_blight_leaf": 0.929411768913269,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9862385392189026,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9150000214576721,
+        "tomato_powdery_mildew_leaf": 0.6666666865348816,
+        "tomato_septoria_leaf_spot_leaf": 0.9609755873680115,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9850746393203735
+      },
+      {
+        "healthy": 0.979899525642395,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9716981053352356,
+        "tomato_early_blight_leaf": 0.841176450252533,
+        "tomato_gray_mold_leaf": 1.0,
+        "tomato_late_blight_leaf": 0.9816513657569885,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9200000166893005,
+        "tomato_powdery_mildew_leaf": 0.4444444477558136,
+        "tomato_septoria_leaf_spot_leaf": 0.9707317352294922,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9850746393203735
+      },
+      {
+        "healthy": 0.9899497628211975,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9528301954269409,
+        "tomato_early_blight_leaf": 0.8882352709770203,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9770641922950745,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9599999785423279,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.9609755873680115,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9850746393203735
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.948113203048706,
+        "tomato_early_blight_leaf": 0.8941176533699036,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9587156176567078,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9449999928474426,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.9804878234863281,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9800994992256165
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9716981053352356,
+        "tomato_early_blight_leaf": 0.8941176533699036,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9724770784378052,
+        "tomato_leaf_mold_leaf": 0.975806474685669,
+        "tomato_mosaic_virus_leaf": 0.9449999928474426,
+        "tomato_powdery_mildew_leaf": 0.6666666865348816,
+        "tomato_septoria_leaf_spot_leaf": 0.9756097793579102,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9899497628211975,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9575471878051758,
+        "tomato_early_blight_leaf": 0.8705882430076599,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9724770784378052,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9599999785423279,
+        "tomato_powdery_mildew_leaf": 0.4444444477558136,
+        "tomato_septoria_leaf_spot_leaf": 0.9902439117431641,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9748743772506714,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9764150977134705,
+        "tomato_early_blight_leaf": 0.9058823585510254,
+        "tomato_gray_mold_leaf": 1.0,
+        "tomato_late_blight_leaf": 0.9587156176567078,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9549999833106995,
+        "tomato_powdery_mildew_leaf": 0.7777777910232544,
+        "tomato_septoria_leaf_spot_leaf": 0.9853658676147461,
+        "tomato_spider_mites_leaf": 0.9750000238418579,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9575471878051758,
+        "tomato_early_blight_leaf": 0.9176470637321472,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9724770784378052,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9850000143051147,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.995121955871582,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9698492288589478,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9528301954269409,
+        "tomato_early_blight_leaf": 0.8941176533699036,
+        "tomato_gray_mold_leaf": 1.0,
+        "tomato_late_blight_leaf": 0.9816513657569885,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9649999737739563,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.995121955871582,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9899497628211975,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9858490824699402,
+        "tomato_early_blight_leaf": 0.929411768913269,
+        "tomato_gray_mold_leaf": 1.0,
+        "tomato_late_blight_leaf": 0.9862385392189026,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9700000286102295,
+        "tomato_powdery_mildew_leaf": 0.5555555820465088,
+        "tomato_septoria_leaf_spot_leaf": 0.9707317352294922,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9899497628211975,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9764150977134705,
+        "tomato_early_blight_leaf": 0.9235293865203857,
+        "tomato_gray_mold_leaf": 1.0,
+        "tomato_late_blight_leaf": 0.9816513657569885,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9800000190734863,
+        "tomato_powdery_mildew_leaf": 0.7777777910232544,
+        "tomato_septoria_leaf_spot_leaf": 0.9902439117431641,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9764150977134705,
+        "tomato_early_blight_leaf": 0.9352940917015076,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9816513657569885,
+        "tomato_leaf_mold_leaf": 0.9838709831237793,
+        "tomato_mosaic_virus_leaf": 0.9800000190734863,
+        "tomato_powdery_mildew_leaf": 0.6666666865348816,
+        "tomato_septoria_leaf_spot_leaf": 0.995121955871582,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9764150977134705,
+        "tomato_early_blight_leaf": 0.9411764740943909,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9816513657569885,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9750000238418579,
+        "tomato_powdery_mildew_leaf": 0.6666666865348816,
+        "tomato_septoria_leaf_spot_leaf": 0.9853658676147461,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      },
+      {
+        "healthy": 0.9849246144294739,
+        "tomato_bacterial_spot_and_speck_leaf": 0.9811320900917053,
+        "tomato_early_blight_leaf": 0.970588207244873,
+        "tomato_gray_mold_leaf": 0.8571428656578064,
+        "tomato_late_blight_leaf": 0.9724770784378052,
+        "tomato_leaf_mold_leaf": 0.9919354915618896,
+        "tomato_mosaic_virus_leaf": 0.9750000238418579,
+        "tomato_powdery_mildew_leaf": 0.7777777910232544,
+        "tomato_septoria_leaf_spot_leaf": 0.9658536314964294,
+        "tomato_spider_mites_leaf": 1.0,
+        "tomato_spotted_wilt_virus": 1.0,
+        "tomato_yellow_leaf_curl_leaf": 0.9900497794151306
+      }
+    ],
+    "worst_classes": [
+      [
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.1428571492433548,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.4444444477558136,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.48235294222831726,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.4285714328289032,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.4444444477558136,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.7411764860153198,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.4444444477558136,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.5714285969734192,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8235294222831726,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.7142857313156128,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8470588326454163,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8058823347091675,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.6666666865348816,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_mosaic_virus_leaf",
+          "class_index": 6,
+          "accuracy": 0.9150000214576721,
+          "support": 200
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.4444444477558136,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.841176450252533,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_mosaic_virus_leaf",
+          "class_index": 6,
+          "accuracy": 0.9200000166893005,
+          "support": 200
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8882352709770203,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8941176533699036,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.6666666865348816,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8941176533699036,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.4444444477558136,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8705882430076599,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.7777777910232544,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.9058823585510254,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_mosaic_virus_leaf",
+          "class_index": 6,
+          "accuracy": 0.9549999833106995,
+          "support": 200
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.9176470637321472,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.8941176533699036,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_bacterial_spot_and_speck_leaf",
+          "class_index": 1,
+          "accuracy": 0.9528301954269409,
+          "support": 212
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.5555555820465088,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.929411768913269,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_mosaic_virus_leaf",
+          "class_index": 6,
+          "accuracy": 0.9700000286102295,
+          "support": 200
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.7777777910232544,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.9235293865203857,
+          "support": 170
+        },
+        {
+          "class_name": "tomato_bacterial_spot_and_speck_leaf",
+          "class_index": 1,
+          "accuracy": 0.9764150977134705,
+          "support": 212
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.6666666865348816,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.9352940917015076,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.6666666865348816,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_early_blight_leaf",
+          "class_index": 2,
+          "accuracy": 0.9411764740943909,
+          "support": 170
+        }
+      ],
+      [
+        {
+          "class_name": "tomato_powdery_mildew_leaf",
+          "class_index": 7,
+          "accuracy": 0.7777777910232544,
+          "support": 9
+        },
+        {
+          "class_name": "tomato_gray_mold_leaf",
+          "class_index": 3,
+          "accuracy": 0.8571428656578064,
+          "support": 7
+        },
+        {
+          "class_name": "tomato_septoria_leaf_spot_leaf",
+          "class_index": 8,
+          "accuracy": 0.9658536314964294,
+          "support": 205
+        }
+      ]
+    ],
+    "stopped_early": false,
+    "global_step": 1539,
+    "optimizer_steps": 1539,
+    "resume_start_epoch": 0,
+    "best_metric_name": "val_loss",
+    "best_epoch": 19,
+    "best_metric_value": 0.08748020619135659
+  },
+  "best_metric_state": {
+    "best_metric_name": "val_loss",
+    "best_metric_value": 0.08748020619135659,
+    "best_epoch": 19,
+    "mode": "min",
+    "patience_bad_epochs": 0
+  }
+}

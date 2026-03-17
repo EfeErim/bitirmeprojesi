@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e19_s1539_20260317_083223_213646",
+  "path": "/content/bitirmeprojesi/runs/20260317_075215_994111/checkpoint_state/checkpoints/ckpt_e19_s1539_20260317_083223_213646",
+  "created_at": "2026-03-17T08:32:28.382234+00:00",
+  "global_step": 1539,
+  "epoch": 19,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.08748020619135659
+}
