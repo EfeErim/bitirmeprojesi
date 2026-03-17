@@ -216,12 +216,21 @@ class ColabLiveTelemetry:
     def configure_repo_output_export(
         self,
         *,
-        output_dir: str | Path,
-        notebook_filename: str,
+        output_dir: Optional[str | Path] = None,
+        notebook_filename: Optional[str] = None,
+        notebook_path: Optional[str | Path] = None,
         export_notebook_fn: Callable[[Path], Optional[Path]],
     ) -> None:
-        self._repo_output_dir = Path(output_dir)
-        self._repo_notebook_path = self._repo_output_dir / str(notebook_filename)
+        if notebook_path is not None:
+            self._repo_notebook_path = Path(notebook_path)
+            self._repo_output_dir = self._repo_notebook_path.parent
+        else:
+            if output_dir is None or notebook_filename is None:
+                raise ValueError(
+                    "configure_repo_output_export requires notebook_path or both output_dir and notebook_filename"
+                )
+            self._repo_output_dir = Path(output_dir)
+            self._repo_notebook_path = self._repo_output_dir / str(notebook_filename)
         self._repo_notebook_exporter = export_notebook_fn
         self.emit_event(
             "repo_output_export_enabled",

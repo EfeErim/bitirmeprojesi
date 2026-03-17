@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Callable, Optional
 from urllib.parse import urlsplit, urlunsplit
@@ -172,7 +173,12 @@ def mount_drive_if_available(force_remount: bool = False) -> None:
         print(f"Drive mount skipped: {exc}")
 
 
-def export_current_colab_notebook(destination_path: str | Path) -> Optional[Path]:
+def export_current_colab_notebook(
+    destination_path: str | Path,
+    *,
+    attempts: int = 3,
+    retry_delay_sec: float = 1.0,
+) -> Optional[Path]:
     """Write the current Colab notebook JSON, including cell outputs, to disk."""
     if not running_in_colab():
         return None
@@ -182,11 +188,21 @@ def export_current_colab_notebook(destination_path: str | Path) -> Optional[Path
     except Exception:
         return None
 
-    response = _message.blocking_request("get_ipynb", timeout_sec=30)
-    payload = response.get("ipynb") if isinstance(response, dict) else None
-    if not isinstance(payload, dict) or not payload:
+    payload = None
+    max_attempts = max(1, int(attempts))
+    delay = max(0.0, float(retry_delay_sec))
+    for attempt_index in range(max_attempts):
+        response = _message.blocking_request("get_ipynb", timeout_sec=30)
+        candidate = response.get("ipynb") if isinstance(response, dict) else None
+        if isinstance(candidate, dict) and candidate:
+            payload = candidate
+            break
         # Colab occasionally returns an empty payload near runtime teardown.
-        # Treat this as a soft failure so auto-push/disconnect finalization can continue.
+        # Retry a few times before treating this as a soft failure so finalization can continue.
+        if attempt_index + 1 < max_attempts and delay > 0.0:
+            time.sleep(delay)
+
+    if not isinstance(payload, dict) or not payload:
         return None
 
     destination = Path(destination_path).expanduser()

@@ -195,3 +195,34 @@ def test_live_telemetry_auto_run_ids_do_not_collide_within_same_second(tmp_path,
 
     assert first.run_id == "20260311_120000_000001"
     assert second.run_id == "20260311_120000_000002"
+
+
+def test_configure_repo_output_export_honors_explicit_notebook_path(tmp_path):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_export_path",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=0.1,
+    )
+
+    target = tmp_path / "repo_runs" / "run_export_path" / "notebooks" / "executed.ipynb"
+
+    def _export(destination):
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text("{}", encoding="utf-8")
+        return destination
+
+    telemetry.configure_repo_output_export(
+        notebook_path=target,
+        export_notebook_fn=_export,
+    )
+    telemetry.close({"status": "ok"})
+
+    assert target.exists()
+    lines = (drive_root / "telemetry" / "run_export_path" / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    exported_events = [json.loads(line) for line in lines if "repo_notebook_exported" in line]
+    assert exported_events
+    assert exported_events[-1]["payload"]["saved_path"] == str(target)
