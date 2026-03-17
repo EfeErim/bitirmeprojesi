@@ -324,6 +324,29 @@ def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path)
     assert candidate["run_id"] == "run_654"
 
 
+def test_discover_adapter_candidates_collapses_same_run_mirrors_preferring_repo_output(tmp_path: Path):
+    project_root = tmp_path / "project"
+    run_id = "run_777"
+    run_root = project_root / "runs" / run_id
+    preferred_asset_dir = _write_adapter_export_with_crop_info(
+        run_root / "outputs" / "colab_notebook_training",
+        crop_name="tomato",
+    )
+    _write_current_drive_adapter_export(run_root / "telemetry", crop_name="tomato")
+    _write_current_drive_adapter_export(run_root / "checkpoint_state", crop_name="tomato")
+
+    drive_root = tmp_path / "drive_root"
+    _write_current_drive_adapter_export(drive_root / "telemetry" / run_id, crop_name="tomato")
+
+    candidates = smoke.discover_adapter_candidates([project_root, drive_root], crop_name=None)
+
+    assert len(candidates) == 1
+    candidate = candidates[0]
+    assert candidate["adapter_dir"] == str(preferred_asset_dir)
+    assert candidate["crop_name"] == "tomato"
+    assert candidate["run_id"] == run_id
+
+
 def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
     project_root = tmp_path / "project"
     asset_dir = _write_adapter_export_with_crop_info(

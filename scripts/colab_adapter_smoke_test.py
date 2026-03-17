@@ -169,12 +169,45 @@ def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
 
 def _infer_run_id(adapter_dir: Path) -> str:
     parts = list(adapter_dir.parts)
-    if "telemetry" not in parts:
-        return ""
-    idx = parts.index("telemetry")
-    if idx + 1 < len(parts):
-        return str(parts[idx + 1])
+    reserved = {"artifacts", "adapter_export", "continual_sd_lora_adapter", "checkpoint_state", "outputs"}
+    if "runs" in parts:
+        idx = parts.index("runs")
+        if idx + 1 < len(parts):
+            candidate = str(parts[idx + 1]).strip()
+            if candidate and candidate not in reserved:
+                return candidate
+    if "telemetry" in parts:
+        idx = parts.index("telemetry")
+        if idx + 1 < len(parts):
+            candidate = str(parts[idx + 1]).strip()
+            if candidate and candidate not in reserved:
+                return candidate
     return ""
+
+
+def _adapter_source_rank(adapter_dir: Path) -> int:
+    normalized = adapter_dir.as_posix().lower()
+    if "/runs/" in normalized and "/outputs/colab_notebook_training/continual_sd_lora_adapter" in normalized:
+        return 0
+    if "/runs/" in normalized and "/checkpoint_state/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+        return 4
+    if "/runs/" in normalized and "/telemetry/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+        return 2
+    if "/runs/" in normalized and "/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+        return 1
+    if "/telemetry/" in normalized and "/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+        return 3
+    if "/models/adapters/" in normalized and normalized.endswith("/continual_sd_lora_adapter"):
+        return 5
+    if normalized.endswith("/outputs/colab_notebook_training/continual_sd_lora_adapter"):
+        return 6
+    return 7
+
+
+def _candidate_identity_key(*, adapter_dir: Path, crop_name: Optional[str], run_id: str) -> str:
+    if run_id:
+        return f"run:{run_id}:{crop_name or 'unknown'}"
+    return f"path:{adapter_dir.resolve()}"
 
 
 def _is_adapter_dir(path: Path) -> bool:
@@ -339,7 +372,7 @@ def discover_adapter_candidates(
     """Search one or more roots for adapter bundles and return selection-ready metadata."""
     requested_crop = _normalize_crop_name(crop_name) if crop_name else None
     roots = [Path(root) for root in (search_roots or DEFAULT_DISCOVERY_ROOTS)]
-    candidates: List[Dict[str, Any]] = []
+    candidates_by_identity: Dict[str, Dict[str, Any]] = {}
     seen: set[str] = set()
 
     for root in roots:
@@ -360,26 +393,51 @@ def discover_adapter_candidates(
             meta_summary = _summary_from_meta(meta)
             candidate_crop = inferred_crop or requested_crop
             run_id = _infer_run_id(adapter_dir)
-            candidates.append(
-                {
-                    "adapter_dir": str(adapter_dir),
-                    "crop_name": candidate_crop,
-                    "backbone_model_name": meta_summary["backbone_model_name"],
-                    "class_count": meta_summary["class_count"],
-                    "class_names": list(meta_summary["class_names"]),
-                    "fusion": dict(meta_summary["fusion"]),
-                    "target_modules_resolved": list(meta_summary["target_modules_resolved"]),
-                    "ood_calibration_version": int(meta_summary["ood_calibration_version"]),
-                    "run_id": run_id,
-                    "display_name": _candidate_label(
-                        adapter_dir=adapter_dir,
-                        crop_name=candidate_crop,
-                        backbone_model_name=meta_summary["backbone_model_name"],
-                        class_count=int(meta_summary["class_count"]),
-                        run_id=run_id,
-                    ),
-                }
+            identity_key = _candidate_identity_key(
+                adapter_dir=adapter_dir,
+                crop_name=candidate_crop,
+                run_id=run_id,
             )
+            candidate = {
+                "adapter_dir": str(adapter_dir),
+                "crop_name": candidate_crop,
+                "backbone_model_name": meta_summary["backbone_model_name"],
+                "class_count": meta_summary["class_count"],
+                "class_names": list(meta_summary["class_names"]),
+                "fusion": dict(meta_summary["fusion"]),
+                "target_modules_resolved": list(meta_summary["target_modules_resolved"]),
+                "ood_calibration_version": int(meta_summary["ood_calibration_version"]),
+                "run_id": run_id,
+            }
+            existing = candidates_by_identity.get(identity_key)
+            if existing is not None:
+                existing_rank = _adapter_source_rank(Path(str(existing.get("adapter_dir", ""))))
+                candidate_rank = _adapter_source_rank(adapter_dir)
+                if (candidate_rank, len(str(adapter_dir))) >= (
+                    existing_rank,
+                    len(str(existing.get("adapter_dir", ""))),
+                ):
+                    continue
+            candidates_by_identity[identity_key] = candidate
+
+    candidates = sorted(
+        candidates_by_identity.values(),
+        key=lambda item: (
+            str(item.get("crop_name") or ""),
+            str(item.get("run_id") or ""),
+            _adapter_source_rank(Path(str(item.get("adapter_dir", "")))),
+            str(item.get("adapter_dir", "")),
+        ),
+    )
+    for candidate in candidates:
+        adapter_dir = Path(str(candidate["adapter_dir"]))
+        candidate["display_name"] = _candidate_label(
+            adapter_dir=adapter_dir,
+            crop_name=candidate.get("crop_name"),
+            backbone_model_name=str(candidate.get("backbone_model_name", "")),
+            class_count=int(candidate.get("class_count", 0)),
+            run_id=str(candidate.get("run_id", "")),
+        )
     return candidates
 
 
