@@ -8,6 +8,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
+    scan_class_root_dataset,
 )
 
 
@@ -229,3 +230,59 @@ def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, m
     with auto_clusters_csv.open("r", encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert rows[0]["resolution"] == "auto_resolve"
+
+
+def test_build_grouped_dataset_plan_excludes_images_missing_after_scan(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    existing_paths = [
+        source_root / "Healthy" / "healthy_0.jpg",
+        source_root / "Healthy" / "healthy_1.jpg",
+        source_root / "Healthy" / "healthy_2.jpg",
+    ]
+    for index, path in enumerate(existing_paths):
+        _write_pattern(path, offset=index + 2)
+
+    missing_path = source_root / "Healthy" / "vanished.jpg"
+
+    real_records, normalization_report = scan_class_root_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        taxonomy_path=None,
+    )
+    missing_record = next(record for record in real_records if record.relative_path.endswith("healthy_0.jpg"))
+    missing_record.relative_path = "Healthy/vanished.jpg"
+    missing_record.absolute_path = str(missing_path.resolve())
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset.scan_class_root_dataset",
+        lambda **kwargs: (real_records, normalization_report),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["summary"]["excluded_images"] == 1
+    assert summary["summary"]["readable_images"] == 2
+    assert summary["summary"]["excluded_reason_breakdown"]["missing_after_scan"] == 1

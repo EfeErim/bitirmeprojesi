@@ -305,6 +305,30 @@ def scan_class_root_dataset(
     return records, normalization_report
 
 
+def _refresh_record_availability(records: Sequence[ImageRecord]) -> Dict[str, int]:
+    excluded_counts = {
+        "missing_after_scan": 0,
+        "unreadable_after_scan": 0,
+    }
+    for record in records:
+        if record.excluded_reason:
+            continue
+        image_path = Path(record.absolute_path)
+        if not image_path.is_file():
+            record.readable = False
+            record.excluded_reason = "missing_after_scan"
+            excluded_counts["missing_after_scan"] += 1
+            continue
+        try:
+            with Image.open(image_path) as raw:
+                _ = ImageOps.exif_transpose(raw.convert("RGB"))
+        except Exception:
+            record.readable = False
+            record.excluded_reason = "unreadable_after_scan"
+            excluded_counts["unreadable_after_scan"] += 1
+    return excluded_counts
+
+
 def _resolve_amp_dtype(device: str) -> Any:
     import torch
 
@@ -738,6 +762,17 @@ def build_grouped_dataset_plan(
         taxonomy_path=taxonomy_path,
     )
     artifact_root.mkdir(parents=True, exist_ok=True)
+    availability_exclusions = _refresh_record_availability(records)
+    if availability_exclusions["missing_after_scan"]:
+        _progress(
+            progress_fn,
+            f"Excluded {availability_exclusions['missing_after_scan']} image(s) that disappeared after the initial scan.",
+        )
+    if availability_exclusions["unreadable_after_scan"]:
+        _progress(
+            progress_fn,
+            f"Excluded {availability_exclusions['unreadable_after_scan']} image(s) that became unreadable after the initial scan.",
+        )
     valid_records = [record for record in records if not record.excluded_reason]
     class_to_records: Dict[str, List[ImageRecord]] = defaultdict(list)
     for record in valid_records:
@@ -1004,6 +1039,12 @@ def build_grouped_dataset_plan(
             "same_class_high_risk_clusters": len(high_risk_review_clusters),
             "cross_class_conflicts": len(blocking_conflicts),
             "blocking_issues": len(blocking_issues),
+            "excluded_reason_breakdown": {
+                "unreadable": len([record for record in records if record.excluded_reason == "unreadable"]),
+                "unhashable": len([record for record in records if record.excluded_reason == "unhashable"]),
+                "missing_after_scan": availability_exclusions["missing_after_scan"],
+                "unreadable_after_scan": availability_exclusions["unreadable_after_scan"],
+            },
             "adjacency_used_for_review_ranking_only": True,
         },
         "normalization_report": normalization_report,
