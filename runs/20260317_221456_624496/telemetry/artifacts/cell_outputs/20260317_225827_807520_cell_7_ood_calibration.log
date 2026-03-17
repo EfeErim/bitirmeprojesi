@@ -1,0 +1,7 @@
+[CELL_CAPTURE] cell=Cell 7: OOD Calibration
+run_id=20260317_221456_624496
+started_at=2026-03-17T22:58:27.807549+00:00
+finished_at=2026-03-17T22:58:33.276844+00:00
+duration_sec=5.469
+
+[OOD] Calibration done. classes=12 version=1

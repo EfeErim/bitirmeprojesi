@@ -1,0 +1,14 @@
+{
+  "notebook": "2_interactive_adapter_training.ipynb",
+  "run_id": "20260317_221456_624496",
+  "status": {
+    "evaluation_splits": [
+      "test",
+      "validation"
+    ],
+    "ood_evidence_source": "real_ood_split",
+    "phase": "evaluation_complete",
+    "production_readiness": "failed"
+  },
+  "ts": "2026-03-17T23:03:03.572541+00:00"
+}
