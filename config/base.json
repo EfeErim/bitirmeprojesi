@@ -7,8 +7,8 @@
       },
       "adapter": {
         "target_modules_strategy": "all_linear_transformer",
-        "lora_r": 16,
-        "lora_alpha": 16,
+        "lora_r": 24,
+        "lora_alpha": 24,
         "lora_dropout": 0.1
       },
       "fusion": {
@@ -18,7 +18,7 @@
         "gating": "softmax"
       },
       "ood": {
-        "threshold_factor": 2.5,
+        "threshold_factor": 3.0,
         "primary_score_method": "auto",
         "ber_enabled": true,
         "ber_lambda_old": 0.1,
@@ -34,17 +34,17 @@
         "knn_backend": "auto",
         "knn_chunk_size": 2048,
         "sure_enabled": true,
-        "sure_semantic_percentile": 82.0,
-        "sure_confidence_percentile": 77.0,
+        "sure_semantic_percentile": 90.0,
+        "sure_confidence_percentile": 97.0,
         "conformal_enabled": true,
         "conformal_alpha": 0.05,
         "conformal_method": "raps",
         "conformal_raps_lambda": 0.2,
         "conformal_raps_k_reg": 1
       },
-      "learning_rate": 0.0001,
+      "learning_rate": 0.00015,
       "weight_decay": 0.01,
-      "num_epochs": 25,
+      "num_epochs": 16,
       "batch_size": 8,
       "device": "cuda",
       "strict_model_loading": false,
