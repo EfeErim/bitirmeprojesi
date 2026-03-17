@@ -67,6 +67,71 @@ def _read_json_if_exists(path: Path) -> Dict[str, Any]:
         return {}
 
 
+def _extract_crop_name_from_payload(payload: Dict[str, Any]) -> Optional[str]:
+    if not isinstance(payload, dict):
+        return None
+
+    context = payload.get("context", {})
+    if not isinstance(context, dict):
+        context = {}
+
+    for candidate in (
+        payload.get("crop"),
+        payload.get("crop_name"),
+        context.get("crop"),
+        context.get("crop_name"),
+    ):
+        if not candidate:
+            continue
+        try:
+            return _normalize_crop_name(str(candidate))
+        except ValueError:
+            continue
+    return None
+
+
+def _infer_crop_name_from_meta(adapter_dir: Path) -> Optional[str]:
+    meta = _read_json_if_exists(adapter_dir / "adapter_meta.json")
+    class_to_idx = meta.get("class_to_idx", {})
+    if not isinstance(class_to_idx, dict):
+        return None
+
+    candidate_counts: Dict[str, int] = {}
+    for raw_name in class_to_idx.keys():
+        class_name = str(raw_name).strip().lower()
+        if not class_name or class_name == "healthy":
+            continue
+        prefix = class_name.split("_", 1)[0].strip()
+        if not prefix or prefix in {"unknown", "ood"}:
+            continue
+        candidate_counts[prefix] = candidate_counts.get(prefix, 0) + 1
+
+    if not candidate_counts:
+        return None
+    inferred = max(candidate_counts.items(), key=lambda item: (item[1], item[0]))[0]
+    return _normalize_crop_name(inferred)
+
+
+def _iter_crop_metadata_candidates(adapter_dir: Path) -> Iterable[Path]:
+    seen: set[Path] = set()
+    bases = [adapter_dir, *list(adapter_dir.parents)[:5]]
+    relative_candidates = (
+        Path("crop_info.json"),
+        Path("production_readiness.json"),
+        Path("training") / "summary.json",
+        Path("artifacts") / "crop_info.json",
+        Path("artifacts") / "production_readiness.json",
+        Path("artifacts") / "training" / "summary.json",
+    )
+    for base in bases:
+        for relative in relative_candidates:
+            candidate = base / relative
+            if candidate in seen:
+                continue
+            seen.add(candidate)
+            yield candidate
+
+
 def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_crop = adapter_dir.parent.name.strip().lower()
@@ -80,16 +145,13 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
         }:
             return parent_crop
 
-    crop_info_candidates = [
-        adapter_dir / "crop_info.json",
-        adapter_dir.parent / "crop_info.json",
-        adapter_dir.parent.parent / "crop_info.json",
-    ]
-    for candidate in crop_info_candidates:
-        payload = _read_json_if_exists(candidate)
-        crop_raw = payload.get("crop")
-        if crop_raw:
-            return _normalize_crop_name(str(crop_raw))
+    for candidate in _iter_crop_metadata_candidates(adapter_dir):
+        inferred = _extract_crop_name_from_payload(_read_json_if_exists(candidate))
+        if inferred is not None:
+            return inferred
+    inferred_from_meta = _infer_crop_name_from_meta(adapter_dir)
+    if inferred_from_meta is not None:
+        return inferred_from_meta
     return None
 
 
@@ -123,8 +185,17 @@ def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
     if path.name == "adapter_meta.json":
         yield path.parent
 
-    yield path
-    yield path / "continual_sd_lora_adapter"
+    for relative in (
+        Path("."),
+        Path("continual_sd_lora_adapter"),
+        Path("adapter_export"),
+        Path("adapter_export") / "continual_sd_lora_adapter",
+        Path("artifacts") / "adapter_export",
+        Path("artifacts") / "adapter_export" / "continual_sd_lora_adapter",
+        Path("outputs") / "colab_notebook_training",
+        Path("outputs") / "colab_notebook_training" / "continual_sd_lora_adapter",
+    ):
+        yield path / relative
 
 
 def _iter_adapter_root_candidates(path: Path, *, crop_key: str) -> Iterable[Path]:

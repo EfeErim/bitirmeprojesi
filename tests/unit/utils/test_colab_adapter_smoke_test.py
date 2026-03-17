@@ -94,6 +94,49 @@ def _write_current_drive_adapter_export(root: Path, crop_name: str = "tomato") -
     return asset_dir
 
 
+def _write_production_readiness(root: Path, crop_name: str = "tomato") -> None:
+    readiness_path = root / "production_readiness.json"
+    readiness_path.parent.mkdir(parents=True, exist_ok=True)
+    readiness_path.write_text(
+        f'{{"status": "ready", "passed": true, "context": {{"crop_name": "{crop_name}"}}}}',
+        encoding="utf-8",
+    )
+
+
+def _write_training_summary(root: Path, crop_name: str = "tomato") -> None:
+    summary_path = root / "training" / "summary.json"
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    summary_path.write_text(
+        f'{{"run_id": "run_local", "crop_name": "{crop_name}"}}',
+        encoding="utf-8",
+    )
+
+
+def _write_adapter_export_with_prefixed_classes(root: Path) -> Path:
+    asset_dir = root / "continual_sd_lora_adapter"
+    asset_dir.mkdir(parents=True, exist_ok=True)
+    (asset_dir / "adapter_meta.json").write_text(
+        """
+        {
+          "schema_version": "v6",
+          "engine": "continual_sd_lora",
+          "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+          "fusion": {"layers": [2, 5, 8, 11], "output_dim": 768, "dropout": 0.1, "gating": "softmax"},
+          "class_to_idx": {
+            "healthy": 0,
+            "tomato_early_blight_leaf": 1,
+            "tomato_late_blight_leaf": 2
+          },
+          "ood_calibration": {"version": 3},
+          "target_modules_resolved": ["encoder.layer.0.attention.q_proj"],
+          "adapter_runtime": {"adapter_wrapped": true}
+        }
+        """.strip(),
+        encoding="utf-8",
+    )
+    return asset_dir
+
+
 def test_load_adapter_summary_accepts_parent_export_dir(monkeypatch, tmp_path: Path):
     export_root = tmp_path / "adapter_export"
     asset_dir = _write_adapter_export(export_root)
@@ -138,11 +181,62 @@ def test_load_adapter_summary_accepts_current_drive_export_dir_and_infers_crop(m
     assert summary["crop_name"] == "tomato"
 
 
+def test_load_adapter_summary_accepts_telemetry_run_dir_and_infers_crop_from_readiness(
+    monkeypatch, tmp_path: Path
+):
+    run_dir = tmp_path / "telemetry" / "run_456"
+    asset_dir = _write_adapter_export(run_dir / "artifacts" / "adapter_export")
+    _write_production_readiness(run_dir / "artifacts", crop_name="tomato")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=run_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
+def test_load_adapter_summary_accepts_telemetry_artifacts_dir_and_infers_crop_from_summary(
+    monkeypatch, tmp_path: Path
+):
+    artifacts_dir = tmp_path / "telemetry" / "run_654" / "artifacts"
+    asset_dir = _write_adapter_export(artifacts_dir / "adapter_export")
+    _write_training_summary(artifacts_dir, crop_name="tomato")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=artifacts_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
 def test_load_adapter_summary_infers_crop_from_local_export_crop_info(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export_with_crop_info(
         tmp_path / "outputs" / "colab_notebook_training",
         crop_name="tomato",
     )
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=asset_dir, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
+def test_load_adapter_summary_infers_crop_from_local_export_artifacts(monkeypatch, tmp_path: Path):
+    export_root = tmp_path / "outputs" / "colab_notebook_training"
+    asset_dir = _write_adapter_export(export_root)
+    _write_production_readiness(export_root / "artifacts", crop_name="tomato")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(None, adapter_dir=export_root, device="cpu")
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
+def test_load_adapter_summary_infers_crop_from_adapter_meta_classes(monkeypatch, tmp_path: Path):
+    export_root = tmp_path / "outputs" / "adapter_export"
+    asset_dir = _write_adapter_export_with_prefixed_classes(export_root)
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
 
     summary = smoke.load_adapter_summary(None, adapter_dir=asset_dir, device="cpu")
@@ -237,6 +331,30 @@ def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp
         crop_name="tomato",
     )
     _write_adapter_export(project_root / ".venv" / "ignored_export")
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 1
+    assert candidates[0]["adapter_dir"] == str(asset_dir)
+    assert candidates[0]["crop_name"] == "tomato"
+
+
+def test_discover_adapter_candidates_infers_crop_from_local_artifacts(tmp_path: Path):
+    project_root = tmp_path / "project"
+    export_root = project_root / "outputs" / "colab_notebook_training"
+    asset_dir = _write_adapter_export(export_root)
+    _write_training_summary(export_root / "artifacts", crop_name="tomato")
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 1
+    assert candidates[0]["adapter_dir"] == str(asset_dir)
+    assert candidates[0]["crop_name"] == "tomato"
+
+
+def test_discover_adapter_candidates_infers_crop_from_adapter_meta_classes(tmp_path: Path):
+    project_root = tmp_path / "project"
+    asset_dir = _write_adapter_export_with_prefixed_classes(project_root / "adapter_export")
 
     candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
 
