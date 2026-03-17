@@ -1,0 +1,110 @@
+{
+  "schema_version": "v6_plan_metric_gate",
+  "metrics": {
+    "accuracy": 0.977286696434021,
+    "ood_auroc": 0.9840073983720392,
+    "ood_false_positive_rate": 0.06568446899938613,
+    "classification_samples": 1629,
+    "ood_samples": 77,
+    "in_distribution_samples": 1629,
+    "sure_ds_f1": 0.551388142575676,
+    "conformal_empirical_coverage": 0.9772866789441375,
+    "conformal_avg_set_size": 1.0030693677102518
+  },
+  "evaluation": {
+    "passed": false,
+    "require_ood": false,
+    "targets": {
+      "accuracy": 0.93,
+      "ood_auroc": 0.92,
+      "ood_false_positive_rate": 0.05,
+      "ood_samples": 5.0,
+      "in_distribution_samples": 5.0,
+      "sure_ds_f1": 0.9,
+      "conformal_empirical_coverage": 0.95,
+      "conformal_avg_set_size": 2.0
+    },
+    "checks": {
+      "accuracy": {
+        "value": 0.977286696434021,
+        "target": 0.93,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_auroc": {
+        "value": 0.9840073983720392,
+        "target": 0.92,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "ood_false_positive_rate": {
+        "value": 0.06568446899938613,
+        "target": 0.05,
+        "operator": "<=",
+        "asserted": true,
+        "passed": false
+      },
+      "ood_samples": {
+        "value": 77,
+        "target": 5.0,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "in_distribution_samples": {
+        "value": 1629,
+        "target": 5.0,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "sure_ds_f1": {
+        "value": 0.551388142575676,
+        "target": 0.9,
+        "operator": ">=",
+        "asserted": true,
+        "passed": false
+      },
+      "conformal_empirical_coverage": {
+        "value": 0.9772866789441375,
+        "target": 0.95,
+        "operator": ">=",
+        "asserted": true,
+        "passed": true
+      },
+      "conformal_avg_set_size": {
+        "value": 1.0030693677102518,
+        "target": 2.0,
+        "operator": "<=",
+        "asserted": true,
+        "passed": true
+      }
+    },
+    "gating": {
+      "status": "ready",
+      "reason": "all_metrics_present",
+      "missing_metrics": []
+    }
+  },
+  "context": {
+    "crop": "tomato",
+    "run_id": "20260317_193526_970678",
+    "split_name": "test",
+    "conformal_eval_samples": 1629,
+    "ood_eval_in_distribution_samples": 1629,
+    "ood_eval_ood_samples": 77,
+    "ood_primary_score_method": "ensemble",
+    "ood_score_methods": [
+      "energy",
+      "ensemble",
+      "knn"
+    ],
+    "ood_types": [
+      "ood"
+    ],
+    "sure_semantic_f1": 0.548148148148148,
+    "sure_confidence_f1": 0.5546666666666666
+  }
+}
