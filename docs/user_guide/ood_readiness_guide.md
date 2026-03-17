@@ -454,6 +454,7 @@ The repo label `SURE+` should be read as `SURE+/DS-F1-inspired double scoring`.
 That means:
 
 - the code combines a semantic OOD score and a confidence rejection score
+- those SURE scores are kept as auxiliary diagnostics and DS-F1 evaluation signals; the runtime `is_ood` verdict still follows the calibrated primary OOD score instead of being overridden by the confidence-reject flag alone
 - DS-F1 is the joint reporting metric for that path
 - the repo does not advertise this implementation as an exact reproduction of a separately versioned "SURE+" paper unless that citation is pinned explicitly in downstream reporting
 

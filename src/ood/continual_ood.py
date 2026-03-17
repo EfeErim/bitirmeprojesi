@@ -544,8 +544,6 @@ class ContinualOODDetector:
             result["sure_confidence_score"] = confidence_score
             result["sure_semantic_ood"] = sure_semantic_ood
             result["sure_confidence_reject"] = sure_confidence_reject
-            if self.primary_score_method == "ensemble":
-                result["is_ood"] = sure_semantic_ood | sure_confidence_reject
         else:
             result["sure_semantic_score"] = torch.zeros(batch_size, dtype=torch.float32, device=features.device)
             result["sure_confidence_score"] = torch.zeros(batch_size, dtype=torch.float32, device=features.device)

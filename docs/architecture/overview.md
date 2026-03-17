@@ -226,7 +226,7 @@ The supported path is:
 
 Important current detail:
 
-- the "SURE+" label in this repo is shorthand for a two-threshold semantic-plus-confidence rejection path; it is not documented as a paper-faithful reproduction claim
+- the "SURE+" label in this repo is shorthand for a two-threshold semantic-plus-confidence diagnostic path used for DS-F1-style evaluation; the runtime `is_ood` verdict still follows the calibrated primary score method rather than letting the confidence-reject flag override it directly
 - conformal mode can now be threshold conformalization on OOD residuals, or standard APS/RAPS set-valued classification
 - the energy detector can optionally calibrate a temperature on the calibration split before thresholds are written
 - kNN distance scoring supports `cdist`, chunked distance search, and optional FAISS when available
