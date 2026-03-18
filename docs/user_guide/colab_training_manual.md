@@ -486,7 +486,7 @@ Notebook 2 also exposes a small set of notebook-level toggles:
 
 These are convenience controls for the notebook surface. The canonical workflow still lives in `TrainingWorkflow.run(...)`.
 
-Notebook 2 now populates its visible training and OOD defaults from the merged `config/base.json` + `config/colab.json` surface. It no longer applies a hidden notebook-only profile after the parameter cell runs. Leave `NOTEBOOK_OVERRIDES = None` unless you intentionally want a one-off notebook experiment; unknown override keys now raise an error instead of being ignored.
+Notebook 2 now takes its visible training and OOD parameters directly from the top parameter cell. It no longer applies a hidden notebook-only profile and it no longer remaps those visible knobs through `NOTEBOOK_OVERRIDES`. If you want different values, edit the cell directly and rerun it.
 
 ## Token Resolution
 

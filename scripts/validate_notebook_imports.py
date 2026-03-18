@@ -319,24 +319,34 @@ def test_training_notebook_bootstrap_contract() -> None:
     assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
 
     required_parameter_snippets = (
-        'BASE_CONFIG = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()',
-        'CONTINUAL_CFG = BASE_CONFIG.get("training", {}).get("continual", {})',
-        'NOTEBOOK_OVERRIDE_CASTERS = {',
-        'NOTEBOOK_OVERRIDES = None',
-        'unknown_override_keys = sorted(set(NOTEBOOK_OVERRIDES) - set(NOTEBOOK_OVERRIDE_CASTERS))',
-        'source=merged_config(colab)',
-        'defaults=config(colab)',
+        'EPOCHS = ',
+        'BATCH_SIZE = ',
+        'LEARNING_RATE = ',
+        'LORA_R = ',
+        'OOD_FACTOR = ',
+        'CHECKPOINT_EVERY_N_STEPS = ',
+        'source=notebook_cell',
+        'defaults=notebook_cell',
+        'parameter_source": "notebook_cell"',
     )
     for snippet in required_parameter_snippets:
-        assert snippet in parameter_source, f"Notebook 2 parameter cell is missing required config-default guard: {snippet}"
+        assert snippet in parameter_source, f"Notebook 2 parameter cell is missing required direct parameter surface: {snippet}"
 
     forbidden_parameter_snippets = (
         'MAX_STABLE_PROFILE = {',
         'profile_payload = dict(MAX_STABLE_PROFILE)',
         'profile=max_stable',
+        'NOTEBOOK_OVERRIDE_CASTERS = {',
+        'NOTEBOOK_SETTINGS = {',
+        'NOTEBOOK_OVERRIDES =',
+        'EPOCHS = int(CONTINUAL_CFG.get("num_epochs"',
+        'BATCH_SIZE = int(CONTINUAL_CFG.get("batch_size"',
+        'LEARNING_RATE = float(CONTINUAL_CFG.get("learning_rate"',
+        'source=merged_config(colab)',
+        'defaults=config(colab)',
     )
     for snippet in forbidden_parameter_snippets:
-        assert snippet not in full_source, f"Notebook 2 parameter cell should not contain hidden profile overrides: {snippet}"
+        assert snippet not in full_source, f"Notebook 2 parameter cell should not contain hidden overrides or config-derived parameter remapping: {snippet}"
 
 
 CHECKS = (
