@@ -1,4 +1,4 @@
-import json
+﻿import json
 import re
 import sys
 from datetime import datetime
@@ -226,3 +226,29 @@ def test_configure_repo_output_export_honors_explicit_notebook_path(tmp_path):
     exported_events = [json.loads(line) for line in lines if "repo_notebook_exported" in line]
     assert exported_events
     assert exported_events[-1]["payload"]["saved_path"] == str(target)
+
+
+def test_close_emits_repo_notebook_export_unavailable_when_exporter_returns_none(tmp_path):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_export_missing",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=0.1,
+    )
+
+    target = tmp_path / "repo_runs" / "run_export_missing" / "notebooks" / "executed.ipynb"
+
+    telemetry.configure_repo_output_export(
+        notebook_path=target,
+        export_notebook_fn=lambda _destination: None,
+    )
+    telemetry.close({"status": "ok"})
+
+    assert not target.exists()
+    lines = (drive_root / "telemetry" / "run_export_missing" / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    unavailable_events = [json.loads(line) for line in lines if "repo_notebook_export_unavailable" in line]
+    assert unavailable_events
+    assert unavailable_events[-1]["payload"]["warning"] == "Notebook exporter returned no payload."

@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from pathlib import Path
 
 from scripts.colab_checkpointing import TrainingCheckpointManager
@@ -189,7 +189,7 @@ class _FakeTelemetry:
         self.latest_payloads = []
         self.sync_calls = 0
 
-    def update_latest(self, payload):
+    def update_latest(self, payload, **_kwargs):
         self.latest_payloads.append(dict(payload))
 
     def sync_pending(self):
@@ -221,8 +221,35 @@ def test_build_notebook_completion_report_marks_ready_when_outputs_exist(tmp_pat
 
     assert report["ready"] is True
     assert report["missing"] == []
+    assert report["soft_missing"] == []
     assert report["evaluation_splits"] == ["test"]
     assert report["production_readiness_status"] == "failed"
+
+
+def test_build_notebook_completion_report_treats_missing_notebook_export_as_soft_missing(tmp_path: Path):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+
+    repo_run_exports = {}
+    for name in ("outputs", "telemetry", "checkpoint_state"):
+        path = tmp_path / name
+        path.mkdir(parents=True, exist_ok=True)
+        repo_run_exports[name] = str(path)
+
+    report = build_notebook_completion_report(
+        state={
+            "evaluation_artifacts": {"test": {"metric_gate": {}}},
+            "production_readiness": {"status": "ready", "ood_evidence_source": "real_ood_split"},
+        },
+        telemetry=_FakeTelemetry(summary_path),
+        repo_run_exports=repo_run_exports,
+        notebook_export_path=tmp_path / "missing.ipynb",
+    )
+
+    assert report["ready"] is True
+    assert report["missing"] == []
+    assert report["soft_missing"] == ["executed_notebook_export"]
+    assert report["checks"]["executed_notebook_export"] is False
 
 
 def test_maybe_auto_disconnect_colab_runtime_calls_unassign_when_ready(tmp_path: Path, monkeypatch):
@@ -298,10 +325,71 @@ def test_maybe_auto_disconnect_colab_runtime_skips_when_checks_are_incomplete(tm
 
     assert result["ready"] is False
     assert result["disconnect_requested"] is not True
-    assert telemetry.sync_calls == 0
+    assert telemetry.sync_calls == 1
+    assert telemetry.latest_payloads[-1]["phase"] == "auto_disconnect_skipped"
+    assert telemetry.latest_payloads[-1]["completion_missing"] == [
+        "evaluation_artifacts",
+        "production_readiness",
+        "repo_exports",
+    ]
+    assert telemetry.latest_payloads[-1]["completion_soft_missing"] == ["executed_notebook_export"]
     assert lines == [
-        (
-            "[COLAB] Auto-disconnect skipped. Incomplete checks: "
-            "evaluation_artifacts, production_readiness, repo_exports, executed_notebook_export"
-        )
+        "[COLAB] Auto-disconnect skipped. Incomplete required checks: evaluation_artifacts, production_readiness, repo_exports",
+        "[COLAB] Soft-missing checks: executed_notebook_export",
+    ]
+
+
+def test_maybe_auto_disconnect_colab_runtime_proceeds_when_only_notebook_export_is_soft_missing(
+    tmp_path: Path,
+    monkeypatch,
+):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+
+    repo_run_exports = {}
+    for name in ("outputs", "telemetry", "checkpoint_state"):
+        path = tmp_path / name
+        path.mkdir(parents=True, exist_ok=True)
+        repo_run_exports[name] = str(path)
+
+    telemetry = _FakeTelemetry(summary_path)
+    completion_report = build_notebook_completion_report(
+        state={
+            "evaluation_artifacts": {"test": {"metric_gate": {}}},
+            "production_readiness": {"status": "ready"},
+        },
+        telemetry=telemetry,
+        repo_run_exports=repo_run_exports,
+        notebook_export_path=tmp_path / "missing.ipynb",
+    )
+
+    calls = []
+
+    class _FakeRuntime:
+        def unassign(self):
+            calls.append("unassign")
+
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers._resolve_colab_runtime_api",
+        lambda: _FakeRuntime(),
+    )
+
+    lines = []
+    result = maybe_auto_disconnect_colab_runtime(
+        enabled=True,
+        grace_period_sec=0.0,
+        telemetry=telemetry,
+        completion_report=completion_report,
+        print_fn=lines.append,
+    )
+
+    assert result["ready"] is True
+    assert result["soft_missing"] == ["executed_notebook_export"]
+    assert result["disconnect_requested"] is True
+    assert calls == ["unassign"]
+    assert telemetry.latest_payloads[-1]["phase"] == "auto_disconnect_pending"
+    assert telemetry.latest_payloads[-1]["completion_soft_missing"] == ["executed_notebook_export"]
+    assert lines == [
+        "[COLAB] Proceeding despite soft-missing checks: executed_notebook_export",
+        "[COLAB] Work complete. Disconnecting runtime now to avoid idle credit use.",
     ]

@@ -318,6 +318,26 @@ def test_training_notebook_bootstrap_contract() -> None:
     assert full_source.index("RUN_ID =") < full_source.index("run_id = RUN_ID")
     assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
 
+    required_parameter_snippets = (
+        'BASE_CONFIG = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()',
+        'CONTINUAL_CFG = BASE_CONFIG.get("training", {}).get("continual", {})',
+        'NOTEBOOK_OVERRIDE_CASTERS = {',
+        'NOTEBOOK_OVERRIDES = None',
+        'unknown_override_keys = sorted(set(NOTEBOOK_OVERRIDES) - set(NOTEBOOK_OVERRIDE_CASTERS))',
+        'source=merged_config(colab)',
+        'defaults=config(colab)',
+    )
+    for snippet in required_parameter_snippets:
+        assert snippet in parameter_source, f"Notebook 2 parameter cell is missing required config-default guard: {snippet}"
+
+    forbidden_parameter_snippets = (
+        'MAX_STABLE_PROFILE = {',
+        'profile_payload = dict(MAX_STABLE_PROFILE)',
+        'profile=max_stable',
+    )
+    for snippet in forbidden_parameter_snippets:
+        assert snippet not in full_source, f"Notebook 2 parameter cell should not contain hidden profile overrides: {snippet}"
+
 
 CHECKS = (
     ValidationCheck(

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Notebook 2 helper functions only."""
 
 from __future__ import annotations
@@ -378,12 +378,23 @@ def build_notebook_completion_report(
         "repo_exports": repo_exports_complete,
         "executed_notebook_export": _path_exists(notebook_export_path),
     }
-    missing = [name for name, passed in checks.items() if not passed]
+    blocking_check_names = (
+        "evaluation_artifacts",
+        "production_readiness",
+        "telemetry_summary",
+        "repo_exports",
+    )
+    soft_check_names = ("executed_notebook_export",)
+    missing = [name for name in blocking_check_names if not checks.get(name, False)]
+    soft_missing = [name for name in soft_check_names if not checks.get(name, False)]
     readiness = resolved_state.get("production_readiness") or {}
     return {
         "ready": not missing,
         "checks": checks,
         "missing": missing,
+        "soft_missing": soft_missing,
+        "blocking_checks": {name: checks.get(name, False) for name in blocking_check_names},
+        "soft_checks": {name: checks.get(name, False) for name in soft_check_names},
         "evaluation_splits": evaluation_splits,
         "repo_exports": repo_export_checks,
         "production_readiness_status": str(readiness.get("status", "")),
@@ -415,36 +426,55 @@ def maybe_auto_disconnect_colab_runtime(
     )
     report["auto_disconnect_enabled"] = bool(enabled)
     report.setdefault("disconnect_requested", False)
+    report.setdefault("missing", [])
+    report.setdefault("soft_missing", [])
+
+    def _publish_status(phase: str, **extra: Any) -> None:
+        payload: Dict[str, Any] = {
+            "phase": str(phase),
+            "auto_disconnect": bool(enabled),
+            "disconnect_requested": bool(report.get("disconnect_requested", False)),
+            "completion_checks": dict(report.get("checks", {})),
+            "completion_missing": list(report.get("missing", [])),
+            "completion_soft_missing": list(report.get("soft_missing", [])),
+        }
+        payload.update(extra)
+        _call_if_present(telemetry, "update_latest", payload)
+        _call_if_present(telemetry, "sync_pending")
 
     if not enabled:
         emit("[COLAB] Auto-disconnect disabled.")
+        _publish_status("auto_disconnect_disabled")
         return report
 
     if not bool(report.get("ready")):
         missing = ", ".join(str(item) for item in report.get("missing", [])) or "unknown"
-        emit(f"[COLAB] Auto-disconnect skipped. Incomplete checks: {missing}")
+        emit(f"[COLAB] Auto-disconnect skipped. Incomplete required checks: {missing}")
+        soft_missing = ", ".join(str(item) for item in report.get("soft_missing", []))
+        if soft_missing:
+            emit(f"[COLAB] Soft-missing checks: {soft_missing}")
+        _publish_status("auto_disconnect_skipped")
         return report
 
     runtime_api = _resolve_colab_runtime_api()
     if runtime_api is None or not hasattr(runtime_api, "unassign"):
         emit("[COLAB] Auto-disconnect skipped. google.colab.runtime.unassign is unavailable.")
+        _publish_status("auto_disconnect_unavailable")
         return report
+
+    soft_missing = ", ".join(str(item) for item in report.get("soft_missing", []))
+    if soft_missing:
+        emit(f"[COLAB] Proceeding despite soft-missing checks: {soft_missing}")
 
     delay = max(0.0, float(grace_period_sec or 0.0))
     report["disconnect_requested"] = True
     report["grace_period_sec"] = delay
 
-    _call_if_present(
-        telemetry,
-        "update_latest",
-        {
-            "phase": "auto_disconnect_pending",
-            "auto_disconnect": True,
-            "grace_period_sec": delay,
-            "completion_checks": dict(report.get("checks", {})),
-        },
+    _publish_status(
+        "auto_disconnect_pending",
+        auto_disconnect=True,
+        grace_period_sec=delay,
     )
-    _call_if_present(telemetry, "sync_pending")
 
     if delay > 0:
         emit(f"[COLAB] Work complete. Disconnecting runtime in {delay:.0f}s to avoid idle credit use.")
@@ -458,4 +488,5 @@ def maybe_auto_disconnect_colab_runtime(
         report["disconnect_requested"] = False
         report["disconnect_error"] = f"{exc.__class__.__name__}: {exc}"
         emit(f"[COLAB] Auto-disconnect failed: {report['disconnect_error']}")
+        _publish_status("auto_disconnect_failed", disconnect_error=report["disconnect_error"])
     return report

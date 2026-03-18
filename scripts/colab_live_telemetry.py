@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Live Colab telemetry utilities with local spool + Drive synchronization."""
 
 from __future__ import annotations
@@ -269,7 +269,17 @@ class ColabLiveTelemetry:
                     phase="repo_sync",
                     force_sync=False,
                 )
-            return saved_path
+                return saved_path
+
+            payload["warning"] = "Notebook exporter returned no payload."
+            self.emit_event(
+                "repo_notebook_export_unavailable",
+                payload,
+                phase="repo_sync",
+                level="warning",
+                force_sync=False,
+            )
+            return None
         except Exception as exc:
             payload["error"] = f"{exc.__class__.__name__}: {exc}"
             self.emit_event(
