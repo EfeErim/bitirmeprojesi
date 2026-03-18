@@ -1,0 +1,14 @@
+[CELL_CAPTURE] cell=Cell 3: Parameters
+run_id=20260318_105204_012576
+started_at=2026-03-18T10:52:48.905455+00:00
+finished_at=2026-03-18T10:52:50.029191+00:00
+duration_sec=1.124
+
+[HF] Authenticated as Grizzmann
+[GIT] Auto-push preflight passed: GitHub token resolved.
+[CONFIG] source=notebook_cell crop=tomato epochs=30 bs=128 lr=0.0002 resume=fresh ber=True auto_disconnect=True auto_push=True
+[RUNTIME] defaults=notebook_cell mp=bf16 workers=12 prefetch=8 sched=cosine wd=0.01 accum=1 grad_clip=1.0 label_smooth=0.0 warmup=0.1 early_stop=5/0.0 val_every=1 cache_train=True
+[OOD] factor=3.0 sure=90.0/97.0 conformal=raps alpha=0.05 raps_lambda=0.2 raps_k=1
+
+[STDERR]
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.

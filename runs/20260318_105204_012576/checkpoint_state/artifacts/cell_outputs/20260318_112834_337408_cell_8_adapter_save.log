@@ -1,0 +1,16 @@
+[CELL_CAPTURE] cell=Cell 8: Adapter Save
+run_id=20260318_105204_012576
+started_at=2026-03-18T11:28:34.337437+00:00
+finished_at=2026-03-18T11:28:38.847572+00:00
+duration_sec=4.510
+
+Cell 8: adapter save started
+Saved adapter directory: /content/bitirmeprojesi/outputs/colab_notebook_training/continual_sd_lora_adapter
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/README.md
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/adapter_config.json
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/adapter_meta.json
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/adapter_model.safetensors
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/classifier.pth
+ - outputs/colab_notebook_training/continual_sd_lora_adapter/fusion.pth
+Drive adapter directory: /content/drive/MyDrive/aads_ulora/telemetry/20260318_105204_012576/artifacts/adapter_export/continual_sd_lora_adapter
+Cell 8: adapter save completed

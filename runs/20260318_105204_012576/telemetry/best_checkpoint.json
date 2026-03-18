@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e16_s1616_20260318_112321_839494",
+  "path": "/content/drive/MyDrive/aads_ulora/telemetry/20260318_105204_012576/checkpoints/ckpt_e16_s1616_20260318_112321_839494/training_checkpoint",
+  "created_at": "2026-03-18T11:23:27.341518+00:00",
+  "global_step": 1616,
+  "epoch": 16,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.11648125834164424
+}

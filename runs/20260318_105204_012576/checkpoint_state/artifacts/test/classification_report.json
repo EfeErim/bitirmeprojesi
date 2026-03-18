@@ -1,0 +1,87 @@
+{
+  "healthy": {
+    "precision": 1.0,
+    "recall": 0.9893048128342246,
+    "f1-score": 0.9946236559139785,
+    "support": 187.0
+  },
+  "tomato_bacterial_spot_and_speck_leaf": {
+    "precision": 0.9671361502347418,
+    "recall": 0.9671361502347418,
+    "f1-score": 0.9671361502347418,
+    "support": 213.0
+  },
+  "tomato_early_blight_leaf": {
+    "precision": 0.9802631578947368,
+    "recall": 0.8713450292397661,
+    "f1-score": 0.9226006191950464,
+    "support": 171.0
+  },
+  "tomato_gray_mold_leaf": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 9.0
+  },
+  "tomato_late_blight_leaf": {
+    "precision": 0.972972972972973,
+    "recall": 0.9863013698630136,
+    "f1-score": 0.9795918367346939,
+    "support": 219.0
+  },
+  "tomato_leaf_mold_leaf": {
+    "precision": 0.9541984732824428,
+    "recall": 1.0,
+    "f1-score": 0.9765625,
+    "support": 125.0
+  },
+  "tomato_mosaic_virus_leaf": {
+    "precision": 0.9897959183673469,
+    "recall": 0.9651741293532339,
+    "f1-score": 0.9773299748110831,
+    "support": 201.0
+  },
+  "tomato_powdery_mildew_leaf": {
+    "precision": 1.0,
+    "recall": 0.8181818181818182,
+    "f1-score": 0.9,
+    "support": 11.0
+  },
+  "tomato_septoria_leaf_spot_leaf": {
+    "precision": 0.9237668161434978,
+    "recall": 0.9951690821256038,
+    "f1-score": 0.958139534883721,
+    "support": 207.0
+  },
+  "tomato_spider_mites_leaf": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 41.0
+  },
+  "tomato_spotted_wilt_virus": {
+    "precision": 0.9767441860465116,
+    "recall": 1.0,
+    "f1-score": 0.9882352941176471,
+    "support": 42.0
+  },
+  "tomato_yellow_leaf_curl_leaf": {
+    "precision": 0.9853658536585366,
+    "recall": 0.9950738916256158,
+    "f1-score": 0.9901960784313726,
+    "support": 203.0
+  },
+  "accuracy": 0.9723756906077348,
+  "macro avg": {
+    "precision": 0.9791869607167323,
+    "recall": 0.9656405236215014,
+    "f1-score": 0.9712013036935238,
+    "support": 1629.0
+  },
+  "weighted avg": {
+    "precision": 0.9731136432667671,
+    "recall": 0.9723756906077348,
+    "f1-score": 0.9721019946075092,
+    "support": 1629.0
+  }
+}
