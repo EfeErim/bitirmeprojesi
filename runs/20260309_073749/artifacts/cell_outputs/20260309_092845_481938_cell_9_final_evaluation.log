@@ -1,9 +1,0 @@
-[CELL_CAPTURE] cell=Cell 9: Final Evaluation
-run_id=20260309_073749
-started_at=2026-03-09T09:28:45.481957+00:00
-finished_at=2026-03-09T09:29:05.035300+00:00
-duration_sec=19.553
-
-[VALIDATION (reference)] samples=2629 classes=13 accuracy=0.9871
-[TEST (held-out)] samples=2647 classes=13 accuracy=0.9875
-[DONE] Validation reference and held-out test artifacts saved to Drive.
