@@ -230,6 +230,7 @@ def test_data_prep_notebook_contract() -> None:
     cells = payload.get("cells", [])
     bootstrap_source = ""
     parameter_source = ""
+    access_check_source = ""
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
     for cell in cells:
         if cell.get("cell_type") != "code":
@@ -239,9 +240,12 @@ def test_data_prep_notebook_contract() -> None:
             bootstrap_source = source
         if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
             parameter_source = source
+        if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
+            access_check_source = source
 
     assert bootstrap_source, "Notebook 0 bootstrap cell was not found"
     assert parameter_source, "Notebook 0 parameter cell was not found"
+    assert access_check_source, "Notebook 0 access-check cell was not found"
     for snippet in (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
@@ -259,6 +263,8 @@ def test_data_prep_notebook_contract() -> None:
         "PREP_BIOCLIP_MODEL_ID =",
     ):
         assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
+    assert "collect_notebook_access_report" in access_check_source
+    assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
 
@@ -284,6 +290,8 @@ def test_training_notebook_bootstrap_contract() -> None:
     cells = payload.get("cells", [])
     bootstrap_source = ""
     parameter_source = ""
+    run_identity_source = ""
+    access_check_source = ""
     for cell in cells:
         if cell.get("cell_type") != "code":
             continue
@@ -292,9 +300,15 @@ def test_training_notebook_bootstrap_contract() -> None:
             bootstrap_source = source
         if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
             parameter_source = source
+        if not run_identity_source and "# Notebook 2 calisma kimligi" in source:
+            run_identity_source = source
+        if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
+            access_check_source = source
 
     assert bootstrap_source, "Notebook 2 bootstrap cell was not found"
     assert parameter_source, "Notebook 2 parameter cell was not found"
+    assert run_identity_source, "Notebook 2 run identity cell was not found"
+    assert access_check_source, "Notebook 2 access-check cell was not found"
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
 
     required_bootstrap_snippets = (
@@ -306,6 +320,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         "REPO_RUN_DIR =",
         "REPO_NOTEBOOK_OUTPUT_PATH =",
         "def save_run_outputs_to_repo()",
+        "build_notebook_run_id",
     )
     missing = [snippet for snippet in required_bootstrap_snippets if snippet not in bootstrap_source]
     if missing:
@@ -317,8 +332,12 @@ def test_training_notebook_bootstrap_contract() -> None:
     )
     assert full_source.index("RUN_ID =") < full_source.index("run_id = RUN_ID")
     assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
+    assert 'PART_NAME = "unspecified"' in run_identity_source
+    assert "collect_notebook_access_report" in access_check_source
+    assert "print_notebook_access_report" in access_check_source
 
     required_parameter_snippets = (
+        'PART_NAME = globals().get("PART_NAME", "unspecified")',
         'EPOCHS = ',
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',

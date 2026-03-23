@@ -252,3 +252,39 @@ def test_close_emits_repo_notebook_export_unavailable_when_exporter_returns_none
     unavailable_events = [json.loads(line) for line in lines if "repo_notebook_export_unavailable" in line]
     assert unavailable_events
     assert unavailable_events[-1]["payload"]["warning"] == "Notebook exporter returned no payload."
+
+def test_live_telemetry_merges_guided_catalog_and_summary_metadata(tmp_path):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_guided",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=0.1,
+    )
+
+    telemetry.merge_artifact_catalog(
+        [
+            {
+                "relative_path": "guided/00_start_here.md",
+                "category": "training",
+                "priority": "critical",
+                "title_tr": "Baslangic rehberi",
+                "description_tr": "Kullanici icin ilk okuma noktasi.",
+                "reader_goal": "Nereden baslayacagini gormek",
+                "format": "md",
+                "generated_by": "test",
+                "decision_importance": "run_overview",
+                "read_order": 1,
+            }
+        ]
+    )
+    telemetry.merge_summary_metadata({"guided_artifacts": {"start_here": "guided/00_start_here.md"}})
+    telemetry.close({"status": "ok"})
+
+    artifact_index = json.loads((drive_root / "telemetry" / "run_guided" / "artifact_index.json").read_text(encoding="utf-8"))
+    summary = json.loads((drive_root / "telemetry" / "run_guided" / "summary.json").read_text(encoding="utf-8"))
+
+    assert any(entry["relative_path"] == "guided/00_start_here.md" for entry in artifact_index)
+    assert summary["metadata"]["guided_artifacts"]["start_here"] == "guided/00_start_here.md"

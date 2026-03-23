@@ -1,11 +1,14 @@
 ﻿from datetime import datetime
+import json
 from pathlib import Path
 
 from scripts.colab_checkpointing import TrainingCheckpointManager
 from scripts.colab_notebook_helpers import (
     NotebookTrainingStatusPrinter,
     build_notebook_completion_report,
+    build_notebook_run_id,
     ensure_notebook_checkpoint_manager,
+    merge_training_summary_fields,
     maybe_auto_disconnect_colab_runtime,
     persist_validation_artifacts,
 )
@@ -393,3 +396,60 @@ def test_maybe_auto_disconnect_colab_runtime_proceeds_when_only_notebook_export_
         "[COLAB] Proceeding despite soft-missing checks: executed_notebook_export",
         "[COLAB] Work complete. Disconnecting runtime now to avoid idle credit use.",
     ]
+
+def test_build_notebook_run_id_includes_crop_part_and_timestamp():
+    run_id = build_notebook_run_id(
+        "Tomato Leaf",
+        "Upper Part",
+        now=datetime(2026, 3, 23, 10, 11, 12),
+    )
+
+    assert run_id == "tomato_leaf_upper_part_2026-03-23_10-11-12"
+
+
+class _ArtifactMergingTelemetry:
+    def __init__(self):
+        self.copied = []
+        self.catalog_entries = []
+        self.summary_metadata = []
+
+    def copy_artifact_file(self, source_path, relative_path):
+        self.copied.append((Path(source_path), str(relative_path)))
+
+    def merge_artifact_catalog(self, entries):
+        self.catalog_entries.extend(list(entries))
+
+    def merge_summary_metadata(self, payload):
+        self.summary_metadata.append(dict(payload))
+
+
+def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_path: Path):
+    telemetry = _ArtifactMergingTelemetry()
+    artifact_root = tmp_path / "outputs" / "colab_notebook_training" / "artifacts"
+    (artifact_root / "test").mkdir(parents=True, exist_ok=True)
+    (artifact_root / "production_readiness.json").write_text("{}", encoding="utf-8")
+    (artifact_root / "test" / "metric_gate.json").write_text("{}", encoding="utf-8")
+
+    payload = merge_training_summary_fields(
+        root=tmp_path,
+        telemetry=telemetry,
+        payload={
+            "run_id": "tomato_leaf_2026-03-23_10-11-12",
+            "run_label": "tomato_leaf_2026-03-23_10-11-12",
+            "crop_name": "tomato",
+            "part_name": "leaf",
+        },
+    )
+
+    summary_path = artifact_root / "training" / "summary.json"
+    guided_dir = artifact_root / "guided"
+    catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
+
+    assert summary_path.exists()
+    assert payload["part_name"] == "leaf"
+    assert (guided_dir / "00_start_here.md").exists()
+    assert (guided_dir / "01_run_overview.json").exists()
+    assert any(entry["relative_path"] == "training/summary.json" for entry in catalog["entries"])
+    assert any(relative_path == "training/summary.json" for _source, relative_path in telemetry.copied)
+    assert telemetry.catalog_entries
+    assert telemetry.summary_metadata

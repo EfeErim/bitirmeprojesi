@@ -11,7 +11,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any, Callable, Optional, Sequence
 from urllib.parse import urlsplit, urlunsplit
 
 HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
@@ -483,18 +483,263 @@ def _resolve_colab_secret(secret_name: str) -> str:
         return ""
 
 
+def _run_capture(
+    args: list[str],
+    *,
+    cwd: Optional[Path] = None,
+    timeout_sec: float = 30.0,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args,
+        cwd=None if cwd is None else str(cwd),
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=max(1.0, float(timeout_sec)),
+    )
+
+
+def probe_repo_update_status(
+    repo_root: str | Path,
+    *,
+    remote_name: str = "origin",
+    branch: Optional[str] = None,
+) -> dict[str, Any]:
+    repo = Path(repo_root).expanduser().resolve()
+    if not is_repo_root(repo):
+        return {"status": "unavailable", "message": f"Repository root not found: {repo}"}
+
+    resolved_branch = str(branch or _git_current_branch(repo) or "").strip()
+    if not resolved_branch:
+        return {"status": "unavailable", "message": "Current git branch could not be determined."}
+
+    local_head_completed = _run_git(["rev-parse", "HEAD"], cwd=repo, check=False, capture_output=True)
+    local_head = str(local_head_completed.stdout or "").strip()
+    if local_head_completed.returncode != 0 or not local_head:
+        return {"status": "unavailable", "branch": resolved_branch, "message": "Local HEAD could not be resolved."}
+
+    remote_completed = _run_capture(["git", "ls-remote", remote_name, f"refs/heads/{resolved_branch}"], cwd=repo)
+    remote_stdout = str(remote_completed.stdout or "").strip()
+    if remote_completed.returncode != 0 or not remote_stdout:
+        return {
+            "status": "unavailable",
+            "branch": resolved_branch,
+            "local_head": local_head,
+            "message": "Remote branch information could not be read.",
+            "detail": remote_stdout,
+        }
+
+    remote_head = remote_stdout.split()[0].strip()
+    update_available = bool(remote_head and remote_head != local_head)
+    return {
+        "status": "ok",
+        "branch": resolved_branch,
+        "local_head": local_head,
+        "remote_head": remote_head,
+        "update_available": update_available,
+        "relation": "update_available" if update_available else "up_to_date",
+    }
+
+
+def probe_github_repo_access(
+    *,
+    repo_url: Optional[str] = None,
+    repo_root: Optional[str | Path] = None,
+    token: Optional[str] = None,
+) -> dict[str, Any]:
+    resolved_repo_url = str(repo_url or "").strip()
+    if not resolved_repo_url and repo_root is not None:
+        repo = Path(repo_root).expanduser().resolve()
+        if is_repo_root(repo):
+            try:
+                resolved_repo_url = _git_remote_url(repo, "origin")
+            except Exception:
+                resolved_repo_url = ""
+    if not resolved_repo_url:
+        resolved_repo_url = str(os.environ.get("AADS_REPO_URL", "")).strip()
+
+    if not resolved_repo_url:
+        return {"status": "unavailable", "message": "Repository URL could not be determined."}
+
+    resolved_token = str(token or resolve_github_token() or "").strip()
+    anonymous_probe = _run_capture(["git", "ls-remote", resolved_repo_url, "HEAD"])
+    anonymous_ok = anonymous_probe.returncode == 0 and bool(str(anonymous_probe.stdout or "").strip())
+
+    token_ok = anonymous_ok
+    token_detail = str(anonymous_probe.stdout or "").strip()
+    if not anonymous_ok and resolved_token:
+        auth_url = _build_repo_access_url(resolved_repo_url, resolved_token)
+        token_probe = _run_capture(["git", "ls-remote", auth_url, "HEAD"])
+        token_ok = token_probe.returncode == 0 and bool(str(token_probe.stdout or "").strip())
+        token_detail = str(token_probe.stdout or "").strip()
+
+    if anonymous_ok:
+        read_access_mode = "public"
+    elif resolved_token and token_ok:
+        read_access_mode = "token_required"
+    else:
+        read_access_mode = "unavailable"
+
+    parsed = urlsplit(resolved_repo_url)
+    has_embedded_auth = "@" in str(parsed.netloc or "")
+    push_ready = bool(resolved_token or has_embedded_auth or parsed.scheme == "ssh")
+    return {
+        "status": "ok" if read_access_mode != "unavailable" else "unavailable",
+        "repo_url": resolved_repo_url,
+        "token_present": bool(resolved_token),
+        "read_access_mode": read_access_mode,
+        "anonymous_read_access": bool(anonymous_ok),
+        "token_read_access": bool(token_ok),
+        "push_requires_auth": True,
+        "push_ready": bool(push_ready),
+        "detail": token_detail if token_detail else str(anonymous_probe.stdout or "").strip(),
+    }
+
+
+def probe_hf_model_access(
+    model_ids: Sequence[str],
+    *,
+    token: Optional[str] = None,
+) -> dict[str, Any]:
+    resolved_model_ids = [str(model_id).strip() for model_id in list(model_ids or []) if str(model_id).strip()]
+    if not resolved_model_ids:
+        return {"status": "skipped", "model_ids": [], "access_mode": "not_checked"}
+
+    try:
+        from huggingface_hub import HfApi
+    except Exception as exc:
+        return {
+            "status": "unavailable",
+            "model_ids": resolved_model_ids,
+            "access_mode": "unavailable",
+            "message": f"huggingface_hub import failed: {exc}",
+        }
+
+    resolved_token = str(token or resolve_hf_token() or "").strip()
+    api_anon = HfApi()
+    api_auth = HfApi(token=resolved_token) if resolved_token else None
+    per_model: list[dict[str, Any]] = []
+    for model_id in resolved_model_ids:
+        anonymous_ok = False
+        token_ok = False
+        anonymous_detail = ""
+        token_detail = ""
+        try:
+            api_anon.model_info(model_id)
+            anonymous_ok = True
+        except Exception as exc:
+            anonymous_detail = f"{exc.__class__.__name__}: {exc}"
+        if anonymous_ok:
+            token_ok = True
+        elif api_auth is not None:
+            try:
+                api_auth.model_info(model_id)
+                token_ok = True
+            except Exception as exc:
+                token_detail = f"{exc.__class__.__name__}: {exc}"
+        access_mode = "public" if anonymous_ok else "token_required" if token_ok else "unavailable"
+        per_model.append(
+            {
+                "model_id": model_id,
+                "access_mode": access_mode,
+                "anonymous_ok": anonymous_ok,
+                "token_ok": token_ok,
+                "detail": token_detail or anonymous_detail,
+            }
+        )
+
+    overall_mode = "public"
+    if any(item["access_mode"] == "unavailable" for item in per_model):
+        overall_mode = "unavailable"
+    elif any(item["access_mode"] == "token_required" for item in per_model):
+        overall_mode = "token_required"
+
+    return {
+        "status": "ok" if overall_mode != "unavailable" else "unavailable",
+        "model_ids": resolved_model_ids,
+        "token_present": bool(resolved_token),
+        "access_mode": overall_mode,
+        "requires_token_for_any": any(item["access_mode"] == "token_required" for item in per_model),
+        "per_model": per_model,
+    }
+
+
+def collect_notebook_access_report(
+    *,
+    repo_root: Optional[str | Path] = None,
+    repo_url: Optional[str] = None,
+    hf_model_ids: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    resolved_repo_root = Path(repo_root).expanduser().resolve() if repo_root is not None else None
+    github = probe_github_repo_access(repo_url=repo_url, repo_root=resolved_repo_root)
+    updates = (
+        probe_repo_update_status(resolved_repo_root)
+        if resolved_repo_root is not None and is_repo_root(resolved_repo_root)
+        else {"status": "unavailable", "message": "Repository root is not available yet."}
+    )
+    huggingface = probe_hf_model_access(list(hf_model_ids or []))
+    return {
+        "github": github,
+        "repo_updates": updates,
+        "huggingface": huggingface,
+    }
+
+
+def print_notebook_access_report(
+    report: dict[str, Any],
+    *,
+    print_fn: Optional[Callable[[str], None]] = None,
+) -> None:
+    emit = print if print_fn is None else print_fn
+    github = dict(report.get("github", {}))
+    updates = dict(report.get("repo_updates", {}))
+    huggingface = dict(report.get("huggingface", {}))
+
+    relation = str(updates.get("relation", "unknown"))
+    if relation == "up_to_date":
+        emit("[KONTROL] Repo guncel gorunuyor.")
+    elif relation == "update_available":
+        emit(f"[KONTROL] Repo icin guncelleme var. Branch={updates.get('branch', '')}")
+    else:
+        emit(f"[KONTROL] Repo guncelleme durumu okunamadi: {updates.get('message', 'bilgi yok')}")
+
+    read_access_mode = str(github.get("read_access_mode", "unavailable"))
+    if read_access_mode == "public":
+        emit("[KONTROL] GitHub okuma erisimi public; clone/pull icin ekstra token gerekmiyor.")
+    elif read_access_mode == "token_required":
+        emit("[KONTROL] GitHub okuma erisimi token istiyor; private repo icin GH_TOKEN gerekli.")
+    else:
+        emit("[KONTROL] GitHub okuma erisimi dogrulanamadi.")
+
+    if bool(github.get("push_ready")):
+        emit("[KONTROL] GitHub push icin kimlik bilgisi hazir.")
+    else:
+        emit("[KONTROL] GitHub push icin ek auth gerekli.")
+
+    hf_mode = str(huggingface.get("access_mode", "not_checked"))
+    if hf_mode == "public":
+        emit("[KONTROL] Gerekli Hugging Face modelleri anonim erisimle aciliyor.")
+    elif hf_mode == "token_required":
+        emit("[KONTROL] En az bir Hugging Face modeli token istiyor; Colab secret kullanin.")
+    elif hf_mode == "not_checked":
+        emit("[KONTROL] Hugging Face model erisimi bu notebook icin ayrica kontrol edilmedi.")
+    else:
+        emit("[KONTROL] Hugging Face model erisimi dogrulanamadi.")
+
+
 def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None) -> bool:
     """Authenticate once and validate the token with a lightweight identity lookup."""
     emit = print if print_fn is None else print_fn
     token = resolve_hf_token()
     if not token:
-        emit("[HF] No token found. Set a Colab secret or env var named HF_TOKEN before running inference.")
+        emit("[HF] Token bulunamadi. Inference veya egitimden once HF_TOKEN adli Colab secret ya da env var tanimlayin.")
         return False
 
     try:
         from huggingface_hub import HfApi, login
     except Exception as exc:
-        emit(f"[HF] Could not import huggingface_hub: {exc}")
+        emit(f"[HF] huggingface_hub import edilemedi: {exc}")
         return False
 
     try:
@@ -507,8 +752,8 @@ def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None
             or profile.get("user")
             or "authenticated user"
         )
-        emit(f"[HF] Authenticated as {username}")
+        emit(f"[HF] Kimlik dogrulandi: {username}")
         return True
     except Exception as exc:
-        emit(f"[HF] Authentication check failed: {exc}")
+        emit(f"[HF] Kimlik dogrulama kontrolu basarisiz: {exc}")
         return False

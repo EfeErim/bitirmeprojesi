@@ -27,6 +27,7 @@ from scripts.colab_dataset_layout import (
     estimate_split_counts,
     normalize_class_name,
 )
+from src.guided_artifacts import refresh_prep_guided_artifacts
 from src.shared.json_utils import read_json, write_json
 
 
@@ -1105,6 +1106,14 @@ def build_grouped_dataset_plan(
             if len(values) > 1
         ],
     )
+    refresh_prep_guided_artifacts(
+        artifact_root,
+        overview_updates={
+            "crop_name": str(crop_name),
+            "runtime_ready": bool(summary["runtime_ready"]),
+            "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / str(crop_name)).resolve()),
+        },
+    )
     return summary
 
 
@@ -1155,7 +1164,7 @@ def materialize_grouped_runtime_dataset(
         destination_path = crop_root / split_name / class_name / destination_relative
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         _materialize_image(source_path, destination_path, materialization_strategy)
-    write_json(
+    split_manifest_path = write_json(
         crop_root / "split_manifest.json",
         {
             "schema_version": "v1_grouped_runtime_layout",
@@ -1166,6 +1175,27 @@ def materialize_grouped_runtime_dataset(
             "rows": rows,
         },
         ensure_ascii=False,
+    )
+    refresh_prep_guided_artifacts(
+        artifact_root,
+        overview_updates={
+            "crop_name": str(crop_name),
+            "materialized_runtime_root": str(crop_root.resolve()),
+            "split_manifest_path": str(split_manifest_path.resolve()),
+        },
+        extra_entries=[
+            {
+                "path": split_manifest_path,
+                "category": "manifests",
+                "priority": "high",
+                "title_tr": "Materyalize edilmis runtime split manifesti",
+                "description_tr": "Gercekten uretilen runtime dataset icindeki split manifest dosyasi.",
+                "reader_goal": "Notebook 2'nin tuketecegi final runtime split yapisini gormek",
+                "generated_by": "scripts.prepare_grouped_runtime_dataset",
+                "decision_importance": "prep_gate",
+                "read_order": 22,
+            }
+        ],
     )
     return Path(runtime_root)
 

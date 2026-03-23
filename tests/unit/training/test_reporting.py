@@ -6,6 +6,7 @@ from src.training.services.reporting import (
     BatchMetricsRecorder,
     load_batch_metrics_history,
     persist_batch_metrics_artifacts,
+    persist_production_readiness_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_summary_artifact,
@@ -198,3 +199,37 @@ def test_reporting_writes_ood_evidence_summary_artifact(tmp_path: Path):
     assert summary["sample_counts"]["in_distribution_samples"] == 4
     assert summary["ood_types"] == ["blur"]
     assert summary["ood_type_count"] == 1
+
+def test_reporting_refreshes_guided_catalog_for_training_outputs(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+
+    persist_training_summary_artifact(
+        artifact_root=artifact_root,
+        summary_payload={"run_id": "run_1", "run_label": "run_1", "crop_name": "tomato", "part_name": "leaf"},
+    )
+    validation = persist_validation_artifacts(
+        artifact_root=artifact_root,
+        y_true=[0, 1],
+        y_pred=[0, 1],
+        classes=["healthy", "disease_a"],
+        artifact_subdir="test",
+        context={"crop_name": "tomato", "split_name": "test"},
+    )
+    persist_production_readiness_artifact(
+        artifact_root=artifact_root,
+        classification_metric_gate=validation["metric_gate"],
+        classification_split="test",
+        ood_evidence_source="unavailable",
+        ood_metrics={},
+        require_ood=False,
+    )
+
+    guided_dir = artifact_root / "guided"
+    catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
+    entry_paths = {entry["relative_path"] for entry in catalog["entries"]}
+
+    assert (guided_dir / "00_start_here.md").exists()
+    assert (guided_dir / "01_run_overview.json").exists()
+    assert "training/summary.json" in entry_paths
+    assert "test/metric_gate.json" in entry_paths
+    assert "production_readiness.json" in entry_paths

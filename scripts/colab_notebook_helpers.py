@@ -7,6 +7,7 @@ import os
 import time
 from datetime import datetime
 from pathlib import Path
+import re
 from typing import Any, Callable, Dict, List, Optional
 
 import matplotlib
@@ -17,6 +18,8 @@ from src.training.services.reporting import (
 from src.training.services.reporting import (
     persist_training_history_artifacts as persist_training_history_artifacts_core,
 )
+from src.guided_artifacts import refresh_training_guided_artifacts
+from src.shared.json_utils import deep_merge, read_json, write_json
 from src.training.services.reporting import (
     persist_validation_artifacts as persist_validation_artifacts_core,
 )
@@ -24,6 +27,42 @@ from src.training.services.reporting import (
 matplotlib.use("Agg")
 
 _EXPECTED_REPO_EXPORTS = ("outputs", "telemetry", "checkpoint_state")
+
+
+def _slug_label_component(value: str, *, default: str = "unspecified") -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower())
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized or default
+
+
+def build_notebook_run_id(crop_name: str, part_name: str = "unspecified", *, now: Optional[datetime] = None) -> str:
+    stamp = (now or datetime.now()).strftime("%Y-%m-%d_%H-%M-%S")
+    crop = _slug_label_component(crop_name, default="crop")
+    part = _slug_label_component(part_name, default="unspecified")
+    return f"{crop}_{part}_{stamp}"
+
+
+def merge_training_summary_fields(
+    *,
+    root: Path,
+    payload: Dict[str, Any],
+    telemetry: Any = None,
+    extra_entries: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    summary_path = _artifact_dir(root, "training") / "summary.json"
+    current = read_json(summary_path, default={}, expect_type=dict)
+    merged = deep_merge(dict(current), dict(payload or {}))
+    write_json(summary_path, merged, ensure_ascii=False, sort_keys=False)
+    if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
+        telemetry.copy_artifact_file(summary_path, "training/summary.json")
+    refresh_training_guided_artifacts(
+        _artifact_dir(root),
+        telemetry=telemetry,
+        overview_updates=merged,
+        extra_entries=list(extra_entries or []),
+        generated_by="scripts.colab_notebook_helpers",
+    )
+    return merged
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:

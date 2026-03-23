@@ -9,6 +9,7 @@ from typing import Any, Dict, Iterable, List, Sequence
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 
+from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.artifacts import ArtifactStore
 from src.training.services.metrics import (
     build_production_readiness,
@@ -88,6 +89,14 @@ def _copy_to_telemetry(telemetry: Any, source_path: Path, relative_path: str) ->
 def _copy_artifacts_to_telemetry(telemetry: Any, artifacts: Iterable[tuple[Path, str]]) -> None:
     for source_path, relative_path in artifacts:
         _copy_to_telemetry(telemetry, source_path, relative_path)
+
+
+def _refresh_guided_outputs(artifact_root: Path, *, telemetry: Any = None, overview_updates: Dict[str, Any] | None = None) -> None:
+    refresh_training_guided_artifacts(
+        artifact_root,
+        telemetry=telemetry,
+        overview_updates=overview_updates,
+    )
 
 
 def _epoch_rows(history_snapshot: Dict[str, Any]) -> List[List[Any]]:
@@ -281,6 +290,7 @@ def persist_training_history_artifacts(
             (history_csv, "training/history.csv"),
         ],
     )
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {
         "history_json": history_json,
         "results_csv": results_csv,
@@ -307,6 +317,7 @@ def persist_batch_metrics_artifacts(
             rows.append([row.get(key, "") for key in headers])
         batch_csv = _write_csv(training_dir / "batch_metrics.csv", headers, rows)
     _copy_artifacts_to_telemetry(telemetry, [(batch_csv, "training/batch_metrics.csv")])
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {"batch_metrics_csv": batch_csv}
 
 
@@ -389,6 +400,7 @@ def persist_training_results_figure(
     plt.close(fig)
 
     _copy_artifacts_to_telemetry(telemetry, [(results_png, "training/results.png")])
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {"results_png": results_png}
 
 
@@ -401,6 +413,7 @@ def persist_training_summary_artifact(
     training_dir = _artifact_dir(artifact_root, "training")
     summary_json = ArtifactStore(training_dir).write_json("summary.json", summary_payload)
     _copy_artifacts_to_telemetry(telemetry, [(summary_json, "training/summary.json")])
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry, overview_updates=dict(summary_payload))
     return {"summary_json": summary_json}
 
 
@@ -475,6 +488,7 @@ def persist_ood_benchmark_artifacts(
             (per_fold_csv, "ood_benchmark/per_fold.csv"),
         ],
     )
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {"summary_json": summary_json, "per_fold_csv": per_fold_csv}
 
 
@@ -503,6 +517,15 @@ def persist_production_readiness_artifact(
     )
     readiness_json = ArtifactStore(artifact_root).write_json("production_readiness.json", payload)
     _copy_artifacts_to_telemetry(telemetry, [(readiness_json, "production_readiness.json")])
+    _refresh_guided_outputs(
+        artifact_root,
+        telemetry=telemetry,
+        overview_updates={
+            "classification_split": classification_split,
+            "readiness_status": payload.get("status", ""),
+            "ood_evidence_source": ood_evidence_source,
+        },
+    )
     return {"payload": payload, "readiness_json": readiness_json}
 
 
@@ -651,6 +674,7 @@ def persist_validation_artifacts(
     else:
         metric_gate_json.unlink(missing_ok=True)
 
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry, overview_updates={"last_written_split": resolved_artifact_subdir})
     return {
         "report_text": report_text,
         "report_dict": report_dict,

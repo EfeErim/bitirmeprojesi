@@ -1,4 +1,5 @@
 import csv
+import json
 from pathlib import Path
 
 import numpy as np
@@ -286,3 +287,50 @@ def test_build_grouped_dataset_plan_excludes_images_missing_after_scan(tmp_path:
     assert summary["summary"]["excluded_images"] == 1
     assert summary["summary"]["readable_images"] == 2
     assert summary["summary"]["excluded_reason_breakdown"]["missing_after_scan"] == 1
+
+def test_grouped_dataset_plan_writes_guided_catalog(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_{index}.jpg", offset=offset + 1)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+
+    build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+    materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+
+    guided_dir = artifact_root / "guided"
+    catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
+
+    assert (guided_dir / "00_start_here.md").exists()
+    assert (guided_dir / "01_prep_overview.json").exists()
+    assert any(entry["relative_path"] == "prep_summary.json" for entry in catalog["entries"])
+    assert any(entry["title_tr"] == "Materyalize edilmis runtime split manifesti" for entry in catalog["entries"])

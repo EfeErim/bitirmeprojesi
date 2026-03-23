@@ -189,7 +189,7 @@ def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
 
     assert bootstrap.login_and_check_hf_token(print_fn=lines.append) is False
     assert lines == [
-        "[HF] No token found. Set a Colab secret or env var named HF_TOKEN before running inference."
+        "[HF] Token bulunamadi. Inference veya egitimden once HF_TOKEN adli Colab secret ya da env var tanimlayin."
     ]
 
 
@@ -218,7 +218,7 @@ def test_login_and_check_hf_token_validates_identity(monkeypatch):
     assert bootstrap.login_and_check_hf_token(print_fn=lines.append) is True
     assert calls["login"] == ("hf-secret", False)
     assert calls["api_token"] == "hf-secret"
-    assert lines == ["[HF] Authenticated as tester"]
+    assert lines == ["[HF] Kimlik dogrulandi: tester"]
 
 
 def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: Path):
@@ -319,3 +319,86 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     push_calls = [call for call in calls if call[1] == "push"]
     assert push_calls
     assert "gh-secret@" in push_calls[0][2]
+
+def test_probe_repo_update_status_reports_available_update(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for name in ("src", "config", "scripts"):
+        (repo_root / name).mkdir(parents=True, exist_ok=True)
+
+    monkeypatch.setattr(bootstrap, "_git_current_branch", lambda _repo: "master")
+    monkeypatch.setattr(
+        bootstrap,
+        "_run_git",
+        lambda args, cwd, check=True, capture_output=False: subprocess.CompletedProcess(
+            ["git", *args],
+            0,
+            stdout="local-sha\n",
+        ),
+    )
+    monkeypatch.setattr(
+        bootstrap,
+        "_run_capture",
+        lambda args, cwd=None, timeout_sec=30.0: subprocess.CompletedProcess(
+            args,
+            0,
+            stdout="remote-sha\trefs/heads/master\n",
+        ),
+    )
+
+    report = bootstrap.probe_repo_update_status(repo_root)
+
+    assert report["status"] == "ok"
+    assert report["branch"] == "master"
+    assert report["local_head"] == "local-sha"
+    assert report["remote_head"] == "remote-sha"
+    assert report["update_available"] is True
+    assert report["relation"] == "update_available"
+
+
+def test_probe_github_repo_access_distinguishes_public_and_token_required(monkeypatch):
+    probes: list[list[str]] = []
+
+    def fake_run_capture(args, cwd=None, timeout_sec=30.0):  # noqa: ARG001
+        probes.append(list(args))
+        if "@github.com" in args[2]:
+            return subprocess.CompletedProcess(args, 0, stdout="sha\tHEAD\n")
+        return subprocess.CompletedProcess(args, 1, stdout="")
+
+    monkeypatch.setattr(bootstrap, "_run_capture", fake_run_capture)
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    report = bootstrap.probe_github_repo_access(repo_url="https://github.com/example/private-repo.git")
+
+    assert report["status"] == "ok"
+    assert report["read_access_mode"] == "token_required"
+    assert report["anonymous_read_access"] is False
+    assert report["token_read_access"] is True
+    assert report["push_ready"] is True
+    assert len(probes) == 2
+
+
+def test_probe_hf_model_access_reports_token_required(monkeypatch):
+    calls: list[tuple[str | None, str]] = []
+
+    class FakeHfApi:
+        def __init__(self, token=None):
+            self.token = token
+
+        def model_info(self, model_id):
+            calls.append((self.token, model_id))
+            if self.token:
+                return {"id": model_id}
+            raise RuntimeError("gated")
+
+    fake_hf = ModuleType("huggingface_hub")
+    fake_hf.HfApi = FakeHfApi
+    monkeypatch.setitem(sys.modules, "huggingface_hub", fake_hf)
+    monkeypatch.setattr(bootstrap, "resolve_hf_token", lambda: "hf-secret")
+
+    report = bootstrap.probe_hf_model_access(["org/gated-model"])
+
+    assert report["status"] == "ok"
+    assert report["access_mode"] == "token_required"
+    assert report["requires_token_for_any"] is True
+    assert report["per_model"][0]["access_mode"] == "token_required"
+    assert calls == [(None, "org/gated-model"), ("hf-secret", "org/gated-model")]

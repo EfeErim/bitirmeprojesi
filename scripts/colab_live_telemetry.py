@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from src.shared.artifacts import ArtifactStore
-from src.shared.json_utils import ensure_parent, read_json, write_json
+from src.shared.json_utils import deep_merge, ensure_parent, read_json, write_json
 
 logger = logging.getLogger(__name__)
 
@@ -170,6 +170,7 @@ class ColabLiveTelemetry:
 
         self._sync_state = _SyncState.from_path(self.local_sync_state_path)
         self._artifact_index: List[Dict[str, Any]] = self._load_artifact_index()
+        self._summary_metadata: Dict[str, Any] = {}
         self._last_sync_attempt = 0.0
         self._drive_available = False
         self._sequence = 0
@@ -301,6 +302,33 @@ class ColabLiveTelemetry:
         except Exception:
             pass
         return []
+
+    def _upsert_artifact_index_entry(self, payload: Dict[str, Any]) -> None:
+        relative_path = str(payload.get("relative_path", "")).strip().replace("\\", "/")
+        if not relative_path:
+            return
+        normalized = {**dict(payload), "relative_path": relative_path}
+        for index in range(len(self._artifact_index) - 1, -1, -1):
+            current = self._artifact_index[index]
+            current_relative_path = str(current.get("relative_path", "")).strip().replace("\\", "/")
+            if current_relative_path != relative_path:
+                continue
+            self._artifact_index[index] = {**current, **normalized}
+            self._store_artifact_index()
+            return
+        self._artifact_index.append(normalized)
+        self._store_artifact_index()
+
+    def merge_artifact_catalog(self, entries: List[Dict[str, Any]]) -> None:
+        for entry in list(entries or []):
+            if not isinstance(entry, dict):
+                continue
+            self._upsert_artifact_index_entry({"ts": _utc_now_iso(), **dict(entry)})
+
+    def merge_summary_metadata(self, payload: Dict[str, Any]) -> None:
+        if not isinstance(payload, dict) or not payload:
+            return
+        self._summary_metadata = deep_merge(self._summary_metadata, payload)
 
     def _store_sync_state(self) -> None:
         self._sync_state.last_sync_ts = _utc_now_iso()
@@ -498,14 +526,13 @@ class ColabLiveTelemetry:
                 self._drive_available = True
             except Exception:
                 self._drive_available = False
-        self._artifact_index.append(
+        self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
                 "relative_path": str(rel).replace("\\", "/"),
                 "type": "text",
             }
         )
-        self._store_artifact_index()
         self.emit_event("artifact_written", {"relative_path": str(rel)}, phase="artifact", force_sync=False)
         return drive_path if drive_path.exists() else local_path
 
@@ -519,14 +546,13 @@ class ColabLiveTelemetry:
                 self._drive_available = True
             except Exception:
                 self._drive_available = False
-        self._artifact_index.append(
+        self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
                 "relative_path": str(rel).replace("\\", "/"),
                 "type": "binary",
             }
         )
-        self._store_artifact_index()
         self.emit_event("artifact_written", {"relative_path": str(rel)}, phase="artifact", force_sync=False)
         return drive_path if drive_path.exists() else local_path
 
@@ -543,14 +569,13 @@ class ColabLiveTelemetry:
                 self._drive_available = True
             except Exception:
                 self._drive_available = False
-        self._artifact_index.append(
+        self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
                 "relative_path": str(rel).replace("\\", "/"),
                 "type": "file_copy",
             }
         )
-        self._store_artifact_index()
         self.emit_event("artifact_copied", {"relative_path": str(rel)}, phase="artifact", force_sync=False)
         return drive_path if drive_path.exists() else local_path
 
@@ -612,6 +637,7 @@ class ColabLiveTelemetry:
             "final_payload": dict(final_payload or {}),
             "artifact_count": len(self._artifact_index),
             "drive_available": bool(self._drive_available),
+            "metadata": dict(self._summary_metadata),
         }
         write_json(self.local_summary_path, summary, sort_keys=True)
         if self._ensure_drive_surface():

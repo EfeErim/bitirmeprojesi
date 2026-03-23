@@ -56,6 +56,7 @@ Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
+- every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
 - Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
 - `class_root` now runs grouped prep and runtime-dataset materialization before training
 - `runtime` consumes an already prepared runtime dataset without re-running prep
@@ -67,8 +68,10 @@ This is the current Notebook 2 training flow from start to finish when you use `
 1. find or initialize the repo workspace
 2. install notebook requirements
 3. mount Google Drive when available
-4. resolve a Hugging Face token from environment variables or Colab secrets
-5. validate a flat class-root dataset
+4. set `CROP_NAME` and `PART_NAME` in the run-identity cell
+5. run the access/update check cell and confirm token needs before a long run
+6. resolve a Hugging Face token from environment variables or Colab secrets
+7. validate a flat class-root dataset
 6. run grouped duplicate-aware prep
 7. materialize a runtime dataset under `data/prepared_runtime_datasets/<crop>/`
 8. train the continual SD-LoRA adapter
@@ -77,9 +80,10 @@ This is the current Notebook 2 training flow from start to finish when you use `
 10. write validation and test artifacts
 11. use real `ood/` data when present, otherwise run the held-out fallback benchmark automatically
 12. write `production_readiness.json`
-13. mirror outputs into `runs/<RUN_ID>/`
-14. optionally auto-push the mirrored run record to GitHub
-15. optionally auto-disconnect the Colab runtime after final exports succeed
+13. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
+14. mirror outputs into `runs/<RUN_ID>/`
+15. optionally auto-push the mirrored run record to GitHub
+16. optionally auto-disconnect the Colab runtime after final exports succeed
 
 Important recommendation:
 
@@ -94,11 +98,12 @@ This is the current Notebook 0 flow from start to finish:
 1. find or initialize the repo workspace
 2. install notebook requirements
 3. mount Google Drive when available
-4. resolve a Hugging Face token from environment variables or Colab secrets
-5. scan a flat class-root dataset
+4. run the access/update check cell and confirm token needs before the audit
+5. resolve a Hugging Face token from environment variables or Colab secrets
+6. scan a flat class-root dataset
 6. normalize class names against the crop taxonomy when possible
 7. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
-8. write review artifacts and a grouped split manifest
+8. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
 9. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when you want Notebook 0 to complete the full prep flow itself
 
 ## The Dataset Format Notebook 2 Accepts
@@ -511,7 +516,7 @@ The same token is also used by the notebook bootstrap when it needs to clone a p
 
 ## What Notebook 2 Produces
 
-Notebook 2 writes to three locations. Each one exists for a different reason.
+Notebook 2 writes to three locations. Each one exists for a different reason. The artifact root now also includes a `guided/` folder so a new user can start from a short human-readable index before opening raw JSON/CSV files.
 
 ### 1. Local notebook output
 
