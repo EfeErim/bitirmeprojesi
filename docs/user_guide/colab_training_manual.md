@@ -72,18 +72,18 @@ This is the current Notebook 2 training flow from start to finish when you use `
 5. run the access/update check cell and confirm token needs before a long run
 6. resolve a Hugging Face token from environment variables or Colab secrets
 7. validate a flat class-root dataset
-6. run grouped duplicate-aware prep
-7. materialize a runtime dataset under `data/prepared_runtime_datasets/<crop>/`
-8. train the continual SD-LoRA adapter
-8. restore the best model state
-9. calibrate OOD
-10. write validation and test artifacts
-11. use real `ood/` data when present, otherwise run the held-out fallback benchmark automatically
-12. write `production_readiness.json`
-13. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
-14. mirror outputs into `runs/<RUN_ID>/`
-15. optionally auto-push the mirrored run record to GitHub
-16. optionally auto-disconnect the Colab runtime after final exports succeed
+8. run grouped duplicate-aware prep
+9. materialize a runtime dataset under `data/prepared_runtime_datasets/<crop>/`
+10. train the continual SD-LoRA adapter
+11. restore the best model state
+12. calibrate OOD
+13. write validation and test artifacts
+14. use real `ood/` data when present, otherwise run the held-out fallback benchmark automatically
+15. write `production_readiness.json`
+16. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
+17. mirror outputs into `runs/<RUN_ID>/`
+18. optionally auto-push the mirrored run record to GitHub
+19. optionally auto-disconnect the Colab runtime after final exports succeed
 
 Important recommendation:
 
@@ -530,11 +530,20 @@ Use this when you want the immediate local result of the notebook run.
 
 `artifacts/` contains the same artifact families as the workflow:
 
+- `guided/`
 - `training/`
 - `validation/`
 - `test/`
 - `ood_benchmark/`
 - `production_readiness.json`
+
+Recommended reading order inside `artifacts/`:
+
+- `guided/00_start_here.md`
+- `guided/01_run_overview.json`
+- `guided/02_file_catalog.json`
+
+These files organize the raw artifacts; they do not replace them.
 
 ### 2. Repo mirror
 
@@ -570,6 +579,7 @@ Current Drive telemetry layout:
 <AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/
   checkpoints/
   artifacts/
+    guided/
     training/
     validation/
     test/

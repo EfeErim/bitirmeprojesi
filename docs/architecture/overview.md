@@ -269,6 +269,8 @@ Notebook 2 writes to three places:
 - repo mirrors under `runs/<RUN_ID>/`
 - Drive telemetry under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
 
+The artifact roots now also include a `guided/` layer with a human-readable start file plus machine-readable overview/catalog files. This layer organizes the raw artifacts without replacing them.
+
 The repo mirror keeps notebook outputs, telemetry copies, and checkpoint manifests plus only the best checkpoint; rolling checkpoint history remains under the Drive telemetry root.
 
 Current adapter export detail:
@@ -276,6 +278,12 @@ Current adapter export detail:
 - local notebook export: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
 - workflow export: `<output_dir>/continual_sd_lora_adapter/`
 - Drive telemetry export: `artifacts/adapter_export/continual_sd_lora_adapter/`
+
+Current notebook naming/detail:
+
+- Notebook 2 exposes `CROP_NAME` and `PART_NAME` at the notebook surface
+- Notebook 2 run ids are human-readable and include crop/part/date-time information
+- maintained notebooks perform an early update/access check before the main long-running cells
 
 
 ## Colab Support Layer
@@ -297,8 +305,10 @@ These helpers handle:
 - repo discovery or auto-clone
 - dependency installation
 - Drive mount coordination
+- repo update and access preflight reporting
 - Hugging Face token checks
 - dataset materialization
+- guided artifact indexing and overview generation
 - local output mirroring
 - telemetry sync
 - checkpoint management

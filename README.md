@@ -245,6 +245,11 @@ Notebook 2 now supports both paths:
 - `DATASET_LAYOUT_MODE="class_root"` starts from a flat dataset, runs grouped prep/materialization, and then trains
 - `DATASET_LAYOUT_MODE="runtime"` trains directly from a prepared runtime dataset root
 
+Current notebook UX detail:
+
+- Notebook 2 exposes a visible run-identity cell with `CROP_NAME` and `PART_NAME`
+- maintained notebooks now include an early access/update check cell so you can verify repo freshness plus GitHub/Hugging Face access needs before a long run
+
 Recommended usage:
 
 - use Notebook 0 first when you want to inspect audit artifacts before training
@@ -401,7 +406,7 @@ What these files mean:
 
 ## What Notebook 2 Produces
 
-Notebook 2 writes to three places.
+Notebook 2 writes to three places. The artifact roots now also include a `guided/` layer so a user can start from a short index without losing any raw JSON, CSV, PNG, or log files.
 
 ### Local notebook output
 
@@ -409,7 +414,18 @@ Notebook 2 writes to three places.
 outputs/colab_notebook_training/
   continual_sd_lora_adapter/
   artifacts/
+    guided/
 ```
+
+Start here when you want the immediate local result of the run.
+
+Human-first entry files:
+
+- `guided/00_start_here.md`
+- `guided/01_run_overview.json`
+- `guided/02_file_catalog.json`
+
+These files organize the existing raw artifacts; they do not replace or delete them.
 
 ### Repo mirror for the run
 
@@ -421,6 +437,8 @@ runs/<RUN_ID>/
   checkpoint_state/
 ```
 
+For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop, part, and date-time information.
+
 `checkpoint_state/` keeps the checkpoint manifests plus only the mirrored best checkpoint. Rolling checkpoint history stays under the Drive telemetry root.
 
 ### Drive telemetry root
@@ -429,6 +447,7 @@ runs/<RUN_ID>/
 <AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/
   checkpoints/
   artifacts/
+    guided/
     training/
     validation/
     test/
