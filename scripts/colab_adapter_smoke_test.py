@@ -17,8 +17,10 @@ from src.shared.json_utils import read_json_dict
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 DEFAULT_DISCOVERY_ROOTS = (
-    Path("/content/drive/MyDrive/aads_ulora"),
-    Path("/content/drive/MyDrive"),
+    Path("."),
+    Path("outputs"),
+    Path("models"),
+    Path("models") / "adapters",
 )
 SKIP_DISCOVERY_DIR_NAMES = {
     ".git",
