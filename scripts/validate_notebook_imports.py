@@ -228,6 +228,7 @@ def test_data_prep_notebook_contract() -> None:
     notebook_path = ROOT / "colab_notebooks" / "0_grouped_dataset_preparation.ipynb"
     payload = json.loads(notebook_path.read_text(encoding="utf-8"))
     cells = payload.get("cells", [])
+    first_code_source = ""
     bootstrap_source = ""
     parameter_source = ""
     access_check_source = ""
@@ -236,6 +237,8 @@ def test_data_prep_notebook_contract() -> None:
         if cell.get("cell_type") != "code":
             continue
         source = "".join(cell.get("source", []))
+        if not first_code_source:
+            first_code_source = source
         if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
             bootstrap_source = source
         if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
@@ -243,9 +246,17 @@ def test_data_prep_notebook_contract() -> None:
         if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
             access_check_source = source
 
+    assert first_code_source, "Notebook 0 first code cell was not found"
     assert bootstrap_source, "Notebook 0 bootstrap cell was not found"
     assert parameter_source, "Notebook 0 parameter cell was not found"
     assert access_check_source, "Notebook 0 access-check cell was not found"
+    for snippet in (
+        "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
+        "def _build_repo_access_url(",
+        "from scripts.colab_repo_bootstrap import probe_repo_update_status",
+        "[KONTROL] Ilk hucre:",
+    ):
+        assert snippet in first_code_source, f"Notebook 0 first code cell is missing required freshness check: {snippet}"
     for snippet in (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
@@ -288,6 +299,7 @@ def test_training_notebook_bootstrap_contract() -> None:
     notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
     payload = json.loads(notebook_path.read_text(encoding="utf-8"))
     cells = payload.get("cells", [])
+    first_code_source = ""
     bootstrap_source = ""
     parameter_source = ""
     run_identity_source = ""
@@ -296,6 +308,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         if cell.get("cell_type") != "code":
             continue
         source = "".join(cell.get("source", []))
+        if not first_code_source:
+            first_code_source = source
         if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
             bootstrap_source = source
         if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
@@ -305,10 +319,18 @@ def test_training_notebook_bootstrap_contract() -> None:
         if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
             access_check_source = source
 
+    assert first_code_source, "Notebook 2 first code cell was not found"
     assert bootstrap_source, "Notebook 2 bootstrap cell was not found"
     assert parameter_source, "Notebook 2 parameter cell was not found"
     assert run_identity_source, "Notebook 2 run identity cell was not found"
     assert access_check_source, "Notebook 2 access-check cell was not found"
+    for snippet in (
+        "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
+        "def _build_repo_access_url(",
+        "from scripts.colab_repo_bootstrap import probe_repo_update_status",
+        "[KONTROL] Ilk hucre:",
+    ):
+        assert snippet in first_code_source, f"Notebook 2 first code cell is missing required freshness check: {snippet}"
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
 
     required_bootstrap_snippets = (
