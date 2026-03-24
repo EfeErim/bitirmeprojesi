@@ -238,13 +238,13 @@ data/runtime_notebook_datasets/<crop>/
 Notebook 0 can also materialize a prepared runtime dataset under:
 
 ```text
-data/prepared_runtime_datasets/<crop>/
+data/prepared_runtime_datasets/<crop_or_crop__part>/
 ```
 
 When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
 
 ```text
-data/prepared_class_root_datasets/<crop>/
+data/prepared_class_root_datasets/<crop_or_crop__part>/
 ```
 
 Notebook 2 now supports both paths:

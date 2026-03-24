@@ -170,6 +170,14 @@ def normalize_prepared_class_name(raw_class_name: str, *, crop_name: str, expect
     return normalized
 
 
+def build_prepared_dataset_key(crop_name: str, part_name: str = "unspecified") -> str:
+    crop_key = normalize_class_name(crop_name) or "crop"
+    part_key = normalize_class_name(part_name)
+    if not part_key or part_key == "unspecified":
+        return crop_key
+    return f"{crop_key}__{part_key}"
+
+
 def _infer_source_hint(class_dir: Path, image_path: Path) -> str:
     relative = image_path.relative_to(class_dir)
     if len(relative.parts) <= 1:
@@ -1135,6 +1143,7 @@ def materialize_grouped_runtime_dataset(
     *,
     class_root: Path,
     crop_name: str,
+    part_name: str = "unspecified",
     artifact_root: Path,
     runtime_root: Path = DEFAULT_RUNTIME_ROOT,
     materialization_strategy: str = "auto",
@@ -1144,7 +1153,8 @@ def materialize_grouped_runtime_dataset(
         raise RuntimeError("Grouped split manifest is missing or invalid.")
     if manifest.get("blocking_issues"):
         raise RuntimeError("Grouped split manifest contains blocking issues. Resolve them before materializing.")
-    crop_root = Path(runtime_root) / str(crop_name)
+    dataset_key = build_prepared_dataset_key(crop_name, part_name)
+    crop_root = Path(runtime_root) / dataset_key
     if crop_root.exists():
         shutil.rmtree(crop_root)
     crop_root.mkdir(parents=True, exist_ok=True)
@@ -1169,6 +1179,8 @@ def materialize_grouped_runtime_dataset(
         {
             "schema_version": "v1_grouped_runtime_layout",
             "crop_name": str(crop_name),
+            "part_name": str(part_name),
+            "dataset_key": str(dataset_key),
             "source_root": str(class_root.resolve()),
             "artifact_root": str(artifact_root.resolve()),
             "split_policy": "grouped_family_80_10_10",
@@ -1180,6 +1192,7 @@ def materialize_grouped_runtime_dataset(
         artifact_root,
         overview_updates={
             "crop_name": str(crop_name),
+            "part_name": str(part_name),
             "materialized_runtime_root": str(crop_root.resolve()),
             "split_manifest_path": str(split_manifest_path.resolve()),
         },
@@ -1204,6 +1217,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Prepare a grouped runtime dataset with duplicate-aware audit.")
     parser.add_argument("--root", type=Path, required=True, help="Flat class-root dataset.")
     parser.add_argument("--crop", type=str, required=True, help="Crop name.")
+    parser.add_argument("--part", type=str, default="unspecified", help="Part name used for prepared runtime dataset naming.")
     parser.add_argument(
         "--artifact-root",
         type=Path,
@@ -1242,6 +1256,7 @@ def main() -> int:
         materialize_grouped_runtime_dataset(
             class_root=args.root,
             crop_name=args.crop,
+            part_name=args.part,
             artifact_root=args.artifact_root,
             runtime_root=args.runtime_root,
         )

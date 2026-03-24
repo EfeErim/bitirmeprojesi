@@ -14,6 +14,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     DEFAULT_BIOCLIP_MODEL_ID,
     DEFAULT_DINOV3_MODEL_ID,
     DEFAULT_NEIGHBORS,
+    build_prepared_dataset_key,
     build_grouped_dataset_plan,
 )
 from scripts.prune_exact_duplicates import (
@@ -120,6 +121,7 @@ def prepare_class_root_for_materialization(
     *,
     class_root: Path,
     crop_name: str,
+    part_name: str = "unspecified",
     audit_artifact_root: Path,
     prepared_class_root: Path,
     prepared_artifact_root: Path,
@@ -207,6 +209,9 @@ def prepare_class_root_for_materialization(
         "prepared_class_root": str(prepared_class_root),
         "audit_artifact_root": str(audit_artifact_root),
         "prepared_artifact_root": str(prepared_artifact_root),
+        "crop_name": str(crop_name),
+        "part_name": str(part_name),
+        "dataset_key": build_prepared_dataset_key(crop_name, part_name),
         "cleanup_seed": int(cleanup_seed),
         "materialization_strategy": str(materialization_strategy),
         "quarantine_cross_class_conflicts": bool(quarantine_cross_class_conflicts),
@@ -232,6 +237,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--class-root", type=Path, required=True, help="Original flat class-root dataset.")
     parser.add_argument("--crop", type=str, required=True, help="Crop name for taxonomy alignment.")
+    parser.add_argument("--part", type=str, default="unspecified", help="Part name used for prepared dataset naming.")
     parser.add_argument(
         "--audit-artifact-root",
         type=Path,
@@ -282,6 +288,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = prepare_class_root_for_materialization(
         class_root=args.class_root,
         crop_name=args.crop,
+        part_name=args.part,
         audit_artifact_root=args.audit_artifact_root,
         prepared_class_root=args.prepared_class_root,
         prepared_artifact_root=args.prepared_artifact_root,

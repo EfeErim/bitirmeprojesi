@@ -299,10 +299,12 @@ def test_data_prep_notebook_contract() -> None:
     for snippet in (
         "DATASET_ROOT =",
         "CROP_NAME =",
+        "PART_NAME =",
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
+        "CONFIRM_PREPARE_FOR_MATERIALIZATION =",
         "MATERIALIZE_AFTER_REVIEW =",
         "CLEANUP_SEED =",
         "PREP_DINOV3_MODEL_ID =",
@@ -312,7 +314,9 @@ def test_data_prep_notebook_contract() -> None:
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in full_source
+    assert "build_prepared_dataset_key" in full_source
     assert "prepare_class_root_for_materialization" in full_source
+    assert "CONFIRM_PREPARE_FOR_MATERIALIZATION='prepare'" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
 
 
@@ -324,6 +328,7 @@ def test_training_notebook_runtime_mode_contract() -> None:
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in payload.get("cells", []))
     assert 'DATASET_LAYOUT_MODE = "class_root"' in full_source
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in full_source
+    assert "build_prepared_dataset_key" in full_source
     assert 'if layout_mode == "runtime":' in full_source
     assert "Prepared runtime dataset is missing split folder(s)" in full_source
     assert "OOD_ROOT is ignored when DATASET_LAYOUT_MODE='runtime'." in full_source

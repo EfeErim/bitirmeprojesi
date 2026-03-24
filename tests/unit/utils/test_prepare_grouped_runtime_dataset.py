@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from scripts.prepare_grouped_runtime_dataset import (
+    build_prepared_dataset_key,
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
@@ -45,6 +46,11 @@ def test_normalize_prepared_class_name_uses_taxonomy_aliases():
     )
 
     assert normalized == "healthy"
+
+
+def test_build_prepared_dataset_key_includes_part_only_when_specified():
+    assert build_prepared_dataset_key("tomato", "unspecified") == "tomato"
+    assert build_prepared_dataset_key("Tomato", "Fruit") == "tomato__fruit"
 
 
 def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path: Path, monkeypatch):
@@ -132,6 +138,58 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
     assert (crop_root / "val").exists()
     assert (crop_root / "test").exists()
     assert (crop_root / "split_manifest.json").exists()
+
+
+def test_materialize_grouped_runtime_dataset_uses_part_aware_dataset_key(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_{index}.jpg", offset=offset + 1)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        part_name="fruit",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato__fruit"
+    manifest = json.loads((crop_root / "split_manifest.json").read_text(encoding="utf-8"))
+
+    assert (crop_root / "continual").exists()
+    assert manifest["crop_name"] == "tomato"
+    assert manifest["part_name"] == "fruit"
+    assert manifest["dataset_key"] == "tomato__fruit"
 
 
 def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monkeypatch):
