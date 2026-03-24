@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
+import re
 from typing import Any, Dict, Iterable, List, Sequence
 
 import numpy as np
@@ -118,6 +119,148 @@ def _write_csv(path: Path, headers: Sequence[str], rows: Iterable[Sequence[Any]]
         for row in rows:
             writer.writerow(list(row))
     return path
+
+
+def _write_dict_rows_csv(path: Path, rows: Sequence[Dict[str, Any]], *, preferred_headers: Sequence[str]) -> Path:
+    materialized_rows = [dict(row) for row in rows]
+    preferred_header_set = set(preferred_headers)
+    extra_headers = sorted(
+        {
+            str(key)
+            for row in materialized_rows
+            for key in row.keys()
+            if str(key) not in preferred_header_set
+        }
+    )
+    headers = [*preferred_headers, *extra_headers]
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers, extrasaction="ignore")
+        writer.writeheader()
+        for row in materialized_rows:
+            writer.writerow({header: row.get(header, "") for header in headers})
+    return path
+
+
+def _sanitize_filename_component(value: Any, *, default: str = "sample") -> str:
+    normalized = re.sub(r"[^a-zA-Z0-9._-]+", "_", str(value or "").strip())
+    normalized = re.sub(r"_+", "_", normalized).strip("._")
+    return normalized or default
+
+
+def _is_hard_example_row(row: Dict[str, Any]) -> bool:
+    sample_origin = str(row.get("sample_origin", "")).strip().lower()
+    is_correct = row.get("is_correct")
+    if sample_origin == "in_distribution":
+        return is_correct is False
+    if sample_origin == "ood":
+        return row.get("ood_predicted") is False
+    return False
+
+
+def _hard_example_reason(row: Dict[str, Any]) -> str:
+    sample_origin = str(row.get("sample_origin", "")).strip().lower()
+    if sample_origin == "ood":
+        return "missed_ood_rejection"
+    return "misclassified_in_distribution"
+
+
+def _hard_example_sort_key(row: Dict[str, Any]) -> tuple[int, float, str]:
+    sample_origin = str(row.get("sample_origin", "")).strip().lower()
+    image_path = str(row.get("image_path", ""))
+    if sample_origin == "ood":
+        score = row.get("ood_primary_score")
+        try:
+            resolved_score = float(score)
+        except (TypeError, ValueError):
+            resolved_score = float("inf")
+        return (1, resolved_score, image_path)
+    confidence = row.get("class_confidence")
+    try:
+        resolved_confidence = -float(confidence)
+    except (TypeError, ValueError):
+        resolved_confidence = 0.0
+    return (0, resolved_confidence, image_path)
+
+
+def _persist_hard_example_artifacts(
+    *,
+    validation_dir: Path,
+    prediction_rows: Sequence[Dict[str, Any]],
+    telemetry: Any = None,
+    telemetry_subdir: str,
+    thumbnail_limit: int = 24,
+) -> Dict[str, Path]:
+    hard_rows = [dict(row) for row in prediction_rows if isinstance(row, dict) and _is_hard_example_row(row)]
+    if not hard_rows:
+        return {}
+
+    hard_rows = sorted(hard_rows, key=_hard_example_sort_key)
+    thumbnails_dir = validation_dir / "hard_examples_thumbnails"
+    written_thumbnail_count = 0
+    for index, row in enumerate(hard_rows, start=1):
+        row["hard_example_reason"] = _hard_example_reason(row)
+        row["review_rank"] = index
+        row["thumbnail_path"] = ""
+        if written_thumbnail_count >= int(max(0, thumbnail_limit)):
+            continue
+        image_path = Path(str(row.get("image_path", "")).strip())
+        if not image_path.exists() or not image_path.is_file():
+            continue
+        try:
+            from PIL import Image
+
+            thumbnails_dir.mkdir(parents=True, exist_ok=True)
+            suffix = image_path.suffix.lower() if image_path.suffix else ".jpg"
+            if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+                suffix = ".jpg"
+            target_name = (
+                f"{index:03d}_"
+                f"{_sanitize_filename_component(row.get('sample_origin'), default='sample')}_"
+                f"{_sanitize_filename_component(image_path.stem)}{suffix}"
+            )
+            thumbnail_path = thumbnails_dir / target_name
+            with Image.open(image_path) as image:
+                preview = image.convert("RGB")
+                preview.thumbnail((256, 256))
+                save_kwargs = {"format": "PNG"} if suffix == ".png" else {"quality": 90}
+                preview.save(thumbnail_path, **save_kwargs)
+            row["thumbnail_path"] = thumbnail_path.relative_to(validation_dir).as_posix()
+            written_thumbnail_count += 1
+            if telemetry is not None:
+                _copy_artifacts_to_telemetry(
+                    telemetry,
+                    [(thumbnail_path, f"{telemetry_subdir}/hard_examples_thumbnails/{thumbnail_path.name}")],
+                )
+        except Exception:
+            continue
+
+    hard_examples_csv = _write_dict_rows_csv(
+        validation_dir / "hard_examples.csv",
+        hard_rows,
+        preferred_headers=(
+            "review_rank",
+            "hard_example_reason",
+            "sample_origin",
+            "split_name",
+            "image_path",
+            "thumbnail_path",
+            "ood_type",
+            "true_index",
+            "true_label",
+            "pred_index",
+            "pred_label",
+            "is_correct",
+            "class_confidence",
+            "ood_primary_score_method",
+            "ood_primary_score",
+            "ood_predicted",
+        ),
+    )
+    _copy_artifacts_to_telemetry(telemetry, [(hard_examples_csv, f"{telemetry_subdir}/hard_examples.csv")])
+    result = {"hard_examples_csv": hard_examples_csv}
+    if thumbnails_dir.exists():
+        result["hard_examples_thumbnails_dir"] = thumbnails_dir
+    return result
 
 
 def _coerce_batch_csv_value(key: str, value: str) -> Any:
@@ -417,6 +560,19 @@ def persist_training_summary_artifact(
     return {"summary_json": summary_json}
 
 
+def persist_training_run_context_artifact(
+    *,
+    artifact_root: Path,
+    context_payload: Dict[str, Any],
+    telemetry: Any = None,
+) -> Dict[str, Path]:
+    training_dir = _artifact_dir(artifact_root, "training")
+    run_context_json = ArtifactStore(training_dir).write_json("run_context.json", context_payload)
+    _copy_artifacts_to_telemetry(telemetry, [(run_context_json, "training/run_context.json")])
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
+    return {"run_context_json": run_context_json}
+
+
 def persist_ood_benchmark_artifacts(
     *,
     artifact_root: Path,
@@ -548,6 +704,7 @@ def persist_validation_artifacts(
     conformal_avg_set_size: float | None = None,
     ood_type_breakdown: Dict[str, Any] | None = None,
     context: Dict[str, Any] | None = None,
+    prediction_rows: Sequence[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     resolved_classes = [str(name) for name in classes]
     labels = list(range(len(resolved_classes)))
@@ -606,6 +763,37 @@ def persist_validation_artifacts(
         "cm_png": confusion_png,
         "cm_norm_png": confusion_norm_png,
     }
+    prediction_rows_list = [dict(row) for row in list(prediction_rows or []) if isinstance(row, dict)]
+    if prediction_rows_list:
+        predictions_csv = _write_dict_rows_csv(
+            validation_dir / "predictions.csv",
+            prediction_rows_list,
+            preferred_headers=(
+                "sample_origin",
+                "split_name",
+                "image_path",
+                "ood_type",
+                "true_index",
+                "true_label",
+                "pred_index",
+                "pred_label",
+                "is_correct",
+                "class_confidence",
+                "ood_primary_score_method",
+                "ood_primary_score",
+                "ood_predicted",
+            ),
+        )
+        paths["predictions_csv"] = predictions_csv
+        _copy_artifacts_to_telemetry(telemetry, [(predictions_csv, f"{resolved_telemetry_subdir}/predictions.csv")])
+        paths.update(
+            _persist_hard_example_artifacts(
+                validation_dir=validation_dir,
+                prediction_rows=prediction_rows_list,
+                telemetry=telemetry,
+                telemetry_subdir=resolved_telemetry_subdir,
+            )
+        )
     _copy_artifacts_to_telemetry(
         telemetry,
         [

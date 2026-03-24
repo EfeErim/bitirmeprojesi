@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
+import importlib.metadata
+import subprocess
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, TypeVar
@@ -25,9 +29,11 @@ from src.training.services.reporting import (
     persist_production_readiness_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
+    persist_training_run_context_artifact,
     persist_training_summary_artifact,
     persist_validation_artifacts,
 )
+from src.shared.json_utils import read_json
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_readiness import (
     build_production_readiness_context as build_production_readiness_context_payload,
@@ -98,6 +104,86 @@ def _collect_final_metrics(history_payload: Dict[str, Any]) -> Dict[str, float]:
         for key, value in final_metrics.items()
         if value is not None
     }
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(65536), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _git_output(repo_root: Path, *args: str) -> str:
+    try:
+        completed = subprocess.run(
+            ["git", *args],
+            cwd=str(repo_root),
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+    except Exception:
+        return ""
+    if completed.returncode != 0:
+        return ""
+    return str(completed.stdout).strip()
+
+
+def _collect_git_context(repo_root: Path) -> Dict[str, Any]:
+    return {
+        "head": _git_output(repo_root, "rev-parse", "HEAD"),
+        "head_short": _git_output(repo_root, "rev-parse", "--short", "HEAD"),
+        "branch": _git_output(repo_root, "branch", "--show-current"),
+        "is_dirty": bool(_git_output(repo_root, "status", "--porcelain")),
+    }
+
+
+def _collect_package_versions() -> Dict[str, str]:
+    versions: Dict[str, str] = {}
+    for package_name in (
+        "torch",
+        "torchvision",
+        "torchaudio",
+        "transformers",
+        "peft",
+        "accelerate",
+        "huggingface-hub",
+        "numpy",
+        "scikit-learn",
+        "opencv-python",
+        "Pillow",
+    ):
+        try:
+            versions[package_name] = importlib.metadata.version(package_name)
+        except importlib.metadata.PackageNotFoundError:
+            continue
+    return versions
+
+
+def _collect_dataset_manifest_context(crop_root: Path) -> Dict[str, Any]:
+    manifests: Dict[str, Any] = {}
+    for filename in ("split_manifest.json", "_split_metadata.json"):
+        manifest_path = crop_root / filename
+        payload: Dict[str, Any] = {
+            "path": str(manifest_path),
+            "exists": manifest_path.exists(),
+        }
+        if manifest_path.exists():
+            try:
+                manifest_json = read_json(manifest_path, default={}, expect_type=dict)
+            except Exception:
+                manifest_json = {}
+            payload.update(
+                {
+                    "sha256": _sha256_file(manifest_path),
+                    "schema_version": manifest_json.get("schema_version"),
+                    "source_root": manifest_json.get("source_root"),
+                }
+            )
+        manifests[filename] = payload
+    return manifests
 
 
 @dataclass
@@ -332,6 +418,7 @@ class TrainingWorkflow:
             conformal_avg_set_size=evaluation_result.conformal_avg_set_size,
             ood_type_breakdown=evaluation_result.ood_type_breakdown,
             context=metric_context,
+            prediction_rows=evaluation_result.prediction_rows,
         )
 
     @staticmethod
@@ -504,12 +591,14 @@ class TrainingWorkflow:
         crop_name = str(crop_name).strip().lower()
         if not crop_name:
             raise ValueError("crop_name must not be empty")
+        resolved_data_dir = Path(data_dir)
+        resolved_output_dir = Path(output_dir)
 
         run_setup = prepare_training_run(
             config=self.config,
             device=self.device,
             crop_name=crop_name,
-            data_dir=data_dir,
+            data_dir=resolved_data_dir,
             class_names=class_names,
             num_workers=num_workers,
             pin_memory=pin_memory,
@@ -532,7 +621,7 @@ class TrainingWorkflow:
             for split_name, counts in dict(run_setup.split_class_counts).items()
         }
         adapter = run_setup.adapter
-        artifact_dir = Path(output_dir) / "training_metrics"
+        artifact_dir = resolved_output_dir / "training_metrics"
         batch_recorder = BatchMetricsRecorder(artifact_root=artifact_dir)
 
         checkpoint_records: List[Dict[str, Any]] = []
@@ -581,8 +670,8 @@ class TrainingWorkflow:
             {
                 "run_id": run_id,
                 "crop_name": crop_name,
-                "data_dir": str(data_dir),
-                "output_dir": str(output_dir),
+                "data_dir": str(resolved_data_dir),
+                "output_dir": str(resolved_output_dir),
             },
             phase="training",
         )
@@ -786,7 +875,7 @@ class TrainingWorkflow:
             selection_source=primary_score_stage.selection_source,
             best_state_restored=best_state_restored,
         )
-        adapter_dir = adapter.save_adapter(str(output_dir))
+        adapter_dir = adapter.save_adapter(str(resolved_output_dir))
         self._emit_telemetry(
             telemetry,
             "production_readiness_ready",
@@ -827,6 +916,42 @@ class TrainingWorkflow:
             summary_payload=summary_payload,
             telemetry=telemetry,
         )
+        repo_root = Path(__file__).resolve().parents[2]
+        run_context_artifacts = persist_training_run_context_artifact(
+            artifact_root=artifact_dir,
+            context_payload={
+                "schema_version": "v1_training_run_context",
+                "run_id": run_id,
+                "crop_name": crop_name,
+                "device": self.device,
+                "python_version": sys.version.split()[0],
+                "data_dir": str(resolved_data_dir),
+                "output_dir": str(resolved_output_dir),
+                "artifact_dir": str(artifact_dir),
+                "adapter_dir": str(adapter_dir),
+                "resolved_config": dict(self.config),
+                "git": _collect_git_context(repo_root),
+                "package_versions": _collect_package_versions(),
+                "dataset": {
+                    "crop_root": str((resolved_data_dir / crop_name).resolve()),
+                    "manifests": _collect_dataset_manifest_context(resolved_data_dir / crop_name),
+                },
+                "loader_sizes": dict(loader_sizes),
+                "loader_batch_counts": dict(loader_batch_counts),
+                "split_class_counts": dict(split_class_counts),
+                "training_runtime": {
+                    "calibration_split_name": calibration_split_name,
+                    "best_state_restored": bool(best_state_restored),
+                    "ood_requested_primary_score_method": requested_primary_score_method,
+                    "ood_primary_score_method": primary_score_stage.selected_method,
+                    "ood_primary_score_selection_source": selection_source,
+                    "ood_evidence_source": ood_evidence_source,
+                },
+                "production_readiness_status": production_readiness.get("status"),
+            },
+            telemetry=telemetry,
+        )
+        training_artifacts = {**training_artifacts, **run_context_artifacts}
         artifact_payload = build_artifact_payload(
             training_artifacts=training_artifacts,
             validation_artifacts=validation_artifacts,

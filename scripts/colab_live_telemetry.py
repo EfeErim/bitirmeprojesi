@@ -9,6 +9,7 @@ import logging
 import os
 import sys
 import time
+import traceback
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -436,6 +437,7 @@ class ColabLiveTelemetry:
         original_stdout = sys.stdout
         original_stderr = sys.stderr
         failure_message = ""
+        failure_traceback = ""
 
         self.emit_event(
             "cell_capture_started",
@@ -449,6 +451,7 @@ class ColabLiveTelemetry:
             yield self._current_artifacts_dir() / relative_path
         except Exception as exc:
             failure_message = f"{exc.__class__.__name__}: {exc}"
+            failure_traceback = traceback.format_exc()
             self.emit_event(
                 "cell_capture_failed",
                 {
@@ -486,6 +489,11 @@ class ColabLiveTelemetry:
                 if not body.endswith("\n"):
                     body += "\n"
                 body += f"\n[EXCEPTION] {failure_message}\n"
+            if failure_traceback:
+                if not body.endswith("\n"):
+                    body += "\n"
+                body += "\n[TRACEBACK]\n"
+                body += failure_traceback
             artifact_path = self.write_text_artifact(relative_path_text, body)
             self.emit_event(
                 "cell_capture_finished",

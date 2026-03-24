@@ -129,6 +129,7 @@ class EvaluationArtifactsPayload:
     report: ValidationReport
     y_true: List[int]
     y_pred: List[int]
+    prediction_rows: List[Dict[str, Any]] = field(default_factory=list)
     ood_labels: Optional[List[int]] = None
     ood_scores: Optional[List[float]] = None
     ood_primary_score_method: str = "ensemble"

@@ -143,6 +143,8 @@ def test_capture_cell_output_persists_output_on_exception(tmp_path):
     body = artifacts[0].read_text(encoding="utf-8")
     assert "about to fail" in body
     assert "[EXCEPTION] RuntimeError: boom" in body
+    assert "[TRACEBACK]" in body
+    assert "RuntimeError: boom" in body
 
 
 def test_live_telemetry_spools_locally_when_drive_mount_is_missing(tmp_path, monkeypatch):

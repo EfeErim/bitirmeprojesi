@@ -2,6 +2,8 @@ import csv
 import json
 from pathlib import Path
 
+from PIL import Image
+
 from src.training.services.reporting import (
     BatchMetricsRecorder,
     load_batch_metrics_history,
@@ -9,6 +11,7 @@ from src.training.services.reporting import (
     persist_production_readiness_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
+    persist_training_run_context_artifact,
     persist_training_summary_artifact,
     persist_validation_artifacts,
 )
@@ -233,3 +236,150 @@ def test_reporting_refreshes_guided_catalog_for_training_outputs(tmp_path: Path)
     assert "training/summary.json" in entry_paths
     assert "test/metric_gate.json" in entry_paths
     assert "production_readiness.json" in entry_paths
+
+
+def test_reporting_writes_prediction_rows_csv(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1],
+        y_pred=[0, 1],
+        classes=["healthy", "disease_a"],
+        prediction_rows=[
+            {
+                "sample_origin": "in_distribution",
+                "split_name": "val",
+                "image_path": "runtime/tomato/val/healthy/img1.jpg",
+                "true_label": "healthy",
+                "pred_label": "healthy",
+                "is_correct": True,
+                "class_confidence": 0.99,
+            }
+        ],
+    )
+
+    predictions_csv = result["paths"]["predictions_csv"]
+    assert predictions_csv.exists()
+    body = predictions_csv.read_text(encoding="utf-8")
+    assert "image_path" in body
+    assert "runtime/tomato/val/healthy/img1.jpg" in body
+
+
+def test_reporting_writes_run_context_artifact(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+    result = persist_training_run_context_artifact(
+        artifact_root=artifact_root,
+        context_payload={"run_id": "run_1", "device": "cpu"},
+    )
+
+    context_path = result["run_context_json"]
+    assert context_path.exists()
+    payload = json.loads(context_path.read_text(encoding="utf-8"))
+    assert payload["run_id"] == "run_1"
+    assert payload["device"] == "cpu"
+
+
+def test_reporting_writes_hard_examples_csv_and_thumbnails(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+    image_dir = tmp_path / "images"
+    image_dir.mkdir()
+    sample_a = image_dir / "misclassified.png"
+    sample_b = image_dir / "missed_ood.png"
+    Image.new("RGB", (48, 48), color=(255, 0, 0)).save(sample_a)
+    Image.new("RGB", (48, 48), color=(0, 0, 255)).save(sample_b)
+
+    result = persist_validation_artifacts(
+        artifact_root=artifact_root,
+        y_true=[0, 1],
+        y_pred=[1, 1],
+        classes=["healthy", "disease_a"],
+        artifact_subdir="test",
+        context={"crop_name": "tomato", "split_name": "test"},
+        prediction_rows=[
+            {
+                "sample_origin": "in_distribution",
+                "split_name": "test",
+                "image_path": sample_a.as_posix(),
+                "true_index": 0,
+                "true_label": "healthy",
+                "pred_index": 1,
+                "pred_label": "disease_a",
+                "is_correct": False,
+                "class_confidence": 0.97,
+            },
+            {
+                "sample_origin": "ood",
+                "split_name": "test",
+                "image_path": sample_b.as_posix(),
+                "ood_type": "blur",
+                "ood_primary_score_method": "energy",
+                "ood_primary_score": 0.11,
+                "ood_predicted": False,
+            },
+        ],
+    )
+
+    hard_examples_csv = result["paths"]["hard_examples_csv"]
+    thumbnails_dir = result["paths"]["hard_examples_thumbnails_dir"]
+    assert hard_examples_csv.exists()
+    assert thumbnails_dir.exists()
+
+    with hard_examples_csv.open("r", encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert [row["hard_example_reason"] for row in rows] == [
+        "misclassified_in_distribution",
+        "missed_ood_rejection",
+    ]
+    thumbnail_paths = [row["thumbnail_path"] for row in rows]
+    assert all(path for path in thumbnail_paths)
+    assert all((hard_examples_csv.parent / path).exists() for path in thumbnail_paths)
+
+
+def test_guided_catalog_includes_prediction_and_hard_example_entries(tmp_path: Path):
+    artifact_root = tmp_path / "training_metrics"
+    image_dir = tmp_path / "images"
+    image_dir.mkdir()
+    sample = image_dir / "review_me.png"
+    Image.new("RGB", (64, 32), color=(0, 128, 0)).save(sample)
+
+    persist_training_summary_artifact(
+        artifact_root=artifact_root,
+        summary_payload={"run_id": "run_1", "run_label": "run_1", "crop_name": "tomato", "part_name": "leaf"},
+    )
+    validation = persist_validation_artifacts(
+        artifact_root=artifact_root,
+        y_true=[0],
+        y_pred=[1],
+        classes=["healthy", "disease_a"],
+        artifact_subdir="test",
+        context={"crop_name": "tomato", "split_name": "test"},
+        prediction_rows=[
+            {
+                "sample_origin": "in_distribution",
+                "split_name": "test",
+                "image_path": sample.as_posix(),
+                "true_index": 0,
+                "true_label": "healthy",
+                "pred_index": 1,
+                "pred_label": "disease_a",
+                "is_correct": False,
+                "class_confidence": 0.91,
+            }
+        ],
+    )
+    persist_production_readiness_artifact(
+        artifact_root=artifact_root,
+        classification_metric_gate=validation["metric_gate"],
+        classification_split="test",
+        ood_evidence_source="unavailable",
+        ood_metrics={},
+        require_ood=False,
+    )
+
+    guided_dir = artifact_root / "guided"
+    catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
+    entry_paths = {entry["relative_path"] for entry in catalog["entries"]}
+
+    assert "test/predictions.csv" in entry_paths
+    assert "test/hard_examples.csv" in entry_paths
+    assert "test/hard_examples_thumbnails" in entry_paths

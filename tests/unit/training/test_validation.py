@@ -203,3 +203,44 @@ def test_evaluate_model_with_artifact_metrics_builds_ood_type_breakdown():
     assert result.ood_type_breakdown["blur"]["sample_count"] == 1
     assert result.ood_type_breakdown["non_plant"]["sample_count"] == 1
     assert result.context["ood_types"] == ["blur", "non_plant"]
+
+
+def test_evaluate_model_with_artifact_metrics_collects_prediction_rows_with_paths():
+    trainer = type("FakeTrainer", (), {})()
+    trainer.device = "cpu"
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer.adapter_model = IdentityModule()
+    trainer.classifier = IdentityModule()
+    trainer.fusion = IdentityModule()
+    trainer.ood_detector = FakeOODDetector()
+    trainer.set_eval_mode = lambda: None
+    trainer.encode = lambda images: images.float()
+    trainer.forward_logits = lambda images: images.float()
+
+    id_loader = FakeOODLoader(
+        [{"images": torch.tensor([[5.0, 1.0], [1.0, 5.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}],
+        [
+            Path("runtime/tomato/val/healthy/sample1.jpg"),
+            Path("runtime/tomato/val/disease_a/sample2.jpg"),
+        ],
+    )
+    id_loader.dataset.split = "val"
+    ood_loader = FakeOODLoader(
+        [{"images": torch.tensor([[0.2, 0.1], [0.1, 0.2]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}],
+        [
+            Path("runtime/tomato/ood/blur/sample3.jpg"),
+            Path("runtime/tomato/ood/non_plant/sample4.jpg"),
+        ],
+    )
+
+    result = evaluate_model_with_artifact_metrics(trainer, id_loader, ood_loader=ood_loader)
+
+    assert result is not None
+    assert len(result.prediction_rows) == 4
+    assert result.prediction_rows[0]["image_path"].endswith("runtime/tomato/val/healthy/sample1.jpg")
+    assert result.prediction_rows[0]["true_label"] == "healthy"
+    assert result.prediction_rows[0]["pred_label"] == "healthy"
+    assert result.prediction_rows[0]["sample_origin"] == "in_distribution"
+    assert result.prediction_rows[2]["sample_origin"] == "ood"
+    assert result.prediction_rows[2]["ood_type"] == "blur"
+    assert result.prediction_rows[2]["true_label"] == ""

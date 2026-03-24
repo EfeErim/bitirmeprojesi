@@ -371,6 +371,36 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             decision_importance="ood_decision",
             read_order=order_base + 7,
         )
+        add(
+            f"{split_name}/predictions.csv",
+            category=split_name,
+            priority="medium",
+            title_tr=f"{split_name.title()} sample predictions",
+            description_tr="Her ornek icin tahmin, etiket ve guven bilgisini CSV olarak sunar.",
+            reader_goal="Yanlis tahmin edilen ornekleri tek tek incelemek",
+            decision_importance="quality_diagnosis",
+            read_order=order_base + 8,
+        )
+        add(
+            f"{split_name}/hard_examples.csv",
+            category=split_name,
+            priority="high",
+            title_tr=f"{split_name.title()} hard examples",
+            description_tr="Yanlis siniflanan veya kacirilan OOD orneklerini oncelikli inceleme icin listeler.",
+            reader_goal="Feedback ile duzeltilecek zor ornekleri onceliklendirmek",
+            decision_importance="quality_diagnosis",
+            read_order=order_base + 9,
+        )
+        add(
+            f"{split_name}/hard_examples_thumbnails",
+            category=split_name,
+            priority="medium",
+            title_tr=f"{split_name.title()} hard example thumbnails",
+            description_tr="Zor orneklerin hizli gozden gecirme icin kucuk onizlemelerini tutar.",
+            reader_goal="Zor ornekleri gorsel olarak hizlica taramak",
+            decision_importance="quality_diagnosis",
+            read_order=order_base + 10,
+        )
 
     add(
         "ood_benchmark/per_fold.csv",

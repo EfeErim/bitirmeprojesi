@@ -28,6 +28,12 @@ class _ArtifactMetricState:
     confidence_preds: List[int] = field(default_factory=list)
 
 
+def _safe_label_name(idx_to_class: Dict[int, str], label: int) -> str:
+    if int(label) < 0:
+        return ""
+    return str(idx_to_class.get(int(label), int(label)))
+
+
 def _resolve_candidate_score_payload(detector: Any, ood: Dict[str, Any]) -> tuple[str, Dict[str, torch.Tensor]]:
     primary_method = str(
         ood.get("primary_score_method", getattr(detector, "primary_score_method", "ensemble")) or "ensemble"
@@ -77,8 +83,9 @@ def _update_detector_artifact_state_for_batch(
     ood_loader_present: bool,
     is_ood_loader: bool,
     batch_sample_types: Optional[List[Optional[str]]] = None,
+    ood_payload: Optional[Dict[str, Any]] = None,
 ) -> None:
-    ood = detector.score(features, logits, predicted_labels=predictions)
+    ood = dict(ood_payload or detector.score(features, logits, predicted_labels=predictions))
     primary_method, candidate_scores = _resolve_candidate_score_payload(detector, ood)
     primary_scores = ood.get("primary_score")
     if not torch.is_tensor(primary_scores):
@@ -143,6 +150,14 @@ def _infer_ood_type_from_path(image_path: Any, *, split_name: str) -> str:
     return str(relative_parts[0])
 
 
+def _resolve_loader_image_paths(eval_loader: Iterable[Dict[str, torch.Tensor]]) -> Optional[List[str]]:
+    dataset = getattr(eval_loader, "dataset", None)
+    image_paths = getattr(dataset, "image_paths", None)
+    if not isinstance(image_paths, list):
+        return None
+    return [path.as_posix() if hasattr(path, "as_posix") else str(path).replace("\\", "/") for path in image_paths]
+
+
 def _resolve_loader_sample_types(
     eval_loader: Iterable[Dict[str, torch.Tensor]], *, is_ood_loader: bool
 ) -> Optional[List[str]]:
@@ -199,6 +214,74 @@ def _build_ood_type_breakdown(state: _ArtifactMetricState) -> Dict[str, Any]:
             "method_metrics": method_metrics,
         }
     return breakdown
+
+
+def _append_prediction_rows_for_batch(
+    prediction_rows: List[Dict[str, Any]],
+    *,
+    idx_to_class: Dict[int, str],
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    predictions: torch.Tensor,
+    image_paths: Optional[List[str]],
+    image_offset: int,
+    sample_origin: str,
+    split_name: str,
+    batch_sample_types: Optional[List[Optional[str]]] = None,
+    ood_payload: Optional[Dict[str, Any]] = None,
+) -> None:
+    probabilities = torch.softmax(logits.detach(), dim=1)
+    class_confidence = probabilities.max(dim=1).values.detach().cpu().tolist()
+    label_values = labels.detach().cpu().tolist()
+    prediction_values = predictions.detach().cpu().tolist()
+
+    primary_method = ""
+    primary_scores: List[Any] = []
+    ood_flags: List[Any] = []
+    if isinstance(ood_payload, dict) and ood_payload:
+        primary_method = str(ood_payload.get("primary_score_method", "") or "").strip()
+        primary_score_value = ood_payload.get("primary_score")
+        if torch.is_tensor(primary_score_value):
+            primary_scores = primary_score_value.detach().cpu().tolist()
+        predicted_ood_value = ood_payload.get("is_ood")
+        if torch.is_tensor(predicted_ood_value):
+            ood_flags = predicted_ood_value.detach().cpu().tolist()
+
+    for index, (label, prediction) in enumerate(zip(label_values, prediction_values)):
+        image_path = ""
+        absolute_index = image_offset + index
+        if image_paths is not None and absolute_index < len(image_paths):
+            image_path = str(image_paths[absolute_index])
+
+        ood_type = ""
+        if batch_sample_types is not None and index < len(batch_sample_types):
+            ood_type = str(batch_sample_types[index] or "")
+
+        prediction_rows.append(
+            {
+                "sample_origin": str(sample_origin),
+                "split_name": str(split_name),
+                "image_path": image_path,
+                "ood_type": ood_type,
+                "true_index": (None if int(label) < 0 else int(label)),
+                "true_label": _safe_label_name(idx_to_class, int(label)),
+                "pred_index": int(prediction),
+                "pred_label": _safe_label_name(idx_to_class, int(prediction)),
+                "is_correct": (None if int(label) < 0 else bool(int(prediction) == int(label))),
+                "class_confidence": float(class_confidence[index]),
+                "ood_primary_score_method": str(primary_method),
+                "ood_primary_score": (
+                    None
+                    if not primary_scores or index >= len(primary_scores)
+                    else float(primary_scores[index])
+                ),
+                "ood_predicted": (
+                    None
+                    if not ood_flags or index >= len(ood_flags)
+                    else bool(ood_flags[index])
+                ),
+            }
+        )
 
 
 def _compute_classification_metrics(
@@ -300,8 +383,10 @@ def _update_detector_artifact_state(
     eval_loader: Iterable[Dict[str, torch.Tensor]],
     ood_loader_present: bool,
     is_ood_loader: bool,
+    prediction_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> None:
     sample_types = _resolve_loader_sample_types(eval_loader, is_ood_loader=is_ood_loader)
+    image_paths = _resolve_loader_image_paths(eval_loader)
     sample_offset = 0
     trainer.set_eval_mode()
     with torch.inference_mode():
@@ -311,11 +396,11 @@ def _update_detector_artifact_state(
             features = trainer.encode(images)
             logits = trainer.classifier(features)
             predictions = torch.argmax(logits, dim=1)
+            ood_payload = detector.score(features, logits, predicted_labels=predictions)
             batch_size = int(labels.shape[0])
             batch_sample_types = None
             if sample_types is not None:
                 batch_sample_types = [str(value) for value in sample_types[sample_offset : sample_offset + batch_size]]
-                sample_offset += batch_size
             _update_detector_artifact_state_for_batch(
                 state,
                 detector=detector,
@@ -327,7 +412,23 @@ def _update_detector_artifact_state(
                 ood_loader_present=ood_loader_present,
                 is_ood_loader=is_ood_loader,
                 batch_sample_types=batch_sample_types,
+                ood_payload=ood_payload,
             )
+            if prediction_rows is not None:
+                _append_prediction_rows_for_batch(
+                    prediction_rows,
+                    idx_to_class=idx_to_class,
+                    logits=logits,
+                    labels=labels,
+                    predictions=predictions,
+                    image_paths=image_paths,
+                    image_offset=sample_offset,
+                    sample_origin=("ood" if is_ood_loader else "in_distribution"),
+                    split_name=str(getattr(getattr(eval_loader, "dataset", None), "split", "") or ""),
+                    batch_sample_types=batch_sample_types,
+                    ood_payload=ood_payload,
+                )
+            sample_offset += batch_size
 
 
 def _finalize_artifact_metric_state(payload: EvaluationArtifactsPayload, state: _ArtifactMetricState) -> None:
@@ -376,6 +477,7 @@ def _evaluate_model_core(
     artifact_state: Optional[_ArtifactMetricState] = None,
     idx_to_class: Optional[Dict[int, str]] = None,
     ood_loader_present: bool = False,
+    prediction_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> Optional[Tuple[ValidationReport, List[int], List[int]]]:
     if getattr(trainer, "classifier", None) is None:
         return None
@@ -387,6 +489,9 @@ def _evaluate_model_core(
     total_correct = 0
     all_labels: List[torch.Tensor] = []
     all_preds: List[torch.Tensor] = []
+    image_paths = _resolve_loader_image_paths(loader)
+    image_offset = 0
+    split_name = str(getattr(getattr(loader, "dataset", None), "split", "") or "")
 
     with torch.inference_mode():
         for batch in loader:
@@ -411,7 +516,9 @@ def _evaluate_model_core(
             all_labels.append(labels.detach().cpu())
             all_preds.append(predictions.detach().cpu())
 
+            ood_payload = None
             if artifact_state is not None and detector is not None and features is not None:
+                ood_payload = detector.score(features, logits, predicted_labels=predictions)
                 _update_detector_artifact_state_for_batch(
                     artifact_state,
                     detector=detector,
@@ -422,7 +529,22 @@ def _evaluate_model_core(
                     predictions=predictions,
                     ood_loader_present=ood_loader_present,
                     is_ood_loader=False,
+                    ood_payload=ood_payload,
                 )
+            if prediction_rows is not None:
+                _append_prediction_rows_for_batch(
+                    prediction_rows,
+                    idx_to_class=idx_to_class or {},
+                    logits=logits,
+                    labels=labels,
+                    predictions=predictions,
+                    image_paths=image_paths,
+                    image_offset=image_offset,
+                    sample_origin="in_distribution",
+                    split_name=split_name,
+                    ood_payload=ood_payload,
+                )
+            image_offset += batch_size
 
     if total_samples <= 0:
         return None
@@ -505,6 +627,7 @@ def evaluate_model_with_artifact_metrics(
     idx_to_class = {idx: name for name, idx in dict(getattr(trainer, "class_to_idx", {})).items()}
     can_collect = _can_collect_detector_artifacts(trainer, detector)
     state = _ArtifactMetricState() if can_collect else None
+    prediction_rows: List[Dict[str, Any]] = []
 
     result = _evaluate_model_core(
         trainer,
@@ -513,12 +636,18 @@ def evaluate_model_with_artifact_metrics(
         artifact_state=state,
         idx_to_class=idx_to_class,
         ood_loader_present=ood_loader is not None,
+        prediction_rows=prediction_rows,
     )
     if result is None:
         return None
 
     report, y_true, y_pred = result
-    payload = EvaluationArtifactsPayload(report=report, y_true=y_true, y_pred=y_pred)
+    payload = EvaluationArtifactsPayload(
+        report=report,
+        y_true=y_true,
+        y_pred=y_pred,
+        prediction_rows=prediction_rows,
+    )
     if not can_collect or state is None:
         return payload
 
@@ -531,6 +660,7 @@ def evaluate_model_with_artifact_metrics(
             eval_loader=ood_loader,
             ood_loader_present=True,
             is_ood_loader=True,
+            prediction_rows=prediction_rows,
         )
     _finalize_artifact_metric_state(payload, state)
 
