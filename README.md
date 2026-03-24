@@ -84,6 +84,7 @@ Notebook 0 is different:
 
 - It runs before training.
 - It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
+- It can build a cleaned class-root working copy from the audit reports before runtime materialization.
 - It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
 - It is the audit-first surface for auditing, grouping, and optionally materializing the prepared runtime dataset for Notebook 2.
 
@@ -238,6 +239,12 @@ Notebook 0 can also materialize a prepared runtime dataset under:
 
 ```text
 data/prepared_runtime_datasets/<crop>/
+```
+
+When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
+
+```text
+data/prepared_class_root_datasets/<crop>/
 ```
 
 Notebook 2 now supports both paths:

@@ -223,6 +223,7 @@ def test_colab_helpers() -> None:
     from scripts.colab_checkpointing import TrainingCheckpointManager
     from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
     from scripts.colab_live_telemetry import ColabLiveTelemetry
+    from scripts.prepare_materialization_dataset import prepare_class_root_for_materialization
     from scripts.prepare_grouped_runtime_dataset import (
         build_grouped_dataset_plan,
         materialize_grouped_runtime_dataset,
@@ -241,6 +242,7 @@ def test_colab_helpers() -> None:
     assert callable(mirror_checkpoint_state_to_repo)
     assert callable(mirror_path_to_repo)
     assert callable(push_repo_run_to_github)
+    assert callable(prepare_class_root_for_materialization)
     _ = (
         TrainingCheckpointManager,
         prepare_runtime_dataset_layout,
@@ -299,7 +301,10 @@ def test_data_prep_notebook_contract() -> None:
         "CROP_NAME =",
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
+        "PREPARED_CLASS_ROOT =",
+        "PREPARE_DATASET_FROM_REPORTS =",
         "MATERIALIZE_AFTER_REVIEW =",
+        "CLEANUP_SEED =",
         "PREP_DINOV3_MODEL_ID =",
         "PREP_BIOCLIP_MODEL_ID =",
     ):
@@ -307,6 +312,7 @@ def test_data_prep_notebook_contract() -> None:
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in full_source
+    assert "prepare_class_root_for_materialization" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
 
 
