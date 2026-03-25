@@ -17,8 +17,9 @@ Use this skill for router-driven inference, adapter loading, deployment layout e
 - `src/router/vlm_pipeline.py`
 - `scripts/colab_router_adapter_inference.py`
 - `scripts/colab_adapter_smoke_test.py`
+- `scripts/colab_simple_adapter_smoke_ui.py`
 
-Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1 or Notebook 3 wrapper issues. Load `skills/aads-training-ood/SKILL.md` too if the task changes the saved adapter contract or OOD calibration expectations.
+Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1, Notebook 3, or Notebook 4 wrapper issues. Load `skills/aads-training-ood/SKILL.md` too if the task changes the saved adapter contract or OOD calibration expectations.
 
 ## Workflow
 

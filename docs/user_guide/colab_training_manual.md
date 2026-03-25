@@ -10,6 +10,12 @@ It covers the maintained Colab surfaces:
 
 Notebook 0 is the audit-first data-preparation surface. Notebook 2 is the training surface and can materialize the grouped runtime dataset before training when you start from a flat class-root dataset. Notebook 3 checks an already exported adapter directly.
 
+The repo also tracks one auxiliary notebook:
+
+- Notebook 4: `colab_notebooks/4_simple_adapter_smoke_test.ipynb`
+
+Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. It is useful for quick manual checks, but it is not a separate canonical workflow contract.
+
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ## What You Will Do In These Notebooks
@@ -28,6 +34,10 @@ Notebook 2 can now do one of two things:
 ### Notebook 3
 
 Notebook 3 loads one saved adapter directly so you can inspect it and run a quick prediction without the router.
+
+### Notebook 4
+
+Notebook 4 exposes the same direct adapter validation path behind a smaller widget-based UI for quick manual smoke tests.
 
 ## Important Terms
 
@@ -435,6 +445,7 @@ Current shipped default:
 - the trainer starts with the concrete detector path on `"ensemble"`
 - when the repo only has one shared real `ood/` pool, the workflow keeps that concrete runtime method instead of auto-tuning on the same pool later used for the final readiness verdict
 - the held-out fallback benchmark can still auto-select a concrete winner because it is separate proxy evidence rather than the final real-OOD deployment verdict
+- fallback-only readiness can now be `provisional`, but not fully deployable
 - if you want to promote `energy` or `knn` using real OOD evidence, inspect the split-local comparison artifacts and rerun with an explicit `training.continual.ood.primary_score_method`, or keep a separate dev OOD pool outside the shipped contract
 - energy scoring can optionally keep a fixed temperature or auto-calibrate one from the calibration split
 - kNN scoring can use `cdist`, chunked search, or optional FAISS when available
@@ -452,7 +463,8 @@ These control how strict the final deployment verdict is:
 Practical interpretation:
 
 - `emit_ood_gate` controls whether split-local `metric_gate.json` files are written to disk
-- `require_ood_for_gate` controls whether final production readiness fails when OOD evidence is missing or insufficient
+- `require_ood_for_gate` controls whether the metric policy fails when OOD evidence is missing or insufficient
+- even when the metric policy passes, the final status remains `provisional` until a real runtime `ood/` pool is part of the evidence
 
 ### Colab runtime controls
 
@@ -497,7 +509,7 @@ Notebook 2 now takes its visible training and OOD parameters directly from the t
 
 ## Token Resolution
 
-Notebook 2 resolves the Hugging Face token from these sources:
+Notebook 2 and the direct-adapter notebooks resolve the Hugging Face token from these sources:
 
 - `HF_TOKEN`
 - `HUGGINGFACE_TOKEN`
@@ -727,6 +739,22 @@ Important caveat:
 - `IMAGE_PATH` must be one image file
 - `BATCH_IMAGE_DIR` must be one directory of image files
 - `CROP_NAME` can stay `None` when the adapter path itself already implies the crop or nearby metadata provides it
+
+## Notebook 4 Minimal Smoke UI
+
+Notebook 4 uses the same adapter discovery and prediction helpers as Notebook 3, but presents them through a small widget UI.
+
+Use Notebook 4 when you want:
+
+- a quick manual adapter selection dropdown
+- image upload without editing path variables
+- a smaller direct-adapter sanity check surface
+
+Use Notebook 3 when you want:
+
+- the fuller documented direct-adapter workflow
+- more explicit path handling
+- a surface that mirrors the maintained smoke-test helper flow step by step
 
 ## Deployment Handoff
 

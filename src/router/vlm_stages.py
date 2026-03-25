@@ -84,8 +84,14 @@ def load_sam3_bioclip25(runtime: Any) -> None:
 
     if sam_id.startswith("fake-") or bioclip_id.startswith("fake-"):
         logger.info("Using helper loaders for fake model ids")
-        sam_processor, sam_model = load_sam(runtime, sam_id)
-        bioclip_processor, bioclip_model = load_clip_like_model(runtime, bioclip_id)
+        sam_loader = getattr(runtime, "_load_sam", None)
+        clip_loader = getattr(runtime, "_load_clip_like_model", None)
+        if not callable(sam_loader):
+            sam_loader = lambda model_id: load_sam(runtime, model_id)
+        if not callable(clip_loader):
+            clip_loader = lambda model_id: load_clip_like_model(runtime, model_id)
+        sam_processor, sam_model = sam_loader(sam_id)
+        bioclip_processor, bioclip_model = clip_loader(bioclip_id)
 
         runtime._set_sam_runtime(sam_processor, sam_model, backend="sam3")
         runtime._set_bioclip_runtime(

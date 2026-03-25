@@ -1,4 +1,4 @@
-# Architecture Overview
+﻿# Architecture Overview
 
 This document explains the current AADS v6 architecture in plain language.
 
@@ -144,19 +144,21 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 
 1. `InferenceWorkflow` builds `src/pipeline/router_adapter_runtime.py`.
 2. The runtime loads config and resolves the adapter root.
-3. If the caller did not supply `crop_hint`, the runtime loads `src/router/vlm_pipeline.py`.
+3. If the caller did not supply `crop_hint`, the runtime loads the canonical router surface `src/router/router_pipeline.py`.
 4. The router analyzes the image and produces a typed router result with normalized detections.
 5. The router keeps one canonical primary detection using router quality ranking when available, otherwise preserving router order.
-6. The runtime resolves the crop adapter directory from that primary detection.
-7. The runtime loads that adapter through `IndependentCropAdapter`.
-8. The image is preprocessed to the configured target size.
-9. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
-10. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
+6. Before resolving any adapter, the runtime applies a conservative uncertainty gate on that primary detection using the configured router confidence and router margin thresholds.
+7. If the primary crop signal is too weak or too ambiguous, the payload status is `router_uncertain` and no adapter runs.
+8. Otherwise the runtime resolves the crop adapter directory from that primary detection.
+9. The runtime loads that adapter through `IndependentCropAdapter`.
+10. The image is preprocessed to the configured target size.
+11. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
+12. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
 
 If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
 If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
 If router initialization fails, the runtime discards that router instance and retries a clean load on the next request.
-`unknown_crop`, `router_unavailable`, and `adapter_unavailable` omit adapter-side `ood_analysis` because no calibrated adapter OOD verdict exists on those paths.
+`unknown_crop`, `router_unavailable`, `router_uncertain`, and `adapter_unavailable` omit adapter-side `ood_analysis` because no calibrated adapter OOD verdict exists on those paths.
 
 ### Default adapter resolution
 
@@ -179,7 +181,7 @@ These are intentionally separate surfaces:
 - Notebook 1 and `scripts/colab_router_adapter_inference.py` are router-only diagnostic surfaces that stop after crop/part identification and may return `part=unknown` when organ evidence is ambiguous
 - direct adapter smoke testing loads one adapter directly and bypasses the router
 
-Notebook 3 and `scripts/colab_adapter_smoke_test.py` are for the second case.
+Notebook 3, Notebook 4, and `scripts/colab_adapter_smoke_test.py` are for the second case. Notebook 4 is a smaller widget wrapper over the same direct-adapter helper path.
 
 ### Router evidence policy
 
@@ -239,7 +241,7 @@ The workflow writes more than one decision-looking file, but they are not equal.
 - `test/metric_gate.json`: split-local diagnostic gate
 - `production_readiness.json`: final deployment verdict
 
-The final deployment decision must come from `production_readiness.json`.
+The final deployment decision must come from `production_readiness.json`. A `ready` verdict requires real `ood/` evidence; a metrics-clean fallback-only run is recorded as `provisional` instead of deployable.
 
 ## Artifact Flow
 
@@ -328,7 +330,8 @@ Use this as the quick code map.
 - `src/training/services/reporting.py`: artifact persistence
 - `src/training/services/ood_benchmark.py`: held-out fallback OOD benchmark
 - `src/pipeline/router_adapter_runtime.py`: router-plus-adapter inference runtime
-- `src/router/vlm_pipeline.py`: router implementation
+- `src/router/router_pipeline.py`: canonical router implementation surface
+- `src/router/vlm_pipeline.py`: compatibility alias for legacy imports and naming
 - `src/shared/contracts.py`: shared result and metadata contracts
 
 ## Validation Surfaces
@@ -351,4 +354,6 @@ The repo validates the maintained surface through:
 - [../user_guide/colab_training_manual.md](../user_guide/colab_training_manual.md)
 - [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
 - [ood_recommendation.md](ood_recommendation.md)
-- [experimental_leave_one_class_out_ood.md](experimental_leave_one_class_out_ood.md)
+- [../archive/experimental_leave_one_class_out_ood.md](../archive/experimental_leave_one_class_out_ood.md)
+
+

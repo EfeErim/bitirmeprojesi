@@ -219,6 +219,38 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
     assert "SEARCH_ROOTS = [" in full_source
 
 
+def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
+    import json
+
+    notebook_path = ROOT / "colab_notebooks" / "4_simple_adapter_smoke_test.ipynb"
+    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    code_cells = [cell for cell in payload.get("cells", []) if cell.get("cell_type") == "code"]
+    assert code_cells, "Notebook 4 code cells were not found"
+    first_code_source = "".join(code_cells[0].get("source", []))
+
+    for snippet in (
+        "CLONE_TARGET = Path('/content/bitirmeprojesi')",
+        "REPO_URL = os.environ.get('AADS_REPO_URL'",
+        "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
+    ):
+        assert snippet in first_code_source, f"Notebook 4 first code cell is missing required GitHub bootstrap: {snippet}"
+
+    forbidden_snippets = (
+        "Path('/content/drive/MyDrive/bitirme projesi')",
+        "Path('/content/drive/MyDrive/bitirmeprojesi')",
+        "def _mount_drive_inline()",
+        "mount_drive_if_available",
+    )
+    for snippet in forbidden_snippets:
+        assert snippet not in first_code_source, f"Notebook 4 first code cell should not use Drive for repo bootstrap: {snippet}"
+
+    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in code_cells)
+    assert "collect_notebook_access_report" in full_source
+    assert "print_notebook_access_report" in full_source
+    assert "from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui" in full_source
+    assert "launch_simple_adapter_smoke_ui(ROOT)" in full_source
+
+
 def test_colab_helpers() -> None:
     from scripts.colab_checkpointing import TrainingCheckpointManager
     from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
@@ -235,6 +267,7 @@ def test_colab_helpers() -> None:
         mirror_path_to_repo,
         push_repo_run_to_github,
     )
+    from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui
     from scripts.evaluate_dataset_layout import evaluate_layout
 
     assert hasattr(ColabLiveTelemetry, "configure_repo_output_export")
@@ -242,6 +275,7 @@ def test_colab_helpers() -> None:
     assert callable(mirror_checkpoint_state_to_repo)
     assert callable(mirror_path_to_repo)
     assert callable(push_repo_run_to_github)
+    assert callable(launch_simple_adapter_smoke_ui)
     assert callable(prepare_class_root_for_materialization)
     _ = (
         TrainingCheckpointManager,
@@ -496,6 +530,14 @@ CHECKS = (
         success_message="Notebook 3 bootstrap uses GitHub/local repo discovery without Drive repo mounts",
         failure_prefix="Notebook 3 bootstrap contract failed",
         callback=test_adapter_smoke_notebook_bootstrap_contract,
+    ),
+    ValidationCheck(
+        result_name="Notebook 4 Bootstrap",
+        step_id="NB4_BOOTSTRAP",
+        description="Notebook 4 bootstrap contract",
+        success_message="Notebook 4 bootstrap uses GitHub/local repo discovery and launches the minimal smoke UI",
+        failure_prefix="Notebook 4 bootstrap contract failed",
+        callback=test_simple_adapter_smoke_notebook_bootstrap_contract,
     ),
     ValidationCheck(
         result_name="Colab Helpers",

@@ -42,6 +42,12 @@ This repository is intentionally narrow. The maintained user surfaces are:
 - CLI training: `.\scripts\python.cmd -m src.app.cli training ...`
 - CLI inference: `.\scripts\python.cmd -m src.app.cli inference ...`
 
+There is also one tracked convenience notebook:
+
+- Notebook 4 minimal direct adapter smoke UI: `colab_notebooks/4_simple_adapter_smoke_test.ipynb`
+
+Notebook 4 is a thin convenience wrapper over the same direct-adapter smoke-test helpers used by Notebook 3. It is tracked in the repo, but it is not a separate canonical workflow surface.
+
 The canonical app-facing entrypoints are:
 
 - `src/workflows/training.py` via `TrainingWorkflow.run(...)`
@@ -61,17 +67,24 @@ Training works like this:
 2. The training flow builds one adapter for that crop.
 3. The workflow evaluates the adapter on validation and test data.
 4. The workflow calibrates OOD behavior.
-5. The workflow writes reports and a final readiness verdict.
-6. You can copy the exported adapter into the deployment adapter root.
+5. The workflow writes reports and a final readiness artifact.
+6. A run is `ready` only when classification targets pass and real `ood/` evidence exists; held-out fallback evidence can still yield a `provisional` verdict.
+7. You can copy the exported adapter into the deployment adapter root.
 
 Inference works like this:
 
 1. The router looks at the image and guesses the crop and part.
 2. The router fuses whole-image crop evidence with SAM3 ROI evidence so one misleading patch does not dominate by itself.
-3. The runtime loads the adapter for that crop.
-4. The adapter predicts the disease class.
-5. If an adapter actually runs, the runtime also reports calibrated adapter OOD information.
-6. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
+3. The runtime rejects weak or ambiguous router outputs as `router_uncertain` before loading any adapter.
+4. The runtime loads the adapter for the accepted crop.
+5. The adapter predicts the disease class.
+6. If an adapter actually runs, the runtime also reports calibrated adapter OOD information.
+7. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
+
+Current naming note:
+
+- the maintained router methodology is `SAM3 + BioCLIP-2.5`
+- `VLM` survives only as a backward-compatible module/config name on some repo surfaces
 
 Notebook 1 is different:
 
@@ -543,6 +556,6 @@ Do not treat generated outputs as tracked implementation files unless you explic
 ## Where To Read Next
 
 - [docs/README.md](docs/README.md): documentation map and reading paths
-- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2 and Notebook 3 guide
+- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, and Notebook 4 guide
 - [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md): how deployment readiness is decided
 - [docs/architecture/overview.md](docs/architecture/overview.md): code and data flow map

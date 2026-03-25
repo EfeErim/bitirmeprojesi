@@ -28,6 +28,7 @@ Read these before making repo-wide assumptions:
 - Notebook training surface: `colab_notebooks/2_interactive_adapter_training.ipynb`
 - Notebook inference surface: `colab_notebooks/1_router_adapter_inference.ipynb`
 - Direct adapter validation: `colab_notebooks/3_adapter_smoke_test.ipynb` and `scripts/colab_adapter_smoke_test.py`
+- Auxiliary direct adapter UI: `colab_notebooks/4_simple_adapter_smoke_test.ipynb` and `scripts/colab_simple_adapter_smoke_ui.py`
 - Repo validation and automation: `.github/workflows/ci.yml`, `scripts/validate_notebook_imports.py`, `scripts/validate_config_schema.py`, `scripts/benchmark_surfaces.py`
 
 ## Tracked Vs Local-Generated
@@ -62,7 +63,7 @@ Use the smallest set that covers the task.
 ## Routing Rules
 
 - Use `aads-training-ood` for `TrainingWorkflow.run(...)`, continual SD-LoRA config, OOD calibration, readiness artifacts, BER comparisons, and training-side adapter export semantics.
-- Use `aads-colab-notebooks` for Notebook 1, 2, or 3 changes, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
+- Use `aads-colab-notebooks` for Notebook 1, 2, 3, or 4 changes, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
 - Use `aads-inference-runtime` for router inference, adapter lookup and deployment handoff, lazy adapter loading, direct adapter smoke testing, and inference payload behavior.
 - Use `aads-repo-hygiene` for CI, tests, benchmark capture, docs consistency, and tracked-vs-generated repo boundaries.
 
@@ -71,7 +72,7 @@ Use the smallest set that covers the task.
 - Use `aads-training-ood` plus `aads-colab-notebooks` for Notebook 2 changes and notebook/export mismatches.
 - Use `aads-training-ood` plus `aads-repo-hygiene` for training-side code changes that also affect tests, docs, metrics, or CI coverage.
 - Use `aads-inference-runtime` plus `aads-repo-hygiene` for runtime bugfixes, adapter lookup regressions, or inference-facing docs and tests.
-- Use `aads-colab-notebooks` plus `aads-inference-runtime` for Notebook 1 or Notebook 3 tasks that stay on inference and adapter-validation surfaces.
+- Use `aads-colab-notebooks` plus `aads-inference-runtime` for Notebook 1, Notebook 3, or Notebook 4 tasks that stay on inference and adapter-validation surfaces.
 - If a task spans training and inference through the saved adapter contract, anchor on the canonical workflow and runtime entrypoints rather than notebook-only behavior.
 
 ## Default Validation Commands

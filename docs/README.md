@@ -59,6 +59,7 @@ Use this when you need:
 Use this when you need:
 
 - Notebook 0, Notebook 2, and Notebook 3 explained step by step
+- the tracked Notebook 4 convenience UI explained in relation to Notebook 3
 - the flat dataset input contract
 - the runtime split layouts created by Notebook 0 or Notebook 2
 - notebook outputs, telemetry, and adapter handoff
@@ -91,7 +92,12 @@ Use this when you need:
 These are reference notes, not the first documents a beginner should read:
 
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
-- [architecture/experimental_leave_one_class_out_ood.md](architecture/experimental_leave_one_class_out_ood.md)
+
+## Archive
+
+These notes are historical context only. Do not treat them as maintained methodology:
+
+- [archive/experimental_leave_one_class_out_ood.md](archive/experimental_leave_one_class_out_ood.md)
 
 ## Fast Answers To Common Questions
 
@@ -147,7 +153,7 @@ When docs, older notes, or generated outputs disagree, prefer this order:
 4. `src/training/services/`
 5. `scripts/`
 6. `tests/`
-7. historical architecture notes
+7. archived methodology notes
 
 ## Validation Commands
 
