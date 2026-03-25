@@ -1,6 +1,6 @@
-# Experimental Prototype: Leave-One-Class-Out OOD Evaluation
+﻿# Experimental Prototype: Leave-One-Class-Out OOD Evaluation
 
-Status: historical design note. The supported workflow now includes an automatic held-out benchmark fallback when no real `data/<crop>/ood/` split exists. For the current user-facing behavior, see [OOD Readiness Guide](../user_guide/ood_readiness_guide.md).
+Status: historical design note. This methodology is archived and is not part of the maintained product surface. The supported workflow now includes an automatic held-out benchmark fallback when no real `data/<crop>/ood/` split exists. For the current user-facing behavior, see [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md).
 
 ## Goal
 
@@ -86,3 +86,4 @@ The supported default remains:
 1. train on all known classes
 2. calibrate OOD on known-class data
 3. save adapter and metadata for inference
+

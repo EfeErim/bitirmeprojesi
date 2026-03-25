@@ -12,7 +12,7 @@ from PIL import Image
 
 from src.core.config_manager import get_config
 from src.router.label_normalization import normalize_part_label
-from src.router.vlm_pipeline import VLMPipeline
+from src.router.router_pipeline import RouterPipeline
 from src.shared.contracts import RouterAnalysisResult
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
@@ -219,12 +219,12 @@ def evaluate_router_part_surface(
 ) -> Dict[str, Any]:
     dataset = discover_eval_samples(root)
     config = get_config(environment=config_env)
-    router = VLMPipeline(config=config, device=device)
+    router = RouterPipeline(config=config, device=device)
     router.load_models()
     if not router.is_ready():
         raise RuntimeError(
             "Router models failed to become ready for inference. "
-            "Check router.vlm.enabled, model availability, and VLM dependency installation."
+            "Check router.vlm.enabled, model availability, and router dependency installation."
         )
 
     compatible_surface = getattr(router, "crop_part_compatibility", {})

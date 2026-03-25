@@ -103,7 +103,7 @@ def _build_trainer(config_cls, trainer_cls):
 
 def collect_benchmarks() -> dict[str, float]:
     from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
-    from src.router.vlm_pipeline import VLMPipeline
+    from src.router.router_pipeline import RouterPipeline
     from src.training.continual_sd_lora import ContinualSDLoRAConfig, ContinualSDLoRATrainer
 
     def trainer_factory():
@@ -144,7 +144,7 @@ def collect_benchmarks() -> dict[str, float]:
     router_cold_load_ms, _ = _time_call(runtime.load_router)
     warm_inference_ms, _ = _time_call(lambda: runtime.predict(Image.new("RGB", (16, 16), color="green")))
 
-    pipeline = VLMPipeline(
+    pipeline = RouterPipeline(
         config={
             "vlm_enabled": True,
             "router": {

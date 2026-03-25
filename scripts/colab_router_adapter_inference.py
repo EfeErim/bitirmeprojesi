@@ -12,12 +12,13 @@ from PIL import Image
 
 from src.core.config_manager import get_config
 from src.pipeline.inference_payloads import build_router_skipped_analysis
-from src.router.vlm_pipeline import VLMPipeline
+from src.router.router_pipeline import RouterPipeline
 from src.shared.contracts import RouterAnalysisResult
 
 StatusPrinter = Callable[[str], None]
 RouterCacheKey = tuple[str, str]
 
+VLMPipeline = RouterPipeline
 _ROUTER_SESSION_CACHE: dict[RouterCacheKey, VLMPipeline] = {}
 
 
@@ -70,7 +71,7 @@ def ensure_router_ready(
     if not router.is_ready():
         raise RuntimeError(
             "Router models failed to become ready for inference. "
-            "Check router.vlm.enabled, model availability, and VLM dependency installation."
+            "Check router.vlm.enabled, model availability, and router dependency installation."
         )
 
     if reuse_cached:
