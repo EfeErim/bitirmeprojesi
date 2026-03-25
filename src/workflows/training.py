@@ -16,7 +16,6 @@ from src.data.loaders import create_training_loaders
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.ood_score_selection import (
     apply_primary_score_method_to_evaluation,
-    compute_method_metrics_from_evaluation,
     is_auto_primary_score_method,
     normalize_requested_primary_score_method,
     resolve_runtime_primary_score_method,
@@ -55,9 +54,6 @@ from src.workflows.training_readiness import (
 )
 from src.workflows.training_readiness import (
     select_authoritative_artifacts as select_authoritative_artifacts_payload,
-)
-from src.workflows.training_readiness import (
-    select_authoritative_evaluation as select_authoritative_evaluation_payload,
 )
 from src.workflows.training_readiness import (
     select_authoritative_value as select_authoritative_value_payload,
@@ -715,23 +711,13 @@ class TrainingWorkflow:
             selection_source="configured",
         )
         if loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(primary_score_stage.requested_method):
-            _, authoritative_evaluation = select_authoritative_evaluation_payload(
-                split_evaluations.get("val"),
-                split_evaluations.get("test"),
-                calibration_split_name=calibration_split_name,
-            )
-            authoritative_method_metrics = compute_method_metrics_from_evaluation(authoritative_evaluation)
+            # Keep the shipped concrete runtime default when only one shared real-OOD
+            # pool exists. Reusing that same pool for automatic score-method tuning
+            # would turn final readiness evidence into selection evidence.
             primary_score_stage = _PrimaryScoreSelectionStage(
                 requested_method=primary_score_stage.requested_method,
-                selected_method=select_best_ood_score_method(
-                    authoritative_method_metrics,
-                    fallback=primary_score_stage.selected_method,
-                ),
-                selection_source=(
-                    "real_ood_split"
-                    if authoritative_method_metrics
-                    else primary_score_stage.selection_source
-                ),
+                selected_method=primary_score_stage.selected_method,
+                selection_source="real_ood_guardrail",
             )
         selected_primary_score_method = self._apply_primary_score_method_to_trainer(
             trainer_for_artifacts,

@@ -198,6 +198,12 @@ When this path is available, the readiness artifact records the OOD evidence sou
 
 - `real_ood_split`
 
+Primary-score selection guardrail:
+
+- if `training.continual.ood.primary_score_method` is set to `"auto"` and the repo only has one shared real `ood/` pool, the workflow keeps the concrete runtime detector path on `"ensemble"` instead of auto-tuning on that same pool
+- this is a repo-level engineering guardrail motivated by OOD-evaluation literature: method rankings can move when the benchmark construction changes, and reusing final deployment evidence for score-method selection would make the readiness claim more optimistic than the evidence supports; see [In or Out? Fixing ImageNet Out-of-Distribution Detection Evaluation](https://proceedings.mlr.press/v202/bitterwolf23a.html)
+- if you want to compare `ensemble`, `energy`, and `knn` on real OOD evidence, treat the split-local method-comparison artifacts as analysis only, then rerun with an explicit method or maintain a separate dev OOD pool outside the current shipped contract
+
 ## What Happens When Real OOD Data Is Missing
 
 The fallback is a leave-one-class-out benchmark.

@@ -432,8 +432,10 @@ These control how OOD calibration and scoring behave:
 Current shipped default:
 
 - the raw config surface ships `training.continual.ood.primary_score_method: "auto"`
-- the trainer starts with the concrete detector path on `"ensemble"` until OOD evidence exists
-- when real `ood/` data or the held-out fallback benchmark is available, the workflow auto-selects the concrete winning method and exports that chosen method into the adapter
+- the trainer starts with the concrete detector path on `"ensemble"`
+- when the repo only has one shared real `ood/` pool, the workflow keeps that concrete runtime method instead of auto-tuning on the same pool later used for the final readiness verdict
+- the held-out fallback benchmark can still auto-select a concrete winner because it is separate proxy evidence rather than the final real-OOD deployment verdict
+- if you want to promote `energy` or `knn` using real OOD evidence, inspect the split-local comparison artifacts and rerun with an explicit `training.continual.ood.primary_score_method`, or keep a separate dev OOD pool outside the shipped contract
 - energy scoring can optionally keep a fixed temperature or auto-calibrate one from the calibration split
 - kNN scoring can use `cdist`, chunked search, or optional FAISS when available
 - conformal mode can be threshold conformalization, APS, or RAPS depending on whether you want rejection calibration or set-valued classification

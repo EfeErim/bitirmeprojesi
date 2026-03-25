@@ -145,37 +145,6 @@ def _fake_evaluation_result(include_ood: bool) -> EvaluationArtifactsPayload:
     )
 
 
-def _fake_auto_pick_evaluation_result() -> EvaluationArtifactsPayload:
-    report = ValidationReport(
-        val_loss=0.05,
-        val_accuracy=1.0,
-        macro_precision=1.0,
-        macro_recall=1.0,
-        macro_f1=1.0,
-        weighted_f1=1.0,
-        balanced_accuracy=1.0,
-        per_class_accuracy={"healthy": 1.0, "disease_a": 1.0},
-        per_class_support={"healthy": 2, "disease_a": 2},
-        worst_classes=[],
-    )
-    return EvaluationArtifactsPayload(
-        report=report,
-        y_true=[0, 1, 0, 1],
-        y_pred=[0, 1, 0, 1],
-        ood_labels=[0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
-        ood_scores=[0.7, 0.75, 0.72, 0.78, 0.74, 0.6, 0.9, 0.58, 0.88, 0.92],
-        ood_primary_score_method="ensemble",
-        ood_scores_by_method={
-            "ensemble": [0.7, 0.75, 0.72, 0.78, 0.74, 0.6, 0.9, 0.58, 0.88, 0.92],
-            "energy": [0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92],
-            "knn": [0.3, 0.4, 0.35, 0.38, 0.42, 0.7, 0.8, 0.72, 0.76, 0.84],
-        },
-        sure_ds_f1=0.95,
-        conformal_empirical_coverage=0.97,
-        conformal_avg_set_size=1.0,
-    )
-
-
 def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(
         "src.workflows.training.create_training_loaders",
@@ -303,7 +272,7 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
     monkeypatch.setattr(
         "src.workflows.training.evaluate_model_with_artifact_metrics",
-        lambda trainer, loader, *, ood_loader=None: _fake_auto_pick_evaluation_result(),
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=ood_loader is not None),
     )
     monkeypatch.setattr(
         "src.workflows.training.run_leave_one_class_out_benchmark",
@@ -338,7 +307,7 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     assert (result.artifact_dir / "production_readiness.json").exists()
 
 
-def test_training_workflow_auto_selects_primary_score_method_from_real_ood(monkeypatch, tmp_path: Path):
+def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mode(monkeypatch, tmp_path: Path):
     saved_methods = []
 
     class AutoPickingAdapter(FakeAdapter):
@@ -381,7 +350,7 @@ def test_training_workflow_auto_selects_primary_score_method_from_real_ood(monke
     monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", AutoPickingAdapter)
     monkeypatch.setattr(
         "src.workflows.training.evaluate_model_with_artifact_metrics",
-        lambda trainer, loader, *, ood_loader=None: _fake_auto_pick_evaluation_result(),
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=ood_loader is not None),
     )
     monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
 
@@ -409,8 +378,9 @@ def test_training_workflow_auto_selects_primary_score_method_from_real_ood(monke
     )
 
     assert result.production_readiness["context"]["ood_requested_primary_score_method"] == "auto"
-    assert result.production_readiness["context"]["ood_primary_score_method"] == "energy"
-    assert saved_methods == [{"config": "energy", "detector": "energy"}]
+    assert result.production_readiness["context"]["ood_primary_score_method"] == "ensemble"
+    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_guardrail"
+    assert saved_methods == [{"config": "ensemble", "detector": "ensemble"}]
 
 
 def test_training_workflow_records_export_metadata_for_adapter(monkeypatch, tmp_path: Path):

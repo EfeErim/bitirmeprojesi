@@ -130,6 +130,8 @@ Recommendation:
   - current ensemble
   - energy
   - kNN
+- treat one shared real `ood/` pool as final readiness evidence, not automatic score-selection evidence
+- if score selection matters, use the held-out benchmark as proxy selection evidence first or keep a separate dev OOD pool outside the current shipped contract
 
 Success criterion:
 
@@ -139,6 +141,7 @@ Why this phase is second:
 
 - it is likely lower risk than training-objective changes
 - it fits the repo's current calibration-and-artifact architecture well
+- the current radial L2 option is still worth keeping on by default while those comparisons run; more recent Mahalanobis analysis also supports feature-norm control as a practical improvement path, not a dead end
 
 ### Phase 3: Add low-risk training regularization
 
@@ -241,4 +244,5 @@ That path is the best balance of:
 - Liznerski, P., Ruff, L., Vandermeulen, R. A., Franks, B. J., Muller, K.-R., and Kloft, M. (2022). *Exposing Outlier Exposure: What Can Be Learned From Few, One, and Zero Outlier Images*. OpenReview. https://openreview.net/forum?id=3v78awEzyB
 - Narayanaswamy, V., Mubarka, Y., Anirudh, R., Rajan, D., Spanias, A., and Thiagarajan, J. J. (2024). *Know Your Space: Inlier and Outlier Construction for Calibrating Medical OOD Detectors*. MIDL. https://proceedings.mlr.press/v227/narayanaswamy24a.html
 - Sun, Y., Ming, Y., Zhu, X., and Li, Y. (2022). *Out-of-Distribution Detection with Deep Nearest Neighbors*. ICML. https://proceedings.mlr.press/v162/sun22d.html
+- Muller, M., and Hein, M. (2025). *Mahalanobis++: Improving OOD Detection via Feature Normalization*. ICML. https://proceedings.mlr.press/v267/muller25a.html
 - Wei, H., Xie, R., Cheng, H., Feng, L., An, B., and Li, Y. (2022). *Mitigating Neural Network Overconfidence with Logit Normalization*. ICML. https://proceedings.mlr.press/v162/wei22d.html
