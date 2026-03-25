@@ -5,13 +5,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-import random
 import re
 import zipfile
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, List, Sequence
+from typing import Dict, Iterable, List, Optional, Sequence
 
 from scripts.colab_dataset_layout import IMAGE_EXTENSIONS
 from scripts.prepare_grouped_runtime_dataset import (
@@ -19,6 +18,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     ReviewPair,
     UnionFind,
     _classify_review_cluster,
+    _record_preference_key,
 )
 
 DEFAULT_SEED = 42
@@ -182,16 +182,48 @@ def _find_variant_relpaths(
     return sorted(set(matches))
 
 
+def _relative_path_preference_key(relative_path: str) -> tuple[int, int, int, str]:
+    relative = Path(relative_path)
+    normalized = relative.as_posix().lower()
+    stripped = _strip_known_variant_suffix(relative.stem)
+    suffix_penalty = 0 if stripped == relative.stem else 1
+    keyword_penalty = sum(1 for token in VARIANT_SUFFIXES if token in normalized)
+    return (suffix_penalty, keyword_penalty, len(relative.stem), normalized)
+
+
+def _choose_canonical_relative_path(
+    relative_paths: Sequence[str],
+    *,
+    record_lookup: Optional[Dict[str, ImageRecord]] = None,
+) -> str:
+    candidates = sorted({str(item).strip() for item in relative_paths if str(item).strip()})
+    if not candidates:
+        raise ValueError("Cannot choose a canonical path from an empty duplicate cluster.")
+    if record_lookup:
+        manifest_backed = [path for path in candidates if path in record_lookup]
+        if manifest_backed:
+            return min(manifest_backed, key=lambda item: _record_preference_key(record_lookup[item]))
+    return min(candidates, key=_relative_path_preference_key)
+
+
 def build_cleanup_plan(
     *,
     dataset_root: Path,
     exact_duplicates_source: Path,
+    dataset_manifest_source: Path | None = None,
     seed: int = DEFAULT_SEED,
 ) -> List[DuplicateCleanupAction]:
-    rng = random.Random(int(seed))
+    _ = seed
     rows = _load_exact_duplicate_rows(Path(exact_duplicates_source))
     actions: List[DuplicateCleanupAction] = []
     directory_cache: Dict[Path, List[tuple[str, str]]] = {}
+    record_lookup: Dict[str, ImageRecord] = {}
+    if dataset_manifest_source is not None:
+        record_lookup = {
+            row["relative_path"]: _record_from_manifest_row(row)
+            for row in _load_manifest_rows(Path(dataset_manifest_source))
+            if str(row.get("relative_path", "")).strip()
+        }
 
     for row_index, row in enumerate(rows, start=1):
         raw_paths = str(row.get("relative_paths", "")).strip()
@@ -200,21 +232,23 @@ def build_cleanup_plan(
         relative_paths = [item.strip() for item in raw_paths.split("|") if item.strip()]
         if len(relative_paths) < 2:
             continue
-        delete_count = len(relative_paths) - 1
-        selected = sorted(rng.sample(relative_paths, delete_count))
-        kept = sorted(set(relative_paths) - set(selected))
-        for selected_path in selected:
-            matches = _find_variant_relpaths(Path(dataset_root), selected_path, directory_cache=directory_cache)
-            if selected_path not in matches:
-                matches = sorted(set(matches + [selected_path]))
+        kept_path = _choose_canonical_relative_path(relative_paths, record_lookup=record_lookup)
+        selected = sorted(path for path in relative_paths if path != kept_path)
+        kept = [kept_path]
+        for candidate_path in sorted(relative_paths):
+            matches = _find_variant_relpaths(Path(dataset_root), candidate_path, directory_cache=directory_cache)
+            if candidate_path not in matches:
+                matches = sorted(set(matches + [candidate_path]))
             for matched in matches:
-                reason = "selected_exact_duplicate" if matched == selected_path else "selected_variant_family"
+                if matched == kept_path:
+                    continue
+                reason = "selected_exact_duplicate" if matched == candidate_path and candidate_path in selected else "selected_variant_family"
                 actions.append(
                     DuplicateCleanupAction(
                         duplicate_group_index=row_index,
                         duplicate_count=len(relative_paths),
                         kept_relative_paths="|".join(kept),
-                        selected_relative_path=selected_path,
+                        selected_relative_path=candidate_path,
                         deleted_relative_path=matched,
                         delete_reason=reason,
                     )
@@ -276,7 +310,7 @@ def build_review_cleanup_plan(
     seed: int = DEFAULT_SEED,
     starting_group_index: int = 0,
 ) -> List[DuplicateCleanupAction]:
-    rng = random.Random(int(seed))
+    _ = seed
     review_rows = _load_review_rows(Path(review_source))
     manifest_rows = _load_manifest_rows(Path(dataset_manifest_source))
     directory_cache: Dict[Path, List[tuple[str, str]]] = {}
@@ -313,21 +347,27 @@ def build_review_cleanup_plan(
         if resolution != "auto_resolve":
             continue
         group_index += 1
-        delete_count = len(relative_paths) - 1
-        selected = sorted(rng.sample(relative_paths, delete_count))
-        kept = sorted(set(relative_paths) - set(selected))
-        for selected_path in selected:
-            matches = _find_variant_relpaths(Path(dataset_root), selected_path, directory_cache=directory_cache)
-            if selected_path not in matches:
-                matches = sorted(set(matches + [selected_path]))
+        kept_path = _choose_canonical_relative_path(relative_paths, record_lookup=record_lookup)
+        kept = [kept_path]
+        selected = {path for path in relative_paths if path != kept_path}
+        for candidate_path in sorted(relative_paths):
+            matches = _find_variant_relpaths(Path(dataset_root), candidate_path, directory_cache=directory_cache)
+            if candidate_path not in matches:
+                matches = sorted(set(matches + [candidate_path]))
             for matched in matches:
-                delete_reason = "selected_review_cluster" if matched == selected_path else "selected_review_variant_family"
+                if matched == kept_path:
+                    continue
+                delete_reason = (
+                    "selected_review_cluster"
+                    if matched == candidate_path and candidate_path in selected
+                    else "selected_review_variant_family"
+                )
                 actions.append(
                     DuplicateCleanupAction(
                         duplicate_group_index=group_index,
                         duplicate_count=len(relative_paths),
                         kept_relative_paths="|".join(kept),
-                        selected_relative_path=selected_path,
+                        selected_relative_path=candidate_path,
                         deleted_relative_path=matched,
                         delete_reason=f"{delete_reason}:{reason}",
                     )
@@ -349,6 +389,7 @@ def build_combined_cleanup_plan(
     exact_actions = build_cleanup_plan(
         dataset_root=dataset_root,
         exact_duplicates_source=exact_duplicates_source,
+        dataset_manifest_source=dataset_manifest_source,
         seed=seed,
     )
     if review_source is None or dataset_manifest_source is None:

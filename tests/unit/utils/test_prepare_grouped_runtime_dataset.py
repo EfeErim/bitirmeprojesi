@@ -291,6 +291,80 @@ def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, m
     assert rows[0]["resolution"] == "auto_resolve"
 
 
+def test_materialized_eval_splits_only_contain_canonical_clean_family_members(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_clean_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_clean_{index}.jpg", offset=offset + 1)
+
+    _write_pattern(source_root / "Healthy" / "healthy_real.jpg", offset=22)
+    _write_pattern(source_root / "Healthy" / "healthy_aug_flip.jpg", offset=23)
+    _write_pattern(source_root / "Early Blight" / "disease_real.jpg", offset=24)
+    _write_pattern(source_root / "Early Blight" / "disease_aug_flip.jpg", offset=25)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {
+            tuple(sorted((real_path, aug_path))): 0.99
+            for real_path in paths
+            for aug_path in paths
+            if "real" in real_path and "aug" in aug_path
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._phash_distance",
+        lambda a, b: 6,
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato"
+    eval_files = {
+        path.relative_to(crop_root).as_posix()
+        for split_name in ("val", "test")
+        for path in (crop_root / split_name).rglob("*.jpg")
+    }
+    assert all("aug" not in path for path in eval_files)
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    synthetic_rows = [row for row in manifest_rows if row["family_role"] == "canonical_with_synthetic_derivatives"]
+    assert synthetic_rows
+    assert all(row["split"] == "continual" for row in synthetic_rows if not row["is_family_canonical"])
+
+
 def test_build_grouped_dataset_plan_excludes_images_missing_after_scan(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"

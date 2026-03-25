@@ -234,6 +234,36 @@ def _compute_blur_and_brightness(image: Image.Image) -> tuple[float, float]:
     return blur_score, brightness_mean
 
 
+def _path_keyword_penalty(path_like: str) -> int:
+    normalized = normalize_class_name(path_like)
+    if not normalized:
+        return len(SYNTHETIC_HINT_KEYWORDS)
+    return sum(1 for token in SYNTHETIC_HINT_KEYWORDS if token in normalized)
+
+
+def _record_preference_key(record: ImageRecord) -> tuple[Any, ...]:
+    pixels = int(record.width) * int(record.height)
+    min_dim = min(int(record.width), int(record.height)) if pixels else 0
+    resolution_penalty = 2 if pixels <= 0 else (1 if min_dim < QUALITY_WARN_MIN_SIZE else 0)
+    brightness_penalty = abs(float(record.brightness_mean) - 0.5)
+    return (
+        1 if record.synthetic_hint else 0,
+        _path_keyword_penalty(record.relative_path),
+        resolution_penalty,
+        -pixels,
+        -float(record.blur_score),
+        float(brightness_penalty),
+        len(Path(record.relative_path).as_posix()),
+        record.relative_path.lower(),
+    )
+
+
+def _select_canonical_record(records: Sequence[ImageRecord]) -> ImageRecord:
+    if not records:
+        raise ValueError("Cannot select a canonical record from an empty family.")
+    return min(records, key=_record_preference_key)
+
+
 def scan_class_root_dataset(
     *,
     class_root: Path,
@@ -984,37 +1014,87 @@ def build_grouped_dataset_plan(
         root_id = uf.find(record.relative_path)
         families[(record.normalized_class_name, root_id)].append(record)
 
-    split_targets = _family_targets(valid_records)
+    review_excluded_paths = {
+        str(path)
+        for pair in review_pairs
+        for path in (pair.path_a, pair.path_b)
+        if str(path).strip()
+    }
+    family_details: Dict[tuple[str, str], Dict[str, Any]] = {}
+    for family_key, items in families.items():
+        ordered_items = sorted(items, key=lambda record: record.relative_path)
+        canonical_record = _select_canonical_record(ordered_items)
+        review_excluded = any(item.relative_path in review_excluded_paths for item in ordered_items)
+        family_has_synthetic = any(item.synthetic_hint for item in ordered_items)
+        if review_excluded:
+            family_role = "review_excluded"
+        elif canonical_record.synthetic_hint:
+            family_role = "synthetic_family"
+        elif family_has_synthetic:
+            family_role = "canonical_with_synthetic_derivatives"
+        elif len(ordered_items) > 1:
+            family_role = "canonical_with_derivatives"
+        else:
+            family_role = "independent_singleton"
+        family_details[family_key] = {
+            "canonical_record": canonical_record,
+            "canonical_relative_path": canonical_record.relative_path,
+            "eval_eligible": (not review_excluded) and (not canonical_record.synthetic_hint),
+            "family_role": family_role,
+            "family_size": len(ordered_items),
+            "review_excluded": review_excluded,
+            "family_has_synthetic": family_has_synthetic,
+        }
+
     family_assignments: Dict[str, str] = {}
     class_health: Dict[str, Any] = {}
     blocking_issues: List[str] = []
-    for class_name, target in split_targets.items():
-        class_families = [
-            (family_root, items)
-            for (family_class, family_root), items in families.items()
-            if family_class == class_name
+    for class_name in sorted({record.normalized_class_name for record in valid_records}):
+        class_families = sorted(
+            [
+                (family_root, items, family_details[(family_class, family_root)])
+                for (family_class, family_root), items in families.items()
+                if family_class == class_name
+            ],
+            key=lambda item: item[0],
+        )
+        eval_candidate_families = [
+            (family_root, [detail["canonical_record"]])
+            for family_root, _items, detail in class_families
+            if detail["eval_eligible"]
         ]
+        target = estimate_split_counts(len(eval_candidate_families))
         class_health[class_name] = {
-            "image_count": sum(len(items) for _, items in class_families),
+            "image_count": sum(len(items) for _, items, _detail in class_families),
             "family_count": len(class_families),
+            "eval_eligible_family_count": len(eval_candidate_families),
+            "continual_only_family_count": len(class_families) - len(eval_candidate_families),
             "targets": {"continual": target[0], "val": target[1], "test": target[2]},
             "synthetic_hint_count": sum(
-                1 for _, items in class_families for item in items if item.synthetic_hint
+                1 for _, items, _detail in class_families for item in items if item.synthetic_hint
             ),
+            "review_excluded_family_count": sum(1 for _family_root, _items, detail in class_families if detail["review_excluded"]),
         }
-        if len(class_families) < 3:
+        if len(eval_candidate_families) < 3:
             blocking_issues.append(
-                f"Class '{class_name}' has only {len(class_families)} independent family/families after grouping."
+                f"Class '{class_name}' has only {len(eval_candidate_families)} evaluation-eligible family/families after grouped prep."
             )
             continue
-        assignments = _assign_splits_for_class(families=class_families, targets=target)
+        assignments = _assign_splits_for_class(families=eval_candidate_families, targets=target)
         family_assignments.update(assignments)
 
     manifest_rows: List[Dict[str, Any]] = []
     for (class_name, family_root), items in sorted(families.items(), key=lambda item: (item[0][0], item[0][1])):
+        family_detail = family_details[(class_name, family_root)]
         family_id = f"{class_name}__{family_root[:12]}"
-        split_name = family_assignments.get(family_root, "")
+        assigned_split = family_assignments.get(family_root, "continual")
+        canonical_relative_path = str(family_detail["canonical_relative_path"])
         for item in sorted(items, key=lambda record: record.relative_path):
+            split_name = (
+                assigned_split
+                if bool(family_detail["eval_eligible"]) and item.relative_path == canonical_relative_path
+                else "continual"
+            )
             manifest_rows.append(
                 {
                     "relative_path": item.relative_path,
@@ -1029,6 +1109,12 @@ def build_grouped_dataset_plan(
                     "exact_hash": item.exact_hash,
                     "phash_hex": item.phash_hex,
                     "family_id": family_id,
+                    "family_size": int(family_detail["family_size"]),
+                    "family_role": str(family_detail["family_role"]),
+                    "family_eval_eligible": bool(family_detail["eval_eligible"]),
+                    "family_canonical_relative_path": canonical_relative_path,
+                    "is_family_canonical": bool(item.relative_path == canonical_relative_path),
+                    "family_assignment": assigned_split,
                     "split": split_name,
                 }
             )
@@ -1048,6 +1134,9 @@ def build_grouped_dataset_plan(
             "same_class_high_risk_clusters": len(high_risk_review_clusters),
             "cross_class_conflicts": len(blocking_conflicts),
             "blocking_issues": len(blocking_issues),
+            "eval_eligible_families": sum(1 for detail in family_details.values() if detail["eval_eligible"]),
+            "continual_only_families": sum(1 for detail in family_details.values() if not detail["eval_eligible"]),
+            "review_excluded_paths": len(review_excluded_paths),
             "excluded_reason_breakdown": {
                 "unreadable": len([record for record in records if record.excluded_reason == "unreadable"]),
                 "unhashable": len([record for record in records if record.excluded_reason == "unhashable"]),
@@ -1183,7 +1272,7 @@ def materialize_grouped_runtime_dataset(
             "dataset_key": str(dataset_key),
             "source_root": str(class_root.resolve()),
             "artifact_root": str(artifact_root.resolve()),
-            "split_policy": "grouped_family_80_10_10",
+            "split_policy": "grouped_family_canonical_eval",
             "rows": rows,
         },
         ensure_ascii=False,
