@@ -15,6 +15,9 @@ _PRIORITY_ORDER = {
     "low": 3,
 }
 
+_GUIDED_START_HERE = "guided/00_start_here.md"
+_GUIDED_CATALOG = "guided/02_file_catalog.json"
+
 
 def _relative_path(path: Path, base_dir: Path) -> str:
     try:
@@ -653,6 +656,112 @@ def _copy_guided_to_telemetry(telemetry: Any, *, artifact_root: Path, written_pa
         telemetry.copy_artifact_file(path, relative_path)
 
 
+def _prepare_guided_catalog(
+    *,
+    root: Path,
+    base_dir: Path,
+    overview_loader: Any,
+    entry_finder: Any,
+    overview_updates: Dict[str, Any] | None,
+    extra_entries: Sequence[Dict[str, Any]] | None,
+    generated_by: str,
+) -> tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    overview = {**overview_loader(root), **dict(overview_updates or {})}
+    catalog_entries = entry_finder(root, base_dir=base_dir, generated_by=generated_by)
+    for item in list(extra_entries or []):
+        catalog_entries.append(_coerce_extra_entry(dict(item), base_dir=base_dir))
+    return overview, _dedupe_entries(catalog_entries)
+
+
+def _build_guided_payloads(
+    *,
+    base_dir: Path,
+    catalog_kind: str,
+    overview_kind: str,
+    overview_schema_version: str,
+    overview: Dict[str, Any],
+    overview_filename: str,
+    primary_files: Dict[str, str],
+    catalog_entries: Sequence[Dict[str, Any]],
+) -> tuple[Dict[str, Any], Dict[str, Any]]:
+    catalog_payload = {
+        "schema_version": "v1_guided_file_catalog",
+        "catalog_kind": catalog_kind,
+        "catalog_base": str(base_dir.resolve()),
+        "entry_count": len(catalog_entries),
+        "entries": list(catalog_entries),
+    }
+    overview_payload = {
+        "schema_version": overview_schema_version,
+        "overview_kind": overview_kind,
+        "catalog_base": str(base_dir.resolve()),
+        "primary_files": {
+            "start_here": _GUIDED_START_HERE,
+            overview_filename.split("/")[-1].replace(".json", "").replace("01_", ""): overview_filename,
+            "file_catalog": _GUIDED_CATALOG,
+            **primary_files,
+        },
+        **overview,
+    }
+    return catalog_payload, overview_payload
+
+
+def _write_guided_bundle(
+    *,
+    guided_dir: Path,
+    overview_filename: str,
+    overview_payload: Dict[str, Any],
+    catalog_payload: Dict[str, Any],
+    start_here: str,
+    category_to_doc: Dict[str, tuple[str, str, str]],
+    catalog_entries: Sequence[Dict[str, Any]],
+) -> List[Path]:
+    written_paths = [
+        _write_guided_file(guided_dir / "00_start_here.md", start_here.rstrip() + "\n"),
+        _write_guided_file(guided_dir / Path(overview_filename).name, overview_payload),
+        _write_guided_file(guided_dir / "02_file_catalog.json", catalog_payload),
+    ]
+    for category, (filename, heading, intro) in category_to_doc.items():
+        written_paths.append(
+            _write_guided_file(
+                guided_dir / filename,
+                _render_section_markdown(
+                    heading=heading,
+                    intro=intro,
+                    entries=[entry for entry in catalog_entries if entry.get("category") == category],
+                ),
+            )
+        )
+    return written_paths
+
+
+def _merge_guided_telemetry(
+    *,
+    telemetry: Any,
+    artifact_root: Path,
+    written_paths: Sequence[Path],
+    catalog_entries: Sequence[Dict[str, Any]],
+    overview_payload: Dict[str, Any],
+    overview_key: str,
+    overview_filename: str,
+) -> None:
+    _copy_guided_to_telemetry(telemetry, artifact_root=artifact_root, written_paths=written_paths)
+    if telemetry is not None and hasattr(telemetry, "merge_artifact_catalog"):
+        telemetry.merge_artifact_catalog(catalog_entries)
+    if telemetry is not None and hasattr(telemetry, "merge_summary_metadata"):
+        telemetry.merge_summary_metadata(
+            {
+                "guided_artifacts": {
+                    "start_here": _GUIDED_START_HERE,
+                    overview_key: overview_filename,
+                    "file_catalog": _GUIDED_CATALOG,
+                },
+                "guided_catalog_entry_count": len(catalog_entries),
+                overview_key: overview_payload,
+            }
+        )
+
+
 def refresh_training_guided_artifacts(
     artifact_root: str | Path,
     *,
@@ -666,33 +775,29 @@ def refresh_training_guided_artifacts(
     guided_dir = root / "guided"
     base_dir = root
 
-    overview = {**_load_training_overview(root), **dict(overview_updates or {})}
-    catalog_entries = _find_training_entries(root, base_dir=base_dir, generated_by=generated_by)
-    for item in list(extra_entries or []):
-        catalog_entries.append(_coerce_extra_entry(dict(item), base_dir=base_dir))
-    catalog_entries = _dedupe_entries(catalog_entries)
-
-    catalog_payload = {
-        "schema_version": "v1_guided_file_catalog",
-        "catalog_kind": "training",
-        "catalog_base": str(base_dir.resolve()),
-        "entry_count": len(catalog_entries),
-        "entries": catalog_entries,
-    }
-    overview_payload = {
-        "schema_version": "v1_guided_run_overview",
-        "overview_kind": "training",
-        "catalog_base": str(base_dir.resolve()),
-        "primary_files": {
-            "start_here": "guided/00_start_here.md",
-            "run_overview": "guided/01_run_overview.json",
-            "file_catalog": "guided/02_file_catalog.json",
+    overview, catalog_entries = _prepare_guided_catalog(
+        root=root,
+        base_dir=base_dir,
+        overview_loader=_load_training_overview,
+        entry_finder=_find_training_entries,
+        overview_updates=overview_updates,
+        extra_entries=extra_entries,
+        generated_by=generated_by,
+    )
+    catalog_payload, overview_payload = _build_guided_payloads(
+        base_dir=base_dir,
+        catalog_kind="training",
+        overview_kind="training",
+        overview_schema_version="v1_guided_run_overview",
+        overview=overview,
+        overview_filename="guided/01_run_overview.json",
+        primary_files={
             "training_summary": "training/summary.json",
             "production_readiness": "production_readiness.json",
             "test_metric_gate": "test/metric_gate.json",
         },
-        **overview,
-    }
+        catalog_entries=catalog_entries,
+    )
 
     start_here = "\n".join(
         [
@@ -740,37 +845,24 @@ def refresh_training_guided_artifacts(
         ),
     }
 
-    written_paths = [
-        _write_guided_file(guided_dir / "00_start_here.md", start_here.rstrip() + "\n"),
-        _write_guided_file(guided_dir / "01_run_overview.json", overview_payload),
-        _write_guided_file(guided_dir / "02_file_catalog.json", catalog_payload),
-    ]
-    for category, (filename, heading, intro) in category_to_doc.items():
-        written_paths.append(
-            _write_guided_file(
-                guided_dir / filename,
-                _render_section_markdown(
-                    heading=heading,
-                    intro=intro,
-                    entries=[entry for entry in catalog_entries if entry.get("category") == category],
-                ),
-            )
-        )
-    _copy_guided_to_telemetry(telemetry, artifact_root=root, written_paths=written_paths)
-    if telemetry is not None and hasattr(telemetry, "merge_artifact_catalog"):
-        telemetry.merge_artifact_catalog(catalog_entries)
-    if telemetry is not None and hasattr(telemetry, "merge_summary_metadata"):
-        telemetry.merge_summary_metadata(
-            {
-                "guided_artifacts": {
-                    "start_here": "guided/00_start_here.md",
-                    "run_overview": "guided/01_run_overview.json",
-                    "file_catalog": "guided/02_file_catalog.json",
-                },
-                "guided_catalog_entry_count": len(catalog_entries),
-                "run_overview": overview_payload,
-            }
-        )
+    written_paths = _write_guided_bundle(
+        guided_dir=guided_dir,
+        overview_filename="guided/01_run_overview.json",
+        overview_payload=overview_payload,
+        catalog_payload=catalog_payload,
+        start_here=start_here,
+        category_to_doc=category_to_doc,
+        catalog_entries=catalog_entries,
+    )
+    _merge_guided_telemetry(
+        telemetry=telemetry,
+        artifact_root=root,
+        written_paths=written_paths,
+        catalog_entries=catalog_entries,
+        overview_payload=overview_payload,
+        overview_key="run_overview",
+        overview_filename="guided/01_run_overview.json",
+    )
     return {
         "catalog": catalog_payload,
         "overview": overview_payload,
@@ -791,32 +883,28 @@ def refresh_prep_guided_artifacts(
     guided_dir = root / "guided"
     base_dir = root
 
-    overview = {**_load_prep_overview(root), **dict(overview_updates or {})}
-    catalog_entries = _find_prep_entries(root, base_dir=base_dir, generated_by=generated_by)
-    for item in list(extra_entries or []):
-        catalog_entries.append(_coerce_extra_entry(dict(item), base_dir=base_dir))
-    catalog_entries = _dedupe_entries(catalog_entries)
-
-    catalog_payload = {
-        "schema_version": "v1_guided_file_catalog",
-        "catalog_kind": "data_prep",
-        "catalog_base": str(base_dir.resolve()),
-        "entry_count": len(catalog_entries),
-        "entries": catalog_entries,
-    }
-    overview_payload = {
-        "schema_version": "v1_guided_prep_overview",
-        "overview_kind": "data_prep",
-        "catalog_base": str(base_dir.resolve()),
-        "primary_files": {
-            "start_here": "guided/00_start_here.md",
-            "prep_overview": "guided/01_prep_overview.json",
-            "file_catalog": "guided/02_file_catalog.json",
+    overview, catalog_entries = _prepare_guided_catalog(
+        root=root,
+        base_dir=base_dir,
+        overview_loader=_load_prep_overview,
+        entry_finder=_find_prep_entries,
+        overview_updates=overview_updates,
+        extra_entries=extra_entries,
+        generated_by=generated_by,
+    )
+    catalog_payload, overview_payload = _build_guided_payloads(
+        base_dir=base_dir,
+        catalog_kind="data_prep",
+        overview_kind="data_prep",
+        overview_schema_version="v1_guided_prep_overview",
+        overview=overview,
+        overview_filename="guided/01_prep_overview.json",
+        primary_files={
             "prep_summary": "prep_summary.json",
             "split_manifest": "proposed_split_manifest.json",
         },
-        **overview,
-    }
+        catalog_entries=catalog_entries,
+    )
     start_here = "\n".join(
         [
             "# Buradan Başla",
@@ -845,37 +933,24 @@ def refresh_prep_guided_artifacts(
         "manifests": ("60_manifests.md", "Manifestler", "Tam veri ve aile manifestleri."),
     }
 
-    written_paths = [
-        _write_guided_file(guided_dir / "00_start_here.md", start_here.rstrip() + "\n"),
-        _write_guided_file(guided_dir / "01_prep_overview.json", overview_payload),
-        _write_guided_file(guided_dir / "02_file_catalog.json", catalog_payload),
-    ]
-    for category, (filename, heading, intro) in category_to_doc.items():
-        written_paths.append(
-            _write_guided_file(
-                guided_dir / filename,
-                _render_section_markdown(
-                    heading=heading,
-                    intro=intro,
-                    entries=[entry for entry in catalog_entries if entry.get("category") == category],
-                ),
-            )
-        )
-    _copy_guided_to_telemetry(telemetry, artifact_root=root, written_paths=written_paths)
-    if telemetry is not None and hasattr(telemetry, "merge_artifact_catalog"):
-        telemetry.merge_artifact_catalog(catalog_entries)
-    if telemetry is not None and hasattr(telemetry, "merge_summary_metadata"):
-        telemetry.merge_summary_metadata(
-            {
-                "guided_artifacts": {
-                    "start_here": "guided/00_start_here.md",
-                    "prep_overview": "guided/01_prep_overview.json",
-                    "file_catalog": "guided/02_file_catalog.json",
-                },
-                "guided_catalog_entry_count": len(catalog_entries),
-                "prep_overview": overview_payload,
-            }
-        )
+    written_paths = _write_guided_bundle(
+        guided_dir=guided_dir,
+        overview_filename="guided/01_prep_overview.json",
+        overview_payload=overview_payload,
+        catalog_payload=catalog_payload,
+        start_here=start_here,
+        category_to_doc=category_to_doc,
+        catalog_entries=catalog_entries,
+    )
+    _merge_guided_telemetry(
+        telemetry=telemetry,
+        artifact_root=root,
+        written_paths=written_paths,
+        catalog_entries=catalog_entries,
+        overview_payload=overview_payload,
+        overview_key="prep_overview",
+        overview_filename="guided/01_prep_overview.json",
+    )
     return {
         "catalog": catalog_payload,
         "overview": overview_payload,
