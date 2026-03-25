@@ -120,6 +120,7 @@ def build_runtime_adapter_metadata(
     class_to_idx: Dict[str, int],
     schema_version: str,
     engine: str,
+    crop_name: str,
     model_name: str,
     ood_calibration_version: int,
     target_modules_resolved: list[str],
@@ -145,6 +146,7 @@ def build_runtime_adapter_metadata(
     return AdapterMetadata(
         schema_version=schema_version,
         engine=engine,
+        crop_name=str(crop_name),
         trainer_config=trainer_config,
         config_hash=str(getattr(trainer, "_config_hash", "")),
         backbone={

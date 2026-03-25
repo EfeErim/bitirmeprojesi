@@ -190,6 +190,7 @@ def test_adapter_save_load_roundtrip(monkeypatch, tmp_path):
     loaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
 
     assert loaded.class_to_idx
+    assert loaded.crop_name == "tomato"
     assert loaded.is_trained is True
 
 
@@ -209,6 +210,7 @@ def test_adapter_metadata_contains_required_contract_keys(monkeypatch, tmp_path)
     required = {
         "schema_version",
         "engine",
+        "crop_name",
         "backbone",
         "fusion",
         "class_to_idx",
@@ -246,6 +248,7 @@ def test_adapter_metadata_golden_contract_with_exportable_ood_state(monkeypatch,
 
     assert meta["schema_version"] == "v6"
     assert meta["engine"] == "continual_sd_lora"
+    assert meta["crop_name"] == "tomato"
     assert meta["class_to_idx"] == {"healthy": 0}
     assert meta["ood_calibration"]["version"] == 5
     assert meta["ood_state"]["primary_score_method"] == "ensemble"
@@ -312,3 +315,20 @@ def test_adapter_training_checkpoint_passthrough(monkeypatch, tmp_path):
     loaded = adapter.load_training_checkpoint(str(payload))
     assert loaded["progress_state"]["global_step"] == 10
     assert loaded["history"]["train_loss"] == [0.1]
+
+
+def test_load_adapter_rejects_crop_mismatch(monkeypatch, tmp_path):
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    adapter = IndependentCropAdapter(crop_name="tomato", device="cpu")
+    adapter.initialize_engine(class_names=["healthy"])
+    adapter.calibrate_ood([{"images": torch.zeros(1, 3, 224, 224), "labels": torch.zeros(1, dtype=torch.long)}])
+
+    save_dir = tmp_path / "mismatched_model"
+    adapter.save_adapter(str(save_dir))
+
+    loaded = IndependentCropAdapter(crop_name="potato", device="cpu")
+    monkeypatch.setattr(adapter_module, "_trainer_types", lambda: (FakeTrainerConfig, FakeTrainer))
+
+    with pytest.raises(ValueError, match="Adapter crop mismatch"):
+        loaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))

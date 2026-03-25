@@ -250,6 +250,11 @@ The final readiness artifact combines:
 - classification evidence from the authoritative in-distribution split
 - OOD evidence from either the real `ood/` split or the fallback benchmark
 
+Deployment rule:
+
+- `ready` requires both a passing metric policy and real `ood/` evidence
+- `provisional` means the metric policy passed but the run still relies on fallback or missing OOD evidence, so it is not yet deployable
+
 ### Which classification split is authoritative
 
 Current selection order:
@@ -287,6 +292,7 @@ It combines:
 - the available OOD evidence
 - the configured targets
 - the final missing requirements list
+- the final deployment-vs-provisional decision
 
 Use this file for go/no-go deployment decisions.
 
@@ -296,15 +302,19 @@ The current payload shape is conceptually:
 
 ```json
 {
-  "status": "ready or failed",
+  "status": "ready | provisional | failed",
   "passed": true,
+  "policy_passed": true,
+  "deployable": true,
   "ood_evidence_source": "real_ood_split | held_out_benchmark | unavailable",
   "classification_evidence": {
     "split_name": "test or val",
     "metrics": {},
     "evaluation": {
       "checks": {
-        "accuracy": {}
+        "accuracy": {},
+        "balanced_accuracy": {},
+        "macro_f1": {}
       }
     }
   },
@@ -314,6 +324,7 @@ The current payload shape is conceptually:
     "evaluation": {}
   },
   "missing_requirements": [],
+  "missing_deployment_requirements": [],
   "targets": {},
   "context": {}
 }
@@ -321,9 +332,11 @@ The current payload shape is conceptually:
 
 ### Fields to focus on first
 
-- `status`: `ready` or `failed`
-- `passed`: boolean version of the same outcome
-- `missing_requirements`: which required targets were not satisfied
+- `status`: `ready`, `provisional`, or `failed`
+- `passed`: `true` only when the run is deployable now
+- `policy_passed`: whether the configured metric policy passed even if deployment evidence is still incomplete
+- `missing_requirements`: which required metric targets were not satisfied
+- `missing_deployment_requirements`: what still blocks deployment after the metrics pass, for example missing real OOD evidence
 - `classification_evidence.split_name`: which in-distribution split was used
 - `ood_evidence.source`: where OOD evidence came from
 - `targets`: the thresholds the run was judged against
@@ -347,6 +360,8 @@ The gate also contains a `gating` section that explains whether missing metrics 
 The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/services/metrics.py`:
 
 - `accuracy >= 0.93`
+- `balanced_accuracy >= 0.90`
+- `macro_f1 >= 0.90`
 - `ood_auroc >= 0.92`
 - `ood_false_positive_rate <= 0.05`
 - `ood_samples >= 5`

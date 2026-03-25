@@ -32,6 +32,8 @@ def test_load_plan_targets_reads_extended_metric_targets(tmp_path):
 
     assert targets == {
         "accuracy": 0.88,
+        "balanced_accuracy": 0.90,
+        "macro_f1": 0.90,
         "ood_auroc": 0.91,
         "ood_false_positive_rate": 0.04,
         "ood_samples": 7.0,
@@ -145,10 +147,13 @@ def test_build_production_readiness_allows_missing_ood_evidence_when_not_require
         require_ood=False,
     )
 
-    assert readiness["status"] == "ready"
-    assert readiness["passed"] is True
+    assert readiness["status"] == "provisional"
+    assert readiness["passed"] is False
+    assert readiness["policy_passed"] is True
+    assert readiness["deployable"] is False
     assert readiness["ood_evidence"]["evaluation"]["require_ood"] is False
     assert readiness["missing_requirements"] == []
+    assert readiness["missing_deployment_requirements"] == ["real_ood_evidence"]
 
 
 def test_build_production_readiness_fails_when_ood_evidence_is_missing(tmp_path):

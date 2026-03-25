@@ -297,6 +297,7 @@ class IndependentCropAdapter:
             class_to_idx=self.class_to_idx,
             schema_version=self.schema_version,
             engine=self.engine,
+            crop_name=self.crop_name,
             model_name=self.model_name,
             ood_calibration_version=self.ood_calibration_version,
             target_modules_resolved=list(self.target_modules_resolved),
@@ -325,6 +326,14 @@ class IndependentCropAdapter:
             raise FileNotFoundError(f"adapter_meta.json not found in {asset_dir}")
 
         meta = AdapterMetadata.from_dict(read_json_dict(meta_path))
+        exported_crop = str(meta.crop_name or "").strip().lower()
+        requested_crop = str(self.crop_name or "").strip().lower()
+        if exported_crop and requested_crop and exported_crop != requested_crop:
+            raise ValueError(
+                f"Adapter crop mismatch: requested '{self.crop_name}' but bundle declares '{meta.crop_name}'."
+            )
+        if exported_crop:
+            self.crop_name = str(meta.crop_name)
         self.class_to_idx = dict(meta.class_to_idx)
 
         normalized = normalize_trainer_config(

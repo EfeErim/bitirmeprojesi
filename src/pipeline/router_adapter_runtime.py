@@ -16,6 +16,7 @@ from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
     build_router_skipped_analysis,
+    build_router_uncertain_result,
     build_router_unavailable_result,
     build_success_result,
     build_unknown_crop_result,
@@ -51,6 +52,8 @@ class RouterAdapterRuntime:
         inference_cfg = self.config.get("inference", {})
         self.adapter_root = Path(adapter_root or inference_cfg.get("adapter_root", "models/adapters"))
         self.target_size = int(inference_cfg.get("target_size", 224))
+        self.router_min_confidence = float(inference_cfg.get("router_min_confidence", 0.65))
+        self.router_min_margin = float(inference_cfg.get("router_min_margin", 0.10))
         self.router: Optional[Any] = None
         self.adapters: Dict[str, _CachedAdapter] = {}
         self.status_callback = status_callback
@@ -60,9 +63,9 @@ class RouterAdapterRuntime:
             self.status_callback(str(message))
 
     def _build_router(self) -> Any:
-        from src.router.vlm_pipeline import VLMPipeline
+        from src.router.router_pipeline import RouterPipeline
 
-        return VLMPipeline(config=self.config, device=str(self.device))
+        return RouterPipeline(config=self.config, device=str(self.device))
 
     def _build_adapter(self, crop_name: str) -> IndependentCropAdapter:
         return IndependentCropAdapter(crop_name=crop_name, device=str(self.device))
@@ -82,7 +85,7 @@ class RouterAdapterRuntime:
                     self._emit_status("[ROUTER] Unavailable.")
                     raise RuntimeError(
                         "Router models failed to become ready for inference. "
-                        "Check router.vlm.enabled, model availability, and VLM dependency installation."
+                        "Check router.vlm.enabled, model availability, and router dependency installation."
                     )
             except Exception:
                 self.router = None
@@ -189,6 +192,55 @@ class RouterAdapterRuntime:
             raise RuntimeError(str(normalized.message or f"Router reported status={router_status}"))
         return normalized
 
+    @staticmethod
+    def _routing_score(detection: Any) -> float:
+        quality_score = getattr(detection, "quality_score", None)
+        if quality_score is not None:
+            return float(quality_score)
+        return float(getattr(detection, "crop_confidence", 0.0))
+
+    def _routing_runner_up(self, router_analysis: RouterAnalysisResult) -> tuple[Optional[str], Optional[float]]:
+        primary = router_analysis.primary_detection
+        if primary is None:
+            return None, None
+        primary_crop = str(primary.crop or "").strip().lower()
+        best_crop: Optional[str] = None
+        best_score: Optional[float] = None
+        for detection in list(router_analysis.detections or []):
+            candidate_crop = str(getattr(detection, "crop", "") or "").strip().lower()
+            if not candidate_crop or candidate_crop == primary_crop:
+                continue
+            candidate_score = self._routing_score(detection)
+            if best_score is None or candidate_score > best_score:
+                best_crop = candidate_crop
+                best_score = candidate_score
+        return best_crop, best_score
+
+    def _router_uncertainty_message(self, router_analysis: RouterAnalysisResult) -> str:
+        primary = router_analysis.primary_detection
+        if primary is None:
+            return ""
+
+        reasons: list[str] = []
+        primary_confidence = float(primary.crop_confidence)
+        if self.router_min_confidence > 0.0 and primary_confidence < self.router_min_confidence:
+            reasons.append(
+                f"crop_confidence={primary_confidence:.3f} < min_confidence={self.router_min_confidence:.3f}"
+            )
+
+        runner_up_crop, runner_up_score = self._routing_runner_up(router_analysis)
+        if runner_up_score is not None and self.router_min_margin > 0.0:
+            primary_score = self._routing_score(primary)
+            margin = primary_score - runner_up_score
+            if margin < self.router_min_margin:
+                reasons.append(
+                    f"routing_margin={margin:.3f} < min_margin={self.router_min_margin:.3f} vs alternate_crop={runner_up_crop}"
+                )
+
+        if not reasons:
+            return ""
+        return f"Router uncertainty gate rejected crop='{primary.crop}': " + "; ".join(reasons)
+
     def predict_result(
         self,
         image: Any,
@@ -247,6 +299,21 @@ class RouterAdapterRuntime:
                 f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f}"
             )
             return result
+
+        if not crop_hint:
+            uncertainty_message = self._router_uncertainty_message(router_analysis)
+            if uncertainty_message:
+                result = build_router_uncertain_result(
+                    part_name=part_name,
+                    router_confidence=router_confidence,
+                    message=uncertainty_message,
+                    include_ood=return_ood,
+                    router_analysis=router_analysis,
+                )
+                self._emit_status(
+                    f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f} message={result.message}"
+                )
+                return result
 
         try:
             adapter = self.load_adapter(crop_name)

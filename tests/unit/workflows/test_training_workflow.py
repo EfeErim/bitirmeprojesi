@@ -303,7 +303,10 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
 
     assert benchmark_calls == []
     assert result.ood_evidence_source == "real_ood_split"
+    assert result.production_readiness["status"] == "ready"
     assert result.production_readiness["passed"] is True
+    assert result.production_readiness["policy_passed"] is True
+    assert result.production_readiness["missing_deployment_requirements"] == []
     assert (result.artifact_dir / "production_readiness.json").exists()
 
 
@@ -500,8 +503,11 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
 
     assert len(benchmark_calls) == 1
     assert result.ood_evidence_source == "held_out_benchmark"
-    assert result.production_readiness["passed"] is True
+    assert result.production_readiness["status"] == "provisional"
+    assert result.production_readiness["passed"] is False
+    assert result.production_readiness["policy_passed"] is True
     assert result.production_readiness["ood_evidence_source"] == "held_out_benchmark"
+    assert result.production_readiness["missing_deployment_requirements"] == ["real_ood_evidence"]
 
 
 def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch, tmp_path: Path):
@@ -550,8 +556,11 @@ def test_training_workflow_allows_missing_ood_when_gate_is_optional(monkeypatch,
 
     assert len(benchmark_calls) == 1
     assert result.ood_evidence_source == "held_out_benchmark"
-    assert result.production_readiness["passed"] is True
+    assert result.production_readiness["status"] == "provisional"
+    assert result.production_readiness["passed"] is False
+    assert result.production_readiness["policy_passed"] is True
     assert result.production_readiness["ood_evidence"]["evaluation"]["require_ood"] is False
+    assert result.production_readiness["missing_deployment_requirements"] == ["real_ood_evidence"]
 
 
 def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp_path: Path):
@@ -619,7 +628,10 @@ def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp
     assert len(benchmark_calls) == 1
     assert benchmark_calls[0]["min_classes"] == 3
     assert result.ood_evidence_source == "held_out_benchmark"
-    assert result.production_readiness["passed"] is True
+    assert result.production_readiness["status"] == "provisional"
+    assert result.production_readiness["passed"] is False
+    assert result.production_readiness["policy_passed"] is True
+    assert result.production_readiness["missing_deployment_requirements"] == ["real_ood_evidence"]
 
 
 def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp_path: Path):
@@ -666,7 +678,10 @@ def test_training_workflow_can_skip_split_metric_gate_artifacts(monkeypatch, tmp
         output_dir=tmp_path / "outputs",
     )
 
-    assert result.production_readiness["passed"] is True
+    assert result.production_readiness["status"] == "provisional"
+    assert result.production_readiness["passed"] is False
+    assert result.production_readiness["policy_passed"] is True
+    assert result.production_readiness["missing_deployment_requirements"] == ["real_ood_evidence"]
     assert "metric_gate_json" not in result.artifacts["validation"]
     assert "metric_gate_json" not in result.artifacts["test"]
     assert not (result.artifact_dir / "validation" / "metric_gate.json").exists()

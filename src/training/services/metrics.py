@@ -6,12 +6,14 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
 import torch
-from sklearn.metrics import roc_auc_score, roc_curve
+from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score, roc_curve
 
 from src.shared.json_utils import read_json, write_json
 
 DEFAULT_PLAN_TARGETS = {
     "accuracy": 0.93,
+    "balanced_accuracy": 0.90,
+    "macro_f1": 0.90,
     "ood_auroc": 0.92,
     "ood_false_positive_rate": 0.05,
     "ood_samples": 5.0,
@@ -33,6 +35,8 @@ OOD_METRIC_NAMES = (
 
 _TARGET_FALLBACK_KEYS = {
     "accuracy": ("accuracy", "continual_accuracy"),
+    "balanced_accuracy": ("balanced_accuracy",),
+    "macro_f1": ("macro_f1",),
     "ood_auroc": ("ood_auroc",),
     "ood_false_positive_rate": ("ood_false_positive_rate",),
     "ood_samples": ("ood_samples", "ood_min_samples", "min_ood_samples"),
@@ -99,14 +103,15 @@ def _resolve_ood_metric_payload(ood_metrics: Optional[Dict[str, Optional[float]]
 
 
 def _collect_missing_requirements(
-    accuracy_check: Dict[str, Any],
+    classification_checks: Dict[str, Dict[str, Any]],
     ood_checks: Dict[str, Dict[str, Any]],
     *,
     require_ood: bool,
 ) -> list[str]:
     missing_requirements: list[str] = []
-    if not accuracy_check.get("asserted", False) or not accuracy_check.get("passed", False):
-        missing_requirements.append("accuracy")
+    for metric_name, detail in classification_checks.items():
+        if not detail.get("asserted", False) or not detail.get("passed", False):
+            missing_requirements.append(metric_name)
     for metric_name, detail in ood_checks.items():
         asserted = bool(detail.get("asserted", False))
         passed = bool(detail.get("passed", False))
@@ -173,12 +178,18 @@ def compute_plan_metrics(
 
     y_true_t = torch.tensor(list(y_true), dtype=torch.long)
     y_pred_t = torch.tensor(list(y_pred), dtype=torch.long)
+    y_true_list = y_true_t.cpu().tolist()
+    y_pred_list = y_pred_t.cpu().tolist()
     accuracy = float((y_true_t == y_pred_t).float().mean().item())
+    balanced_accuracy = float(balanced_accuracy_score(y_true_list, y_pred_list))
+    macro_f1 = float(f1_score(y_true_list, y_pred_list, average="macro", zero_division=0))
 
     ood_metrics = compute_ood_detection_metrics(ood_labels=ood_labels, ood_scores=ood_scores)
 
     return {
         "accuracy": accuracy,
+        "balanced_accuracy": balanced_accuracy,
+        "macro_f1": macro_f1,
         "ood_auroc": ood_metrics["ood_auroc"],
         "ood_false_positive_rate": ood_metrics["ood_false_positive_rate"],
         "classification_samples": int(y_true_t.numel()),
@@ -285,7 +296,11 @@ def validate_plan_metrics(
     checks: Dict[str, Dict[str, Any]] = _build_threshold_checks(
         metrics,
         target_values,
-        (("accuracy", ">="),),
+        (
+            ("accuracy", ">="),
+            ("balanced_accuracy", ">="),
+            ("macro_f1", ">="),
+        ),
     )
     ood_validation = validate_ood_metrics(metrics, target_values, require_ood=require_ood)
     checks.update(ood_validation["checks"])
@@ -314,30 +329,56 @@ def build_production_readiness(
     classification_metrics = dict(classification_gate.get("metrics", {}))
     classification_eval = dict(classification_gate.get("evaluation", {}))
     classification_checks = dict(classification_eval.get("checks", {}))
-    accuracy_check = classification_checks.get(
-        "accuracy",
-        _build_check(classification_metrics.get("accuracy"), target_values["accuracy"], operator=">="),
-    )
+    resolved_classification_checks = {
+        "accuracy": classification_checks.get(
+            "accuracy",
+            _build_check(classification_metrics.get("accuracy"), target_values["accuracy"], operator=">="),
+        ),
+        "balanced_accuracy": classification_checks.get(
+            "balanced_accuracy",
+            _build_check(
+                classification_metrics.get("balanced_accuracy"),
+                target_values["balanced_accuracy"],
+                operator=">=",
+            ),
+        ),
+        "macro_f1": classification_checks.get(
+            "macro_f1",
+            _build_check(classification_metrics.get("macro_f1"), target_values["macro_f1"], operator=">="),
+        ),
+    }
 
     resolved_ood_metrics = _resolve_ood_metric_payload(ood_metrics)
     ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=require_ood)
 
     missing_requirements = _collect_missing_requirements(
-        accuracy_check,
+        resolved_classification_checks,
         ood_validation["checks"],
         require_ood=require_ood,
     )
-    passed = not missing_requirements
-    status = "ready" if passed else "failed"
+    policy_passed = not missing_requirements
+    real_ood_evidence = str(ood_evidence_source or "unavailable") == "real_ood_split"
+    deployable = bool(policy_passed and real_ood_evidence)
+    missing_deployment_requirements: list[str] = []
+    if policy_passed and not real_ood_evidence:
+        missing_deployment_requirements.append("real_ood_evidence")
+    if deployable:
+        status = "ready"
+    elif policy_passed:
+        status = "provisional"
+    else:
+        status = "failed"
     return {
         "status": status,
-        "passed": bool(passed),
+        "passed": bool(deployable),
+        "policy_passed": bool(policy_passed),
+        "deployable": bool(deployable),
         "ood_evidence_source": str(ood_evidence_source or "unavailable"),
         "classification_evidence": {
             "split_name": str(classification_split),
             "metrics": classification_metrics,
             "evaluation": {
-                "checks": {"accuracy": accuracy_check},
+                "checks": resolved_classification_checks,
             },
         },
         "ood_evidence": {
@@ -346,6 +387,7 @@ def build_production_readiness(
             "evaluation": ood_validation,
         },
         "missing_requirements": missing_requirements,
+        "missing_deployment_requirements": missing_deployment_requirements,
         "targets": target_values,
         "context": dict(context or {}),
     }

@@ -348,7 +348,7 @@ def test_predict_does_not_fabricate_ood_payload_when_adapter_response_omits_it(m
     assert "conformal_set" not in payload
 
 
-def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path):
+def test_predict_rejects_uncertain_router_handoff(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     _write_adapter_meta(adapter_root, "tomato")
 
@@ -357,7 +357,12 @@ def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path)
             "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
             "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
             "ood": {"threshold_factor": 2.0},
-            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "router_min_confidence": 0.65,
+                "router_min_margin": 0.10,
+            },
         },
         device="cpu",
         adapter_root=adapter_root,
@@ -385,10 +390,12 @@ def test_predict_uses_primary_detection_order_from_router(monkeypatch, tmp_path)
 
     result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
 
-    assert result["status"] == "success"
-    assert result["crop"] == "tomato"
+    assert result["status"] == "router_uncertain"
+    assert result["crop"] is None
     assert result["router_confidence"] == 0.61
     assert result["router"]["primary_detection"]["crop"] == "tomato"
+    assert "min_confidence=0.650" in result["message"]
+    assert "alternate_crop=potato" in result["message"]
 
 
 def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_path):

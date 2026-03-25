@@ -101,6 +101,30 @@ def build_router_unavailable_result(*, message: str, include_ood: bool) -> Infer
     )
 
 
+def build_router_uncertain_result(
+    *,
+    part_name: str | None,
+    router_confidence: float,
+    message: str,
+    include_ood: bool,
+    router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
+) -> InferenceResult:
+    normalized_router = normalize_router_analysis(router_analysis)
+    if not normalized_router.message:
+        normalized_router.message = str(message)
+    return InferenceResult(
+        status="router_uncertain",
+        crop=None,
+        part=part_name,
+        router_confidence=float(router_confidence),
+        diagnosis=None,
+        confidence=0.0,
+        message=str(message),
+        ood_analysis=None,
+        router=normalized_router,
+    )
+
+
 def build_adapter_unavailable_result(
     *,
     crop_name: str,
