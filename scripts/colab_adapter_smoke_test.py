@@ -8,14 +8,16 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
-from src.data.transforms import preprocess_image
+from src.data.transforms import build_image_transform, preprocess_image
 from src.shared.json_utils import read_json_dict
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
+DEFAULT_ROBUST_VIEWS = ("full_resize", "resize_pad", "center_crop")
+IMAGE_MEAN_PAD_RGB = (124, 116, 104)
 DEFAULT_DISCOVERY_ROOTS = (
     Path("."),
     Path("outputs"),
@@ -448,10 +450,11 @@ def _flatten_prediction(
     payload: Dict[str, Any],
     *,
     resolved_adapter_dir: Path,
+    view_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     disease = dict(payload.get("disease", {}))
     ood = dict(payload.get("ood_analysis", {}))
-    return {
+    row = {
         "image_name": str(image_name),
         "adapter_dir": str(resolved_adapter_dir),
         "status": str(payload.get("status", "")),
@@ -476,6 +479,277 @@ def _flatten_prediction(
         "ood_analysis": ood,
         "raw_payload": payload,
     }
+    if view_name is not None:
+        row["view_name"] = str(view_name)
+    return row
+
+
+def _normalize_pil_image(image: Image.Image, *, target_size: int) -> Any:
+    transform = build_image_transform(int(target_size), training=False)
+    if image.mode != "RGB":
+        image = image.convert("RGB")
+    return transform(image)
+
+
+def _prepare_view_tensor(image: Image.Image, *, target_size: int, view_name: str) -> Any:
+    rgb_image = image.convert("RGB")
+    if view_name == "full_resize":
+        return preprocess_image(rgb_image, target_size=target_size)
+
+    if view_name == "resize_pad":
+        width, height = rgb_image.size
+        longest = max(width, height, 1)
+        scale = float(target_size) / float(longest)
+        resized = rgb_image.resize(
+            (
+                max(1, int(round(width * scale))),
+                max(1, int(round(height * scale))),
+            ),
+            Image.Resampling.BILINEAR,
+        )
+        canvas = Image.new("RGB", (int(target_size), int(target_size)), IMAGE_MEAN_PAD_RGB)
+        paste_x = (int(target_size) - resized.width) // 2
+        paste_y = (int(target_size) - resized.height) // 2
+        canvas.paste(resized, (paste_x, paste_y))
+        return _normalize_pil_image(canvas, target_size=int(target_size))
+
+    if view_name == "center_crop":
+        width, height = rgb_image.size
+        shortest = max(1, min(width, height))
+        scale = float(target_size) / float(shortest)
+        resized = rgb_image.resize(
+            (
+                max(1, int(round(width * scale))),
+                max(1, int(round(height * scale))),
+            ),
+            Image.Resampling.BILINEAR,
+        )
+        left = max(0, (resized.width - int(target_size)) // 2)
+        top = max(0, (resized.height - int(target_size)) // 2)
+        cropped = ImageOps.crop(
+            resized,
+            border=(
+                left,
+                top,
+                max(0, resized.width - int(target_size) - left),
+                max(0, resized.height - int(target_size) - top),
+            ),
+        )
+        if cropped.size != (int(target_size), int(target_size)):
+            cropped = ImageOps.fit(
+                resized,
+                (int(target_size), int(target_size)),
+                method=Image.Resampling.BILINEAR,
+                centering=(0.5, 0.5),
+            )
+        return _normalize_pil_image(cropped, target_size=int(target_size))
+
+    raise ValueError(
+        f"Unsupported robust smoke view '{view_name}'. Expected one of: {', '.join(DEFAULT_ROBUST_VIEWS)}."
+    )
+
+
+def _view_error_row(
+    image_name: str,
+    *,
+    resolved_adapter_dir: Path,
+    view_name: str,
+    error: Exception,
+) -> Dict[str, Any]:
+    row = _error_row(Path(image_name), resolved_adapter_dir=resolved_adapter_dir, error=error)
+    row["view_name"] = str(view_name)
+    return row
+
+
+def _predict_image_view(
+    image_name: str,
+    image: Image.Image,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    resolved_adapter_dir: Path,
+    view_name: str,
+) -> Dict[str, Any]:
+    image_tensor = _prepare_view_tensor(image, target_size=target_size, view_name=view_name)
+    payload = adapter.predict_with_ood(image_tensor)
+    return _flatten_prediction(
+        image_name,
+        payload,
+        resolved_adapter_dir=resolved_adapter_dir,
+        view_name=view_name,
+    )
+
+
+def _normalize_requested_views(robust_views: Optional[Sequence[str]]) -> List[str]:
+    raw_views = list(robust_views or DEFAULT_ROBUST_VIEWS)
+    if not raw_views:
+        raise ValueError("robust_views must contain at least one view name when robust mode is enabled.")
+    normalized: List[str] = []
+    seen: set[str] = set()
+    for view_name in raw_views:
+        normalized_name = str(view_name).strip().lower()
+        if not normalized_name:
+            continue
+        if normalized_name in seen:
+            continue
+        if normalized_name not in DEFAULT_ROBUST_VIEWS:
+            raise ValueError(
+                f"Unsupported robust smoke view '{normalized_name}'. "
+                f"Expected one of: {', '.join(DEFAULT_ROBUST_VIEWS)}."
+            )
+        seen.add(normalized_name)
+        normalized.append(normalized_name)
+    if not normalized:
+        raise ValueError("robust_views must contain at least one supported view name.")
+    return normalized
+
+
+def _view_consistency_summary(views: Sequence[Dict[str, Any]], *, primary_view: str) -> Dict[str, Any]:
+    successful = [row for row in views if row.get("status") != "error"]
+    successful_names = [str(row.get("view_name", "")) for row in successful if row.get("view_name")]
+    failed_names = [str(row.get("view_name", "")) for row in views if row.get("status") == "error" and row.get("view_name")]
+    predicted_classes = {
+        str(row.get("view_name", "")): row.get("predicted_class")
+        for row in successful
+        if row.get("view_name")
+    }
+    ood_votes = {
+        str(row.get("view_name", "")): row.get("is_ood")
+        for row in successful
+        if row.get("view_name")
+    }
+    confidences = [
+        float(row.get("confidence", 0.0))
+        for row in successful
+        if row.get("confidence") is not None
+    ]
+    warning_codes: List[str] = []
+    distinct_classes = {value for value in predicted_classes.values() if value is not None}
+    if len(distinct_classes) > 1:
+        warning_codes.append("view_class_disagreement")
+    distinct_ood = {value for value in ood_votes.values() if value is not None}
+    if len(distinct_ood) > 1:
+        warning_codes.append("view_ood_disagreement")
+    if confidences:
+        confidence_min = min(confidences)
+        confidence_max = max(confidences)
+        confidence_spread = confidence_max - confidence_min
+        if confidence_spread >= 0.20:
+            warning_codes.append("view_confidence_spread_high")
+    else:
+        confidence_min = None
+        confidence_max = None
+        confidence_spread = None
+    if failed_names:
+        warning_codes.append("view_error_present")
+    return {
+        "primary_view": str(primary_view),
+        "successful_views": successful_names,
+        "failed_views": failed_names,
+        "warning_codes": warning_codes,
+        "predicted_classes": predicted_classes,
+        "ood_votes": ood_votes,
+        "confidence_min": confidence_min,
+        "confidence_max": confidence_max,
+        "confidence_spread": confidence_spread,
+        "stable": len(successful_names) >= 2 and not warning_codes,
+    }
+
+
+def _uncertainty_diagnostics(
+    row: Dict[str, Any],
+    *,
+    view_consistency: Dict[str, Any],
+) -> Dict[str, Any]:
+    ood_analysis = dict(row.get("ood_analysis", {}))
+    warning_codes = ["confidence_not_calibrated"]
+    if bool(row.get("is_ood")):
+        warning_codes.append("ood_flagged")
+    sure_confidence_reject = ood_analysis.get("sure_confidence_reject")
+    if sure_confidence_reject is True:
+        warning_codes.append("sure_confidence_reject")
+    conformal_set = ood_analysis.get("conformal_set")
+    conformal_set_size = ood_analysis.get("conformal_set_size")
+    if conformal_set_size is None and isinstance(conformal_set, list):
+        conformal_set_size = len(conformal_set)
+    if isinstance(conformal_set_size, int) and conformal_set_size > 1:
+        warning_codes.append("conformal_set_wide")
+    if not bool(view_consistency.get("stable")):
+        warning_codes.append("view_instability")
+
+    diagnostics: Dict[str, Any] = {
+        "confidence_source": "top1_softmax",
+        "confidence_is_calibrated": False,
+        "warning_codes": warning_codes,
+    }
+    if "candidate_scores" in ood_analysis:
+        diagnostics["candidate_scores"] = dict(ood_analysis.get("candidate_scores", {}))
+    if "candidate_thresholds" in ood_analysis:
+        diagnostics["candidate_thresholds"] = dict(ood_analysis.get("candidate_thresholds", {}))
+    if "sure_confidence_reject" in ood_analysis:
+        diagnostics["sure_confidence_reject"] = bool(ood_analysis.get("sure_confidence_reject"))
+    if "sure_semantic_ood" in ood_analysis:
+        diagnostics["sure_semantic_ood"] = bool(ood_analysis.get("sure_semantic_ood"))
+    if conformal_set is not None:
+        diagnostics["conformal_set"] = list(conformal_set)
+    if conformal_set_size is not None:
+        diagnostics["conformal_set_size"] = int(conformal_set_size)
+    return diagnostics
+
+
+def _predict_single_image_robust(
+    image_path: Path,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    resolved_adapter_dir: Path,
+    robust_views: Sequence[str],
+) -> Dict[str, Any]:
+    image_name = image_path.name
+    rows: List[Dict[str, Any]] = []
+    with Image.open(image_path) as opened_image:
+        base_image = opened_image.convert("RGB")
+        for view_name in robust_views:
+            try:
+                rows.append(
+                    _predict_image_view(
+                        image_name,
+                        base_image,
+                        adapter=adapter,
+                        target_size=target_size,
+                        resolved_adapter_dir=resolved_adapter_dir,
+                        view_name=view_name,
+                    )
+                )
+            except (OSError, UnidentifiedImageError, ValueError, RuntimeError) as exc:
+                rows.append(
+                    _view_error_row(
+                        image_name,
+                        resolved_adapter_dir=resolved_adapter_dir,
+                        view_name=view_name,
+                        error=exc,
+                    )
+                )
+
+    primary_view = str(robust_views[0])
+    primary_row = next(
+        (row for row in rows if row.get("view_name") == primary_view),
+        _view_error_row(
+            image_name,
+            resolved_adapter_dir=resolved_adapter_dir,
+            view_name=primary_view,
+            error=RuntimeError(f"Primary view '{primary_view}' did not produce a result."),
+        ),
+    )
+    result = dict(primary_row)
+    result["image_path"] = str(image_path)
+    result["views"] = rows
+    result["view_consistency"] = _view_consistency_summary(rows, primary_view=primary_view)
+    result["uncertainty_diagnostics"] = _uncertainty_diagnostics(
+        result,
+        view_consistency=result["view_consistency"],
+    )
+    return result
 
 
 def _predict_image_row(
@@ -486,9 +760,15 @@ def _predict_image_row(
     resolved_adapter_dir: Path,
 ) -> Dict[str, Any]:
     with Image.open(image_path) as image:
-        image_tensor = preprocess_image(image.convert("RGB"), target_size=target_size)
-    payload = adapter.predict_with_ood(image_tensor)
-    row = _flatten_prediction(image_path.name, payload, resolved_adapter_dir=resolved_adapter_dir)
+        row = _predict_image_view(
+            image_path.name,
+            image,
+            adapter=adapter,
+            target_size=target_size,
+            resolved_adapter_dir=resolved_adapter_dir,
+            view_name="full_resize",
+        )
+    row.pop("view_name", None)
     row["image_path"] = str(image_path)
     return row
 
@@ -543,6 +823,8 @@ def predict_single_image(
     adapter_root: Optional[str | Path] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
+    enable_robust_smoke: bool = False,
+    robust_views: Optional[Sequence[str]] = None,
 ) -> Dict[str, Any]:
     """Run a single direct adapter prediction for a smoke test."""
     resolved_dir, _, adapter = _load_adapter_context(
@@ -553,6 +835,14 @@ def predict_single_image(
         device=device,
     )
     image_ref = Path(image_path)
+    if enable_robust_smoke:
+        return _predict_single_image_robust(
+            image_ref,
+            adapter=adapter,
+            target_size=_target_size(config_env),
+            resolved_adapter_dir=resolved_dir,
+            robust_views=_normalize_requested_views(robust_views),
+        )
     return _predict_image_row(
         image_ref,
         adapter=adapter,

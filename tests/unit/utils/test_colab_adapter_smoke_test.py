@@ -39,6 +39,16 @@ class _FakeAdapter:
         }
 
 
+class _ScriptedViewAdapter(_FakeAdapter):
+    def __init__(self, crop_name: str, payloads_by_marker: dict[float, dict], device: str = "cpu"):
+        super().__init__(crop_name, device=device)
+        self.payloads_by_marker = payloads_by_marker
+
+    def predict_with_ood(self, image):
+        marker = round(float(image[0, 0, 0].item()), 2)
+        return dict(self.payloads_by_marker[marker])
+
+
 def _write_adapter_export(root: Path) -> Path:
     asset_dir = root / "continual_sd_lora_adapter"
     asset_dir.mkdir(parents=True, exist_ok=True)
@@ -135,6 +145,39 @@ def _write_adapter_export_with_prefixed_classes(root: Path) -> Path:
         encoding="utf-8",
     )
     return asset_dir
+
+
+def _scripted_view_tensor(_image, *, target_size: int, view_name: str):
+    marker_map = {
+        "full_resize": 0.11,
+        "resize_pad": 0.22,
+        "center_crop": 0.33,
+    }
+    return torch.full((3, target_size, target_size), marker_map[view_name], dtype=torch.float32)
+
+
+def _make_payload(
+    *,
+    predicted_class: str = "blight",
+    confidence: float = 0.91,
+    is_ood: bool = False,
+    primary_score: float = 0.2,
+    decision_threshold: float = 0.8,
+    extra_ood: dict | None = None,
+):
+    ood_analysis = {
+        "is_ood": is_ood,
+        "primary_score": primary_score,
+        "decision_threshold": decision_threshold,
+        "calibration_version": 3,
+    }
+    if extra_ood:
+        ood_analysis.update(extra_ood)
+    return {
+        "status": "success",
+        "disease": {"class_index": 1, "name": predicted_class, "confidence": confidence},
+        "ood_analysis": ood_analysis,
+    }
 
 
 def test_load_adapter_summary_accepts_parent_export_dir(monkeypatch, tmp_path: Path):
@@ -264,6 +307,7 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
     assert result["confidence"] == 0.91
     assert result["is_ood"] is False
     assert result["raw_payload"]["status"] == "success"
+    assert "views" not in result
 
 
 def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_path: Path):
@@ -282,6 +326,169 @@ def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_pat
 
     assert result["predicted_class"] == "blight"
     assert result["adapter_dir"] == str(asset_dir)
+
+
+def test_prepare_view_tensor_resize_pad_and_center_crop_return_target_sized_tensors(tmp_path: Path):
+    image_path = tmp_path / "leaf_rect.png"
+    Image.new("RGB", (40, 20), color="green").save(image_path)
+
+    with Image.open(image_path) as image:
+        resize_pad_tensor = smoke._prepare_view_tensor(image, target_size=32, view_name="resize_pad")
+    with Image.open(image_path) as image:
+        center_crop_tensor = smoke._prepare_view_tensor(image, target_size=32, view_name="center_crop")
+
+    assert tuple(resize_pad_tensor.shape) == (3, 32, 32)
+    assert tuple(center_crop_tensor.shape) == (3, 32, 32)
+
+
+def test_predict_single_image_robust_mode_returns_ordered_views_and_full_resize_top_level(
+    monkeypatch, tmp_path: Path
+):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (8, 8), color="green").save(image_path)
+    payloads = {
+        0.11: _make_payload(
+            extra_ood={
+                "candidate_scores": {"ensemble": 0.2, "energy": 0.15},
+                "candidate_thresholds": {"ensemble": 0.8, "energy": 0.75},
+                "sure_confidence_reject": True,
+                "sure_semantic_ood": False,
+                "conformal_set": ["blight", "healthy"],
+                "conformal_set_size": 2,
+            }
+        ),
+        0.22: _make_payload(confidence=0.89),
+        0.33: _make_payload(confidence=0.87),
+    }
+
+    monkeypatch.setattr(
+        smoke,
+        "_build_adapter",
+        lambda crop_name, device: _ScriptedViewAdapter(crop_name, payloads, device),
+    )
+    monkeypatch.setattr(smoke, "_prepare_view_tensor", _scripted_view_tensor)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        enable_robust_smoke=True,
+        robust_views=("full_resize", "resize_pad", "center_crop"),
+    )
+
+    assert [row["view_name"] for row in result["views"]] == ["full_resize", "resize_pad", "center_crop"]
+    assert result["predicted_class"] == "blight"
+    assert result["confidence"] == 0.91
+    assert result["raw_payload"]["status"] == "success"
+    assert result["view_consistency"]["primary_view"] == "full_resize"
+    assert result["view_consistency"]["stable"] is True
+    assert result["uncertainty_diagnostics"]["candidate_scores"] == {"ensemble": 0.2, "energy": 0.15}
+    assert result["uncertainty_diagnostics"]["candidate_thresholds"] == {"ensemble": 0.8, "energy": 0.75}
+    assert result["uncertainty_diagnostics"]["sure_confidence_reject"] is True
+    assert result["uncertainty_diagnostics"]["sure_semantic_ood"] is False
+    assert result["uncertainty_diagnostics"]["conformal_set"] == ["blight", "healthy"]
+    assert result["uncertainty_diagnostics"]["conformal_set_size"] == 2
+    assert result["uncertainty_diagnostics"]["warning_codes"] == [
+        "confidence_not_calibrated",
+        "sure_confidence_reject",
+        "conformal_set_wide",
+    ]
+
+
+def test_predict_single_image_robust_mode_flags_view_class_disagreement_and_keeps_full_resize_top_level(
+    monkeypatch, tmp_path: Path
+):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (8, 8), color="green").save(image_path)
+    payloads = {
+        0.11: _make_payload(predicted_class="blight", confidence=0.91),
+        0.22: _make_payload(predicted_class="healthy", confidence=0.90),
+        0.33: _make_payload(predicted_class="blight", confidence=0.89),
+    }
+
+    monkeypatch.setattr(
+        smoke,
+        "_build_adapter",
+        lambda crop_name, device: _ScriptedViewAdapter(crop_name, payloads, device),
+    )
+    monkeypatch.setattr(smoke, "_prepare_view_tensor", _scripted_view_tensor)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        enable_robust_smoke=True,
+    )
+
+    assert result["predicted_class"] == "blight"
+    assert "view_class_disagreement" in result["view_consistency"]["warning_codes"]
+    assert result["view_consistency"]["stable"] is False
+    assert "view_instability" in result["uncertainty_diagnostics"]["warning_codes"]
+
+
+def test_predict_single_image_robust_mode_flags_view_ood_disagreement(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (8, 8), color="green").save(image_path)
+    payloads = {
+        0.11: _make_payload(is_ood=False),
+        0.22: _make_payload(is_ood=True),
+        0.33: _make_payload(is_ood=False),
+    }
+
+    monkeypatch.setattr(
+        smoke,
+        "_build_adapter",
+        lambda crop_name, device: _ScriptedViewAdapter(crop_name, payloads, device),
+    )
+    monkeypatch.setattr(smoke, "_prepare_view_tensor", _scripted_view_tensor)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        enable_robust_smoke=True,
+    )
+
+    assert "view_ood_disagreement" in result["view_consistency"]["warning_codes"]
+
+
+def test_predict_single_image_robust_mode_flags_large_confidence_spread(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (8, 8), color="green").save(image_path)
+    payloads = {
+        0.11: _make_payload(confidence=0.95),
+        0.22: _make_payload(confidence=0.60),
+        0.33: _make_payload(confidence=0.89),
+    }
+
+    monkeypatch.setattr(
+        smoke,
+        "_build_adapter",
+        lambda crop_name, device: _ScriptedViewAdapter(crop_name, payloads, device),
+    )
+    monkeypatch.setattr(smoke, "_prepare_view_tensor", _scripted_view_tensor)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        enable_robust_smoke=True,
+    )
+
+    assert "view_confidence_spread_high" in result["view_consistency"]["warning_codes"]
+    assert result["view_consistency"]["confidence_spread"] == 0.35
 
 
 def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, tmp_path: Path):

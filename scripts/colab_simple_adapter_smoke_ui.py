@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+from html import escape
 from pathlib import Path
 from typing import Any, Optional
 
@@ -149,17 +150,37 @@ def launch_simple_adapter_smoke_ui(
         score = result.get("primary_score")
         score_text = "-" if score is None else f"{float(score):.4f}"
         threshold_text = "-" if threshold is None else f"{float(threshold):.4f}"
+        view_consistency = dict(result.get("view_consistency", {}))
+        uncertainty = dict(result.get("uncertainty_diagnostics", {}))
+        robustness_warning_codes = [str(code) for code in list(view_consistency.get("warning_codes", []))]
+        uncertainty_warning_codes = [str(code) for code in list(uncertainty.get("warning_codes", []))]
+        if bool(view_consistency.get("stable")):
+            robustness_status = "Stable across derived views"
+        else:
+            headline_warnings = robustness_warning_codes[:2] or uncertainty_warning_codes[:2]
+            if headline_warnings:
+                robustness_status = "Review recommended: " + ", ".join(headline_warnings)
+            else:
+                robustness_status = "Review recommended"
+        robustness_warning_text = ", ".join(robustness_warning_codes) if robustness_warning_codes else "-"
+        uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
         html = f"""
         <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#fafbfc;">
           <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Tahmin Sonucu</div>
-          <div><b>Adapter:</b> {summary['resolved_adapter_dir']}</div>
-          <div><b>Crop:</b> {summary['crop_name']}</div>
-          <div><b>Sinif:</b> {result.get('predicted_class') or '-'}</div>
+          <div><b>Adapter:</b> {escape(str(summary['resolved_adapter_dir']))}</div>
+          <div><b>Crop:</b> {escape(str(summary['crop_name']))}</div>
+          <div><b>Sinif:</b> {escape(str(result.get('predicted_class') or '-'))}</div>
           <div><b>Confidence:</b> {confidence:.2f}%</div>
           <div><b>OOD Karari:</b> {ood_label}</div>
           <div><b>OOD Score:</b> {score_text}</div>
           <div><b>Karar Esigi:</b> {threshold_text}</div>
-          <div><b>Goruntu:</b> {image_path}</div>
+          <div><b>Robustluk:</b> {escape(robustness_status)}</div>
+          <div><b>Goruntu:</b> {escape(str(image_path))}</div>
+          <details style="margin-top:10px;">
+            <summary>Kompakt Teshis</summary>
+            <div style="margin-top:8px;"><b>View warnings:</b> {escape(robustness_warning_text)}</div>
+            <div><b>Uncertainty warnings:</b> {escape(uncertainty_warning_text)}</div>
+          </details>
         </div>
         """
         display(HTML(html))
@@ -203,6 +224,7 @@ def launch_simple_adapter_smoke_ui(
                 adapter_dir=summary["resolved_adapter_dir"],
                 config_env=config_env,
                 device=device,
+                enable_robust_smoke=True,
             )
             render_result(summary, result, image_path)
             display(
