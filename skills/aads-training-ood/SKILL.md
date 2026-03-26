@@ -17,7 +17,7 @@ Use this skill for changes around `TrainingWorkflow.run(...)`, `config/base.json
 - `src/workflows/training.py`
 - `src/training/services/`
 
-Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 2, dataset materialization, Drive telemetry, or notebook export paths.
+Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 0 or Notebook 2, dataset materialization, Drive telemetry, or notebook export paths.
 
 ## Workflow
 

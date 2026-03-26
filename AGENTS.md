@@ -1,6 +1,6 @@
 # AADS v6 Agent Guide
 
-This repo is intentionally narrow. The maintained product surface is continual SD-LoRA adapter training, OOD readiness, router-driven inference, and Colab notebook wrappers for those same flows. This file is for coding agents working inside this repo.
+This repo is intentionally narrow. The maintained product surface is audit-first dataset preparation, continual SD-LoRA adapter training, OOD readiness, router-driven inference, and Colab notebook wrappers for those same flows. This file is for coding agents working inside this repo.
 
 ## Source Of Truth
 
@@ -23,6 +23,7 @@ Read these before making repo-wide assumptions:
 
 ## Maintained Entrypoints
 
+- Grouped dataset preparation: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
 - Training: `src/workflows/training.py` via `TrainingWorkflow.run(...)`
 - Inference: `src/workflows/inference.py` via `InferenceWorkflow.predict(...)`
 - Notebook training surface: `colab_notebooks/2_interactive_adapter_training.ipynb`
@@ -60,16 +61,22 @@ Project-local skills live under `skills/` and should be preferred for repo-speci
 
 Use the smallest set that covers the task.
 
+## Skill Maintenance
+
+- When changing `AGENTS.md` or any repo-local skill, keep the matching `SKILL.md` guidance and `agents/*.yaml` metadata aligned in the same edit.
+- Keep shared repo facts in canonical docs when possible. Skills should focus on routing, guardrails, and the narrowest inspect-first set needed for the task.
+- After changing repo-local skill routing or metadata, sanity-check at least 2 representative requests so the right skill would trigger and inspect the right canonical files.
+
 ## Routing Rules
 
 - Use `aads-training-ood` for `TrainingWorkflow.run(...)`, continual SD-LoRA config, OOD calibration, readiness artifacts, BER comparisons, and training-side adapter export semantics.
-- Use `aads-colab-notebooks` for Notebook 1, 2, 3, or 4 changes, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
+- Use `aads-colab-notebooks` for Notebook 0, 1, 2, 3, or 4 changes, grouped dataset preparation, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
 - Use `aads-inference-runtime` for router inference, adapter lookup and deployment handoff, lazy adapter loading, direct adapter smoke testing, and inference payload behavior.
 - Use `aads-repo-hygiene` for CI, tests, benchmark capture, docs consistency, and tracked-vs-generated repo boundaries.
 
 ## Overlap Rules
 
-- Use `aads-training-ood` plus `aads-colab-notebooks` for Notebook 2 changes and notebook/export mismatches.
+- Use `aads-training-ood` plus `aads-colab-notebooks` for Notebook 0 or Notebook 2 changes that affect dataset materialization, training contracts, or notebook/export mismatches.
 - Use `aads-training-ood` plus `aads-repo-hygiene` for training-side code changes that also affect tests, docs, metrics, or CI coverage.
 - Use `aads-inference-runtime` plus `aads-repo-hygiene` for runtime bugfixes, adapter lookup regressions, or inference-facing docs and tests.
 - Use `aads-colab-notebooks` plus `aads-inference-runtime` for Notebook 1, Notebook 3, or Notebook 4 tasks that stay on inference and adapter-validation surfaces.
@@ -82,8 +89,10 @@ Start with the narrowest relevant subset:
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `.\scripts\python.cmd scripts/validate_config_schema.py`
+- `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
+- `.\scripts\python.cmd scripts/evaluate_router_part_surface.py --root <router_part_eval_root> --config-env colab --output .runtime_tmp/router_part_eval.json`
 - `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 
 Run benchmark capture when orchestration interfaces, workflow entrypoints, or router runtime behavior change.

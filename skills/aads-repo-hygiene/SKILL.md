@@ -11,9 +11,11 @@ Use this skill for CI, tests, validation commands, benchmark capture, and docume
 
 - `README.md`
 - `docs/README.md`
+- `docs/architecture/overview.md`
 - `.github/workflows/ci.yml`
 - `pyproject.toml`
 - `scripts/benchmark_surfaces.py`
+- `scripts/validate_config_schema.py`
 - `scripts/validate_notebook_imports.py`
 
 Load the feature-specific skill too if the task touches training, notebooks, or inference behavior.
@@ -26,6 +28,8 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 4. Run `scripts/benchmark_surfaces.py` when workflow entrypoints, router runtime orchestration, or benchmarked interfaces change.
 5. When docs drift from code, update the canonical docs in the repo instead of adding duplicate side notes.
 6. Preserve or improve literature-backed rationale when the task changes ML methods, benchmark claims, evaluation policy, or contributor guidance about model behavior. Prefer primary sources and label engineering inference explicitly.
+7. When changing `AGENTS.md`, `skills/*/SKILL.md`, or `skills/*/agents/*.yaml`, keep the routing text and metadata aligned, and sanity-check representative task phrasings before considering the edit done.
+8. Prefer pointing skills at canonical docs and contracts over duplicating mutable repo facts across multiple skill files.
 
 ## Boundaries
 
@@ -38,6 +42,9 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
+- `.\scripts\python.cmd scripts/validate_config_schema.py`
+- `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>` when dataset-contract guidance changes
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
+- `.\scripts\python.cmd scripts/evaluate_router_part_surface.py --root <router_part_eval_root> --config-env colab --output .runtime_tmp/router_part_eval.json` when router part-policy guidance changes
 - Re-check `.github/workflows/ci.yml` when changing validation commands or coverage expectations.

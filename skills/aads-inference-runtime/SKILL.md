@@ -10,11 +10,14 @@ Use this skill for router-driven inference, adapter loading, deployment layout e
 ## Inspect First
 
 - `README.md`
+- `docs/README.md`
 - `docs/architecture/overview.md`
 - `src/workflows/inference.py`
 - `src/pipeline/router_adapter_runtime.py`
 - `src/pipeline/inference_payloads.py`
+- `src/router/router_pipeline.py`
 - `src/router/vlm_pipeline.py`
+- `src/shared/contracts.py`
 - `scripts/colab_router_adapter_inference.py`
 - `scripts/colab_adapter_smoke_test.py`
 - `scripts/colab_simple_adapter_smoke_ui.py`
@@ -27,7 +30,7 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1, Notebook 3, or Noteb
 2. Preserve the default adapter layout `models/adapters/<crop>/continual_sd_lora_adapter/` unless the user explicitly wants a deployment-contract change.
 3. Keep router-driven inference and direct adapter smoke testing as separate supported surfaces.
 4. Preserve the typed inference payload contract and OOD metadata semantics when changing runtime behavior.
-5. If a change touches the crop-routing boundary, inspect both `src/router/vlm_pipeline.py` and `src/pipeline/router_adapter_runtime.py` before editing.
+5. If a change touches crop routing, inspect `src/router/router_pipeline.py`, `src/router/vlm_pipeline.py`, and `src/pipeline/router_adapter_runtime.py` before editing. If it touches the public payload, inspect `src/shared/contracts.py` too.
 6. Back router evidence policy, reject-option behavior, calibration logic, and other non-trivial inference heuristics with literature when credible sources exist. Mark repo-specific engineering inference explicitly instead of overstating the citation.
 
 ## Boundaries
@@ -42,4 +45,5 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1, Notebook 3, or Noteb
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `pytest tests/unit/pipeline/test_router_adapter_runtime.py tests/unit/workflows/test_inference_workflow.py -q`
+- `.\scripts\python.cmd scripts/evaluate_router_part_surface.py --root <router_part_eval_root> --config-env colab --output .runtime_tmp/router_part_eval.json` when crop or part routing thresholds change
 - `.\scripts\python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json` when runtime orchestration or router performance surfaces change.
