@@ -180,6 +180,47 @@ def _public_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
     return public_manifest
 
 
+def _runtime_layout_matches_manifest(crop_root: Path, manifest: Dict[str, Any]) -> bool:
+    required_splits = ("continual", "val", "test")
+    classes = manifest.get("classes", [])
+    if not isinstance(classes, list):
+        return False
+
+    for split_name in required_splits:
+        if not (crop_root / split_name).is_dir():
+            return False
+
+    for entry in classes:
+        if not isinstance(entry, dict):
+            return False
+        class_name = str(entry.get("class_name", "")).strip()
+        split_counts = entry.get("split_counts", {})
+        if not class_name or not isinstance(split_counts, dict):
+            return False
+        for split_name in required_splits:
+            expected_count = int(split_counts.get(split_name, 0))
+            class_dir = crop_root / split_name / class_name
+            actual_count = sum(
+                1
+                for path in class_dir.rglob("*")
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+            )
+            if actual_count != expected_count:
+                return False
+
+    ood_manifest = manifest.get("ood")
+    ood_dir = crop_root / "ood"
+    if ood_manifest is None:
+        return not ood_dir.exists()
+    expected_ood_count = int(dict(ood_manifest).get("image_count", 0))
+    actual_ood_count = (
+        sum(1 for path in ood_dir.rglob("*") if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS)
+        if ood_dir.is_dir()
+        else 0
+    )
+    return actual_ood_count == expected_ood_count
+
+
 def _resolve_materialization_attempts(strategy: str) -> List[str]:
     normalized = str(strategy or "auto").strip().lower()
     if normalized not in MATERIALIZATION_STRATEGIES:
@@ -322,7 +363,8 @@ def prepare_runtime_dataset_layout(
 
     if crop_root.exists() and split_manifest_path.exists():
         try:
-            if read_json(split_manifest_path, default={}) == comparison_manifest:
+            existing_manifest = read_json(split_manifest_path, default={})
+            if existing_manifest == comparison_manifest and _runtime_layout_matches_manifest(crop_root, comparison_manifest):
                 return runtime_dataset_root
         except Exception:
             pass

@@ -658,3 +658,25 @@ def test_discover_adapter_candidates_skips_redundant_descendant_roots(tmp_path: 
 
     assert candidates == []
     assert scan_roots == [tmp_path]
+
+
+def test_discover_adapter_candidates_skips_redundant_descendant_roots_even_when_child_comes_first(
+    tmp_path: Path, monkeypatch
+):
+    scan_roots: list[Path] = []
+    parent = tmp_path / "outputs"
+    child = parent / "nested"
+    child.mkdir(parents=True, exist_ok=True)
+
+    def _recording_iter(root: Path):
+        scan_roots.append(root)
+        return iter(())
+
+    monkeypatch.setattr(smoke, "_iter_adapter_meta_paths", _recording_iter)
+
+    candidates = smoke.discover_adapter_candidates(
+        search_roots=[child, parent],
+    )
+
+    assert candidates == []
+    assert scan_roots == [parent]

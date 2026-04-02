@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 
 from PIL import Image
 
@@ -67,6 +68,32 @@ def test_prepare_runtime_dataset_layout_preserves_nested_relative_paths(tmp_path
     crop_root = result_root / "tomato"
     nested_targets = list(crop_root.rglob("camera_a/image_nested.jpg"))
     assert len(nested_targets) == 1
+
+
+def test_prepare_runtime_dataset_layout_rebuilds_when_manifest_matches_but_split_tree_is_incomplete(tmp_path: Path):
+    source_root = tmp_path / "source"
+    runtime_root = tmp_path / "runtime"
+    _write_images(source_root, "Healthy", 5)
+
+    result_root = prepare_runtime_dataset_layout(
+        source_root,
+        "tomato",
+        seed=42,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato"
+    shutil.rmtree(crop_root / "continual")
+
+    prepare_runtime_dataset_layout(
+        source_root,
+        "tomato",
+        seed=42,
+        runtime_root=runtime_root,
+    )
+
+    assert (crop_root / "continual").exists()
+    assert any((crop_root / "continual").rglob("*.jpg"))
 
 
 def test_resolve_notebook_training_classes_uses_taxonomy_when_aliases_cover_dataset():

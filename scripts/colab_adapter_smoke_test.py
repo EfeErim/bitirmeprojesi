@@ -369,16 +369,18 @@ def _iter_adapter_meta_paths(root: Path) -> Iterable[Path]:
 
 
 def _normalize_search_roots(search_roots: Sequence[str | Path]) -> List[Path]:
-    normalized_roots: List[Path] = []
-    normalized_keys: List[Path] = []
-    for raw_root in search_roots:
-        root = Path(raw_root)
-        root_key = root.resolve(strict=False)
-        if any(root_key == existing or root_key.is_relative_to(existing) for existing in normalized_keys):
+    resolved_pairs = [(Path(raw_root), Path(raw_root).resolve(strict=False)) for raw_root in search_roots]
+    kept: List[tuple[Path, Path]] = []
+    for index, (root, root_key) in enumerate(resolved_pairs):
+        if any(
+            index != other_index and (root_key == other_key or root_key.is_relative_to(other_key))
+            for other_index, (_other_root, other_key) in enumerate(resolved_pairs)
+        ):
             continue
-        normalized_roots.append(root)
-        normalized_keys.append(root_key)
-    return normalized_roots
+        if any(root_key == existing_key for _existing_root, existing_key in kept):
+            continue
+        kept.append((root, root_key))
+    return [root for root, _root_key in kept]
 
 
 def discover_adapter_candidates(
