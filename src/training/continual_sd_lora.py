@@ -525,6 +525,12 @@ class ContinualSDLoRATrainer:
         self._idx_to_class: Dict[int, str] = {}
         self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
         self._ood_calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self.class_balance_runtime = (
+            dict(self.config.extra.get("class_balance", {}))
+            if isinstance(self.config.extra.get("class_balance"), dict)
+            else {}
+        )
+        self.class_balance_weights: Optional[torch.Tensor] = None
         configure_runtime_reproducibility(self.config, np_module=np)
         self._refresh_class_index_cache()
 
@@ -536,8 +542,27 @@ class ContinualSDLoRATrainer:
         self._config_hash = compute_config_hash(self._contract)
         return resolved
 
+    def _refresh_class_balance_weights(self) -> None:
+        weights_by_class = dict(self.class_balance_runtime.get("weights_by_class", {}))
+        if not self.class_to_idx or not weights_by_class:
+            self.class_balance_weights = None
+            return
+        ordered_names = [
+            class_name
+            for class_name, _idx in sorted(self.class_to_idx.items(), key=lambda item: int(item[1]))
+        ]
+        if any(class_name not in weights_by_class for class_name in ordered_names):
+            self.class_balance_weights = None
+            return
+        self.class_balance_weights = torch.tensor(
+            [float(weights_by_class[class_name]) for class_name in ordered_names],
+            dtype=torch.float32,
+            device=self.device,
+        )
+
     def _refresh_class_index_cache(self) -> None:
         self._idx_to_class = build_idx_to_class(self.class_to_idx)
+        self._refresh_class_balance_weights()
 
     def _class_index_cache_stale(self) -> bool:
         if len(self._idx_to_class) != len(self.class_to_idx):
@@ -751,11 +776,13 @@ class ContinualSDLoRATrainer:
                     logits,
                     labels,
                     label_smoothing=float(self.config.label_smoothing),
+                    class_weight=self.class_balance_weights,
                 )
                 return total_loss
             return nn.functional.cross_entropy(
                 logits,
                 labels,
+                weight=self.class_balance_weights,
                 label_smoothing=float(self.config.label_smoothing),
             )
 

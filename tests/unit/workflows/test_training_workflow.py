@@ -1,4 +1,7 @@
+import json
 from pathlib import Path
+
+import pytest
 
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
 from src.workflows.training import TrainingWorkflow, TrainingWorkflowResult
@@ -789,3 +792,112 @@ def test_training_workflow_requires_isolated_eval_split_when_val_used_for_calibr
 
     assert result.production_readiness["passed"] is False
     assert "accuracy" in result.production_readiness["missing_requirements"]
+
+
+def test_training_workflow_records_class_balance_runtime_in_artifacts(monkeypatch, tmp_path: Path):
+    runtime_root = tmp_path / "runtime_data" / "tomato"
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    (runtime_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 260},
+                    {"class_name": "disease_a", "image_count": 120},
+                ]
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.run_leave_one_class_out_benchmark",
+        lambda **kwargs: {},
+    )
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    run_context = json.loads((result.artifact_dir / "training" / "run_context.json").read_text(encoding="utf-8"))
+    summary = json.loads((result.artifact_dir / "training" / "summary.json").read_text(encoding="utf-8"))
+    assert run_context["class_balance"]["active"] is True
+    assert summary["class_balance"]["active"] is True
+    assert summary["class_balance"]["eligible_classes"] == ["disease_a"]
+    assert set(summary["class_balance"]["weights_by_class"].keys()) == {"healthy", "disease_a"}
+
+
+def test_training_workflow_fails_for_supported_classes_below_min_reference_count(monkeypatch, tmp_path: Path):
+    runtime_root = tmp_path / "runtime_data" / "tomato"
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    (runtime_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 260},
+                    {"class_name": "disease_a", "image_count": 54},
+                ]
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    with pytest.raises(ValueError, match="minimum reference count of 100"):
+        workflow.run(
+            crop_name="tomato",
+            data_dir=tmp_path / "runtime_data",
+            output_dir=tmp_path / "outputs",
+        )

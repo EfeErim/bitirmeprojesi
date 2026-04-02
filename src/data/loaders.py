@@ -5,7 +5,7 @@ from __future__ import annotations
 import random
 from collections import Counter
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, TypedDict
 
 import numpy as np
 import torch
@@ -13,7 +13,17 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from .datasets import CropDataset, infer_crop_classes_from_layout
 
-VALID_SAMPLERS = {"shuffle", "weighted"}
+VALID_SAMPLERS = {"auto", "shuffle", "weighted"}
+AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO = 1.5
+
+
+class SamplerRuntime(TypedDict):
+    requested_sampler: str
+    resolved_sampler: str
+    decision_reason: str
+    imbalance_ratio: float
+    imbalance_ratio_threshold: float
+    class_counts: Dict[str, int]
 
 
 def seed_worker_factory(base_seed: int) -> Any:
@@ -49,6 +59,53 @@ def build_weighted_sampler(dataset: CropDataset, seed: int) -> WeightedRandomSam
     )
 
 
+def _dataset_class_count_map(dataset: CropDataset) -> Dict[str, int]:
+    classes = [str(name) for name in getattr(dataset, "classes", [])]
+    label_counts = Counter(int(label) for label in getattr(dataset, "labels", []) if int(label) >= 0)
+    if classes:
+        return {
+            class_name: int(label_counts.get(class_index, 0))
+            for class_index, class_name in enumerate(classes)
+        }
+    return {str(label): int(count) for label, count in sorted(label_counts.items(), key=lambda item: item[0])}
+
+
+def resolve_train_sampler(
+    dataset: CropDataset,
+    *,
+    requested_sampler: str,
+    imbalance_ratio_threshold: float = AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO,
+) -> SamplerRuntime:
+    requested = str(requested_sampler).strip().lower()
+    class_counts = _dataset_class_count_map(dataset)
+    nonzero_counts = [int(count) for count in class_counts.values() if int(count) > 0]
+    imbalance_ratio = 1.0
+    if nonzero_counts:
+        imbalance_ratio = float(max(nonzero_counts)) / float(min(nonzero_counts))
+
+    resolved = requested
+    reason = "explicit_request"
+    if requested == "auto":
+        if len(nonzero_counts) <= 1:
+            resolved = "shuffle"
+            reason = "single_class_or_empty"
+        elif imbalance_ratio >= float(imbalance_ratio_threshold):
+            resolved = "weighted"
+            reason = "imbalance_detected"
+        else:
+            resolved = "shuffle"
+            reason = "balanced_enough"
+
+    return {
+        "requested_sampler": requested,
+        "resolved_sampler": resolved,
+        "decision_reason": reason,
+        "imbalance_ratio": round(float(imbalance_ratio), 4),
+        "imbalance_ratio_threshold": float(imbalance_ratio_threshold),
+        "class_counts": class_counts,
+    }
+
+
 def create_training_loaders(
     data_dir: str,
     crop: str,
@@ -60,7 +117,7 @@ def create_training_loaders(
     cache_train_split: bool = False,
     target_size: int = 224,
     error_policy: str = "tolerant",
-    sampler: str = "shuffle",
+    sampler: str = "auto",
     seed: int = 42,
     validate_images_on_init: bool = True,
     *,
@@ -115,9 +172,23 @@ def create_training_loaders(
         split_sampler = None
         shuffle = split == "train"
         drop_last = split == "train"
-        if split == "train" and sampler_name == "weighted" and len(dataset) > 0:
-            split_sampler = sampler_builder(dataset, int(seed))
-            shuffle = False
+        sampler_runtime: SamplerRuntime = {
+            "requested_sampler": sampler_name,
+            "resolved_sampler": sampler_name,
+            "decision_reason": "non_train_split",
+            "imbalance_ratio": 1.0,
+            "imbalance_ratio_threshold": float(AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO),
+            "class_counts": {},
+        }
+        if split == "train":
+            sampler_runtime = resolve_train_sampler(
+                dataset,
+                requested_sampler=sampler_name,
+                imbalance_ratio_threshold=AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO,
+            )
+            if sampler_runtime["resolved_sampler"] == "weighted" and len(dataset) > 0:
+                split_sampler = sampler_builder(dataset, int(seed))
+                shuffle = False
 
         extra_kwargs = dict(dataloader_kwargs)
         if num_workers <= 0:
@@ -142,6 +213,16 @@ def create_training_loaders(
         )
         setattr(loaders[split], "_seed_base", int(seed) + split_seed_offset)
         setattr(loaders[split], "_sampler_seed_base", int(seed) + sampler_seed_offset)
+        setattr(loaders[split], "_requested_sampler", str(sampler_runtime["requested_sampler"]))
+        setattr(loaders[split], "_resolved_sampler", str(sampler_runtime["resolved_sampler"]))
+        setattr(loaders[split], "_sampler_decision_reason", str(sampler_runtime["decision_reason"]))
+        setattr(loaders[split], "_sampler_imbalance_ratio", float(sampler_runtime["imbalance_ratio"]))
+        setattr(
+            loaders[split],
+            "_sampler_imbalance_ratio_threshold",
+            float(sampler_runtime["imbalance_ratio_threshold"]),
+        )
+        setattr(loaders[split], "_sampler_class_counts", dict(sampler_runtime["class_counts"]))
 
     ood_root = Path(data_dir) / crop / "ood"
     if ood_root.exists():

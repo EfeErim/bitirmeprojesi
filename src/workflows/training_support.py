@@ -8,6 +8,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
+from src.shared.json_utils import deep_merge
+from src.training.services.class_balance import build_class_balance_runtime, format_under_min_class_error
+
 
 def loader_size(loader: Any) -> int:
     dataset = getattr(loader, "dataset", None)
@@ -55,6 +58,8 @@ class TrainingRunSetup:
     detected_classes: List[str]
     split_class_counts: Dict[str, Dict[str, int]]
     adapter: Any
+    sampler_runtime: Dict[str, Any]
+    class_balance_runtime: Dict[str, Any]
 
 
 def _dataset_class_counts(loader: Any) -> Dict[str, int]:
@@ -68,6 +73,30 @@ def _dataset_class_counts(loader: Any) -> Dict[str, int]:
         class_name: int(counts.get(class_index, 0))
         for class_index, class_name in enumerate(classes)
     }
+
+
+def _resolve_loader_sampler_runtime(loader: Any) -> Dict[str, Any]:
+    return {
+        "requested_sampler": str(getattr(loader, "_requested_sampler", "auto")),
+        "resolved_sampler": str(getattr(loader, "_resolved_sampler", "auto")),
+        "decision_reason": str(getattr(loader, "_sampler_decision_reason", "unknown")),
+        "imbalance_ratio": float(getattr(loader, "_sampler_imbalance_ratio", 1.0)),
+        "imbalance_ratio_threshold": float(getattr(loader, "_sampler_imbalance_ratio_threshold", 1.0)),
+        "class_counts": dict(getattr(loader, "_sampler_class_counts", {})),
+    }
+
+
+def _inject_class_balance_runtime(config: Dict[str, Any], class_balance_runtime: Dict[str, Any]) -> Dict[str, Any]:
+    return deep_merge(
+        dict(config),
+        {
+            "training": {
+                "continual": {
+                    "class_balance": dict(class_balance_runtime),
+                }
+            }
+        },
+    )
 
 
 def _validate_training_layout(
@@ -175,7 +204,7 @@ def prepare_training_run(
         cache_train_split=bool(data_cfg.get("cache_train_split", False)),
         target_size=int(data_cfg.get("target_size", 224)),
         error_policy=str(error_policy or data_cfg.get("loader_error_policy", "tolerant")),
-        sampler=str(sampler or data_cfg.get("sampler", "shuffle")),
+        sampler=str(sampler or data_cfg.get("sampler", "auto")),
         seed=int(training_cfg.get("seed", 42)),
         validate_images_on_init=bool(data_cfg.get("validate_images_on_init", True)),
         pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
@@ -191,6 +220,16 @@ def prepare_training_run(
         loader_batch_counts=loader_batch_counts,
     )
 
+    sampler_runtime = _resolve_loader_sampler_runtime(loaders.get("train"))
+    class_balance_runtime = build_class_balance_runtime(
+        crop_name=crop_name,
+        data_dir=data_dir,
+        detected_classes=detected_classes,
+        split_class_counts=split_class_counts,
+    )
+    if class_balance_runtime.get("under_min_classes"):
+        raise ValueError(format_under_min_class_error(class_balance_runtime))
+
     adapter = adapter_factory(
         crop_name=crop_name,
         model_name=str(
@@ -201,7 +240,10 @@ def prepare_training_run(
         ),
         device=device,
     )
-    adapter.initialize_engine(class_names=detected_classes, config=config)
+    adapter.initialize_engine(
+        class_names=detected_classes,
+        config=_inject_class_balance_runtime(config, class_balance_runtime),
+    )
 
     return TrainingRunSetup(
         run_id=resolved_run_id,
@@ -214,6 +256,8 @@ def prepare_training_run(
         detected_classes=detected_classes,
         split_class_counts=split_class_counts,
         adapter=adapter,
+        sampler_runtime=sampler_runtime,
+        class_balance_runtime=class_balance_runtime,
     )
 
 def build_artifact_payload(

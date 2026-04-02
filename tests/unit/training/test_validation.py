@@ -244,3 +244,36 @@ def test_evaluate_model_with_artifact_metrics_collects_prediction_rows_with_path
     assert result.prediction_rows[2]["sample_origin"] == "ood"
     assert result.prediction_rows[2]["ood_type"] == "blur"
     assert result.prediction_rows[2]["true_label"] == ""
+
+
+def test_evaluate_model_keeps_validation_loss_unweighted(monkeypatch):
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        extra={"class_balance": {"weights_by_class": {"healthy": 0.8, "disease_a": 1.2}}},
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer._refresh_class_index_cache()
+    trainer.adapter_model = IdentityModule()
+    trainer.classifier = nn.Linear(4, 2)
+    trainer.fusion = IdentityModule()
+    trainer.forward_logits = lambda images: torch.tensor([[2.0, 0.0], [1.0, 0.0]])  # type: ignore[assignment]
+    recorded = {}
+
+    def fake_cross_entropy(logits, labels, weight=None, label_smoothing=0.0):
+        recorded["weight"] = weight
+        return torch.tensor(0.5)
+
+    monkeypatch.setattr("src.training.validation.torch.nn.functional.cross_entropy", fake_cross_entropy)
+
+    report = evaluate_model(
+        trainer,
+        [{"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}],
+    )
+
+    assert report is not None
+    assert recorded["weight"] is None

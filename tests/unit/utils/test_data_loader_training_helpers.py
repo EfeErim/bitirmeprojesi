@@ -80,6 +80,53 @@ def test_create_training_loaders_supports_weighted_sampler(tmp_path: Path):
 
     assert loaders["train"].sampler is not None
     assert loaders["train"].sampler.__class__.__name__ == "WeightedRandomSampler"
+    assert loaders["train"]._resolved_sampler == "weighted"
+
+
+def test_create_training_loaders_auto_sampler_promotes_imbalanced_train_split(tmp_path: Path):
+    for idx in range(6):
+        _write_image(tmp_path / "tomato" / "continual" / "healthy" / f"healthy_{idx}.jpg")
+    for idx in range(2):
+        _write_image(tmp_path / "tomato" / "continual" / "disease_a" / f"disease_{idx}.jpg", color=(0, 255, 0))
+    _write_image(tmp_path / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(tmp_path / "tomato" / "test" / "healthy" / "test.jpg")
+
+    loaders = create_training_loaders(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        batch_size=2,
+        num_workers=0,
+        sampler="auto",
+        seed=7,
+    )
+
+    assert loaders["train"].sampler is not None
+    assert loaders["train"].sampler.__class__.__name__ == "WeightedRandomSampler"
+    assert loaders["train"]._requested_sampler == "auto"
+    assert loaders["train"]._resolved_sampler == "weighted"
+    assert loaders["train"]._sampler_decision_reason == "imbalance_detected"
+    assert loaders["train"]._sampler_class_counts == {"healthy": 6, "disease_a": 2}
+
+
+def test_create_training_loaders_auto_sampler_keeps_balanced_train_split_on_shuffle(tmp_path: Path):
+    for idx in range(4):
+        _write_image(tmp_path / "tomato" / "continual" / "healthy" / f"healthy_{idx}.jpg")
+        _write_image(tmp_path / "tomato" / "continual" / "disease_a" / f"disease_{idx}.jpg", color=(0, 255, 0))
+    _write_image(tmp_path / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(tmp_path / "tomato" / "test" / "healthy" / "test.jpg")
+
+    loaders = create_training_loaders(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        batch_size=2,
+        num_workers=0,
+        sampler="auto",
+        seed=7,
+    )
+
+    assert loaders["train"].sampler.__class__.__name__ != "WeightedRandomSampler"
+    assert loaders["train"]._resolved_sampler == "shuffle"
+    assert loaders["train"]._sampler_decision_reason == "balanced_enough"
 
 
 def test_create_training_loaders_adds_optional_ood_loader(tmp_path: Path):

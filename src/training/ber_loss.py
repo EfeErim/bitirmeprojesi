@@ -84,6 +84,7 @@ class BERLoss(nn.Module):
         logits: torch.Tensor,
         labels: torch.Tensor,
         label_smoothing: float = 0.0,
+        class_weight: torch.Tensor | None = None,
     ) -> Tuple[torch.Tensor, Dict[str, float]]:
         """Compute CE + BER loss.
 
@@ -91,11 +92,12 @@ class BERLoss(nn.Module):
             logits: Model output logits ``[N, C]``.
             labels: Ground-truth labels ``[N]``.
             label_smoothing: Label smoothing factor for CE.
+            class_weight: Optional normalized class weights for CE.
 
         Returns:
             ``(total_loss, {"ce": ..., "ber_old": ..., "ber_new": ...})``
         """
-        ce_loss = F.cross_entropy(logits, labels, label_smoothing=label_smoothing)
+        ce_loss = F.cross_entropy(logits, labels, weight=class_weight, label_smoothing=label_smoothing)
 
         energies = self._energy(logits)
         old_mask = labels < self.num_old_classes

@@ -445,6 +445,42 @@ def test_train_batch_emits_step_metrics():
     assert stats.step_time_sec >= 0.0
 
 
+def test_training_step_uses_class_balanced_ce_weights_when_active(monkeypatch):
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        label_smoothing=0.1,
+        extra={"class_balance": {"weights_by_class": {"healthy": 0.8, "disease_a": 1.2}}},
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.optimizer = object()
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer._refresh_class_index_cache()
+    expected_loss = torch.tensor(1.23, requires_grad=True)
+    recorded = {}
+
+    def fake_cross_entropy(logits, labels, weight=None, label_smoothing=0.0):
+        recorded["labels"] = labels.detach().clone()
+        recorded["weight"] = None if weight is None else weight.detach().cpu().clone()
+        recorded["label_smoothing"] = label_smoothing
+        return expected_loss
+
+    monkeypatch.setattr("src.training.continual_sd_lora.nn.functional.cross_entropy", fake_cross_entropy)
+    trainer.forward_logits = lambda images: torch.full((images.shape[0], 2), 0.5, requires_grad=True)  # type: ignore[assignment]
+
+    loss = trainer.training_step(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    assert loss is expected_loss
+    assert recorded["labels"].tolist() == [0, 1]
+    assert recorded["label_smoothing"] == pytest.approx(0.1)
+    assert torch.allclose(recorded["weight"], torch.tensor([0.8, 1.2]))
+
+
 def test_training_step_uses_ber_loss_when_enabled():
     cfg = ContinualSDLoRAConfig(
         backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
@@ -457,14 +493,18 @@ def test_training_step_uses_ber_loss_when_enabled():
     )
     trainer = ContinualSDLoRATrainer(cfg)
     trainer.optimizer = object()
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer.class_balance_runtime = {"weights_by_class": {"healthy": 0.8, "disease_a": 1.2}}
+    trainer._refresh_class_index_cache()
     recorded = {}
     expected_loss = torch.tensor(1.23, requires_grad=True)
 
     class FakeBER:
-        def __call__(self, logits, labels, label_smoothing=0.0):
+        def __call__(self, logits, labels, label_smoothing=0.0, class_weight=None):
             recorded["logits"] = logits.detach().clone()
             recorded["labels"] = labels.detach().clone()
             recorded["label_smoothing"] = label_smoothing
+            recorded["class_weight"] = None if class_weight is None else class_weight.detach().cpu().clone()
             return expected_loss, {"ce": 0.7, "ber_old": 0.1, "ber_new": 0.2}
 
     trainer.ber_loss = FakeBER()
@@ -477,6 +517,7 @@ def test_training_step_uses_ber_loss_when_enabled():
     assert loss is expected_loss
     assert recorded["labels"].tolist() == [0, 1]
     assert recorded["label_smoothing"] == pytest.approx(0.1)
+    assert torch.allclose(recorded["class_weight"], torch.tensor([0.8, 1.2]))
     assert trainer._last_ber_components == {"ce": 0.7, "ber_old": 0.1, "ber_new": 0.2}
 
 

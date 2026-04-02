@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -96,9 +97,9 @@ def test_prepare_training_run_rejects_eval_only_classes():
 
 def test_prepare_training_run_generates_microsecond_resolution_run_ids(monkeypatch):
     loaders = {
-        "train": FakeLoader(["healthy"], [0], 1),
-        "val": FakeLoader(["healthy"], [0], 1),
-        "test": FakeLoader(["healthy"], [0], 1),
+        "train": FakeLoader(["healthy"], [0] * 100, 1),
+        "val": FakeLoader(["healthy"], [0] * 100, 1),
+        "test": FakeLoader(["healthy"], [0] * 100, 1),
     }
 
     class _FakeDateTime:
@@ -146,3 +147,125 @@ def test_prepare_training_run_generates_microsecond_resolution_run_ids(monkeypat
 
     assert first.run_id == "tomato_20260311_120000_000001"
     assert second.run_id == "tomato_20260311_120000_000002"
+
+
+def test_prepare_training_run_rejects_supported_classes_below_min_reference_count(tmp_path: Path):
+    crop_root = tmp_path / "runtime" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 240},
+                    {"class_name": "disease_a", "image_count": 54},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    loaders = {
+        "train": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "val": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "test": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+    }
+
+    with pytest.raises(ValueError, match="minimum reference count of 100"):
+        prepare_training_run(
+            config=_base_config(),
+            device="cpu",
+            crop_name="tomato",
+            data_dir=tmp_path / "runtime",
+            class_names=None,
+            num_workers=0,
+            pin_memory=False,
+            use_cache=False,
+            sampler=None,
+            error_policy=None,
+            run_id="run_1",
+            loader_factory=lambda **kwargs: loaders,
+            adapter_factory=lambda **kwargs: FakeAdapter(),
+        )
+
+
+def test_prepare_training_run_injects_active_class_balance_runtime(tmp_path: Path):
+    crop_root = tmp_path / "runtime" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 260},
+                    {"class_name": "disease_a", "image_count": 120},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    adapter = FakeAdapter()
+    loaders = {
+        "train": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "val": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "test": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+    }
+
+    setup = prepare_training_run(
+        config=_base_config(),
+        device="cpu",
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime",
+        class_names=None,
+        num_workers=0,
+        pin_memory=False,
+        use_cache=False,
+        sampler=None,
+        error_policy=None,
+        run_id="run_1",
+        loader_factory=lambda **kwargs: loaders,
+        adapter_factory=lambda **kwargs: adapter,
+    )
+
+    assert setup.class_balance_runtime["active"] is True
+    assert setup.class_balance_runtime["eligible_classes"] == ["disease_a"]
+    injected = adapter.initialized["config"]["training"]["continual"]["class_balance"]
+    assert injected["active"] is True
+    assert set(injected["weights_by_class"].keys()) == {"healthy", "disease_a"}
+
+
+def test_prepare_training_run_keeps_class_balance_inactive_when_all_classes_are_large(tmp_path: Path):
+    crop_root = tmp_path / "runtime" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 260},
+                    {"class_name": "disease_a", "image_count": 220},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    loaders = {
+        "train": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "val": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "test": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+    }
+
+    setup = prepare_training_run(
+        config=_base_config(),
+        device="cpu",
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime",
+        class_names=None,
+        num_workers=0,
+        pin_memory=False,
+        use_cache=False,
+        sampler=None,
+        error_policy=None,
+        run_id="run_1",
+        loader_factory=lambda **kwargs: loaders,
+        adapter_factory=lambda **kwargs: FakeAdapter(),
+    )
+
+    assert setup.class_balance_runtime["active"] is False
+    assert setup.class_balance_runtime["eligible_classes"] == []

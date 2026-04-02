@@ -66,7 +66,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             },
         },
         "data": {
-            "sampler": "shuffle",
+            "sampler": "auto",
             "loader_error_policy": "tolerant",
             "target_size": 224,
             "cache_size": 1000,
@@ -212,7 +212,7 @@ def normalize_continual_training_config(
     scheduler["min_lr"] = float(scheduler.get("min_lr", 1e-6))
     scheduler["step_on"] = str(scheduler.get("step_on", "batch"))
 
-    data["sampler"] = str(data.get("sampler", "shuffle"))
+    data["sampler"] = str(data.get("sampler", "auto"))
     data["loader_error_policy"] = str(data.get("loader_error_policy", "tolerant"))
     data["target_size"] = int(data.get("target_size", 224))
     data["cache_size"] = int(data.get("cache_size", 1000))

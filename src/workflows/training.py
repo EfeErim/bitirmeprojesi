@@ -13,6 +13,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Type
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
+from src.shared.json_utils import read_json
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.ood_score_selection import (
     apply_primary_score_method_to_evaluation,
@@ -32,19 +33,12 @@ from src.training.services.reporting import (
     persist_training_summary_artifact,
     persist_validation_artifacts,
 )
-from src.shared.json_utils import read_json
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_readiness import (
     build_production_readiness_context as build_production_readiness_context_payload,
 )
 from src.workflows.training_readiness import (
     build_training_summary_payload as build_training_summary_payload_dict,
-)
-from src.workflows.training_readiness import (
-    has_evaluation_labels as has_readiness_evaluation_labels,
-)
-from src.workflows.training_readiness import (
-    has_metric_gate as has_readiness_metric_gate,
 )
 from src.workflows.training_readiness import (
     record_adapter_export_metadata as record_adapter_export_metadata_payload,
@@ -54,9 +48,6 @@ from src.workflows.training_readiness import (
 )
 from src.workflows.training_readiness import (
     select_authoritative_artifacts as select_authoritative_artifacts_payload,
-)
-from src.workflows.training_readiness import (
-    select_authoritative_value as select_authoritative_value_payload,
 )
 from src.workflows.training_support import (
     build_artifact_payload,
@@ -617,6 +608,8 @@ class TrainingWorkflow:
             for split_name, counts in dict(run_setup.split_class_counts).items()
         }
         adapter = run_setup.adapter
+        sampler_runtime = dict(run_setup.sampler_runtime)
+        class_balance_runtime = dict(run_setup.class_balance_runtime)
         artifact_dir = resolved_output_dir / "training_metrics"
         batch_recorder = BatchMetricsRecorder(artifact_root=artifact_dir)
 
@@ -774,7 +767,10 @@ class TrainingWorkflow:
             metrics=dict(ood_evidence_metrics),
             benchmark=dict(ood_benchmark),
         )
-        if ood_stage.source == "held_out_benchmark" and is_auto_primary_score_method(primary_score_stage.requested_method):
+        if (
+            ood_stage.source == "held_out_benchmark"
+            and is_auto_primary_score_method(primary_score_stage.requested_method)
+        ):
             benchmark_method_metrics = dict(ood_stage.benchmark.get("method_comparison_metrics", {}))
             if benchmark_method_metrics:
                 selected_primary_score_method = self._apply_primary_score_method_to_trainer(
@@ -882,8 +878,9 @@ class TrainingWorkflow:
             loader_sizes=loader_sizes,
             loader_batch_counts=loader_batch_counts,
             split_class_counts=split_class_counts,
+            class_balance=class_balance_runtime,
             adapter_dir=adapter_dir,
-            artifact_dir=artifact_dir,
+            artifact_dir=str(artifact_dir),
             checkpoint_records=checkpoint_records,
             ood_calibration=ood_calibration,
             history_payload=history_payload,
@@ -925,6 +922,7 @@ class TrainingWorkflow:
                 "loader_sizes": dict(loader_sizes),
                 "loader_batch_counts": dict(loader_batch_counts),
                 "split_class_counts": dict(split_class_counts),
+                "class_balance": dict(class_balance_runtime),
                 "training_runtime": {
                     "calibration_split_name": calibration_split_name,
                     "best_state_restored": bool(best_state_restored),
@@ -932,6 +930,7 @@ class TrainingWorkflow:
                     "ood_primary_score_method": primary_score_stage.selected_method,
                     "ood_primary_score_selection_source": selection_source,
                     "ood_evidence_source": ood_evidence_source,
+                    "train_sampler": sampler_runtime,
                 },
                 "production_readiness_status": production_readiness.get("status"),
             },

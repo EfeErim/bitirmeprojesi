@@ -63,7 +63,7 @@
         }
       },
       "data": {
-        "sampler": "shuffle",
+        "sampler": "auto",
         "loader_error_policy": "tolerant",
         "target_size": 224,
         "cache_size": 1000,

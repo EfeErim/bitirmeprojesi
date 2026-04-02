@@ -66,6 +66,8 @@ Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
+- training now resolves supported-class reference counts from `split_manifest.json` or `_split_metadata.json` when those runtime manifests exist, otherwise from the runtime `continual` split counts
+- if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
 - Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
 - `class_root` now runs grouped prep and runtime-dataset materialization before training
@@ -414,6 +416,24 @@ These affect image loading and error tolerance:
 - `training.continual.data.cache_size`
 - `training.continual.data.cache_train_split`
 - `training.continual.data.validate_images_on_init`
+
+Current sampler behavior:
+
+- the shipped default is `training.continual.data.sampler: "auto"`
+- `auto` keeps normal shuffle training when the continual split is roughly balanced
+- `auto` switches the train loader to `WeightedRandomSampler` when the largest known-class count is at least `1.5x` the smallest non-zero class count
+- set `"shuffle"` or `"weighted"` explicitly when you do not want the automatic rule
+- this threshold is a repo-level engineering heuristic for long-tail handling, not a paper-faithful claim that one ratio is universally optimal
+
+Current class-imbalance behavior layered on top of the sampler:
+
+- the workflow first resolves per-class reference counts from `split_manifest.json` or `_split_metadata.json`; if those manifests are absent, it falls back to runtime `continual` counts
+- any supported class below `100` resolved images now hard-fails the run before adapter initialization
+- when all supported classes pass that floor and at least one supported class is in the `100-200` range, training cross-entropy automatically switches to class-balanced weighting based on the effective-number method from Cui et al.
+- once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
+- the weighted loss applies only to training CE; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
+- the workflow records the resolved counts, activation decision, and normalized per-class weights in the training run context and summary artifacts
+- the `100` floor and `100-200` trigger are repo policy for this adapter workflow; the effective-number weighting itself is literature-backed, but these exact thresholds are engineering policy rather than paper-defined universal constants
 
 ### OOD behavior
 

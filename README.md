@@ -116,6 +116,8 @@ The maintained training path is:
 - multi-scale feature fusion
 - classifier head on the fused representation
 - OOD calibration saved inside the exported adapter bundle
+- training loader sampling defaults to `auto`, promoting the train split to weighted sampling when class counts are materially imbalanced
+- training now resolves supported-class reference counts from `split_manifest.json` or `_split_metadata.json` when available, otherwise from the runtime `continual` split; runs fail before adapter initialization if any supported class resolves below `100` images, and when at least one supported class lands in the `100-200` range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
 
 The default inference deployment path is:
 
@@ -289,8 +291,8 @@ In practice, the flow is:
 1. Load `config/base.json`.
 2. Optionally merge `config/colab.json` when the environment is `colab`.
 3. Normalize the public training surface under `training.continual`.
-4. Build data loaders from the runtime dataset.
-5. Train the crop adapter.
+4. Build data loaders from the runtime dataset and resolve the supported-class count policy from the runtime manifest or continual split.
+5. Fail early if a supported class is below the minimum reference count, otherwise train the crop adapter with the shipped imbalance policy.
 6. Restore the best in-memory weights.
 7. Calibrate OOD using the chosen calibration split.
 8. Save the adapter.
