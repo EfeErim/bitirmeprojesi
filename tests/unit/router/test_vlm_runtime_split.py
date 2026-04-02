@@ -102,6 +102,29 @@ def test_pipeline_keeps_configured_crop_part_surface_when_dynamic_taxonomy_is_en
     assert "whole plant" in pipeline.part_labels
 
 
+def test_pipeline_falls_back_to_configured_labels_when_taxonomy_file_is_missing():
+    pipeline = VLMPipeline(
+        config={
+            "router": {
+                "crop_mapping": {
+                    "tomato": {"parts": ["leaf", "fruit"]},
+                    "potato": {"parts": ["leaf"]},
+                },
+                "vlm": {
+                    "enabled": False,
+                    "use_dynamic_taxonomy": True,
+                    "taxonomy_path": "config/definitely_missing_taxonomy.json",
+                },
+            },
+        },
+        device="cpu",
+    )
+
+    assert pipeline.crop_labels == ["tomato", "potato"]
+    assert "leaf" in pipeline.part_labels
+    assert pipeline.crop_part_compatibility["tomato"] == ["leaf", "fruit"]
+
+
 def test_clip_score_labels_ensemble_reuses_open_clip_image_embedding():
     pipeline = _build_pipeline()
     model = _attach_open_clip_runtime(pipeline)

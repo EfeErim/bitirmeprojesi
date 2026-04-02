@@ -120,7 +120,7 @@ def policy_enabled(policy_graph: Dict[str, Dict[str, Any]], stage: str, default:
 
 
 def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
-    """Load crop/part labels from taxonomy file with safe defaults on failure."""
+    """Load crop/part labels from taxonomy file."""
     path = Path(taxonomy_path)
     if not path.is_absolute():
         if not path.exists():
@@ -128,32 +128,31 @@ def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
             path = file_dir.parent.parent / taxonomy_path
 
     if not path.exists():
-        logger.warning(f"Taxonomy file not found: {taxonomy_path}, using minimal defaults")
-        return ["plant"], ["leaf", "flower", "fruit", "stem", "root"]
+        raise FileNotFoundError(f"Taxonomy file not found: {taxonomy_path}")
 
     try:
         with open(path, "r", encoding="utf-8") as f:
             taxonomy = json.load(f)
-
-        crops = taxonomy.get("crops", [])
-        weeds = taxonomy.get("common_weeds", [])
-        ornamentals = taxonomy.get("ornamentals", [])
-        all_crops = crops + weeds + ornamentals
-
-        parts_data = taxonomy.get("parts", [])
-        if isinstance(parts_data, dict):
-            core_parts = parts_data.get("core", [])
-            extended_parts = parts_data.get("extended", [])
-            parts = core_parts + extended_parts
-            logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} crops, {len(parts)} parts (core+extended)")
-        else:
-            parts = parts_data
-            logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
-
-        return all_crops, parts
     except Exception as e:
         logger.error(f"Failed to load taxonomy from {path}: {e}")
-        return ["plant"], ["leaf", "flower", "fruit", "stem", "root"]
+        raise RuntimeError(f"Failed to load taxonomy from {path}") from e
+
+    crops = taxonomy.get("crops", [])
+    weeds = taxonomy.get("common_weeds", [])
+    ornamentals = taxonomy.get("ornamentals", [])
+    all_crops = crops + weeds + ornamentals
+
+    parts_data = taxonomy.get("parts", [])
+    if isinstance(parts_data, dict):
+        core_parts = parts_data.get("core", [])
+        extended_parts = parts_data.get("extended", [])
+        parts = core_parts + extended_parts
+        logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} crops, {len(parts)} parts (core+extended)")
+    else:
+        parts = parts_data
+        logger.info(f"Loaded taxonomy from {path}: {len(all_crops)} plant types, {len(parts)} part types")
+
+    return all_crops, parts
 
 
 def load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:

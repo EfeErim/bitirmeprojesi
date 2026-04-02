@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 from src.router.policy_taxonomy_utils import (
     apply_runtime_profile,
     build_policy_graph,
@@ -75,3 +77,10 @@ def test_load_taxonomy_and_compatibility_from_file(tmp_path):
     assert crops == ["tomato", "weed_a", "rose"]
     assert parts == ["leaf", "fruit"]
     assert compatibility == {"tomato": ["leaf", "whole plant", "fruit"]}
+
+
+def test_load_taxonomy_raises_when_file_is_missing(tmp_path):
+    missing_path = tmp_path / "missing_taxonomy.json"
+
+    with pytest.raises(FileNotFoundError, match="Taxonomy file not found"):
+        load_taxonomy(str(missing_path))
