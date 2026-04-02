@@ -1,4 +1,4 @@
-"""Held-out OOD evidence helpers for production readiness."""
+﻿"""Held-out OOD evidence helpers for production readiness."""
 
 from __future__ import annotations
 
@@ -546,6 +546,7 @@ def _build_failed_summary(
         "reason": str(reason),
         "metrics": _empty_metric_map(),
         "metric_std": {},
+        "method_comparison": {},
         "method_comparison_metrics": {},
         "method_comparison_metric_std": {},
         "evaluation": validate_ood_metrics({}, target_values, require_ood=True),
@@ -1075,6 +1076,71 @@ def _collect_fold_target_failures(
     return failures
 
 
+def _coerce_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_worst_fold_summary(folds: Sequence[Dict[str, Any]], method_name: str) -> Dict[str, Any]:
+    candidates: List[Dict[str, Any]] = []
+    for fold_payload in folds:
+        method_metrics = dict(fold_payload.get("method_metrics", {})).get(method_name, {})
+        metrics = dict(method_metrics or {}) if isinstance(method_metrics, dict) else {}
+        fpr = _coerce_float(metrics.get("ood_false_positive_rate"))
+        auroc = _coerce_float(metrics.get("ood_auroc"))
+        if fpr is None and auroc is None:
+            continue
+        candidates.append(
+            {
+                "held_out_class": str(fold_payload.get("held_out_class", "")),
+                "ood_false_positive_rate": fpr,
+                "ood_auroc": auroc,
+                "metrics": metrics,
+            }
+        )
+    if not candidates:
+        return {}
+    candidates.sort(
+        key=lambda item: (
+            float("-inf") if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
+            float("inf") if item.get("ood_auroc") is None else float(item["ood_auroc"]),
+            str(item.get("held_out_class", "")),
+        )
+    )
+    return candidates[0]
+
+
+def _build_method_comparison_payload(
+    folds: Sequence[Dict[str, Any]],
+    *,
+    target_values: Dict[str, Any],
+) -> Dict[str, Any]:
+    aggregate_by_method, std_by_method = _aggregate_method_metric_stats(folds)
+    methods: Dict[str, Any] = {}
+    for method_name in sorted(aggregate_by_method.keys()):
+        pooled_metrics = dict(aggregate_by_method.get(method_name, {}))
+        metric_std = dict(std_by_method.get(method_name, {}))
+        method_payload: Dict[str, Any] = {
+            "pooled_metrics": pooled_metrics,
+            "metric_std": metric_std,
+            "pooled_gate_eligible": bool(
+                validate_ood_metrics(pooled_metrics, target_values, require_ood=True).get("passed", False)
+            ),
+        }
+        worst_fold = _build_worst_fold_summary(folds, method_name)
+        if worst_fold:
+            method_payload["worst_fold"] = worst_fold
+        methods[method_name] = method_payload
+    return {
+        "schema_version": "v1_ood_method_comparison",
+        "evidence_source": "held_out_benchmark",
+        "methods": methods,
+    }
+
 def _build_benchmark_summary_payload(
     *,
     folds: List[Dict[str, Any]],
@@ -1087,20 +1153,36 @@ def _build_benchmark_summary_payload(
     failed_folds = [fold for fold in folds if fold.get("status") != "completed"]
     aggregate_metrics, metric_std = _aggregate_fold_metric_stats(successful_folds)
     method_comparison_metrics, method_comparison_metric_std = _aggregate_method_metric_stats(successful_folds)
+    method_comparison = _build_method_comparison_payload(successful_folds, target_values=target_values)
     selected_primary_score_method = primary_score_method
     selected_metrics = dict(aggregate_metrics)
     selected_metric_std = dict(metric_std)
     selection_source = "configured"
     if is_auto_primary_score_method(requested_primary_score_method):
+        comparison_for_selection: Dict[str, Any] = (
+            dict(method_comparison) if dict(method_comparison.get("methods", {})) else dict(method_comparison_metrics)
+        )
         selected_primary_score_method = select_best_ood_score_method(
-            method_comparison_metrics,
+            comparison_for_selection,
             fallback=primary_score_method,
         )
-        if method_comparison_metrics:
+        if comparison_for_selection:
             selection_source = "held_out_benchmark"
-            selected_metrics = dict(method_comparison_metrics.get(selected_primary_score_method, aggregate_metrics))
-            selected_metric_std = dict(method_comparison_metric_std.get(selected_primary_score_method, metric_std))
+            selected_method_payload = dict(method_comparison.get("methods", {})).get(selected_primary_score_method, {})
+            if isinstance(selected_method_payload, dict) and selected_method_payload:
+                selected_metrics = dict(selected_method_payload.get("pooled_metrics", aggregate_metrics))
+                selected_metric_std = dict(selected_method_payload.get("metric_std", metric_std))
+            else:
+                selected_metrics = dict(method_comparison_metrics.get(selected_primary_score_method, aggregate_metrics))
+                selected_metric_std = dict(method_comparison_metric_std.get(selected_primary_score_method, metric_std))
 
+    method_comparison.update(
+        {
+            "requested_primary_score_method": requested_primary_score_method,
+            "selected_primary_score_method": selected_primary_score_method,
+            "selection_source": selection_source,
+        }
+    )
     ood_validation = validate_ood_metrics(selected_metrics, target_values, require_ood=True)
     fold_target_failures = _collect_fold_target_failures(
         successful_folds,
@@ -1119,6 +1201,7 @@ def _build_benchmark_summary_payload(
         "primary_score_selection_source": selection_source,
         "metrics": selected_metrics,
         "metric_std": selected_metric_std,
+        "method_comparison": method_comparison,
         "method_comparison_metrics": method_comparison_metrics,
         "method_comparison_metric_std": method_comparison_metric_std,
         "evaluation": ood_validation,
@@ -1129,7 +1212,6 @@ def _build_benchmark_summary_payload(
         "targets": target_values,
         "context": base_context,
     }
-
 def _aggregate_fold_metric_stats(
     folds: Sequence[Dict[str, Any]],
 ) -> tuple[Dict[str, Optional[float]], Dict[str, Optional[float]]]:
@@ -1490,4 +1572,7 @@ def run_leave_one_class_out_benchmark(
         },
     )
     return summary_payload
+
+
+
 

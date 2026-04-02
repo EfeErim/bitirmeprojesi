@@ -27,16 +27,67 @@ def test_normalize_requested_primary_score_method_accepts_auto():
     assert normalize_requested_primary_score_method("AUTO") == "auto"
 
 
-def test_select_best_ood_score_method_prefers_best_auroc_then_lower_fpr():
+def test_select_best_ood_score_method_prefers_gate_eligible_method():
     selected = select_best_ood_score_method(
         {
-            "ensemble": {"ood_auroc": 0.91, "ood_false_positive_rate": 0.07},
-            "energy": {"ood_auroc": 0.95, "ood_false_positive_rate": 0.09},
-            "knn": {"ood_auroc": 0.95, "ood_false_positive_rate": 0.11},
+            "methods": {
+                "ensemble": {
+                    "pooled_metrics": {"ood_auroc": 0.98, "ood_false_positive_rate": 0.08},
+                    "pooled_gate_eligible": False,
+                    "worst_slice": {"metrics": {"ood_false_positive_rate": 0.08, "ood_auroc": 0.98}},
+                },
+                "energy": {
+                    "pooled_metrics": {"ood_auroc": 0.93, "ood_false_positive_rate": 0.05},
+                    "pooled_gate_eligible": True,
+                    "worst_slice": {"metrics": {"ood_false_positive_rate": 0.05, "ood_auroc": 0.93}},
+                },
+            }
         }
     )
 
     assert selected == "energy"
+
+
+def test_select_best_ood_score_method_prefers_lower_worst_slice_fpr_before_pooled_auroc():
+    selected = select_best_ood_score_method(
+        {
+            "methods": {
+                "ensemble": {
+                    "pooled_metrics": {"ood_auroc": 0.98, "ood_false_positive_rate": 0.03},
+                    "pooled_gate_eligible": True,
+                    "worst_slice": {"metrics": {"ood_false_positive_rate": 0.22, "ood_auroc": 0.92}},
+                },
+                "energy": {
+                    "pooled_metrics": {"ood_auroc": 0.95, "ood_false_positive_rate": 0.05},
+                    "pooled_gate_eligible": True,
+                    "worst_slice": {"metrics": {"ood_false_positive_rate": 0.07, "ood_auroc": 0.89}},
+                },
+            }
+        }
+    )
+
+    assert selected == "energy"
+
+
+def test_select_best_ood_score_method_prefers_lower_worst_fold_fpr_before_pooled_auroc():
+    selected = select_best_ood_score_method(
+        {
+            "methods": {
+                "ensemble": {
+                    "pooled_metrics": {"ood_auroc": 0.99, "ood_false_positive_rate": 0.02},
+                    "pooled_gate_eligible": True,
+                    "worst_fold": {"metrics": {"ood_false_positive_rate": 0.18, "ood_auroc": 0.91}},
+                },
+                "knn": {
+                    "pooled_metrics": {"ood_auroc": 0.94, "ood_false_positive_rate": 0.04},
+                    "pooled_gate_eligible": True,
+                    "worst_fold": {"metrics": {"ood_false_positive_rate": 0.06, "ood_auroc": 0.88}},
+                },
+            }
+        }
+    )
+
+    assert selected == "knn"
 
 
 def test_apply_primary_score_method_to_evaluation_rewrites_selected_scores():

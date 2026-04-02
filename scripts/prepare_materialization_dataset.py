@@ -122,6 +122,7 @@ def prepare_class_root_for_materialization(
     class_root: Path,
     crop_name: str,
     part_name: str = "unspecified",
+    provenance_manifest_path: Optional[Path] = None,
     audit_artifact_root: Path,
     prepared_class_root: Path,
     prepared_artifact_root: Path,
@@ -195,6 +196,7 @@ def prepare_class_root_for_materialization(
         class_root=prepared_class_root,
         crop_name=crop_name,
         artifact_root=prepared_artifact_root,
+        provenance_manifest_path=provenance_manifest_path,
         taxonomy_path=taxonomy_path,
         dino_model_id=dino_model_id,
         bioclip_model_id=bioclip_model_id,
@@ -212,6 +214,7 @@ def prepare_class_root_for_materialization(
         "crop_name": str(crop_name),
         "part_name": str(part_name),
         "dataset_key": build_prepared_dataset_key(crop_name, part_name),
+        "provenance_manifest_path": ("" if provenance_manifest_path is None else str(Path(provenance_manifest_path))),
         "cleanup_seed": int(cleanup_seed),
         "materialization_strategy": str(materialization_strategy),
         "quarantine_cross_class_conflicts": bool(quarantine_cross_class_conflicts),
@@ -238,6 +241,12 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument("--class-root", type=Path, required=True, help="Original flat class-root dataset.")
     parser.add_argument("--crop", type=str, required=True, help="Crop name for taxonomy alignment.")
     parser.add_argument("--part", type=str, default="unspecified", help="Part name used for prepared dataset naming.")
+    parser.add_argument(
+        "--provenance-manifest",
+        type=Path,
+        default=None,
+        help="Optional original class-root provenance CSV passed through to the rerun audit.",
+    )
     parser.add_argument(
         "--audit-artifact-root",
         type=Path,
@@ -289,6 +298,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         class_root=args.class_root,
         crop_name=args.crop,
         part_name=args.part,
+        provenance_manifest_path=args.provenance_manifest,
         audit_artifact_root=args.audit_artifact_root,
         prepared_class_root=args.prepared_class_root,
         prepared_artifact_root=args.prepared_artifact_root,

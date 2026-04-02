@@ -9,6 +9,7 @@ from src.training.services.reporting import (
     load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_production_readiness_artifact,
+    persist_provenance_slice_breakdown_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_run_context_artifact,
@@ -202,6 +203,77 @@ def test_reporting_writes_ood_evidence_summary_artifact(tmp_path: Path):
     assert summary["sample_counts"]["in_distribution_samples"] == 4
     assert summary["ood_types"] == ["blur"]
     assert summary["ood_type_count"] == 1
+
+
+def test_reporting_writes_ood_method_comparison_artifact(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        ood_labels=[0, 0, 0, 0, 1, 1],
+        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+        ood_scores_by_method={
+            "ensemble": [0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+            "energy": [0.2, 0.3, 0.22, 0.25, 0.85, 0.95],
+            "knn": [0.12, 0.21, 0.19, 0.2, 0.76, 0.88],
+        },
+        sure_ds_f1=0.95,
+        conformal_empirical_coverage=0.97,
+        conformal_avg_set_size=1.0,
+        ood_type_breakdown={
+            "blur": {
+                "sample_count": 2,
+                "method_metrics": {
+                    "ensemble": {"ood_auroc": 0.81, "ood_false_positive_rate": 0.12, "in_distribution_samples": 4},
+                    "energy": {"ood_auroc": 0.84, "ood_false_positive_rate": 0.08, "in_distribution_samples": 4},
+                    "knn": {"ood_auroc": 0.79, "ood_false_positive_rate": 0.15, "in_distribution_samples": 4},
+                },
+            }
+        },
+        context={
+            "ood_requested_primary_score_method": "auto",
+            "ood_primary_score_method": "ensemble",
+            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_score_methods": ["ensemble", "energy", "knn"],
+        },
+    )
+
+    comparison_path = result["paths"]["ood_method_comparison_json"]
+    summary_path = result["paths"]["ood_evidence_summary_json"]
+    assert comparison_path.exists()
+    comparison = json.loads(comparison_path.read_text(encoding="utf-8"))
+    assert comparison["selected_primary_score_method"] == "ensemble"
+    assert comparison["selection_source"] == "real_ood_guardrail"
+    assert comparison["methods"]["energy"]["worst_slice"]["slice_name"] == "blur"
+
+    summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    assert summary["method_comparison"]["selected_primary_score_method"] == "ensemble"
+    assert "energy" in summary["method_comparison"]["methods"]
+
+
+def test_reporting_writes_provenance_slice_breakdown_artifact(tmp_path: Path):
+    result = persist_provenance_slice_breakdown_artifact(
+        artifact_root=tmp_path / "training_metrics",
+        payload={
+            "schema_version": "v1_provenance_slice_breakdown",
+            "available": True,
+            "classification_split": "test",
+            "matched_sample_count": 10,
+            "dimensions": {
+                "source_dataset": {
+                    "reported_slice_count": 2,
+                    "worst_slices": {"accuracy": {"name": "set_b", "sample_count": 5}},
+                }
+            },
+        },
+    )
+
+    artifact_path = result["provenance_slice_breakdown_json"]
+    assert artifact_path.exists()
+    payload = json.loads(artifact_path.read_text(encoding="utf-8"))
+    assert payload["classification_split"] == "test"
+    assert payload["dimensions"]["source_dataset"]["reported_slice_count"] == 2
 
 def test_reporting_refreshes_guided_catalog_for_training_outputs(tmp_path: Path):
     artifact_root = tmp_path / "training_metrics"

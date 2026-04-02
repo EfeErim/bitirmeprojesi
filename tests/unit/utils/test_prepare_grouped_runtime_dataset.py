@@ -140,6 +140,96 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
     assert (crop_root / "split_manifest.json").exists()
 
 
+def test_grouped_dataset_plan_roundtrips_provenance_manifest_fields(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_{index}.jpg", offset=offset + 1)
+
+    provenance_path = source_root / "provenance_manifest.csv"
+    image_paths = sorted(path for path in source_root.rglob("*.jpg"))
+    with provenance_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "relative_path",
+                "source_dataset",
+                "source_subset",
+                "capture_group_id",
+                "domain_tag",
+            ],
+        )
+        writer.writeheader()
+        for index, image_path in enumerate(image_paths):
+            writer.writerow(
+                {
+                    "relative_path": image_path.relative_to(source_root).as_posix(),
+                    "source_dataset": "dataset_a" if index < 3 else "dataset_b",
+                    "source_subset": "subset_train" if index % 2 == 0 else "subset_eval",
+                    "capture_group_id": f"group_{index // 2}",
+                    "domain_tag": "field" if index < 3 else "lab",
+                }
+            )
+        writer.writerow(
+            {
+                "relative_path": "Healthy/missing_row.jpg",
+                "source_dataset": "dataset_extra",
+                "source_subset": "subset_extra",
+                "capture_group_id": "group_extra",
+                "domain_tag": "synthetic",
+            }
+        )
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+    assert summary["provenance_manifest"]["available"] is True
+    assert summary["provenance_manifest"]["matched_rows"] == len(image_paths)
+    assert summary["provenance_manifest"]["unmatched_manifest_rows"] == 1
+    assert summary["provenance_manifest"]["warnings"]
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+
+    manifest = json.loads((result_root / "tomato" / "split_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["provenance_manifest"]["available"] is True
+    rows = manifest["rows"]
+    assert rows
+    assert all("runtime_relative_path" in row and row["runtime_relative_path"] for row in rows)
+    assert all("source_dataset" in row for row in rows)
+    assert any(row["source_dataset"] == "dataset_a" for row in rows)
+    assert any(row["domain_tag"] == "lab" for row in rows)
+
+
 def test_materialize_grouped_runtime_dataset_uses_part_aware_dataset_key(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"

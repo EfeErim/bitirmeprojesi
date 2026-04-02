@@ -151,6 +151,13 @@ def test_run_leave_one_class_out_benchmark_writes_aggregate_artifacts(monkeypatc
     assert summary["requested_primary_score_method"] == "auto"
     assert summary["primary_score_method"] == "ensemble"
     assert {"ensemble", "energy", "knn"} <= set(summary["method_comparison_metrics"].keys())
+    assert summary["method_comparison"]["selected_primary_score_method"] == "ensemble"
+    assert summary["method_comparison"]["selection_source"] == "held_out_benchmark"
+    assert summary["method_comparison"]["methods"]["ensemble"]["worst_fold"]["held_out_class"] in {
+        "healthy",
+        "disease_a",
+        "disease_b",
+    }
     assert all(fold["status"] == "completed" for fold in summary["folds"])
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "summary.json").exists()
     assert (tmp_path / "training_metrics" / "ood_benchmark" / "per_fold.csv").exists()
@@ -204,6 +211,106 @@ def test_run_leave_one_class_out_benchmark_auto_selects_best_method(monkeypatch,
     assert summary["primary_score_method"] == "energy"
     assert summary["primary_score_selection_source"] == "held_out_benchmark"
     assert summary["metrics"] == summary["method_comparison_metrics"]["energy"]
+    assert summary["method_comparison"]["selected_primary_score_method"] == "energy"
+    assert summary["method_comparison"]["methods"]["energy"]["worst_fold"]["held_out_class"] in {
+        "healthy",
+        "disease_a",
+        "disease_b",
+    }
+
+
+def test_benchmark_summary_auto_selection_prefers_lower_worst_fold_fpr_before_pooled_auroc():
+    summary = _build_benchmark_summary_payload(
+        folds=[
+            {
+                "held_out_class": "healthy",
+                "status": "completed",
+                "metrics": {
+                    "accuracy": 1.0,
+                    "ood_auroc": 0.95,
+                    "ood_false_positive_rate": 0.05,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 0.95,
+                    "conformal_empirical_coverage": 0.97,
+                    "conformal_avg_set_size": 1.0,
+                },
+                "method_metrics": {
+                    "ensemble": {
+                        "ood_auroc": 0.99,
+                        "ood_false_positive_rate": 0.18,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                        "sure_ds_f1": 0.95,
+                        "conformal_empirical_coverage": 0.97,
+                        "conformal_avg_set_size": 1.0,
+                    },
+                    "energy": {
+                        "ood_auroc": 0.96,
+                        "ood_false_positive_rate": 0.05,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                        "sure_ds_f1": 0.95,
+                        "conformal_empirical_coverage": 0.97,
+                        "conformal_avg_set_size": 1.0,
+                    },
+                },
+            },
+            {
+                "held_out_class": "disease_a",
+                "status": "completed",
+                "metrics": {
+                    "accuracy": 1.0,
+                    "ood_auroc": 0.94,
+                    "ood_false_positive_rate": 0.06,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 0.94,
+                    "conformal_empirical_coverage": 0.96,
+                    "conformal_avg_set_size": 1.1,
+                },
+                "method_metrics": {
+                    "ensemble": {
+                        "ood_auroc": 0.98,
+                        "ood_false_positive_rate": 0.16,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                        "sure_ds_f1": 0.94,
+                        "conformal_empirical_coverage": 0.96,
+                        "conformal_avg_set_size": 1.1,
+                    },
+                    "energy": {
+                        "ood_auroc": 0.95,
+                        "ood_false_positive_rate": 0.04,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                        "sure_ds_f1": 0.94,
+                        "conformal_empirical_coverage": 0.96,
+                        "conformal_avg_set_size": 1.1,
+                    },
+                },
+            },
+        ],
+        primary_score_method="ensemble",
+        requested_primary_score_method="auto",
+        target_values={
+            "accuracy": 0.93,
+            "ood_auroc": 0.92,
+            "ood_false_positive_rate": 0.10,
+            "ood_samples": 5,
+            "in_distribution_samples": 5,
+            "sure_ds_f1": 0.90,
+            "conformal_empirical_coverage": 0.95,
+            "conformal_avg_set_size": 2.0,
+        },
+        base_context={"crop_name": "tomato"},
+    )
+
+    assert summary["primary_score_method"] == "energy"
+    assert summary["primary_score_selection_source"] == "held_out_benchmark"
+    assert summary["method_comparison"]["methods"]["ensemble"]["worst_fold"]["held_out_class"] == "healthy"
+    assert summary["method_comparison"]["methods"]["ensemble"]["worst_fold"]["metrics"]["ood_false_positive_rate"] == 0.18
+    assert summary["method_comparison"]["methods"]["energy"]["worst_fold"]["metrics"]["ood_false_positive_rate"] == 0.05
 
 
 def test_run_leave_one_class_out_benchmark_fails_when_class_count_is_too_small(monkeypatch, tmp_path: Path):

@@ -1,4 +1,4 @@
-"""Canonical training workflow for the supported adapter-training path."""
+﻿"""Canonical training workflow for the supported adapter-training path."""
 
 from __future__ import annotations
 
@@ -27,6 +27,7 @@ from src.training.services.reporting import (
     load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_production_readiness_artifact,
+    persist_provenance_slice_breakdown_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_run_context_artifact,
@@ -36,6 +37,9 @@ from src.training.services.reporting import (
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_readiness import (
     build_production_readiness_context as build_production_readiness_context_payload,
+)
+from src.workflows.training_readiness import (
+    build_provenance_slice_breakdown as build_provenance_slice_breakdown_payload,
 )
 from src.workflows.training_readiness import (
     build_training_summary_payload as build_training_summary_payload_dict,
@@ -48,6 +52,12 @@ from src.workflows.training_readiness import (
 )
 from src.workflows.training_readiness import (
     select_authoritative_artifacts as select_authoritative_artifacts_payload,
+)
+from src.workflows.training_readiness import (
+    select_authoritative_evaluation as select_authoritative_evaluation_payload,
+)
+from src.workflows.training_readiness import (
+    summarize_provenance_slice_breakdown as summarize_provenance_slice_breakdown_payload,
 )
 from src.workflows.training_support import (
     build_artifact_payload,
@@ -171,6 +181,75 @@ def _collect_dataset_manifest_context(crop_root: Path) -> Dict[str, Any]:
             )
         manifests[filename] = payload
     return manifests
+
+def _resolve_ood_method_comparison_from_artifacts(artifacts: Dict[str, Any]) -> Dict[str, Any]:
+    metric_gate = dict(artifacts.get("metric_gate", {})) if isinstance(artifacts, dict) else {}
+    context = dict(metric_gate.get("context", {})) if isinstance(metric_gate.get("context"), dict) else {}
+    comparison = dict(context.get("ood_method_comparison", {})) if isinstance(context.get("ood_method_comparison"), dict) else {}
+    if comparison:
+        return comparison
+    paths = dict(artifacts.get("paths", {})) if isinstance(artifacts, dict) else {}
+    comparison_path = paths.get("ood_method_comparison_json")
+    if comparison_path:
+        resolved = read_json(Path(str(comparison_path)), default={}, expect_type=dict)
+        if isinstance(resolved, dict):
+            return resolved
+    return {}
+
+
+def _build_ood_method_comparison_context(
+    *,
+    authoritative_artifacts: Dict[str, Any],
+    ood_evidence_source: str,
+    ood_benchmark: Dict[str, Any],
+) -> Dict[str, Any]:
+    comparison: Dict[str, Any] = {}
+    if str(ood_evidence_source or "") == "held_out_benchmark":
+        comparison = dict(ood_benchmark.get("method_comparison", {})) if isinstance(ood_benchmark, dict) else {}
+        if not comparison and isinstance(ood_benchmark, dict):
+            legacy_methods = dict(ood_benchmark.get("method_comparison_metrics", {}))
+            if legacy_methods:
+                comparison = {
+                    "requested_primary_score_method": str(ood_benchmark.get("requested_primary_score_method", "") or ""),
+                    "selected_primary_score_method": str(ood_benchmark.get("primary_score_method", "") or ""),
+                    "selection_source": str(ood_benchmark.get("primary_score_selection_source", "") or ""),
+                    "methods": {
+                        str(method_name): {"pooled_metrics": dict(metrics or {})}
+                        for method_name, metrics in legacy_methods.items()
+                    },
+                }
+    else:
+        comparison = _resolve_ood_method_comparison_from_artifacts(authoritative_artifacts)
+    if not comparison:
+        return {}
+    method_payloads = dict(comparison.get("methods", {})) if isinstance(comparison.get("methods"), dict) else {}
+    summarized_methods: Dict[str, Any] = {}
+    for method_name, payload in method_payloads.items():
+        details = dict(payload or {}) if isinstance(payload, dict) else {}
+        summary_payload: Dict[str, Any] = {
+            "pooled_metrics": dict(details.get("pooled_metrics", {})) if isinstance(details.get("pooled_metrics"), dict) else {},
+        }
+        if "pooled_gate_eligible" in details:
+            summary_payload["pooled_gate_eligible"] = bool(details.get("pooled_gate_eligible"))
+        if isinstance(details.get("worst_slice"), dict):
+            summary_payload["worst_slice"] = dict(details.get("worst_slice", {}))
+        if isinstance(details.get("worst_fold"), dict):
+            summary_payload["worst_fold"] = dict(details.get("worst_fold", {}))
+        if isinstance(details.get("metric_std"), dict):
+            summary_payload["metric_std"] = dict(details.get("metric_std", {}))
+        summarized_methods[str(method_name)] = summary_payload
+    return {
+        "requested_primary_score_method": str(comparison.get("requested_primary_score_method", "") or ""),
+        "selected_primary_score_method": str(
+            comparison.get("selected_primary_score_method", comparison.get("primary_score_method", "")) or ""
+        ),
+        "selection_source": str(
+            comparison.get("selection_source", comparison.get("primary_score_selection_source", "")) or ""
+        ),
+        "split_name": str(comparison.get("split_name", "") or ""),
+        "methods": summarized_methods,
+    }
+
 
 
 @dataclass
@@ -400,6 +479,7 @@ class TrainingWorkflow:
             emit_metric_gate=emit_metric_gate,
             ood_labels=evaluation_result.ood_labels,
             ood_scores=evaluation_result.ood_scores,
+            ood_scores_by_method=evaluation_result.ood_scores_by_method,
             sure_ds_f1=evaluation_result.sure_ds_f1,
             conformal_empirical_coverage=evaluation_result.conformal_empirical_coverage,
             conformal_avg_set_size=evaluation_result.conformal_avg_set_size,
@@ -750,6 +830,11 @@ class TrainingWorkflow:
             test_artifacts,
             calibration_split_name=calibration_split_name,
         )
+        authoritative_evaluation_split, authoritative_evaluation = select_authoritative_evaluation_payload(
+            split_evaluations.get("val"),
+            split_evaluations.get("test"),
+            calibration_split_name=calibration_split_name,
+        )
         evaluation_cfg = dict(training_cfg.get("evaluation", {}))
         ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
             crop_name=crop_name,
@@ -771,12 +856,14 @@ class TrainingWorkflow:
             ood_stage.source == "held_out_benchmark"
             and is_auto_primary_score_method(primary_score_stage.requested_method)
         ):
-            benchmark_method_metrics = dict(ood_stage.benchmark.get("method_comparison_metrics", {}))
-            if benchmark_method_metrics:
+            benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison", {}))
+            if not benchmark_method_comparison:
+                benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison_metrics", {}))
+            if benchmark_method_comparison:
                 selected_primary_score_method = self._apply_primary_score_method_to_trainer(
                     trainer_for_artifacts,
                     select_best_ood_score_method(
-                        benchmark_method_metrics,
+                        benchmark_method_comparison,
                         fallback=primary_score_stage.selected_method,
                     ),
                 )
@@ -817,6 +904,22 @@ class TrainingWorkflow:
         ood_evidence_source = ood_stage.source
         ood_evidence_metrics = dict(ood_stage.metrics)
         ood_benchmark = dict(ood_stage.benchmark)
+        ood_method_comparison_context = _build_ood_method_comparison_context(
+            authoritative_artifacts=authoritative_artifacts,
+            ood_evidence_source=ood_evidence_source,
+            ood_benchmark=ood_benchmark,
+        )
+        provenance_breakdown = build_provenance_slice_breakdown_payload(
+            crop_root=resolved_data_dir / crop_name,
+            classification_split=(authoritative_split or authoritative_evaluation_split),
+            authoritative_evaluation=authoritative_evaluation,
+        )
+        provenance_summary = summarize_provenance_slice_breakdown_payload(provenance_breakdown)
+        provenance_warnings = [
+            str(item)
+            for item in list(provenance_breakdown.get("warnings", []))
+            if str(item).strip()
+        ]
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
             classification_metric_gate=(
@@ -840,10 +943,22 @@ class TrainingWorkflow:
                 selected_primary_score_method=primary_score_stage.selected_method,
                 selection_source=primary_score_stage.selection_source,
                 ood_benchmark=ood_benchmark,
+                provenance_summary=provenance_summary,
+                provenance_warnings=provenance_warnings,
+                ood_method_comparison=ood_method_comparison_context,
             ),
             require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
             telemetry=telemetry,
         )
+        if bool(provenance_breakdown.get("available", False)):
+            readiness_artifacts = {
+                **readiness_artifacts,
+                **persist_provenance_slice_breakdown_artifact(
+                    artifact_root=artifact_dir,
+                    payload=provenance_breakdown,
+                    telemetry=telemetry,
+                ),
+            }
         production_readiness = dict(readiness_artifacts.get("payload", {}))
         record_adapter_export_metadata_payload(
             adapter,
@@ -892,6 +1007,8 @@ class TrainingWorkflow:
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             primary_score_selection_source=selection_source,
+            loss_name=str(training_cfg.get("optimization", {}).get("loss_name", "cross_entropy")),
+            logitnorm_tau=float(training_cfg.get("optimization", {}).get("logitnorm_tau", 1.0)),
             final_metrics=_collect_final_metrics(history_payload),
         )
         summary_artifacts = persist_training_summary_artifact(
@@ -976,3 +1093,14 @@ class TrainingWorkflow:
         )
 
         return result
+
+
+
+
+
+
+
+
+
+
+

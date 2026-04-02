@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 
 import pytest
@@ -16,9 +16,10 @@ class FakeDataset:
 
 
 class FakeLoader(list):
-    def __init__(self, classes):
+    def __init__(self, classes, *, split_name=""):
         super().__init__([{"images": 1, "labels": 1}])
         self.dataset = FakeDataset(classes)
+        self.split_name = str(split_name)
 
 
 class FakeHistory:
@@ -312,6 +313,145 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     assert result.production_readiness["missing_deployment_requirements"] == []
     assert (result.artifact_dir / "production_readiness.json").exists()
 
+def test_training_workflow_persists_provenance_slice_breakdown_and_method_comparison(monkeypatch, tmp_path: Path):
+    crop_root = tmp_path / "runtime_data" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+
+    manifest_rows = []
+    for index in range(10):
+        class_name = "healthy" if index % 2 == 0 else "disease_a"
+        manifest_rows.append(
+            {
+                "split": "test",
+                "raw_class_name": class_name,
+                "normalized_class_name": class_name,
+                "relative_path": f"{class_name}/img_{index}.jpg",
+                "runtime_relative_path": f"test/{class_name}/img_{index}.jpg",
+                "source_dataset": "set_a" if index < 5 else "set_b",
+                "source_subset": "subset_a" if index < 5 else "subset_b",
+                "capture_group_id": f"group_{index // 5}",
+                "domain_tag": "field" if index < 5 else "lab",
+                "source_hint": "original",
+            }
+        )
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps({"rows": manifest_rows, "provenance_manifest": {"available": True}}, indent=2),
+        encoding="utf-8",
+    )
+
+    def _prediction_rows(split_name: str) -> list[dict]:
+        rows = []
+        set_b_predictions = [0, 0, 0, 1, 1]
+        for index in range(10):
+            class_name = "healthy" if index % 2 == 0 else "disease_a"
+            true_index = index % 2
+            pred_index = true_index if index < 5 else set_b_predictions[index - 5]
+            rows.append(
+                {
+                    "sample_origin": "in_distribution",
+                    "split_name": split_name,
+                    "image_path": str(crop_root / split_name / class_name / f"img_{index}.jpg"),
+                    "true_index": true_index,
+                    "pred_index": pred_index,
+                    "true_label": class_name,
+                    "pred_label": class_name if pred_index == true_index else ("healthy" if pred_index == 0 else "disease_a"),
+                    "is_correct": pred_index == true_index,
+                }
+            )
+        return rows
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"], split_name="continual"),
+            "val": FakeLoader(["healthy", "disease_a"], split_name="val"),
+            "test": FakeLoader(["healthy", "disease_a"], split_name="test"),
+            "ood": FakeLoader(["unknown"], split_name="ood"),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    def _evaluation_with_provenance(_trainer, loader, *, ood_loader=None):
+        split_name = getattr(loader, "split_name", "test")
+        report = ValidationReport(
+            val_loss=0.05,
+            val_accuracy=1.0,
+            macro_precision=1.0,
+            macro_recall=1.0,
+            macro_f1=1.0,
+            weighted_f1=1.0,
+            balanced_accuracy=1.0,
+            per_class_accuracy={"healthy": 1.0, "disease_a": 1.0},
+            per_class_support={"healthy": 5, "disease_a": 5},
+            worst_classes=[],
+        )
+        include_ood = ood_loader is not None
+        return EvaluationArtifactsPayload(
+            report=report,
+            y_true=[0, 1, 0, 1],
+            y_pred=[0, 1, 0, 1],
+            prediction_rows=_prediction_rows(split_name),
+            ood_labels=([0, 0, 0, 0, 0, 1, 1, 1, 1, 1] if include_ood else None),
+            ood_scores=([0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92] if include_ood else None),
+            ood_primary_score_method="ensemble",
+            ood_scores_by_method=(
+                {
+                    "ensemble": [0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92],
+                    "energy": [0.2, 0.22, 0.18, 0.19, 0.24, 0.86, 0.91, 0.88, 0.9, 0.94],
+                    "knn": [0.12, 0.19, 0.17, 0.2, 0.23, 0.78, 0.84, 0.8, 0.83, 0.88],
+                }
+                if include_ood
+                else {}
+            ),
+            ood_type_breakdown={
+                "field": {
+                    "sample_count": 5,
+                    "method_metrics": {
+                        "ensemble": {"ood_auroc": 0.85, "ood_false_positive_rate": 0.12, "in_distribution_samples": 10},
+                        "energy": {"ood_auroc": 0.88, "ood_false_positive_rate": 0.08, "in_distribution_samples": 10},
+                        "knn": {"ood_auroc": 0.82, "ood_false_positive_rate": 0.15, "in_distribution_samples": 10},
+                    },
+                }
+            },
+            sure_ds_f1=0.95,
+            conformal_empirical_coverage=0.97,
+            conformal_avg_set_size=1.0,
+            context={"split_name": split_name},
+        )
+
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        _evaluation_with_provenance,
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "ood": {"primary_score_method": "auto"},
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": True},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert (result.artifact_dir / "provenance_slice_breakdown.json").exists()
+    assert (result.artifact_dir / "test" / "ood_method_comparison.json").exists()
+    assert result.production_readiness["context"]["provenance_summary"]["available"] is True
+    assert result.production_readiness["context"]["provenance_summary"]["reported_dimension_count"] >= 1
+    assert result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
 
 def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mode(monkeypatch, tmp_path: Path):
     saved_methods = []
@@ -901,3 +1041,10 @@ def test_training_workflow_fails_for_supported_classes_below_min_reference_count
             data_dir=tmp_path / "runtime_data",
             output_dir=tmp_path / "outputs",
         )
+
+
+
+
+
+
+

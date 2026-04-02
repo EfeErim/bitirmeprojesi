@@ -54,6 +54,8 @@
         "grad_accumulation_steps": 4,
         "max_grad_norm": 1.0,
         "mixed_precision": "auto",
+        "loss_name": "cross_entropy",
+        "logitnorm_tau": 1.0,
         "label_smoothing": 0.0,
         "scheduler": {
           "name": "cosine",

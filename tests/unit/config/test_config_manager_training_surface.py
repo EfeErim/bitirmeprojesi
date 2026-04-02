@@ -31,6 +31,8 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["learning_rate"] == 0.0002
     assert continual["deterministic"] is False
     assert continual["optimization"]["grad_accumulation_steps"] == 1
+    assert continual["optimization"]["loss_name"] == "cross_entropy"
+    assert continual["optimization"]["logitnorm_tau"] == 1.0
     assert continual["optimization"]["scheduler"]["name"] == "cosine"
     assert continual["evaluation"]["best_metric"] == "val_loss"
     assert continual["evaluation"]["require_ood_for_gate"] is True
@@ -105,3 +107,21 @@ def test_extract_continual_training_config_normalizes_primary_score_method():
     normalized = extract_continual_training_config(payload)
 
     assert normalized["ood"]["primary_score_method"] == "knn"
+
+
+def test_extract_continual_training_config_normalizes_logitnorm_fields():
+    payload = {
+        "training": {
+            "continual": {
+                "optimization": {
+                    "loss_name": "logitnorm",
+                    "logitnorm_tau": "0.7",
+                }
+            }
+        }
+    }
+
+    normalized = extract_continual_training_config(payload)
+
+    assert normalized["optimization"]["loss_name"] == "logitnorm"
+    assert normalized["optimization"]["logitnorm_tau"] == 0.7

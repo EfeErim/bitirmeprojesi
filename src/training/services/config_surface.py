@@ -1,4 +1,4 @@
-"""Normalization helpers for the public continual-training config contract."""
+﻿"""Normalization helpers for the public continual-training config contract."""
 
 from __future__ import annotations
 
@@ -58,6 +58,8 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "max_grad_norm": 1.0,
             "mixed_precision": "auto",
             "label_smoothing": 0.0,
+            "loss_name": "cross_entropy",
+            "logitnorm_tau": 1.0,
             "scheduler": {
                 "name": "cosine",
                 "warmup_ratio": 0.1,
@@ -206,7 +208,8 @@ def normalize_continual_training_config(
     optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))
     optimization["mixed_precision"] = str(optimization.get("mixed_precision", "auto"))
     optimization["label_smoothing"] = float(optimization.get("label_smoothing", 0.0))
-
+    optimization["loss_name"] = str(optimization.get("loss_name", "cross_entropy"))
+    optimization["logitnorm_tau"] = float(optimization.get("logitnorm_tau", 1.0))
     scheduler["name"] = str(scheduler.get("name", "cosine"))
     scheduler["warmup_ratio"] = float(scheduler.get("warmup_ratio", 0.1))
     scheduler["min_lr"] = float(scheduler.get("min_lr", 1e-6))
@@ -255,3 +258,4 @@ def extract_continual_training_config(
     else:
         source = _coerce_legacy_flat_config(payload, model_name=model_name, device=device)
     return normalize_continual_training_config(source, model_name=model_name, device=device)
+

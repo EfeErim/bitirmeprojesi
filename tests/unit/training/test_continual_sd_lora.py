@@ -56,6 +56,8 @@ def test_config_from_training_config_accepts_v6_contract():
     assert cfg.knn_backend == "chunked"
     assert cfg.conformal_method == "aps"
     assert cfg.grad_accumulation_steps == 2
+    assert cfg.loss_name == "cross_entropy"
+    assert cfg.logitnorm_tau == pytest.approx(1.0)
     assert cfg.scheduler_name == "linear"
     assert cfg.evaluation_best_metric == "macro_f1"
     assert cfg.ood_primary_score_method == "auto"
@@ -96,6 +98,8 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["ood"]["conformal_raps_k_reg"] == 2
     assert payload["ood"]["primary_score_method"] == "auto"
     assert payload["optimization"]["grad_accumulation_steps"] == 2
+    assert payload["optimization"]["loss_name"] == "cross_entropy"
+    assert payload["optimization"]["logitnorm_tau"] == pytest.approx(1.0)
     assert payload["optimization"]["scheduler"]["name"] == "linear"
     assert payload["evaluation"]["best_metric"] == "macro_f1"
 
@@ -519,6 +523,59 @@ def test_training_step_uses_ber_loss_when_enabled():
     assert recorded["label_smoothing"] == pytest.approx(0.1)
     assert torch.allclose(recorded["class_weight"], torch.tensor([0.8, 1.2]))
     assert trainer._last_ber_components == {"ce": 0.7, "ber_old": 0.1, "ber_new": 0.2}
+
+
+def test_training_step_uses_logitnorm_loss_when_configured(monkeypatch):
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        loss_name="logitnorm",
+        logitnorm_tau=0.7,
+        label_smoothing=0.05,
+        extra={"class_balance": {"weights_by_class": {"healthy": 0.8, "disease_a": 1.2}}},
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.optimizer = object()
+    trainer.class_to_idx = {"healthy": 0, "disease_a": 1}
+    trainer._refresh_class_index_cache()
+    expected_loss = torch.tensor(1.23, requires_grad=True)
+    recorded = {}
+
+    def fake_logitnorm_loss(logits, labels, *, tau, weight=None, label_smoothing=0.0):
+        recorded["labels"] = labels.detach().clone()
+        recorded["tau"] = tau
+        recorded["weight"] = None if weight is None else weight.detach().cpu().clone()
+        recorded["label_smoothing"] = label_smoothing
+        return expected_loss
+
+    monkeypatch.setattr("src.training.continual_sd_lora.compute_logitnorm_loss", fake_logitnorm_loss)
+    trainer.forward_logits = lambda images: torch.full((images.shape[0], 2), 0.5, requires_grad=True)  # type: ignore[assignment]
+
+    loss = trainer.training_step(
+        {"images": torch.zeros(2, 3, 8, 8), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    assert loss is expected_loss
+    assert recorded["labels"].tolist() == [0, 1]
+    assert recorded["tau"] == pytest.approx(0.7)
+    assert recorded["label_smoothing"] == pytest.approx(0.05)
+    assert torch.allclose(recorded["weight"], torch.tensor([0.8, 1.2]))
+
+
+def test_config_rejects_logitnorm_when_ber_is_enabled():
+    with pytest.raises(ValueError, match="ber_enabled.*loss_name='logitnorm'"):
+        ContinualSDLoRAConfig(
+            backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+            target_modules_strategy="all_linear_transformer",
+            fusion_layers=[2],
+            fusion_output_dim=4,
+            device="cpu",
+            ber_enabled=True,
+            loss_name="logitnorm",
+        ).validate()
 
 
 def test_train_batch_emits_ber_metrics_when_enabled():

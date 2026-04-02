@@ -367,6 +367,7 @@ def test_data_prep_notebook_contract() -> None:
         "DATASET_ROOT =",
         "CROP_NAME =",
         "PART_NAME =",
+        "PROVENANCE_MANIFEST_PATH =",
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
         "PREPARED_CLASS_ROOT =",
@@ -383,6 +384,8 @@ def test_data_prep_notebook_contract() -> None:
     assert "build_grouped_dataset_plan" in full_source
     assert "build_prepared_dataset_key" in full_source
     assert "prepare_class_root_for_materialization" in full_source
+    assert 'STATE["provenance_manifest_path"] = provenance_manifest_path' in full_source
+    assert 'provenance_manifest_path=STATE.get("provenance_manifest_path")' in full_source
     assert "CONFIRM_PREPARE_FOR_MATERIALIZATION='prepare'" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
 
@@ -472,10 +475,13 @@ def test_training_notebook_bootstrap_contract() -> None:
 
     required_parameter_snippets = (
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
+        'PROVENANCE_MANIFEST_PATH = ""',
         'EPOCHS = ',
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',
         'LORA_R = ',
+        'LOSS_NAME = "cross_entropy"',
+        'LOGITNORM_TAU = 1.0',
         'OOD_FACTOR = ',
         'CHECKPOINT_EVERY_N_STEPS = ',
         'source=notebook_cell',
@@ -487,6 +493,19 @@ def test_training_notebook_bootstrap_contract() -> None:
             parameter_source,
             snippet,
             "Notebook 2 parameter cell is missing required direct parameter surface: {snippet}",
+        )
+
+    required_training_surface_snippets = (
+        'provenance_manifest_path=provenance_manifest_path',
+        'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
+        'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
+        'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
+    )
+    for snippet in required_training_surface_snippets:
+        _assert_contains(
+            full_source,
+            snippet,
+            "Notebook 2 training surface is missing required explicit config wiring: {snippet}",
         )
 
     forbidden_parameter_snippets = (

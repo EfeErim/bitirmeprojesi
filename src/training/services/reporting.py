@@ -1,4 +1,4 @@
-"""Artifact writers for training telemetry, plots, and validation reports."""
+﻿"""Artifact writers for training telemetry, plots, and validation reports."""
 
 from __future__ import annotations
 
@@ -15,8 +15,11 @@ from src.shared.artifacts import ArtifactStore
 from src.training.services.metrics import (
     build_production_readiness,
     compute_plan_metrics,
+    load_plan_targets,
+    validate_ood_metrics,
     write_plan_metric_artifact,
 )
+from src.training.services.ood_score_selection import SUPPORTED_CONCRETE_OOD_SCORE_METHODS
 
 _HISTORY_KEYS = [
     "train_loss",
@@ -334,12 +337,114 @@ def _resolve_context_metric(value: Any, context: Dict[str, Any], key: str) -> An
     return None if context_value is None else float(context_value)
 
 
+def _coerce_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_worst_slice_summary(method_name: str, ood_type_breakdown: Dict[str, Any] | None) -> Dict[str, Any]:
+    resolved_breakdown = dict(ood_type_breakdown or {})
+    candidates: list[Dict[str, Any]] = []
+    for ood_type, payload in resolved_breakdown.items():
+        row = dict(payload or {}) if isinstance(payload, dict) else {}
+        method_metrics = dict(row.get("method_metrics", {})) if isinstance(row.get("method_metrics"), dict) else {}
+        metrics = dict(method_metrics.get(method_name, {})) if method_name in method_metrics else {}
+        if not metrics:
+            metrics = dict(row.get("metrics", {})) if str(row.get("primary_score_method", "")) == method_name else {}
+        fpr = _coerce_float(metrics.get("ood_false_positive_rate"))
+        auroc = _coerce_float(metrics.get("ood_auroc"))
+        if fpr is None and auroc is None:
+            continue
+        candidates.append(
+            {
+                "slice_name": str(ood_type),
+                "sample_count": int(row.get("sample_count", 0) or 0),
+                "ood_false_positive_rate": fpr,
+                "ood_auroc": auroc,
+                "metrics": {
+                    "ood_false_positive_rate": fpr,
+                    "ood_auroc": auroc,
+                    "ood_samples": row.get("sample_count"),
+                    "in_distribution_samples": metrics.get("in_distribution_samples"),
+                },
+            }
+        )
+    if not candidates:
+        return {}
+    candidates.sort(
+        key=lambda item: (
+            float("-inf") if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
+            float("inf") if item.get("ood_auroc") is None else float(item["ood_auroc"]),
+            str(item.get("slice_name", "")),
+        )
+    )
+    return candidates[0]
+
+
+def _build_ood_method_comparison(
+    *,
+    split_name: str,
+    y_true: Sequence[int],
+    y_pred: Sequence[int],
+    ood_labels: Sequence[int] | None,
+    ood_scores_by_method: Dict[str, Sequence[float]] | None,
+    sure_ds_f1: float | None,
+    conformal_empirical_coverage: float | None,
+    conformal_avg_set_size: float | None,
+    context: Dict[str, Any],
+    ood_type_breakdown: Dict[str, Any] | None,
+) -> Dict[str, Any]:
+    if not ood_labels or not ood_scores_by_method:
+        return {}
+    targets = load_plan_targets()
+    methods: Dict[str, Any] = {}
+    for method_name in SUPPORTED_CONCRETE_OOD_SCORE_METHODS:
+        score_values = list(dict(ood_scores_by_method or {}).get(method_name, []) or [])
+        if not score_values:
+            continue
+        pooled_metrics = compute_plan_metrics(
+            y_true=y_true,
+            y_pred=y_pred,
+            ood_labels=ood_labels,
+            ood_scores=score_values,
+            sure_ds_f1=sure_ds_f1,
+            conformal_empirical_coverage=conformal_empirical_coverage,
+            conformal_avg_set_size=conformal_avg_set_size,
+        )
+        method_payload: Dict[str, Any] = {
+            "pooled_metrics": pooled_metrics,
+            "pooled_gate_eligible": bool(
+                validate_ood_metrics(pooled_metrics, targets, require_ood=True).get("passed", False)
+            ),
+        }
+        worst_slice = _extract_worst_slice_summary(method_name, ood_type_breakdown)
+        if worst_slice:
+            method_payload["worst_slice"] = worst_slice
+        methods[method_name] = method_payload
+    if not methods:
+        return {}
+    return {
+        "schema_version": "v1_ood_method_comparison",
+        "split_name": str(split_name),
+        "requested_primary_score_method": str(context.get("ood_requested_primary_score_method", "") or ""),
+        "selected_primary_score_method": str(context.get("ood_primary_score_method", "ensemble") or "ensemble"),
+        "selection_source": str(context.get("ood_primary_score_selection_source", "") or ""),
+        "ood_type_count": int(len(dict(ood_type_breakdown or {}))),
+        "methods": methods,
+    }
+
+
 def _build_ood_evidence_summary(
     *,
     split_name: str,
     metrics: Dict[str, Any],
     context: Dict[str, Any],
     ood_type_breakdown: Dict[str, Any] | None,
+    ood_method_comparison: Dict[str, Any] | None,
 ) -> Dict[str, Any]:
     sample_counts = {
         "classification_samples": (
@@ -367,8 +472,8 @@ def _build_ood_evidence_summary(
         "ood_types": ood_types,
         "ood_type_count": int(len(ood_types)),
         "ood_type_breakdown": resolved_breakdown,
+        "method_comparison": dict(ood_method_comparison or {}),
     }
-
 
 def _write_per_class_metrics_csv(path: Path, resolved_classes: Sequence[str], report_dict: Dict[str, Any]) -> Path:
     with path.open("w", encoding="utf-8", newline="") as handle:
@@ -653,6 +758,20 @@ def persist_ood_benchmark_artifacts(
     return {"summary_json": summary_json, "per_fold_csv": per_fold_csv}
 
 
+
+def persist_provenance_slice_breakdown_artifact(
+    *,
+    artifact_root: Path,
+    payload: Dict[str, Any],
+    telemetry: Any = None,
+) -> Dict[str, Path]:
+    artifact_root = Path(artifact_root)
+    artifact_root.mkdir(parents=True, exist_ok=True)
+    provenance_json = ArtifactStore(artifact_root).write_json("provenance_slice_breakdown.json", payload)
+    _copy_artifacts_to_telemetry(telemetry, [(provenance_json, "provenance_slice_breakdown.json")])
+    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
+    return {"provenance_slice_breakdown_json": provenance_json}
+
 def persist_production_readiness_artifact(
     *,
     artifact_root: Path,
@@ -704,6 +823,7 @@ def persist_validation_artifacts(
     emit_metric_gate: bool = True,
     ood_labels: Sequence[int] | None = None,
     ood_scores: Sequence[float] | None = None,
+    ood_scores_by_method: Dict[str, Sequence[float]] | None = None,
     sure_ds_f1: float | None = None,
     conformal_empirical_coverage: float | None = None,
     conformal_avg_set_size: float | None = None,
@@ -822,6 +942,36 @@ def persist_validation_artifacts(
     metric_context = dict(context or {"num_classes": len(resolved_classes)})
     if isinstance(ood_type_breakdown, dict) and ood_type_breakdown:
         metric_context["ood_type_breakdown"] = dict(ood_type_breakdown)
+
+    ood_method_comparison = _build_ood_method_comparison(
+        split_name=resolved_artifact_subdir,
+        y_true=y_true,
+        y_pred=y_pred,
+        ood_labels=ood_labels,
+        ood_scores_by_method=ood_scores_by_method,
+        sure_ds_f1=_resolve_context_metric(sure_ds_f1, metric_context, "sure_ds_f1"),
+        conformal_empirical_coverage=_resolve_context_metric(
+            conformal_empirical_coverage,
+            metric_context,
+            "conformal_empirical_coverage",
+        ),
+        conformal_avg_set_size=_resolve_context_metric(
+            conformal_avg_set_size,
+            metric_context,
+            "conformal_avg_set_size",
+        ),
+        context=metric_context,
+        ood_type_breakdown=ood_type_breakdown,
+    )
+    if ood_method_comparison:
+        metric_context["ood_method_comparison"] = dict(ood_method_comparison)
+        comparison_json = store.write_json("ood_method_comparison.json", ood_method_comparison)
+        paths["ood_method_comparison_json"] = comparison_json
+        _copy_artifacts_to_telemetry(
+            telemetry,
+            [(comparison_json, f"{resolved_telemetry_subdir}/ood_method_comparison.json")],
+        )
+
     metrics = compute_plan_metrics(
         y_true=y_true,
         y_pred=y_pred,
@@ -845,6 +995,7 @@ def persist_validation_artifacts(
             metrics=metrics,
             context=metric_context,
             ood_type_breakdown=ood_type_breakdown,
+            ood_method_comparison=ood_method_comparison,
         )
         summary_json = store.write_json("ood_evidence_summary.json", ood_evidence_summary)
         paths["ood_evidence_summary_json"] = summary_json

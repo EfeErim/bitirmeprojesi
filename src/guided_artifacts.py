@@ -1,4 +1,4 @@
-"""Human-readable guided artifact indexes for notebook and workflow outputs."""
+﻿"""Human-readable guided artifact indexes for notebook and workflow outputs."""
 
 from __future__ import annotations
 
@@ -181,9 +181,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "production_readiness.json",
         category="ood_and_readiness",
         priority="critical",
-        title_tr="Nihai üretim hazırlığı kararı",
-        description_tr="Deploy kararı için önce bakılması gereken ana dosya.",
-        reader_goal="Modelin üretime çıkmaya hazır olup olmadığını anlamak",
+        title_tr="Nihai Ã¼retim hazÄ±rlÄ±ÄŸÄ± kararÄ±",
+        description_tr="Deploy kararÄ± iÃ§in Ã¶nce bakÄ±lmasÄ± gereken ana dosya.",
+        reader_goal="Modelin Ã¼retime Ã§Ä±kmaya hazÄ±r olup olmadÄ±ÄŸÄ±nÄ± anlamak",
         decision_importance="deploy_decision",
         read_order=1,
     )
@@ -191,9 +191,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "training/summary.json",
         category="training",
         priority="critical",
-        title_tr="Eğitim özeti",
-        description_tr="Koşunun kimliği, sınıfları, temel metrikleri ve export yollarını özetler.",
-        reader_goal="Koşunun ne ürettiğini tek dosyada görmek",
+        title_tr="EÄŸitim Ã¶zeti",
+        description_tr="KoÅŸunun kimliÄŸi, sÄ±nÄ±flarÄ±, temel metrikleri ve export yollarÄ±nÄ± Ã¶zetler.",
+        reader_goal="KoÅŸunun ne Ã¼rettiÄŸini tek dosyada gÃ¶rmek",
         decision_importance="run_overview",
         read_order=2,
     )
@@ -201,9 +201,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "test/metric_gate.json",
         category="test",
         priority="critical",
-        title_tr="Test gate özeti",
-        description_tr="Held-out test performansının gate kararını içerir.",
-        reader_goal="Asıl test kararını görmek",
+        title_tr="Test gate Ã¶zeti",
+        description_tr="Held-out test performansÄ±nÄ±n gate kararÄ±nÄ± iÃ§erir.",
+        reader_goal="AsÄ±l test kararÄ±nÄ± gÃ¶rmek",
         decision_importance="deploy_decision",
         read_order=3,
     )
@@ -211,9 +211,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "validation/metric_gate.json",
         category="validation",
         priority="high",
-        title_tr="Validation gate özeti",
-        description_tr="Validation split üzerinde ölçülen yardımcı gate kararı.",
-        reader_goal="Test öncesi referans performansı görmek",
+        title_tr="Validation gate Ã¶zeti",
+        description_tr="Validation split Ã¼zerinde Ã¶lÃ§Ã¼len yardÄ±mcÄ± gate kararÄ±.",
+        reader_goal="Test Ã¶ncesi referans performansÄ± gÃ¶rmek",
         decision_importance="supporting_diagnostic",
         read_order=4,
     )
@@ -221,19 +221,29 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "ood_benchmark/summary.json",
         category="ood_and_readiness",
         priority="high",
-        title_tr="OOD benchmark özeti",
-        description_tr="Gerçek OOD yoksa kullanılan held-out benchmark sonucunu özetler.",
-        reader_goal="OOD fallback kanıtını incelemek",
+        title_tr="OOD benchmark Ã¶zeti",
+        description_tr="GerÃ§ek OOD yoksa kullanÄ±lan held-out benchmark sonucunu Ã¶zetler.",
+        reader_goal="OOD fallback kanÄ±tÄ±nÄ± incelemek",
         decision_importance="ood_decision",
         read_order=5,
+    )
+    add(
+        "provenance_slice_breakdown.json",
+        category="ood_and_readiness",
+        priority="medium",
+        title_tr="Provenance dilim kirilimi",
+        description_tr="Authoritative ID split uzerinde provenance slice metriklerini raporlar.",
+        reader_goal="Kaynak veya domain slice kaymalarini incelemek",
+        decision_importance="supporting_diagnostic",
+        read_order=6,
     )
     add(
         "training/history.json",
         category="training",
         priority="high",
-        title_tr="Epoch bazlı eğitim geçmişi",
-        description_tr="Epoch seviyesinde loss ve performans eğrilerini JSON olarak saklar.",
-        reader_goal="Eğitim trendini programatik olarak incelemek",
+        title_tr="Epoch bazlÄ± eÄŸitim geÃ§miÅŸi",
+        description_tr="Epoch seviyesinde loss ve performans eÄŸrilerini JSON olarak saklar.",
+        reader_goal="EÄŸitim trendini programatik olarak incelemek",
         decision_importance="training_diagnosis",
         read_order=10,
     )
@@ -241,9 +251,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "training/history.csv",
         category="training",
         priority="medium",
-        title_tr="Eğitim geçmişi CSV",
-        description_tr="Epoch metriklerinin tablo formatındaki karşılığı.",
-        reader_goal="Tablo halinde eğitim eğrilerini incelemek",
+        title_tr="EÄŸitim geÃ§miÅŸi CSV",
+        description_tr="Epoch metriklerinin tablo formatÄ±ndaki karÅŸÄ±lÄ±ÄŸÄ±.",
+        reader_goal="Tablo halinde eÄŸitim eÄŸrilerini incelemek",
         decision_importance="training_diagnosis",
         read_order=11,
     )
@@ -251,9 +261,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "training/results.csv",
         category="training",
         priority="medium",
-        title_tr="Eğitim sonuç tablosu",
-        description_tr="Özet epoch sonuçlarını CSV halinde sunar.",
-        reader_goal="Epoch sonuçlarını hızlıca taramak",
+        title_tr="EÄŸitim sonuÃ§ tablosu",
+        description_tr="Ã–zet epoch sonuÃ§larÄ±nÄ± CSV halinde sunar.",
+        reader_goal="Epoch sonuÃ§larÄ±nÄ± hÄ±zlÄ±ca taramak",
         decision_importance="training_diagnosis",
         read_order=12,
     )
@@ -262,8 +272,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         category="training",
         priority="medium",
         title_tr="Batch metrikleri",
-        description_tr="Adım bazlı loss, LR ve throughput kayıtlarını içerir.",
-        reader_goal="İnce taneli eğitim davranışını incelemek",
+        description_tr="AdÄ±m bazlÄ± loss, LR ve throughput kayÄ±tlarÄ±nÄ± iÃ§erir.",
+        reader_goal="Ä°nce taneli eÄŸitim davranÄ±ÅŸÄ±nÄ± incelemek",
         decision_importance="training_diagnosis",
         read_order=13,
     )
@@ -271,9 +281,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "training/results.png",
         category="training",
         priority="medium",
-        title_tr="Eğitim grafik paneli",
-        description_tr="Loss, accuracy ve throughput eğrilerini tek görselde toplar.",
-        reader_goal="Eğitimin genel seyrini görsel olarak görmek",
+        title_tr="EÄŸitim grafik paneli",
+        description_tr="Loss, accuracy ve throughput eÄŸrilerini tek gÃ¶rselde toplar.",
+        reader_goal="EÄŸitimin genel seyrini gÃ¶rsel olarak gÃ¶rmek",
         decision_importance="training_diagnosis",
         read_order=14,
     )
@@ -284,9 +294,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
                 base_dir=base_dir,
                 category="training",
                 priority="low",
-                title_tr=f"Eğitim eğrisi görseli: {curve_path.name}",
-                description_tr="Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
-                reader_goal="Belirli epoch anlarındaki eğitim eğrilerini görmek",
+                title_tr=f"EÄŸitim eÄŸrisi gÃ¶rseli: {curve_path.name}",
+                description_tr="Notebook tarafÄ±ndan ara/final aÅŸamada kaydedilen eÄŸitim eÄŸrisi gÃ¶rseli.",
+                reader_goal="Belirli epoch anlarÄ±ndaki eÄŸitim eÄŸrilerini gÃ¶rmek",
                 generated_by=generated_by,
                 decision_importance="training_diagnosis",
                 read_order=20,
@@ -298,9 +308,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             f"{split_name}/classification_report.txt",
             category=split_name,
             priority="medium",
-            title_tr=f"{split_name.title()} sınıflandırma raporu",
-            description_tr="Precision, recall ve F1 özetini metin formatında sunar.",
-            reader_goal="Sınıf bazlı metrikleri metin olarak okumak",
+            title_tr=f"{split_name.title()} sÄ±nÄ±flandÄ±rma raporu",
+            description_tr="Precision, recall ve F1 Ã¶zetini metin formatÄ±nda sunar.",
+            reader_goal="SÄ±nÄ±f bazlÄ± metrikleri metin olarak okumak",
             decision_importance="quality_diagnosis",
             read_order=order_base,
         )
@@ -308,9 +318,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             f"{split_name}/classification_report.json",
             category=split_name,
             priority="medium",
-            title_tr=f"{split_name.title()} sınıflandırma raporu JSON",
-            description_tr="Aynı raporun makine-okur JSON sürümü.",
-            reader_goal="Raporu programatik olarak tüketmek",
+            title_tr=f"{split_name.title()} sÄ±nÄ±flandÄ±rma raporu JSON",
+            description_tr="AynÄ± raporun makine-okur JSON sÃ¼rÃ¼mÃ¼.",
+            reader_goal="Raporu programatik olarak tÃ¼ketmek",
             decision_importance="quality_diagnosis",
             read_order=order_base + 1,
         )
@@ -318,9 +328,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             f"{split_name}/per_class_metrics.csv",
             category=split_name,
             priority="medium",
-            title_tr=f"{split_name.title()} sınıf bazlı metrikler",
-            description_tr="Her sınıf için precision, recall, F1 ve support değerlerini içerir.",
-            reader_goal="Hangi sınıfta sorun olduğunu görmek",
+            title_tr=f"{split_name.title()} sÄ±nÄ±f bazlÄ± metrikler",
+            description_tr="Her sÄ±nÄ±f iÃ§in precision, recall, F1 ve support deÄŸerlerini iÃ§erir.",
+            reader_goal="Hangi sÄ±nÄ±fta sorun olduÄŸunu gÃ¶rmek",
             decision_importance="quality_diagnosis",
             read_order=order_base + 2,
         )
@@ -329,8 +339,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             category=split_name,
             priority="medium",
             title_tr=f"{split_name.title()} confusion matrix CSV",
-            description_tr="Ham confusion matrix değerlerini tablo halinde tutar.",
-            reader_goal="Karışan sınıf çiftlerini sayısal görmek",
+            description_tr="Ham confusion matrix deÄŸerlerini tablo halinde tutar.",
+            reader_goal="KarÄ±ÅŸan sÄ±nÄ±f Ã§iftlerini sayÄ±sal gÃ¶rmek",
             decision_importance="quality_diagnosis",
             read_order=order_base + 3,
         )
@@ -338,9 +348,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             f"{split_name}/confusion_matrix.png",
             category=split_name,
             priority="medium",
-            title_tr=f"{split_name.title()} confusion matrix görseli",
-            description_tr="Ham confusion matrix'in görsel hali.",
-            reader_goal="Hangi sınıfların karıştığını hızlı görmek",
+            title_tr=f"{split_name.title()} confusion matrix gÃ¶rseli",
+            description_tr="Ham confusion matrix'in gÃ¶rsel hali.",
+            reader_goal="Hangi sÄ±nÄ±flarÄ±n karÄ±ÅŸtÄ±ÄŸÄ±nÄ± hÄ±zlÄ± gÃ¶rmek",
             decision_importance="quality_diagnosis",
             read_order=order_base + 4,
         )
@@ -349,8 +359,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             category=split_name,
             priority="medium",
             title_tr=f"{split_name.title()} normalize confusion matrix",
-            description_tr="Sınıf büyüklüğünden bağımsız normalize confusion matrix görseli.",
-            reader_goal="Oransal hata desenini görmek",
+            description_tr="SÄ±nÄ±f bÃ¼yÃ¼klÃ¼ÄŸÃ¼nden baÄŸÄ±msÄ±z normalize confusion matrix gÃ¶rseli.",
+            reader_goal="Oransal hata desenini gÃ¶rmek",
             decision_importance="quality_diagnosis",
             read_order=order_base + 5,
         )
@@ -358,19 +368,29 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             f"{split_name}/ood_type_breakdown.json",
             category=split_name,
             priority="medium",
-            title_tr=f"{split_name.title()} OOD tip kırılımı",
-            description_tr="OOD klasör alt tiplerine göre metrik kırılımını içerir.",
-            reader_goal="Hangi OOD alt tipinde sorun olduğunu görmek",
+            title_tr=f"{split_name.title()} OOD tip kÄ±rÄ±lÄ±mÄ±",
+            description_tr="OOD klasÃ¶r alt tiplerine gÃ¶re metrik kÄ±rÄ±lÄ±mÄ±nÄ± iÃ§erir.",
+            reader_goal="Hangi OOD alt tipinde sorun olduÄŸunu gÃ¶rmek",
             decision_importance="ood_decision",
             read_order=order_base + 6,
+        )
+        add(
+            f"{split_name}/ood_method_comparison.json",
+            category=split_name,
+            priority="medium",
+            title_tr=f"{split_name.title()} OOD method comparison",
+            description_tr="Pooled ve slice-aware OOD score yontem karsilastirmasini icerir.",
+            reader_goal="Ensemble, energy ve knn kanitlarini karsilastirmak",
+            decision_importance="ood_decision",
+            read_order=order_base + 7,
         )
         add(
             f"{split_name}/ood_evidence_summary.json",
             category=split_name,
             priority="high",
-            title_tr=f"{split_name.title()} OOD kanıt özeti",
-            description_tr="Bu split için OOD örnek sayıları ve özet metrikleri gösterir.",
-            reader_goal="OOD kanıtının yeterliliğini görmek",
+            title_tr=f"{split_name.title()} OOD kanÄ±t Ã¶zeti",
+            description_tr="Bu split iÃ§in OOD Ã¶rnek sayÄ±larÄ± ve Ã¶zet metrikleri gÃ¶sterir.",
+            reader_goal="OOD kanÄ±tÄ±nÄ±n yeterliliÄŸini gÃ¶rmek",
             decision_importance="ood_decision",
             read_order=order_base + 7,
         )
@@ -410,8 +430,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         category="ood_and_readiness",
         priority="medium",
         title_tr="OOD benchmark fold tablosu",
-        description_tr="Held-out benchmark fold sonuçlarını tek tabloda toplar.",
-        reader_goal="Fold bazında OOD performansını incelemek",
+        description_tr="Held-out benchmark fold sonuÃ§larÄ±nÄ± tek tabloda toplar.",
+        reader_goal="Fold bazÄ±nda OOD performansÄ±nÄ± incelemek",
         decision_importance="ood_decision",
         read_order=50,
     )
@@ -419,9 +439,9 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         "ood_benchmark/progress.json",
         category="ood_and_readiness",
         priority="low",
-        title_tr="OOD benchmark ilerleme kaydı",
-        description_tr="Uzun benchmark çalışırken ara durum bilgisini tutar.",
-        reader_goal="Benchmark sürecinin hangi aşamada kaldığını görmek",
+        title_tr="OOD benchmark ilerleme kaydÄ±",
+        description_tr="Uzun benchmark Ã§alÄ±ÅŸÄ±rken ara durum bilgisini tutar.",
+        reader_goal="Benchmark sÃ¼recinin hangi aÅŸamada kaldÄ±ÄŸÄ±nÄ± gÃ¶rmek",
         decision_importance="runtime_diagnostic",
         read_order=51,
     )
@@ -430,8 +450,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
             continue
         fold_name = fold_dir.name
         for filename, title, order in (
-            ("metric_gate.json", "OOD fold gate özeti", 60),
-            ("failure.json", "OOD fold hata özeti", 61),
+            ("metric_gate.json", "OOD fold gate Ã¶zeti", 60),
+            ("failure.json", "OOD fold hata Ã¶zeti", 61),
             ("failure_traceback.txt", "OOD fold traceback", 62),
         ):
             target = fold_dir / filename
@@ -444,8 +464,8 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
                     category="ood_and_readiness",
                     priority="low" if "failure" not in filename else "high",
                     title_tr=f"{title}: {fold_name}",
-                    description_tr=f"Held-out fold '{fold_name}' için üretilen yardımcı artefact.",
-                    reader_goal="Tek bir fold özelinde ayrıntı incelemek",
+                    description_tr=f"Held-out fold '{fold_name}' iÃ§in Ã¼retilen yardÄ±mcÄ± artefact.",
+                    reader_goal="Tek bir fold Ã¶zelinde ayrÄ±ntÄ± incelemek",
                     generated_by=generated_by,
                     decision_importance="ood_decision" if "metric_gate" in filename else "runtime_diagnostic",
                     read_order=order,
@@ -490,9 +510,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "prep_summary.json",
         category="summary",
         priority="critical",
-        title_tr="Prep ana özeti",
-        description_tr="Notebook 0 koşusunun en önemli audit özetini içerir.",
-        reader_goal="Dataset prep sonucunu tek dosyada görmek",
+        title_tr="Prep ana Ã¶zeti",
+        description_tr="Notebook 0 koÅŸusunun en Ã¶nemli audit Ã¶zetini iÃ§erir.",
+        reader_goal="Dataset prep sonucunu tek dosyada gÃ¶rmek",
         decision_importance="prep_gate",
         read_order=1,
     )
@@ -500,9 +520,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "proposed_split_manifest.json",
         category="split_plan",
         priority="critical",
-        title_tr="Önerilen split manifesti",
-        description_tr="Her görüntünün hangi split'e gideceğini ve blokajları içerir.",
-        reader_goal="Gerçek split planını incelemek",
+        title_tr="Ã–nerilen split manifesti",
+        description_tr="Her gÃ¶rÃ¼ntÃ¼nÃ¼n hangi split'e gideceÄŸini ve blokajlarÄ± iÃ§erir.",
+        reader_goal="GerÃ§ek split planÄ±nÄ± incelemek",
         decision_importance="prep_gate",
         read_order=2,
     )
@@ -511,8 +531,8 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         category="split_plan",
         priority="high",
         title_tr="OOD handoff kontrol listesi",
-        description_tr="Prep sonrası OOD veri hazırlığı için kalan adımları gösterir.",
-        reader_goal="OOD tarafında ne eksik olduğunu görmek",
+        description_tr="Prep sonrasÄ± OOD veri hazÄ±rlÄ±ÄŸÄ± iÃ§in kalan adÄ±mlarÄ± gÃ¶sterir.",
+        reader_goal="OOD tarafÄ±nda ne eksik olduÄŸunu gÃ¶rmek",
         decision_importance="prep_gate",
         read_order=3,
     )
@@ -521,8 +541,8 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         category="label_normalization",
         priority="high",
         title_tr="Etiket normalizasyon raporu",
-        description_tr="Ham sınıf klasör adlarının normalize sınıf adlarına nasıl eşlendiğini gösterir.",
-        reader_goal="Sınıf isimlerinin doğru yorumlandığını doğrulamak",
+        description_tr="Ham sÄ±nÄ±f klasÃ¶r adlarÄ±nÄ±n normalize sÄ±nÄ±f adlarÄ±na nasÄ±l eÅŸlendiÄŸini gÃ¶sterir.",
+        reader_goal="SÄ±nÄ±f isimlerinin doÄŸru yorumlandÄ±ÄŸÄ±nÄ± doÄŸrulamak",
         decision_importance="data_quality",
         read_order=10,
     )
@@ -530,9 +550,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "class_health_report.json",
         category="class_health",
         priority="high",
-        title_tr="Sınıf sağlık raporu",
-        description_tr="Her sınıfın aile sayısı, hedef split dağılımı ve risk özetini içerir.",
-        reader_goal="Hangi sınıfların kırılgan olduğunu görmek",
+        title_tr="SÄ±nÄ±f saÄŸlÄ±k raporu",
+        description_tr="Her sÄ±nÄ±fÄ±n aile sayÄ±sÄ±, hedef split daÄŸÄ±lÄ±mÄ± ve risk Ã¶zetini iÃ§erir.",
+        reader_goal="Hangi sÄ±nÄ±flarÄ±n kÄ±rÄ±lgan olduÄŸunu gÃ¶rmek",
         decision_importance="data_quality",
         read_order=11,
     )
@@ -540,9 +560,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "dataset_manifest.csv",
         category="manifests",
         priority="medium",
-        title_tr="Tüm görüntü manifesti",
-        description_tr="Taranan tüm görüntülerin kalite ve hash alanlarını içerir.",
-        reader_goal="Ham veri kayıtlarını tablo halinde incelemek",
+        title_tr="TÃ¼m gÃ¶rÃ¼ntÃ¼ manifesti",
+        description_tr="Taranan tÃ¼m gÃ¶rÃ¼ntÃ¼lerin kalite ve hash alanlarÄ±nÄ± iÃ§erir.",
+        reader_goal="Ham veri kayÄ±tlarÄ±nÄ± tablo halinde incelemek",
         decision_importance="data_audit",
         read_order=20,
     )
@@ -551,8 +571,8 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         category="manifests",
         priority="medium",
         title_tr="Aile manifesti",
-        description_tr="Görüntü aileleri ve split atamalarını satır bazında gösterir.",
-        reader_goal="Aile bazlı grouping sonucunu görmek",
+        description_tr="GÃ¶rÃ¼ntÃ¼ aileleri ve split atamalarÄ±nÄ± satÄ±r bazÄ±nda gÃ¶sterir.",
+        reader_goal="Aile bazlÄ± grouping sonucunu gÃ¶rmek",
         decision_importance="data_audit",
         read_order=21,
     )
@@ -560,9 +580,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "same_class_review_candidates.csv",
         category="review_items",
         priority="medium",
-        title_tr="Aynı sınıf inceleme adayları",
-        description_tr="Borderline benzerlik gösteren aynı sınıf görüntü çiftleri.",
-        reader_goal="Manuel inceleme gerektiren çiftleri görmek",
+        title_tr="AynÄ± sÄ±nÄ±f inceleme adaylarÄ±",
+        description_tr="Borderline benzerlik gÃ¶steren aynÄ± sÄ±nÄ±f gÃ¶rÃ¼ntÃ¼ Ã§iftleri.",
+        reader_goal="Manuel inceleme gerektiren Ã§iftleri gÃ¶rmek",
         decision_importance="data_quality",
         read_order=30,
     )
@@ -570,9 +590,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "same_class_review_clusters.csv",
         category="review_items",
         priority="medium",
-        title_tr="Aynı sınıf inceleme kümeleri",
-        description_tr="Manuel veya otomatik çözüm için gruplanmış review kümeleri.",
-        reader_goal="Review işini küme bazında organize etmek",
+        title_tr="AynÄ± sÄ±nÄ±f inceleme kÃ¼meleri",
+        description_tr="Manuel veya otomatik Ã§Ã¶zÃ¼m iÃ§in gruplanmÄ±ÅŸ review kÃ¼meleri.",
+        reader_goal="Review iÅŸini kÃ¼me bazÄ±nda organize etmek",
         decision_importance="data_quality",
         read_order=31,
     )
@@ -580,9 +600,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "same_class_auto_resolved_clusters.csv",
         category="review_items",
         priority="low",
-        title_tr="Otomatik çözülen review kümeleri",
-        description_tr="Düşük riskli olduğu için otomatik çözülen kümeler.",
-        reader_goal="Hangi review kümelerinin otomatik kapandığını görmek",
+        title_tr="Otomatik Ã§Ã¶zÃ¼len review kÃ¼meleri",
+        description_tr="DÃ¼ÅŸÃ¼k riskli olduÄŸu iÃ§in otomatik Ã§Ã¶zÃ¼len kÃ¼meler.",
+        reader_goal="Hangi review kÃ¼melerinin otomatik kapandÄ±ÄŸÄ±nÄ± gÃ¶rmek",
         decision_importance="data_quality",
         read_order=32,
     )
@@ -590,9 +610,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "same_class_high_risk_clusters.csv",
         category="review_items",
         priority="high",
-        title_tr="Yüksek riskli review kümeleri",
-        description_tr="Manuel kontrol gerektiren yüksek risk kümeleri.",
-        reader_goal="Öncelikli insan inceleme listesini görmek",
+        title_tr="YÃ¼ksek riskli review kÃ¼meleri",
+        description_tr="Manuel kontrol gerektiren yÃ¼ksek risk kÃ¼meleri.",
+        reader_goal="Ã–ncelikli insan inceleme listesini gÃ¶rmek",
         decision_importance="prep_gate",
         read_order=33,
     )
@@ -600,9 +620,9 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         "cross_class_conflicts.csv",
         category="review_items",
         priority="critical",
-        title_tr="Sınıflar arası çakışmalar",
-        description_tr="Farklı sınıflara düşen ama çakışan veya kopya görünen örnekler.",
-        reader_goal="Split ve etiket hatalarını görmek",
+        title_tr="SÄ±nÄ±flar arasÄ± Ã§akÄ±ÅŸmalar",
+        description_tr="FarklÄ± sÄ±nÄ±flara dÃ¼ÅŸen ama Ã§akÄ±ÅŸan veya kopya gÃ¶rÃ¼nen Ã¶rnekler.",
+        reader_goal="Split ve etiket hatalarÄ±nÄ± gÃ¶rmek",
         decision_importance="prep_gate",
         read_order=34,
     )
@@ -611,8 +631,8 @@ def _find_prep_entries(artifact_root: Path, *, base_dir: Path, generated_by: str
         category="review_items",
         priority="medium",
         title_tr="Exact duplicate listesi",
-        description_tr="Aynı hash'e sahip görüntü gruplarını listeler.",
-        reader_goal="Birebir kopyaları temizlemek",
+        description_tr="AynÄ± hash'e sahip gÃ¶rÃ¼ntÃ¼ gruplarÄ±nÄ± listeler.",
+        reader_goal="Birebir kopyalarÄ± temizlemek",
         decision_importance="data_quality",
         read_order=35,
     )
@@ -627,15 +647,15 @@ def _render_section_markdown(
 ) -> str:
     lines = [f"# {heading}", "", intro.strip(), ""]
     if not entries:
-        lines.extend(["Bu bölüm için mevcut artefact bulunamadı.", ""])
+        lines.extend(["Bu bÃ¶lÃ¼m iÃ§in mevcut artefact bulunamadÄ±.", ""])
         return "\n".join(lines).rstrip() + "\n"
     for entry in entries:
         lines.append(f"## {entry['title_tr']}")
         lines.append(f"- Yol: `{entry['relative_path']}`")
-        lines.append(f"- Öncelik: `{entry['priority']}`")
+        lines.append(f"- Ã–ncelik: `{entry['priority']}`")
         lines.append(f"- Format: `{entry['format']}`")
-        lines.append(f"- Amaç: {entry['reader_goal']}")
-        lines.append(f"- Açıklama: {entry['description_tr']}")
+        lines.append(f"- AmaÃ§: {entry['reader_goal']}")
+        lines.append(f"- AÃ§Ä±klama: {entry['description_tr']}")
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
@@ -801,9 +821,9 @@ def refresh_training_guided_artifacts(
 
     start_here = "\n".join(
         [
-            "# Buradan Başla",
+            "# Buradan BaÅŸla",
             "",
-            "Ham artefact dosyaları korunur. Önce şu sırayı izleyin:",
+            "Ham artefact dosyalarÄ± korunur. Ã–nce ÅŸu sÄ±rayÄ± izleyin:",
             "",
             "1. `guided/01_run_overview.json`",
             "2. `production_readiness.json`",
@@ -811,7 +831,7 @@ def refresh_training_guided_artifacts(
             "4. `test/metric_gate.json`",
             "5. `ood_benchmark/summary.json` veya `test/ood_evidence_summary.json`",
             "",
-            "Tanı için:",
+            "TanÄ± iÃ§in:",
             "- `guided/10_training.md`",
             "- `guided/20_validation.md`",
             "- `guided/30_test.md`",
@@ -819,29 +839,29 @@ def refresh_training_guided_artifacts(
             "- `guided/50_adapter_export.md`",
             "- `guided/60_logs_and_checkpoints.md`",
             "",
-            f"Katalog tabanı: `{base_dir.resolve().as_posix()}`",
+            f"Katalog tabanÄ±: `{base_dir.resolve().as_posix()}`",
             "",
         ]
     )
 
     category_to_doc = {
-        "training": ("10_training.md", "Eğitim Dosyaları", "Bu bölüm eğitim geçmişi ve eğri dosyalarını özetler."),
-        "validation": ("20_validation.md", "Validation Dosyaları", "Bu bölüm validation split artefactlerini toplar."),
-        "test": ("30_test.md", "Test Dosyaları", "Bu bölüm held-out test artefactlerini toplar."),
+        "training": ("10_training.md", "EÄŸitim DosyalarÄ±", "Bu bÃ¶lÃ¼m eÄŸitim geÃ§miÅŸi ve eÄŸri dosyalarÄ±nÄ± Ã¶zetler."),
+        "validation": ("20_validation.md", "Validation DosyalarÄ±", "Bu bÃ¶lÃ¼m validation split artefactlerini toplar."),
+        "test": ("30_test.md", "Test DosyalarÄ±", "Bu bÃ¶lÃ¼m held-out test artefactlerini toplar."),
         "ood_and_readiness": (
             "40_ood_and_readiness.md",
             "OOD ve Readiness",
-            "Bu bölüm OOD kanıtı ve nihai readiness kararını toplar.",
+            "Bu bÃ¶lÃ¼m OOD kanÄ±tÄ± ve nihai readiness kararÄ±nÄ± toplar.",
         ),
         "adapter_export": (
             "50_adapter_export.md",
             "Adapter Export",
-            "Bu bölüm adapter export ve notebook export dosyalarını listeler.",
+            "Bu bÃ¶lÃ¼m adapter export ve notebook export dosyalarÄ±nÄ± listeler.",
         ),
         "logs_and_checkpoints": (
             "60_logs_and_checkpoints.md",
             "Log ve Checkpoint",
-            "Bu bölüm runtime logları ve checkpoint kayıtlarını listeler.",
+            "Bu bÃ¶lÃ¼m runtime loglarÄ± ve checkpoint kayÄ±tlarÄ±nÄ± listeler.",
         ),
     }
 
@@ -907,29 +927,29 @@ def refresh_prep_guided_artifacts(
     )
     start_here = "\n".join(
         [
-            "# Buradan Başla",
+            "# Buradan BaÅŸla",
             "",
-            "Notebook 0 çıktılarında hiçbir ham dosya silinmez. Önce şu sırayla ilerleyin:",
+            "Notebook 0 Ã§Ä±ktÄ±larÄ±nda hiÃ§bir ham dosya silinmez. Ã–nce ÅŸu sÄ±rayla ilerleyin:",
             "",
             "1. `guided/01_prep_overview.json`",
             "2. `prep_summary.json`",
             "3. `proposed_split_manifest.json`",
             "4. `cross_class_conflicts.csv` ve `same_class_high_risk_clusters.csv`",
             "",
-            f"Katalog tabanı: `{base_dir.resolve().as_posix()}`",
+            f"Katalog tabanÄ±: `{base_dir.resolve().as_posix()}`",
             "",
         ]
     )
     category_to_doc = {
-        "summary": ("10_summary.md", "Prep Özeti", "Ana prep özeti ve koşu görünümü."),
+        "summary": ("10_summary.md", "Prep Ã–zeti", "Ana prep Ã¶zeti ve koÅŸu gÃ¶rÃ¼nÃ¼mÃ¼."),
         "label_normalization": (
             "20_label_normalization.md",
             "Etiket Normalizasyonu",
-            "Ham sınıf isimlerinin normalize sonuçları.",
+            "Ham sÄ±nÄ±f isimlerinin normalize sonuÃ§larÄ±.",
         ),
-        "class_health": ("30_class_health.md", "Sınıf Sağlığı", "Sınıf bazlı risk ve dağılım raporları."),
-        "split_plan": ("40_split_plan.md", "Split Planı", "Önerilen split ve OOD handoff kararları."),
-        "review_items": ("50_review_items.md", "İnceleme Öğeleri", "Manuel inceleme gerektiren çift ve kümeler."),
+        "class_health": ("30_class_health.md", "SÄ±nÄ±f SaÄŸlÄ±ÄŸÄ±", "SÄ±nÄ±f bazlÄ± risk ve daÄŸÄ±lÄ±m raporlarÄ±."),
+        "split_plan": ("40_split_plan.md", "Split PlanÄ±", "Ã–nerilen split ve OOD handoff kararlarÄ±."),
+        "review_items": ("50_review_items.md", "Ä°nceleme Ã–ÄŸeleri", "Manuel inceleme gerektiren Ã§ift ve kÃ¼meler."),
         "manifests": ("60_manifests.md", "Manifestler", "Tam veri ve aile manifestleri."),
     }
 
@@ -956,3 +976,4 @@ def refresh_prep_guided_artifacts(
         "overview": overview_payload,
         "paths": {path.name: str(path) for path in written_paths},
     }
+

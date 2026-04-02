@@ -161,6 +161,28 @@ def _collect_extra_training_fields(normalized: Dict[str, Any]) -> Dict[str, Any]
     }
 
 
+def _normalize_logits_for_logitnorm(logits: torch.Tensor, *, tau: float, eps: float = 1e-7) -> torch.Tensor:
+    norms = torch.linalg.vector_norm(logits, ord=2, dim=1, keepdim=True).clamp_min(float(eps))
+    return logits / norms / float(max(float(tau), float(eps)))
+
+
+def compute_logitnorm_loss(
+    logits: torch.Tensor,
+    labels: torch.Tensor,
+    *,
+    tau: float,
+    weight: Optional[torch.Tensor] = None,
+    label_smoothing: float = 0.0,
+) -> torch.Tensor:
+    normalized_logits = _normalize_logits_for_logitnorm(logits, tau=float(tau))
+    return nn.functional.cross_entropy(
+        normalized_logits,
+        labels,
+        weight=weight,
+        label_smoothing=float(label_smoothing),
+    )
+
+
 @dataclass
 class ContinualSDLoRAConfig:
     """Runtime configuration for v6 continual SD-LoRA training."""
@@ -187,6 +209,8 @@ class ContinualSDLoRAConfig:
     grad_accumulation_steps: int = 4
     max_grad_norm: float = 1.0
     mixed_precision: str = "auto"
+    loss_name: str = "cross_entropy"
+    logitnorm_tau: float = 1.0
     label_smoothing: float = 0.0
     scheduler_name: str = "cosine"
     scheduler_warmup_ratio: float = 0.1
@@ -241,6 +265,10 @@ class ContinualSDLoRAConfig:
             raise ValueError("grad_accumulation_steps must be positive.")
         if self.max_grad_norm < 0.0:
             raise ValueError("max_grad_norm must be non-negative.")
+        if self.loss_name not in {"cross_entropy", "logitnorm"}:
+            raise ValueError("optimization.loss_name must be one of: cross_entropy, logitnorm.")
+        if self.logitnorm_tau <= 0.0:
+            raise ValueError("optimization.logitnorm_tau must be positive.")
         if self.label_smoothing < 0.0:
             raise ValueError("label_smoothing must be non-negative.")
         if self.mixed_precision not in {"off", "auto", "fp16", "bf16"}:
@@ -263,6 +291,8 @@ class ContinualSDLoRAConfig:
             )
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
+        if self.ber_enabled and self.loss_name == "logitnorm":
+            raise ValueError("training.continual.ood.ber_enabled is incompatible with optimization.loss_name='logitnorm'.")
         if self.ber_warmup_steps < 0:
             raise ValueError("ber_warmup_steps must be non-negative.")
         if self.energy_temperature_mode not in {"fixed", "auto"}:
@@ -351,6 +381,8 @@ class ContinualSDLoRAConfig:
                 "grad_accumulation_steps": self.grad_accumulation_steps,
                 "max_grad_norm": self.max_grad_norm,
                 "mixed_precision": self.mixed_precision,
+                "loss_name": self.loss_name,
+                "logitnorm_tau": self.logitnorm_tau,
                 "label_smoothing": self.label_smoothing,
                 "scheduler": {
                     "name": self.scheduler_name,
@@ -451,6 +483,8 @@ class ContinualSDLoRAConfig:
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 4)),
             max_grad_norm=float(optimization.get("max_grad_norm", 1.0)),
             mixed_precision=str(optimization.get("mixed_precision", "auto")),
+            loss_name=str(optimization.get("loss_name", "cross_entropy")),
+            logitnorm_tau=float(optimization.get("logitnorm_tau", 1.0)),
             label_smoothing=float(optimization.get("label_smoothing", 0.0)),
             scheduler_name=str(scheduler.get("name", "cosine")),
             scheduler_warmup_ratio=float(scheduler.get("warmup_ratio", 0.1)),
@@ -779,6 +813,14 @@ class ContinualSDLoRATrainer:
                     class_weight=self.class_balance_weights,
                 )
                 return total_loss
+            if self.config.loss_name == "logitnorm":
+                return compute_logitnorm_loss(
+                    logits,
+                    labels,
+                    tau=float(self.config.logitnorm_tau),
+                    weight=self.class_balance_weights,
+                    label_smoothing=float(self.config.label_smoothing),
+                )
             return nn.functional.cross_entropy(
                 logits,
                 labels,
