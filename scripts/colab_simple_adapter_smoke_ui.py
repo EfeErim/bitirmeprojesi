@@ -23,6 +23,21 @@ except Exception:  # pragma: no cover - notebook runtime fallback
     widgets = None
 
 
+def _ensure_colab_widget_manager() -> bool:
+    """Enable the Colab widget bridge before rendering FileUpload widgets."""
+    try:
+        from google.colab import output as colab_output
+    except Exception:
+        return False
+
+    enable_manager = getattr(colab_output, "enable_custom_widget_manager", None)
+    if enable_manager is None:
+        return False
+
+    enable_manager()
+    return True
+
+
 def _extract_upload_record(upload_value: Any) -> tuple[Optional[str], Optional[bytes]]:
     if isinstance(upload_value, dict):
         records = list(upload_value.values())
@@ -48,6 +63,50 @@ def _extract_upload_record(upload_value: Any) -> tuple[Optional[str], Optional[b
     return str(name), bytes(content)
 
 
+def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> str:
+    confidence = float(result.get("confidence", 0.0)) * 100.0
+    ood_label = "OOD" if bool(result.get("is_ood")) else "In-distribution"
+    threshold = result.get("decision_threshold")
+    score = result.get("primary_score")
+    score_text = "-" if score is None else f"{float(score):.4f}"
+    threshold_text = "-" if threshold is None else f"{float(threshold):.4f}"
+    view_consistency = dict(result.get("view_consistency", {}))
+    uncertainty = dict(result.get("uncertainty_diagnostics", {}))
+    robustness_warning_codes = [str(code) for code in list(view_consistency.get("warning_codes", []))]
+    uncertainty_warning_codes = [str(code) for code in list(uncertainty.get("warning_codes", []))]
+    if bool(view_consistency.get("stable")):
+        robustness_status = "Stable across derived views"
+        robustness_accent = "#0f766e"
+    else:
+        headline_warnings = robustness_warning_codes[:2] or uncertainty_warning_codes[:2]
+        if headline_warnings:
+            robustness_status = "Review recommended: " + ", ".join(headline_warnings)
+        else:
+            robustness_status = "Review recommended"
+        robustness_accent = "#b45309"
+    robustness_warning_text = ", ".join(robustness_warning_codes) if robustness_warning_codes else "-"
+    uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
+    return f"""
+    <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#111827;">Tahmin Sonucu</div>
+      <div style="color:#374151;"><b style="color:#111827;">Adapter:</b> {escape(str(summary['resolved_adapter_dir']))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Crop:</b> {escape(str(summary['crop_name']))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Sinif:</b> {escape(str(result.get('predicted_class') or '-'))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Confidence:</b> {confidence:.2f}%</div>
+      <div style="color:#374151;"><b style="color:#111827;">OOD Karari:</b> {ood_label}</div>
+      <div style="color:#374151;"><b style="color:#111827;">OOD Score:</b> {score_text}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Karar Esigi:</b> {threshold_text}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Robustluk:</b> <span style="color:{robustness_accent};font-weight:600;">{escape(robustness_status)}</span></div>
+      <div style="color:#374151;word-break:break-word;"><b style="color:#111827;">Goruntu:</b> {escape(str(image_path))}</div>
+      <details style="margin-top:10px;color:#374151;">
+        <summary style="cursor:pointer;color:#111827;font-weight:600;">Kompakt Teshis</summary>
+        <div style="margin-top:8px;"><b style="color:#111827;">View warnings:</b> {escape(robustness_warning_text)}</div>
+        <div><b style="color:#111827;">Uncertainty warnings:</b> {escape(uncertainty_warning_text)}</div>
+      </details>
+    </div>
+    """
+
+
 def launch_simple_adapter_smoke_ui(
     root: str | Path,
     *,
@@ -61,6 +120,12 @@ def launch_simple_adapter_smoke_ui(
         raise RuntimeError(
             "This notebook UI requires ipywidgets. Re-run the bootstrap cell after dependency installation."
         )
+    try:
+        _ensure_colab_widget_manager()
+    except Exception as exc:
+        raise RuntimeError(
+            "Colab custom widgets could not be initialized. Re-run the bootstrap cell before using Notebook 4 uploads."
+        ) from exc
 
     root_path = Path(root)
     resolved_search_roots = [
@@ -144,46 +209,7 @@ def launch_simple_adapter_smoke_ui(
         raise ValueError("Bir resim yukleyin veya mevcut bir dosya yolu girin.")
 
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
-        confidence = float(result.get("confidence", 0.0)) * 100.0
-        ood_label = "OOD" if bool(result.get("is_ood")) else "In-distribution"
-        threshold = result.get("decision_threshold")
-        score = result.get("primary_score")
-        score_text = "-" if score is None else f"{float(score):.4f}"
-        threshold_text = "-" if threshold is None else f"{float(threshold):.4f}"
-        view_consistency = dict(result.get("view_consistency", {}))
-        uncertainty = dict(result.get("uncertainty_diagnostics", {}))
-        robustness_warning_codes = [str(code) for code in list(view_consistency.get("warning_codes", []))]
-        uncertainty_warning_codes = [str(code) for code in list(uncertainty.get("warning_codes", []))]
-        if bool(view_consistency.get("stable")):
-            robustness_status = "Stable across derived views"
-        else:
-            headline_warnings = robustness_warning_codes[:2] or uncertainty_warning_codes[:2]
-            if headline_warnings:
-                robustness_status = "Review recommended: " + ", ".join(headline_warnings)
-            else:
-                robustness_status = "Review recommended"
-        robustness_warning_text = ", ".join(robustness_warning_codes) if robustness_warning_codes else "-"
-        uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
-        html = f"""
-        <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#fafbfc;">
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Tahmin Sonucu</div>
-          <div><b>Adapter:</b> {escape(str(summary['resolved_adapter_dir']))}</div>
-          <div><b>Crop:</b> {escape(str(summary['crop_name']))}</div>
-          <div><b>Sinif:</b> {escape(str(result.get('predicted_class') or '-'))}</div>
-          <div><b>Confidence:</b> {confidence:.2f}%</div>
-          <div><b>OOD Karari:</b> {ood_label}</div>
-          <div><b>OOD Score:</b> {score_text}</div>
-          <div><b>Karar Esigi:</b> {threshold_text}</div>
-          <div><b>Robustluk:</b> {escape(robustness_status)}</div>
-          <div><b>Goruntu:</b> {escape(str(image_path))}</div>
-          <details style="margin-top:10px;">
-            <summary>Kompakt Teshis</summary>
-            <div style="margin-top:8px;"><b>View warnings:</b> {escape(robustness_warning_text)}</div>
-            <div><b>Uncertainty warnings:</b> {escape(uncertainty_warning_text)}</div>
-          </details>
-        </div>
-        """
-        display(HTML(html))
+        display(HTML(_build_result_html(summary, result, image_path)))
 
     def refresh(_button: Any = None) -> None:
         nonlocal adapter_candidates
@@ -254,5 +280,4 @@ def launch_simple_adapter_smoke_ui(
     )
     refresh()
 
-
-__all__ = ["launch_simple_adapter_smoke_ui"]
+__all__ = ["launch_simple_adapter_smoke_ui", "_ensure_colab_widget_manager", "_build_result_html"]
