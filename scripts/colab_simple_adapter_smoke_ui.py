@@ -23,6 +23,14 @@ except Exception:  # pragma: no cover - notebook runtime fallback
     widgets = None
 
 
+def _running_in_colab() -> bool:
+    try:
+        import google.colab  # noqa: F401
+    except Exception:
+        return False
+    return True
+
+
 def _ensure_colab_widget_manager() -> bool:
     """Enable the Colab widget bridge before rendering FileUpload widgets."""
     try:
@@ -69,6 +77,21 @@ def _persist_upload_value(upload_value: Any, upload_dir: Path) -> Optional[Path]
         return None
     target_path = upload_dir / Path(upload_name).name
     target_path.write_bytes(upload_bytes)
+    return target_path
+
+
+def _upload_via_colab_files(upload_dir: Path) -> Optional[Path]:
+    try:
+        from google.colab import files
+    except Exception:
+        return None
+
+    uploaded = files.upload()
+    if not uploaded:
+        return None
+    upload_name, upload_bytes = next(iter(uploaded.items()))
+    target_path = upload_dir / Path(str(upload_name)).name
+    target_path.write_bytes(bytes(upload_bytes))
     return target_path
 
 
@@ -129,12 +152,11 @@ def launch_simple_adapter_smoke_ui(
         raise RuntimeError(
             "This notebook UI requires ipywidgets. Re-run the bootstrap cell after dependency installation."
         )
+    widget_upload_ready = False
     try:
-        _ensure_colab_widget_manager()
-    except Exception as exc:
-        raise RuntimeError(
-            "Colab custom widgets could not be initialized. Re-run the bootstrap cell before using Notebook 4 uploads."
-        ) from exc
+        widget_upload_ready = _ensure_colab_widget_manager()
+    except Exception:
+        widget_upload_ready = False
 
     root_path = Path(root)
     resolved_search_roots = [
@@ -159,9 +181,15 @@ def launch_simple_adapter_smoke_ui(
     ] or [("Adapter bulunamadi, asagidan yol girin", -1)]
 
     title = widgets.HTML("<h3 style=\"margin:0 0 8px 0;\">Basit Adapter Testi</h3>")
-    help_text = widgets.HTML(
-        "<p style=\"margin:0 0 12px 0;\">Adapter secin veya yol girin, bir resim yukleyin, sonra <b>Tahmin Et</b> butonuna basin.</p>"
-    )
+    help_parts = [
+        "Adapter secin veya yol girin, bir resim yukleyin, sonra <b>Tahmin Et</b> butonuna basin."
+    ]
+    if _running_in_colab():
+        if widget_upload_ready:
+            help_parts.append("Colab'da sorun yasarsaniz <b>Colab Yukle</b> butonunu kullanin.")
+        else:
+            help_parts.append("Widget upload kullanilamadi; Colab'da <b>Colab Yukle</b> butonunu kullanin.")
+    help_text = widgets.HTML("<p style=\"margin:0 0 12px 0;\">" + " ".join(help_parts) + "</p>")
     adapter_dropdown = widgets.Dropdown(
         options=dropdown_options,
         value=dropdown_options[0][1],
@@ -187,6 +215,9 @@ def launch_simple_adapter_smoke_ui(
         description="Resim:",
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
+    )
+    colab_upload_button = (
+        widgets.Button(description="Colab Yukle", button_style="warning") if _running_in_colab() else None
     )
     refresh_button = widgets.Button(description="Adapterleri Yenile", button_style="info")
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
@@ -228,6 +259,19 @@ def launch_simple_adapter_smoke_ui(
             clear_output(wait=True)
             print(f"Yuklenen resim hazir: {persisted_path.name}")
 
+    def handle_colab_upload(_button: Any = None) -> None:
+        persisted_path = _upload_via_colab_files(upload_dir)
+        if persisted_path is None:
+            with status_output:
+                clear_output(wait=True)
+                print("Colab upload iptal edildi veya dosya secilmedi.")
+            return
+        upload_state["path"] = persisted_path
+        image_path_text.value = str(persisted_path)
+        with status_output:
+            clear_output(wait=True)
+            print(f"Yuklenen resim hazir: {persisted_path.name}")
+
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
         display(HTML(_build_result_html(summary, result, image_path)))
 
@@ -252,6 +296,9 @@ def launch_simple_adapter_smoke_ui(
     def run_prediction(_button: Any = None) -> None:
         with result_output:
             clear_output(wait=True)
+            image_path = resolve_image_path()
+            if not image_path.exists():
+                raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
             candidate = selected_candidate()
             summary = load_adapter_summary(
                 candidate.get("crop_name"),
@@ -259,9 +306,6 @@ def launch_simple_adapter_smoke_ui(
                 config_env=config_env,
                 device=device,
             )
-            image_path = resolve_image_path()
-            if not image_path.exists():
-                raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
             with Image.open(image_path) as preview:
                 display(preview.copy())
             result = predict_single_image(
@@ -284,6 +328,12 @@ def launch_simple_adapter_smoke_ui(
     refresh_button.on_click(refresh)
     run_button.on_click(run_prediction)
     image_upload.observe(handle_upload_change, names="value")
+    if colab_upload_button is not None:
+        colab_upload_button.on_click(handle_colab_upload)
+    action_buttons = [refresh_button]
+    if colab_upload_button is not None:
+        action_buttons.append(colab_upload_button)
+    action_buttons.append(run_button)
     display(
         widgets.VBox(
             [
@@ -293,7 +343,7 @@ def launch_simple_adapter_smoke_ui(
                 adapter_path_text,
                 image_upload,
                 image_path_text,
-                widgets.HBox([refresh_button, run_button]),
+                widgets.HBox(action_buttons),
                 status_output,
                 result_output,
             ]
@@ -303,7 +353,9 @@ def launch_simple_adapter_smoke_ui(
 
 __all__ = [
     "launch_simple_adapter_smoke_ui",
+    "_running_in_colab",
     "_ensure_colab_widget_manager",
     "_build_result_html",
     "_persist_upload_value",
+    "_upload_via_colab_files",
 ]

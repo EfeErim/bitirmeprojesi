@@ -34,12 +34,44 @@ def test_ensure_colab_widget_manager_enables_custom_manager(monkeypatch):
     assert calls == ["enabled"]
 
 
-def test_launch_simple_adapter_smoke_ui_raises_when_widget_manager_bootstrap_fails(monkeypatch, tmp_path):
-    monkeypatch.setattr(ui, "widgets", object())
-    monkeypatch.setattr(ui, "_ensure_colab_widget_manager", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+def test_launch_simple_adapter_smoke_ui_tolerates_widget_manager_bootstrap_failures(monkeypatch, tmp_path):
+    class _FakeWidget:
+        def __init__(self, *args, **kwargs):
+            self.value = kwargs.get("value")
+            self.options = kwargs.get("options")
 
-    with pytest.raises(RuntimeError, match="Colab custom widgets could not be initialized"):
-        ui.launch_simple_adapter_smoke_ui(tmp_path)
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def on_click(self, _handler):
+            return None
+
+        def observe(self, _handler, names=None):
+            return None
+
+    fake_widgets = types.SimpleNamespace(
+        HTML=_FakeWidget,
+        Dropdown=_FakeWidget,
+        Text=_FakeWidget,
+        FileUpload=_FakeWidget,
+        Button=_FakeWidget,
+        Output=_FakeWidget,
+        VBox=_FakeWidget,
+        HBox=_FakeWidget,
+        Layout=lambda **kwargs: kwargs,
+    )
+
+    monkeypatch.setattr(ui, "widgets", fake_widgets)
+    monkeypatch.setattr(ui, "_ensure_colab_widget_manager", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    monkeypatch.setattr(ui, "_running_in_colab", lambda: True)
+    monkeypatch.setattr(ui, "discover_adapter_candidates", lambda *_args, **_kwargs: [])
+    monkeypatch.setattr(ui, "display", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(ui, "clear_output", lambda *_args, **_kwargs: None)
+
+    ui.launch_simple_adapter_smoke_ui(tmp_path)
 
 
 def test_build_result_html_sets_explicit_contrast_colors():
@@ -82,3 +114,26 @@ def test_persist_upload_value_writes_uploaded_bytes(tmp_path: Path):
 
 def test_persist_upload_value_returns_none_for_empty_upload(tmp_path: Path):
     assert ui._persist_upload_value((), tmp_path) is None
+
+
+def test_upload_via_colab_files_writes_uploaded_bytes(monkeypatch, tmp_path: Path):
+    files_module = types.SimpleNamespace(upload=lambda: {"leaf.png": b"xyz"})
+    colab_module = types.ModuleType("google.colab")
+    colab_module.files = files_module
+    google_module = types.ModuleType("google")
+    google_module.colab = colab_module
+
+    monkeypatch.setitem(sys.modules, "google", google_module)
+    monkeypatch.setitem(sys.modules, "google.colab", colab_module)
+
+    persisted = ui._upload_via_colab_files(tmp_path)
+
+    assert persisted == tmp_path / "leaf.png"
+    assert persisted.read_bytes() == b"xyz"
+
+
+def test_upload_via_colab_files_returns_none_outside_colab(monkeypatch, tmp_path: Path):
+    monkeypatch.delitem(sys.modules, "google", raising=False)
+    monkeypatch.delitem(sys.modules, "google.colab", raising=False)
+
+    assert ui._upload_via_colab_files(tmp_path) is None
