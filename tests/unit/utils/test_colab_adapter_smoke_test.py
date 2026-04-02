@@ -614,3 +614,4 @@ def test_load_adapter_summary_accepts_crop_dir_as_adapter_root_without_crop_name
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
+

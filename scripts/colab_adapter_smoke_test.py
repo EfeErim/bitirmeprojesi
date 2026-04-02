@@ -800,18 +800,28 @@ def load_adapter_summary(
     config_env: Optional[str] = "colab",
     device: str = "cuda",
 ) -> Dict[str, Any]:
-    """Load an adapter and return a compact runtime + metadata summary."""
-    resolved_dir, crop_key, adapter = _load_adapter_context(
+    """Resolve an adapter bundle and return a compact metadata summary."""
+    resolved_dir = _resolve_adapter_dir(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
         config_env=config_env,
-        device=device,
     )
+    crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
     meta = _read_adapter_meta(resolved_dir)
-    summary = dict(adapter.get_summary())
-    summary.update(_summary_from_meta(meta))
-    summary["crop_name"] = crop_key
+    meta_summary = _summary_from_meta(meta)
+    class_to_idx = dict(meta.get("class_to_idx", {}))
+    summary = {
+        "crop_name": crop_key,
+        "model_name": str(dict(meta.get("backbone", {})).get("model_name", "")),
+        "engine": str(meta.get("engine", "continual_sd_lora")),
+        "schema_version": str(meta.get("schema_version", "v6")),
+        "is_trained": True,
+        "num_classes": len(class_to_idx),
+        "class_to_idx": {str(k): int(v) for k, v in class_to_idx.items()},
+        "ood_calibration_version": int(dict(meta.get("ood_calibration", {})).get("version", 0)),
+    }
+    summary.update(meta_summary)
     summary["resolved_adapter_dir"] = str(resolved_dir)
     return summary
 
@@ -903,3 +913,4 @@ __all__ = [
     "predict_single_image",
     "predict_image_folder",
 ]
+

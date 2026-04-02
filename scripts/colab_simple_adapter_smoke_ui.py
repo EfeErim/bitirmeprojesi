@@ -32,7 +32,7 @@ def _running_in_colab() -> bool:
 
 
 def _ensure_colab_widget_manager() -> bool:
-    """Enable the Colab widget bridge before rendering FileUpload widgets."""
+    """Backward-compatible helper kept for existing tests and callers."""
     try:
         from google.colab import output as colab_output
     except Exception:
@@ -152,11 +152,6 @@ def launch_simple_adapter_smoke_ui(
         raise RuntimeError(
             "This notebook UI requires ipywidgets. Re-run the bootstrap cell after dependency installation."
         )
-    widget_upload_ready = False
-    try:
-        widget_upload_ready = _ensure_colab_widget_manager()
-    except Exception:
-        widget_upload_ready = False
 
     root_path = Path(root)
     resolved_search_roots = [
@@ -181,14 +176,11 @@ def launch_simple_adapter_smoke_ui(
     ] or [("Adapter bulunamadi, asagidan yol girin", -1)]
 
     title = widgets.HTML("<h3 style=\"margin:0 0 8px 0;\">Basit Adapter Testi</h3>")
-    help_parts = [
-        "Adapter secin veya yol girin, bir resim yukleyin, sonra <b>Tahmin Et</b> butonuna basin."
-    ]
+    help_parts = ["Adapter secin veya yol girin."]
     if _running_in_colab():
-        if widget_upload_ready:
-            help_parts.append("Colab'da sorun yasarsaniz <b>Colab Yukle</b> butonunu kullanin.")
-        else:
-            help_parts.append("Widget upload kullanilamadi; Colab'da <b>Colab Yukle</b> butonunu kullanin.")
+        help_parts.append("Resim alani bos birakilirsa <b>Tahmin Et</b> Notebook 3 gibi Colab upload penceresi acar.")
+    else:
+        help_parts.append("Colab disinda <b>Resim</b> alanina mevcut dosya yolunu girin.")
     help_text = widgets.HTML("<p style=\"margin:0 0 12px 0;\">" + " ".join(help_parts) + "</p>")
     adapter_dropdown = widgets.Dropdown(
         options=dropdown_options,
@@ -204,26 +196,17 @@ def launch_simple_adapter_smoke_ui(
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
     )
-    image_upload = widgets.FileUpload(
-        accept=".jpg,.jpeg,.png,.bmp,.tif,.tiff,.webp",
-        multiple=False,
-        description="Resim Yukle",
-    )
     image_path_text = widgets.Text(
         value="",
-        placeholder="Upload yerine mevcut bir dosya yolu da verebilirsiniz",
+        placeholder="Colab'da bos birakirsaniz upload acilir; aksi halde mevcut dosya yolunu girin",
         description="Resim:",
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
-    )
-    colab_upload_button = (
-        widgets.Button(description="Colab Yukle", button_style="warning") if _running_in_colab() else None
     )
     refresh_button = widgets.Button(description="Adapterleri Yenile", button_style="info")
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
     status_output = widgets.Output()
     result_output = widgets.Output()
-    upload_state: dict[str, Optional[Path]] = {"path": None}
 
     def selected_candidate() -> dict[str, Any]:
         manual_path = adapter_path_text.value.strip()
@@ -241,36 +224,16 @@ def launch_simple_adapter_smoke_ui(
         raw_path = image_path_text.value.strip()
         if raw_path:
             return Path(raw_path).expanduser()
-        uploaded_path = upload_state.get("path") or _persist_upload_value(image_upload.value, upload_dir)
-        if uploaded_path is not None:
-            upload_state["path"] = uploaded_path
-            image_path_text.value = str(uploaded_path)
-            return uploaded_path
-        raise ValueError("Bir resim yukleyin veya mevcut bir dosya yolu girin.")
-
-    def handle_upload_change(change: Any) -> None:
-        new_value = change.get("new") if isinstance(change, dict) else image_upload.value
-        persisted_path = _persist_upload_value(new_value, upload_dir)
-        if persisted_path is None:
-            return
-        upload_state["path"] = persisted_path
-        image_path_text.value = str(persisted_path)
-        with status_output:
-            clear_output(wait=True)
-            print(f"Yuklenen resim hazir: {persisted_path.name}")
-
-    def handle_colab_upload(_button: Any = None) -> None:
-        persisted_path = _upload_via_colab_files(upload_dir)
-        if persisted_path is None:
-            with status_output:
-                clear_output(wait=True)
-                print("Colab upload iptal edildi veya dosya secilmedi.")
-            return
-        upload_state["path"] = persisted_path
-        image_path_text.value = str(persisted_path)
-        with status_output:
-            clear_output(wait=True)
-            print(f"Yuklenen resim hazir: {persisted_path.name}")
+        if _running_in_colab():
+            uploaded_path = _upload_via_colab_files(upload_dir)
+            if uploaded_path is not None:
+                image_path_text.value = str(uploaded_path)
+                with status_output:
+                    clear_output(wait=True)
+                    print(f"Yuklenen resim hazir: {uploaded_path.name}")
+                return uploaded_path
+            raise ValueError("Colab upload iptal edildi veya dosya secilmedi.")
+        raise ValueError("Bir resim yolu girin. Colab'da bos birakirsaniz upload penceresi acilir.")
 
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
         display(HTML(_build_result_html(summary, result, image_path)))
@@ -327,13 +290,6 @@ def launch_simple_adapter_smoke_ui(
 
     refresh_button.on_click(refresh)
     run_button.on_click(run_prediction)
-    image_upload.observe(handle_upload_change, names="value")
-    if colab_upload_button is not None:
-        colab_upload_button.on_click(handle_colab_upload)
-    action_buttons = [refresh_button]
-    if colab_upload_button is not None:
-        action_buttons.append(colab_upload_button)
-    action_buttons.append(run_button)
     display(
         widgets.VBox(
             [
@@ -341,15 +297,15 @@ def launch_simple_adapter_smoke_ui(
                 help_text,
                 adapter_dropdown,
                 adapter_path_text,
-                image_upload,
                 image_path_text,
-                widgets.HBox(action_buttons),
+                widgets.HBox([refresh_button, run_button]),
                 status_output,
                 result_output,
             ]
         )
     )
     refresh()
+
 
 __all__ = [
     "launch_simple_adapter_smoke_ui",

@@ -22,6 +22,15 @@ from src.training.services.runtime import (
 logger = logging.getLogger(__name__)
 
 
+def _resolve_auto_model_factory(auto_model_factory: Any) -> Any:
+    if auto_model_factory is not None:
+        return auto_model_factory
+    try:
+        from transformers import AutoModel as late_auto_model
+    except Exception as exc:
+        raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.") from exc
+    return late_auto_model
+
 def refresh_optimizer_after_model_change(trainer: Any) -> None:
     if trainer.optimizer is None:
         return
@@ -68,9 +77,7 @@ def initialize_trainer_engine(
     if class_to_idx:
         trainer.class_to_idx = dict(class_to_idx)
 
-    if auto_model_factory is None:
-        raise RuntimeError("transformers AutoModel is unavailable for continual trainer initialization.")
-
+    auto_model_factory = _resolve_auto_model_factory(auto_model_factory)
     loaded_backbone = auto_model_factory.from_pretrained(trainer.config.backbone_model_name)
     trainer.backbone = trainer._prepare_module_for_device(loaded_backbone, module_name="backbone")
     for param in trainer.backbone.parameters():
@@ -333,3 +340,5 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         },
         "ood_analysis": ood_analysis,
     }
+
+

@@ -2,8 +2,6 @@ import sys
 import types
 from pathlib import Path
 
-import pytest
-
 from scripts import colab_simple_adapter_smoke_ui as ui
 
 
@@ -34,7 +32,7 @@ def test_ensure_colab_widget_manager_enables_custom_manager(monkeypatch):
     assert calls == ["enabled"]
 
 
-def test_launch_simple_adapter_smoke_ui_tolerates_widget_manager_bootstrap_failures(monkeypatch, tmp_path):
+def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_path):
     class _FakeWidget:
         def __init__(self, *args, **kwargs):
             self.value = kwargs.get("value")
@@ -49,14 +47,10 @@ def test_launch_simple_adapter_smoke_ui_tolerates_widget_manager_bootstrap_failu
         def on_click(self, _handler):
             return None
 
-        def observe(self, _handler, names=None):
-            return None
-
     fake_widgets = types.SimpleNamespace(
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
-        FileUpload=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
         VBox=_FakeWidget,
@@ -65,7 +59,6 @@ def test_launch_simple_adapter_smoke_ui_tolerates_widget_manager_bootstrap_failu
     )
 
     monkeypatch.setattr(ui, "widgets", fake_widgets)
-    monkeypatch.setattr(ui, "_ensure_colab_widget_manager", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
     monkeypatch.setattr(ui, "_running_in_colab", lambda: True)
     monkeypatch.setattr(ui, "discover_adapter_candidates", lambda *_args, **_kwargs: [])
     monkeypatch.setattr(ui, "display", lambda *_args, **_kwargs: None)
