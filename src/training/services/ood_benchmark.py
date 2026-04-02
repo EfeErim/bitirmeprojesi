@@ -6,8 +6,8 @@ import hashlib
 import json
 import time
 import traceback
-from dataclasses import dataclass
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 

@@ -39,11 +39,19 @@ from src.router.sam3_output_utils import (
 from src.router.vlm_stages import (
     analyze_batch_results,
     build_pipeline_surface_config,
-    load_clip_like_model as load_clip_like_model_stage,
-    load_models as load_models_stage,
-    load_sam as load_sam_stage,
-    load_sam3_bioclip25 as load_sam3_bioclip25_stage,
     route_batch_items,
+)
+from src.router.vlm_stages import (
+    load_clip_like_model as load_clip_like_model_stage,
+)
+from src.router.vlm_stages import (
+    load_models as load_models_stage,
+)
+from src.router.vlm_stages import (
+    load_sam as load_sam_stage,
+)
+from src.router.vlm_stages import (
+    load_sam3_bioclip25 as load_sam3_bioclip25_stage,
 )
 from src.shared.contracts import RouterAnalysisResult, RouterRequestOptions
 
@@ -78,7 +86,6 @@ class VLMPipeline:
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         self.config = config
         surface_config = build_pipeline_surface_config(config)
-        router_config = surface_config.router_config
         self.vlm_config = surface_config.vlm_config
         self._base_vlm_config = surface_config.base_vlm_config
         self.active_profile: Optional[str] = None

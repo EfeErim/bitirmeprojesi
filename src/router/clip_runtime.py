@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from PIL import Image
 
+from src.router.confidence_utils import build_open_set_rejection_reasons
 from src.router.prompt_clip_utils import (
     aggregate_prompt_logits,
     build_prompt_batch,
@@ -19,7 +20,6 @@ from src.router.prompt_clip_utils import (
     get_prompt_templates_for_type,
     open_set_unknown_prompts,
 )
-from src.router.confidence_utils import build_open_set_rejection_reasons
 
 logger = logging.getLogger(__name__)
 

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import csv
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence
 
 import numpy as np
@@ -92,7 +92,12 @@ def _copy_artifacts_to_telemetry(telemetry: Any, artifacts: Iterable[tuple[Path,
         _copy_to_telemetry(telemetry, source_path, relative_path)
 
 
-def _refresh_guided_outputs(artifact_root: Path, *, telemetry: Any = None, overview_updates: Dict[str, Any] | None = None) -> None:
+def _refresh_guided_outputs(
+    artifact_root: Path,
+    *,
+    telemetry: Any = None,
+    overview_updates: Dict[str, Any] | None = None,
+) -> None:
     refresh_training_guided_artifacts(
         artifact_root,
         telemetry=telemetry,
@@ -862,7 +867,11 @@ def persist_validation_artifacts(
     else:
         metric_gate_json.unlink(missing_ok=True)
 
-    _refresh_guided_outputs(artifact_root, telemetry=telemetry, overview_updates={"last_written_split": resolved_artifact_subdir})
+    _refresh_guided_outputs(
+        artifact_root,
+        telemetry=telemetry,
+        overview_updates={"last_written_split": resolved_artifact_subdir},
+    )
     return {
         "report_text": report_text,
         "report_dict": report_dict,

@@ -146,7 +146,11 @@ def main() -> int:
     parser.add_argument("--config-env", default="colab", help="Config environment override (default: colab)")
     parser.add_argument("--crop", dest="crop_hint", help="Optional crop hint to bypass the router")
     parser.add_argument("--part", dest="part_hint", help="Optional part hint")
-    parser.add_argument("--adapter-root", type=Path, help="Unused legacy adapter-root argument kept for notebook compatibility")
+    parser.add_argument(
+        "--adapter-root",
+        type=Path,
+        help="Unused legacy adapter-root argument kept for notebook compatibility",
+    )
     parser.add_argument("--device", default="cuda", help="Torch device preference")
     args = parser.parse_args()
 

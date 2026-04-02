@@ -86,10 +86,16 @@ def load_sam3_bioclip25(runtime: Any) -> None:
         logger.info("Using helper loaders for fake model ids")
         sam_loader = getattr(runtime, "_load_sam", None)
         clip_loader = getattr(runtime, "_load_clip_like_model", None)
+        def _load_sam_via_helper(model_id: str):
+            return load_sam(runtime, model_id)
+
+        def _load_clip_via_helper(model_id: str):
+            return load_clip_like_model(runtime, model_id)
+
         if not callable(sam_loader):
-            sam_loader = lambda model_id: load_sam(runtime, model_id)
+            sam_loader = _load_sam_via_helper
         if not callable(clip_loader):
-            clip_loader = lambda model_id: load_clip_like_model(runtime, model_id)
+            clip_loader = _load_clip_via_helper
         sam_processor, sam_model = sam_loader(sam_id)
         bioclip_processor, bioclip_model = clip_loader(bioclip_id)
 

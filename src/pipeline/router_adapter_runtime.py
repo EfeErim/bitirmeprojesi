@@ -16,8 +16,8 @@ from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
     build_router_skipped_analysis,
-    build_router_uncertain_result,
     build_router_unavailable_result,
+    build_router_uncertain_result,
     build_success_result,
     build_unknown_crop_result,
     normalize_router_analysis,
@@ -234,7 +234,9 @@ class RouterAdapterRuntime:
             margin = primary_score - runner_up_score
             if margin < self.router_min_margin:
                 reasons.append(
-                    f"routing_margin={margin:.3f} < min_margin={self.router_min_margin:.3f} vs alternate_crop={runner_up_crop}"
+                    "routing_margin="
+                    f"{margin:.3f} < min_margin={self.router_min_margin:.3f} "
+                    f"vs alternate_crop={runner_up_crop}"
                 )
 
         if not reasons:
@@ -311,7 +313,9 @@ class RouterAdapterRuntime:
                     router_analysis=router_analysis,
                 )
                 self._emit_status(
-                    f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f} message={result.message}"
+                    f"[RESULT] status={result.status} "
+                    f"router_confidence={result.router_confidence:.3f} "
+                    f"message={result.message}"
                 )
                 return result
 

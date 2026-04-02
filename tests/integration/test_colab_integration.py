@@ -15,9 +15,11 @@ def test_colab_config_contains_minimal_contract():
     manager = ConfigurationManager(config_dir="config", environment="colab")
     cfg = manager.load_all_configs()
 
-    assert {"training", "router", "ood", "colab", "inference"} <= set(cfg.keys())
+    assert {"training", "router", "colab", "inference"} <= set(cfg.keys())
+    assert "ood" not in cfg
     continual = cfg["training"]["continual"]
     assert continual["backbone"]["model_name"] == "facebook/dinov3-vitl16-pretrain-lvd1689m"
+    assert "ood" in continual
 
 
 def test_continual_config_rejects_low_bit_payload():

@@ -23,6 +23,19 @@ def _safe_print(*args, **kwargs):
 
 print = _safe_print
 
+PARAMETER_CAPTURE = 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):'
+ACCESS_CHECK_CAPTURE = (
+    'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):'
+)
+
+
+def _assert_contains(source: str, snippet: str, message: str) -> None:
+    assert snippet in source, message.format(snippet=snippet)
+
+
+def _assert_not_contains(source: str, snippet: str, message: str) -> None:
+    assert snippet not in source, message.format(snippet=snippet)
+
 
 def gate_label(step_id: str, name: str) -> str:
     return f"[{step_id}] {name}"
@@ -203,7 +216,11 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
         "REPO_URL = os.environ.get('AADS_REPO_URL'",
         "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
     ):
-        assert snippet in first_code_source, f"Notebook 3 first code cell is missing required GitHub bootstrap: {snippet}"
+        _assert_contains(
+            first_code_source,
+            snippet,
+            "Notebook 3 first code cell is missing required GitHub bootstrap: {snippet}",
+        )
 
     forbidden_snippets = (
         "Path('/content/drive/MyDrive/bitirme projesi')",
@@ -212,7 +229,11 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
         "mount_drive_if_available",
     )
     for snippet in forbidden_snippets:
-        assert snippet not in first_code_source, f"Notebook 3 first code cell should not use Drive for repo bootstrap: {snippet}"
+        _assert_not_contains(
+            first_code_source,
+            snippet,
+            "Notebook 3 first code cell should not use Drive for repo bootstrap: {snippet}",
+        )
 
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in code_cells)
     assert "Path('/content/drive/MyDrive/aads_ulora')" not in full_source
@@ -233,7 +254,11 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
         "REPO_URL = os.environ.get('AADS_REPO_URL'",
         "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
     ):
-        assert snippet in first_code_source, f"Notebook 4 first code cell is missing required GitHub bootstrap: {snippet}"
+        _assert_contains(
+            first_code_source,
+            snippet,
+            "Notebook 4 first code cell is missing required GitHub bootstrap: {snippet}",
+        )
 
     forbidden_snippets = (
         "Path('/content/drive/MyDrive/bitirme projesi')",
@@ -242,7 +267,11 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
         "mount_drive_if_available",
     )
     for snippet in forbidden_snippets:
-        assert snippet not in first_code_source, f"Notebook 4 first code cell should not use Drive for repo bootstrap: {snippet}"
+        _assert_not_contains(
+            first_code_source,
+            snippet,
+            "Notebook 4 first code cell should not use Drive for repo bootstrap: {snippet}",
+        )
 
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in code_cells)
     assert "collect_notebook_access_report" in full_source
@@ -255,12 +284,6 @@ def test_colab_helpers() -> None:
     from scripts.colab_checkpointing import TrainingCheckpointManager
     from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
     from scripts.colab_live_telemetry import ColabLiveTelemetry
-    from scripts.prepare_materialization_dataset import prepare_class_root_for_materialization
-    from scripts.prepare_grouped_runtime_dataset import (
-        build_grouped_dataset_plan,
-        materialize_grouped_runtime_dataset,
-        scan_class_root_dataset,
-    )
     from scripts.colab_repo_bootstrap import (
         export_current_colab_notebook,
         mirror_checkpoint_state_to_repo,
@@ -269,6 +292,12 @@ def test_colab_helpers() -> None:
     )
     from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui
     from scripts.evaluate_dataset_layout import evaluate_layout
+    from scripts.prepare_grouped_runtime_dataset import (
+        build_grouped_dataset_plan,
+        materialize_grouped_runtime_dataset,
+        scan_class_root_dataset,
+    )
+    from scripts.prepare_materialization_dataset import prepare_class_root_for_materialization
 
     assert hasattr(ColabLiveTelemetry, "configure_repo_output_export")
     assert callable(export_current_colab_notebook)
@@ -307,9 +336,9 @@ def test_data_prep_notebook_contract() -> None:
             first_code_source = source
         if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
             bootstrap_source = source
-        if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
+        if not parameter_source and PARAMETER_CAPTURE in source:
             parameter_source = source
-        if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
+        if not access_check_source and ACCESS_CHECK_CAPTURE in source:
             access_check_source = source
 
     assert first_code_source, "Notebook 0 first code cell was not found"
@@ -322,7 +351,11 @@ def test_data_prep_notebook_contract() -> None:
         "from scripts.colab_repo_bootstrap import probe_repo_update_status",
         "[KONTROL] Ilk hucre:",
     ):
-        assert snippet in first_code_source, f"Notebook 0 first code cell is missing required freshness check: {snippet}"
+        _assert_contains(
+            first_code_source,
+            snippet,
+            "Notebook 0 first code cell is missing required freshness check: {snippet}",
+        )
     for snippet in (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
@@ -391,7 +424,7 @@ def test_training_notebook_bootstrap_contract() -> None:
             parameter_source = source
         if not run_identity_source and "# Notebook 2 calisma kimligi" in source:
             run_identity_source = source
-        if not access_check_source and 'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):' in source:
+        if not access_check_source and ACCESS_CHECK_CAPTURE in source:
             access_check_source = source
 
     assert first_code_source, "Notebook 2 first code cell was not found"
@@ -405,7 +438,11 @@ def test_training_notebook_bootstrap_contract() -> None:
         "from scripts.colab_repo_bootstrap import probe_repo_update_status",
         "[KONTROL] Ilk hucre:",
     ):
-        assert snippet in first_code_source, f"Notebook 2 first code cell is missing required freshness check: {snippet}"
+        _assert_contains(
+            first_code_source,
+            snippet,
+            "Notebook 2 first code cell is missing required freshness check: {snippet}",
+        )
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
 
     required_bootstrap_snippets = (
@@ -423,9 +460,9 @@ def test_training_notebook_bootstrap_contract() -> None:
     if missing:
         raise AssertionError(f"Notebook 2 bootstrap cell is missing required setup: {', '.join(missing)}")
 
-    assert 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in parameter_source
+    assert PARAMETER_CAPTURE in parameter_source
     assert full_source.index("TELEMETRY = ColabLiveTelemetry(") < full_source.index(
-        'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):'
+        PARAMETER_CAPTURE
     )
     assert full_source.index("RUN_ID =") < full_source.index("run_id = RUN_ID")
     assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
@@ -446,7 +483,11 @@ def test_training_notebook_bootstrap_contract() -> None:
         'parameter_source": "notebook_cell"',
     )
     for snippet in required_parameter_snippets:
-        assert snippet in parameter_source, f"Notebook 2 parameter cell is missing required direct parameter surface: {snippet}"
+        _assert_contains(
+            parameter_source,
+            snippet,
+            "Notebook 2 parameter cell is missing required direct parameter surface: {snippet}",
+        )
 
     forbidden_parameter_snippets = (
         'MAX_STABLE_PROFILE = {',
@@ -462,7 +503,14 @@ def test_training_notebook_bootstrap_contract() -> None:
         'defaults=config(colab)',
     )
     for snippet in forbidden_parameter_snippets:
-        assert snippet not in full_source, f"Notebook 2 parameter cell should not contain hidden overrides or config-derived parameter remapping: {snippet}"
+        _assert_not_contains(
+            full_source,
+            snippet,
+            (
+                "Notebook 2 parameter cell should not contain hidden overrides "
+                "or config-derived parameter remapping: {snippet}"
+            ),
+        )
 
 
 CHECKS = (
