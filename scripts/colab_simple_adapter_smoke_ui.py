@@ -96,17 +96,33 @@ def _upload_via_colab_files(upload_dir: Path) -> Optional[Path]:
 
 
 def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> str:
-    confidence = float(result.get("confidence", 0.0)) * 100.0
-    ood_label = "OOD" if bool(result.get("is_ood")) else "In-distribution"
+    status = str(result.get("status", "")).strip().lower() or "unknown"
+    confidence_value = result.get("confidence")
+    confidence_text = "-"
+    if confidence_value is not None and status != "error":
+        confidence_text = f"{float(confidence_value) * 100.0:.2f}%"
+    is_ood = result.get("is_ood")
+    if status == "error":
+        ood_label = "-"
+    elif is_ood is True:
+        ood_label = "OOD"
+    elif is_ood is False:
+        ood_label = "In-distribution"
+    else:
+        ood_label = "-"
     threshold = result.get("decision_threshold")
     score = result.get("primary_score")
     score_text = "-" if score is None else f"{float(score):.4f}"
     threshold_text = "-" if threshold is None else f"{float(threshold):.4f}"
+    error_text = str(result.get("error") or "").strip()
     view_consistency = dict(result.get("view_consistency", {}))
     uncertainty = dict(result.get("uncertainty_diagnostics", {}))
     robustness_warning_codes = [str(code) for code in list(view_consistency.get("warning_codes", []))]
     uncertainty_warning_codes = [str(code) for code in list(uncertainty.get("warning_codes", []))]
-    if bool(view_consistency.get("stable")):
+    if status == "error":
+        robustness_status = "Prediction failed"
+        robustness_accent = "#b91c1c"
+    elif bool(view_consistency.get("stable")):
         robustness_status = "Stable across derived views"
         robustness_accent = "#0f766e"
     else:
@@ -120,16 +136,18 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
     uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
     return f"""
     <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
-      <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#111827;">Tahmin Sonucu</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#111827;">{'Tahmin Basarisiz' if status == 'error' else 'Tahmin Sonucu'}</div>
       <div style="color:#374151;"><b style="color:#111827;">Adapter:</b> {escape(str(summary['resolved_adapter_dir']))}</div>
       <div style="color:#374151;"><b style="color:#111827;">Crop:</b> {escape(str(summary['crop_name']))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Status:</b> {escape(status)}</div>
       <div style="color:#374151;"><b style="color:#111827;">Sinif:</b> {escape(str(result.get('predicted_class') or '-'))}</div>
-      <div style="color:#374151;"><b style="color:#111827;">Confidence:</b> {confidence:.2f}%</div>
+      <div style="color:#374151;"><b style="color:#111827;">Confidence:</b> {confidence_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">OOD Karari:</b> {ood_label}</div>
       <div style="color:#374151;"><b style="color:#111827;">OOD Score:</b> {score_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Karar Esigi:</b> {threshold_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Robustluk:</b> <span style="color:{robustness_accent};font-weight:600;">{escape(robustness_status)}</span></div>
       <div style="color:#374151;word-break:break-word;"><b style="color:#111827;">Goruntu:</b> {escape(str(image_path))}</div>
+      {'<div style="color:#b91c1c;word-break:break-word;"><b style="color:#991b1b;">Hata:</b> ' + escape(error_text) + '</div>' if error_text else ''}
       <details style="margin-top:10px;color:#374151;">
         <summary style="cursor:pointer;color:#111827;font-weight:600;">Kompakt Teshis</summary>
         <div style="margin-top:8px;"><b style="color:#111827;">View warnings:</b> {escape(robustness_warning_text)}</div>

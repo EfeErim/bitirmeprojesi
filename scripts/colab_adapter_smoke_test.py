@@ -62,12 +62,14 @@ def _normalize_crop_name(crop_name: str) -> str:
     return normalized
 
 
-def _read_json_if_exists(path: Path) -> Dict[str, Any]:
+def _read_json_if_exists(path: Path, *, strict: bool = False) -> Dict[str, Any]:
     if not path.exists():
         return {}
     try:
         return read_json_dict(path)
-    except Exception:
+    except Exception as exc:
+        if strict:
+            raise ValueError(f"Failed to parse JSON metadata at {path}: {exc}") from exc
         return {}
 
 
@@ -94,8 +96,8 @@ def _extract_crop_name_from_payload(payload: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def _infer_crop_name_from_meta(adapter_dir: Path) -> Optional[str]:
-    meta = _read_json_if_exists(adapter_dir / "adapter_meta.json")
+def _infer_crop_name_from_meta(adapter_dir: Path, *, strict_metadata: bool = False) -> Optional[str]:
+    meta = _read_json_if_exists(adapter_dir / "adapter_meta.json", strict=strict_metadata)
     class_to_idx = meta.get("class_to_idx", {})
     if not isinstance(class_to_idx, dict):
         return None
@@ -136,7 +138,7 @@ def _iter_crop_metadata_candidates(adapter_dir: Path) -> Iterable[Path]:
             yield candidate
 
 
-def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
+def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: bool = False) -> Optional[str]:
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_crop = adapter_dir.parent.name.strip().lower()
         if parent_crop not in {
@@ -150,10 +152,12 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
             return parent_crop
 
     for candidate in _iter_crop_metadata_candidates(adapter_dir):
-        inferred = _extract_crop_name_from_payload(_read_json_if_exists(candidate))
+        inferred = _extract_crop_name_from_payload(
+            _read_json_if_exists(candidate, strict=strict_metadata)
+        )
         if inferred is not None:
             return inferred
-    inferred_from_meta = _infer_crop_name_from_meta(adapter_dir)
+    inferred_from_meta = _infer_crop_name_from_meta(adapter_dir, strict_metadata=strict_metadata)
     if inferred_from_meta is not None:
         return inferred_from_meta
     return None
@@ -162,7 +166,7 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
 def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
     if crop_name is not None:
         return _normalize_crop_name(crop_name)
-    inferred = _infer_crop_name_from_adapter_dir(adapter_dir)
+    inferred = _infer_crop_name_from_adapter_dir(adapter_dir, strict_metadata=True)
     if inferred is not None:
         return inferred
     raise ValueError(
@@ -348,12 +352,15 @@ def _candidate_label(
     backbone_model_name: str,
     class_count: int,
     run_id: str,
+    metadata_error: str = "",
 ) -> str:
     label_bits = [crop_name or "unknown-crop", f"{class_count} classes"]
     if backbone_model_name:
         label_bits.append(backbone_model_name)
     if run_id:
         label_bits.append(f"run={run_id}")
+    if metadata_error:
+        label_bits.append("metadata-warning")
     label_bits.append(str(adapter_dir))
     return " | ".join(label_bits)
 
@@ -404,7 +411,12 @@ def discover_adapter_candidates(
                 continue
             seen.add(adapter_key)
 
-            inferred_crop = _infer_crop_name_from_adapter_dir(adapter_dir)
+            metadata_error = ""
+            try:
+                inferred_crop = _infer_crop_name_from_adapter_dir(adapter_dir, strict_metadata=True)
+            except ValueError as exc:
+                inferred_crop = None
+                metadata_error = str(exc)
             if requested_crop is not None and inferred_crop not in {None, requested_crop}:
                 continue
 
@@ -427,6 +439,7 @@ def discover_adapter_candidates(
                 "target_modules_resolved": list(meta_summary["target_modules_resolved"]),
                 "ood_calibration_version": int(meta_summary["ood_calibration_version"]),
                 "run_id": run_id,
+                "metadata_error": metadata_error,
             }
             existing = candidates_by_identity.get(identity_key)
             if existing is not None:
@@ -456,6 +469,7 @@ def discover_adapter_candidates(
             backbone_model_name=str(candidate.get("backbone_model_name", "")),
             class_count=int(candidate.get("class_count", 0)),
             run_id=str(candidate.get("run_id", "")),
+            metadata_error=str(candidate.get("metadata_error", "")),
         )
     return candidates
 
@@ -676,10 +690,16 @@ def _uncertainty_diagnostics(
     *,
     view_consistency: Dict[str, Any],
 ) -> Dict[str, Any]:
-    ood_analysis = dict(row.get("ood_analysis", {}))
-    warning_codes = ["confidence_not_calibrated"]
-    if bool(row.get("is_ood")):
-        warning_codes.append("ood_flagged")
+    raw_ood_analysis = row.get("ood_analysis")
+    ood_analysis = dict(raw_ood_analysis) if isinstance(raw_ood_analysis, dict) else {}
+    warning_codes: List[str] = []
+    status = str(row.get("status", "")).strip().lower()
+    if status == "error":
+        warning_codes.append("prediction_error")
+    else:
+        warning_codes.append("confidence_not_calibrated")
+        if bool(row.get("is_ood")):
+            warning_codes.append("ood_flagged")
     sure_confidence_reject = ood_analysis.get("sure_confidence_reject")
     if sure_confidence_reject is True:
         warning_codes.append("sure_confidence_reject")
@@ -695,8 +715,11 @@ def _uncertainty_diagnostics(
     diagnostics: Dict[str, Any] = {
         "confidence_source": "top1_softmax",
         "confidence_is_calibrated": False,
+        "status": status,
         "warning_codes": warning_codes,
     }
+    if row.get("error"):
+        diagnostics["error"] = str(row.get("error"))
     if "candidate_scores" in ood_analysis:
         diagnostics["candidate_scores"] = dict(ood_analysis.get("candidate_scores", {}))
     if "candidate_thresholds" in ood_analysis:

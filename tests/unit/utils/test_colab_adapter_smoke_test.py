@@ -508,6 +508,37 @@ def test_predict_single_image_robust_mode_flags_large_confidence_spread(monkeypa
 
 
 
+def test_predict_single_image_robust_mode_keeps_error_row_when_primary_view_fails(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (8, 8), color="green").save(image_path)
+
+    def _prepare_with_primary_failure(_image, *, target_size: int, view_name: str):
+        if view_name == "full_resize":
+            raise ValueError("forced failure on primary view")
+        return torch.zeros(3, target_size, target_size)
+
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+    monkeypatch.setattr(smoke, "_prepare_view_tensor", _prepare_with_primary_failure)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        enable_robust_smoke=True,
+    )
+
+    assert result["status"] == "error"
+    assert "forced failure on primary view" in result["error"]
+    assert result["view_consistency"]["failed_views"] == ["full_resize"]
+    assert result["uncertainty_diagnostics"]["status"] == "error"
+    assert result["uncertainty_diagnostics"]["error"] == result["error"]
+    assert "prediction_error" in result["uncertainty_diagnostics"]["warning_codes"]
+    assert "view_instability" in result["uncertainty_diagnostics"]["warning_codes"]
+
+
 def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_dir = tmp_path / "images"
@@ -536,6 +567,22 @@ def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, t
 
 
 
+def test_load_adapter_summary_raises_for_invalid_crop_metadata_json(monkeypatch, tmp_path: Path):
+    export_root = tmp_path / "outputs" / "colab_notebook_training"
+    asset_dir = _write_adapter_export(export_root)
+    (export_root / "artifacts").mkdir(parents=True, exist_ok=True)
+    (export_root / "artifacts" / "crop_info.json").write_text("{not-valid-json", encoding="utf-8")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    try:
+        smoke.load_adapter_summary(None, adapter_dir=asset_dir, device="cpu")
+    except ValueError as exc:
+        assert "Failed to parse JSON metadata" in str(exc)
+        assert "crop_info.json" in str(exc)
+    else:
+        raise AssertionError("Expected load_adapter_summary to fail on invalid crop metadata.")
+
+
 def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path):
     drive_root = tmp_path / "drive_root"
     asset_dir = _write_current_drive_adapter_export(drive_root / "telemetry" / "run_654", crop_name="tomato")
@@ -548,6 +595,21 @@ def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path)
     assert candidate["crop_name"] == "tomato"
     assert candidate["run_id"] == "run_654"
 
+
+
+def test_discover_adapter_candidates_marks_metadata_warning_for_invalid_crop_metadata(tmp_path: Path):
+    project_root = tmp_path / "project"
+    export_root = project_root / "outputs" / "colab_notebook_training"
+    asset_dir = _write_adapter_export(export_root)
+    (export_root / "artifacts").mkdir(parents=True, exist_ok=True)
+    (export_root / "artifacts" / "crop_info.json").write_text("{not-valid-json", encoding="utf-8")
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 1
+    assert candidates[0]["adapter_dir"] == str(asset_dir)
+    assert candidates[0]["metadata_error"]
+    assert "metadata-warning" in candidates[0]["display_name"]
 
 
 def test_discover_adapter_candidates_collapses_same_run_mirrors_preferring_repo_output(tmp_path: Path):

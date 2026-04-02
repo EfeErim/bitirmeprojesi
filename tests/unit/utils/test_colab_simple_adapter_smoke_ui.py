@@ -88,6 +88,35 @@ def test_build_result_html_sets_explicit_contrast_colors():
     assert "background:#ffffff;color:#111827" in html
     assert "summary style=\"cursor:pointer;color:#111827;font-weight:600;\"" in html
     assert "Stable across derived views" in html
+    assert "Status:</b> unknown" in html
+
+
+def test_build_result_html_surfaces_error_state_without_in_distribution_label():
+    html = ui._build_result_html(
+        {
+            "resolved_adapter_dir": "/tmp/adapter",
+            "crop_name": "tomato",
+        },
+        {
+            "status": "error",
+            "predicted_class": None,
+            "confidence": 0.0,
+            "is_ood": None,
+            "primary_score": None,
+            "decision_threshold": None,
+            "error": "forced failure on primary view",
+            "view_consistency": {"stable": False, "warning_codes": ["view_error_present"]},
+            "uncertainty_diagnostics": {"warning_codes": ["prediction_error"]},
+        },
+        image_path=ui.Path("/tmp/leaf.png"),
+    )
+
+    assert "Tahmin Basarisiz" in html
+    assert "Status:</b> error" in html
+    assert "OOD Karari:</b> -" in html
+    assert "Prediction failed" in html
+    assert "Hata:</b> forced failure on primary view" in html
+    assert "In-distribution" not in html
 
 
 def test_persist_upload_value_writes_uploaded_bytes(tmp_path: Path):
