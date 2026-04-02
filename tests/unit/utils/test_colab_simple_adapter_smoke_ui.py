@@ -1,5 +1,6 @@
 import sys
 import types
+from pathlib import Path
 
 import pytest
 
@@ -62,3 +63,22 @@ def test_build_result_html_sets_explicit_contrast_colors():
     assert "background:#ffffff;color:#111827" in html
     assert "summary style=\"cursor:pointer;color:#111827;font-weight:600;\"" in html
     assert "Stable across derived views" in html
+
+
+def test_persist_upload_value_writes_uploaded_bytes(tmp_path: Path):
+    persisted = ui._persist_upload_value(
+        (
+            {
+                "name": "leaf.png",
+                "content": memoryview(b"abc123"),
+            },
+        ),
+        tmp_path,
+    )
+
+    assert persisted == tmp_path / "leaf.png"
+    assert persisted.read_bytes() == b"abc123"
+
+
+def test_persist_upload_value_returns_none_for_empty_upload(tmp_path: Path):
+    assert ui._persist_upload_value((), tmp_path) is None

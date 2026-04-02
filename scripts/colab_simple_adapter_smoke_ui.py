@@ -63,6 +63,15 @@ def _extract_upload_record(upload_value: Any) -> tuple[Optional[str], Optional[b
     return str(name), bytes(content)
 
 
+def _persist_upload_value(upload_value: Any, upload_dir: Path) -> Optional[Path]:
+    upload_name, upload_bytes = _extract_upload_record(upload_value)
+    if not upload_name or not upload_bytes:
+        return None
+    target_path = upload_dir / Path(upload_name).name
+    target_path.write_bytes(upload_bytes)
+    return target_path
+
+
 def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> str:
     confidence = float(result.get("confidence", 0.0)) * 100.0
     ood_label = "OOD" if bool(result.get("is_ood")) else "In-distribution"
@@ -183,6 +192,7 @@ def launch_simple_adapter_smoke_ui(
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
     status_output = widgets.Output()
     result_output = widgets.Output()
+    upload_state: dict[str, Optional[Path]] = {"path": None}
 
     def selected_candidate() -> dict[str, Any]:
         manual_path = adapter_path_text.value.strip()
@@ -197,16 +207,26 @@ def launch_simple_adapter_smoke_ui(
         return adapter_candidates[selected_index]
 
     def resolve_image_path() -> Path:
-        upload_name, upload_bytes = _extract_upload_record(image_upload.value)
-        if upload_name and upload_bytes:
-            target_path = upload_dir / Path(upload_name).name
-            target_path.write_bytes(upload_bytes)
-            return target_path
-
         raw_path = image_path_text.value.strip()
         if raw_path:
             return Path(raw_path).expanduser()
+        uploaded_path = upload_state.get("path") or _persist_upload_value(image_upload.value, upload_dir)
+        if uploaded_path is not None:
+            upload_state["path"] = uploaded_path
+            image_path_text.value = str(uploaded_path)
+            return uploaded_path
         raise ValueError("Bir resim yukleyin veya mevcut bir dosya yolu girin.")
+
+    def handle_upload_change(change: Any) -> None:
+        new_value = change.get("new") if isinstance(change, dict) else image_upload.value
+        persisted_path = _persist_upload_value(new_value, upload_dir)
+        if persisted_path is None:
+            return
+        upload_state["path"] = persisted_path
+        image_path_text.value = str(persisted_path)
+        with status_output:
+            clear_output(wait=True)
+            print(f"Yuklenen resim hazir: {persisted_path.name}")
 
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
         display(HTML(_build_result_html(summary, result, image_path)))
@@ -263,6 +283,7 @@ def launch_simple_adapter_smoke_ui(
 
     refresh_button.on_click(refresh)
     run_button.on_click(run_prediction)
+    image_upload.observe(handle_upload_change, names="value")
     display(
         widgets.VBox(
             [
@@ -280,4 +301,9 @@ def launch_simple_adapter_smoke_ui(
     )
     refresh()
 
-__all__ = ["launch_simple_adapter_smoke_ui", "_ensure_colab_widget_manager", "_build_result_html"]
+__all__ = [
+    "launch_simple_adapter_smoke_ui",
+    "_ensure_colab_widget_manager",
+    "_build_result_html",
+    "_persist_upload_value",
+]
