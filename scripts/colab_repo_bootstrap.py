@@ -322,6 +322,10 @@ def mirror_checkpoint_state_to_repo(
     if mirrored_root is None:
         return None
 
+    source_checkpoints_dir = source / "checkpoints"
+    if not source_checkpoints_dir.exists():
+        return mirrored_root
+
     best_manifest = _read_json_dict(source / "best_checkpoint.json")
     best_name = str(best_manifest.get("name") or "").strip()
     source_best_path = source / "checkpoints" / "best"
@@ -331,8 +335,19 @@ def mirror_checkpoint_state_to_repo(
         candidate = Path(manifest_path).expanduser()
         if candidate.exists():
             source_best_path = candidate
+        else:
+            raise RuntimeError(f"Best checkpoint path from manifest was not found: {candidate}")
+    elif best_name:
+        named_candidate = source_checkpoints_dir / best_name
+        if named_candidate.exists():
+            source_best_path = named_candidate
 
     if not source_best_path.exists():
+        if any(source_checkpoints_dir.iterdir()):
+            raise RuntimeError(
+                "Best checkpoint could not be resolved from checkpoint_state metadata. "
+                "Check best_checkpoint.json and the checkpoint directory contents."
+            )
         return mirrored_root
 
     destination_checkpoints_dir = destination / "checkpoints"

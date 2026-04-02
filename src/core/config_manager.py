@@ -58,12 +58,30 @@ class ConfigurationManager:
             return {schema_name: payload}
         return payload
 
+    def _available_environment_names(self) -> list[str]:
+        names: list[str] = []
+        for candidate in sorted(self.config_dir.glob("*.json")):
+            if candidate.name == "base.json":
+                continue
+            try:
+                payload = _read_json(candidate)
+            except Exception:
+                continue
+            if is_versioned_config_surface_payload(payload):
+                names.append(candidate.stem)
+        return names
+
     def get_environment_config(self, env: str) -> Dict[str, Any]:
         if not env:
             return {}
         env_path = self.config_dir / f"{env}.json"
         if not env_path.exists():
-            return {}
+            available = self._available_environment_names()
+            available_text = ", ".join(available) if available else "(none)"
+            raise FileNotFoundError(
+                f"Config environment '{env}' was not found under {self.config_dir}. "
+                f"Available environments: {available_text}"
+            )
         return migrate_config_payload(_read_json(env_path))
 
     def load_all_configs(self) -> Dict[str, Any]:

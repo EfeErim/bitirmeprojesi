@@ -271,6 +271,42 @@ def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: P
     assert "ckpt_other" not in mirrored_index
 
 
+def test_mirror_checkpoint_state_to_repo_uses_checkpoint_name_when_manifest_path_missing(tmp_path: Path):
+    source_root = tmp_path / "source"
+    destination_root = tmp_path / "repo" / "runs" / "run_1" / "checkpoint_state"
+
+    best_source = source_root / "checkpoints" / "ckpt_best"
+    best_source.mkdir(parents=True, exist_ok=True)
+    (best_source / "checkpoint.pt").write_text("best", encoding="utf-8")
+
+    (source_root / "best_checkpoint.json").write_text(
+        json.dumps({"name": "ckpt_best"}) + "\n",
+        encoding="utf-8",
+    )
+
+    mirrored_root = bootstrap.mirror_checkpoint_state_to_repo(source_root, destination_root)
+
+    assert mirrored_root == destination_root
+    assert (destination_root / "checkpoints" / "ckpt_best" / "checkpoint.pt").exists()
+
+
+def test_mirror_checkpoint_state_to_repo_raises_when_best_checkpoint_cannot_be_resolved(tmp_path: Path):
+    source_root = tmp_path / "source"
+    destination_root = tmp_path / "repo" / "runs" / "run_1" / "checkpoint_state"
+
+    unresolved_checkpoint = source_root / "checkpoints" / "ckpt_best"
+    unresolved_checkpoint.mkdir(parents=True, exist_ok=True)
+    (unresolved_checkpoint / "checkpoint.pt").write_text("best", encoding="utf-8")
+    (source_root / "best_checkpoint.json").write_text("{bad json", encoding="utf-8")
+
+    try:
+        bootstrap.mirror_checkpoint_state_to_repo(source_root, destination_root)
+    except RuntimeError as exc:
+        assert "Best checkpoint could not be resolved" in str(exc)
+    else:
+        raise AssertionError("Expected mirror_checkpoint_state_to_repo to fail on unresolved best checkpoint")
+
+
 def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     repo_root = tmp_path / "repo"
     (repo_root / "src").mkdir(parents=True)

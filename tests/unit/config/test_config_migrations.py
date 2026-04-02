@@ -123,6 +123,34 @@ def test_manager_rejects_future_config_schema_version(tmp_path):
         ConfigurationManager(config_dir=str(config_dir)).load_all_configs()
 
 
+def test_manager_rejects_missing_environment_config(tmp_path):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        config_dir / "base.json",
+        {
+            "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION,
+            "router": {"enabled": True},
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "facebook/dinov3-vitl16-pretrain-lvd1689m"},
+                    "adapter": {"target_modules_strategy": "all_linear_transformer"},
+                    "fusion": {"layers": [2, 5, 8, 11]},
+                }
+            },
+        },
+    )
+    _write_json(
+        config_dir / "legacy.json",
+        {
+            "colab": {"training": {"checkpoint_interval": 123}},
+        },
+    )
+
+    with pytest.raises(FileNotFoundError, match="Available environments: legacy"):
+        ConfigurationManager(config_dir=str(config_dir), environment="missing_env").load_all_configs()
+
+
 def test_load_config_file_migrates_versioned_surface(tmp_path):
     config_dir = tmp_path / "config"
     config_dir.mkdir(parents=True, exist_ok=True)
