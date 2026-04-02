@@ -1106,7 +1106,8 @@ def _build_worst_fold_summary(folds: Sequence[Dict[str, Any]], method_name: str)
         return {}
     candidates.sort(
         key=lambda item: (
-            float("-inf") if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
+            bool(item.get("ood_false_positive_rate") is None),
+            0.0 if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
             float("inf") if item.get("ood_auroc") is None else float(item["ood_auroc"]),
             str(item.get("held_out_class", "")),
         )
@@ -1572,6 +1573,7 @@ def run_leave_one_class_out_benchmark(
         },
     )
     return summary_payload
+
 
 
 

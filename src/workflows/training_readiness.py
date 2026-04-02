@@ -263,11 +263,22 @@ def build_provenance_slice_breakdown(
         and str(row.get("sample_origin", "") or "").strip() == "in_distribution"
         and str(row.get("split_name", classification_split) or classification_split).strip() == str(classification_split)
     ]
+    authoritative_metric_rows = [
+        dict(row)
+        for row in prediction_rows
+        if row.get("true_index") is not None and row.get("pred_index") is not None
+    ]
     payload["authoritative_sample_count"] = int(len(prediction_rows))
     if not prediction_rows:
         warnings.append("Authoritative evaluation did not expose in-distribution prediction rows for provenance analysis.")
         payload["warnings"] = warnings
         return payload
+    authoritative_pooled_metrics = _to_metric_triplet(
+        compute_plan_metrics(
+            y_true=[int(row["true_index"]) for row in authoritative_metric_rows],
+            y_pred=[int(row["pred_index"]) for row in authoritative_metric_rows],
+        )
+    )
 
     matched_rows: list[Dict[str, Any]] = []
     unmatched_count = 0
@@ -325,7 +336,9 @@ def build_provenance_slice_breakdown(
             if len(slice_rows) < int(max(1, min_reported_slice_samples)):
                 skipped_slice_count += 1
                 continue
-            reported_slices.append(_slice_metric_payload(slice_name, slice_rows, pooled_metrics=pooled_metrics))
+            reported_slices.append(
+                _slice_metric_payload(slice_name, slice_rows, pooled_metrics=authoritative_pooled_metrics)
+            )
         worst_slices: Dict[str, Any] = {}
         for metric_name in _SLICE_METRIC_NAMES:
             metric_candidates = [
@@ -473,3 +486,4 @@ def build_training_summary_payload(
         },
         "final_metrics": dict(final_metrics),
     }
+

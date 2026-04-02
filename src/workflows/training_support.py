@@ -1,4 +1,4 @@
-"""Internal helpers for the public training workflow facade."""
+﻿"""Internal helpers for the public training workflow facade."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from src.shared.json_utils import deep_merge
 from src.training.services.class_balance import build_class_balance_runtime, format_under_min_class_error
+from src.training.services.runtime_dataset import resolve_runtime_dataset
 
 
 def loader_size(loader: Any) -> int:
@@ -60,6 +61,9 @@ class TrainingRunSetup:
     adapter: Any
     sampler_runtime: Dict[str, Any]
     class_balance_runtime: Dict[str, Any]
+    runtime_dataset_key: str
+    runtime_crop_root: Path
+    runtime_dataset_resolution_source: str
 
 
 def _dataset_class_counts(loader: Any) -> Dict[str, int]:
@@ -192,10 +196,11 @@ def prepare_training_run(
     data_cfg = dict(training_cfg.get("data", {}))
     colab_cfg = dict(config.get("colab", {}).get("training", {}))
     resolved_run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}")
+    resolved_dataset = resolve_runtime_dataset(data_dir=data_dir, crop_name=crop_name)
 
     loaders = loader_factory(
         data_dir=str(data_dir),
-        crop=crop_name,
+        crop=resolved_dataset.dataset_key,
         class_names=class_names,
         batch_size=int(training_cfg.get("batch_size", 8)),
         num_workers=int(num_workers if num_workers is not None else colab_cfg.get("num_workers", 2)),
@@ -226,6 +231,7 @@ def prepare_training_run(
         data_dir=data_dir,
         detected_classes=detected_classes,
         split_class_counts=split_class_counts,
+        dataset_key=resolved_dataset.dataset_key,
     )
     if class_balance_runtime.get("under_min_classes"):
         raise ValueError(format_under_min_class_error(class_balance_runtime))
@@ -258,6 +264,9 @@ def prepare_training_run(
         adapter=adapter,
         sampler_runtime=sampler_runtime,
         class_balance_runtime=class_balance_runtime,
+        runtime_dataset_key=resolved_dataset.dataset_key,
+        runtime_crop_root=resolved_dataset.crop_root,
+        runtime_dataset_resolution_source=resolved_dataset.resolution_source,
     )
 
 def build_artifact_payload(
@@ -279,3 +288,5 @@ def build_artifact_payload(
             "summary": summary_artifacts,
         }
     )
+
+

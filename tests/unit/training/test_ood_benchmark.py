@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 
 import torch
@@ -313,6 +313,54 @@ def test_benchmark_summary_auto_selection_prefers_lower_worst_fold_fpr_before_po
     assert summary["method_comparison"]["methods"]["energy"]["worst_fold"]["metrics"]["ood_false_positive_rate"] == 0.05
 
 
+
+def test_benchmark_summary_prefers_real_fpr_when_worst_fold_has_missing_fpr():
+    summary = _build_benchmark_summary_payload(
+        folds=[
+            {
+                "held_out_class": "healthy",
+                "status": "completed",
+                "metrics": {"accuracy": 1.0},
+                "method_metrics": {
+                    "ensemble": {
+                        "ood_auroc": 0.30,
+                        "ood_false_positive_rate": None,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                    },
+                },
+            },
+            {
+                "held_out_class": "disease_a",
+                "status": "completed",
+                "metrics": {"accuracy": 1.0},
+                "method_metrics": {
+                    "ensemble": {
+                        "ood_auroc": 0.90,
+                        "ood_false_positive_rate": 0.18,
+                        "ood_samples": 5,
+                        "in_distribution_samples": 5,
+                    },
+                },
+            },
+        ],
+        primary_score_method="ensemble",
+        requested_primary_score_method="auto",
+        target_values={
+            "accuracy": 0.93,
+            "ood_auroc": 0.92,
+            "ood_false_positive_rate": 0.10,
+            "ood_samples": 5,
+            "in_distribution_samples": 5,
+            "sure_ds_f1": 0.90,
+            "conformal_empirical_coverage": 0.95,
+            "conformal_avg_set_size": 2.0,
+        },
+        base_context={"crop_name": "tomato"},
+    )
+
+    assert summary["method_comparison"]["methods"]["ensemble"]["worst_fold"]["held_out_class"] == "disease_a"
+    assert summary["method_comparison"]["methods"]["ensemble"]["worst_fold"]["metrics"]["ood_false_positive_rate"] == 0.18
 def test_run_leave_one_class_out_benchmark_fails_when_class_count_is_too_small(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(
         "src.training.services.ood_benchmark.evaluate_model_with_artifact_metrics",
@@ -627,3 +675,4 @@ def test_resume_key_changes_when_dataset_fingerprint_changes():
     )
 
     assert first != second
+

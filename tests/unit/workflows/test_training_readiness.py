@@ -1,5 +1,6 @@
 ﻿import json
 
+import pytest
 from src.workflows.training_readiness import (
     build_provenance_slice_breakdown,
     build_production_readiness_context,
@@ -176,3 +177,57 @@ def test_build_provenance_slice_breakdown_reports_populated_dimensions(tmp_path)
     assert summary["available"] is True
     assert summary["matched_sample_count"] == 10
     assert "source_dataset" in summary["reported_dimensions"]
+
+
+def test_build_provenance_slice_breakdown_uses_authoritative_split_for_slice_deltas(tmp_path):
+    crop_root = tmp_path / "runtime_data" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+
+    manifest_rows = []
+    prediction_rows = []
+    for index in range(10):
+        class_name = "healthy" if index % 2 == 0 else "disease_a"
+        runtime_relative_path = f"test/{class_name}/img_{index}.jpg"
+        manifest_rows.append(
+            {
+                "split": "test",
+                "raw_class_name": class_name,
+                "normalized_class_name": class_name,
+                "relative_path": f"{class_name}/img_{index}.jpg",
+                "runtime_relative_path": runtime_relative_path,
+                "source_dataset": "set_a" if index < 5 else "",
+                "source_hint": "original",
+            }
+        )
+        true_index = index % 2
+        pred_index = true_index if index < 8 else 0
+        prediction_rows.append(
+            {
+                "sample_origin": "in_distribution",
+                "split_name": "test",
+                "image_path": str(crop_root / runtime_relative_path),
+                "true_index": true_index,
+                "pred_index": pred_index,
+            }
+        )
+
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps({"rows": manifest_rows}, indent=2),
+        encoding="utf-8",
+    )
+
+    breakdown = build_provenance_slice_breakdown(
+        crop_root=crop_root,
+        classification_split="test",
+        authoritative_evaluation=_FakeEvaluation(
+            [row["true_index"] for row in prediction_rows],
+            prediction_rows=prediction_rows,
+        ),
+    )
+
+    source_dataset = breakdown["dimensions"]["source_dataset"]
+    assert source_dataset["reported_slice_count"] == 1
+    assert source_dataset["slices"][0]["name"] == "set_a"
+    assert source_dataset["slices"][0]["deltas"]["accuracy"] == pytest.approx(0.1)
+
+

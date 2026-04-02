@@ -683,6 +683,9 @@ class TrainingWorkflow:
         loader_sizes = dict(run_setup.loader_sizes)
         loader_batch_counts = dict(run_setup.loader_batch_counts)
         detected_classes = list(run_setup.detected_classes)
+        runtime_dataset_key = str(run_setup.runtime_dataset_key)
+        runtime_crop_root = Path(run_setup.runtime_crop_root)
+        runtime_dataset_resolution_source = str(run_setup.runtime_dataset_resolution_source)
         split_class_counts = {
             str(split_name): {str(class_name): int(count) for class_name, count in counts.items()}
             for split_name, counts in dict(run_setup.split_class_counts).items()
@@ -910,7 +913,7 @@ class TrainingWorkflow:
             ood_benchmark=ood_benchmark,
         )
         provenance_breakdown = build_provenance_slice_breakdown_payload(
-            crop_root=resolved_data_dir / crop_name,
+            crop_root=runtime_crop_root,
             classification_split=(authoritative_split or authoritative_evaluation_split),
             authoritative_evaluation=authoritative_evaluation,
         )
@@ -1033,8 +1036,10 @@ class TrainingWorkflow:
                 "git": _collect_git_context(repo_root),
                 "package_versions": _collect_package_versions(),
                 "dataset": {
-                    "crop_root": str((resolved_data_dir / crop_name).resolve()),
-                    "manifests": _collect_dataset_manifest_context(resolved_data_dir / crop_name),
+                    "crop_root": str(runtime_crop_root.resolve()),
+                    "dataset_key": runtime_dataset_key,
+                    "resolution_source": runtime_dataset_resolution_source,
+                    "manifests": _collect_dataset_manifest_context(runtime_crop_root),
                 },
                 "loader_sizes": dict(loader_sizes),
                 "loader_batch_counts": dict(loader_batch_counts),
@@ -1093,6 +1098,10 @@ class TrainingWorkflow:
         )
 
         return result
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-import csv
+﻿import csv
 import json
 from pathlib import Path
 
@@ -252,6 +252,47 @@ def test_reporting_writes_ood_method_comparison_artifact(tmp_path: Path):
     assert "energy" in summary["method_comparison"]["methods"]
 
 
+
+def test_reporting_prefers_real_fpr_when_building_worst_slice_summary(tmp_path: Path):
+    result = persist_validation_artifacts(
+        artifact_root=tmp_path / "training_metrics",
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        ood_labels=[0, 0, 0, 0, 1, 1],
+        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+        ood_scores_by_method={
+            "ensemble": [0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+            "energy": [0.2, 0.3, 0.22, 0.25, 0.85, 0.95],
+        },
+        sure_ds_f1=0.95,
+        conformal_empirical_coverage=0.97,
+        conformal_avg_set_size=1.0,
+        ood_type_breakdown={
+            "missing_fpr": {
+                "sample_count": 2,
+                "method_metrics": {
+                    "energy": {"ood_auroc": 0.10, "ood_false_positive_rate": None, "in_distribution_samples": 4},
+                },
+            },
+            "blur": {
+                "sample_count": 2,
+                "method_metrics": {
+                    "energy": {"ood_auroc": 0.84, "ood_false_positive_rate": 0.08, "in_distribution_samples": 4},
+                },
+            },
+        },
+        context={
+            "ood_requested_primary_score_method": "auto",
+            "ood_primary_score_method": "ensemble",
+            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_score_methods": ["ensemble", "energy"],
+        },
+    )
+
+    comparison = json.loads(result["paths"]["ood_method_comparison_json"].read_text(encoding="utf-8"))
+    assert comparison["methods"]["energy"]["worst_slice"]["slice_name"] == "blur"
+    assert comparison["methods"]["energy"]["worst_slice"]["metrics"]["ood_false_positive_rate"] == 0.08
 def test_reporting_writes_provenance_slice_breakdown_artifact(tmp_path: Path):
     result = persist_provenance_slice_breakdown_artifact(
         artifact_root=tmp_path / "training_metrics",
@@ -455,3 +496,4 @@ def test_guided_catalog_includes_prediction_and_hard_example_entries(tmp_path: P
     assert "test/predictions.csv" in entry_paths
     assert "test/hard_examples.csv" in entry_paths
     assert "test/hard_examples_thumbnails" in entry_paths
+

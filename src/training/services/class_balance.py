@@ -1,4 +1,4 @@
-"""Class-support policy and effective-number class-balanced weighting."""
+﻿"""Class-support policy and effective-number class-balanced weighting."""
 
 from __future__ import annotations
 
@@ -81,8 +81,9 @@ def resolve_reference_class_counts(
     data_dir: str | Path,
     detected_classes: Sequence[str],
     split_class_counts: Dict[str, Dict[str, int]],
+    dataset_key: str | None = None,
 ) -> Dict[str, Any]:
-    crop_root = Path(data_dir) / str(crop_name)
+    crop_root = Path(data_dir) / str(dataset_key or crop_name)
     filename, manifest_counts, skipped = _manifest_class_counts(crop_root)
     normalized_detected = [normalize_class_name(name) for name in list(detected_classes)]
     resolved_counts: Dict[str, int] = {}
@@ -139,6 +140,7 @@ def build_class_balance_runtime(
     data_dir: str | Path,
     detected_classes: Sequence[str],
     split_class_counts: Dict[str, Dict[str, int]],
+    dataset_key: str | None = None,
     beta: float = CLASS_BALANCE_BETA,
     min_supported_samples: int = MIN_SUPPORTED_CLASS_SAMPLES,
     eligible_max_samples: int = CLASS_BALANCE_ELIGIBLE_MAX_SAMPLES,
@@ -148,6 +150,7 @@ def build_class_balance_runtime(
         data_dir=data_dir,
         detected_classes=detected_classes,
         split_class_counts=split_class_counts,
+        dataset_key=dataset_key,
     )
     resolved_counts = {
         str(class_name): int(count)
@@ -201,3 +204,4 @@ def format_under_min_class_error(class_balance_runtime: Dict[str, Any]) -> str:
         f"Supported classes below minimum reference count of {minimum}: {details}. "
         "Remove them from the supported label set before training this adapter."
     )
+

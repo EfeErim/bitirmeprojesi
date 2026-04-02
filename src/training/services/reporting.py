@@ -377,7 +377,8 @@ def _extract_worst_slice_summary(method_name: str, ood_type_breakdown: Dict[str,
         return {}
     candidates.sort(
         key=lambda item: (
-            float("-inf") if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
+            bool(item.get("ood_false_positive_rate") is None),
+            0.0 if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
             float("inf") if item.get("ood_auroc") is None else float(item["ood_auroc"]),
             str(item.get("slice_name", "")),
         )
@@ -1031,3 +1032,4 @@ def persist_validation_artifacts(
         "metric_gate": metric_gate,
         "paths": paths,
     }
+

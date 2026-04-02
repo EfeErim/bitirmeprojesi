@@ -453,6 +453,72 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
     assert result.production_readiness["context"]["provenance_summary"]["reported_dimension_count"] >= 1
     assert result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
 
+
+def test_training_workflow_resolves_prepared_runtime_dataset_key_for_crop(monkeypatch, tmp_path: Path):
+    runtime_root = tmp_path / "runtime_data"
+    dataset_root = runtime_root / "tomato__fruit"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+    (dataset_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "crop_name": "tomato",
+                "part_name": "fruit",
+                "dataset_key": "tomato__fruit",
+                "classes": [
+                    {"class_name": "healthy", "image_count": 260},
+                    {"class_name": "disease_a", "image_count": 120},
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    loader_calls = []
+
+    def _capture_loader_kwargs(**kwargs):
+        loader_calls.append(dict(kwargs))
+        return {
+            "train": FakeLoader(["healthy", "disease_a"], split_name="continual"),
+            "val": FakeLoader(["healthy", "disease_a"], split_name="val"),
+            "test": FakeLoader(["healthy", "disease_a"], split_name="test"),
+        }
+
+    monkeypatch.setattr("src.workflows.training.create_training_loaders", _capture_loader_kwargs)
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda *_args, **_kwargs: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=runtime_root,
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert loader_calls[0]["crop"] == "tomato__fruit"
+    run_context = json.loads((result.artifact_dir / "training" / "run_context.json").read_text(encoding="utf-8"))
+    assert run_context["dataset"]["dataset_key"] == "tomato__fruit"
+    assert Path(run_context["dataset"]["crop_root"]) == dataset_root.resolve()
+    assert run_context["dataset"]["resolution_source"] == "manifest:split_manifest.json"
 def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mode(monkeypatch, tmp_path: Path):
     saved_methods = []
 
@@ -1041,6 +1107,7 @@ def test_training_workflow_fails_for_supported_classes_below_min_reference_count
             data_dir=tmp_path / "runtime_data",
             output_dir=tmp_path / "outputs",
         )
+
 
 
 
