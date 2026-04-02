@@ -64,7 +64,7 @@ def test_load_taxonomy_and_compatibility_from_file(tmp_path):
         "common_weeds": ["weed_a"],
         "ornamentals": ["rose"],
         "parts": {"core": ["leaf"], "extended": ["fruit"]},
-        "crop_part_compatibility": {"Tomato": ["Leaf", "Fruit"], "bad": "skip"},
+        "crop_part_compatibility": {"Tomato": ["Leaf", "Whole", "Entire Plant", "Fruit"], "bad": "skip"},
     }
     taxonomy_path = tmp_path / "taxonomy.json"
     taxonomy_path.write_text(json.dumps(taxonomy), encoding="utf-8")
@@ -74,4 +74,4 @@ def test_load_taxonomy_and_compatibility_from_file(tmp_path):
 
     assert crops == ["tomato", "weed_a", "rose"]
     assert parts == ["leaf", "fruit"]
-    assert compatibility == {"tomato": ["leaf", "fruit"]}
+    assert compatibility == {"tomato": ["leaf", "whole plant", "fruit"]}

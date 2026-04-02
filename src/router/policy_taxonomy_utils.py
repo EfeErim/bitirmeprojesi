@@ -8,6 +8,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.router.label_normalization import normalize_part_label
+
 logger = logging.getLogger(__name__)
 
 __all__ = [
@@ -177,7 +179,7 @@ def load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
         if not isinstance(parts, list):
             continue
         crop_key = str(crop_name).strip().lower()
-        part_values = [str(part).strip().lower() for part in parts if str(part).strip()]
+        part_values = list(dict.fromkeys(normalize_part_label(part) for part in parts if normalize_part_label(part)))
         if crop_key and part_values:
             normalized[crop_key] = part_values
     return normalized

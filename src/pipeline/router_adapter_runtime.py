@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Optional
 
 from PIL import Image
 
@@ -32,7 +31,10 @@ StatusCallback = Callable[[str], None]
 class _CachedAdapter:
     adapter: IndependentCropAdapter
     adapter_dir: Path
-    adapter_bundle_token: str
+    adapter_meta_mtime_ns: int
+    adapter_meta_size: int
+    adapter_max_entry_mtime_ns: int
+    adapter_entry_count: int
 
 
 class RouterAdapterRuntime:
@@ -104,58 +106,43 @@ class RouterAdapterRuntime:
         raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
 
     @staticmethod
-    def _bundle_sentinel_paths(adapter_dir: Path) -> Iterable[Path]:
-        try:
-            entries = sorted(adapter_dir.iterdir())
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"No adapter assets found under {adapter_dir}") from exc
-
-        yielded: set[Path] = set()
-        for entry in entries:
-            yielded.add(entry)
-            yield entry
-            if not entry.is_dir():
-                continue
-            try:
-                children = sorted(entry.iterdir())
-            except OSError:
-                continue
-            for child in children:
-                if not child.is_file():
-                    continue
-                yielded.add(child)
-                yield child
-        meta_path = adapter_dir / "adapter_meta.json"
-        if meta_path.exists() and meta_path not in yielded:
-            yield meta_path
-
-    @staticmethod
-    def _adapter_cache_token(adapter_dir: Path) -> tuple[Path, str]:
+    def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, int, int, int, int]:
         resolved_dir = adapter_dir.resolve()
-        digest = hashlib.sha256()
-        file_count = 0
-        for path in RouterAdapterRuntime._bundle_sentinel_paths(resolved_dir):
-            stat = path.stat()
-            digest.update(path.relative_to(resolved_dir).as_posix().encode("utf-8"))
-            digest.update(b"\0")
-            digest.update(b"f" if path.is_file() else b"d")
-            digest.update(b":")
-            digest.update(str(int(stat.st_size)).encode("utf-8"))
-            digest.update(b":")
-            digest.update(str(int(stat.st_mtime_ns)).encode("utf-8"))
-            digest.update(b"\0")
-            file_count += 1
-        if file_count <= 0:
-            raise FileNotFoundError(f"No adapter assets found under {resolved_dir}")
-        return resolved_dir, digest.hexdigest()
+        meta_path = resolved_dir / "adapter_meta.json"
+        try:
+            meta_stat = meta_path.stat()
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"No adapter assets found under {resolved_dir}") from exc
+
+        entry_stats = [entry.stat() for entry in sorted(resolved_dir.iterdir())]
+        max_entry_mtime_ns = max((int(stat.st_mtime_ns) for stat in entry_stats), default=int(meta_stat.st_mtime_ns))
+        return (
+            resolved_dir,
+            int(meta_stat.st_mtime_ns),
+            int(meta_stat.st_size),
+            int(max_entry_mtime_ns),
+            len(entry_stats),
+        )
 
     def load_adapter(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> IndependentCropAdapter:
         crop_key = str(crop_name).strip().lower()
         resolved_dir = self._resolve_adapter_dir(crop_key, adapter_dir=adapter_dir)
-        resolved_cache_dir, bundle_token = self._adapter_cache_token(resolved_dir)
+        (
+            resolved_cache_dir,
+            adapter_meta_mtime_ns,
+            adapter_meta_size,
+            adapter_max_entry_mtime_ns,
+            adapter_entry_count,
+        ) = self._adapter_meta_state(resolved_dir)
         cached = self.adapters.get(crop_key)
         if cached is not None:
-            if cached.adapter_dir == resolved_cache_dir and cached.adapter_bundle_token == bundle_token:
+            if (
+                cached.adapter_dir == resolved_cache_dir
+                and cached.adapter_meta_mtime_ns == adapter_meta_mtime_ns
+                and cached.adapter_meta_size == adapter_meta_size
+                and cached.adapter_max_entry_mtime_ns == adapter_max_entry_mtime_ns
+                and cached.adapter_entry_count == adapter_entry_count
+            ):
                 return cached.adapter
             self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key}...")
         else:
@@ -166,7 +153,10 @@ class RouterAdapterRuntime:
         self.adapters[crop_key] = _CachedAdapter(
             adapter=adapter,
             adapter_dir=resolved_cache_dir,
-            adapter_bundle_token=bundle_token,
+            adapter_meta_mtime_ns=adapter_meta_mtime_ns,
+            adapter_meta_size=adapter_meta_size,
+            adapter_max_entry_mtime_ns=adapter_max_entry_mtime_ns,
+            adapter_entry_count=adapter_entry_count,
         )
         self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter

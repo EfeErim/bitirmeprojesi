@@ -29,6 +29,7 @@ from src.router.heuristics import (
     select_best_crop_with_fallback,
     select_part_label_with_specificity,
 )
+from src.router.label_normalization import normalize_part_label
 from src.router.pipeline_flow_utils import resolve_effective_max_detections
 from src.router.roi_helpers import (
     bbox_area_ratio,
@@ -67,14 +68,7 @@ class Sam3RequestContext:
 
 
 def _normalize_sam3_prompt_label(label: Any) -> str:
-    normalized = str(label).strip().lower()
-    if not normalized:
-        return ""
-    aliases = {
-        "whole": "whole plant",
-        "entire plant": "whole plant",
-    }
-    return aliases.get(normalized, normalized)
+    return normalize_part_label(label)
 
 
 def build_request_context(

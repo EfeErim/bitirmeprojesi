@@ -368,6 +368,19 @@ def _iter_adapter_meta_paths(root: Path) -> Iterable[Path]:
             yield Path(dirpath) / "adapter_meta.json"
 
 
+def _normalize_search_roots(search_roots: Sequence[str | Path]) -> List[Path]:
+    normalized_roots: List[Path] = []
+    normalized_keys: List[Path] = []
+    for raw_root in search_roots:
+        root = Path(raw_root)
+        root_key = root.resolve(strict=False)
+        if any(root_key == existing or root_key.is_relative_to(existing) for existing in normalized_keys):
+            continue
+        normalized_roots.append(root)
+        normalized_keys.append(root_key)
+    return normalized_roots
+
+
 def discover_adapter_candidates(
     search_roots: Optional[Sequence[str | Path]] = None,
     *,
@@ -375,7 +388,7 @@ def discover_adapter_candidates(
 ) -> List[Dict[str, Any]]:
     """Search one or more roots for adapter bundles and return selection-ready metadata."""
     requested_crop = _normalize_crop_name(crop_name) if crop_name else None
-    roots = [Path(root) for root in (search_roots or DEFAULT_DISCOVERY_ROOTS)]
+    roots = _normalize_search_roots(search_roots or DEFAULT_DISCOVERY_ROOTS)
     candidates_by_identity: Dict[str, Dict[str, Any]] = {}
     seen: set[str] = set()
 

@@ -113,7 +113,7 @@ class CropDataset(Dataset):
             class_dir = base_dir / class_name
             if not class_dir.exists():
                 continue
-            for image_path in sorted(class_dir.iterdir()):
+            for image_path in sorted(class_dir.rglob("*")):
                 if image_path.suffix.lower() not in IMAGE_EXTENSIONS:
                     continue
                 image_paths.append(image_path)
@@ -135,7 +135,7 @@ class CropDataset(Dataset):
         failed: List[Dict[str, str]] = []
         for img_path, label in zip(self.image_paths, self.labels):
             try:
-                self._decode_image(img_path)
+                self._verify_image_file(img_path)
                 valid_paths.append(img_path)
                 valid_labels.append(label)
             except Exception as exc:
@@ -161,6 +161,11 @@ class CropDataset(Dataset):
             raise ValueError(f"Failed to load image: {img_path}")
         rgb = cv2.cvtColor(raw, cv2.COLOR_BGR2RGB)
         return Image.fromarray(rgb)
+
+    @staticmethod
+    def _verify_image_file(img_path: Path) -> None:
+        with Image.open(img_path) as image:
+            image.verify()
 
     def _load_image(self, img_path: Path) -> Image.Image:
         cache = self.cache

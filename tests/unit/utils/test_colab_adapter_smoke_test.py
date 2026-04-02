@@ -180,6 +180,7 @@ def _make_payload(
     }
 
 
+
 def test_load_adapter_summary_accepts_parent_export_dir(monkeypatch, tmp_path: Path):
     export_root = tmp_path / "adapter_export"
     asset_dir = _write_adapter_export(export_root)
@@ -193,6 +194,7 @@ def test_load_adapter_summary_accepts_parent_export_dir(monkeypatch, tmp_path: P
     assert summary["target_modules_resolved"] == ["encoder.layer.0.attention.q_proj"]
 
 
+
 def test_load_adapter_summary_accepts_asset_dir(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
@@ -201,6 +203,7 @@ def test_load_adapter_summary_accepts_asset_dir(monkeypatch, tmp_path: Path):
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["class_count"] == 2
+
 
 
 def test_load_adapter_summary_accepts_adapter_meta_file(monkeypatch, tmp_path: Path):
@@ -213,6 +216,7 @@ def test_load_adapter_summary_accepts_adapter_meta_file(monkeypatch, tmp_path: P
     assert summary["resolved_adapter_dir"] == str(asset_dir)
 
 
+
 def test_load_adapter_summary_accepts_current_drive_export_dir_and_infers_crop(monkeypatch, tmp_path: Path):
     run_dir = tmp_path / "telemetry" / "run_789"
     asset_dir = _write_current_drive_adapter_export(run_dir, crop_name="tomato")
@@ -222,6 +226,7 @@ def test_load_adapter_summary_accepts_current_drive_export_dir_and_infers_crop(m
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
+
 
 
 def test_load_adapter_summary_accepts_telemetry_run_dir_and_infers_crop_from_readiness(
@@ -238,6 +243,7 @@ def test_load_adapter_summary_accepts_telemetry_run_dir_and_infers_crop_from_rea
     assert summary["crop_name"] == "tomato"
 
 
+
 def test_load_adapter_summary_accepts_telemetry_artifacts_dir_and_infers_crop_from_summary(
     monkeypatch, tmp_path: Path
 ):
@@ -250,6 +256,7 @@ def test_load_adapter_summary_accepts_telemetry_artifacts_dir_and_infers_crop_fr
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
+
 
 
 def test_load_adapter_summary_infers_crop_from_local_export_crop_info(monkeypatch, tmp_path: Path):
@@ -265,6 +272,7 @@ def test_load_adapter_summary_infers_crop_from_local_export_crop_info(monkeypatc
     assert summary["crop_name"] == "tomato"
 
 
+
 def test_load_adapter_summary_infers_crop_from_local_export_artifacts(monkeypatch, tmp_path: Path):
     export_root = tmp_path / "outputs" / "colab_notebook_training"
     asset_dir = _write_adapter_export(export_root)
@@ -277,6 +285,7 @@ def test_load_adapter_summary_infers_crop_from_local_export_artifacts(monkeypatc
     assert summary["crop_name"] == "tomato"
 
 
+
 def test_load_adapter_summary_infers_crop_from_adapter_meta_classes(monkeypatch, tmp_path: Path):
     export_root = tmp_path / "outputs" / "adapter_export"
     asset_dir = _write_adapter_export_with_prefixed_classes(export_root)
@@ -286,6 +295,7 @@ def test_load_adapter_summary_infers_crop_from_adapter_meta_classes(monkeypatch,
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
+
 
 
 def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Path):
@@ -310,6 +320,7 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
     assert "views" not in result
 
 
+
 def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_path: Path):
     asset_dir = _write_current_drive_adapter_export(tmp_path / "telemetry" / "run_123", crop_name="tomato")
     image_path = tmp_path / "leaf.png"
@@ -328,6 +339,7 @@ def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_pat
     assert result["adapter_dir"] == str(asset_dir)
 
 
+
 def test_prepare_view_tensor_resize_pad_and_center_crop_return_target_sized_tensors(tmp_path: Path):
     image_path = tmp_path / "leaf_rect.png"
     Image.new("RGB", (40, 20), color="green").save(image_path)
@@ -339,6 +351,7 @@ def test_prepare_view_tensor_resize_pad_and_center_crop_return_target_sized_tens
 
     assert tuple(resize_pad_tensor.shape) == (3, 32, 32)
     assert tuple(center_crop_tensor.shape) == (3, 32, 32)
+
 
 
 def test_predict_single_image_robust_mode_returns_ordered_views_and_full_resize_top_level(
@@ -398,6 +411,7 @@ def test_predict_single_image_robust_mode_returns_ordered_views_and_full_resize_
     ]
 
 
+
 def test_predict_single_image_robust_mode_flags_view_class_disagreement_and_keeps_full_resize_top_level(
     monkeypatch, tmp_path: Path
 ):
@@ -432,6 +446,7 @@ def test_predict_single_image_robust_mode_flags_view_class_disagreement_and_keep
     assert "view_instability" in result["uncertainty_diagnostics"]["warning_codes"]
 
 
+
 def test_predict_single_image_robust_mode_flags_view_ood_disagreement(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
@@ -459,6 +474,7 @@ def test_predict_single_image_robust_mode_flags_view_ood_disagreement(monkeypatc
     )
 
     assert "view_ood_disagreement" in result["view_consistency"]["warning_codes"]
+
 
 
 def test_predict_single_image_robust_mode_flags_large_confidence_spread(monkeypatch, tmp_path: Path):
@@ -491,6 +507,7 @@ def test_predict_single_image_robust_mode_flags_large_confidence_spread(monkeypa
     assert result["view_consistency"]["confidence_spread"] == 0.35
 
 
+
 def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_dir = tmp_path / "images"
@@ -518,6 +535,7 @@ def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, t
     assert broken_row["error"]
 
 
+
 def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path):
     drive_root = tmp_path / "drive_root"
     asset_dir = _write_current_drive_adapter_export(drive_root / "telemetry" / "run_654", crop_name="tomato")
@@ -529,6 +547,7 @@ def test_discover_adapter_candidates_reads_current_drive_exports(tmp_path: Path)
     assert candidate["adapter_dir"] == str(asset_dir)
     assert candidate["crop_name"] == "tomato"
     assert candidate["run_id"] == "run_654"
+
 
 
 def test_discover_adapter_candidates_collapses_same_run_mirrors_preferring_repo_output(tmp_path: Path):
@@ -554,6 +573,7 @@ def test_discover_adapter_candidates_collapses_same_run_mirrors_preferring_repo_
     assert candidate["run_id"] == run_id
 
 
+
 def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
     project_root = tmp_path / "project"
     asset_dir = _write_adapter_export_with_crop_info(
@@ -569,6 +589,7 @@ def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp
     assert candidates[0]["crop_name"] == "tomato"
 
 
+
 def test_discover_adapter_candidates_infers_crop_from_local_artifacts(tmp_path: Path):
     project_root = tmp_path / "project"
     export_root = project_root / "outputs" / "colab_notebook_training"
@@ -582,6 +603,7 @@ def test_discover_adapter_candidates_infers_crop_from_local_artifacts(tmp_path: 
     assert candidates[0]["crop_name"] == "tomato"
 
 
+
 def test_discover_adapter_candidates_infers_crop_from_adapter_meta_classes(tmp_path: Path):
     project_root = tmp_path / "project"
     asset_dir = _write_adapter_export_with_prefixed_classes(project_root / "adapter_export")
@@ -593,6 +615,7 @@ def test_discover_adapter_candidates_infers_crop_from_adapter_meta_classes(tmp_p
     assert candidates[0]["crop_name"] == "tomato"
 
 
+
 def test_load_adapter_summary_accepts_crop_dir_as_adapter_root(monkeypatch, tmp_path: Path):
     crop_dir = tmp_path / "models" / "adapters" / "tomato"
     asset_dir = _write_adapter_export(crop_dir)
@@ -601,6 +624,7 @@ def test_load_adapter_summary_accepts_crop_dir_as_adapter_root(monkeypatch, tmp_
     summary = smoke.load_adapter_summary("tomato", adapter_root=crop_dir, device="cpu")
 
     assert summary["resolved_adapter_dir"] == str(asset_dir)
+
 
 
 def test_load_adapter_summary_accepts_crop_dir_as_adapter_root_without_crop_name(
@@ -615,3 +639,22 @@ def test_load_adapter_summary_accepts_crop_dir_as_adapter_root_without_crop_name
     assert summary["resolved_adapter_dir"] == str(asset_dir)
     assert summary["crop_name"] == "tomato"
 
+
+
+def test_discover_adapter_candidates_skips_redundant_descendant_roots(tmp_path: Path, monkeypatch):
+    scan_roots: list[Path] = []
+    (tmp_path / "outputs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "outputs" / "nested").mkdir(parents=True, exist_ok=True)
+
+    def _recording_iter(root: Path):
+        scan_roots.append(root)
+        return iter(())
+
+    monkeypatch.setattr(smoke, "_iter_adapter_meta_paths", _recording_iter)
+
+    candidates = smoke.discover_adapter_candidates(
+        search_roots=[tmp_path, tmp_path / "outputs", tmp_path / "outputs" / "nested"],
+    )
+
+    assert candidates == []
+    assert scan_roots == [tmp_path]

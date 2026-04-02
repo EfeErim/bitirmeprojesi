@@ -56,6 +56,7 @@ def _write_adapter_meta(root: Path, crop: str) -> Path:
     return adapter_dir
 
 
+
 def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     _write_adapter_meta(adapter_root, "tomato")
@@ -91,6 +92,7 @@ def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     )
 
 
+
 def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tmp_path):
     runtime = RouterAdapterRuntime(
         config={
@@ -112,6 +114,7 @@ def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tm
     assert result["router"]["primary_detection"]["crop"] == "tomato"
     assert typed_result.ood_analysis is None
     assert "ood_analysis" not in result
+
 
 
 def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
@@ -152,6 +155,7 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
     }
 
 
+
 def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path):
     runtime = RouterAdapterRuntime(
         config={
@@ -184,6 +188,7 @@ def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path)
     assert "ood_analysis" not in result
 
 
+
 def test_predict_returns_router_unavailable_when_router_returns_no_payload(monkeypatch, tmp_path):
     runtime = RouterAdapterRuntime(
         config={
@@ -213,6 +218,7 @@ def test_predict_returns_router_unavailable_when_router_returns_no_payload(monke
     assert "ood_analysis" not in result
 
 
+
 def test_predict_returns_router_unavailable_when_router_reports_unavailable_status(monkeypatch, tmp_path):
     runtime = RouterAdapterRuntime(
         config={
@@ -240,6 +246,7 @@ def test_predict_returns_router_unavailable_when_router_reports_unavailable_stat
     assert result["router"]["status"] == "unavailable"
     assert typed_result.ood_analysis is None
     assert "ood_analysis" not in result
+
 
 
 def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_path):
@@ -287,6 +294,7 @@ def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_pat
     ]
 
 
+
 def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     _write_adapter_meta(adapter_root, "tomato")
@@ -311,6 +319,7 @@ def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     assert result.ood_analysis is not None
     assert result.router is not None
     assert result.router.primary_detection is not None
+
 
 
 def test_predict_does_not_fabricate_ood_payload_when_adapter_response_omits_it(monkeypatch, tmp_path):
@@ -346,6 +355,7 @@ def test_predict_does_not_fabricate_ood_payload_when_adapter_response_omits_it(m
     assert typed_result.ood_analysis is None
     assert "ood_analysis" not in payload
     assert "conformal_set" not in payload
+
 
 
 def test_predict_rejects_uncertain_router_handoff(monkeypatch, tmp_path):
@@ -398,6 +408,7 @@ def test_predict_rejects_uncertain_router_handoff(monkeypatch, tmp_path):
     assert "alternate_crop=potato" in result["message"]
 
 
+
 def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     _write_adapter_meta(adapter_root, "tomato")
@@ -429,6 +440,7 @@ def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_pat
         "[ADAPTER] Ready crop=tomato",
         "[RESULT] status=success crop=tomato diagnosis=healthy confidence=0.910 ood=False",
     ]
+
 
 
 def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path):
@@ -464,6 +476,7 @@ def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path
 
     assert first is not second
     assert len(built_adapters) == 2
+
 
 
 def test_load_adapter_reloads_when_non_metadata_bundle_file_changes(monkeypatch, tmp_path):
@@ -502,6 +515,7 @@ def test_load_adapter_reloads_when_non_metadata_bundle_file_changes(monkeypatch,
     assert len(built_adapters) == 2
 
 
+
 def test_runtime_rejects_unavailable_cuda(monkeypatch, tmp_path):
     monkeypatch.setattr("src.training.services.runtime.torch.cuda.is_available", lambda: False)
 
@@ -515,6 +529,7 @@ def test_runtime_rejects_unavailable_cuda(monkeypatch, tmp_path):
         assert "CUDA is not available" in str(exc)
     else:
         raise AssertionError("RouterAdapterRuntime was expected to reject unavailable CUDA.")
+
 
 
 def test_predict_returns_router_unavailable_when_router_never_becomes_ready(monkeypatch, tmp_path):
@@ -561,3 +576,38 @@ def test_predict_returns_router_unavailable_when_router_never_becomes_ready(monk
         "[ROUTER] Unavailable.",
         f"[RESULT] status=router_unavailable message={second['message']}",
     ]
+
+
+def test_predict_reload_adapter_when_adapter_meta_changes(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    adapter_dir = _write_adapter_meta(adapter_root, "tomato")
+    build_calls = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    def _build_adapter(crop_name):
+        build_calls.append(crop_name)
+        return FakeAdapter(crop_name, device="cpu")
+
+    monkeypatch.setattr(runtime, "_build_adapter", _build_adapter)
+
+    first = runtime.load_adapter("tomato")
+    second = runtime.load_adapter("tomato")
+    assert first is second
+    assert build_calls == ["tomato"]
+
+    meta_path = adapter_dir / "adapter_meta.json"
+    meta_path.write_text('{"version": 2}', encoding="utf-8")
+
+    third = runtime.load_adapter("tomato")
+    assert third is not second
+    assert build_calls == ["tomato", "tomato"]
