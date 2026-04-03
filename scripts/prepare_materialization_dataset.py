@@ -9,7 +9,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
-from scripts.colab_dataset_layout import IMAGE_EXTENSIONS, _materialize_image
+from src.data.dataset_layout import IMAGE_EXTENSIONS, _materialize_image
 from scripts.prepare_grouped_runtime_dataset import (
     DEFAULT_BIOCLIP_MODEL_ID,
     DEFAULT_DINOV3_MODEL_ID,

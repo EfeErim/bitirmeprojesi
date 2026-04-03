@@ -20,7 +20,7 @@ import numpy as np
 from PIL import Image, ImageOps
 from sklearn.neighbors import NearestNeighbors
 
-from scripts.colab_dataset_layout import (
+from src.data.dataset_layout import (
     IMAGE_EXTENSIONS,
     _class_name_aliases,
     _materialize_image,

@@ -11,7 +11,7 @@ from typing import Any, Optional
 from IPython.display import HTML, clear_output, display
 from PIL import Image
 
-from scripts.colab_adapter_smoke_test import (
+from src.pipeline.adapter_smoke import (
     discover_adapter_candidates,
     load_adapter_summary,
     predict_single_image,
