@@ -427,7 +427,6 @@ def test_repo_dataset_scaffold() -> None:
         ROOT / "data" / "class_root_dataset" / ".gitkeep",
         ROOT / "data" / "prepared_class_root_datasets" / ".gitkeep",
         ROOT / "data" / "prepared_runtime_datasets" / ".gitkeep",
-        ROOT / "data" / "runtime_notebook_datasets" / ".gitkeep",
     )
     missing = [str(path.relative_to(ROOT)) for path in required_paths if not path.exists()]
     assert not missing, f"Missing dataset scaffold path(s): {', '.join(missing)}"
