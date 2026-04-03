@@ -67,6 +67,12 @@ def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
     assert root_normalized["evaluation"]["best_metric"] == "macro_f1"
     assert root_normalized["optimization"]["scheduler"]["name"] == "cosine"
     assert root_normalized["ood"]["primary_score_method"] == "auto"
+    assert root_normalized["ood"]["threshold_factor"] == 3.0
+    assert root_normalized["ood"]["ber_enabled"] is True
+    assert root_normalized["ood"]["sure_semantic_percentile"] == 90.0
+    assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
+    assert root_normalized["ood"]["conformal_method"] == "raps"
+    assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
     assert legacy_normalized["backbone"]["model_name"] == "legacy-model"
     assert legacy_normalized["adapter"]["lora_r"] == 4
     assert legacy_normalized["fusion"]["output_dim"] == 256
@@ -125,3 +131,4 @@ def test_extract_continual_training_config_normalizes_logitnorm_fields():
 
     assert normalized["optimization"]["loss_name"] == "logitnorm"
     assert normalized["optimization"]["logitnorm_tau"] == 0.7
+

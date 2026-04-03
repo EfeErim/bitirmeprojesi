@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Notebook 2 helper functions only."""
 
 from __future__ import annotations
@@ -427,8 +427,12 @@ def build_notebook_completion_report(
     missing = [name for name in blocking_check_names if not checks.get(name, False)]
     soft_missing = [name for name in soft_check_names if not checks.get(name, False)]
     readiness = resolved_state.get("production_readiness") or {}
+    readiness_status = str(readiness.get("status", "") or "")
+    completion_ready = not missing and readiness_status != "failed"
+    if not completion_ready and readiness_status == "failed" and "production_readiness_failed" not in missing:
+        missing = [*missing, "production_readiness_failed"]
     return {
-        "ready": not missing,
+        "ready": completion_ready,
         "checks": checks,
         "missing": missing,
         "soft_missing": soft_missing,
@@ -436,7 +440,7 @@ def build_notebook_completion_report(
         "soft_checks": {name: checks.get(name, False) for name in soft_check_names},
         "evaluation_splits": evaluation_splits,
         "repo_exports": repo_export_checks,
-        "production_readiness_status": str(readiness.get("status", "")),
+        "production_readiness_status": readiness_status,
         "ood_evidence_source": readiness.get("ood_evidence_source"),
     }
 
@@ -529,3 +533,4 @@ def maybe_auto_disconnect_colab_runtime(
         emit(f"[COLAB] Auto-disconnect failed: {report['disconnect_error']}")
         _publish_status("auto_disconnect_failed", disconnect_error=report["disconnect_error"])
     return report
+

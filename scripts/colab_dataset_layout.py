@@ -426,7 +426,7 @@ def prepare_runtime_dataset_layout(
     materialization_strategy: str = "auto",
 ) -> Path:
     """Split class-root data into runtime layout and optionally materialize `ood/`."""
-    runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "runtime_notebook_datasets")
+    runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "prepared_runtime_datasets")
     crop_root = runtime_dataset_root / str(crop_name)
     split_manifest_path = crop_root / "split_manifest.json"
     legacy_manifest_path = crop_root / "_split_metadata.json"
@@ -522,3 +522,4 @@ def prepare_runtime_dataset_layout(
     write_json(split_manifest_path, public_manifest, ensure_ascii=False)
     write_json(legacy_manifest_path, public_manifest, ensure_ascii=False)
     return runtime_dataset_root
+

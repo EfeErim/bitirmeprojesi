@@ -170,7 +170,7 @@ That validator checks:
 Notebook 2 `class_root` mode materializes the grouped runtime layout used by the workflow:
 
 ```text
-data/runtime_notebook_datasets/<crop>/
+data/prepared_runtime_datasets/<crop>/
   continual/<class>/*
   val/<class>/*
   test/<class>/*
@@ -179,7 +179,7 @@ data/runtime_notebook_datasets/<crop>/
 If you also provide unknown examples, the runtime layout can include:
 
 ```text
-data/runtime_notebook_datasets/<crop>/ood/*
+data/prepared_runtime_datasets/<crop>/ood/*
 ```
 
 Important distinction:
@@ -187,7 +187,7 @@ Important distinction:
 - the flat class-root notebook input is only for supported disease classes
 - the real `ood/` pool is separate unknown-input evidence, not another class
 - do not create an `ood` class folder inside the flat notebook input root
-- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/runtime_notebook_datasets/<crop>/ood/`
+- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/prepared_runtime_datasets/<crop>/ood/`
 
 The generated runtime dataset includes:
 
@@ -295,7 +295,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
    Then train through the canonical workflow or CLI:
 
    ```powershell
-   .\scripts\python.cmd -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
+   .\scripts\python.cmd -m src.app.cli training tomato data\prepared_runtime_datasets outputs\training_run --config-env colab
    ```
 
 7. Keep OOD separate from classification splitting.
@@ -833,5 +833,6 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+
 
 

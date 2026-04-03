@@ -156,6 +156,45 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
 
 
 
+def test_part_hint_does_not_override_router_part_when_router_runs(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class FruitRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "tomato",
+                        "part": "fruit",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FruitRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"), part_hint="leaf")
+
+    assert result["status"] == "success"
+    assert result["part"] == "fruit"
+    assert result["router"]["primary_detection"]["part"] == "fruit"
+
+
+
 def test_unknown_crop_payload_when_router_returns_nothing(monkeypatch, tmp_path):
     runtime = RouterAdapterRuntime(
         config={
@@ -611,3 +650,4 @@ def test_predict_reload_adapter_when_adapter_meta_changes(monkeypatch, tmp_path)
     third = runtime.load_adapter("tomato")
     assert third is not second
     assert build_calls == ["tomato", "tomato"]
+

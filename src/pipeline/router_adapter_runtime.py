@@ -284,7 +284,7 @@ class RouterAdapterRuntime:
                 return result
             detection = router_analysis.primary_detection.to_dict() if router_analysis.primary_detection else {}
             crop_name = str(detection.get("crop", "")).strip().lower() or None
-            part_name = part_name or str(detection.get("part", "")).strip().lower() or None
+            part_name = str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
             status_message = (
                 f"[ROUTER] crop={crop_name or 'unknown'} "
@@ -375,3 +375,4 @@ class RouterAdapterRuntime:
             part_hint=part_hint,
             return_ood=return_ood,
         ).to_dict(include_ood=return_ood)
+

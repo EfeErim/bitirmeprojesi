@@ -267,7 +267,7 @@ The workflow code does not train from the flat layout directly. It expects a run
 Notebook 2 creates that layout automatically under:
 
 ```text
-data/runtime_notebook_datasets/<crop>/
+data/prepared_runtime_datasets/<crop>/
 ```
 
 Notebook 0 can also materialize a prepared runtime dataset under:
@@ -346,7 +346,7 @@ If the crop is known but the organ evidence is ambiguous, the router keeps the c
 ### Train from an already materialized runtime dataset
 
 ```powershell
-.\scripts\python.cmd -m src.app.cli training tomato data\runtime_notebook_datasets outputs\training_run --config-env colab
+.\scripts\python.cmd -m src.app.cli training tomato data\prepared_runtime_datasets outputs\training_run --config-env colab
 ```
 
 ### Run router-driven inference
@@ -581,3 +581,4 @@ Do not treat generated outputs as tracked implementation files unless you explic
 - [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, and Notebook 4 guide
 - [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md): how deployment readiness is decided
 - [docs/architecture/overview.md](docs/architecture/overview.md): code and data flow map
+

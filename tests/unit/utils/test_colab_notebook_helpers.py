@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 import json
 from pathlib import Path
 
@@ -222,8 +222,8 @@ def test_build_notebook_completion_report_marks_ready_when_outputs_exist(tmp_pat
         notebook_export_path=notebook_export_path,
     )
 
-    assert report["ready"] is True
-    assert report["missing"] == []
+    assert report["ready"] is False
+    assert report["missing"] == ["production_readiness_failed"]
     assert report["soft_missing"] == []
     assert report["evaluation_splits"] == ["test"]
     assert report["production_readiness_status"] == "failed"
@@ -453,3 +453,5 @@ def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_pa
     assert any(relative_path == "training/summary.json" for _source, relative_path in telemetry.copied)
     assert telemetry.catalog_entries
     assert telemetry.summary_metadata
+
+

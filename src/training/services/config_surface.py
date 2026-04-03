@@ -1,4 +1,4 @@
-﻿"""Normalization helpers for the public continual-training config contract."""
+"""Normalization helpers for the public continual-training config contract."""
 
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "gating": "softmax",
         },
         "ood": {
-            "threshold_factor": 2.0,
+            "threshold_factor": 3.0,
             "primary_score_method": "auto",
-            "ber_enabled": False,
+            "ber_enabled": True,
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
             "ber_warmup_steps": 50,
@@ -45,12 +45,12 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "knn_backend": "auto",
             "knn_chunk_size": 2048,
             "sure_enabled": True,
-            "sure_semantic_percentile": 95.0,
-            "sure_confidence_percentile": 90.0,
+            "sure_semantic_percentile": 90.0,
+            "sure_confidence_percentile": 97.0,
             "conformal_enabled": True,
             "conformal_alpha": 0.05,
-            "conformal_method": "threshold",
-            "conformal_raps_lambda": 0.0,
+            "conformal_method": "raps",
+            "conformal_raps_lambda": 0.2,
             "conformal_raps_k_reg": 1,
         },
         "optimization": {
@@ -117,7 +117,7 @@ def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, 
             "gating": str(flat_config.get("fusion_gating", "softmax")),
         },
         "ood": {
-            "threshold_factor": float(flat_config.get("ood_threshold_factor", 2.0)),
+            "threshold_factor": float(flat_config.get("ood_threshold_factor", 3.0)),
             "primary_score_method": normalize_requested_primary_score_method(
                 flat_config.get("primary_score_method", "auto")
             ),
@@ -174,9 +174,9 @@ def normalize_continual_training_config(
     normalized["seed"] = int(normalized.get("seed", 42))
     normalized["deterministic"] = bool(normalized.get("deterministic", False))
 
-    ood["threshold_factor"] = float(ood.get("threshold_factor", 2.0))
+    ood["threshold_factor"] = float(ood.get("threshold_factor", 3.0))
     ood["primary_score_method"] = normalize_requested_primary_score_method(ood.get("primary_score_method", "auto"))
-    ood["ber_enabled"] = bool(ood.get("ber_enabled", False))
+    ood["ber_enabled"] = bool(ood.get("ber_enabled", True))
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))
     ood["ber_warmup_steps"] = int(ood.get("ber_warmup_steps", 50))
@@ -196,12 +196,12 @@ def normalize_continual_training_config(
     ood["knn_backend"] = str(ood.get("knn_backend", "auto"))
     ood["knn_chunk_size"] = int(ood.get("knn_chunk_size", 2048))
     ood["sure_enabled"] = bool(ood.get("sure_enabled", True))
-    ood["sure_semantic_percentile"] = float(ood.get("sure_semantic_percentile", 95.0))
-    ood["sure_confidence_percentile"] = float(ood.get("sure_confidence_percentile", 90.0))
+    ood["sure_semantic_percentile"] = float(ood.get("sure_semantic_percentile", 90.0))
+    ood["sure_confidence_percentile"] = float(ood.get("sure_confidence_percentile", 97.0))
     ood["conformal_enabled"] = bool(ood.get("conformal_enabled", True))
     ood["conformal_alpha"] = float(ood.get("conformal_alpha", 0.05))
-    ood["conformal_method"] = str(ood.get("conformal_method", "threshold"))
-    ood["conformal_raps_lambda"] = float(ood.get("conformal_raps_lambda", 0.0))
+    ood["conformal_method"] = str(ood.get("conformal_method", "raps"))
+    ood["conformal_raps_lambda"] = float(ood.get("conformal_raps_lambda", 0.2))
     ood["conformal_raps_k_reg"] = int(ood.get("conformal_raps_k_reg", 1))
 
     optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 4))
@@ -258,4 +258,5 @@ def extract_continual_training_config(
     else:
         source = _coerce_legacy_flat_config(payload, model_name=model_name, device=device)
     return normalize_continual_training_config(source, model_name=model_name, device=device)
+
 
