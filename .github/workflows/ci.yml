@@ -102,10 +102,15 @@ jobs:
             scripts/benchmark_surfaces.py
 
       - name: Run unit tests
-        run: pytest tests/unit tests/colab/test_smoke_training.py -q
+        run: pytest tests/unit tests/colab/test_smoke_training.py -q --cov=src --cov-branch --cov-report= --cov-fail-under=0
 
       - name: Run integration tests
-        run: pytest tests/integration -q --runintegration
+        run: pytest tests/integration -q --runintegration --cov=src --cov-branch --cov-append --cov-report= --cov-fail-under=0
+
+      - name: Enforce coverage gate
+        run: |
+          python -m coverage report
+          python -m coverage xml -o .runtime_tmp/coverage.xml
 
       - name: Capture orchestration benchmarks
         run: python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json

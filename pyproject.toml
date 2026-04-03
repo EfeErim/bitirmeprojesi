@@ -31,3 +31,12 @@ select = ["E", "F", "I"]
 python_version = "3.11"
 ignore_missing_imports = true
 exclude = ["^colab_notebooks/", "^\\.runtime_tmp/", "^tests/"]
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
