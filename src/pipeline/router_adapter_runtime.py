@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Protocol
+from typing import Any, Callable, Dict, Optional, Protocol, TypeAlias
 
 from PIL import Image
 
@@ -28,7 +28,7 @@ from src.training.services.runtime import resolve_runtime_device
 logger = logging.getLogger(__name__)
 
 StatusCallback = Callable[[str], None]
-ImageInput = Image.Image | str | Path
+ImageInput: TypeAlias = Image.Image | str | Path
 
 
 class RouterLike(Protocol):

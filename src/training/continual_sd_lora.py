@@ -292,7 +292,10 @@ class ContinualSDLoRAConfig:
         if self.ber_lambda_old < 0.0 or self.ber_lambda_new < 0.0:
             raise ValueError("BER lambda values must be non-negative.")
         if self.ber_enabled and self.loss_name == "logitnorm":
-            raise ValueError("training.continual.ood.ber_enabled is incompatible with optimization.loss_name='logitnorm'.")
+            raise ValueError(
+                "training.continual.ood.ber_enabled is incompatible with "
+                "optimization.loss_name='logitnorm'."
+            )
         if self.ber_warmup_steps < 0:
             raise ValueError("ber_warmup_steps must be non-negative.")
         if self.energy_temperature_mode not in {"fixed", "auto"}:

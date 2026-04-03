@@ -30,6 +30,12 @@ class _FakeRouter:
     def analyze_image(self, _image):
         return {"detections": [{"crop": "tomato", "part": "leaf", "crop_confidence": 0.95}]}
 
+    def analyze_image_result(self, image):
+        return self.analyze_image(image)
+
+    def is_ready(self):
+        return True
+
 
 class _FakeAdapter:
     def __init__(self, crop_name, device="cpu"):

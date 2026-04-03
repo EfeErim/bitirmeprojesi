@@ -364,7 +364,10 @@ def prepare_runtime_dataset_layout(
     if crop_root.exists() and split_manifest_path.exists():
         try:
             existing_manifest = read_json(split_manifest_path, default={})
-            if existing_manifest == comparison_manifest and _runtime_layout_matches_manifest(crop_root, comparison_manifest):
+            if (
+                existing_manifest == comparison_manifest
+                and _runtime_layout_matches_manifest(crop_root, comparison_manifest)
+            ):
                 return runtime_dataset_root
         except Exception:
             pass
