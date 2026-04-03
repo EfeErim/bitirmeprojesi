@@ -1,7 +1,8 @@
-from types import SimpleNamespace
+﻿from types import SimpleNamespace
 
 import torch
 
+from src.training.services.persistence import restore_rng_state
 from src.training.services.runtime import build_adamw_optimizer, configure_runtime_reproducibility
 
 
@@ -110,3 +111,27 @@ def test_build_adamw_optimizer_falls_back_when_fused_is_rejected(monkeypatch):
         {"fused": True, "foreach": None},
         {"fused": None, "foreach": True},
     ]
+
+
+def test_configure_runtime_reproducibility_raises_when_deterministic_mode_cannot_be_enabled(monkeypatch):
+    def _fail(_enabled):
+        raise RuntimeError("unsupported deterministic mode")
+
+    monkeypatch.setattr(torch, "use_deterministic_algorithms", _fail)
+
+    try:
+        configure_runtime_reproducibility(SimpleNamespace(seed=7, deterministic=True))
+        raise AssertionError("configure_runtime_reproducibility was expected to fail for deterministic runs.")
+    except RuntimeError as exc:
+        assert "Deterministic training was requested" in str(exc)
+
+
+def test_restore_rng_state_raises_when_checkpoint_rng_payload_is_invalid(monkeypatch):
+    monkeypatch.setattr(torch, "set_rng_state", lambda _state: (_ for _ in ()).throw(RuntimeError("bad state")))
+
+    try:
+        restore_rng_state({"torch": object()})
+        raise AssertionError("restore_rng_state was expected to fail for invalid torch RNG state.")
+    except RuntimeError as exc:
+        assert "checkpoint torch RNG state" in str(exc)
+

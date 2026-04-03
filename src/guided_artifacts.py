@@ -17,6 +17,33 @@ _PRIORITY_ORDER = {
 
 _GUIDED_START_HERE = "guided/00_start_here.md"
 _GUIDED_CATALOG = "guided/02_file_catalog.json"
+_MOJIBAKE_MARKERS = ("\u00c3", "\u00c5", "\u00c4")
+
+
+def _repair_mojibake_text(value: str) -> str:
+    text = str(value)
+    if any(marker in text for marker in _MOJIBAKE_MARKERS):
+        current_marker_count = sum(text.count(marker) for marker in _MOJIBAKE_MARKERS)
+        for source_encoding in ("cp1252", "latin-1"):
+            try:
+                candidate = text.encode(source_encoding).decode("utf-8")
+            except UnicodeError:
+                continue
+            candidate_marker_count = sum(candidate.count(marker) for marker in _MOJIBAKE_MARKERS)
+            if candidate_marker_count < current_marker_count:
+                text = candidate
+                current_marker_count = candidate_marker_count
+    return text
+
+
+def _repair_mojibake_tree(value: Any) -> Any:
+    if isinstance(value, str):
+        return _repair_mojibake_text(value)
+    if isinstance(value, list):
+        return [_repair_mojibake_tree(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _repair_mojibake_tree(item) for key, item in value.items()}
+    return value
 
 
 def _relative_path(path: Path, base_dir: Path) -> str:
@@ -122,7 +149,11 @@ def _load_training_overview(artifact_root: Path) -> Dict[str, Any]:
         "adapter_dir": summary.get("adapter_dir", ""),
         "artifact_dir": summary.get("artifact_dir", ""),
         "checkpoint_count": summary.get("checkpoint_count"),
-        "final_metrics": dict(summary.get("final_metrics", {})) if isinstance(summary.get("final_metrics"), dict) else {},
+        "final_metrics": (
+            dict(summary.get("final_metrics", {}))
+            if isinstance(summary.get("final_metrics"), dict)
+            else {}
+        ),
         "ood_benchmark_status": dict(benchmark).get("status", ""),
     }
     return {key: value for key, value in payload.items() if value not in (None, "", [], {})}
@@ -663,8 +694,8 @@ def _render_section_markdown(
 def _write_guided_file(path: Path, content: str | Dict[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     if isinstance(content, dict):
-        return write_json(path, content, ensure_ascii=False, sort_keys=False)
-    path.write_text(str(content), encoding="utf-8")
+        return write_json(path, _repair_mojibake_tree(content), ensure_ascii=False, sort_keys=False)
+    path.write_text(_repair_mojibake_text(str(content)), encoding="utf-8")
     return path
 
 
@@ -723,7 +754,7 @@ def _build_guided_payloads(
         },
         **overview,
     }
-    return catalog_payload, overview_payload
+    return _repair_mojibake_tree(catalog_payload), _repair_mojibake_tree(overview_payload)
 
 
 def _write_guided_bundle(
@@ -737,7 +768,7 @@ def _write_guided_bundle(
     catalog_entries: Sequence[Dict[str, Any]],
 ) -> List[Path]:
     written_paths = [
-        _write_guided_file(guided_dir / "00_start_here.md", start_here.rstrip() + "\n"),
+        _write_guided_file(guided_dir / "00_start_here.md", _repair_mojibake_text(start_here.rstrip()) + "\n"),
         _write_guided_file(guided_dir / Path(overview_filename).name, overview_payload),
         _write_guided_file(guided_dir / "02_file_catalog.json", catalog_payload),
     ]
@@ -845,8 +876,16 @@ def refresh_training_guided_artifacts(
     )
 
     category_to_doc = {
-        "training": ("10_training.md", "EÄŸitim DosyalarÄ±", "Bu bÃ¶lÃ¼m eÄŸitim geÃ§miÅŸi ve eÄŸri dosyalarÄ±nÄ± Ã¶zetler."),
-        "validation": ("20_validation.md", "Validation DosyalarÄ±", "Bu bÃ¶lÃ¼m validation split artefactlerini toplar."),
+        "training": (
+            "10_training.md",
+            "E??itim Dosyalar??",
+            "Bu b??l??m e??itim ge??mi??i ve e??ri dosyalar??n?? ??zetler.",
+        ),
+        "validation": (
+            "20_validation.md",
+            "Validation Dosyalar??",
+            "Bu b??l??m validation split artefactlerini toplar.",
+        ),
         "test": ("30_test.md", "Test DosyalarÄ±", "Bu bÃ¶lÃ¼m held-out test artefactlerini toplar."),
         "ood_and_readiness": (
             "40_ood_and_readiness.md",
@@ -976,4 +1015,5 @@ def refresh_prep_guided_artifacts(
         "overview": overview_payload,
         "paths": {path.name: str(path) for path in written_paths},
     }
+
 

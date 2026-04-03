@@ -1,4 +1,4 @@
-import torch
+﻿import torch
 
 from src.router.diagnostic_scouting import DiagnosticScoutingAnalyzer
 from src.shared.contracts import RouterAnalysisResult, RouterDetection
@@ -78,3 +78,28 @@ def test_analyze_image_uses_shared_primary_detection_when_available():
     assert out["status"] == "ok"
     assert out["crop"] == "tomato"
     assert out["confidence"] == 0.61
+
+
+def test_quick_assessment_reports_pipeline_init_failure():
+    analyzer = DiagnosticScoutingAnalyzer(config={}, device="cpu")
+    analyzer.vlm_pipeline = None
+    analyzer.vlm_pipeline_init_error = "RuntimeError: missing weights"
+
+    out = analyzer.quick_assessment(torch.randn(1, 3, 16, 16))
+
+    assert out["status"] == "error"
+    assert out["explanation"]["reason"] == "vlm_pipeline_init_failed"
+    assert "missing weights" in out["explanation"]["error"]
+
+
+def test_analyze_image_reports_pipeline_init_failure_when_constructor_failed():
+    analyzer = DiagnosticScoutingAnalyzer(config={}, device="cpu")
+    analyzer.vlm_pipeline = None
+    analyzer.vlm_pipeline_init_error = "RuntimeError: missing weights"
+
+    out = analyzer.analyze_image(torch.randn(1, 3, 16, 16))
+
+    assert out["status"] == "error"
+    assert "vlm_pipeline_init_failed" in out["message"]
+    assert "missing weights" in out["message"]
+

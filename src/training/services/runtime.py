@@ -1,8 +1,9 @@
-"""Runtime helpers for AMP, optimizer/scheduler setup, and session defaults."""
+﻿"""Runtime helpers for AMP, optimizer/scheduler setup, and session defaults."""
 
 from __future__ import annotations
 
 import inspect
+import logging
 import math
 import random
 import time
@@ -12,6 +13,8 @@ from typing import Any, Iterable, Optional
 import torch
 
 from src.training.types import TrainBatchStats
+
+logger = logging.getLogger(__name__)
 
 
 def configure_runtime_reproducibility(config: Any, *, np_module: Any = None) -> None:
@@ -26,8 +29,15 @@ def configure_runtime_reproducibility(config: Any, *, np_module: Any = None) -> 
     deterministic = bool(getattr(config, "deterministic", False))
     try:
         torch.use_deterministic_algorithms(deterministic)
-    except Exception:
-        pass
+    except Exception as exc:
+        if deterministic:
+            raise RuntimeError(
+                "Deterministic training was requested, but torch.use_deterministic_algorithms(...) failed."
+            ) from exc
+        logger.warning(
+            "Failed to configure deterministic algorithms; continuing with best-effort runtime settings: %s",
+            exc,
+        )
     if hasattr(torch.backends, "cudnn"):
         torch.backends.cudnn.deterministic = deterministic
         torch.backends.cudnn.benchmark = not deterministic
@@ -298,3 +308,4 @@ def build_train_batch_stats(
         ber_old_loss=ber_old_loss,
         ber_new_loss=ber_new_loss,
     )
+

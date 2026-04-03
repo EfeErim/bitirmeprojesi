@@ -180,6 +180,7 @@ class ColabLiveTelemetry:
         self._repo_notebook_exporter: Optional[Callable[[Path], Optional[Path]]] = None
         self._last_latest_write_at = 0.0
         self._pending_latest_payload: Optional[Dict[str, Any]] = None
+        self._last_drive_issue: Optional[tuple[str, str]] = None
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
         self._local_artifact_store = ArtifactStore(self.local_artifacts_dir)
@@ -196,20 +197,53 @@ class ColabLiveTelemetry:
             phase="bootstrap",
         )
 
+
+    def _record_drive_unavailable(self, *, operation: str, error: str) -> None:
+        normalized_error = str(error).strip() or "unknown_drive_error"
+        issue = (str(operation), normalized_error)
+        self._drive_available = False
+        if self._last_drive_issue == issue:
+            return
+        self._last_drive_issue = issue
+        logger.warning("Drive telemetry unavailable during %s: %s", operation, normalized_error)
+        self.emit_event(
+            "drive_sync_unavailable",
+            {"operation": str(operation), "error": normalized_error},
+            phase="telemetry",
+            level="warning",
+            force_sync=False,
+        )
+
+    def _record_drive_available(self, *, operation: str) -> None:
+        was_unavailable = self._last_drive_issue is not None
+        self._drive_available = True
+        if was_unavailable:
+            self.emit_event(
+                "drive_sync_restored",
+                {"operation": str(operation)},
+                phase="telemetry",
+                level="info",
+                force_sync=False,
+            )
+        self._last_drive_issue = None
+
     def _ensure_drive_surface(self) -> bool:
         if self._drive_mount_required and not _google_drive_is_mounted():
-            self._drive_available = False
             self._drive_artifact_store = None
+            self._record_drive_unavailable(
+                operation="ensure_drive_surface",
+                error="Google Drive mount is unavailable.",
+            )
             return False
         try:
             self.drive_run_dir.mkdir(parents=True, exist_ok=True)
             if self._drive_artifact_store is None:
                 self._drive_artifact_store = ArtifactStore(self.artifacts_dir)
-            self._drive_available = True
+            self._record_drive_available(operation="ensure_drive_surface")
             return True
-        except Exception:
-            self._drive_available = False
+        except Exception as exc:
             self._drive_artifact_store = None
+            self._record_drive_unavailable(operation="ensure_drive_surface", error=f"{exc.__class__.__name__}: {exc}")
             return False
 
     def _current_artifacts_dir(self) -> Path:
@@ -340,9 +374,12 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface():
             try:
                 write_json(self.drive_artifact_index_path, self._artifact_index, sort_keys=True)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="store_artifact_index")
+            except Exception as exc:
+                self._record_drive_unavailable(
+                    operation="store_artifact_index",
+                    error=f"{exc.__class__.__name__}: {exc}",
+                )
 
     def _periodic_sync(self, force: bool = False) -> None:
         now = time.time()
@@ -374,9 +411,12 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface():
             try:
                 write_json(self.drive_latest_path, payload, sort_keys=True)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="write_latest_payload")
+            except Exception as exc:
+                self._record_drive_unavailable(
+                    operation="write_latest_payload",
+                    error=f"{exc.__class__.__name__}: {exc}",
+                )
         self._last_latest_write_at = time.monotonic()
         self._pending_latest_payload = None
 
@@ -531,9 +571,12 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface() and self._drive_artifact_store is not None:
             try:
                 drive_path = self._drive_artifact_store.write_text(rel, text)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="write_text_artifact")
+            except Exception as exc:
+                self._record_drive_unavailable(
+                    operation="write_text_artifact",
+                    error=f"{exc.__class__.__name__}: {exc}",
+                )
         self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
@@ -551,9 +594,12 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface() and self._drive_artifact_store is not None:
             try:
                 drive_path = self._drive_artifact_store.write_bytes(rel, content)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="write_binary_artifact")
+            except Exception as exc:
+                self._record_drive_unavailable(
+                    operation="write_binary_artifact",
+                    error=f"{exc.__class__.__name__}: {exc}",
+                )
         self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
@@ -574,9 +620,9 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface() and self._drive_artifact_store is not None:
             try:
                 drive_path = self._drive_artifact_store.copy_file(src, rel)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="copy_artifact_file")
+            except Exception as exc:
+                self._record_drive_unavailable(operation="copy_artifact_file", error=f"{exc.__class__.__name__}: {exc}")
         self._upsert_artifact_index_entry(
             {
                 "ts": _utc_now_iso(),
@@ -611,9 +657,9 @@ class ColabLiveTelemetry:
                     for line in unsynced:
                         handle.write(line + "\n")
                 self._sync_state.events_synced = len(lines)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="sync_events")
+            except Exception as exc:
+                self._record_drive_unavailable(operation="sync_events", error=f"{exc.__class__.__name__}: {exc}")
 
     def _sync_logs(self) -> None:
         if not self.local_log_path.exists():
@@ -629,9 +675,9 @@ class ColabLiveTelemetry:
                 with self.drive_log_path.open("ab") as handle:
                     handle.write(chunk)
                 self._sync_state.logs_synced_bytes = len(local_bytes)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="sync_logs")
+            except Exception as exc:
+                self._record_drive_unavailable(operation="sync_logs", error=f"{exc.__class__.__name__}: {exc}")
 
     def close(self, final_payload: Optional[Dict[str, Any]] = None) -> None:
         pending = self._pending_latest_payload
@@ -651,8 +697,9 @@ class ColabLiveTelemetry:
         if self._ensure_drive_surface():
             try:
                 write_json(self.drive_summary_path, summary, sort_keys=True)
-                self._drive_available = True
-            except Exception:
-                self._drive_available = False
+                self._record_drive_available(operation="write_summary")
+            except Exception as exc:
+                self._record_drive_unavailable(operation="write_summary", error=f"{exc.__class__.__name__}: {exc}")
         self.emit_event("run_finished", summary, phase="final", force_sync=False)
         self.sync_pending()
+

@@ -170,6 +170,8 @@ def test_live_telemetry_spools_locally_when_drive_mount_is_missing(tmp_path, mon
     assert (local_run_dir / "events.jsonl").exists()
     assert (local_run_dir / "summary.json").exists()
     assert (local_run_dir / "artifacts" / "training" / "history.json").exists()
+    events = (local_run_dir / "events.jsonl").read_text(encoding="utf-8").splitlines()
+    assert any("drive_sync_unavailable" in line for line in events)
 
 
 def test_live_telemetry_auto_run_ids_do_not_collide_within_same_second(tmp_path, monkeypatch):
@@ -255,6 +257,7 @@ def test_close_emits_repo_notebook_export_unavailable_when_exporter_returns_none
     assert unavailable_events
     assert unavailable_events[-1]["payload"]["warning"] == "Notebook exporter returned no payload."
 
+
 def test_live_telemetry_merges_guided_catalog_and_summary_metadata(tmp_path):
     drive_root = tmp_path / "drive"
     local_root = tmp_path / "local"
@@ -285,8 +288,37 @@ def test_live_telemetry_merges_guided_catalog_and_summary_metadata(tmp_path):
     telemetry.merge_summary_metadata({"guided_artifacts": {"start_here": "guided/00_start_here.md"}})
     telemetry.close({"status": "ok"})
 
-    artifact_index = json.loads((drive_root / "telemetry" / "run_guided" / "artifact_index.json").read_text(encoding="utf-8"))
+    artifact_index = json.loads(
+        (drive_root / "telemetry" / "run_guided" / "artifact_index.json").read_text(encoding="utf-8")
+    )
     summary = json.loads((drive_root / "telemetry" / "run_guided" / "summary.json").read_text(encoding="utf-8"))
 
     assert any(entry["relative_path"] == "guided/00_start_here.md" for entry in artifact_index)
     assert summary["metadata"]["guided_artifacts"]["start_here"] == "guided/00_start_here.md"
+
+
+def test_write_text_artifact_emits_drive_warning_event_when_drive_write_fails(tmp_path, monkeypatch):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_drive_warning",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=60.0,
+    )
+
+    def _fail_write_text(_relative_path, _text):
+        raise OSError("drive write blocked")
+
+    assert telemetry._drive_artifact_store is not None
+    monkeypatch.setattr(telemetry._drive_artifact_store, "write_text", _fail_write_text)
+
+    telemetry.write_text_artifact("training/history.json", '{"loss": [0.1]}')
+
+    lines = telemetry.local_events_path.read_text(encoding="utf-8").splitlines()
+    warning_events = [json.loads(line) for line in lines if "drive_sync_unavailable" in line]
+    assert warning_events
+    assert warning_events[-1]["payload"]["operation"] == "write_text_artifact"
+    assert "drive write blocked" in warning_events[-1]["payload"]["error"]
+

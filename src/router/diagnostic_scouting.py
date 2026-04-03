@@ -1,4 +1,4 @@
-"""Diagnostic scouting helper extracted from the main VLM pipeline module."""
+﻿"""Diagnostic scouting helper extracted from the main VLM pipeline module."""
 
 from __future__ import annotations
 
@@ -19,13 +19,18 @@ class DiagnosticScoutingAnalyzer:
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         self.config = config
         self.vlm_pipeline: Optional[Any] = None
+        self.vlm_pipeline_init_error = ""
         # Resolve lazily to avoid module import cycles.
         try:
             from src.router.vlm_pipeline import VLMPipeline
 
             self.vlm_pipeline = VLMPipeline(config, device=device)
-        except Exception:
-            pass
+        except Exception as exc:
+            self.vlm_pipeline_init_error = f"{exc.__class__.__name__}: {exc}"
+            logger.warning(
+                "Diagnostic scouting could not initialize the VLM pipeline: %s",
+                self.vlm_pipeline_init_error,
+            )
 
         vlm_conf = config.get("router", {}).get("vlm", {}) if isinstance(config.get("router"), dict) else {}
         self.confidence_threshold = config.get("vlm_confidence_threshold", vlm_conf.get("confidence_threshold", 0.8))
@@ -50,10 +55,17 @@ class DiagnosticScoutingAnalyzer:
                 explanation = {"error": str(e)}
                 status = "error"
         else:
-            explanation = {
-                "reason": "vlm_pipeline_disabled" if self.vlm_pipeline is not None else "no_vlm_pipeline"
-            }
-            status = "skipped"
+            if self.vlm_pipeline is None and self.vlm_pipeline_init_error:
+                explanation = {
+                    "reason": "vlm_pipeline_init_failed",
+                    "error": self.vlm_pipeline_init_error,
+                }
+                status = "error"
+            else:
+                explanation = {
+                    "reason": "vlm_pipeline_disabled" if self.vlm_pipeline is not None else "no_vlm_pipeline"
+                }
+                status = "skipped"
 
         return {"status": status, "explanation": explanation}
 
@@ -68,7 +80,11 @@ class DiagnosticScoutingAnalyzer:
                 "part": "unknown",
                 "confidence": 0.0,
                 "detections": [],
-                "message": "vlm_pipeline_unavailable",
+                "message": (
+                    f"vlm_pipeline_init_failed: {self.vlm_pipeline_init_error}"
+                    if self.vlm_pipeline_init_error
+                    else "vlm_pipeline_unavailable"
+                ),
             }
 
         try:
@@ -128,3 +144,4 @@ class DiagnosticScoutingAnalyzer:
                 "detections": [],
                 "message": str(e),
             }
+

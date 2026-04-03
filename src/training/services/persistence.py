@@ -1,4 +1,4 @@
-"""Persistence helpers for trainer checkpoints, metadata, OOD state, and adapter assets."""
+﻿"""Persistence helpers for trainer checkpoints, metadata, OOD state, and adapter assets."""
 
 from __future__ import annotations
 
@@ -223,30 +223,34 @@ def capture_rng_state(*, np_module: Any = None) -> Dict[str, Any]:
 def restore_rng_state(payload: Dict[str, Any], *, np_module: Any = None) -> None:
     if not isinstance(payload, dict):
         return
-    try:
-        torch_state = payload.get("torch")
-        if torch_state is not None:
+
+    torch_state = payload.get("torch")
+    if torch_state is not None:
+        try:
             torch.set_rng_state(torch_state)
-    except Exception:
-        pass
-    try:
-        cuda_state = payload.get("torch_cuda")
-        if cuda_state is not None and torch.cuda.is_available():
+        except Exception as exc:
+            raise RuntimeError("Failed to restore checkpoint torch RNG state.") from exc
+
+    cuda_state = payload.get("torch_cuda")
+    if cuda_state is not None and torch.cuda.is_available():
+        try:
             torch.cuda.set_rng_state_all(cuda_state)
-    except Exception:
-        pass
-    try:
-        python_state = payload.get("python")
-        if python_state is not None:
+        except Exception as exc:
+            raise RuntimeError("Failed to restore checkpoint CUDA RNG state.") from exc
+
+    python_state = payload.get("python")
+    if python_state is not None:
+        try:
             random.setstate(python_state)
-    except Exception:
-        pass
-    try:
-        numpy_state = payload.get("numpy")
-        if numpy_state is not None and np_module is not None:
+        except Exception as exc:
+            raise RuntimeError("Failed to restore checkpoint Python RNG state.") from exc
+
+    numpy_state = payload.get("numpy")
+    if numpy_state is not None and np_module is not None:
+        try:
             np_module.random.set_state(numpy_state)
-    except Exception:
-        pass
+        except Exception as exc:
+            raise RuntimeError("Failed to restore checkpoint NumPy RNG state.") from exc
 
 
 def build_adapter_metadata(
@@ -429,3 +433,4 @@ def load_trainer_adapter(trainer: Any, adapter_dir: str, *, peft_model_cls: Any 
     _restore_exported_head_state(trainer, root)
     _restore_exported_ood_state(trainer, meta)
     return meta
+

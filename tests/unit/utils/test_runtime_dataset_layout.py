@@ -1,12 +1,14 @@
+﻿import shutil
 from pathlib import Path
-import shutil
 
 from PIL import Image
 
 from scripts.colab_dataset_layout import (
     build_runtime_split_manifest,
+    list_repo_dataset_directories,
     prepare_runtime_dataset_layout,
     resolve_notebook_training_classes,
+    resolve_repo_dataset_directory,
 )
 
 
@@ -149,3 +151,105 @@ def test_resolve_notebook_training_classes_falls_back_to_all_available_when_taxo
         "tomato_healthy_leaf",
         "tomato_spider_mites",
     }
+
+
+def test_list_repo_dataset_directories_returns_sorted_child_dirs(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_parent = repo_root / "data" / "class_root_dataset"
+    (dataset_parent / "grape_leaf").mkdir(parents=True)
+    (dataset_parent / "grape_fruit").mkdir(parents=True)
+
+    result = list_repo_dataset_directories(
+        repo_root=repo_root,
+        repo_relative_root="data/class_root_dataset",
+    )
+
+    assert [path.name for path in result] == ["grape_fruit", "grape_leaf"]
+
+
+def test_resolve_repo_dataset_directory_accepts_explicit_name(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_parent = repo_root / "data" / "class_root_dataset"
+    (dataset_parent / "grape_leaf").mkdir(parents=True)
+    (dataset_parent / "grape_fruit").mkdir(parents=True)
+
+    selected_name, selected_path, dataset_names = resolve_repo_dataset_directory(
+        repo_root=repo_root,
+        repo_relative_root="data/class_root_dataset",
+        requested_name="grape_leaf",
+        prompt_label="class-root dataset",
+    )
+
+    assert selected_name == "grape_leaf"
+    assert selected_path == dataset_parent / "grape_leaf"
+    assert dataset_names == ["grape_fruit", "grape_leaf"]
+
+
+def test_resolve_repo_dataset_directory_prompts_for_index_when_name_missing(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_parent = repo_root / "data" / "class_root_dataset"
+    (dataset_parent / "grape_leaf").mkdir(parents=True)
+    (dataset_parent / "grape_fruit").mkdir(parents=True)
+    prompts: list[str] = []
+    printed: list[str] = []
+
+    def _input(prompt: str) -> str:
+        prompts.append(prompt)
+        return "2"
+
+    def _print(message: str) -> None:
+        printed.append(message)
+
+    selected_name, selected_path, dataset_names = resolve_repo_dataset_directory(
+        repo_root=repo_root,
+        repo_relative_root="data/class_root_dataset",
+        requested_name="",
+        prompt_label="class-root dataset",
+        input_fn=_input,
+        print_fn=_print,
+    )
+
+    assert selected_name == "grape_leaf"
+    assert selected_path == dataset_parent / "grape_leaf"
+    assert dataset_names == ["grape_fruit", "grape_leaf"]
+    assert prompts
+    assert any("grape_fruit" in line for line in printed)
+
+
+def test_prepare_runtime_dataset_layout_refuses_to_delete_existing_runtime_tree_when_manifest_validation_fails(
+    tmp_path: Path,
+    monkeypatch,
+):
+    source_root = tmp_path / "source"
+    runtime_root = tmp_path / "runtime"
+    _write_images(source_root, "Healthy", 5)
+
+    result_root = prepare_runtime_dataset_layout(
+        source_root,
+        "tomato",
+        seed=42,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato"
+    marker_path = crop_root / "keep_me.txt"
+    marker_path.write_text("preserve", encoding="utf-8")
+
+    def _fail_read_json(*args, **kwargs):
+        raise ValueError("bad manifest")
+
+    monkeypatch.setattr("scripts.colab_dataset_layout.read_json", _fail_read_json)
+
+    try:
+        prepare_runtime_dataset_layout(
+            source_root,
+            "tomato",
+            seed=42,
+            runtime_root=runtime_root,
+        )
+        raise AssertionError("prepare_runtime_dataset_layout was expected to fail when manifest validation breaks.")
+    except RuntimeError as exc:
+        assert "refusing to delete" in str(exc)
+
+    assert marker_path.exists()
+

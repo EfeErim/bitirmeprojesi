@@ -8,7 +8,7 @@ import os
 import random
 import shutil
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from src.shared.json_utils import read_json, write_json
 
@@ -29,6 +29,105 @@ def normalize_class_name(name: str) -> str:
     while "__" in normalized:
         normalized = normalized.replace("__", "_")
     return normalized.strip("_")
+
+
+def resolve_repo_relative_root(*, repo_root: str | Path, repo_relative_root: str | Path) -> Path:
+    raw_repo_root = Path(repo_root).expanduser().resolve()
+    raw_relative = str(repo_relative_root or "").strip()
+    if not raw_relative:
+        raise RuntimeError("Repo dataset root cannot be empty.")
+    candidate = Path(raw_relative).expanduser()
+    if candidate.is_absolute():
+        raise RuntimeError("Repo dataset root must stay repo-relative.")
+    resolved = (raw_repo_root / candidate).resolve()
+    try:
+        resolved.relative_to(raw_repo_root)
+    except ValueError as exc:
+        raise RuntimeError(f"Repo dataset root escapes the repo: {raw_relative}") from exc
+    return resolved
+
+
+def list_repo_dataset_directories(
+    *,
+    repo_root: str | Path,
+    repo_relative_root: str | Path,
+) -> list[Path]:
+    base_root = resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)
+    if not base_root.is_dir():
+        raise RuntimeError(f"Repo dataset parent not found: {base_root}")
+    return sorted(
+        [path for path in base_root.iterdir() if path.is_dir()],
+        key=lambda path: path.name.lower(),
+    )
+
+
+def resolve_repo_dataset_directory(
+    *,
+    repo_root: str | Path,
+    repo_relative_root: str | Path,
+    requested_name: str = "",
+    prompt_label: str = "dataset",
+    input_fn: Callable[[str], str] = input,
+    print_fn: Callable[[str], None] = print,
+) -> tuple[str, Path, list[str]]:
+    dataset_dirs = list_repo_dataset_directories(
+        repo_root=repo_root,
+        repo_relative_root=repo_relative_root,
+    )
+    dataset_names = [path.name for path in dataset_dirs]
+    if not dataset_names:
+        raise RuntimeError(
+            "No dataset directories were found under "
+            f"{resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)}"
+        )
+
+    requested = str(requested_name or "").strip()
+    if requested:
+        if requested.isdigit():
+            selected_index = int(requested) - 1
+            if selected_index < 0 or selected_index >= len(dataset_names):
+                raise RuntimeError(
+                    f"Requested {prompt_label} index is out of range: {requested}. "
+                    f"Available options: {dataset_names}"
+                )
+            selected_name = dataset_names[selected_index]
+        elif requested in dataset_names:
+            selected_name = requested
+        else:
+            raise RuntimeError(
+                f"Requested {prompt_label} '{requested}' was not found under "
+                f"{resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)}. "
+                f"Available options: {dataset_names}"
+            )
+    elif len(dataset_names) == 1:
+        selected_name = dataset_names[0]
+        print_fn(f"[DATASET] Only one repo {prompt_label} bulundu, otomatik secildi: {selected_name}")
+    else:
+        print_fn(
+            f"[DATASET] Repo icinde kullanilabilir {prompt_label} secenekleri "
+            f"({resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)}):"
+        )
+        for index, dataset_name in enumerate(dataset_names, start=1):
+            print_fn(f"  [{index}] {dataset_name}")
+        raw_choice = str(
+            input_fn(
+                f"Kullanilacak {prompt_label} icin isim ya da numara girin "
+                f"(1-{len(dataset_names)}): "
+            )
+        ).strip()
+        if not raw_choice:
+            raise RuntimeError(f"{prompt_label.capitalize()} secimi bos birakilamaz.")
+        return resolve_repo_dataset_directory(
+            repo_root=repo_root,
+            repo_relative_root=repo_relative_root,
+            requested_name=raw_choice,
+            prompt_label=prompt_label,
+            input_fn=input_fn,
+            print_fn=print_fn,
+        )
+
+    selected_path = next(path for path in dataset_dirs if path.name == selected_name)
+    return selected_name, selected_path, dataset_names
 
 
 def _build_alias_lookup() -> Dict[str, set[str]]:
@@ -369,8 +468,11 @@ def prepare_runtime_dataset_layout(
                 and _runtime_layout_matches_manifest(crop_root, comparison_manifest)
             ):
                 return runtime_dataset_root
-        except Exception:
-            pass
+        except Exception as exc:
+            raise RuntimeError(
+                f"Existing runtime dataset manifest could not be validated at {split_manifest_path}; "
+                f"refusing to delete {crop_root}."
+            ) from exc
 
     if crop_root.exists():
         shutil.rmtree(crop_root)

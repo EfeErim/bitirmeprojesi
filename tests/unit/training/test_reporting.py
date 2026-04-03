@@ -343,12 +343,17 @@ def test_reporting_refreshes_guided_catalog_for_training_outputs(tmp_path: Path)
     guided_dir = artifact_root / "guided"
     catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
     entry_paths = {entry["relative_path"] for entry in catalog["entries"]}
+    start_here = (guided_dir / "00_start_here.md").read_text(encoding="utf-8")
+    catalog_text = json.dumps(catalog, ensure_ascii=False)
 
     assert (guided_dir / "00_start_here.md").exists()
     assert (guided_dir / "01_run_overview.json").exists()
     assert "training/summary.json" in entry_paths
     assert "test/metric_gate.json" in entry_paths
     assert "production_readiness.json" in entry_paths
+    assert "# Buradan Ba\u015fla" in start_here
+    assert "\u00c3" not in start_here
+    assert "\u00c3" not in catalog_text
 
 
 def test_reporting_writes_prediction_rows_csv(tmp_path: Path):
@@ -496,4 +501,5 @@ def test_guided_catalog_includes_prediction_and_hard_example_entries(tmp_path: P
     assert "test/predictions.csv" in entry_paths
     assert "test/hard_examples.csv" in entry_paths
     assert "test/hard_examples_thumbnails" in entry_paths
+
 
