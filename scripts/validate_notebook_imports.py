@@ -389,6 +389,7 @@ def test_data_prep_notebook_contract() -> None:
         )
     for snippet in (
         "REPO_DATASET_ROOT =",
+        "REPO_DATASET_NAME =",
         "DATASET_ROOT =",
         "CROP_NAME =",
         "PART_NAME =",
@@ -410,7 +411,9 @@ def test_data_prep_notebook_contract() -> None:
     assert "build_prepared_dataset_key" in full_source
     assert "prepare_class_root_for_materialization" in full_source
     assert "def _resolve_repo_dataset_root" in full_source
+    assert "resolve_repo_dataset_directory" in full_source
     assert 'dataset_source = "repo"' in full_source
+    assert 'STATE["dataset_name"] = dataset_name' in full_source
     assert 'STATE["dataset_source"] = dataset_source' in full_source
     assert 'STATE["provenance_manifest_path"] = provenance_manifest_path' in full_source
     assert 'provenance_manifest_path=STATE.get("provenance_manifest_path")' in full_source
@@ -515,6 +518,7 @@ def test_training_notebook_bootstrap_contract() -> None:
 
     required_parameter_snippets = (
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
+        'DATASET_NAME = ""',
         'PROVENANCE_MANIFEST_PATH = ""',
         'EPOCHS = ',
         'BATCH_SIZE = ',
@@ -540,6 +544,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
         'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
+        'resolve_repo_dataset_directory',
+        'STATE["selected_dataset_name"] = selected_dataset_name',
     )
     for snippet in required_training_surface_snippets:
         _assert_contains(

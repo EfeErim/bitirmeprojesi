@@ -1,4 +1,4 @@
-﻿# Colab Training Manual
+# Colab Training Manual
 
 This guide is written for someone who may be opening the AADS notebooks for the first time.
 
@@ -111,7 +111,7 @@ This is the current Notebook 0 flow from start to finish:
 2. install notebook requirements
 3. run the access/update check cell and confirm token needs before the audit
 4. resolve a Hugging Face token from environment variables or Colab secrets
-5. resolve the repo dataset root, using `REPO_DATASET_ROOT` by default and `DATASET_ROOT` only as an explicit override
+5. choose the repo dataset under `REPO_DATASET_ROOT`; if you leave `REPO_DATASET_NAME` blank the notebook prompts you, and `DATASET_ROOT` is only for an explicit repo-relative override
 6. scan the flat class-root dataset
 7. normalize class names against the crop taxonomy when possible
 8. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
@@ -147,6 +147,7 @@ That means:
 - the root folder contains one folder per class
 - each class folder contains image files
 - you should not pre-create `train`, `val`, or `test` folders for Notebook 2
+- when `DATASET_NAME` is blank, Notebook 2 now prompts you to choose one repo dataset under `data/class_root_dataset/`
 
 ### Validate the dataset before training
 
@@ -832,4 +833,5 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+
 

@@ -97,6 +97,7 @@ Notebook 0 is different:
 
 - It runs before training.
 - Its canonical repo-local audit input root is `data/class_root_dataset/`.
+- It now asks you which repo dataset under that root to audit unless you prefill the dataset name or explicit repo-relative path.
 - It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
 - It can build a cleaned class-root working copy from the audit reports before runtime materialization.
 - It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
@@ -239,16 +240,16 @@ Current checked-in Notebook 0 examples:
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
 
-Because both datasets live under the shared repo staging root, Notebook 0 should point `DATASET_ROOT` at the specific dataset you want to audit, for example:
+Because both datasets live under the shared repo staging root, Notebook 0 now prompts you to choose one of them from the repo by default. You can still prefill the dataset name or explicit repo-relative path if you want to skip the prompt:
 
 ```python
-DATASET_ROOT = "data/class_root_dataset/grape_fruit"
+REPO_DATASET_NAME = "grape_fruit"
 ```
 
 or:
 
 ```python
-DATASET_ROOT = "data/class_root_dataset/grape_leaf"
+REPO_DATASET_NAME = "grape_leaf"
 ```
 
 ### Workflow and CLI training contract
