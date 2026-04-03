@@ -191,7 +191,7 @@ Tracked:
 
 Local or generated:
 
-- `data/class_root_dataset/` contents
+- most `data/class_root_dataset/` contents, except the checked-in `grape_fruit/` and `grape_leaf/` Notebook 0 dataset roots
 - `data/prepared_class_root_datasets/`
 - `data/prepared_runtime_datasets/`
 - `data/runtime_notebook_datasets/`

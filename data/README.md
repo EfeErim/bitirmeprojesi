@@ -1,6 +1,9 @@
 # Data Workspace
 
-This repo keeps Notebook 0 and Notebook 2 dataset staging paths under `data/`, but the actual dataset contents are local working files, not tracked source.
+This repo keeps Notebook 0 and Notebook 2 dataset staging paths under `data/`. Most dataset contents remain local working files rather than tracked source, but this repo currently includes two checked-in Notebook 0 class-root datasets:
+
+- `data/class_root_dataset/grape_fruit/`
+- `data/class_root_dataset/grape_leaf/`
 
 Canonical local paths:
 
@@ -11,8 +14,8 @@ Canonical local paths:
 
 Rules:
 
-- Keep only the placeholder `.gitkeep` files tracked in these folders.
-- Do not commit real images, runtime splits, manifests, or notebook-generated artifacts under `data/`.
+- Keep `data/prepared_class_root_datasets/`, `data/prepared_runtime_datasets/`, and `data/runtime_notebook_datasets/` as local-only working areas unless you explicitly intend to change repo policy.
+- Do not commit runtime splits, manifests, or notebook-generated artifacts under `data/`.
 - If you need a different local dataset location, override the notebook parameter instead of changing the tracked scaffold.
 
 Expected Notebook 0 input shape:
@@ -22,3 +25,8 @@ data/class_root_dataset/
   <class>/
     <images>
 ```
+
+For the checked-in grape datasets, point Notebook 0 `DATASET_ROOT` at one of these exact roots:
+
+- `data/class_root_dataset/grape_fruit`
+- `data/class_root_dataset/grape_leaf`

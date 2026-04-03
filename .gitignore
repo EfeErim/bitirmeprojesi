@@ -40,6 +40,10 @@ data/*.csv
 data/*.json
 data/class_root_dataset/*
 !data/class_root_dataset/.gitkeep
+!data/class_root_dataset/grape_fruit/
+!data/class_root_dataset/grape_fruit/**
+!data/class_root_dataset/grape_leaf/
+!data/class_root_dataset/grape_leaf/**
 data/prepared_class_root_datasets/*
 !data/prepared_class_root_datasets/.gitkeep
 data/prepared_runtime_datasets/*

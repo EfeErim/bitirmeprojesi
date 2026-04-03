@@ -135,7 +135,7 @@ These folders matter most:
 - `src/pipeline/` and `src/router/`: router-driven inference runtime
 - `scripts/`: notebook helpers, validation tools, and small entrypoints
 - `config/`: shipped JSON configuration
-- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2; only placeholder scaffolding is tracked
+- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets for Notebook 0
 - `docs/`: maintained Markdown documentation
 - `tests/`: unit, integration, and notebook-surface coverage
 
@@ -232,6 +232,23 @@ Validate that layout with:
 
 ```powershell
 .\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\class_root_dataset
+```
+
+Current checked-in Notebook 0 examples:
+
+- `data/class_root_dataset/grape_fruit/`
+- `data/class_root_dataset/grape_leaf/`
+
+Because both datasets live under the shared repo staging root, Notebook 0 should point `DATASET_ROOT` at the specific dataset you want to audit, for example:
+
+```python
+DATASET_ROOT = "data/class_root_dataset/grape_fruit"
+```
+
+or:
+
+```python
+DATASET_ROOT = "data/class_root_dataset/grape_leaf"
 ```
 
 ### Workflow and CLI training contract
