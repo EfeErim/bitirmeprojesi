@@ -96,6 +96,7 @@ Notebook 1 is different:
 Notebook 0 is different:
 
 - It runs before training.
+- Its canonical repo-local audit input root is `data/class_root_dataset/`.
 - It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
 - It can build a cleaned class-root working copy from the audit reports before runtime materialization.
 - It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
@@ -134,6 +135,7 @@ These folders matter most:
 - `src/pipeline/` and `src/router/`: router-driven inference runtime
 - `scripts/`: notebook helpers, validation tools, and small entrypoints
 - `config/`: shipped JSON configuration
+- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2; only placeholder scaffolding is tracked
 - `docs/`: maintained Markdown documentation
 - `tests/`: unit, integration, and notebook-surface coverage
 
@@ -216,7 +218,7 @@ Notebook 2 expects a flat class-root layout:
 Example:
 
 ```text
-data/tomato_flat/
+data/class_root_dataset/
   healthy/
     img001.jpg
     img002.jpg
@@ -229,7 +231,7 @@ data/tomato_flat/
 Validate that layout with:
 
 ```powershell
-.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\tomato_flat
+.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\class_root_dataset
 ```
 
 ### Workflow and CLI training contract

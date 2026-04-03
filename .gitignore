@@ -38,6 +38,14 @@ data/archive.zip
 data/*.xlsx
 data/*.csv
 data/*.json
+data/class_root_dataset/*
+!data/class_root_dataset/.gitkeep
+data/prepared_class_root_datasets/*
+!data/prepared_class_root_datasets/.gitkeep
+data/prepared_runtime_datasets/*
+!data/prepared_runtime_datasets/.gitkeep
+data/runtime_notebook_datasets/*
+!data/runtime_notebook_datasets/.gitkeep
 data/images/
 data/processed/
 data/splits/

@@ -1,4 +1,4 @@
-# Colab Training Manual
+﻿# Colab Training Manual
 
 This guide is written for someone who may be opening the AADS notebooks for the first time.
 
@@ -22,7 +22,7 @@ If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ### Notebook 0
 
-Notebook 0 audits a flat class-root dataset, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset.
+Notebook 0 audits a flat class-root dataset from the repo workspace, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset.
 
 ### Notebook 2
 
@@ -109,14 +109,16 @@ This is the current Notebook 0 flow from start to finish:
 
 1. find or initialize the repo workspace
 2. install notebook requirements
-3. mount Google Drive when available
-4. run the access/update check cell and confirm token needs before the audit
-5. resolve a Hugging Face token from environment variables or Colab secrets
-6. scan a flat class-root dataset
-6. normalize class names against the crop taxonomy when possible
-7. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
-8. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
-9. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when you want Notebook 0 to complete the full prep flow itself
+3. run the access/update check cell and confirm token needs before the audit
+4. resolve a Hugging Face token from environment variables or Colab secrets
+5. resolve the repo dataset root, using `REPO_DATASET_ROOT` by default and `DATASET_ROOT` only as an explicit override
+6. scan the flat class-root dataset
+7. normalize class names against the crop taxonomy when possible
+8. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
+9. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
+10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when you want Notebook 0 to complete the full prep flow itself
+
+Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree.
 
 ## The Dataset Format Notebook 2 Accepts
 
@@ -830,3 +832,4 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+

@@ -357,6 +357,18 @@ def test_data_prep_notebook_contract() -> None:
             "Notebook 0 first code cell is missing required freshness check: {snippet}",
         )
     for snippet in (
+        "from google.colab import drive",
+        "drive.mount('/content/drive')",
+        "drive.mount('/content/drive', force_remount=False)",
+        "Path('/content/drive/MyDrive/bitirme projesi')",
+        "Path('/content/drive/MyDrive/bitirmeprojesi')",
+    ):
+        _assert_not_contains(
+            first_code_source,
+            snippet,
+            "Notebook 0 first code cell should stay repo-first without Drive bootstrap: {snippet}",
+        )
+    for snippet in (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
         "REPO_RUN_DIR =",
@@ -364,6 +376,19 @@ def test_data_prep_notebook_contract() -> None:
     ):
         assert snippet in bootstrap_source, f"Notebook 0 bootstrap is missing: {snippet}"
     for snippet in (
+        "mount_drive_if_available",
+        "def _mount_drive_inline()",
+        "Path('/content/drive/MyDrive/bitirme projesi')",
+        "Path('/content/drive/MyDrive/bitirmeprojesi')",
+        "def _copy_path_to_drive_exports",
+    ):
+        _assert_not_contains(
+            bootstrap_source,
+            snippet,
+            "Notebook 0 bootstrap should not mirror repo prep outputs through Drive: {snippet}",
+        )
+    for snippet in (
+        "REPO_DATASET_ROOT =",
         "DATASET_ROOT =",
         "CROP_NAME =",
         "PART_NAME =",
@@ -384,10 +409,25 @@ def test_data_prep_notebook_contract() -> None:
     assert "build_grouped_dataset_plan" in full_source
     assert "build_prepared_dataset_key" in full_source
     assert "prepare_class_root_for_materialization" in full_source
+    assert "def _resolve_repo_dataset_root" in full_source
+    assert 'dataset_source = "repo"' in full_source
+    assert 'STATE["dataset_source"] = dataset_source' in full_source
     assert 'STATE["provenance_manifest_path"] = provenance_manifest_path' in full_source
     assert 'provenance_manifest_path=STATE.get("provenance_manifest_path")' in full_source
     assert "CONFIRM_PREPARE_FOR_MATERIALIZATION='prepare'" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
+
+
+def test_repo_dataset_scaffold() -> None:
+    required_paths = (
+        ROOT / "data" / "README.md",
+        ROOT / "data" / "class_root_dataset" / ".gitkeep",
+        ROOT / "data" / "prepared_class_root_datasets" / ".gitkeep",
+        ROOT / "data" / "prepared_runtime_datasets" / ".gitkeep",
+        ROOT / "data" / "runtime_notebook_datasets" / ".gitkeep",
+    )
+    missing = [str(path.relative_to(ROOT)) for path in required_paths if not path.exists()]
+    assert not missing, f"Missing dataset scaffold path(s): {', '.join(missing)}"
 
 
 def test_training_notebook_runtime_mode_contract() -> None:
@@ -630,6 +670,15 @@ CHECKS = (
         success_message="Notebook 0 bootstrap globals are defined before use",
         failure_prefix="Notebook 0 bootstrap contract failed",
         callback=test_data_prep_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Data Scaffold",
+        step_id="DATA_LAYOUT",
+        description="repo dataset scaffold",
+        success_message="Repo-local dataset scaffold is present",
+        failure_prefix="Repo dataset scaffold check failed",
+        callback=test_repo_dataset_scaffold,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
