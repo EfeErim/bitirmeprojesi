@@ -1,9 +1,10 @@
-﻿import json
+import json
 
 import pytest
+
 from src.workflows.training_readiness import (
-    build_provenance_slice_breakdown,
     build_production_readiness_context,
+    build_provenance_slice_breakdown,
     record_adapter_export_metadata,
     select_authoritative_artifacts,
     select_authoritative_evaluation,
@@ -229,5 +230,3 @@ def test_build_provenance_slice_breakdown_uses_authoritative_split_for_slice_del
     assert source_dataset["reported_slice_count"] == 1
     assert source_dataset["slices"][0]["name"] == "set_a"
     assert source_dataset["slices"][0]["deltas"]["accuracy"] == pytest.approx(0.1)
-
-

@@ -2,10 +2,17 @@
 
 from __future__ import annotations
 
-from src.router.vlm_pipeline import VLMPipeline
+from src.router.vlm_pipeline import VLMPipeline as _LegacyVLMPipeline
 
-# Preserve the old VLM name as a compatibility alias while maintained surfaces
-# migrate to the router-specific name.
-RouterPipeline = VLMPipeline
+
+class RouterPipeline(_LegacyVLMPipeline):
+    """Canonical router pipeline surface.
+
+    The implementation still lives in the legacy compatibility module so older
+    imports keep working, but maintained code should depend on this type.
+    """
+
+
+VLMPipeline = RouterPipeline
 
 __all__ = ["RouterPipeline", "VLMPipeline"]

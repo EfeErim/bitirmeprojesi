@@ -1,11 +1,12 @@
-﻿"""Artifact writers for training telemetry, plots, and validation reports."""
+"""Artifact writers for training telemetry, plots, and validation reports."""
 
 from __future__ import annotations
 
 import csv
 import re
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, Iterable, List, Protocol, Sequence
 
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
@@ -75,6 +76,20 @@ _BATCH_FLOAT_KEYS = {
 }
 _BATCH_BOOL_KEYS = {"optimizer_step_applied"}
 
+JsonDict = Dict[str, Any]
+
+
+class TelemetryArtifactSink(Protocol):
+    def copy_artifact_file(self, source_path: Path, relative_path: str) -> None: ...
+
+
+@dataclass(frozen=True)
+class _ValidationComputation:
+    report_text: str
+    report_dict: JsonDict
+    cm: Any
+    cm_norm: Any
+
 
 def _artifact_dir(root: Path, *parts: str) -> Path:
     target = Path(root)
@@ -84,13 +99,16 @@ def _artifact_dir(root: Path, *parts: str) -> Path:
     return target
 
 
-def _copy_to_telemetry(telemetry: Any, source_path: Path, relative_path: str) -> None:
+def _copy_to_telemetry(telemetry: TelemetryArtifactSink | None, source_path: Path, relative_path: str) -> None:
     if telemetry is None or not hasattr(telemetry, "copy_artifact_file"):
         return
     telemetry.copy_artifact_file(source_path, relative_path)
 
 
-def _copy_artifacts_to_telemetry(telemetry: Any, artifacts: Iterable[tuple[Path, str]]) -> None:
+def _copy_artifacts_to_telemetry(
+    telemetry: TelemetryArtifactSink | None,
+    artifacts: Iterable[tuple[Path, str]],
+) -> None:
     for source_path, relative_path in artifacts:
         _copy_to_telemetry(telemetry, source_path, relative_path)
 
@@ -239,7 +257,7 @@ def _persist_hard_example_artifacts(
                     telemetry,
                     [(thumbnail_path, f"{telemetry_subdir}/hard_examples_thumbnails/{thumbnail_path.name}")],
                 )
-        except Exception:
+        except (OSError, TypeError, ValueError):
             continue
 
     hard_examples_csv = _write_dict_rows_csv(
@@ -810,6 +828,131 @@ def persist_production_readiness_artifact(
     return {"payload": payload, "readiness_json": readiness_json}
 
 
+def _build_validation_computation(
+    *,
+    y_true: Sequence[int],
+    y_pred: Sequence[int],
+    resolved_classes: Sequence[str],
+) -> _ValidationComputation:
+    labels = list(range(len(resolved_classes)))
+    report_text = classification_report(
+        y_true,
+        y_pred,
+        labels=labels,
+        target_names=resolved_classes,
+        zero_division=0,
+    )
+    report_dict = classification_report(
+        y_true,
+        y_pred,
+        labels=labels,
+        target_names=resolved_classes,
+        zero_division=0,
+        output_dict=True,
+    )
+    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    cm_norm = cm.astype(float) / np.clip(cm.sum(axis=1, keepdims=True), 1.0, None)
+    return _ValidationComputation(
+        report_text=report_text,
+        report_dict=report_dict,
+        cm=cm,
+        cm_norm=cm_norm,
+    )
+
+
+def _persist_validation_core_outputs(
+    *,
+    validation_dir: Path,
+    computation: _ValidationComputation,
+    resolved_classes: Sequence[str],
+    resolved_telemetry_subdir: str,
+    telemetry: TelemetryArtifactSink | None,
+) -> JsonDict:
+    store = ArtifactStore(validation_dir)
+    report_txt = store.write_text("classification_report.txt", computation.report_text)
+    report_json = store.write_json("classification_report.json", computation.report_dict)
+    confusion_csv = validation_dir / "confusion_matrix.csv"
+    np.savetxt(confusion_csv, computation.cm, delimiter=",", fmt="%d")
+    per_class_csv = validation_dir / "per_class_metrics.csv"
+    confusion_png = validation_dir / "confusion_matrix.png"
+    confusion_norm_png = validation_dir / "confusion_matrix_normalized.png"
+    _write_per_class_metrics_csv(per_class_csv, resolved_classes, computation.report_dict)
+    _render_confusion_matrix(
+        matrix=computation.cm,
+        output_path=confusion_png,
+        resolved_classes=resolved_classes,
+        title="Validation Confusion Matrix",
+        normalize=False,
+    )
+    _render_confusion_matrix(
+        matrix=computation.cm_norm,
+        output_path=confusion_norm_png,
+        resolved_classes=resolved_classes,
+        title="Validation Confusion Matrix (Normalized)",
+        normalize=True,
+    )
+    _copy_artifacts_to_telemetry(
+        telemetry,
+        [
+            (report_txt, f"{resolved_telemetry_subdir}/classification_report.txt"),
+            (report_json, f"{resolved_telemetry_subdir}/classification_report.json"),
+            (per_class_csv, f"{resolved_telemetry_subdir}/per_class_metrics.csv"),
+            (confusion_csv, f"{resolved_telemetry_subdir}/confusion_matrix.csv"),
+            (confusion_png, f"{resolved_telemetry_subdir}/confusion_matrix.png"),
+            (confusion_norm_png, f"{resolved_telemetry_subdir}/confusion_matrix_normalized.png"),
+        ],
+    )
+    return {
+        "report_txt": report_txt,
+        "report_json": report_json,
+        "per_class_csv": per_class_csv,
+        "cm_csv": confusion_csv,
+        "cm_png": confusion_png,
+        "cm_norm_png": confusion_norm_png,
+    }
+
+
+def _persist_prediction_outputs(
+    *,
+    validation_dir: Path,
+    prediction_rows: Sequence[JsonDict],
+    resolved_telemetry_subdir: str,
+    telemetry: TelemetryArtifactSink | None,
+) -> JsonDict:
+    if not prediction_rows:
+        return {}
+    predictions_csv = _write_dict_rows_csv(
+        validation_dir / "predictions.csv",
+        prediction_rows,
+        preferred_headers=(
+            "sample_origin",
+            "split_name",
+            "image_path",
+            "ood_type",
+            "true_index",
+            "true_label",
+            "pred_index",
+            "pred_label",
+            "is_correct",
+            "class_confidence",
+            "ood_primary_score_method",
+            "ood_primary_score",
+            "ood_predicted",
+        ),
+    )
+    paths: JsonDict = {"predictions_csv": predictions_csv}
+    _copy_artifacts_to_telemetry(telemetry, [(predictions_csv, f"{resolved_telemetry_subdir}/predictions.csv")])
+    paths.update(
+        _persist_hard_example_artifacts(
+            validation_dir=validation_dir,
+            prediction_rows=prediction_rows,
+            telemetry=telemetry,
+            telemetry_subdir=resolved_telemetry_subdir,
+        )
+    )
+    return paths
+
+
 def persist_validation_artifacts(
     *,
     artifact_root: Path,
@@ -833,105 +976,35 @@ def persist_validation_artifacts(
     prediction_rows: Sequence[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     resolved_classes = [str(name) for name in classes]
-    labels = list(range(len(resolved_classes)))
     resolved_artifact_subdir, resolved_telemetry_subdir = _resolve_output_subdirs(
         artifact_subdir,
         telemetry_subdir,
     )
-    report_text = classification_report(
-        y_true,
-        y_pred,
-        labels=labels,
-        target_names=resolved_classes,
-        zero_division=0,
+    computation = _build_validation_computation(
+        y_true=y_true,
+        y_pred=y_pred,
+        resolved_classes=resolved_classes,
     )
-    report_dict = classification_report(
-        y_true,
-        y_pred,
-        labels=labels,
-        target_names=resolved_classes,
-        zero_division=0,
-        output_dict=True,
-    )
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
-    cm_norm = cm.astype(float) / np.clip(cm.sum(axis=1, keepdims=True), 1.0, None)
 
     validation_dir = _artifact_dir(artifact_root, resolved_artifact_subdir)
-    store = ArtifactStore(validation_dir)
-    report_txt = store.write_text("classification_report.txt", report_text)
-    report_json = store.write_json("classification_report.json", report_dict)
-    confusion_csv = validation_dir / "confusion_matrix.csv"
-    np.savetxt(confusion_csv, cm, delimiter=",", fmt="%d")
-    per_class_csv = validation_dir / "per_class_metrics.csv"
-    confusion_png = validation_dir / "confusion_matrix.png"
-    confusion_norm_png = validation_dir / "confusion_matrix_normalized.png"
-    _write_per_class_metrics_csv(per_class_csv, resolved_classes, report_dict)
-    _render_confusion_matrix(
-        matrix=cm,
-        output_path=confusion_png,
+    paths = _persist_validation_core_outputs(
+        validation_dir=validation_dir,
+        computation=computation,
         resolved_classes=resolved_classes,
-        title="Validation Confusion Matrix",
-        normalize=False,
+        resolved_telemetry_subdir=resolved_telemetry_subdir,
+        telemetry=telemetry,
     )
-    _render_confusion_matrix(
-        matrix=cm_norm,
-        output_path=confusion_norm_png,
-        resolved_classes=resolved_classes,
-        title="Validation Confusion Matrix (Normalized)",
-        normalize=True,
-    )
-
-    paths = {
-        "report_txt": report_txt,
-        "report_json": report_json,
-        "per_class_csv": per_class_csv,
-        "cm_csv": confusion_csv,
-        "cm_png": confusion_png,
-        "cm_norm_png": confusion_norm_png,
-    }
     prediction_rows_list = [dict(row) for row in list(prediction_rows or []) if isinstance(row, dict)]
-    if prediction_rows_list:
-        predictions_csv = _write_dict_rows_csv(
-            validation_dir / "predictions.csv",
-            prediction_rows_list,
-            preferred_headers=(
-                "sample_origin",
-                "split_name",
-                "image_path",
-                "ood_type",
-                "true_index",
-                "true_label",
-                "pred_index",
-                "pred_label",
-                "is_correct",
-                "class_confidence",
-                "ood_primary_score_method",
-                "ood_primary_score",
-                "ood_predicted",
-            ),
+    paths.update(
+        _persist_prediction_outputs(
+            validation_dir=validation_dir,
+            prediction_rows=prediction_rows_list,
+            resolved_telemetry_subdir=resolved_telemetry_subdir,
+            telemetry=telemetry,
         )
-        paths["predictions_csv"] = predictions_csv
-        _copy_artifacts_to_telemetry(telemetry, [(predictions_csv, f"{resolved_telemetry_subdir}/predictions.csv")])
-        paths.update(
-            _persist_hard_example_artifacts(
-                validation_dir=validation_dir,
-                prediction_rows=prediction_rows_list,
-                telemetry=telemetry,
-                telemetry_subdir=resolved_telemetry_subdir,
-            )
-        )
-    _copy_artifacts_to_telemetry(
-        telemetry,
-        [
-            (report_txt, f"{resolved_telemetry_subdir}/classification_report.txt"),
-            (report_json, f"{resolved_telemetry_subdir}/classification_report.json"),
-            (per_class_csv, f"{resolved_telemetry_subdir}/per_class_metrics.csv"),
-            (confusion_csv, f"{resolved_telemetry_subdir}/confusion_matrix.csv"),
-            (confusion_png, f"{resolved_telemetry_subdir}/confusion_matrix.png"),
-            (confusion_norm_png, f"{resolved_telemetry_subdir}/confusion_matrix_normalized.png"),
-        ],
     )
 
+    store = ArtifactStore(validation_dir)
     if isinstance(ood_type_breakdown, dict) and ood_type_breakdown:
         breakdown_json = store.write_json("ood_type_breakdown.json", ood_type_breakdown)
         paths["ood_type_breakdown_json"] = breakdown_json
@@ -1015,7 +1088,10 @@ def persist_validation_artifacts(
     metric_gate_json = validation_dir / "metric_gate.json"
     if emit_metric_gate:
         paths["metric_gate_json"] = metric_gate_json
-        _copy_artifacts_to_telemetry(telemetry, [(metric_gate_json, f"{resolved_telemetry_subdir}/metric_gate.json")])
+        _copy_artifacts_to_telemetry(
+            telemetry,
+            [(metric_gate_json, f"{resolved_telemetry_subdir}/metric_gate.json")],
+        )
     else:
         metric_gate_json.unlink(missing_ok=True)
 
@@ -1025,11 +1101,10 @@ def persist_validation_artifacts(
         overview_updates={"last_written_split": resolved_artifact_subdir},
     )
     return {
-        "report_text": report_text,
-        "report_dict": report_dict,
-        "cm": cm,
-        "cm_norm": cm_norm,
+        "report_text": computation.report_text,
+        "report_dict": computation.report_dict,
+        "cm": computation.cm,
+        "cm_norm": computation.cm_norm,
         "metric_gate": metric_gate,
         "paths": paths,
     }
-

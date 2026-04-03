@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Protocol
 
 from PIL import Image
 
@@ -24,7 +25,20 @@ from src.pipeline.inference_payloads import (
 from src.shared.contracts import InferenceResult, RouterAnalysisResult
 from src.training.services.runtime import resolve_runtime_device
 
+logger = logging.getLogger(__name__)
+
 StatusCallback = Callable[[str], None]
+ImageInput = Image.Image | str | Path
+
+
+class RouterLike(Protocol):
+    def load_models(self) -> None: ...
+
+    def analyze_image(self, image: ImageInput) -> RouterAnalysisResult | Dict[str, Any]: ...
+
+    def analyze_image_result(self, image: ImageInput) -> RouterAnalysisResult | Dict[str, Any]: ...
+
+    def is_ready(self) -> bool: ...
 
 
 @dataclass(frozen=True)
@@ -56,7 +70,7 @@ class RouterAdapterRuntime:
         self.target_size = int(inference_cfg.get("target_size", 224))
         self.router_min_confidence = float(inference_cfg.get("router_min_confidence", 0.65))
         self.router_min_margin = float(inference_cfg.get("router_min_margin", 0.10))
-        self.router: Optional[Any] = None
+        self.router: Optional[RouterLike] = None
         self.adapters: Dict[str, _CachedAdapter] = {}
         self.status_callback = status_callback
 
@@ -64,7 +78,7 @@ class RouterAdapterRuntime:
         if self.status_callback is not None:
             self.status_callback(str(message))
 
-    def _build_router(self) -> Any:
+    def _build_router(self) -> RouterLike:
         from src.router.router_pipeline import RouterPipeline
 
         return RouterPipeline(config=self.config, device=str(self.device))
@@ -89,7 +103,8 @@ class RouterAdapterRuntime:
                         "Router models failed to become ready for inference. "
                         "Check router.vlm.enabled, model availability, and router dependency installation."
                     )
-            except Exception:
+            except (OSError, RuntimeError, TypeError, ValueError) as exc:
+                logger.warning("Router initialization failed: %s", exc)
                 self.router = None
                 raise
             self.router = router
@@ -161,12 +176,13 @@ class RouterAdapterRuntime:
         self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter
 
-    def _coerce_image(self, image: Any) -> Any:
+    def _coerce_image(self, image: ImageInput) -> Image.Image:
         if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
+            with Image.open(image) as opened_image:
+                return opened_image.convert("RGB")
         return image
 
-    def _route(self, image: Any) -> RouterAnalysisResult:
+    def _route(self, image: Image.Image) -> RouterAnalysisResult:
         router = self.load_router()
         if hasattr(router, "analyze_image_result"):
             analysis = router.analyze_image_result(image)
@@ -235,7 +251,7 @@ class RouterAdapterRuntime:
 
     def predict_result(
         self,
-        image: Any,
+        image: ImageInput,
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
@@ -258,7 +274,8 @@ class RouterAdapterRuntime:
         else:
             try:
                 router_analysis = self._route(prepared_image)
-            except Exception as exc:
+            except (OSError, RuntimeError, TypeError, ValueError) as exc:
+                logger.warning("Router analysis failed: %s", exc)
                 result = build_router_unavailable_result(
                     message=f"Router runtime unavailable: {exc}",
                     include_ood=return_ood,

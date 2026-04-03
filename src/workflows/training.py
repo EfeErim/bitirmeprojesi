@@ -1,14 +1,15 @@
-﻿"""Canonical training workflow for the supported adapter-training path."""
+"""Canonical training workflow for the supported adapter-training path."""
 
 from __future__ import annotations
 
 import hashlib
 import importlib.metadata
+import logging
 import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequence
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
@@ -67,8 +68,48 @@ from src.workflows.training_support import (
     stringify_paths,
 )
 
-Observer = Callable[[Dict[str, Any]], None]
-T = TypeVar("T")
+logger = logging.getLogger(__name__)
+
+JsonDict = Dict[str, Any]
+Observer = Callable[[JsonDict], None]
+
+
+class TelemetrySink(Protocol):
+    def emit_event(
+        self,
+        event_type: str,
+        payload: JsonDict,
+        *,
+        phase: str,
+        force_sync: bool = ...,
+    ) -> None: ...
+
+    def update_latest(self, payload: JsonDict) -> None: ...
+
+
+class CheckpointManagerLike(Protocol):
+    def save_checkpoint(
+        self,
+        *,
+        adapter: IndependentCropAdapter,
+        session: "TrainingSessionLike",
+        reason: str,
+        run_id: str,
+        mark_best: bool,
+        val_loss: Any,
+    ) -> JsonDict: ...
+
+
+class HistoryLike(Protocol):
+    def to_dict(self) -> JsonDict: ...
+
+
+class TrainingSessionLike(Protocol):
+    trainer: Any
+
+    def run(self) -> HistoryLike: ...
+
+    def restore_best_model_state(self) -> bool: ...
 
 
 def _last_history_value(history_payload: Dict[str, Any], key: str) -> Optional[float]:
@@ -92,15 +133,8 @@ _FINAL_HISTORY_METRICS = (
 
 
 def _collect_final_metrics(history_payload: Dict[str, Any]) -> Dict[str, float]:
-    final_metrics = {
-        key: _last_history_value(history_payload, key)
-        for key in _FINAL_HISTORY_METRICS
-    }
-    return {
-        key: value
-        for key, value in final_metrics.items()
-        if value is not None
-    }
+    final_metrics = {key: _last_history_value(history_payload, key) for key in _FINAL_HISTORY_METRICS}
+    return {key: value for key, value in final_metrics.items() if value is not None}
 
 
 def _sha256_file(path: Path) -> str:
@@ -121,9 +155,15 @@ def _git_output(repo_root: Path, *args: str) -> str:
             text=True,
             encoding="utf-8",
         )
-    except Exception:
+    except (OSError, subprocess.SubprocessError, UnicodeError) as exc:
+        logger.debug("Git command failed for args=%s: %s", args, exc)
         return ""
     if completed.returncode != 0:
+        logger.debug(
+            "Git command returned non-zero exit status for args=%s stderr=%s",
+            args,
+            str(completed.stderr).strip(),
+        )
         return ""
     return str(completed.stdout).strip()
 
@@ -159,18 +199,19 @@ def _collect_package_versions() -> Dict[str, str]:
     return versions
 
 
-def _collect_dataset_manifest_context(crop_root: Path) -> Dict[str, Any]:
-    manifests: Dict[str, Any] = {}
+def _collect_dataset_manifest_context(crop_root: Path) -> JsonDict:
+    manifests: JsonDict = {}
     for filename in ("split_manifest.json", "_split_metadata.json"):
         manifest_path = crop_root / filename
-        payload: Dict[str, Any] = {
+        payload: JsonDict = {
             "path": str(manifest_path),
             "exists": manifest_path.exists(),
         }
         if manifest_path.exists():
             try:
                 manifest_json = read_json(manifest_path, default={}, expect_type=dict)
-            except Exception:
+            except (OSError, TypeError, ValueError) as exc:
+                logger.warning("Failed to read dataset manifest %s: %s", manifest_path, exc)
                 manifest_json = {}
             payload.update(
                 {
@@ -182,10 +223,20 @@ def _collect_dataset_manifest_context(crop_root: Path) -> Dict[str, Any]:
         manifests[filename] = payload
     return manifests
 
-def _resolve_ood_method_comparison_from_artifacts(artifacts: Dict[str, Any]) -> Dict[str, Any]:
+
+def _nested_dict(source: JsonDict, *keys: str) -> JsonDict:
+    current: Any = source
+    for key in keys:
+        if not isinstance(current, dict):
+            return {}
+        current = current.get(key, {})
+    return dict(current) if isinstance(current, dict) else {}
+
+
+def _resolve_ood_method_comparison_from_artifacts(artifacts: JsonDict) -> JsonDict:
     metric_gate = dict(artifacts.get("metric_gate", {})) if isinstance(artifacts, dict) else {}
-    context = dict(metric_gate.get("context", {})) if isinstance(metric_gate.get("context"), dict) else {}
-    comparison = dict(context.get("ood_method_comparison", {})) if isinstance(context.get("ood_method_comparison"), dict) else {}
+    context = _nested_dict(metric_gate, "context")
+    comparison = _nested_dict(context, "ood_method_comparison")
     if comparison:
         return comparison
     paths = dict(artifacts.get("paths", {})) if isinstance(artifacts, dict) else {}
@@ -210,7 +261,9 @@ def _build_ood_method_comparison_context(
             legacy_methods = dict(ood_benchmark.get("method_comparison_metrics", {}))
             if legacy_methods:
                 comparison = {
-                    "requested_primary_score_method": str(ood_benchmark.get("requested_primary_score_method", "") or ""),
+                    "requested_primary_score_method": str(
+                        ood_benchmark.get("requested_primary_score_method", "") or ""
+                    ),
                     "selected_primary_score_method": str(ood_benchmark.get("primary_score_method", "") or ""),
                     "selection_source": str(ood_benchmark.get("primary_score_selection_source", "") or ""),
                     "methods": {
@@ -227,7 +280,9 @@ def _build_ood_method_comparison_context(
     for method_name, payload in method_payloads.items():
         details = dict(payload or {}) if isinstance(payload, dict) else {}
         summary_payload: Dict[str, Any] = {
-            "pooled_metrics": dict(details.get("pooled_metrics", {})) if isinstance(details.get("pooled_metrics"), dict) else {},
+            "pooled_metrics": dict(details.get("pooled_metrics", {}))
+            if isinstance(details.get("pooled_metrics"), dict)
+            else {},
         }
         if "pooled_gate_eligible" in details:
             summary_payload["pooled_gate_eligible"] = bool(details.get("pooled_gate_eligible"))
@@ -249,7 +304,6 @@ def _build_ood_method_comparison_context(
         "split_name": str(comparison.get("split_name", "") or ""),
         "methods": summarized_methods,
     }
-
 
 
 @dataclass
@@ -311,6 +365,17 @@ class _OODEvidenceStage:
     metrics: Dict[str, Any]
     benchmark: Dict[str, Any]
 
+
+@dataclass(frozen=True)
+class _TrainingExecutionStage:
+    history_payload: JsonDict
+    best_state_restored: bool
+    calibration_split_name: str
+    calibration_loader: Any
+    ood_calibration: JsonDict
+    trainer: Any
+
+
 class TrainingWorkflow:
     """Stable app-facing entrypoint for continual adapter training."""
 
@@ -326,7 +391,7 @@ class TrainingWorkflow:
 
     @staticmethod
     def _emit_telemetry(
-        telemetry: Any,
+        telemetry: Optional[TelemetrySink],
         event_type: str,
         payload: Dict[str, Any],
         *,
@@ -346,10 +411,10 @@ class TrainingWorkflow:
         adapter: IndependentCropAdapter,
         run_id: str,
         telemetry: Any,
-        checkpoint_manager: Any,
+        checkpoint_manager: Optional[CheckpointManagerLike],
         batch_recorder: Optional[BatchMetricsRecorder],
-        checkpoint_records: List[Dict[str, Any]],
-        session_holder: Dict[str, Any],
+        checkpoint_records: List[JsonDict],
+        session_holder: JsonDict,
     ) -> Observer:
         def _workflow_observer(event: Dict[str, Any]) -> None:
             event_type = str(event.get("event_type", "training_event"))
@@ -364,12 +429,17 @@ class TrainingWorkflow:
                 phase="training",
                 force_sync=False,
             )
-            if telemetry is not None and hasattr(telemetry, "update_latest") and event_type in {
-                "batch_end",
-                "validation_end",
-                "epoch_end",
-                "training_completed",
-            }:
+            if (
+                telemetry is not None
+                and hasattr(telemetry, "update_latest")
+                and event_type
+                in {
+                    "batch_end",
+                    "validation_end",
+                    "epoch_end",
+                    "training_completed",
+                }
+            ):
                 telemetry.update_latest({"event_type": event_type, **payload})
 
             if checkpoint_manager is None or event_type != "checkpoint_requested":
@@ -388,6 +458,98 @@ class TrainingWorkflow:
             checkpoint_records.append(dict(record))
 
         return _workflow_observer
+
+    def _create_training_session(
+        self,
+        *,
+        adapter: IndependentCropAdapter,
+        loaders: JsonDict,
+        num_epochs: Optional[int],
+        colab_cfg: JsonDict,
+        run_id: str,
+        telemetry: Optional[TelemetrySink],
+        checkpoint_manager: Optional[CheckpointManagerLike],
+        observers: Optional[Iterable[Observer]],
+        stop_policy: Optional[Callable[[], bool]],
+        checkpoint_every_n_steps: Optional[int],
+        checkpoint_on_exception: Optional[bool],
+        validation_every_n_epochs: Optional[int],
+        artifact_dir: Path,
+    ) -> tuple[TrainingSessionLike, BatchMetricsRecorder, List[JsonDict]]:
+        batch_recorder = BatchMetricsRecorder(artifact_root=artifact_dir)
+        checkpoint_records: List[JsonDict] = []
+        session_observers: List[Observer] = list(observers or [])
+        session_holder: JsonDict = {}
+        session_observers.append(
+            self._build_workflow_observer(
+                adapter=adapter,
+                run_id=run_id,
+                telemetry=telemetry,
+                checkpoint_manager=checkpoint_manager,
+                batch_recorder=batch_recorder,
+                checkpoint_records=checkpoint_records,
+                session_holder=session_holder,
+            )
+        )
+        session = adapter.build_training_session(
+            train_loader=loaders["train"],
+            num_epochs=num_epochs,
+            val_loader=loaders.get("val"),
+            observers=session_observers,
+            stop_policy=stop_policy,
+            run_id=run_id,
+            checkpoint_every_n_steps=int(
+                checkpoint_every_n_steps
+                if checkpoint_every_n_steps is not None
+                else colab_cfg.get("checkpoint_every_n_steps", 0)
+            ),
+            checkpoint_on_exception=bool(
+                colab_cfg.get("checkpoint_on_exception", True)
+                if checkpoint_on_exception is None
+                else checkpoint_on_exception
+            ),
+            validation_every_n_epochs=int(
+                validation_every_n_epochs
+                if validation_every_n_epochs is not None
+                else colab_cfg.get("validation_every_n_epochs", 1)
+            ),
+        )
+        session_holder["session"] = session
+        return session, batch_recorder, checkpoint_records
+
+    def _execute_training_session(
+        self,
+        *,
+        session: TrainingSessionLike,
+        batch_recorder: BatchMetricsRecorder,
+        adapter: IndependentCropAdapter,
+        loaders: JsonDict,
+        loader_sizes: Dict[str, int],
+    ) -> _TrainingExecutionStage:
+        try:
+            history = session.run()
+        finally:
+            batch_recorder.flush()
+        history_payload = history.to_dict()
+        if int(history_payload.get("optimizer_steps", 0)) <= 0:
+            raise RuntimeError(
+                "Training produced zero optimizer steps. Check the continual split size, batch_size, and "
+                "grad_accumulation_steps before launching a full experiment."
+            )
+        restore_best_state = getattr(session, "restore_best_model_state", None)
+        best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
+        calibration_split_name, calibration_loader = select_calibration_source(loaders, loader_sizes)
+        ood_calibration: JsonDict = {}
+        if loader_size(calibration_loader) > 0:
+            ood_calibration = adapter.calibrate_ood(calibration_loader)
+        return _TrainingExecutionStage(
+            history_payload=history_payload,
+            best_state_restored=best_state_restored,
+            calibration_split_name=calibration_split_name,
+            calibration_loader=calibration_loader,
+            ood_calibration=ood_calibration,
+            trainer=getattr(session, "trainer", None),
+        )
 
     def _persist_training_artifacts(
         self,
@@ -453,12 +615,8 @@ class TrainingWorkflow:
         if evaluation_result is None:
             return {}
 
-        require_ood = bool(
-            getattr(getattr(trainer, "config", None), "evaluation_require_ood_for_gate", False)
-        )
-        emit_metric_gate = bool(
-            getattr(getattr(trainer, "config", None), "evaluation_emit_ood_gate", True)
-        )
+        require_ood = bool(getattr(getattr(trainer, "config", None), "evaluation_require_ood_for_gate", False))
+        emit_metric_gate = bool(getattr(getattr(trainer, "config", None), "evaluation_emit_ood_gate", True))
         metric_context = {
             "run_id": run_id,
             "crop_name": crop_name,
@@ -498,7 +656,6 @@ class TrainingWorkflow:
         if trainer is None or loader_size(loader) <= 0:
             return None
         return evaluate_model_with_artifact_metrics(trainer, loader, ood_loader=ood_loader)
-
 
     @classmethod
     def _collect_split_evaluations(
@@ -553,7 +710,6 @@ class TrainingWorkflow:
             for split_name, loader, artifact_subdir in split_specs
         }
 
-
     @staticmethod
     def _apply_primary_score_method_to_trainer(trainer: Any, primary_score_method: str) -> str:
         resolved = resolve_runtime_primary_score_method(primary_score_method)
@@ -569,7 +725,6 @@ class TrainingWorkflow:
         if detector is not None and hasattr(detector, "primary_score_method"):
             setattr(detector, "primary_score_method", resolved)
         return resolved
-
 
     def _resolve_ood_evidence(
         self,
@@ -694,47 +849,21 @@ class TrainingWorkflow:
         sampler_runtime = dict(run_setup.sampler_runtime)
         class_balance_runtime = dict(run_setup.class_balance_runtime)
         artifact_dir = resolved_output_dir / "training_metrics"
-        batch_recorder = BatchMetricsRecorder(artifact_root=artifact_dir)
-
-        checkpoint_records: List[Dict[str, Any]] = []
-        session_observers: List[Observer] = list(observers or [])
-        session_holder: Dict[str, Any] = {}
-        session_observers.append(
-            self._build_workflow_observer(
-                adapter=adapter,
-                run_id=run_id,
-                telemetry=telemetry,
-                checkpoint_manager=checkpoint_manager,
-                batch_recorder=batch_recorder,
-                checkpoint_records=checkpoint_records,
-                session_holder=session_holder,
-            )
-        )
-
-        session = adapter.build_training_session(
-            train_loader=loaders["train"],
+        session, batch_recorder, checkpoint_records = self._create_training_session(
+            adapter=adapter,
+            loaders=loaders,
             num_epochs=num_epochs,
-            val_loader=loaders.get("val"),
-            observers=session_observers,
-            stop_policy=stop_policy,
+            colab_cfg=colab_cfg,
             run_id=run_id,
-            checkpoint_every_n_steps=int(
-                checkpoint_every_n_steps
-                if checkpoint_every_n_steps is not None
-                else colab_cfg.get("checkpoint_every_n_steps", 0)
-            ),
-            checkpoint_on_exception=bool(
-                colab_cfg.get("checkpoint_on_exception", True)
-                if checkpoint_on_exception is None
-                else checkpoint_on_exception
-            ),
-            validation_every_n_epochs=int(
-                validation_every_n_epochs
-                if validation_every_n_epochs is not None
-                else colab_cfg.get("validation_every_n_epochs", 1)
-            ),
+            telemetry=telemetry,
+            checkpoint_manager=checkpoint_manager,
+            observers=observers,
+            stop_policy=stop_policy,
+            checkpoint_every_n_steps=checkpoint_every_n_steps,
+            checkpoint_on_exception=checkpoint_on_exception,
+            validation_every_n_epochs=validation_every_n_epochs,
+            artifact_dir=artifact_dir,
         )
-        session_holder["session"] = session
 
         self._emit_telemetry(
             telemetry,
@@ -748,22 +877,18 @@ class TrainingWorkflow:
             phase="training",
         )
 
-        try:
-            history = session.run()
-        finally:
-            batch_recorder.flush()
-        history_payload = history.to_dict()
-        if int(history_payload.get("optimizer_steps", 0)) <= 0:
-            raise RuntimeError(
-                "Training produced zero optimizer steps. Check the continual split size, batch_size, and "
-                "grad_accumulation_steps before launching a full experiment."
-            )
-        restore_best_state = getattr(session, "restore_best_model_state", None)
-        best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
-        calibration_split_name, calibration_loader = select_calibration_source(loaders, loader_sizes)
-        ood_calibration = {}
-        if loader_size(calibration_loader) > 0:
-            ood_calibration = adapter.calibrate_ood(calibration_loader)
+        execution_stage = self._execute_training_session(
+            session=session,
+            batch_recorder=batch_recorder,
+            adapter=adapter,
+            loaders=loaders,
+            loader_sizes=loader_sizes,
+        )
+        history_payload = execution_stage.history_payload
+        best_state_restored = execution_stage.best_state_restored
+        calibration_split_name = execution_stage.calibration_split_name
+        calibration_loader = execution_stage.calibration_loader
+        ood_calibration = execution_stage.ood_calibration
 
         training_artifacts = self._persist_training_artifacts(
             artifact_dir=artifact_dir,
@@ -771,7 +896,7 @@ class TrainingWorkflow:
             batch_metrics_csv=batch_recorder.output_path,
             telemetry=telemetry,
         )
-        trainer_for_artifacts = getattr(session, "trainer", None)
+        trainer_for_artifacts = execution_stage.trainer
         split_evaluation_stage = self._collect_split_evaluations(
             trainer=trainer_for_artifacts,
             loaders=loaders,
@@ -855,9 +980,8 @@ class TrainingWorkflow:
             metrics=dict(ood_evidence_metrics),
             benchmark=dict(ood_benchmark),
         )
-        if (
-            ood_stage.source == "held_out_benchmark"
-            and is_auto_primary_score_method(primary_score_stage.requested_method)
+        if ood_stage.source == "held_out_benchmark" and is_auto_primary_score_method(
+            primary_score_stage.requested_method
         ):
             benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison", {}))
             if not benchmark_method_comparison:
@@ -919,9 +1043,7 @@ class TrainingWorkflow:
         )
         provenance_summary = summarize_provenance_slice_breakdown_payload(provenance_breakdown)
         provenance_warnings = [
-            str(item)
-            for item in list(provenance_breakdown.get("warnings", []))
-            if str(item).strip()
+            str(item) for item in list(provenance_breakdown.get("warnings", [])) if str(item).strip()
         ]
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
@@ -1098,18 +1220,3 @@ class TrainingWorkflow:
         )
 
         return result
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

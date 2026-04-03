@@ -1,4 +1,4 @@
-﻿"""Readiness and authoritative-split helpers for the training workflow."""
+"""Readiness and authoritative-split helpers for the training workflow."""
 
 from __future__ import annotations
 
@@ -242,11 +242,12 @@ def build_provenance_slice_breakdown(
         return payload
 
     metadata_available = any(
-        any(str(row.get(field_name, "") or "").strip() for field_name in _PROVENANCE_DIMENSIONS)
-        for row in split_rows
+        any(str(row.get(field_name, "") or "").strip() for field_name in _PROVENANCE_DIMENSIONS) for row in split_rows
     )
     if not metadata_available:
-        warnings.append("Runtime manifest rows did not include populated provenance fields for the authoritative split.")
+        warnings.append(
+            "Runtime manifest rows did not include populated provenance fields for the authoritative split."
+        )
         payload["warnings"] = warnings
         return payload
 
@@ -261,16 +262,17 @@ def build_provenance_slice_breakdown(
         for row in list(getattr(authoritative_evaluation, "prediction_rows", []) or [])
         if isinstance(row, dict)
         and str(row.get("sample_origin", "") or "").strip() == "in_distribution"
-        and str(row.get("split_name", classification_split) or classification_split).strip() == str(classification_split)
+        and str(row.get("split_name", classification_split) or classification_split).strip()
+        == str(classification_split)
     ]
     authoritative_metric_rows = [
-        dict(row)
-        for row in prediction_rows
-        if row.get("true_index") is not None and row.get("pred_index") is not None
+        dict(row) for row in prediction_rows if row.get("true_index") is not None and row.get("pred_index") is not None
     ]
     payload["authoritative_sample_count"] = int(len(prediction_rows))
     if not prediction_rows:
-        warnings.append("Authoritative evaluation did not expose in-distribution prediction rows for provenance analysis.")
+        warnings.append(
+            "Authoritative evaluation did not expose in-distribution prediction rows for provenance analysis."
+        )
         payload["warnings"] = warnings
         return payload
     authoritative_pooled_metrics = _to_metric_triplet(
@@ -486,4 +488,3 @@ def build_training_summary_payload(
         },
         "final_metrics": dict(final_metrics),
     }
-

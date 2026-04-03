@@ -1,4 +1,4 @@
-﻿import json
+import json
 from pathlib import Path
 
 import pytest
@@ -76,12 +76,7 @@ class FakeAdapter:
         return {"status": "initialized"}
 
     def build_training_session(self, train_loader, **kwargs):
-        evaluation = (
-            self.initialized.get("config", {})
-            .get("training", {})
-            .get("continual", {})
-            .get("evaluation", {})
-        )
+        evaluation = self.initialized.get("config", {}).get("training", {}).get("continual", {}).get("evaluation", {})
         trainer_config = type(
             "FakeTrainerConfig",
             (),
@@ -313,6 +308,7 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     assert result.production_readiness["missing_deployment_requirements"] == []
     assert (result.artifact_dir / "production_readiness.json").exists()
 
+
 def test_training_workflow_persists_provenance_slice_breakdown_and_method_comparison(monkeypatch, tmp_path: Path):
     crop_root = tmp_path / "runtime_data" / "tomato"
     crop_root.mkdir(parents=True, exist_ok=True)
@@ -354,7 +350,9 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
                     "true_index": true_index,
                     "pred_index": pred_index,
                     "true_label": class_name,
-                    "pred_label": class_name if pred_index == true_index else ("healthy" if pred_index == 0 else "disease_a"),
+                    "pred_label": class_name
+                    if pred_index == true_index
+                    else ("healthy" if pred_index == 0 else "disease_a"),
                     "is_correct": pred_index == true_index,
                 }
             )
@@ -370,6 +368,7 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
         },
     )
     monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+
     def _evaluation_with_provenance(_trainer, loader, *, ood_loader=None):
         split_name = getattr(loader, "split_name", "test")
         report = ValidationReport(
@@ -451,7 +450,9 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
     assert (result.artifact_dir / "test" / "ood_method_comparison.json").exists()
     assert result.production_readiness["context"]["provenance_summary"]["available"] is True
     assert result.production_readiness["context"]["provenance_summary"]["reported_dimension_count"] >= 1
-    assert result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
+    assert (
+        result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
+    )
 
 
 def test_training_workflow_resolves_prepared_runtime_dataset_key_for_crop(monkeypatch, tmp_path: Path):
@@ -519,6 +520,8 @@ def test_training_workflow_resolves_prepared_runtime_dataset_key_for_crop(monkey
     assert run_context["dataset"]["dataset_key"] == "tomato__fruit"
     assert Path(run_context["dataset"]["crop_root"]) == dataset_root.resolve()
     assert run_context["dataset"]["resolution_source"] == "manifest:split_manifest.json"
+
+
 def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mode(monkeypatch, tmp_path: Path):
     saved_methods = []
 
@@ -665,24 +668,25 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
     )
     monkeypatch.setattr(
         "src.workflows.training.run_leave_one_class_out_benchmark",
-        lambda **kwargs: benchmark_calls.append(dict(kwargs)) or {
-            "status": "completed",
-            "passed": True,
-            "metrics": {
-                "ood_auroc": 0.96,
-                "ood_false_positive_rate": 0.03,
-                "ood_samples": 5,
-                "in_distribution_samples": 5,
-                "sure_ds_f1": 0.94,
-                "conformal_empirical_coverage": 0.97,
-                "conformal_avg_set_size": 1.0,
-            },
-            "paths": {
-                "summary_json": str(
-                    tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json"
-                )
-            },
-        },
+        lambda **kwargs: (
+            benchmark_calls.append(dict(kwargs))
+            or {
+                "status": "completed",
+                "passed": True,
+                "metrics": {
+                    "ood_auroc": 0.96,
+                    "ood_false_positive_rate": 0.03,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 0.94,
+                    "conformal_empirical_coverage": 0.97,
+                    "conformal_avg_set_size": 1.0,
+                },
+                "paths": {
+                    "summary_json": str(tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json")
+                },
+            }
+        ),
     )
 
     workflow = TrainingWorkflow(
@@ -789,24 +793,25 @@ def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp
     )
     monkeypatch.setattr(
         "src.workflows.training.run_leave_one_class_out_benchmark",
-        lambda **kwargs: benchmark_calls.append(dict(kwargs)) or {
-            "status": "completed",
-            "passed": True,
-            "metrics": {
-                "ood_auroc": 0.96,
-                "ood_false_positive_rate": 0.03,
-                "ood_samples": 5,
-                "in_distribution_samples": 5,
-                "sure_ds_f1": 0.94,
-                "conformal_empirical_coverage": 0.97,
-                "conformal_avg_set_size": 1.0,
-            },
-            "paths": {
-                "summary_json": str(
-                    tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json"
-                )
-            },
-        },
+        lambda **kwargs: (
+            benchmark_calls.append(dict(kwargs))
+            or {
+                "status": "completed",
+                "passed": True,
+                "metrics": {
+                    "ood_auroc": 0.96,
+                    "ood_false_positive_rate": 0.03,
+                    "ood_samples": 5,
+                    "in_distribution_samples": 5,
+                    "sure_ds_f1": 0.94,
+                    "conformal_empirical_coverage": 0.97,
+                    "conformal_avg_set_size": 1.0,
+                },
+                "paths": {
+                    "summary_json": str(tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json")
+                },
+            }
+        ),
     )
 
     workflow = TrainingWorkflow(
@@ -1107,11 +1112,3 @@ def test_training_workflow_fails_for_supported_classes_below_min_reference_count
             data_dir=tmp_path / "runtime_data",
             output_dir=tmp_path / "outputs",
         )
-
-
-
-
-
-
-
-

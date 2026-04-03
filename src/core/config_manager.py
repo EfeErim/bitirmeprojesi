@@ -65,7 +65,8 @@ class ConfigurationManager:
                 continue
             try:
                 payload = _read_json(candidate)
-            except Exception:
+            except (OSError, TypeError, ValueError) as exc:
+                logger.debug("Skipping unreadable config candidate %s: %s", candidate, exc)
                 continue
             if is_versioned_config_surface_payload(payload):
                 names.append(candidate.stem)
