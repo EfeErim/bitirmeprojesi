@@ -62,13 +62,12 @@ def test_run_inference_runs_router_only_pipeline(monkeypatch, tmp_path: Path):
         return fake_image
 
     monkeypatch.setattr(router_script, "get_config", lambda environment=None: {"environment": environment})
-    monkeypatch.setattr(router_script, "VLMPipeline", FakeRouter)
+    monkeypatch.setattr(router_script, "RouterPipeline", FakeRouter)
     monkeypatch.setattr(router_script.Image, "open", _open_image)
 
     result = router_script.run_inference(
         tmp_path / "leaf.png",
         config_env="colab",
-        adapter_root=tmp_path / "models" / "adapters",
         device="cpu",
         status_printer=status_messages.append,
     )
@@ -118,7 +117,7 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(router_script.Image, "open", _open_image)
     monkeypatch.setattr(
         router_script,
-        "VLMPipeline",
+        "RouterPipeline",
         lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("router should not be built")),
     )
 
@@ -191,7 +190,7 @@ def test_run_inference_surfaces_part_abstention_message(monkeypatch, tmp_path: P
             )
 
     monkeypatch.setattr(router_script, "get_config", lambda environment=None: {"environment": environment})
-    monkeypatch.setattr(router_script, "VLMPipeline", FakeRouter)
+    monkeypatch.setattr(router_script, "RouterPipeline", FakeRouter)
     monkeypatch.setattr(router_script.Image, "open", lambda _path: fake_image)
 
     result = router_script.run_inference(
@@ -263,7 +262,7 @@ def test_run_inference_reuses_cached_router_between_images(monkeypatch, tmp_path
         return _FakeImage()
 
     monkeypatch.setattr(router_script, "get_config", _get_config)
-    monkeypatch.setattr(router_script, "VLMPipeline", FakeRouter)
+    monkeypatch.setattr(router_script, "RouterPipeline", FakeRouter)
     monkeypatch.setattr(router_script.Image, "open", _open_image)
 
     first = router_script.run_inference(
@@ -312,7 +311,6 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         config_env="colab",
         crop_hint=None,
         part_hint=None,
-        adapter_root=None,
         device="cuda",
         status_printer=None,
     ):
@@ -321,7 +319,6 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "config_env": config_env,
             "crop_hint": crop_hint,
             "part_hint": part_hint,
-            "adapter_root": adapter_root,
             "device": device,
             "status_printer": status_printer,
         }
@@ -349,8 +346,6 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "tomato",
             "--part",
             "leaf",
-            "--adapter-root",
-            str(tmp_path / "models" / "adapters"),
             "--device",
             "cpu",
         ],
@@ -364,7 +359,6 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         "config_env": "colab",
         "crop_hint": "tomato",
         "part_hint": "leaf",
-        "adapter_root": tmp_path / "models" / "adapters",
         "device": "cpu",
         "status_printer": None,
     }
@@ -378,3 +372,9 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "primary_detection": {"crop": "tomato", "part": "leaf", "crop_confidence": 0.95},
         },
     }
+
+
+
+
+
+

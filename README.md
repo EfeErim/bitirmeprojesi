@@ -1,4 +1,4 @@
-# AADS v6
+﻿# AADS v6
 
 AADS v6 is a focused plant-disease training and inference repository.
 
@@ -119,7 +119,7 @@ The maintained training path is:
 - classifier head on the fused representation
 - OOD calibration saved inside the exported adapter bundle
 - training loader sampling defaults to `auto`, promoting the train split to weighted sampling when class counts are materially imbalanced
-- training now resolves supported-class reference counts from `split_manifest.json` or `_split_metadata.json` when available, otherwise from the runtime `continual` split; runs fail before adapter initialization if any supported class resolves below `100` images, and when at least one supported class lands in the `100-200` range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
+- training now resolves supported-class reference counts from `split_manifest.json` when available, otherwise from the runtime `continual` split; runs fail before adapter initialization if any supported class resolves below `100` images, and when at least one supported class lands in the `100-200` range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
 
 The default inference deployment path is:
 
@@ -391,7 +391,7 @@ The config flow is:
 2. `config/<environment>.json` is merged on top when requested.
 3. `ConfigurationManager` applies the versioned migration step declared by `config_schema_version`.
 4. `ConfigurationManager` normalizes the training surface.
-5. Legacy top-level `ood` and `checkpoint_interval` aliases are migrated on read, but the active config stays canonical.
+5. Config files must declare `config_schema_version: 1` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface. Only the canonical surface is accepted; old aliases now fail fast.
 6. Prohibited 4-bit flags are rejected before use.
 
 The most important config areas are:
@@ -581,4 +581,7 @@ Do not treat generated outputs as tracked implementation files unless you explic
 - [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, and Notebook 4 guide
 - [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md): how deployment readiness is decided
 - [docs/architecture/overview.md](docs/architecture/overview.md): code and data flow map
+
+
+
 

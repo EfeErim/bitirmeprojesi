@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["RouterPipeline", "VLMPipeline", "DiagnosticScoutingAnalyzer"]
+__all__ = ["RouterPipeline", "DiagnosticScoutingAnalyzer"]
 
 
 def __getattr__(name: str) -> Any:
@@ -12,11 +12,9 @@ def __getattr__(name: str) -> Any:
         raise AttributeError(name)
     from src.router.diagnostic_scouting import DiagnosticScoutingAnalyzer
     from src.router.router_pipeline import RouterPipeline
-    from src.router.vlm_pipeline import VLMPipeline
 
     exports = {
         "RouterPipeline": RouterPipeline,
-        "VLMPipeline": VLMPipeline,
         "DiagnosticScoutingAnalyzer": DiagnosticScoutingAnalyzer,
     }
     return exports[name]

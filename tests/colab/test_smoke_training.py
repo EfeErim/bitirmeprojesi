@@ -1,4 +1,4 @@
-"""Smoke tests for continual SD-LoRA training surfaces."""
+﻿"""Smoke tests for continual SD-LoRA training surfaces."""
 
 import torch
 import torch.nn as nn
@@ -58,8 +58,10 @@ class TestContinualSmoke:
         trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
             'mahalanobis_z': torch.tensor([0.1]),
             'energy_z': torch.tensor([0.2]),
-            'ensemble_score': torch.tensor([0.15]),
-            'class_threshold': torch.tensor([0.5]),
+            "primary_score": torch.tensor([0.15]),
+        "decision_threshold": torch.tensor([0.5]),
+        "candidate_scores": {"ensemble": torch.tensor([0.15])},
+        "candidate_thresholds": {"ensemble": torch.tensor([0.5])},
             'is_ood': torch.tensor([False]),
             'calibration_version': torch.tensor([1]),
         }
@@ -73,3 +75,6 @@ class TestContinualSmoke:
             'is_ood',
             'calibration_version',
         } <= set(result['ood_analysis'].keys())
+
+
+

@@ -1,4 +1,4 @@
-﻿"""Class-support policy and effective-number class-balanced weighting."""
+"""Class-support policy and effective-number class-balanced weighting."""
 
 from __future__ import annotations
 
@@ -42,13 +42,13 @@ def compute_effective_number_weights(
 
 
 def _manifest_payload(crop_root: Path) -> tuple[str, Dict[str, Any]]:
-    for filename in ("split_manifest.json", "_split_metadata.json"):
-        path = crop_root / filename
-        if not path.exists():
-            continue
-        payload = read_json(path, default={}, expect_type=dict)
-        if isinstance(payload, dict):
-            return filename, dict(payload)
+    filename = "split_manifest.json"
+    path = crop_root / filename
+    if not path.exists():
+        return "", {}
+    payload = read_json(path, default={}, expect_type=dict)
+    if isinstance(payload, dict):
+        return filename, dict(payload)
     return "", {}
 
 
@@ -204,4 +204,3 @@ def format_under_min_class_error(class_balance_runtime: Dict[str, Any]) -> str:
         f"Supported classes below minimum reference count of {minimum}: {details}. "
         "Remove them from the supported label set before training this adapter."
     )
-

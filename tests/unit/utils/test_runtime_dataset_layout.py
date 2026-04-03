@@ -1,4 +1,4 @@
-﻿import shutil
+import shutil
 from pathlib import Path
 
 from PIL import Image
@@ -47,7 +47,6 @@ def test_prepare_runtime_dataset_layout_writes_split_manifest(tmp_path: Path):
 
     crop_root = result_root / "tomato"
     assert (crop_root / "split_manifest.json").exists()
-    assert (crop_root / "_split_metadata.json").exists()
     assert (crop_root / "continual").exists()
     assert (crop_root / "val").exists()
     assert (crop_root / "test").exists()
@@ -252,4 +251,7 @@ def test_prepare_runtime_dataset_layout_refuses_to_delete_existing_runtime_tree_
         assert "refusing to delete" in str(exc)
 
     assert marker_path.exists()
+
+
+
 

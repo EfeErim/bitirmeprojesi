@@ -137,12 +137,14 @@ def restore_ood_state(
     threshold_factor = float(payload.get("threshold_factor", default_threshold_factor))
     target_device = torch.device(device) if device is not None else torch.device("cpu")
 
-    # Restore extended flags with backward-compatible defaults
+    primary_score_method = str(payload.get("primary_score_method", "") or "").strip()
+    if not primary_score_method:
+        raise ValueError("OOD state must declare primary_score_method.")
     radial_beta_range_raw = payload.get("radial_beta_range", [0.5, 2.0])
     energy_temperature_range_raw = payload.get("energy_temperature_range", [0.5, 3.0])
     detector = ContinualOODDetector(
         threshold_factor=threshold_factor,
-        primary_score_method=str(payload.get("primary_score_method", "ensemble") or "ensemble"),
+        primary_score_method=primary_score_method,
         knn_k=int(payload.get("knn_k", 10)),
         knn_bank_cap=int(payload.get("knn_bank_cap", 256)),
         knn_backend=str(payload.get("knn_backend", "auto") or "auto"),
@@ -433,4 +435,8 @@ def load_trainer_adapter(trainer: Any, adapter_dir: str, *, peft_model_cls: Any 
     _restore_exported_head_state(trainer, root)
     _restore_exported_ood_state(trainer, meta)
     return meta
+
+
+
+
 

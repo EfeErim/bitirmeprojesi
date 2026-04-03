@@ -1,4 +1,4 @@
-from PIL import Image
+﻿from PIL import Image
 
 from src.core.config_manager import ConfigurationManager
 from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
@@ -28,8 +28,11 @@ class FakeAdapter:
             "status": "success",
             "disease": {"class_index": 0, "name": "healthy", "confidence": 0.93},
             "ood_analysis": {
-                "ensemble_score": 0.1,
-                "class_threshold": 0.7,
+                "score_method": "ensemble",
+                "primary_score": 0.1,
+                "decision_threshold": 0.7,
+                "candidate_scores": {"ensemble": 0.1},
+                "candidate_thresholds": {"ensemble": 0.7},
                 "is_ood": False,
                 "calibration_version": 1,
             },
@@ -117,3 +120,6 @@ def test_runtime_retries_with_fresh_router_after_startup_failure(monkeypatch, tm
     assert second["crop"] == "tomato"
     assert second["router"]["primary_detection"]["crop"] == "tomato"
     assert build_calls["count"] == 2
+
+
+

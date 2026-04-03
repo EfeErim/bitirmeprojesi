@@ -22,8 +22,8 @@ from sklearn.neighbors import NearestNeighbors
 
 from src.data.dataset_layout import (
     IMAGE_EXTENSIONS,
-    _class_name_aliases,
-    _materialize_image,
+    class_name_aliases,
+    materialize_image,
     estimate_split_counts,
     normalize_class_name,
 )
@@ -174,7 +174,7 @@ def normalize_prepared_class_name(raw_class_name: str, *, crop_name: str, expect
     normalized = normalize_class_name(raw_class_name)
     if not expected_classes:
         return normalized
-    aliases = _class_name_aliases(normalized, crop_name=normalize_class_name(crop_name))
+    aliases = class_name_aliases(normalized, crop_name=normalize_class_name(crop_name))
     matches = sorted(expected_classes & aliases)
     if len(matches) == 1:
         return matches[0]
@@ -1409,7 +1409,7 @@ def materialize_grouped_runtime_dataset(
             destination_relative = Path(relative_path.name)
         destination_path = crop_root / split_name / class_name / destination_relative
         destination_path.parent.mkdir(parents=True, exist_ok=True)
-        _materialize_image(source_path, destination_path, materialization_strategy)
+        materialize_image(source_path, destination_path, materialization_strategy)
         row["runtime_relative_path"] = destination_path.relative_to(crop_root).as_posix()
     split_manifest_path = write_json(
         crop_root / "split_manifest.json",
@@ -1510,3 +1510,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 import torch
 
-from src.router.vlm_pipeline import VLMPipeline
+from src.router.router_pipeline import RouterPipeline
 
 
 class _FakeProcessor:
@@ -49,7 +49,7 @@ def test_strict_loading_requires_model_ids():
     }
 
     with patch('torch.cuda.is_available', return_value=False):
-        pipeline = VLMPipeline(config=config, device='cpu')
+        pipeline = RouterPipeline(config=config, device='cpu')
 
     pipeline._load_sam = lambda model_id: (_ for _ in ()).throw(ValueError('bad sam id'))
 
@@ -76,7 +76,7 @@ def test_non_strict_loading_falls_back_to_placeholder():
     }
 
     with patch('torch.cuda.is_available', return_value=False):
-        pipeline = VLMPipeline(config=config, device='cpu')
+        pipeline = RouterPipeline(config=config, device='cpu')
 
     pipeline._load_sam = lambda model_id: (_ for _ in ()).throw(ValueError('bad sam id'))
 
@@ -99,7 +99,7 @@ def test_analyzer_resolution_is_sam3_only():
     }
 
     with patch('torch.cuda.is_available', return_value=False):
-        pipeline = VLMPipeline(config=config, device='cpu')
+        pipeline = RouterPipeline(config=config, device='cpu')
 
     pipeline.actual_pipeline = 'dino'
     assert pipeline._resolve_analyzer_for_active_pipeline() is None
@@ -135,7 +135,7 @@ def test_strict_loading_with_models_runs_inference():
     fake_processor = _FakeProcessor()
 
     with patch('torch.cuda.is_available', return_value=False):
-        pipeline = VLMPipeline(config=config, device='cpu')
+        pipeline = RouterPipeline(config=config, device='cpu')
 
     pipeline._load_sam = lambda model_id: (fake_processor, fake_model)
     pipeline._load_clip_like_model = lambda model_id: (fake_processor, fake_model)
@@ -162,3 +162,4 @@ def test_strict_loading_with_models_runs_inference():
     assert detection['crop'] == 'tomato'
     assert detection['part'] == 'leaf'
     assert detection['crop_confidence'] > 0.9
+

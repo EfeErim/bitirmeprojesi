@@ -1,4 +1,4 @@
-import json
+﻿import json
 from pathlib import Path
 
 import pytest
@@ -108,8 +108,8 @@ class FakeTrainer:
                 "score_method": "ensemble",
                 "primary_score": 0.2,
                 "decision_threshold": 0.8,
-                "ensemble_score": 0.2,
-                "class_threshold": 0.8,
+                "candidate_scores": {"ensemble": 0.2},
+                "candidate_thresholds": {"ensemble": 0.8},
                 "is_ood": False,
                 "calibration_version": self.ood_detector.calibration_version,
             },
@@ -332,3 +332,7 @@ def test_load_adapter_rejects_crop_mismatch(monkeypatch, tmp_path):
 
     with pytest.raises(ValueError, match="Adapter crop mismatch"):
         loaded.load_adapter(str(save_dir / "continual_sd_lora_adapter"))
+
+
+
+

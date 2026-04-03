@@ -66,7 +66,7 @@ Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
-- training now resolves supported-class reference counts from `split_manifest.json` or `_split_metadata.json` when those runtime manifests exist, otherwise from the runtime `continual` split counts
+- training now resolves supported-class reference counts from `split_manifest.json` when that runtime manifest exists, otherwise from the runtime `continual` split counts
 - if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
 - Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
@@ -192,7 +192,7 @@ Important distinction:
 The generated runtime dataset includes:
 
 - `split_manifest.json`
-- `_split_metadata.json`
+
 
 Contract reminder:
 
@@ -430,7 +430,7 @@ Current sampler behavior:
 
 Current class-imbalance behavior layered on top of the sampler:
 
-- the workflow first resolves per-class reference counts from `split_manifest.json` or `_split_metadata.json`; if those manifests are absent, it falls back to runtime `continual` counts
+- the workflow first resolves per-class reference counts from `split_manifest.json`; if that manifest is absent, it falls back to runtime `continual` counts
 - any supported class below `100` resolved images now hard-fails the run before adapter initialization
 - when all supported classes pass that floor and at least one supported class is in the `100-200` range, training cross-entropy automatically switches to class-balanced weighting based on the effective-number method from Cui et al.
 - once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
@@ -833,6 +833,7 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+
 
 
 

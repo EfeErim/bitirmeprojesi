@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import pytest
 import torch
@@ -39,7 +39,9 @@ class FakeOODDetector:
             semantic = torch.tensor([True, True], dtype=torch.bool, device=features.device)
             confidence = torch.tensor([True, True], dtype=torch.bool, device=features.device)
         return {
-            "ensemble_score": ensemble,
+            "primary_score_method": "ensemble",
+            "primary_score": ensemble,
+            "candidate_scores": {"ensemble": ensemble},
             "sure_semantic_ood": semantic,
             "sure_confidence_reject": confidence,
         }
@@ -277,3 +279,6 @@ def test_evaluate_model_keeps_validation_loss_unweighted(monkeypatch):
 
     assert report is not None
     assert recorded["weight"] is None
+
+
+

@@ -39,22 +39,13 @@ def _resolve_candidate_score_payload(detector: Any, ood: Dict[str, Any]) -> tupl
         ood.get("primary_score_method", getattr(detector, "primary_score_method", "ensemble")) or "ensemble"
     ).strip().lower()
     candidate_scores = ood.get("candidate_scores")
-    if isinstance(candidate_scores, dict) and candidate_scores:
-        return primary_method, {
-            str(name): value
-            for name, value in candidate_scores.items()
-            if torch.is_tensor(value)
-        }
-
-    fallback_scores: Dict[str, torch.Tensor] = {}
-    if torch.is_tensor(ood.get("ensemble_score")):
-        fallback_scores["ensemble"] = ood["ensemble_score"]
-    if torch.is_tensor(ood.get("energy_score")):
-        fallback_scores["energy"] = ood["energy_score"]
-    if torch.is_tensor(ood.get("knn_distance")):
-        fallback_scores["knn"] = ood["knn_distance"]
-    return primary_method, fallback_scores
-
+    if not isinstance(candidate_scores, dict) or not candidate_scores:
+        return primary_method, {}
+    return primary_method, {
+        str(name): value
+        for name, value in candidate_scores.items()
+        if torch.is_tensor(value)
+    }
 
 def _build_confusion_matrix(labels: torch.Tensor, preds: torch.Tensor, num_classes: int) -> torch.Tensor:
     confusion = torch.zeros((num_classes, num_classes), dtype=torch.long)
@@ -665,3 +656,8 @@ def evaluate_model_with_artifact_metrics(
     _finalize_artifact_metric_state(payload, state)
 
     return payload
+
+
+
+
+

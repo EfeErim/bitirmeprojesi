@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 import torch
 from PIL import Image
@@ -32,8 +32,11 @@ class _FakeAdapter:
             "disease": {"class_index": 1, "name": "blight", "confidence": 0.91},
             "ood_analysis": {
                 "is_ood": False,
-                "ensemble_score": 0.2,
-                "class_threshold": 0.8,
+                "score_method": "ensemble",
+                "primary_score": 0.2,
+                "decision_threshold": 0.8,
+                "candidate_scores": {"ensemble": 0.2},
+                "candidate_thresholds": {"ensemble": 0.8},
                 "calibration_version": 3,
             },
         }
@@ -742,3 +745,6 @@ def test_discover_adapter_candidates_skips_redundant_descendant_roots_even_when_
 
     assert candidates == []
     assert scan_roots == [parent]
+
+
+

@@ -492,18 +492,8 @@ def _flatten_prediction(
         "confidence": float(disease.get("confidence", 0.0)),
         "is_ood": bool(ood.get("is_ood", False)),
         "score_method": str(ood.get("score_method", "ensemble")),
-        "primary_score": float(
-            ood.get(
-                "primary_score",
-                ood.get("ensemble_score", 0.0),
-            )
-        ),
-        "decision_threshold": float(
-            ood.get(
-                "decision_threshold",
-                ood.get("class_threshold", 0.0),
-            )
-        ),
+        "primary_score": float(ood.get("primary_score", 0.0)),
+        "decision_threshold": float(ood.get("decision_threshold", 0.0)),
         "calibration_version": int(ood.get("calibration_version", 0)),
         "ood_analysis": ood,
         "raw_payload": payload,
@@ -951,4 +941,6 @@ __all__ = [
     "predict_single_image",
     "predict_image_folder",
 ]
+
+
 

@@ -1,4 +1,4 @@
-"""Integration tests for the kept Colab training surfaces."""
+﻿"""Integration tests for the kept Colab training surfaces."""
 
 from pathlib import Path
 
@@ -111,8 +111,11 @@ def test_adapter_metadata_roundtrip_without_model_download(monkeypatch, tmp_path
                 "status": "success",
                 "disease": {"class_index": 0, "name": "healthy", "confidence": 0.9},
                 "ood_analysis": {
-                    "ensemble_score": 0.2,
-                    "class_threshold": 0.8,
+                    "score_method": "ensemble",
+                "primary_score": 0.2,
+                "decision_threshold": 0.8,
+                "candidate_scores": {"ensemble": 0.2},
+                "candidate_thresholds": {"ensemble": 0.8},
                     "is_ood": False,
                     "calibration_version": 1,
                 },
@@ -216,3 +219,6 @@ def test_training_checkpoint_roundtrip_without_model_download(monkeypatch, tmp_p
     assert payload["run_id"] == "run_42"
     assert payload["progress_state"]["global_step"] == 11
     assert payload["history"]["train_loss"] == [0.3, 0.2]
+
+
+

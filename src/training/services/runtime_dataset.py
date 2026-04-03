@@ -1,4 +1,4 @@
-﻿"""Helpers for resolving runtime dataset roots for training workflows."""
+"""Helpers for resolving runtime dataset roots for training workflows."""
 
 from __future__ import annotations
 
@@ -18,15 +18,12 @@ def normalize_runtime_crop_name(name: str) -> str:
     return normalized.strip("_")
 
 
-def _read_runtime_manifest(crop_root: Path) -> tuple[str, Dict[str, Any]]:
-    for filename in ("split_manifest.json", "_split_metadata.json"):
-        manifest_path = crop_root / filename
-        if not manifest_path.exists():
-            continue
-        payload = read_json(manifest_path, default={}, expect_type=dict)
-        if isinstance(payload, dict):
-            return filename, dict(payload)
-    return "", {}
+def _read_runtime_manifest(crop_root: Path) -> Dict[str, Any]:
+    manifest_path = crop_root / "split_manifest.json"
+    if not manifest_path.exists():
+        return {}
+    payload = read_json(manifest_path, default={}, expect_type=dict)
+    return dict(payload) if isinstance(payload, dict) else {}
 
 
 @dataclass(frozen=True)
@@ -47,7 +44,7 @@ def resolve_runtime_dataset(*, data_dir: str | Path, crop_name: str) -> Resolved
             resolution_source="direct",
         )
 
-    manifest_matches: list[tuple[Path, str]] = []
+    manifest_matches: list[Path] = []
     prefix_matches: list[Path] = []
     if resolved_data_dir.is_dir():
         for candidate in sorted(resolved_data_dir.iterdir(), key=lambda item: item.name.lower()):
@@ -56,20 +53,20 @@ def resolve_runtime_dataset(*, data_dir: str | Path, crop_name: str) -> Resolved
             candidate_key = str(candidate.name).strip().lower()
             if candidate_key.startswith(f"{crop_key}__"):
                 prefix_matches.append(candidate)
-            manifest_name, manifest_payload = _read_runtime_manifest(candidate)
+            manifest_payload = _read_runtime_manifest(candidate)
             manifest_crop_key = normalize_runtime_crop_name(manifest_payload.get("crop_name", ""))
-            if manifest_name and manifest_crop_key == crop_key:
-                manifest_matches.append((candidate, manifest_name))
+            if manifest_payload and manifest_crop_key == crop_key:
+                manifest_matches.append(candidate)
 
     if len(manifest_matches) == 1:
-        crop_root, manifest_name = manifest_matches[0]
+        crop_root = manifest_matches[0]
         return ResolvedRuntimeDataset(
             dataset_key=str(crop_root.name),
             crop_root=crop_root,
-            resolution_source=f"manifest:{manifest_name}",
+            resolution_source="manifest:split_manifest.json",
         )
     if len(manifest_matches) > 1:
-        matches = ", ".join(str(path.name) for path, _ in manifest_matches)
+        matches = ", ".join(str(path.name) for path in manifest_matches)
         raise ValueError(
             f"Multiple runtime datasets matched crop '{crop_key}' under {resolved_data_dir}: {matches}. "
             "Point data_dir at the specific runtime root or remove the ambiguity."

@@ -111,7 +111,7 @@ def test_streamed_calibration_matches_materialized_reference_within_tolerance():
     actual_score = trainer.ood_detector.score(score_features, score_logits, predicted_labels=predicted_labels)
     reference_score = reference.score(score_features, score_logits, predicted_labels=predicted_labels)
 
-    for key in ("mahalanobis_z", "energy_z", "ensemble_score", "class_threshold"):
+    for key in ("mahalanobis_z", "energy_z", "primary_score", "decision_threshold"):
         assert torch.allclose(actual_score[key], reference_score[key], atol=1e-4, rtol=1e-4)
     assert torch.equal(actual_score["is_ood"], reference_score["is_ood"])
 
@@ -165,3 +165,4 @@ def test_streamed_calibration_raises_for_empty_loader():
 
     with pytest.raises(ValueError, match="empty loader"):
         trainer.calibrate_ood([])
+

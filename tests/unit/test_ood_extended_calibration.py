@@ -103,7 +103,7 @@ class TestExtendedCalibration:
         assert detector.conformal_qhat is None
 
         ood = detector.score(features[:1], logits[:1])
-        assert "ensemble_score" in ood
+        assert "primary_score" in ood
         # SURE+ fields should not be in output when disabled
         assert "sure_semantic_score" not in ood
 
@@ -144,3 +144,4 @@ class TestExtendedCalibration:
         for class_id in first_banks:
             assert first_banks[class_id].shape[0] == 8
             assert torch.equal(first_banks[class_id], second_banks[class_id])
+

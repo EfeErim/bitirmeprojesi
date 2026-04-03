@@ -1,4 +1,4 @@
-﻿# Architecture Overview
+# Architecture Overview
 
 This document explains the current AADS v6 architecture in plain language.
 
@@ -37,14 +37,14 @@ The configuration path is intentionally simple.
 2. If an environment is requested, such as `colab`, it deep-merges `config/colab.json` on top.
 3. `src/core/config_migrations.py` upgrades each config file through the declared `config_schema_version`.
 4. `src/training/services/config_surface.py` normalizes the public training surface under `training.continual`.
-5. Legacy top-level `ood` and `checkpoint_interval` aliases are migrated on read, but the active config stays canonical.
+5. Config files must declare `config_schema_version: 1` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface.
 6. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
 
 Why this matters:
 
 - users edit a small public config surface
 - workflow code sees a normalized shape
-- legacy aliases are migrated explicitly instead of being repaired by repeated hidden mutation
+- unsupported config aliases fail fast instead of being repaired silently
 
 ## Training Architecture
 
@@ -62,7 +62,7 @@ src/workflows/training.py -> TrainingWorkflow.run(...)
    - loader creation
    - class detection
    - loader-size and split-count summaries
-   - supported-class reference-count resolution from `split_manifest.json`, `_split_metadata.json`, or the runtime `continual` split
+   - supported-class reference-count resolution from `split_manifest.json` or the runtime `continual` split
    - early rejection when a supported class resolves below `100` images
    - runtime-only class-balance metadata injection before adapter initialization
 3. `src/data/loaders.py` creates the training loaders from the runtime dataset. The shipped `training.continual.data.sampler` default is `"auto"`, which keeps shuffle for roughly balanced continual splits and promotes the train loader to weighted sampling when the largest class is at least 1.5x the smallest non-zero class.
@@ -126,7 +126,7 @@ This layout is what the code actually trains from.
 It writes:
 
 - `split_manifest.json`
-- `_split_metadata.json`
+
 
 The current split policy is effectively 80/10/10 with small-class safeguards.
 
@@ -335,7 +335,7 @@ Use this as the quick code map.
 - `src/training/services/ood_benchmark.py`: held-out fallback OOD benchmark
 - `src/pipeline/router_adapter_runtime.py`: router-plus-adapter inference runtime
 - `src/router/router_pipeline.py`: canonical router implementation surface
-- `src/router/vlm_pipeline.py`: compatibility alias for legacy imports and naming
+
 - `src/shared/contracts.py`: shared result and metadata contracts
 
 ## Validation Surfaces
@@ -359,6 +359,8 @@ The repo validates the maintained surface through:
 - [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
 - [ood_recommendation.md](ood_recommendation.md)
 - [../archive/experimental_leave_one_class_out_ood.md](../archive/experimental_leave_one_class_out_ood.md)
+
+
 
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Continual-learning OOD detector using a multi-score runtime stack.
 
-The detector keeps the legacy Mahalanobis + energy ensemble path, but also
+The detector keeps the Mahalanobis + energy ensemble path, but also
 calibrates raw energy and per-class kNN distance scores from the same feature
 materialization. The repo's SURE+/DS-F1-inspired double scoring remains
 ensemble-based, while conformal prediction now supports threshold, APS, and
@@ -63,8 +63,6 @@ def normalize_knn_backend(value: Any) -> str:
 _BASE_SCORE_FIELDS = (
     "mahalanobis_z",
     "energy_z",
-    "ensemble_score",
-    "class_threshold",
     "energy_score",
     "energy_threshold",
     "knn_distance",
@@ -244,8 +242,6 @@ class ContinualOODDetector:
         return {
             "mahalanobis_z": 0.0,
             "energy_z": 0.0,
-            "ensemble_score": 0.0,
-            "class_threshold": float("inf"),
             "energy_score": 0.0,
             "energy_threshold": float("inf"),
             "knn_distance": 0.0,
@@ -267,8 +263,6 @@ class ContinualOODDetector:
         float_fields = {
             "mahalanobis_z",
             "energy_z",
-            "ensemble_score",
-            "class_threshold",
             "energy_score",
             "energy_threshold",
             "knn_distance",
@@ -522,8 +516,6 @@ class ContinualOODDetector:
         result: Dict[str, Any] = {
             "mahalanobis_z": mahalanobis_z,
             "energy_z": energy_z,
-            "ensemble_score": candidate_scores["ensemble"],
-            "class_threshold": candidate_thresholds["ensemble"],
             "energy_score": candidate_scores["energy"],
             "energy_threshold": candidate_thresholds["energy"],
             "knn_distance": candidate_scores["knn"],
@@ -812,8 +804,6 @@ class ContinualOODDetector:
         float_outputs = {
             "mahalanobis_z": torch.empty(batch_size, dtype=torch.float32, device=features.device),
             "energy_z": torch.empty(batch_size, dtype=torch.float32, device=features.device),
-            "ensemble_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
-            "class_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
             "energy_score": torch.empty(batch_size, dtype=torch.float32, device=features.device),
             "energy_threshold": torch.empty(batch_size, dtype=torch.float32, device=features.device),
             "knn_distance": torch.empty(batch_size, dtype=torch.float32, device=features.device),
@@ -888,3 +878,6 @@ class ContinualOODDetector:
         if self.radial_beta is not None:
             output["radial_beta"] = self.radial_beta
         return output
+
+
+

@@ -18,8 +18,7 @@ from src.shared.contracts import RouterAnalysisResult
 StatusPrinter = Callable[[str], None]
 RouterCacheKey = tuple[str, str]
 
-VLMPipeline = RouterPipeline
-_ROUTER_SESSION_CACHE: dict[RouterCacheKey, VLMPipeline] = {}
+_ROUTER_SESSION_CACHE: dict[RouterCacheKey, RouterPipeline] = {}
 
 
 def _emit_status(status_printer: Optional[StatusPrinter], message: str) -> None:
@@ -54,7 +53,7 @@ def ensure_router_ready(
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
     reuse_cached: bool = True,
-) -> VLMPipeline:
+) -> RouterPipeline:
     cache_key = _router_cache_key(config_env=config_env, device=device)
     cached_router = _ROUTER_SESSION_CACHE.get(cache_key) if reuse_cached else None
     if cached_router is not None:
@@ -66,7 +65,7 @@ def ensure_router_ready(
 
     _emit_status(status_printer, f"[ROUTER] Loading models on {device}...")
     config = get_config(environment=config_env)
-    router = VLMPipeline(config=config, device=device)
+    router = RouterPipeline(config=config, device=device)
     router.load_models()
     if not router.is_ready():
         raise RuntimeError(
@@ -86,12 +85,10 @@ def run_inference(
     config_env: Optional[str] = "colab",
     crop_hint: Optional[str] = None,
     part_hint: Optional[str] = None,
-    adapter_root: Optional[str | Path] = None,
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
     reuse_router: bool = True,
 ) -> Dict[str, Any]:
-    del adapter_root
     image_ref = Path(image_path)
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
     image = Image.open(image_path).convert("RGB")
@@ -146,11 +143,6 @@ def main() -> int:
     parser.add_argument("--config-env", default="colab", help="Config environment override (default: colab)")
     parser.add_argument("--crop", dest="crop_hint", help="Optional crop hint to bypass the router")
     parser.add_argument("--part", dest="part_hint", help="Optional part hint")
-    parser.add_argument(
-        "--adapter-root",
-        type=Path,
-        help="Unused legacy adapter-root argument kept for notebook compatibility",
-    )
     parser.add_argument("--device", default="cuda", help="Torch device preference")
     args = parser.parse_args()
 
@@ -159,7 +151,6 @@ def main() -> int:
         config_env=args.config_env,
         crop_hint=args.crop_hint,
         part_hint=args.part_hint,
-        adapter_root=args.adapter_root,
         device=args.device,
     )
     print(json.dumps(result, indent=2))

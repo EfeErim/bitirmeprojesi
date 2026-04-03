@@ -1,4 +1,4 @@
-﻿"""Diagnostic scouting helper extracted from the main VLM pipeline module."""
+"""Diagnostic scouting helper extracted from the main VLM pipeline module."""
 
 from __future__ import annotations
 
@@ -22,9 +22,9 @@ class DiagnosticScoutingAnalyzer:
         self.vlm_pipeline_init_error = ""
         # Resolve lazily to avoid module import cycles.
         try:
-            from src.router.vlm_pipeline import VLMPipeline
+            from src.router.router_pipeline import RouterPipeline
 
-            self.vlm_pipeline = VLMPipeline(config, device=device)
+            self.vlm_pipeline = RouterPipeline(config, device=device)
         except Exception as exc:
             self.vlm_pipeline_init_error = f"{exc.__class__.__name__}: {exc}"
             logger.warning(
@@ -144,4 +144,5 @@ class DiagnosticScoutingAnalyzer:
                 "detections": [],
                 "message": str(e),
             }
+
 

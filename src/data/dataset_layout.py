@@ -142,7 +142,7 @@ def _build_alias_lookup() -> Dict[str, set[str]]:
 _CLASS_ALIAS_LOOKUP = _build_alias_lookup()
 
 
-def _class_name_aliases(name: str, *, crop_name: str) -> set[str]:
+def class_name_aliases(name: str, *, crop_name: str) -> set[str]:
     normalized = normalize_class_name(name)
     crop_key = normalize_class_name(crop_name)
     aliases = {normalized}
@@ -221,7 +221,7 @@ def resolve_notebook_training_classes(
     matched: List[str] = []
     unmatched: List[str] = []
     for class_name in resolved_available:
-        aliases = _class_name_aliases(class_name, crop_name=crop_key)
+        aliases = class_name_aliases(class_name, crop_name=crop_key)
         if aliases & expected_set:
             matched.append(class_name)
         else:
@@ -332,7 +332,7 @@ def _resolve_materialization_attempts(strategy: str) -> List[str]:
     return [normalized]
 
 
-def _materialize_image(source_path: Path, dest_path: Path, strategy: str) -> str:
+def materialize_image(source_path: Path, dest_path: Path, strategy: str) -> str:
     attempts = _resolve_materialization_attempts(strategy)
     last_error: Optional[Exception] = None
 
@@ -429,7 +429,6 @@ def prepare_runtime_dataset_layout(
     runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "prepared_runtime_datasets")
     crop_root = runtime_dataset_root / str(crop_name)
     split_manifest_path = crop_root / "split_manifest.json"
-    legacy_manifest_path = crop_root / "_split_metadata.json"
     resolved_ood_root = Path(ood_root) if ood_root is not None else None
 
     source_manifest = build_runtime_split_manifest(
@@ -507,7 +506,7 @@ def prepare_runtime_dataset_layout(
             for source_path, destination_relative_path in files:
                 destination_path = dst_dir / destination_relative_path
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
-                _materialize_image(source_path, destination_path, materialization_strategy)
+                materialize_image(source_path, destination_path, materialization_strategy)
 
     public_manifest = _public_manifest(source_manifest)
     public_manifest["ood"] = comparison_manifest["ood"]
@@ -518,8 +517,10 @@ def prepare_runtime_dataset_layout(
             destination_relative_path = source_path.relative_to(resolved_ood_root)
             destination_path = ood_dir / destination_relative_path
             destination_path.parent.mkdir(parents=True, exist_ok=True)
-            _materialize_image(source_path, destination_path, materialization_strategy)
+            materialize_image(source_path, destination_path, materialization_strategy)
     write_json(split_manifest_path, public_manifest, ensure_ascii=False)
-    write_json(legacy_manifest_path, public_manifest, ensure_ascii=False)
     return runtime_dataset_root
+
+
+
 

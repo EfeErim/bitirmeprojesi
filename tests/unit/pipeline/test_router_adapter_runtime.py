@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 
 from PIL import Image
@@ -40,8 +40,11 @@ class FakeAdapter:
             "status": "success",
             "disease": {"class_index": 0, "name": "healthy", "confidence": 0.91},
             "ood_analysis": {
-                "ensemble_score": 0.12,
-                "class_threshold": 0.8,
+                "score_method": "ensemble",
+                "primary_score": 0.12,
+                "decision_threshold": 0.8,
+                "candidate_scores": {"ensemble": 0.12},
+                "candidate_thresholds": {"ensemble": 0.8},
                 "is_ood": False,
                 "calibration_version": 3,
                 "conformal_set": ["healthy"],
@@ -650,4 +653,7 @@ def test_predict_reload_adapter_when_adapter_meta_changes(monkeypatch, tmp_path)
     third = runtime.load_adapter("tomato")
     assert third is not second
     assert build_calls == ["tomato", "tomato"]
+
+
+
 

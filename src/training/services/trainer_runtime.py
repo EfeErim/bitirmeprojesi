@@ -260,25 +260,11 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         for name, values in dict(ood.get("candidate_scores", {})).items()
         if torch.is_tensor(values) and values.numel() > 0
     }
-    if not candidate_scores:
-        if torch.is_tensor(ood.get("ensemble_score")) and ood["ensemble_score"].numel() > 0:
-            candidate_scores["ensemble"] = float(ood["ensemble_score"][0].item())
-        if torch.is_tensor(ood.get("energy_score")) and ood["energy_score"].numel() > 0:
-            candidate_scores["energy"] = float(ood["energy_score"][0].item())
-        if torch.is_tensor(ood.get("knn_distance")) and ood["knn_distance"].numel() > 0:
-            candidate_scores["knn"] = float(ood["knn_distance"][0].item())
     candidate_thresholds = {
         name: float(values[0].item())
         for name, values in dict(ood.get("candidate_thresholds", {})).items()
         if torch.is_tensor(values) and values.numel() > 0
     }
-    if not candidate_thresholds:
-        if torch.is_tensor(ood.get("class_threshold")) and ood["class_threshold"].numel() > 0:
-            candidate_thresholds["ensemble"] = float(ood["class_threshold"][0].item())
-        if torch.is_tensor(ood.get("energy_threshold")) and ood["energy_threshold"].numel() > 0:
-            candidate_thresholds["energy"] = float(ood["energy_threshold"][0].item())
-        if torch.is_tensor(ood.get("knn_threshold")) and ood["knn_threshold"].numel() > 0:
-            candidate_thresholds["knn"] = float(ood["knn_threshold"][0].item())
     primary_score_tensor = ood.get("primary_score")
     if not torch.is_tensor(primary_score_tensor):
         if primary_score_method in candidate_scores:
@@ -340,5 +326,7 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
         },
         "ood_analysis": ood_analysis,
     }
+
+
 
 

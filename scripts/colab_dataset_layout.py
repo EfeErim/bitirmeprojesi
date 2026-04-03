@@ -1,4 +1,4 @@
-﻿"""Compatibility wrapper for notebook dataset-layout helpers."""
+"""Notebook dataset-layout wrapper around the canonical src surface."""
 
 from __future__ import annotations
 
@@ -7,8 +7,8 @@ import src.data.dataset_layout as _impl
 IMAGE_EXTENSIONS = _impl.IMAGE_EXTENSIONS
 MATERIALIZATION_STRATEGIES = _impl.MATERIALIZATION_STRATEGIES
 read_json = _impl.read_json
-_class_name_aliases = _impl._class_name_aliases
-_materialize_image = _impl._materialize_image
+class_name_aliases = _impl.class_name_aliases
+materialize_image = _impl.materialize_image
 estimate_split_counts = _impl.estimate_split_counts
 list_repo_dataset_directories = _impl.list_repo_dataset_directories
 normalize_class_name = _impl.normalize_class_name
@@ -39,12 +39,12 @@ def main() -> int:
 __all__ = [
     "IMAGE_EXTENSIONS",
     "MATERIALIZATION_STRATEGIES",
-    "_class_name_aliases",
-    "_materialize_image",
     "build_runtime_split_manifest",
+    "class_name_aliases",
     "estimate_split_counts",
     "list_repo_dataset_directories",
     "main",
+    "materialize_image",
     "normalize_class_name",
     "prepare_runtime_dataset_layout",
     "read_json",

@@ -81,23 +81,12 @@ class OODAnalysis:
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "OODAnalysis":
         data = dict(payload or {})
         conformal_set_raw = data.get("conformal_set")
-        legacy_score = data.get("ensemble_score")
-        legacy_threshold = data.get("class_threshold")
-        primary_score = data.get("primary_score", legacy_score if legacy_score is not None else 0.0)
-        decision_threshold = data.get(
-            "decision_threshold",
-            legacy_threshold if legacy_threshold is not None else 0.0,
-        )
         candidate_scores_raw = data.get("candidate_scores")
         candidate_thresholds_raw = data.get("candidate_thresholds")
-        if not isinstance(candidate_scores_raw, dict) and legacy_score is not None:
-            candidate_scores_raw = {"ensemble": legacy_score}
-        if not isinstance(candidate_thresholds_raw, dict) and legacy_threshold is not None:
-            candidate_thresholds_raw = {"ensemble": legacy_threshold}
         return cls(
             score_method=str(data.get("score_method", "ensemble") or "ensemble"),
-            primary_score=float(primary_score),
-            decision_threshold=float(decision_threshold),
+            primary_score=float(data.get("primary_score", 0.0)),
+            decision_threshold=float(data.get("decision_threshold", 0.0)),
             is_ood=bool(data.get("is_ood", False)),
             calibration_version=int(data.get("calibration_version", 0)),
             candidate_scores=(
@@ -522,3 +511,6 @@ class CheckpointRecord:
             is_best=bool(data.get("is_best", False)),
             val_loss=None if val_loss is None else float(val_loss),
         )
+
+
+

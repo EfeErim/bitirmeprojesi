@@ -1,4 +1,4 @@
-"""Normalization helpers for the public continual-training config contract."""
+﻿"""Normalization helpers for the public continual-training config contract."""
 
 from __future__ import annotations
 
@@ -95,39 +95,6 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
         "strict_model_loading": False,
         "seed": 42,
         "deterministic": True,
-    }
-
-
-def _coerce_legacy_flat_config(flat_config: Dict[str, Any], *, model_name: str, device: Any) -> Dict[str, Any]:
-    return {
-        "backbone": {"model_name": str(flat_config.get("model_name", model_name))},
-        "adapter": {
-            "target_modules_strategy": str(flat_config.get("target_modules_strategy", "all_linear_transformer")),
-            "lora_r": int(flat_config.get("lora_r", 16)),
-            "lora_alpha": int(flat_config.get("lora_alpha", 16)),
-            "lora_dropout": float(flat_config.get("lora_dropout", 0.1)),
-        },
-        "fusion": {
-            "layers": [
-                int(value)
-                for value in flat_config.get("fusion_layers", DEFAULT_FUSION_LAYERS)
-            ],
-            "output_dim": int(flat_config.get("fusion_output_dim", DEFAULT_FUSION_OUTPUT_DIM)),
-            "dropout": float(flat_config.get("fusion_dropout", 0.1)),
-            "gating": str(flat_config.get("fusion_gating", "softmax")),
-        },
-        "ood": {
-            "threshold_factor": float(flat_config.get("ood_threshold_factor", 3.0)),
-            "primary_score_method": normalize_requested_primary_score_method(
-                flat_config.get("primary_score_method", "auto")
-            ),
-        },
-        "learning_rate": float(flat_config.get("learning_rate", 1e-4)),
-        "weight_decay": float(flat_config.get("weight_decay", 0.01)),
-        "num_epochs": int(flat_config.get("num_epochs", 10)),
-        "batch_size": int(flat_config.get("batch_size", 8)),
-        "device": str(flat_config.get("device", device)),
-        "strict_model_loading": bool(flat_config.get("strict_model_loading", False)),
     }
 
 
@@ -247,16 +214,20 @@ def extract_continual_training_config(
     device: Any = DEFAULT_DEVICE,
 ) -> Dict[str, Any]:
     payload = dict(config or {})
-    training = payload.get("training")
-    if isinstance(training, dict) and isinstance(training.get("continual"), dict):
-        source = dict(training.get("continual", {}))
-    elif any(
-        key in payload
-        for key in ("backbone", "adapter", "fusion", "ood", "optimization", "data", "early_stopping", "evaluation")
-    ):
-        source = payload
+    if not payload:
+        source: Dict[str, Any] = {}
     else:
-        source = _coerce_legacy_flat_config(payload, model_name=model_name, device=device)
+        training = payload.get("training")
+        if isinstance(training, dict) and isinstance(training.get("continual"), dict):
+            source = dict(training.get("continual", {}))
+        elif any(
+            key in payload
+            for key in ("backbone", "adapter", "fusion", "ood", "optimization", "data", "early_stopping", "evaluation")
+        ):
+            source = payload
+        else:
+            raise ValueError(
+                "Continual training config must be provided under training.continual or as a canonical continual block."
+            )
     return normalize_continual_training_config(source, model_name=model_name, device=device)
-
 

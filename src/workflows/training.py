@@ -1,4 +1,4 @@
-"""Canonical training workflow for the supported adapter-training path."""
+﻿"""Canonical training workflow for the supported adapter-training path."""
 
 from __future__ import annotations
 
@@ -200,28 +200,26 @@ def _collect_package_versions() -> Dict[str, str]:
 
 
 def _collect_dataset_manifest_context(crop_root: Path) -> JsonDict:
-    manifests: JsonDict = {}
-    for filename in ("split_manifest.json", "_split_metadata.json"):
-        manifest_path = crop_root / filename
-        payload: JsonDict = {
-            "path": str(manifest_path),
-            "exists": manifest_path.exists(),
-        }
-        if manifest_path.exists():
-            try:
-                manifest_json = read_json(manifest_path, default={}, expect_type=dict)
-            except (OSError, TypeError, ValueError) as exc:
-                logger.warning("Failed to read dataset manifest %s: %s", manifest_path, exc)
-                manifest_json = {}
-            payload.update(
-                {
-                    "sha256": _sha256_file(manifest_path),
-                    "schema_version": manifest_json.get("schema_version"),
-                    "source_root": manifest_json.get("source_root"),
-                }
-            )
-        manifests[filename] = payload
-    return manifests
+    filename = "split_manifest.json"
+    manifest_path = crop_root / filename
+    payload: JsonDict = {
+        "path": str(manifest_path),
+        "exists": manifest_path.exists(),
+    }
+    if manifest_path.exists():
+        try:
+            manifest_json = read_json(manifest_path, default={}, expect_type=dict)
+        except (OSError, TypeError, ValueError) as exc:
+            logger.warning("Failed to read dataset manifest %s: %s", manifest_path, exc)
+            manifest_json = {}
+        payload.update(
+            {
+                "sha256": _sha256_file(manifest_path),
+                "schema_version": manifest_json.get("schema_version"),
+                "source_root": manifest_json.get("source_root"),
+            }
+        )
+    return {filename: payload}
 
 
 def _nested_dict(source: JsonDict, *keys: str) -> JsonDict:
@@ -258,8 +256,8 @@ def _build_ood_method_comparison_context(
     if str(ood_evidence_source or "") == "held_out_benchmark":
         comparison = dict(ood_benchmark.get("method_comparison", {})) if isinstance(ood_benchmark, dict) else {}
         if not comparison and isinstance(ood_benchmark, dict):
-            legacy_methods = dict(ood_benchmark.get("method_comparison_metrics", {}))
-            if legacy_methods:
+            comparison_metrics = dict(ood_benchmark.get("method_comparison_metrics", {}))
+            if comparison_metrics:
                 comparison = {
                     "requested_primary_score_method": str(
                         ood_benchmark.get("requested_primary_score_method", "") or ""
@@ -268,7 +266,7 @@ def _build_ood_method_comparison_context(
                     "selection_source": str(ood_benchmark.get("primary_score_selection_source", "") or ""),
                     "methods": {
                         str(method_name): {"pooled_metrics": dict(metrics or {})}
-                        for method_name, metrics in legacy_methods.items()
+                        for method_name, metrics in comparison_metrics.items()
                     },
                 }
     else:
@@ -1220,3 +1218,8 @@ class TrainingWorkflow:
         )
 
         return result
+
+
+
+
+

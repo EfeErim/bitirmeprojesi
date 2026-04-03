@@ -1,5 +1,6 @@
-"""Minimal OOD contract tests for the kept continual detector."""
+﻿"""Minimal OOD contract tests for the kept continual detector."""
 
+import pytest
 import torch
 
 from src.ood._scoring_utils import distribution_threshold, ensemble_threshold
@@ -27,8 +28,6 @@ def test_continual_ood_calibration_and_score_contract():
     assert {
         "mahalanobis_z",
         "energy_z",
-        "ensemble_score",
-        "class_threshold",
         "energy_score",
         "energy_threshold",
         "knn_distance",
@@ -37,8 +36,10 @@ def test_continual_ood_calibration_and_score_contract():
         "decision_threshold",
         "is_ood",
         "calibration_version",
+        "candidate_scores",
+        "candidate_thresholds",
     } <= set(score.keys())
-    assert score["ensemble_score"].shape[0] == 6
+    assert score["primary_score"].shape[0] == 6
     assert score["candidate_scores"]["knn"].shape[0] == 6
 
 
@@ -52,34 +53,33 @@ def test_continual_ood_unknown_class_safe_defaults():
     predicted = torch.full((4,), 99)
     out = detector.score(features[:4], logits[:4], predicted_labels=predicted)
 
-    assert torch.all(out["ensemble_score"] == 0.0)
-    assert torch.isinf(out["class_threshold"]).all()
+    assert torch.all(out["primary_score"] == 0.0)
+    assert torch.isinf(out["decision_threshold"]).all()
     assert torch.equal(out["is_ood"], torch.tensor([False, False, False, False]))
 
 
-def test_restore_legacy_ood_state_defaults_primary_score_to_ensemble():
-    restored = restore_ood_state(
-        {
-            "threshold_factor": 2.0,
-            "calibration_version": 1,
-            "class_stats": {
-                "0": {
-                    "mean": [0.0, 0.0],
-                    "var": [1.0, 1.0],
-                    "mahalanobis_mu": 0.1,
-                    "mahalanobis_sigma": 0.2,
-                    "energy_mu": 0.3,
-                    "energy_sigma": 0.4,
-                    "threshold": 0.5,
-                }
+def test_restore_ood_state_requires_primary_score_method():
+    with pytest.raises(ValueError, match="must declare primary_score_method"):
+        restore_ood_state(
+            {
+                "threshold_factor": 2.0,
+                "calibration_version": 1,
+                "class_stats": {
+                    "0": {
+                        "mean": [0.0, 0.0],
+                        "var": [1.0, 1.0],
+                        "mahalanobis_mu": 0.1,
+                        "mahalanobis_sigma": 0.2,
+                        "energy_mu": 0.3,
+                        "energy_sigma": 0.4,
+                        "threshold": 0.5,
+                    }
+                },
             },
-        },
-        default_threshold_factor=2.0,
-        device="cpu",
-    )
+            default_threshold_factor=2.0,
+            device="cpu",
+        )
 
-    assert restored.primary_score_method == "ensemble"
-    assert restored.class_stats[0].energy_threshold > 0.0
 
 def test_sure_confidence_reject_does_not_override_primary_ood_decision():
     detector = ContinualOODDetector(threshold_factor=2.0, sure_enabled=True)
@@ -109,4 +109,6 @@ def test_sure_confidence_reject_does_not_override_primary_ood_decision():
     assert bool(result["sure_confidence_reject"][0].item()) is True
     assert bool(result["sure_semantic_ood"][0].item()) is False
     assert bool(result["is_ood"][0].item()) is False
+
+
 

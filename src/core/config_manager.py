@@ -90,7 +90,6 @@ class ConfigurationManager:
         if self._environment:
             merged = _deep_merge(merged, self.get_environment_config(self._environment))
         self._normalize_training_surface(merged)
-        merged.pop("ood", None)
         merged[CONFIG_SCHEMA_VERSION_KEY] = CURRENT_CONFIG_SCHEMA_VERSION
         assert_no_prohibited_4bit_flags(merged)
         self._merged_config = merged

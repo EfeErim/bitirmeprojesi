@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 
 from src.router import clip_runtime, sam3_runtime
-from src.router.vlm_pipeline import VLMPipeline
+from src.router.router_pipeline import RouterPipeline
 
 
 class FakeTokenizer:
@@ -35,8 +35,8 @@ class FakeOpenClipModel:
         return embeds
 
 
-def _build_pipeline() -> VLMPipeline:
-    return VLMPipeline(
+def _build_pipeline() -> RouterPipeline:
+    return RouterPipeline(
         config={
             "router": {
                 "crop_mapping": {"tomato": {"parts": ["leaf"]}},
@@ -57,7 +57,7 @@ def _build_pipeline() -> VLMPipeline:
     )
 
 
-def _attach_open_clip_runtime(pipeline: VLMPipeline) -> FakeOpenClipModel:
+def _attach_open_clip_runtime(pipeline: RouterPipeline) -> FakeOpenClipModel:
     model = FakeOpenClipModel()
     pipeline.bioclip_backend = "open_clip"
     pipeline.bioclip = model
@@ -83,7 +83,7 @@ def test_pipeline_keeps_configured_crop_part_surface_when_dynamic_taxonomy_is_en
         encoding="utf-8",
     )
 
-    pipeline = VLMPipeline(
+    pipeline = RouterPipeline(
         config={
             "router": {
                 "crop_mapping": {"tomato": {"parts": ["leaf", "fruit", "stem", "whole"]}},
@@ -103,7 +103,7 @@ def test_pipeline_keeps_configured_crop_part_surface_when_dynamic_taxonomy_is_en
 
 
 def test_pipeline_falls_back_to_configured_labels_when_taxonomy_file_is_missing():
-    pipeline = VLMPipeline(
+    pipeline = RouterPipeline(
         config={
             "router": {
                 "crop_mapping": {
@@ -225,7 +225,7 @@ def test_run_sam3_merges_results_across_prompt_sequence():
 
 
 def test_analyze_image_reports_empty_sam3_diagnostics_with_prompt_sequence():
-    pipeline = VLMPipeline(
+    pipeline = RouterPipeline(
         config={
             "router": {
                 "crop_mapping": {"tomato": {"parts": ["leaf", "fruit", "whole"]}},
@@ -428,7 +428,7 @@ def test_analyze_sam3_batch_falls_back_per_chunk_when_batched_sam3_is_unsupporte
 
 
 def test_set_runtime_profile_refreshes_profile_derived_controls():
-    pipeline = VLMPipeline(
+    pipeline = RouterPipeline(
         config={
             "router": {
                 "vlm": {
@@ -452,3 +452,4 @@ def test_set_runtime_profile_refreshes_profile_derived_controls():
 
     assert pipeline.set_runtime_profile("open_set") is True
     assert pipeline.open_set_enabled is True
+

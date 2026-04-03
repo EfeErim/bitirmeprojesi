@@ -1,4 +1,4 @@
-import pytest
+﻿import pytest
 import torch
 import torch.nn as nn
 
@@ -280,8 +280,10 @@ def test_predict_payload_contains_v6_ood_keys():
     trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
         "mahalanobis_z": torch.tensor([0.1]),
         "energy_z": torch.tensor([0.2]),
-        "ensemble_score": torch.tensor([0.15]),
-        "class_threshold": torch.tensor([0.8]),
+        "primary_score": torch.tensor([0.15]),
+        "decision_threshold": torch.tensor([0.8]),
+        "candidate_scores": {"ensemble": torch.tensor([0.15])},
+        "candidate_thresholds": {"ensemble": torch.tensor([0.8])},
         "is_ood": torch.tensor([False]),
         "calibration_version": torch.tensor([3]),
     }
@@ -318,8 +320,10 @@ def test_predict_payload_refreshes_cached_class_index_after_class_update():
     trainer.ood_detector.score = lambda features, logits, predicted_labels=None: {
         "mahalanobis_z": torch.tensor([0.1]),
         "energy_z": torch.tensor([0.2]),
-        "ensemble_score": torch.tensor([0.15]),
-        "class_threshold": torch.tensor([0.8]),
+        "primary_score": torch.tensor([0.15]),
+        "decision_threshold": torch.tensor([0.8]),
+        "candidate_scores": {"ensemble": torch.tensor([0.15])},
+        "candidate_thresholds": {"ensemble": torch.tensor([0.8])},
         "is_ood": torch.tensor([False]),
         "calibration_version": torch.tensor([3]),
     }
@@ -1007,3 +1011,6 @@ def test_save_adapter_rejects_uncalibrated_ood_state(monkeypatch, tmp_path):
         match="No calibration loader is available for automatic OOD calibration before save_adapter\\(\\)",
     ):
         trainer.save_adapter(str(tmp_path / "adapter"))
+
+
+

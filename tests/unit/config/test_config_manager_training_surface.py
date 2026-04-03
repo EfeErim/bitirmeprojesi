@@ -1,3 +1,5 @@
+﻿import pytest
+
 from src.core.config_manager import ConfigurationManager
 from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION
 from src.training.services.config_surface import extract_continual_training_config
@@ -44,7 +46,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["data"]["validate_images_on_init"] is False
 
 
-def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
+def test_extract_continual_training_config_normalizes_root_shape():
     root_payload = {
         "training": {
             "continual": {
@@ -53,15 +55,8 @@ def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
             }
         }
     }
-    legacy_payload = {
-        "model_name": "legacy-model",
-        "lora_r": 4,
-        "fusion_output_dim": 256,
-        "device": "cpu",
-    }
 
     root_normalized = extract_continual_training_config(root_payload, model_name="ignored", device="cuda")
-    legacy_normalized = extract_continual_training_config(legacy_payload, model_name="ignored", device="cuda")
 
     assert root_normalized["backbone"]["model_name"] == "demo-model"
     assert root_normalized["evaluation"]["best_metric"] == "macro_f1"
@@ -73,10 +68,18 @@ def test_extract_continual_training_config_normalizes_root_and_legacy_shapes():
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
     assert root_normalized["ood"]["conformal_method"] == "raps"
     assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
-    assert legacy_normalized["backbone"]["model_name"] == "legacy-model"
-    assert legacy_normalized["adapter"]["lora_r"] == 4
-    assert legacy_normalized["fusion"]["output_dim"] == 256
-    assert legacy_normalized["device"] == "cpu"
+
+
+def test_extract_continual_training_config_rejects_flat_noncanonical_shape():
+    noncanonical_payload = {
+        "model_name": "noncanonical-model",
+        "lora_r": 4,
+        "fusion_output_dim": 256,
+        "device": "cpu",
+    }
+
+    with pytest.raises(ValueError, match="must be provided under training.continual"):
+        extract_continual_training_config(noncanonical_payload, model_name="ignored", device="cuda")
 
 
 def test_extract_continual_training_config_normalizes_ber_fields():
