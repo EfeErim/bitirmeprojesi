@@ -118,7 +118,7 @@ This is the current Notebook 0 flow from start to finish:
 9. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
 10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
 
-Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree.
+Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy and materializes the runtime dataset automatically after a clean audit; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass.
 
 ## The Dataset Format Notebook 2 Accepts
 

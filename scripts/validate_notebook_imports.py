@@ -401,7 +401,6 @@ def test_data_prep_notebook_contract() -> None:
         "OOD_ROOT =",
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
-        "CONFIRM_PREPARE_FOR_MATERIALIZATION =",
         "MATERIALIZE_AFTER_REVIEW =",
         "CLEANUP_SEED =",
         "PREP_DINOV3_MODEL_ID =",
@@ -420,7 +419,7 @@ def test_data_prep_notebook_contract() -> None:
     assert 'STATE["dataset_source"] = dataset_source' in full_source
     assert 'STATE["provenance_manifest_path"] = provenance_manifest_path' in full_source
     assert 'provenance_manifest_path=STATE.get("provenance_manifest_path")' in full_source
-    assert "CONFIRM_PREPARE_FOR_MATERIALIZATION='prepare'" in full_source
+    assert "MATERIALIZE_AFTER_REVIEW = True" in full_source
     assert "materialize_grouped_runtime_dataset" in full_source
 
 
