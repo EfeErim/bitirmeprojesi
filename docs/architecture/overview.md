@@ -1,4 +1,4 @@
-# Architecture Overview
+﻿# Architecture Overview
 
 This document explains the current AADS v6 architecture in plain language.
 
@@ -103,7 +103,7 @@ Notebook 2 accepts a flat class-root layout:
 
 This is easier for a beginner to prepare by hand.
 
-Notebook 0 uses this contract for duplicate-aware audit before training and defaults to the repo-local staging root `data/class_root_dataset/`. Notebook 2 `class_root` mode now uses the same grouped prep logic before it materializes the runtime dataset for training.
+Notebook 0 uses this contract for duplicate-aware audit before training and defaults to the repo-local staging root `data/class_root_dataset/`. Notebook 0 and Notebook 2 can also pull a reusable repo-local OOD tree from `data/ood_dataset/<dataset_name>/` when they materialize the runtime dataset. Notebook 2 `class_root` mode now uses the same grouped prep logic before it materializes the runtime dataset for training.
 
 ### Contract 2: Runtime training layout
 
@@ -359,6 +359,7 @@ The repo validates the maintained surface through:
 - [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
 - [ood_recommendation.md](ood_recommendation.md)
 - [../archive/experimental_leave_one_class_out_ood.md](../archive/experimental_leave_one_class_out_ood.md)
+
 
 
 

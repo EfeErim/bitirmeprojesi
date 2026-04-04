@@ -189,6 +189,14 @@ def build_prepared_dataset_key(crop_name: str, part_name: str = "unspecified") -
     return f"{crop_key}__{part_key}"
 
 
+def _fingerprint_paths(paths: Iterable[Path], *, root: Path) -> str:
+    digest = hashlib.sha1()
+    for path in paths:
+        digest.update(path.relative_to(root).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def _normalize_relative_path(value: Any) -> str:
     normalized = str(value or "").strip().replace("\\", "/")
     while "//" in normalized:
@@ -1382,6 +1390,7 @@ def materialize_grouped_runtime_dataset(
     part_name: str = "unspecified",
     artifact_root: Path,
     runtime_root: Path = DEFAULT_RUNTIME_ROOT,
+    ood_root: Optional[Path] = None,
     materialization_strategy: str = "auto",
 ) -> Path:
     manifest = read_json(artifact_root / "proposed_split_manifest.json", default={}, expect_type=dict)
@@ -1391,6 +1400,27 @@ def materialize_grouped_runtime_dataset(
         raise RuntimeError("Grouped split manifest contains blocking issues. Resolve them before materializing.")
     dataset_key = build_prepared_dataset_key(crop_name, part_name)
     crop_root = Path(runtime_root) / dataset_key
+    resolved_ood_root = Path(ood_root) if ood_root is not None else None
+    ood_manifest: Optional[Dict[str, Any]] = None
+    ood_images: List[Path] = []
+    if resolved_ood_root is not None:
+        if not resolved_ood_root.exists():
+            raise FileNotFoundError(f"OOD root not found: {resolved_ood_root}")
+        if not resolved_ood_root.is_dir():
+            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
+        ood_images = sorted(
+            [
+                path
+                for path in resolved_ood_root.rglob("*")
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+            ],
+            key=lambda path: str(path).lower(),
+        )
+        ood_manifest = {
+            "source_root": str(resolved_ood_root.resolve()),
+            "image_count": len(ood_images),
+            "image_fingerprint": _fingerprint_paths(ood_images, root=resolved_ood_root),
+        }
     if crop_root.exists():
         shutil.rmtree(crop_root)
     crop_root.mkdir(parents=True, exist_ok=True)
@@ -1411,6 +1441,14 @@ def materialize_grouped_runtime_dataset(
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         materialize_image(source_path, destination_path, materialization_strategy)
         row["runtime_relative_path"] = destination_path.relative_to(crop_root).as_posix()
+
+    if resolved_ood_root is not None:
+        ood_dir = crop_root / "ood"
+        ood_dir.mkdir(parents=True, exist_ok=True)
+        for source_path in ood_images:
+            destination_path = ood_dir / source_path.relative_to(resolved_ood_root)
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            materialize_image(source_path, destination_path, materialization_strategy)
     split_manifest_path = write_json(
         crop_root / "split_manifest.json",
         {
@@ -1422,10 +1460,27 @@ def materialize_grouped_runtime_dataset(
             "artifact_root": str(artifact_root.resolve()),
             "split_policy": "grouped_family_canonical_eval",
             "provenance_manifest": dict(manifest.get("provenance_manifest", {})),
+            "ood": ood_manifest,
             "rows": rows,
         },
         ensure_ascii=False,
     )
+    if ood_manifest is not None:
+        ood_handoff_checklist = {
+            "status": "materialized",
+            "message": "Repo or explicit OOD tree was materialized into runtime_dataset/<dataset_key>/ood.",
+            "source_root": str(ood_manifest.get("source_root", "")),
+            "image_count": int(ood_manifest.get("image_count", 0)),
+        }
+        write_json(
+            artifact_root / "ood_handoff_checklist.json",
+            ood_handoff_checklist,
+            ensure_ascii=False,
+        )
+        prep_summary = read_json(artifact_root / "prep_summary.json", default={}, expect_type=dict)
+        if isinstance(prep_summary, dict):
+            prep_summary["ood_handoff_checklist"] = dict(ood_handoff_checklist)
+            write_json(artifact_root / "prep_summary.json", prep_summary, ensure_ascii=False)
     refresh_prep_guided_artifacts(
         artifact_root,
         overview_updates={
@@ -1433,6 +1488,7 @@ def materialize_grouped_runtime_dataset(
             "part_name": str(part_name),
             "materialized_runtime_root": str(crop_root.resolve()),
             "split_manifest_path": str(split_manifest_path.resolve()),
+            "ood_image_count": int((ood_manifest or {}).get("image_count", 0)),
         },
         extra_entries=[
             {
@@ -1484,6 +1540,12 @@ def main() -> int:
         default=DEFAULT_RUNTIME_ROOT,
         help=f"Prepared runtime dataset root (default: {DEFAULT_RUNTIME_ROOT})",
     )
+    parser.add_argument(
+        "--ood-root",
+        type=Path,
+        default=None,
+        help="Optional repo-local or explicit OOD tree to materialize into runtime_dataset/<dataset_key>/ood.",
+    )
     args = parser.parse_args()
 
     summary = build_grouped_dataset_plan(
@@ -1504,6 +1566,7 @@ def main() -> int:
             part_name=args.part,
             artifact_root=args.artifact_root,
             runtime_root=args.runtime_root,
+            ood_root=args.ood_root,
         )
     return 0
 

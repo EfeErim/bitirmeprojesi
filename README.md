@@ -136,7 +136,7 @@ These folders matter most:
 - `src/pipeline/` and `src/router/`: router-driven inference runtime
 - `scripts/`: notebook helpers, validation tools, and small entrypoints
 - `config/`: shipped JSON configuration
-- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets for Notebook 0
+- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets for Notebook 0
 - `docs/`: maintained Markdown documentation
 - `tests/`: unit, integration, and notebook-surface coverage
 
@@ -275,6 +275,14 @@ Notebook 0 can also materialize a prepared runtime dataset under:
 ```text
 data/prepared_runtime_datasets/<crop_or_crop__part>/
 ```
+
+Reusable repo-local OOD pools can live under:
+
+```text
+data/ood_dataset/<ood_dataset_name>/
+```
+
+Notebook 0 and Notebook 2 can now pull one of those repo OOD folders into the materialized runtime `ood/` tree.
 
 When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
 

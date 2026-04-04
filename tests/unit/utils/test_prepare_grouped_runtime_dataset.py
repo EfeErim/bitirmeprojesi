@@ -282,6 +282,65 @@ def test_materialize_grouped_runtime_dataset_uses_part_aware_dataset_key(tmp_pat
     assert manifest["dataset_key"] == "tomato__fruit"
 
 
+def test_materialize_grouped_runtime_dataset_includes_optional_ood_tree(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+    ood_root = tmp_path / "ood_pool"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_{index}.jpg", offset=offset + 1)
+
+    _write_pattern(ood_root / "unsupported_tomato" / "ood_a.jpg", offset=5)
+    _write_pattern(ood_root / "background" / "nested" / "ood_b.jpg", offset=7)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+        ood_root=ood_root,
+    )
+
+    crop_root = result_root / "tomato"
+    manifest = json.loads((crop_root / "split_manifest.json").read_text(encoding="utf-8"))
+    handoff = json.loads((artifact_root / "ood_handoff_checklist.json").read_text(encoding="utf-8"))
+
+    assert (crop_root / "ood" / "unsupported_tomato" / "ood_a.jpg").exists()
+    assert (crop_root / "ood" / "background" / "nested" / "ood_b.jpg").exists()
+    assert manifest["ood"]["source_root"] == str(ood_root.resolve())
+    assert manifest["ood"]["image_count"] == 2
+    assert handoff["status"] == "materialized"
+    assert handoff["image_count"] == 2
+
+
 def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"

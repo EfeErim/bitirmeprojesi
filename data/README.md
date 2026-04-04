@@ -8,17 +8,20 @@ This repo keeps the maintained notebook dataset paths under `data/`. Most datase
 Use these paths:
 
 - `data/class_root_dataset/`: flat class-root datasets for Notebook 0 audit and Notebook 2 `class_root` mode
+- `data/ood_dataset/`: repo-local OOD pools that Notebook 0 and Notebook 2 can materialize into runtime `ood/`
 - `data/prepared_class_root_datasets/`: Notebook 0 cleaned working copies created from audit reports
 - `data/prepared_runtime_datasets/`: prepared runtime datasets used by Notebook 0 materialization and Notebook 2 `runtime` mode
 
 Practical flow:
 
 1. Put raw flat datasets under `data/class_root_dataset/<dataset_name>/`.
-2. Run Notebook 0 if you want audit-first cleanup and optional materialization.
-3. Train from `data/prepared_runtime_datasets/<dataset_key>/` when you already have a prepared runtime layout.
+2. Optionally put reusable OOD pools under `data/ood_dataset/<dataset_name>/`.
+3. Run Notebook 0 if you want audit-first cleanup and optional materialization.
+4. Train from `data/prepared_runtime_datasets/<dataset_key>/` when you already have a prepared runtime layout.
 
 Rules:
 
+- Keep `data/ood_dataset/` for reusable OOD pools only. Nested folders are for organization, not class labels.
 - Keep `data/prepared_class_root_datasets/` and `data/prepared_runtime_datasets/` as local-only working areas unless you explicitly intend to change repo policy.
 - Do not commit runtime splits, manifests, or notebook-generated artifacts under `data/`.
 - If you need a different local dataset location, override the notebook parameter instead of changing the tracked scaffold.
@@ -39,6 +42,15 @@ data/prepared_runtime_datasets/<dataset_key>/
   val/<class>/*
   test/<class>/*
   ood/*
+```
+
+Expected repo-local OOD pool shape:
+
+```text
+data/ood_dataset/<dataset_name>/
+  unsupported_same_crop/*
+  blur_or_occlusion/*
+  other_crops_optional/*
 ```
 
 For the checked-in grape datasets, point Notebook 0 or Notebook 2 `class_root` mode at one of these roots:

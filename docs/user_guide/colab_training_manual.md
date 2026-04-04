@@ -1,4 +1,4 @@
-# Colab Training Manual
+﻿# Colab Training Manual
 
 This guide is written for someone who may be opening the AADS notebooks for the first time.
 
@@ -90,7 +90,7 @@ This is the current Notebook 2 training flow from start to finish when you use `
 11. restore the best model state
 12. calibrate OOD
 13. write validation and test artifacts
-14. use real `ood/` data when present, otherwise run the held-out fallback benchmark automatically
+14. use real `ood/` data when present, whether it already lives under the runtime dataset or was pulled from `data/ood_dataset/<dataset_name>/`, otherwise run the held-out fallback benchmark automatically
 15. write `production_readiness.json`
 16. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
 17. mirror outputs into `runs/<RUN_ID>/`
@@ -116,7 +116,7 @@ This is the current Notebook 0 flow from start to finish:
 7. normalize class names against the crop taxonomy when possible
 8. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
 9. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
-10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` when you want Notebook 0 to complete the full prep flow itself
+10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
 
 Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree.
 
@@ -187,7 +187,7 @@ Important distinction:
 - the flat class-root notebook input is only for supported disease classes
 - the real `ood/` pool is separate unknown-input evidence, not another class
 - do not create an `ood` class folder inside the flat notebook input root
-- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/prepared_runtime_datasets/<crop>/ood/`
+- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/prepared_runtime_datasets/<crop>/ood/`; for repo-local notebook workflows you can stage that pool under `data/ood_dataset/<dataset_name>/` and let Notebook 0 or Notebook 2 materialize it into the runtime layout
 
 The generated runtime dataset includes:
 
@@ -833,6 +833,7 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+
 
 
 

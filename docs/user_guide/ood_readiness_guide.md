@@ -1,4 +1,4 @@
-# OOD Readiness Guide
+﻿# OOD Readiness Guide
 
 This guide explains how AADS v6 decides whether a trained adapter is ready for deployment.
 
@@ -115,6 +115,7 @@ Current behavior:
 - images under `ood/` are loaded recursively
 - nested folder names inside `ood/` are not treated as class labels
 - one shared `ood/` pool can be reused across runs for the same crop
+- for repo-local notebook workflows, a reusable OOD pool can be staged under `data/ood_dataset/<dataset_name>/` and then materialized into `data/prepared_runtime_datasets/<dataset_key>/ood/`
 - when real `ood/` data is evaluated, the top-level folder under `ood/` is emitted as `ood_type` in validation and test artifacts so you can inspect near/far/non-plant/blur-style slices without turning them into supported labels
 
 ## How To Build A Real `ood/` Pool
@@ -534,3 +535,5 @@ Evaluate BER by comparing runs on the same:
 - [../../src/workflows/training.py](../../src/workflows/training.py)
 - [../../src/training/services/metrics.py](../../src/training/services/metrics.py)
 - [../../src/training/services/ood_benchmark.py](../../src/training/services/ood_benchmark.py)
+
+

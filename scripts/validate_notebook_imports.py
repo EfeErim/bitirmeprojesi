@@ -396,6 +396,9 @@ def test_data_prep_notebook_contract() -> None:
         "PROVENANCE_MANIFEST_PATH =",
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
+        "OOD_DATASET_ROOT =",
+        "OOD_DATASET_NAME =",
+        "OOD_ROOT =",
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
         "CONFIRM_PREPARE_FOR_MATERIALIZATION =",
@@ -425,6 +428,7 @@ def test_repo_dataset_scaffold() -> None:
     required_paths = (
         ROOT / "data" / "README.md",
         ROOT / "data" / "class_root_dataset" / ".gitkeep",
+        ROOT / "data" / "ood_dataset" / ".gitkeep",
         ROOT / "data" / "prepared_class_root_datasets" / ".gitkeep",
         ROOT / "data" / "prepared_runtime_datasets" / ".gitkeep",
     )
@@ -443,7 +447,7 @@ def test_training_notebook_runtime_mode_contract() -> None:
     assert "build_prepared_dataset_key" in full_source
     assert 'if layout_mode == "runtime":' in full_source
     assert "Prepared runtime dataset is missing split folder(s)" in full_source
-    assert "OOD_ROOT is ignored when DATASET_LAYOUT_MODE='runtime'." in full_source
+    assert "OOD dataset parameters are ignored when DATASET_LAYOUT_MODE='runtime'." in full_source
 
 
 def test_training_notebook_bootstrap_contract() -> None:
@@ -518,6 +522,8 @@ def test_training_notebook_bootstrap_contract() -> None:
     required_parameter_snippets = (
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
         'DATASET_NAME = ""',
+        'OOD_DATASET_ROOT = "data/ood_dataset"',
+        'OOD_DATASET_NAME = ""',
         'PROVENANCE_MANIFEST_PATH = ""',
         'EPOCHS = ',
         'BATCH_SIZE = ',
@@ -543,6 +549,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
         'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
+        'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
         'resolve_repo_dataset_directory',
         'STATE["selected_dataset_name"] = selected_dataset_name',
     )
