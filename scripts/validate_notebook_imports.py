@@ -444,8 +444,10 @@ def test_training_notebook_dataset_contract_detection() -> None:
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in payload.get("cells", []))
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in full_source
     assert "Notebook secilen datasetin yapisina bakip class-root mu runtime mi oldugunu otomatik algilar." in full_source
-    assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_repo_relative_root" in full_source
+    assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in full_source
     assert 'def _dataset_contract(candidate_root: Path) -> str:' in full_source
+    assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in full_source
+    assert 'direct_class_root_dataset = resolve_direct_repo_dataset_root(' in full_source
     assert 'STATE["dataset_contract"] = dataset_contract' in full_source
     assert "build_prepared_dataset_key" in full_source
     assert 'if dataset_contract == "runtime":' in full_source
@@ -554,6 +556,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
         'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
         'list_repo_dataset_directories',
+        'resolve_direct_repo_dataset_root',
         'resolve_repo_relative_root',
         'STATE["dataset_contract"] = dataset_contract',
         'STATE["selected_dataset_name"] = selected_dataset_name',

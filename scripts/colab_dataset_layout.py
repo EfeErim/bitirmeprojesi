@@ -13,6 +13,7 @@ estimate_split_counts = _impl.estimate_split_counts
 list_repo_dataset_directories = _impl.list_repo_dataset_directories
 normalize_class_name = _impl.normalize_class_name
 resolve_notebook_training_classes = _impl.resolve_notebook_training_classes
+resolve_direct_repo_dataset_root = _impl.resolve_direct_repo_dataset_root
 resolve_repo_dataset_directory = _impl.resolve_repo_dataset_directory
 resolve_repo_relative_root = _impl.resolve_repo_relative_root
 
@@ -48,6 +49,7 @@ __all__ = [
     "normalize_class_name",
     "prepare_runtime_dataset_layout",
     "read_json",
+    "resolve_direct_repo_dataset_root",
     "resolve_notebook_training_classes",
     "resolve_repo_dataset_directory",
     "resolve_repo_relative_root",

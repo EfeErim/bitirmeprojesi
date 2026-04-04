@@ -14,6 +14,13 @@ from src.shared.json_utils import read_json, write_json
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 MATERIALIZATION_STRATEGIES = {"auto", "copy", "symlink", "hardlink"}
+REPO_LOCAL_DATASET_PARENT_NAMES = {
+    "class_root_dataset",
+    "ood_dataset",
+    "prepared_class_root_datasets",
+    "prepared_runtime_datasets",
+    "runtime_notebook_datasets",
+}
 _CLASS_ALIAS_GROUPS = (
     {"healthy", "healthy_leaf"},
     {"gray_mold", "botrytis_gray_mold"},
@@ -61,6 +68,19 @@ def list_repo_dataset_directories(
     )
 
 
+def resolve_direct_repo_dataset_root(
+    *,
+    repo_root: str | Path,
+    repo_relative_root: str | Path,
+) -> tuple[str, Path] | None:
+    base_root = resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)
+    data_root = Path(repo_root).expanduser().resolve() / "data"
+    parent = base_root.parent
+    if parent.parent == data_root and parent.name in REPO_LOCAL_DATASET_PARENT_NAMES:
+        return base_root.name, base_root
+    return None
+
+
 def resolve_repo_dataset_directory(
     *,
     repo_root: str | Path,
@@ -70,6 +90,20 @@ def resolve_repo_dataset_directory(
     input_fn: Callable[[str], str] = input,
     print_fn: Callable[[str], None] = print,
 ) -> tuple[str, Path, list[str]]:
+    requested = str(requested_name or "").strip()
+    direct_dataset = resolve_direct_repo_dataset_root(
+        repo_root=repo_root,
+        repo_relative_root=repo_relative_root,
+    )
+    if direct_dataset is not None:
+        selected_name, selected_path = direct_dataset
+        if requested and requested != selected_name:
+            raise RuntimeError(
+                f"Requested {prompt_label} '{requested}' does not match the explicit dataset root {selected_path}."
+            )
+        print_fn(f"[DATASET] Repo {prompt_label} dogrudan kok olarak kullaniliyor: {selected_path}")
+        return selected_name, selected_path, [selected_name]
+
     dataset_dirs = list_repo_dataset_directories(
         repo_root=repo_root,
         repo_relative_root=repo_relative_root,
@@ -81,7 +115,6 @@ def resolve_repo_dataset_directory(
             f"{resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)}"
         )
 
-    requested = str(requested_name or "").strip()
     if requested:
         if requested.isdigit():
             selected_index = int(requested) - 1

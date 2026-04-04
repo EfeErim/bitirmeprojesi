@@ -7,6 +7,7 @@ from scripts.colab_dataset_layout import (
     build_runtime_split_manifest,
     list_repo_dataset_directories,
     prepare_runtime_dataset_layout,
+    resolve_direct_repo_dataset_root,
     resolve_notebook_training_classes,
     resolve_repo_dataset_directory,
 )
@@ -164,6 +165,35 @@ def test_list_repo_dataset_directories_returns_sorted_child_dirs(tmp_path: Path)
     )
 
     assert [path.name for path in result] == ["grape_fruit", "grape_leaf"]
+
+
+def test_resolve_direct_repo_dataset_root_accepts_dataset_path_under_repo_staging_parent(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_root = repo_root / "data" / "class_root_dataset" / "grape_fruit"
+    (dataset_root / "healthy").mkdir(parents=True)
+
+    selected = resolve_direct_repo_dataset_root(
+        repo_root=repo_root,
+        repo_relative_root="data/class_root_dataset/grape_fruit",
+    )
+
+    assert selected == ("grape_fruit", dataset_root)
+
+
+def test_resolve_repo_dataset_directory_accepts_direct_dataset_root(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_root = repo_root / "data" / "class_root_dataset" / "grape_fruit"
+    (dataset_root / "healthy").mkdir(parents=True)
+
+    selected_name, selected_path, dataset_names = resolve_repo_dataset_directory(
+        repo_root=repo_root,
+        repo_relative_root="data/class_root_dataset/grape_fruit",
+        prompt_label="class-root dataset",
+    )
+
+    assert selected_name == "grape_fruit"
+    assert selected_path == dataset_root
+    assert dataset_names == ["grape_fruit"]
 
 
 def test_resolve_repo_dataset_directory_accepts_explicit_name(tmp_path: Path):
