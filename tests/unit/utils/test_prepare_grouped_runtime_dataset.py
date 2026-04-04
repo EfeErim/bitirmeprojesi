@@ -6,10 +6,12 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 from scripts.prepare_grouped_runtime_dataset import (
+    ImageRecord,
     build_prepared_dataset_key,
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
+    _infer_source_like_group,
     scan_class_root_dataset,
 )
 
@@ -51,6 +53,56 @@ def test_normalize_prepared_class_name_uses_taxonomy_aliases():
 def test_build_prepared_dataset_key_includes_part_only_when_specified():
     assert build_prepared_dataset_key("tomato", "unspecified") == "tomato"
     assert build_prepared_dataset_key("Tomato", "Fruit") == "tomato__fruit"
+
+
+def test_infer_source_like_group_prefers_capture_group_and_web_signals():
+    captured = ImageRecord(
+        relative_path="Healthy/source_a/img001.jpg",
+        absolute_path="C:/tmp/img001.jpg",
+        raw_class_name="Healthy",
+        normalized_class_name="healthy",
+        source_hint="source_a",
+        source_dataset="",
+        source_subset="",
+        capture_group_id="Plant 17 Session 2",
+        domain_tag="",
+        source_like_group="unknown",
+        synthetic_hint=False,
+        eval_quality_risk=False,
+        readable=True,
+        width=256,
+        height=256,
+        blur_score=1.0,
+        brightness_mean=0.5,
+        exact_hash="a",
+        phash_hex="0" * 16,
+        class_order_index=0,
+    )
+    web = ImageRecord(
+        relative_path="Healthy/istockphoto-1320751459-612x612.jpg",
+        absolute_path="C:/tmp/istock.jpg",
+        raw_class_name="Healthy",
+        normalized_class_name="healthy",
+        source_hint="unknown",
+        source_dataset="",
+        source_subset="",
+        capture_group_id="",
+        domain_tag="",
+        source_like_group="unknown",
+        synthetic_hint=False,
+        eval_quality_risk=False,
+        readable=True,
+        width=256,
+        height=256,
+        blur_score=1.0,
+        brightness_mean=0.5,
+        exact_hash="b",
+        phash_hex="1" * 16,
+        class_order_index=1,
+    )
+
+    assert _infer_source_like_group(captured) == "capture:plant_17_session_2"
+    assert _infer_source_like_group(web) == "web:istockphoto:1320751459"
 
 
 def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path: Path, monkeypatch):
@@ -169,7 +221,7 @@ def test_grouped_dataset_plan_roundtrips_provenance_manifest_fields(tmp_path: Pa
                     "relative_path": image_path.relative_to(source_root).as_posix(),
                     "source_dataset": "dataset_a" if index < 3 else "dataset_b",
                     "source_subset": "subset_train" if index % 2 == 0 else "subset_eval",
-                    "capture_group_id": f"group_{index // 2}",
+                    "capture_group_id": f"group_{index}",
                     "domain_tag": "field" if index < 3 else "lab",
                 }
             )
@@ -438,6 +490,121 @@ def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, m
     with auto_clusters_csv.open("r", encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert rows[0]["resolution"] == "auto_resolve"
+
+
+def test_source_like_group_bundles_eval_families_into_one_split(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    for class_name, offsets in {
+        "Healthy": (2, 10, 18),
+        "Early Blight": (3, 11, 19),
+    }.items():
+        _write_pattern(source_root / class_name / "source_a" / f"{class_name.lower().replace(' ', '_')}_a.jpg", offset=offsets[0])
+        _write_pattern(source_root / class_name / "source_a" / f"{class_name.lower().replace(' ', '_')}_b.jpg", offset=offsets[1])
+        _write_pattern(source_root / class_name / "source_b" / f"{class_name.lower().replace(' ', '_')}_c.jpg", offset=offsets[2])
+        _write_pattern(source_root / class_name / "source_c" / f"{class_name.lower().replace(' ', '_')}_d.jpg", offset=offsets[2] + 5)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    source_a_eval_rows = [
+        row for row in manifest_rows
+        if row["source_like_group"].startswith("hint:source_a") and row["is_family_canonical"]
+    ]
+    assert source_a_eval_rows
+    assert len({row["split"] for row in source_a_eval_rows}) == 1
+
+
+def test_eval_risk_families_are_continual_only(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_clean_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_clean_{index}.jpg", offset=offset + 1)
+
+    _write_pattern(source_root / "Healthy" / "Ekran görüntüsü 2026-03-04 001701.jpg", offset=23)
+    _write_pattern(source_root / "Early Blight" / "pngtree-preview-image.jpg", offset=24)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+    assert summary["runtime_ready"] is True
+    assert summary["summary"]["eval_risk_images"] == 2
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    risky_rows = [row for row in manifest_rows if row["eval_quality_risk"]]
+    assert risky_rows
+    assert all(row["split"] == "continual" for row in risky_rows)
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+    crop_root = result_root / "tomato"
+    eval_files = {
+        path.name
+        for split_name in ("val", "test")
+        for path in (crop_root / split_name).rglob("*.*")
+        if path.is_file()
+    }
+    assert "Ekran görüntüsü 2026-03-04 001701.jpg" not in eval_files
+    assert "pngtree-preview-image.jpg" not in eval_files
 
 
 def test_materialized_eval_splits_only_contain_canonical_clean_family_members(tmp_path: Path, monkeypatch):

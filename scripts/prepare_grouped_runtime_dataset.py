@@ -9,6 +9,7 @@ import hashlib
 import itertools
 import json
 import math
+import re
 import shutil
 from collections import defaultdict
 from contextlib import nullcontext
@@ -70,6 +71,47 @@ SYNTHETIC_HINT_KEYWORDS = (
     "noise",
     "pca",
 )
+EVAL_RISK_KEYWORDS = (
+    "ekran",
+    "ekran_goruntusu",
+    "ekran_görüntüsü",
+    "screenshot",
+    "preview",
+    "pngtree",
+    "shutterstock",
+    "gettyimages",
+    "freepik",
+    "alamy",
+)
+SOURCE_LIKE_WEBSITE_KEYWORDS = (
+    "istockphoto",
+    "pngtree",
+    "shutterstock",
+    "gettyimages",
+    "freepik",
+    "alamy",
+)
+SOURCE_LIKE_GROUP_UNKNOWN = "unknown"
+STEM_NOISE_KEYWORDS = {
+    "copy",
+    "edited",
+    "edit",
+    "crop",
+    "cropped",
+    "flip",
+    "flipped",
+    "rotate",
+    "rotated",
+    "rot",
+    "aug",
+    "augmented",
+    "augment",
+    "preview",
+    "small",
+    "large",
+    "final",
+    "web",
+}
 
 
 @dataclass
@@ -83,7 +125,9 @@ class ImageRecord:
     source_subset: str
     capture_group_id: str
     domain_tag: str
+    source_like_group: str
     synthetic_hint: bool
+    eval_quality_risk: bool
     readable: bool
     width: int
     height: int
@@ -327,6 +371,81 @@ def _has_synthetic_hint(path_like: str) -> bool:
     return any(token in normalized for token in SYNTHETIC_HINT_KEYWORDS)
 
 
+def _normalized_path_tokens(path_like: str) -> List[str]:
+    normalized = normalize_class_name(path_like)
+    return [token for token in normalized.split("_") if token]
+
+
+def _stem_family_fingerprint(relative_path: str) -> str:
+    stem = normalize_class_name(Path(str(relative_path or "")).stem)
+    tokens = [token for token in stem.split("_") if token]
+    if not tokens:
+        return ""
+    cleaned: List[str] = []
+    for token in tokens:
+        if token in STEM_NOISE_KEYWORDS:
+            continue
+        if token in {"ekran", "goruntusu"}:
+            continue
+        if token.isdigit() and len(token) <= 3:
+            continue
+        cleaned.append(token)
+    if not cleaned:
+        cleaned = tokens[:]
+    fingerprint = "_".join(cleaned).strip("_")
+    fingerprint = re.sub(r"(_+\d+)$", "", fingerprint).strip("_")
+    return fingerprint or stem
+
+
+def _infer_source_like_group(record: ImageRecord) -> str:
+    capture_group = normalize_class_name(record.capture_group_id)
+    if capture_group:
+        return f"capture:{capture_group}"
+
+    source_dataset = normalize_class_name(record.source_dataset)
+    source_subset = normalize_class_name(record.source_subset)
+    if source_dataset and source_subset:
+        return f"dataset:{source_dataset}:{source_subset}"
+    if source_dataset:
+        return f"dataset:{source_dataset}"
+
+    normalized_path = normalize_class_name(record.relative_path)
+    for keyword in SOURCE_LIKE_WEBSITE_KEYWORDS:
+        if keyword not in normalized_path:
+            continue
+        match = re.search(rf"{keyword}_(\d+)", normalized_path)
+        if match:
+            return f"web:{keyword}:{match.group(1)}"
+        return f"web:{keyword}"
+
+    screenshot_match = re.search(
+        r"(ekran_goruntusu|ekran_görüntüsü|screenshot)_(\d{4})_(\d{2})_(\d{2})",
+        normalized_path,
+    )
+    if screenshot_match:
+        return f"screenshot:{screenshot_match.group(2)}_{screenshot_match.group(3)}_{screenshot_match.group(4)}"
+    if "ekran_goruntusu" in normalized_path or "ekran_görüntüsü" in normalized_path or "screenshot" in normalized_path:
+        stem_fingerprint = _stem_family_fingerprint(record.relative_path)
+        return f"screenshot:{stem_fingerprint or 'batch'}"
+
+    domain_tag = normalize_class_name(record.domain_tag)
+    if domain_tag and domain_tag not in {"unknown", "other"}:
+        return f"domain:{domain_tag}"
+
+    if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN:
+        return f"hint:{normalize_class_name(record.source_hint)}"
+    return SOURCE_LIKE_GROUP_UNKNOWN
+
+
+def _has_eval_quality_risk(record: ImageRecord) -> bool:
+    normalized_path = normalize_class_name(record.relative_path)
+    if any(keyword in normalized_path for keyword in EVAL_RISK_KEYWORDS):
+        return True
+    if record.source_like_group.startswith("screenshot:") or record.source_like_group.startswith("web:"):
+        return True
+    return False
+
+
 def _compute_exact_hash(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -468,7 +587,9 @@ def scan_class_root_dataset(
                     source_subset="",
                     capture_group_id="",
                     domain_tag="",
+                    source_like_group=SOURCE_LIKE_GROUP_UNKNOWN,
                     synthetic_hint=synthetic_hint,
+                    eval_quality_risk=False,
                     readable=readable,
                     width=int(width),
                     height=int(height),
@@ -487,6 +608,9 @@ def scan_class_root_dataset(
         records=records,
         provenance_manifest_path=provenance_manifest_path,
     )
+    for record in records:
+        record.source_like_group = _infer_source_like_group(record)
+        record.eval_quality_risk = _has_eval_quality_risk(record)
     normalization_report["provenance_manifest"] = provenance_summary
     return records, normalization_report
 
@@ -702,6 +826,11 @@ def _classify_review_cluster(
 ) -> tuple[str, str]:
     cluster_size = len(records)
     source_hints = {record.source_hint for record in records if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN}
+    source_like_groups = {
+        record.source_like_group
+        for record in records
+        if record.source_like_group and record.source_like_group != SOURCE_LIKE_GROUP_UNKNOWN
+    }
     synthetic_count = sum(1 for record in records if record.synthetic_hint)
     min_adjacency = min(
         (pair.adjacency_distance for pair in pairs if pair.adjacency_distance is not None),
@@ -715,13 +844,18 @@ def _classify_review_cluster(
         return "manual_review", "cluster size exceeds conservative auto-resolve threshold"
     if len(source_hints) > 1:
         return "manual_review", "mixed source hints in same-class review cluster"
+    if len(source_like_groups) > 1:
+        return "manual_review", "mixed source-like groups in same-class review cluster"
 
     strong_similarity = max_dino >= DINO_AUTO_MIN and (max_bioclip < 0 or max_bioclip >= BIOCLIP_REVIEW_MIN)
     adjacency_supported = min_adjacency is not None and int(min_adjacency) <= 2 and cluster_size <= 3
     synthetic_supported = synthetic_count > 0 and cluster_size <= 4
+    source_like_supported = len(source_like_groups) == 1 and cluster_size <= 4
 
     if synthetic_supported:
         return "auto_resolve", "small same-class cluster has synthetic lineage hints"
+    if source_like_supported:
+        return "auto_resolve", "small same-class cluster shares one source-like group"
     if adjacency_supported:
         return "auto_resolve", "very small same-class cluster is adjacency-backed"
     if max_phash > PHASH_REVIEW_MAX_DISTANCE:
@@ -887,13 +1021,52 @@ def _family_targets(records: Sequence[ImageRecord]) -> Dict[str, tuple[int, int,
     return {class_name: estimate_split_counts(total) for class_name, total in totals.items()}
 
 
-def _assign_splits_for_class(
+def _auto_merge_same_class_source_like_families(
     *,
-    families: List[tuple[str, List[ImageRecord]]],
+    records: Sequence[ImageRecord],
+    uf: UnionFind,
+) -> None:
+    grouped: Dict[tuple[str, str, str], List[ImageRecord]] = defaultdict(list)
+    for record in records:
+        if record.excluded_reason:
+            continue
+        source_like_group = str(record.source_like_group or SOURCE_LIKE_GROUP_UNKNOWN).strip()
+        stem_fingerprint = _stem_family_fingerprint(record.relative_path)
+        if source_like_group == SOURCE_LIKE_GROUP_UNKNOWN or not stem_fingerprint:
+            continue
+        grouped[(record.normalized_class_name, source_like_group, stem_fingerprint)].append(record)
+    for _, values in grouped.items():
+        if len(values) < 2:
+            continue
+        base = values[0].relative_path
+        for other in values[1:]:
+            uf.union(base, other.relative_path)
+
+
+def _bundle_key_for_family(
+    *,
+    family_id: str,
+    family_records: Sequence[ImageRecord],
+) -> str:
+    source_like_groups = {
+        record.source_like_group
+        for record in family_records
+        if record.source_like_group and record.source_like_group != SOURCE_LIKE_GROUP_UNKNOWN
+    }
+    if len(source_like_groups) == 1:
+        source_like_group = next(iter(source_like_groups))
+        if source_like_group.startswith(("capture:", "web:", "screenshot:", "hint:")):
+            return source_like_group
+    return f"family:{family_id}"
+
+
+def _assign_splits_for_units(
+    *,
+    units: List[tuple[str, List[ImageRecord]]],
     targets: tuple[int, int, int],
 ) -> Dict[str, str]:
-    if len(families) < 3:
-        raise ValueError("Need at least 3 families for grouped split assignment.")
+    if len(units) < 3:
+        raise ValueError("Need at least 3 units for grouped split assignment.")
     desired = {
         "continual": int(targets[0]),
         "val": int(targets[1]),
@@ -901,13 +1074,13 @@ def _assign_splits_for_class(
     }
     used = {"continual": 0, "val": 0, "test": 0}
     assignments: Dict[str, str] = {}
-    ordered = sorted(families, key=lambda item: (-len(item[1]), item[0]))
-    # Seed one family per split to avoid empty split artifacts.
-    for split_name, (family_id, family_records) in zip(("continual", "val", "test"), ordered[:3]):
-        assignments[family_id] = split_name
-        used[split_name] += len(family_records)
-    for family_id, family_records in ordered[3:]:
-        size = len(family_records)
+    ordered = sorted(units, key=lambda item: (-len(item[1]), item[0]))
+    # Seed one unit per split to avoid empty split artifacts.
+    for split_name, (unit_id, unit_records) in zip(("continual", "val", "test"), ordered[:3]):
+        assignments[unit_id] = split_name
+        used[split_name] += len(unit_records)
+    for unit_id, unit_records in ordered[3:]:
+        size = len(unit_records)
         deficits = {
             split_name: desired[split_name] - used[split_name]
             for split_name in ("continual", "val", "test")
@@ -916,7 +1089,7 @@ def _assign_splits_for_class(
             deficits.items(),
             key=lambda item: (item[1] < 0, -item[1], used[item[0]], item[0]),
         )[0][0]
-        assignments[family_id] = preferred
+        assignments[unit_id] = preferred
         used[preferred] += size
     return assignments
 
@@ -1000,6 +1173,8 @@ def build_grouped_dataset_plan(
         base = group[0].relative_path
         for other in group[1:]:
             uf.union(base, other.relative_path)
+
+    _auto_merge_same_class_source_like_families(records=valid_records, uf=uf)
 
     _progress(progress_fn, "Loading DINOv3 once for the full audit run.")
     dino_processor, dino_model = _load_dinov3_components(dino_model_id, device=device)
@@ -1175,12 +1350,21 @@ def build_grouped_dataset_plan(
         canonical_record = _select_canonical_record(ordered_items)
         review_excluded = any(item.relative_path in review_excluded_paths for item in ordered_items)
         family_has_synthetic = any(item.synthetic_hint for item in ordered_items)
+        family_has_eval_risk = any(item.eval_quality_risk for item in ordered_items)
+        bundle_key = _bundle_key_for_family(
+            family_id=str(family_key[1]),
+            family_records=ordered_items,
+        )
         if review_excluded:
             family_role = "review_excluded"
         elif canonical_record.synthetic_hint:
             family_role = "synthetic_family"
+        elif canonical_record.eval_quality_risk:
+            family_role = "eval_risk_family"
         elif family_has_synthetic:
             family_role = "canonical_with_synthetic_derivatives"
+        elif family_has_eval_risk:
+            family_role = "canonical_with_eval_risk_derivatives"
         elif len(ordered_items) > 1:
             family_role = "canonical_with_derivatives"
         else:
@@ -1188,11 +1372,13 @@ def build_grouped_dataset_plan(
         family_details[family_key] = {
             "canonical_record": canonical_record,
             "canonical_relative_path": canonical_record.relative_path,
-            "eval_eligible": (not review_excluded) and (not canonical_record.synthetic_hint),
+            "eval_eligible": (not review_excluded) and (not canonical_record.synthetic_hint) and (not canonical_record.eval_quality_risk),
             "family_role": family_role,
             "family_size": len(ordered_items),
             "review_excluded": review_excluded,
             "family_has_synthetic": family_has_synthetic,
+            "family_has_eval_risk": family_has_eval_risk,
+            "bundle_key": bundle_key,
         }
 
     family_assignments: Dict[str, str] = {}
@@ -1222,15 +1408,43 @@ def build_grouped_dataset_plan(
             "synthetic_hint_count": sum(
                 1 for _, items, _detail in class_families for item in items if item.synthetic_hint
             ),
+            "eval_risk_count": sum(
+                1 for _, items, _detail in class_families for item in items if item.eval_quality_risk
+            ),
             "review_excluded_family_count": sum(1 for _family_root, _items, detail in class_families if detail["review_excluded"]),
+            "source_like_bundle_count": len(
+                {
+                    str(detail["bundle_key"])
+                    for _family_root, _items, detail in class_families
+                    if str(detail.get("bundle_key", "")).strip()
+                }
+            ),
         }
         if len(eval_candidate_families) < 3:
             blocking_issues.append(
                 f"Class '{class_name}' has only {len(eval_candidate_families)} evaluation-eligible family/families after grouped prep."
             )
             continue
-        assignments = _assign_splits_for_class(families=eval_candidate_families, targets=target)
-        family_assignments.update(assignments)
+        bundled_eval_families: Dict[str, List[ImageRecord]] = defaultdict(list)
+        bundle_to_family_ids: Dict[str, List[str]] = defaultdict(list)
+        for family_root, _items, detail in class_families:
+            if not detail["eval_eligible"]:
+                continue
+            bundle_key = str(detail.get("bundle_key") or f"family:{family_root}")
+            bundled_eval_families[bundle_key].append(detail["canonical_record"])
+            bundle_to_family_ids[bundle_key].append(family_root)
+        if len(bundled_eval_families) < 3:
+            blocking_issues.append(
+                f"Class '{class_name}' has only {len(bundled_eval_families)} source-like eval bundle(s) after grouped prep."
+            )
+            continue
+        assignments = _assign_splits_for_units(
+            units=[(bundle_key, records) for bundle_key, records in bundled_eval_families.items()],
+            targets=target,
+        )
+        for bundle_key, split_name in assignments.items():
+            for family_root in bundle_to_family_ids.get(bundle_key, []):
+                family_assignments[family_root] = split_name
 
     manifest_rows: List[Dict[str, Any]] = []
     for (class_name, family_root), items in sorted(families.items(), key=lambda item: (item[0][0], item[0][1])):
@@ -1254,7 +1468,9 @@ def build_grouped_dataset_plan(
                     "source_subset": item.source_subset,
                     "capture_group_id": item.capture_group_id,
                     "domain_tag": item.domain_tag,
+                    "source_like_group": item.source_like_group,
                     "synthetic_hint": item.synthetic_hint,
+                    "eval_quality_risk": item.eval_quality_risk,
                     "width": item.width,
                     "height": item.height,
                     "blur_score": round(item.blur_score, 4),
@@ -1265,6 +1481,7 @@ def build_grouped_dataset_plan(
                     "family_size": int(family_detail["family_size"]),
                     "family_role": str(family_detail["family_role"]),
                     "family_eval_eligible": bool(family_detail["eval_eligible"]),
+                    "family_bundle_key": str(family_detail.get("bundle_key") or ""),
                     "family_canonical_relative_path": canonical_relative_path,
                     "is_family_canonical": bool(item.relative_path == canonical_relative_path),
                     "family_assignment": assigned_split,
@@ -1290,6 +1507,7 @@ def build_grouped_dataset_plan(
             "blocking_issues": len(blocking_issues),
             "eval_eligible_families": sum(1 for detail in family_details.values() if detail["eval_eligible"]),
             "continual_only_families": sum(1 for detail in family_details.values() if not detail["eval_eligible"]),
+            "eval_risk_images": sum(1 for record in valid_records if record.eval_quality_risk),
             "review_excluded_paths": len(review_excluded_paths),
             "excluded_reason_breakdown": {
                 "unreadable": len([record for record in records if record.excluded_reason == "unreadable"]),
