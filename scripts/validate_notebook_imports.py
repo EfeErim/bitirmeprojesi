@@ -436,18 +436,21 @@ def test_repo_dataset_scaffold() -> None:
     assert not missing, f"Missing dataset scaffold path(s): {', '.join(missing)}"
 
 
-def test_training_notebook_runtime_mode_contract() -> None:
+def test_training_notebook_dataset_contract_detection() -> None:
     import json
 
     notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
     payload = json.loads(notebook_path.read_text(encoding="utf-8"))
     full_source = "\n\n".join("".join(cell.get("source", [])) for cell in payload.get("cells", []))
-    assert 'DATASET_LAYOUT_MODE = "class_root"' in full_source
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in full_source
+    assert "Notebook secilen datasetin yapisina bakip class-root mu runtime mi oldugunu otomatik algilar." in full_source
+    assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_repo_relative_root" in full_source
+    assert 'def _dataset_contract(candidate_root: Path) -> str:' in full_source
+    assert 'STATE["dataset_contract"] = dataset_contract' in full_source
     assert "build_prepared_dataset_key" in full_source
-    assert 'if layout_mode == "runtime":' in full_source
+    assert 'if dataset_contract == "runtime":' in full_source
     assert "Prepared runtime dataset is missing split folder(s)" in full_source
-    assert "OOD dataset parameters are ignored when DATASET_LAYOUT_MODE='runtime'." in full_source
+    assert "OOD dataset parameters are ignored when the selected dataset is already runtime-shaped." in full_source
 
 
 def test_training_notebook_bootstrap_contract() -> None:
@@ -550,7 +553,9 @@ def test_training_notebook_bootstrap_contract() -> None:
         'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
         'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
         'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
-        'resolve_repo_dataset_directory',
+        'list_repo_dataset_directories',
+        'resolve_repo_relative_root',
+        'STATE["dataset_contract"] = dataset_contract',
         'STATE["selected_dataset_name"] = selected_dataset_name',
     )
     for snippet in required_training_surface_snippets:
@@ -694,12 +699,12 @@ CHECKS = (
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
-        result_name="Notebook 2 Runtime Mode",
+        result_name="Notebook 2 Dataset Contract",
         step_id="NB2_RUNTIME",
-        description="Notebook 2 runtime dataset mode contract",
-        success_message="Notebook 2 runtime dataset mode is wired",
-        failure_prefix="Notebook 2 runtime contract failed",
-        callback=test_training_notebook_runtime_mode_contract,
+        description="Notebook 2 dataset contract auto-detection",
+        success_message="Notebook 2 auto-detects class-root vs runtime datasets",
+        failure_prefix="Notebook 2 dataset contract check failed",
+        callback=test_training_notebook_dataset_contract_detection,
         requires_runtime_dependencies=False,
     ),
 )

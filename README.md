@@ -292,8 +292,9 @@ data/prepared_class_root_datasets/<crop_or_crop__part>/
 
 Notebook 2 now supports both paths:
 
-- `DATASET_LAYOUT_MODE="class_root"` starts from a flat dataset, runs grouped prep/materialization, and then trains
-- `DATASET_LAYOUT_MODE="runtime"` trains directly from a prepared runtime dataset root
+- Notebook 2 now auto-detects the selected repo dataset contract
+- if the selected dataset is flat class-root, it runs grouped prep/materialization and then trains
+- if the selected dataset already has `continual/`, `val/`, and `test/`, it trains directly from that prepared runtime dataset
 
 Current notebook UX detail:
 
@@ -304,7 +305,7 @@ Recommended usage:
 
 - use Notebook 0 first when you want to inspect audit artifacts before training
 - use Notebook 2 `class_root` mode when you want one notebook to prepare and train in one pass
-- use Notebook 2 `runtime` mode when the prepared runtime dataset already exists
+- use Notebook 2 on an already prepared runtime dataset when you want to skip prep automatically
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 

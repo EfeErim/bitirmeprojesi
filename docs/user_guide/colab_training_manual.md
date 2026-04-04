@@ -26,10 +26,10 @@ Notebook 0 audits a flat class-root dataset from the repo workspace, groups like
 
 ### Notebook 2
 
-Notebook 2 can now do one of two things:
+Notebook 2 can now do both parts automatically:
 
-- start from a flat class-root dataset, run grouped prep/materialization, and then train
-- train directly from a prepared runtime dataset root produced earlier
+- if the selected repo dataset is flat class-root, run grouped prep/materialization and then train
+- if the selected repo dataset is already runtime-shaped, skip prep and train directly
 
 ### Notebook 3
 
@@ -42,7 +42,7 @@ Notebook 4 exposes the same direct adapter validation path behind a smaller widg
 ## Important Terms
 
 - `flat class-root dataset`: the simple folder layout you prepare by hand for Notebook 2
-- `runtime dataset`: the split layout used by workflow training; it can be created by Notebook 2 from a flat dataset or consumed directly in runtime mode
+- `runtime dataset`: the split layout used by workflow training; it can be created by Notebook 2 from a flat dataset or consumed directly when the selected dataset is already runtime-shaped
 - `adapter bundle`: the saved training output that contains model weights, metadata, and OOD state
 - `telemetry`: the logs and mirrored artifacts saved during a notebook run
 - `OOD`: "out of distribution," meaning the image may not belong to the supported disease classes
@@ -69,13 +69,13 @@ Important current behavior:
 - training now resolves supported-class reference counts from `split_manifest.json` when that runtime manifest exists, otherwise from the runtime `continual` split counts
 - if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
-- Notebook 2 accepts either `DATASET_LAYOUT_MODE="class_root"` or `DATASET_LAYOUT_MODE="runtime"`
-- `class_root` now runs grouped prep and runtime-dataset materialization before training
-- `runtime` consumes an already prepared runtime dataset without re-running prep
+- Notebook 2 now inspects the selected repo dataset and auto-detects whether it is class-root or runtime-shaped
+- flat class-root input triggers grouped prep and runtime-dataset materialization before training
+- a dataset that already contains `continual/`, `val/`, and `test/` is consumed directly without re-running prep
 
 ## Notebook 2 In Plain English
 
-This is the current Notebook 2 training flow from start to finish when you use `DATASET_LAYOUT_MODE="class_root"`:
+This is the current Notebook 2 training flow from start to finish when the selected dataset is flat class-root:
 
 1. find or initialize the repo workspace
 2. install notebook requirements
@@ -100,8 +100,8 @@ This is the current Notebook 2 training flow from start to finish when you use `
 Important recommendation:
 
 - use Notebook 0 first when you want to inspect the audit artifacts before training
-- use Notebook 2 `class_root` mode when you want one notebook to prepare and train in one pass
-- use Notebook 2 `runtime` mode when the prepared runtime dataset already exists
+- use Notebook 2 when you want one notebook to decide automatically whether prep is needed
+- if the selected dataset is already runtime-shaped, Notebook 2 skips prep automatically
 
 ## Notebook 0 In Plain English
 
@@ -196,8 +196,8 @@ The generated runtime dataset includes:
 
 Contract reminder:
 
-- Notebook 2 `class_root` mode accepts the flat class-root layout and now runs grouped prep before training
-- Notebook 2 `runtime` mode and `TrainingWorkflow.run(...)` expect the runtime split layout
+- Notebook 2 accepts the flat class-root layout and now runs grouped prep before training when needed
+- a runtime-shaped dataset and `TrainingWorkflow.run(...)` both use the runtime split layout
 - Notebook 0 remains the maintained audit-first surface when you want to inspect or fix prep issues before training
 
 ## How The Split Is Created
@@ -833,6 +833,7 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
+
 
 
 
