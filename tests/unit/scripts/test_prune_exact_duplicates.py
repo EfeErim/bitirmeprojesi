@@ -3,6 +3,7 @@ import zipfile
 from pathlib import Path
 
 from scripts.prune_exact_duplicates import (
+    _record_from_manifest_row,
     apply_cleanup_plan,
     build_combined_cleanup_plan,
     build_cleanup_plan,
@@ -305,6 +306,29 @@ def test_build_review_cleanup_plan_only_deletes_auto_resolved_clusters(tmp_path:
     assert "Healthy/manual_a.jpg" not in deleted
     assert "Healthy/manual_b.jpg" not in deleted
 
+
+def test_record_from_manifest_row_backfills_new_manifest_fields():
+    row = {
+        "relative_path": "Healthy/screenshot_2025_01_04_leaf.jpg",
+        "absolute_path": "D:/tmp/Healthy/screenshot_2025_01_04_leaf.jpg",
+        "raw_class_name": "Healthy",
+        "normalized_class_name": "healthy",
+        "source_hint": "unknown",
+        "synthetic_hint": "false",
+        "width": "32",
+        "height": "32",
+        "blur_score": "1.0",
+        "brightness_mean": "0.5",
+        "exact_hash": "",
+        "phash_hex": "0",
+        "class_order_index": "0",
+        "excluded_reason": "",
+    }
+
+    record = _record_from_manifest_row(row)
+
+    assert record.source_like_group == "screenshot:2025_01_04"
+    assert record.eval_quality_risk is True
 
 def test_build_combined_cleanup_plan_merges_exact_and_review_actions(tmp_path: Path):
     dataset_root = tmp_path / "dataset"

@@ -16,6 +16,8 @@ from scripts.colab_dataset_layout import IMAGE_EXTENSIONS
 from scripts.prepare_grouped_runtime_dataset import (
     ImageRecord,
     ReviewPair,
+    _has_eval_quality_risk,
+    _infer_source_like_group,
     UnionFind,
     _classify_review_cluster,
     _record_preference_key,
@@ -261,7 +263,8 @@ def build_cleanup_plan(
 
 def _record_from_manifest_row(row: Dict[str, str]) -> ImageRecord:
     synthetic_raw = str(row.get("synthetic_hint", "")).strip().lower()
-    return ImageRecord(
+    eval_quality_raw = str(row.get("eval_quality_risk", "")).strip().lower()
+    record = ImageRecord(
         relative_path=str(row.get("relative_path", "")),
         absolute_path=str(row.get("absolute_path", "")),
         raw_class_name=str(row.get("raw_class_name", "")),
@@ -271,7 +274,9 @@ def _record_from_manifest_row(row: Dict[str, str]) -> ImageRecord:
         source_subset=str(row.get("source_subset", "")),
         capture_group_id=str(row.get("capture_group_id", "")),
         domain_tag=str(row.get("domain_tag", "")),
+        source_like_group=str(row.get("source_like_group", "")),
         synthetic_hint=synthetic_raw in {"1", "true", "yes"},
+        eval_quality_risk=eval_quality_raw in {"1", "true", "yes"},
         readable=True,
         width=int(float(row.get("width", 0) or 0)),
         height=int(float(row.get("height", 0) or 0)),
@@ -282,6 +287,11 @@ def _record_from_manifest_row(row: Dict[str, str]) -> ImageRecord:
         class_order_index=int(float(row.get("class_order_index", 0) or 0)),
         excluded_reason=str(row.get("excluded_reason", "")),
     )
+    if not record.source_like_group:
+        record.source_like_group = _infer_source_like_group(record)
+    if not eval_quality_raw:
+        record.eval_quality_risk = _has_eval_quality_risk(record)
+    return record
 
 
 def _review_pair_from_row(row: Dict[str, str]) -> ReviewPair:
