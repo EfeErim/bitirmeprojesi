@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import builtins
+import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +28,23 @@ PARAMETER_CAPTURE = 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):'
 ACCESS_CHECK_CAPTURE = (
     'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):'
 )
+REPO_BOOTSTRAP_REQUIRED = (
+    "CLONE_TARGET = Path('/content/bitirmeprojesi')",
+    "REPO_URL = os.environ.get('AADS_REPO_URL'",
+    "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
+)
+UPDATE_CHECK_REQUIRED = (
+    "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
+    "def _build_repo_access_url(",
+    "from scripts.colab_repo_bootstrap import probe_repo_update_status",
+    "[KONTROL] Ilk hucre:",
+)
+DRIVE_REPO_BOOTSTRAP_FORBIDDEN = (
+    "Path('/content/drive/MyDrive/bitirme projesi')",
+    "Path('/content/drive/MyDrive/bitirmeprojesi')",
+    "def _mount_drive_inline()",
+    "mount_drive_if_available",
+)
 
 
 def _assert_contains(source: str, snippet: str, message: str) -> None:
@@ -35,6 +53,83 @@ def _assert_contains(source: str, snippet: str, message: str) -> None:
 
 def _assert_not_contains(source: str, snippet: str, message: str) -> None:
     assert snippet not in source, message.format(snippet=snippet)
+
+
+def _assert_contains_all(source: str, snippets: tuple[str, ...], message: str) -> None:
+    for snippet in snippets:
+        _assert_contains(source, snippet, message)
+
+
+def _assert_not_contains_all(source: str, snippets: tuple[str, ...], message: str) -> None:
+    for snippet in snippets:
+        _assert_not_contains(source, snippet, message)
+
+
+@dataclass(frozen=True)
+class NotebookSources:
+    notebook_path: Path
+    code_cells: tuple[str, ...]
+    full_source: str
+    first_code_source: str
+
+
+def _load_notebook_sources_from_path(notebook_path: Path) -> NotebookSources:
+    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    code_cells = tuple(
+        "".join(cell.get("source", []))
+        for cell in payload.get("cells", [])
+        if cell.get("cell_type") == "code"
+    )
+    assert code_cells, f"{notebook_path.name} code cells were not found"
+    return NotebookSources(
+        notebook_path=notebook_path,
+        code_cells=code_cells,
+        full_source="\n\n".join(code_cells),
+        first_code_source=code_cells[0],
+    )
+
+
+def _load_notebook_sources(notebook_name: str) -> NotebookSources:
+    return _load_notebook_sources_from_path(ROOT / "colab_notebooks" / notebook_name)
+
+
+def _find_code_cell_source(sources: NotebookSources, marker: str, missing_message: str) -> str:
+    for source in sources.code_cells:
+        if marker in source:
+            return source
+    raise AssertionError(missing_message)
+
+
+def _assert_repo_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
+    _assert_contains_all(
+        first_code_source,
+        REPO_BOOTSTRAP_REQUIRED,
+        f"{notebook_label} first code cell is missing required GitHub bootstrap: {{snippet}}",
+    )
+    _assert_not_contains_all(
+        first_code_source,
+        DRIVE_REPO_BOOTSTRAP_FORBIDDEN,
+        f"{notebook_label} first code cell should not use Drive for repo bootstrap: {{snippet}}",
+    )
+
+
+def _assert_update_check_contract(
+    first_code_source: str,
+    notebook_label: str,
+    *,
+    forbid_drive_bootstrap: bool,
+) -> None:
+    _assert_contains_all(
+        first_code_source,
+        UPDATE_CHECK_REQUIRED,
+        f"{notebook_label} first code cell is missing required freshness check: {{snippet}}",
+    )
+    if forbid_drive_bootstrap:
+        _assert_not_contains_all(
+            first_code_source,
+            DRIVE_REPO_BOOTSTRAP_FORBIDDEN,
+            f"{notebook_label} first code cell should stay repo-first without Drive bootstrap: {{snippet}}",
+        )
 
 
 def gate_label(step_id: str, name: str) -> str:
@@ -203,81 +298,23 @@ def test_adapter_smoke_notebook_surface() -> None:
 
 
 def test_adapter_smoke_notebook_bootstrap_contract() -> None:
-    import json
+    sources = _load_notebook_sources("3_adapter_smoke_test.ipynb")
 
-    notebook_path = ROOT / "colab_notebooks" / "3_adapter_smoke_test.ipynb"
-    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
-    code_cells = [cell for cell in payload.get("cells", []) if cell.get("cell_type") == "code"]
-    assert code_cells, "Notebook 3 code cells were not found"
-    first_code_source = "".join(code_cells[0].get("source", []))
+    _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 3")
 
-    for snippet in (
-        "CLONE_TARGET = Path('/content/bitirmeprojesi')",
-        "REPO_URL = os.environ.get('AADS_REPO_URL'",
-        "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
-    ):
-        _assert_contains(
-            first_code_source,
-            snippet,
-            "Notebook 3 first code cell is missing required GitHub bootstrap: {snippet}",
-        )
-
-    forbidden_snippets = (
-        "Path('/content/drive/MyDrive/bitirme projesi')",
-        "Path('/content/drive/MyDrive/bitirmeprojesi')",
-        "def _mount_drive_inline()",
-        "mount_drive_if_available",
-    )
-    for snippet in forbidden_snippets:
-        _assert_not_contains(
-            first_code_source,
-            snippet,
-            "Notebook 3 first code cell should not use Drive for repo bootstrap: {snippet}",
-        )
-
-    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in code_cells)
-    assert "Path('/content/drive/MyDrive/aads_ulora')" not in full_source
-    assert "SEARCH_ROOTS = [" in full_source
+    assert "Path('/content/drive/MyDrive/aads_ulora')" not in sources.full_source
+    assert "SEARCH_ROOTS = [" in sources.full_source
 
 
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
-    import json
+    sources = _load_notebook_sources("4_simple_adapter_smoke_test.ipynb")
 
-    notebook_path = ROOT / "colab_notebooks" / "4_simple_adapter_smoke_test.ipynb"
-    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
-    code_cells = [cell for cell in payload.get("cells", []) if cell.get("cell_type") == "code"]
-    assert code_cells, "Notebook 4 code cells were not found"
-    first_code_source = "".join(code_cells[0].get("source", []))
+    _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 4")
 
-    for snippet in (
-        "CLONE_TARGET = Path('/content/bitirmeprojesi')",
-        "REPO_URL = os.environ.get('AADS_REPO_URL'",
-        "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
-    ):
-        _assert_contains(
-            first_code_source,
-            snippet,
-            "Notebook 4 first code cell is missing required GitHub bootstrap: {snippet}",
-        )
-
-    forbidden_snippets = (
-        "Path('/content/drive/MyDrive/bitirme projesi')",
-        "Path('/content/drive/MyDrive/bitirmeprojesi')",
-        "def _mount_drive_inline()",
-        "mount_drive_if_available",
-    )
-    for snippet in forbidden_snippets:
-        _assert_not_contains(
-            first_code_source,
-            snippet,
-            "Notebook 4 first code cell should not use Drive for repo bootstrap: {snippet}",
-        )
-
-    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in code_cells)
-    assert "collect_notebook_access_report" in full_source
-    assert "print_notebook_access_report" in full_source
-    assert "from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui" in full_source
-    assert "launch_simple_adapter_smoke_ui(ROOT)" in full_source
+    assert "collect_notebook_access_report" in sources.full_source
+    assert "print_notebook_access_report" in sources.full_source
+    assert "from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui" in sources.full_source
+    assert "launch_simple_adapter_smoke_ui(ROOT)" in sources.full_source
 
 
 def test_colab_helpers() -> None:
@@ -318,56 +355,28 @@ def test_colab_helpers() -> None:
 
 
 def test_data_prep_notebook_contract() -> None:
-    import json
+    sources = _load_notebook_sources("0_grouped_dataset_preparation.ipynb")
+    bootstrap_source = _find_code_cell_source(
+        sources,
+        "from scripts.colab_live_telemetry import ColabLiveTelemetry",
+        "Notebook 0 bootstrap cell was not found",
+    )
+    parameter_source = _find_code_cell_source(
+        sources,
+        PARAMETER_CAPTURE,
+        "Notebook 0 parameter cell was not found",
+    )
+    access_check_source = _find_code_cell_source(
+        sources,
+        ACCESS_CHECK_CAPTURE,
+        "Notebook 0 access-check cell was not found",
+    )
 
-    notebook_path = ROOT / "colab_notebooks" / "0_grouped_dataset_preparation.ipynb"
-    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
-    cells = payload.get("cells", [])
-    first_code_source = ""
-    bootstrap_source = ""
-    parameter_source = ""
-    access_check_source = ""
-    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
-    for cell in cells:
-        if cell.get("cell_type") != "code":
-            continue
-        source = "".join(cell.get("source", []))
-        if not first_code_source:
-            first_code_source = source
-        if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
-            bootstrap_source = source
-        if not parameter_source and PARAMETER_CAPTURE in source:
-            parameter_source = source
-        if not access_check_source and ACCESS_CHECK_CAPTURE in source:
-            access_check_source = source
-
-    assert first_code_source, "Notebook 0 first code cell was not found"
-    assert bootstrap_source, "Notebook 0 bootstrap cell was not found"
-    assert parameter_source, "Notebook 0 parameter cell was not found"
-    assert access_check_source, "Notebook 0 access-check cell was not found"
-    for snippet in (
-        "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
-        "def _build_repo_access_url(",
-        "from scripts.colab_repo_bootstrap import probe_repo_update_status",
-        "[KONTROL] Ilk hucre:",
-    ):
-        _assert_contains(
-            first_code_source,
-            snippet,
-            "Notebook 0 first code cell is missing required freshness check: {snippet}",
-        )
-    for snippet in (
-        "from google.colab import drive",
-        "drive.mount('/content/drive')",
-        "drive.mount('/content/drive', force_remount=False)",
-        "Path('/content/drive/MyDrive/bitirme projesi')",
-        "Path('/content/drive/MyDrive/bitirmeprojesi')",
-    ):
-        _assert_not_contains(
-            first_code_source,
-            snippet,
-            "Notebook 0 first code cell should stay repo-first without Drive bootstrap: {snippet}",
-        )
+    _assert_update_check_contract(
+        sources.first_code_source,
+        "Notebook 0",
+        forbid_drive_bootstrap=True,
+    )
     for snippet in (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
@@ -393,7 +402,6 @@ def test_data_prep_notebook_contract() -> None:
         "DATASET_ROOT =",
         "CROP_NAME =",
         "PART_NAME =",
-        "PROVENANCE_MANIFEST_PATH =",
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
         "OOD_DATASET_ROOT =",
@@ -409,18 +417,16 @@ def test_data_prep_notebook_contract() -> None:
         assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
-    assert "build_grouped_dataset_plan" in full_source
-    assert "build_prepared_dataset_key" in full_source
-    assert "prepare_class_root_for_materialization" in full_source
-    assert "def _resolve_repo_dataset_root" in full_source
-    assert "resolve_repo_dataset_directory" in full_source
-    assert 'dataset_source = "repo"' in full_source
-    assert 'STATE["dataset_name"] = dataset_name' in full_source
-    assert 'STATE["dataset_source"] = dataset_source' in full_source
-    assert 'STATE["provenance_manifest_path"] = provenance_manifest_path' in full_source
-    assert 'provenance_manifest_path=STATE.get("provenance_manifest_path")' in full_source
-    assert "MATERIALIZE_AFTER_REVIEW = True" in full_source
-    assert "materialize_grouped_runtime_dataset" in full_source
+    assert "build_grouped_dataset_plan" in sources.full_source
+    assert "build_prepared_dataset_key" in sources.full_source
+    assert "prepare_class_root_for_materialization" in sources.full_source
+    assert "def _resolve_repo_dataset_root" in sources.full_source
+    assert "resolve_repo_dataset_directory" in sources.full_source
+    assert 'dataset_source = "repo"' in sources.full_source
+    assert 'STATE["dataset_name"] = dataset_name' in sources.full_source
+    assert 'STATE["dataset_source"] = dataset_source' in sources.full_source
+    assert "MATERIALIZE_AFTER_REVIEW = True" in sources.full_source
+    assert "materialize_grouped_runtime_dataset" in sources.full_source
 
 
 def test_repo_dataset_scaffold() -> None:
@@ -436,67 +442,48 @@ def test_repo_dataset_scaffold() -> None:
 
 
 def test_training_notebook_dataset_contract_detection() -> None:
-    import json
-
-    notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
-    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
-    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in payload.get("cells", []))
-    assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in full_source
-    assert "Notebook secilen datasetin yapisina bakip class-root mu runtime mi oldugunu otomatik algilar." in full_source
-    assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in full_source
-    assert 'def _dataset_contract(candidate_root: Path) -> str:' in full_source
-    assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in full_source
-    assert 'direct_class_root_dataset = resolve_direct_repo_dataset_root(' in full_source
-    assert 'STATE["dataset_contract"] = dataset_contract' in full_source
-    assert "build_prepared_dataset_key" in full_source
-    assert 'if dataset_contract == "runtime":' in full_source
-    assert "Prepared runtime dataset is missing split folder(s)" in full_source
-    assert "OOD dataset parameters are ignored when the selected dataset is already runtime-shaped." in full_source
+    sources = _load_notebook_sources("2_interactive_adapter_training.ipynb")
+    assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in sources.full_source
+    assert "Notebook secilen datasetin yapisina bakip class-root mu runtime mi oldugunu otomatik algilar." in sources.full_source
+    assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in sources.full_source
+    assert 'def _dataset_contract(candidate_root: Path) -> str:' in sources.full_source
+    assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
+    assert 'direct_class_root_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
+    assert 'STATE["dataset_contract"] = dataset_contract' in sources.full_source
+    assert "build_prepared_dataset_key" in sources.full_source
+    assert 'if dataset_contract == "runtime":' in sources.full_source
+    assert "Prepared runtime dataset is missing split folder(s)" in sources.full_source
+    assert "OOD dataset parameters are ignored when the selected dataset is already runtime-shaped." in sources.full_source
 
 
 def test_training_notebook_bootstrap_contract() -> None:
-    import json
+    sources = _load_notebook_sources("2_interactive_adapter_training.ipynb")
+    bootstrap_source = _find_code_cell_source(
+        sources,
+        "from scripts.colab_live_telemetry import ColabLiveTelemetry",
+        "Notebook 2 bootstrap cell was not found",
+    )
+    parameter_source = _find_code_cell_source(
+        sources,
+        PARAMETER_CAPTURE,
+        "Notebook 2 parameter cell was not found",
+    )
+    run_identity_source = _find_code_cell_source(
+        sources,
+        "# Notebook 2 calisma kimligi",
+        "Notebook 2 run identity cell was not found",
+    )
+    access_check_source = _find_code_cell_source(
+        sources,
+        ACCESS_CHECK_CAPTURE,
+        "Notebook 2 access-check cell was not found",
+    )
 
-    notebook_path = ROOT / "colab_notebooks" / "2_interactive_adapter_training.ipynb"
-    payload = json.loads(notebook_path.read_text(encoding="utf-8"))
-    cells = payload.get("cells", [])
-    first_code_source = ""
-    bootstrap_source = ""
-    parameter_source = ""
-    run_identity_source = ""
-    access_check_source = ""
-    for cell in cells:
-        if cell.get("cell_type") != "code":
-            continue
-        source = "".join(cell.get("source", []))
-        if not first_code_source:
-            first_code_source = source
-        if not bootstrap_source and "from scripts.colab_live_telemetry import ColabLiveTelemetry" in source:
-            bootstrap_source = source
-        if not parameter_source and 'with TELEMETRY.capture_cell_output("Cell 3: Parameters"):' in source:
-            parameter_source = source
-        if not run_identity_source and "# Notebook 2 calisma kimligi" in source:
-            run_identity_source = source
-        if not access_check_source and ACCESS_CHECK_CAPTURE in source:
-            access_check_source = source
-
-    assert first_code_source, "Notebook 2 first code cell was not found"
-    assert bootstrap_source, "Notebook 2 bootstrap cell was not found"
-    assert parameter_source, "Notebook 2 parameter cell was not found"
-    assert run_identity_source, "Notebook 2 run identity cell was not found"
-    assert access_check_source, "Notebook 2 access-check cell was not found"
-    for snippet in (
-        "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
-        "def _build_repo_access_url(",
-        "from scripts.colab_repo_bootstrap import probe_repo_update_status",
-        "[KONTROL] Ilk hucre:",
-    ):
-        _assert_contains(
-            first_code_source,
-            snippet,
-            "Notebook 2 first code cell is missing required freshness check: {snippet}",
-        )
-    full_source = "\n\n".join("".join(cell.get("source", [])) for cell in cells if cell.get("cell_type") == "code")
+    _assert_update_check_contract(
+        sources.first_code_source,
+        "Notebook 2",
+        forbid_drive_bootstrap=False,
+    )
 
     required_bootstrap_snippets = (
         "RUN_ID =",
@@ -514,11 +501,11 @@ def test_training_notebook_bootstrap_contract() -> None:
         raise AssertionError(f"Notebook 2 bootstrap cell is missing required setup: {', '.join(missing)}")
 
     assert PARAMETER_CAPTURE in parameter_source
-    assert full_source.index("TELEMETRY = ColabLiveTelemetry(") < full_source.index(
+    assert sources.full_source.index("TELEMETRY = ColabLiveTelemetry(") < sources.full_source.index(
         PARAMETER_CAPTURE
     )
-    assert full_source.index("RUN_ID =") < full_source.index("run_id = RUN_ID")
-    assert full_source.index("CHECKPOINT_MANAGER =") < full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
+    assert sources.full_source.index("RUN_ID =") < sources.full_source.index("run_id = RUN_ID")
+    assert sources.full_source.index("CHECKPOINT_MANAGER =") < sources.full_source.index('"checkpoint_manager": CHECKPOINT_MANAGER')
     assert 'PART_NAME = "unspecified"' in run_identity_source
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
@@ -528,7 +515,6 @@ def test_training_notebook_bootstrap_contract() -> None:
         'DATASET_NAME = ""',
         'OOD_DATASET_ROOT = "data/ood_dataset"',
         'OOD_DATASET_NAME = ""',
-        'PROVENANCE_MANIFEST_PATH = ""',
         'EPOCHS = ',
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',
@@ -549,10 +535,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         )
 
     required_training_surface_snippets = (
-        'provenance_manifest_path=provenance_manifest_path',
         'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
-        'STATE["provenance_manifest_path"] = resolved_provenance_manifest_path',
         'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
         'list_repo_dataset_directories',
         'resolve_direct_repo_dataset_root',
@@ -562,7 +546,7 @@ def test_training_notebook_bootstrap_contract() -> None:
     )
     for snippet in required_training_surface_snippets:
         _assert_contains(
-            full_source,
+            sources.full_source,
             snippet,
             "Notebook 2 training surface is missing required explicit config wiring: {snippet}",
         )
@@ -582,7 +566,7 @@ def test_training_notebook_bootstrap_contract() -> None:
     )
     for snippet in forbidden_parameter_snippets:
         _assert_not_contains(
-            full_source,
+            sources.full_source,
             snippet,
             (
                 "Notebook 2 parameter cell should not contain hidden overrides "

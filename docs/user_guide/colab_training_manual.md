@@ -22,7 +22,7 @@ If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ### Notebook 0
 
-Notebook 0 audits a flat class-root dataset from the repo workspace, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset.
+Notebook 0 audits a flat class-root dataset from the repo workspace, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset. If `CROP_NAME` or `PART_NAME` are left blank in the parameter cell, Notebook 0 now prompts for them after the dataset is selected and suggests defaults from the dataset folder name when possible.
 
 ### Notebook 2
 
@@ -234,18 +234,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
 
 ### Recommended data-preparation workflow
 
-1. Preserve provenance before merging.
-
-   Keep a manifest for every image with fields such as:
-
-   - `source_dataset`
-   - `source_subset`
-   - `original_image_id`
-   - `augmentation_family_id`
-   - `synthetic_flag`
-   - `capture_group_id`
-
-2. Deduplicate before final splitting.
+1. Deduplicate before final splitting.
 
    Run both:
 
@@ -254,7 +243,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
 
    Remove exact duplicates from the benchmark set and keep near-duplicate families together in one split.
 
-3. Split by group, not by image.
+2. Split by group, not by image.
 
    Keep these together:
 
@@ -262,7 +251,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
    - one synthetic image family and its close variants
    - images from the same plant, same capture session, or same collection event when that metadata exists
 
-4. Prefer real images for authoritative `val` and `test`.
+3. Prefer real images for authoritative `val` and `test`.
 
    A practical rule is:
 
@@ -270,17 +259,17 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
    - `val/` and `test/` should prefer real, non-synthetic images
    - GAN-generated images should be train-only or evaluated in a separate ablation, not mixed silently into the authoritative test split
 
-5. Keep source-aware evaluation when sources are merged.
+4. Keep grouped evaluation when sources are merged.
 
    Preferred order:
 
-   - source-held-out test split
-   - source-balanced grouped split
+   - grouped held-out test split
+   - grouped balanced split
    - image-level random split only as a convenience baseline
 
-   If your data comes from multiple public datasets, a held-out source or at least a source-balanced grouped test split is much more trustworthy than a random split after merge.
+   If your data comes from multiple public datasets, a grouped held-out test split is much more trustworthy than a random split after merge.
 
-6. Materialize the runtime dataset through Notebook 0 when you want audit-first control.
+5. Materialize the runtime dataset through Notebook 0 when you want audit-first control.
 
    When you need a trustworthy benchmark and want to inspect the prep outputs before training, let Notebook 0 write this layout directly:
 
@@ -298,7 +287,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
    .\scripts\python.cmd -m src.app.cli training tomato data\prepared_runtime_datasets outputs\training_run --config-env colab
    ```
 
-7. Keep OOD separate from classification splitting.
+6. Keep OOD separate from classification splitting.
 
    Do not mix unknown images into the supported class-root dataset. Keep `ood/` as a separate pool under the runtime dataset and match it to the real deployment contract.
 
@@ -309,7 +298,7 @@ If you combine multiple public tomato-leaf datasets, use these rules:
 - never merge raw images, augmented variants, and GAN samples into one flat folder and trust the notebook random split as the main benchmark
 - keep all derivatives of one original image in the same split
 - keep one clean held-out test slice of real leaf images that were never used to generate training augmentations
-- report whether the test slice is source-held-out, source-balanced, or only random-after-merge
+- report whether the test slice is grouped held-out, grouped balanced, or only random-after-merge
 - treat random-after-merge metrics as smoke-test evidence, not deployment evidence
 
 ### Roboflow and other offline augmentation tools
@@ -334,14 +323,14 @@ If you want to measure whether augmentation helps, compare two controlled runs a
 
 Public plant-disease datasets often do not provide enough metadata to prove that all sources are fully independent. Different dataset packages may reuse the same original photo, a resized copy, a crop, or an offline augmentation family.
 
-Do not claim full source independence unless you can actually verify it. Instead, use a conservative protocol that reduces leakage risk as much as possible:
+Do not claim full source independence unless you can actually verify it. Instead, use a conservative grouped protocol that reduces leakage risk as much as possible:
 
-1. preserve whatever provenance you do have, such as dataset package, subset, filename lineage, download origin, or augmentation history
+1. keep dataset-package boundaries visible when you still know them
 2. run exact duplicate detection
 3. run near-duplicate detection
 4. group suspiciously similar images together even if you are not fully certain they share one original
 5. split by those groups instead of by individual images
-6. describe the evaluation honestly as source-held-out, source-balanced, grouped, or random-after-merge
+6. describe the evaluation honestly as grouped held-out, grouped balanced, or random-after-merge
 
 This is still much more trustworthy than merging everything first and relying on an image-level random split.
 
@@ -356,7 +345,7 @@ If you cannot fully reconstruct which augmented images came from which originals
 5. reserve a clean real-image test slice that excludes synthetic and likely augmented families
 6. treat any remaining random-after-merge result as a convenience baseline, not as the headline claim
 
-When provenance is weak, the goal is not to prove perfect independence. The goal is to remove obvious leakage paths and make the benchmark defensible.
+When lineage is weak, the goal is not to prove perfect independence. The goal is to remove obvious leakage paths and make the benchmark defensible.
 
 ### When Notebook 2 auto-splitting is still acceptable
 
@@ -815,7 +804,7 @@ If you are testing a telemetry export, point `ADAPTER_DIR` at the export folder 
 
 ## Validation Commands
 
-Run these before or after notebook-related changes:
+Start with the maintained validation commands from [../../README.md](../../README.md). For notebook-only changes, the narrowest common subset is:
 
 ```powershell
 .\scripts\python.cmd scripts/validate_notebook_imports.py

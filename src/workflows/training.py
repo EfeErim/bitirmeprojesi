@@ -28,7 +28,6 @@ from src.training.services.reporting import (
     load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_production_readiness_artifact,
-    persist_provenance_slice_breakdown_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_run_context_artifact,
@@ -38,9 +37,6 @@ from src.training.services.reporting import (
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_readiness import (
     build_production_readiness_context as build_production_readiness_context_payload,
-)
-from src.workflows.training_readiness import (
-    build_provenance_slice_breakdown as build_provenance_slice_breakdown_payload,
 )
 from src.workflows.training_readiness import (
     build_training_summary_payload as build_training_summary_payload_dict,
@@ -56,9 +52,6 @@ from src.workflows.training_readiness import (
 )
 from src.workflows.training_readiness import (
     select_authoritative_evaluation as select_authoritative_evaluation_payload,
-)
-from src.workflows.training_readiness import (
-    summarize_provenance_slice_breakdown as summarize_provenance_slice_breakdown_payload,
 )
 from src.workflows.training_support import (
     build_artifact_payload,
@@ -1034,15 +1027,6 @@ class TrainingWorkflow:
             ood_evidence_source=ood_evidence_source,
             ood_benchmark=ood_benchmark,
         )
-        provenance_breakdown = build_provenance_slice_breakdown_payload(
-            crop_root=runtime_crop_root,
-            classification_split=(authoritative_split or authoritative_evaluation_split),
-            authoritative_evaluation=authoritative_evaluation,
-        )
-        provenance_summary = summarize_provenance_slice_breakdown_payload(provenance_breakdown)
-        provenance_warnings = [
-            str(item) for item in list(provenance_breakdown.get("warnings", [])) if str(item).strip()
-        ]
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
             classification_metric_gate=(
@@ -1066,22 +1050,11 @@ class TrainingWorkflow:
                 selected_primary_score_method=primary_score_stage.selected_method,
                 selection_source=primary_score_stage.selection_source,
                 ood_benchmark=ood_benchmark,
-                provenance_summary=provenance_summary,
-                provenance_warnings=provenance_warnings,
                 ood_method_comparison=ood_method_comparison_context,
             ),
             require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
             telemetry=telemetry,
         )
-        if bool(provenance_breakdown.get("available", False)):
-            readiness_artifacts = {
-                **readiness_artifacts,
-                **persist_provenance_slice_breakdown_artifact(
-                    artifact_root=artifact_dir,
-                    payload=provenance_breakdown,
-                    telemetry=telemetry,
-                ),
-            }
         production_readiness = dict(readiness_artifacts.get("payload", {}))
         record_adapter_export_metadata_payload(
             adapter,

@@ -9,7 +9,6 @@ from src.training.services.reporting import (
     load_batch_metrics_history,
     persist_batch_metrics_artifacts,
     persist_production_readiness_artifact,
-    persist_provenance_slice_breakdown_artifact,
     persist_training_history_artifacts,
     persist_training_results_figure,
     persist_training_run_context_artifact,
@@ -293,28 +292,6 @@ def test_reporting_prefers_real_fpr_when_building_worst_slice_summary(tmp_path: 
     comparison = json.loads(result["paths"]["ood_method_comparison_json"].read_text(encoding="utf-8"))
     assert comparison["methods"]["energy"]["worst_slice"]["slice_name"] == "blur"
     assert comparison["methods"]["energy"]["worst_slice"]["metrics"]["ood_false_positive_rate"] == 0.08
-def test_reporting_writes_provenance_slice_breakdown_artifact(tmp_path: Path):
-    result = persist_provenance_slice_breakdown_artifact(
-        artifact_root=tmp_path / "training_metrics",
-        payload={
-            "schema_version": "v1_provenance_slice_breakdown",
-            "available": True,
-            "classification_split": "test",
-            "matched_sample_count": 10,
-            "dimensions": {
-                "source_dataset": {
-                    "reported_slice_count": 2,
-                    "worst_slices": {"accuracy": {"name": "set_b", "sample_count": 5}},
-                }
-            },
-        },
-    )
-
-    artifact_path = result["provenance_slice_breakdown_json"]
-    assert artifact_path.exists()
-    payload = json.loads(artifact_path.read_text(encoding="utf-8"))
-    assert payload["classification_split"] == "test"
-    assert payload["dimensions"]["source_dataset"]["reported_slice_count"] == 2
 
 def test_reporting_refreshes_guided_catalog_for_training_outputs(tmp_path: Path):
     artifact_root = tmp_path / "training_metrics"

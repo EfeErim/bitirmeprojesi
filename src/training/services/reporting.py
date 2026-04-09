@@ -776,21 +776,6 @@ def persist_ood_benchmark_artifacts(
     _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {"summary_json": summary_json, "per_fold_csv": per_fold_csv}
 
-
-
-def persist_provenance_slice_breakdown_artifact(
-    *,
-    artifact_root: Path,
-    payload: Dict[str, Any],
-    telemetry: Any = None,
-) -> Dict[str, Path]:
-    artifact_root = Path(artifact_root)
-    artifact_root.mkdir(parents=True, exist_ok=True)
-    provenance_json = ArtifactStore(artifact_root).write_json("provenance_slice_breakdown.json", payload)
-    _copy_artifacts_to_telemetry(telemetry, [(provenance_json, "provenance_slice_breakdown.json")])
-    _refresh_guided_outputs(artifact_root, telemetry=telemetry)
-    return {"provenance_slice_breakdown_json": provenance_json}
-
 def persist_production_readiness_artifact(
     *,
     artifact_root: Path,

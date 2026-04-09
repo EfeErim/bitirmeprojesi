@@ -125,16 +125,6 @@ TRAINING_STATIC_ENTRY_SPECS = [
         "read_order": 5,
     },
     {
-        "relative_path": "provenance_slice_breakdown.json",
-        "category": "ood_and_readiness",
-        "priority": "medium",
-        "title_tr": "Provenance dilim kırılımı",
-        "description_tr": "Authoritative ID split üzerinde provenance slice metriklerini raporlar.",
-        "reader_goal": "Kaynak veya domain slice kaymalarını incelemek",
-        "decision_importance": "supporting_diagnostic",
-        "read_order": 6,
-    },
-    {
         "relative_path": "training/history.json",
         "category": "training",
         "priority": "high",

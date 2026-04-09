@@ -47,13 +47,6 @@ DINO_CROSS_CLASS_BLOCK_MIN = 0.990
 BIOCLIP_CROSS_CLASS_BLOCK_MIN = 0.980
 DEFAULT_NEIGHBORS = 8
 SOURCE_HINT_UNKNOWN = "unknown"
-PROVENANCE_FIELDS = (
-    "source_dataset",
-    "source_subset",
-    "capture_group_id",
-    "domain_tag",
-)
-DEFAULT_PROVENANCE_MANIFEST_FILENAME = "provenance_manifest.csv"
 QUALITY_WARN_MIN_SIZE = 224
 QUALITY_CRITICAL_MIN_SIZE = 160
 SYNTHETIC_HINT_KEYWORDS = (
@@ -121,10 +114,6 @@ class ImageRecord:
     raw_class_name: str
     normalized_class_name: str
     source_hint: str
-    source_dataset: str
-    source_subset: str
-    capture_group_id: str
-    domain_tag: str
     source_like_group: str
     synthetic_hint: bool
     eval_quality_risk: bool
@@ -249,115 +238,6 @@ def _normalize_relative_path(value: Any) -> str:
     return normalized.strip("/")
 
 
-def _resolve_provenance_manifest_path(
-    *,
-    class_root: Path,
-    provenance_manifest_path: Optional[Path],
-) -> tuple[Optional[Path], str]:
-    if provenance_manifest_path is not None:
-        candidate = Path(provenance_manifest_path).expanduser()
-        if not candidate.is_absolute():
-            candidate = candidate.resolve()
-        return candidate, "explicit"
-    candidate = Path(class_root) / DEFAULT_PROVENANCE_MANIFEST_FILENAME
-    if candidate.is_file():
-        return candidate, "auto"
-    return None, "missing"
-
-
-def _load_provenance_rows(
-    *,
-    class_root: Path,
-    records: Sequence[ImageRecord],
-    provenance_manifest_path: Optional[Path],
-) -> Dict[str, Any]:
-    manifest_path, resolution_source = _resolve_provenance_manifest_path(
-        class_root=class_root,
-        provenance_manifest_path=provenance_manifest_path,
-    )
-    warnings: List[str] = []
-    summary: Dict[str, Any] = {
-        "path": ("" if manifest_path is None else str(manifest_path)),
-        "resolution_source": str(resolution_source),
-        "available": False,
-        "matched_rows": 0,
-        "manifest_rows": 0,
-        "dataset_rows": int(len(records)),
-        "unmatched_manifest_rows": 0,
-        "missing_record_rows": int(len(records)),
-        "duplicate_relative_paths": 0,
-        "warnings": warnings,
-    }
-    if manifest_path is None:
-        warnings.append("Provenance manifest was not provided; continuing without provenance metadata.")
-        return summary
-    if not manifest_path.is_file():
-        warnings.append(f"Provenance manifest was not found: {manifest_path}")
-        return summary
-
-    with manifest_path.open("r", encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        fieldnames = [str(name).strip() for name in list(reader.fieldnames or [])]
-        if "relative_path" not in fieldnames:
-            warnings.append("Provenance manifest is missing required 'relative_path' column; file was ignored.")
-            return summary
-
-        manifest_rows = [dict(row) for row in reader if isinstance(row, dict)]
-
-    indexed_rows: Dict[str, Dict[str, str]] = {}
-    duplicate_relative_paths = 0
-    for row in manifest_rows:
-        normalized_relative_path = _normalize_relative_path(row.get("relative_path"))
-        if not normalized_relative_path:
-            continue
-        if normalized_relative_path in indexed_rows:
-            duplicate_relative_paths += 1
-        indexed_rows[normalized_relative_path] = {
-            field_name: str(row.get(field_name, "") or "").strip()
-            for field_name in PROVENANCE_FIELDS
-        }
-
-    dataset_relative_paths = {
-        _normalize_relative_path(record.relative_path)
-        for record in records
-    }
-    matched_rows = 0
-    for record in records:
-        row = indexed_rows.get(_normalize_relative_path(record.relative_path))
-        if not row:
-            continue
-        matched_rows += 1
-        for field_name in PROVENANCE_FIELDS:
-            setattr(record, field_name, str(row.get(field_name, "") or "").strip())
-
-    unmatched_manifest_rows = len(
-        [path for path in indexed_rows.keys() if path not in dataset_relative_paths]
-    )
-    summary.update(
-        {
-            "available": True,
-            "matched_rows": int(matched_rows),
-            "manifest_rows": int(len(indexed_rows)),
-            "unmatched_manifest_rows": int(unmatched_manifest_rows),
-            "missing_record_rows": int(max(0, len(records) - matched_rows)),
-            "duplicate_relative_paths": int(duplicate_relative_paths),
-        }
-    )
-    if summary["missing_record_rows"] > 0:
-        warnings.append(
-            f"{summary['missing_record_rows']} dataset image(s) had no matching provenance row."
-        )
-    if unmatched_manifest_rows > 0:
-        warnings.append(
-            f"{unmatched_manifest_rows} provenance row(s) did not match any dataset image."
-        )
-    if duplicate_relative_paths > 0:
-        warnings.append(
-            f"{duplicate_relative_paths} duplicate provenance row(s) overwrote earlier entries by relative_path."
-        )
-    return summary
-
-
 def _infer_source_hint(class_dir: Path, image_path: Path) -> str:
     relative = image_path.relative_to(class_dir)
     if len(relative.parts) <= 1:
@@ -398,17 +278,6 @@ def _stem_family_fingerprint(relative_path: str) -> str:
 
 
 def _infer_source_like_group(record: ImageRecord) -> str:
-    capture_group = normalize_class_name(record.capture_group_id)
-    if capture_group:
-        return f"capture:{capture_group}"
-
-    source_dataset = normalize_class_name(record.source_dataset)
-    source_subset = normalize_class_name(record.source_subset)
-    if source_dataset and source_subset:
-        return f"dataset:{source_dataset}:{source_subset}"
-    if source_dataset:
-        return f"dataset:{source_dataset}"
-
     normalized_path = normalize_class_name(record.relative_path)
     for keyword in SOURCE_LIKE_WEBSITE_KEYWORDS:
         if keyword not in normalized_path:
@@ -427,10 +296,6 @@ def _infer_source_like_group(record: ImageRecord) -> str:
     if "ekran_goruntusu" in normalized_path or "ekran_görüntüsü" in normalized_path or "screenshot" in normalized_path:
         stem_fingerprint = _stem_family_fingerprint(record.relative_path)
         return f"screenshot:{stem_fingerprint or 'batch'}"
-
-    domain_tag = normalize_class_name(record.domain_tag)
-    if domain_tag and domain_tag not in {"unknown", "other"}:
-        return f"domain:{domain_tag}"
 
     if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN:
         return f"hint:{normalize_class_name(record.source_hint)}"
@@ -524,7 +389,6 @@ def scan_class_root_dataset(
     class_root: Path,
     crop_name: str,
     taxonomy_path: Optional[Path] = None,
-    provenance_manifest_path: Optional[Path] = None,
 ) -> tuple[List[ImageRecord], Dict[str, Any]]:
     expected_classes = _load_taxonomy_expected_classes(crop_name, taxonomy_path)
     records: List[ImageRecord] = []
@@ -583,10 +447,6 @@ def scan_class_root_dataset(
                     raw_class_name=class_dir.name,
                     normalized_class_name=normalized_class_name,
                     source_hint=source_hint,
-                    source_dataset="",
-                    source_subset="",
-                    capture_group_id="",
-                    domain_tag="",
                     source_like_group=SOURCE_LIKE_GROUP_UNKNOWN,
                     synthetic_hint=synthetic_hint,
                     eval_quality_risk=False,
@@ -603,15 +463,9 @@ def scan_class_root_dataset(
             )
             class_order_index += 1
     normalization_report["unmatched_raw_classes"] = sorted(set(normalization_report["unmatched_raw_classes"]))
-    provenance_summary = _load_provenance_rows(
-        class_root=class_root,
-        records=records,
-        provenance_manifest_path=provenance_manifest_path,
-    )
     for record in records:
         record.source_like_group = _infer_source_like_group(record)
         record.eval_quality_risk = _has_eval_quality_risk(record)
-    normalization_report["provenance_manifest"] = provenance_summary
     return records, normalization_report
 
 
@@ -1099,7 +953,6 @@ def build_grouped_dataset_plan(
     class_root: Path,
     crop_name: str,
     artifact_root: Path,
-    provenance_manifest_path: Optional[Path] = None,
     taxonomy_path: Optional[Path] = None,
     dino_model_id: str = DEFAULT_DINOV3_MODEL_ID,
     bioclip_model_id: str = DEFAULT_BIOCLIP_MODEL_ID,
@@ -1119,7 +972,6 @@ def build_grouped_dataset_plan(
     records, normalization_report = scan_class_root_dataset(
         class_root=class_root,
         crop_name=crop_name,
-        provenance_manifest_path=provenance_manifest_path,
         taxonomy_path=taxonomy_path,
     )
     artifact_root.mkdir(parents=True, exist_ok=True)
@@ -1464,10 +1316,6 @@ def build_grouped_dataset_plan(
                     "raw_class_name": item.raw_class_name,
                     "normalized_class_name": item.normalized_class_name,
                     "source_hint": item.source_hint,
-                    "source_dataset": item.source_dataset,
-                    "source_subset": item.source_subset,
-                    "capture_group_id": item.capture_group_id,
-                    "domain_tag": item.domain_tag,
                     "source_like_group": item.source_like_group,
                     "synthetic_hint": item.synthetic_hint,
                     "eval_quality_risk": item.eval_quality_risk,
@@ -1493,7 +1341,6 @@ def build_grouped_dataset_plan(
         "schema_version": "v1_grouped_data_prep",
         "crop_name": str(crop_name),
         "source_root": str(class_root.resolve()),
-        "provenance_manifest": dict(normalization_report.get("provenance_manifest", {})),
         "summary": {
             "total_images": len(records),
             "readable_images": len(valid_records),
@@ -1538,7 +1385,6 @@ def build_grouped_dataset_plan(
             "schema_version": "v1_grouped_split_manifest",
             "crop_name": str(crop_name),
             "source_root": str(class_root.resolve()),
-            "provenance_manifest": dict(normalization_report.get("provenance_manifest", {})),
             "blocking_issues": list(blocking_issues),
             "runtime_ready": bool(summary["runtime_ready"]),
             "rows": manifest_rows,
@@ -1677,7 +1523,6 @@ def materialize_grouped_runtime_dataset(
             "source_root": str(class_root.resolve()),
             "artifact_root": str(artifact_root.resolve()),
             "split_policy": "grouped_family_canonical_eval",
-            "provenance_manifest": dict(manifest.get("provenance_manifest", {})),
             "ood": ood_manifest,
             "rows": rows,
         },
@@ -1745,12 +1590,6 @@ def main() -> int:
     parser.add_argument("--device", type=str, default="cpu", help="Embedding device (cpu or cuda).")
     parser.add_argument("--batch-size", type=int, default=16, help="Embedding batch size.")
     parser.add_argument("--neighbors", type=int, default=DEFAULT_NEIGHBORS, help="Neighbors per image.")
-    parser.add_argument(
-        "--provenance-manifest",
-        type=Path,
-        default=None,
-        help="Optional CSV sidecar with relative_path and provenance metadata columns.",
-    )
     parser.add_argument("--materialize", action="store_true", help="Materialize runtime dataset if no blockers.")
     parser.add_argument(
         "--runtime-root",
@@ -1770,7 +1609,6 @@ def main() -> int:
         class_root=args.root,
         crop_name=args.crop,
         artifact_root=args.artifact_root,
-        provenance_manifest_path=args.provenance_manifest,
         taxonomy_path=args.taxonomy_path,
         device=args.device,
         batch_size=args.batch_size,

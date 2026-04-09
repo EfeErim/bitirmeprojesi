@@ -226,10 +226,6 @@ def _write_runtime_dataset(runtime_root: Path) -> Path:
                     "normalized_class_name": class_name,
                     "relative_path": f"{class_name}/{filename}",
                     "runtime_relative_path": f"{split_name}/{class_name}/{filename}",
-                    "source_dataset": "offline_fixture",
-                    "source_subset": split_name,
-                    "capture_group_id": f"group_{class_name}",
-                    "domain_tag": "lab",
                     "source_hint": "generated",
                 }
             )
@@ -243,7 +239,6 @@ def _write_runtime_dataset(runtime_root: Path) -> Path:
                     {"class_name": "disease_a", "image_count": 130},
                 ],
                 "rows": manifest_rows,
-                "provenance_manifest": {"available": True},
             },
             indent=2,
         ),

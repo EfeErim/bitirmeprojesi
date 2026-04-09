@@ -309,55 +309,7 @@ def test_training_workflow_prefers_real_ood_evidence(monkeypatch, tmp_path: Path
     assert (result.artifact_dir / "production_readiness.json").exists()
 
 
-def test_training_workflow_persists_provenance_slice_breakdown_and_method_comparison(monkeypatch, tmp_path: Path):
-    crop_root = tmp_path / "runtime_data" / "tomato"
-    crop_root.mkdir(parents=True, exist_ok=True)
-
-    manifest_rows = []
-    for index in range(10):
-        class_name = "healthy" if index % 2 == 0 else "disease_a"
-        manifest_rows.append(
-            {
-                "split": "test",
-                "raw_class_name": class_name,
-                "normalized_class_name": class_name,
-                "relative_path": f"{class_name}/img_{index}.jpg",
-                "runtime_relative_path": f"test/{class_name}/img_{index}.jpg",
-                "source_dataset": "set_a" if index < 5 else "set_b",
-                "source_subset": "subset_a" if index < 5 else "subset_b",
-                "capture_group_id": f"group_{index // 5}",
-                "domain_tag": "field" if index < 5 else "lab",
-                "source_hint": "original",
-            }
-        )
-    (crop_root / "split_manifest.json").write_text(
-        json.dumps({"rows": manifest_rows, "provenance_manifest": {"available": True}}, indent=2),
-        encoding="utf-8",
-    )
-
-    def _prediction_rows(split_name: str) -> list[dict]:
-        rows = []
-        set_b_predictions = [0, 0, 0, 1, 1]
-        for index in range(10):
-            class_name = "healthy" if index % 2 == 0 else "disease_a"
-            true_index = index % 2
-            pred_index = true_index if index < 5 else set_b_predictions[index - 5]
-            rows.append(
-                {
-                    "sample_origin": "in_distribution",
-                    "split_name": split_name,
-                    "image_path": str(crop_root / split_name / class_name / f"img_{index}.jpg"),
-                    "true_index": true_index,
-                    "pred_index": pred_index,
-                    "true_label": class_name,
-                    "pred_label": class_name
-                    if pred_index == true_index
-                    else ("healthy" if pred_index == 0 else "disease_a"),
-                    "is_correct": pred_index == true_index,
-                }
-            )
-        return rows
-
+def test_training_workflow_persists_ood_method_comparison(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(
         "src.workflows.training.create_training_loaders",
         lambda **kwargs: {
@@ -369,7 +321,7 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
     )
     monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
 
-    def _evaluation_with_provenance(_trainer, loader, *, ood_loader=None):
+    def _evaluation_with_method_comparison(_trainer, loader, *, ood_loader=None):
         split_name = getattr(loader, "split_name", "test")
         report = ValidationReport(
             val_loss=0.05,
@@ -388,7 +340,18 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
             report=report,
             y_true=[0, 1, 0, 1],
             y_pred=[0, 1, 0, 1],
-            prediction_rows=_prediction_rows(split_name),
+            prediction_rows=[
+                {
+                    "sample_origin": "in_distribution",
+                    "split_name": split_name,
+                    "image_path": str(tmp_path / split_name / "healthy" / "img_0.jpg"),
+                    "true_index": 0,
+                    "pred_index": 0,
+                    "true_label": "healthy",
+                    "pred_label": "healthy",
+                    "is_correct": True,
+                }
+            ],
             ood_labels=([0, 0, 0, 0, 0, 1, 1, 1, 1, 1] if include_ood else None),
             ood_scores=([0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92] if include_ood else None),
             ood_primary_score_method="ensemble",
@@ -419,7 +382,7 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
 
     monkeypatch.setattr(
         "src.workflows.training.evaluate_model_with_artifact_metrics",
-        _evaluation_with_provenance,
+        _evaluation_with_method_comparison,
     )
     monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
 
@@ -446,10 +409,7 @@ def test_training_workflow_persists_provenance_slice_breakdown_and_method_compar
         output_dir=tmp_path / "outputs",
     )
 
-    assert (result.artifact_dir / "provenance_slice_breakdown.json").exists()
     assert (result.artifact_dir / "test" / "ood_method_comparison.json").exists()
-    assert result.production_readiness["context"]["provenance_summary"]["available"] is True
-    assert result.production_readiness["context"]["provenance_summary"]["reported_dimension_count"] >= 1
     assert (
         result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
     )
