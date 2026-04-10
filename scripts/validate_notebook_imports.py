@@ -325,6 +325,7 @@ def test_colab_helpers() -> None:
         export_current_colab_notebook,
         mirror_checkpoint_state_to_repo,
         mirror_path_to_repo,
+        push_repo_paths_to_github,
         push_repo_run_to_github,
     )
     from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui
@@ -340,6 +341,7 @@ def test_colab_helpers() -> None:
     assert callable(export_current_colab_notebook)
     assert callable(mirror_checkpoint_state_to_repo)
     assert callable(mirror_path_to_repo)
+    assert callable(push_repo_paths_to_github)
     assert callable(push_repo_run_to_github)
     assert callable(launch_simple_adapter_smoke_ui)
     assert callable(prepare_class_root_for_materialization)
@@ -410,6 +412,9 @@ def test_data_prep_notebook_contract() -> None:
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
         "MATERIALIZE_AFTER_REVIEW =",
+        "SAVE_RUNTIME_DATASET_TO_GITHUB =",
+        "RUNTIME_DATASET_PUSH_REMOTE_NAME =",
+        "RUNTIME_DATASET_PUSH_BRANCH =",
         "CLEANUP_SEED =",
         "PREP_DINOV3_MODEL_ID =",
         "PREP_BIOCLIP_MODEL_ID =",
@@ -427,6 +432,8 @@ def test_data_prep_notebook_contract() -> None:
     assert 'STATE["dataset_source"] = dataset_source' in sources.full_source
     assert "MATERIALIZE_AFTER_REVIEW = True" in sources.full_source
     assert "materialize_grouped_runtime_dataset" in sources.full_source
+    assert "push_repo_paths_to_github" in sources.full_source
+    assert "runtime_dataset_push_report" in sources.full_source
 
 
 def test_repo_dataset_scaffold() -> None:

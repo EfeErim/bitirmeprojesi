@@ -11,7 +11,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, List, Optional, Sequence
 from urllib.parse import urlsplit, urlunsplit
 
 HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
@@ -459,6 +459,76 @@ def push_repo_run_to_github(
         "branch": resolved_branch,
         "remote_name": remote_name,
         "run_dir": str(run_dir),
+        "staged_files": staged_files,
+    }
+
+
+def push_repo_paths_to_github(
+    repo_root: str | Path,
+    relative_paths: Sequence[str | Path],
+    *,
+    remote_name: str = "origin",
+    branch: Optional[str] = None,
+    commit_message: Optional[str] = None,
+    token: Optional[str] = None,
+    print_fn: Optional[Callable[[str], None]] = None,
+) -> dict[str, object]:
+    """Force-add selected repo-relative paths, commit them, and push to GitHub."""
+    emit = print if print_fn is None else print_fn
+    repo = Path(repo_root).expanduser().resolve()
+    if not is_repo_root(repo):
+        raise FileNotFoundError(f"Repository root not found: {repo}")
+
+    normalized_paths: List[str] = []
+    for raw_path in relative_paths:
+        raw_text = str(raw_path).strip().replace("\\", "/")
+        if raw_text.startswith("/") or ":" in raw_text.split("/", 1)[0]:
+            raise ValueError(f"Path must be repo-relative and stay inside the repo: {raw_path}")
+        relative = Path(raw_text).as_posix().strip().strip("/")
+        if not relative or relative.startswith("../") or "/../" in relative:
+            raise ValueError(f"Path must be repo-relative and stay inside the repo: {raw_path}")
+        normalized_paths.append(relative)
+    if not normalized_paths:
+        raise ValueError("At least one repo-relative path is required.")
+
+    resolved_token = str(token or resolve_github_token() or "").strip()
+    if not resolved_token:
+        raise RuntimeError("GitHub auto-push requires GH_TOKEN or GITHUB_TOKEN in env vars or Colab secrets.")
+
+    resolved_branch = str(branch or os.environ.get("AADS_REPO_PUSH_BRANCH") or _git_current_branch(repo) or "").strip()
+    if not resolved_branch:
+        raise RuntimeError("Could not determine the target git branch for auto-push.")
+
+    remote_url = _git_remote_url(repo, remote_name)
+    push_url = _build_authenticated_remote_url(remote_url, resolved_token)
+
+    _run_git(["config", "user.name", os.environ.get("AADS_GIT_USER_NAME", "AADS Colab")], cwd=repo)
+    _run_git(["config", "user.email", os.environ.get("AADS_GIT_USER_EMAIL", "aads-colab@local")], cwd=repo)
+    _run_git(["add", "-A", "-f", "--", *normalized_paths], cwd=repo)
+
+    staged = _run_git(["diff", "--cached", "--name-only", "--", *normalized_paths], cwd=repo, capture_output=True)
+    staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
+    if not staged_files:
+        emit(f"[GIT] No eligible changes to push for: {', '.join(normalized_paths)}.")
+        return {
+            "enabled": True,
+            "pushed": False,
+            "branch": resolved_branch,
+            "remote_name": remote_name,
+            "paths": normalized_paths,
+            "staged_files": [],
+        }
+
+    message = str(commit_message or f"Add generated repo assets: {', '.join(normalized_paths)}")
+    _run_git(["commit", "-m", message, "--", *normalized_paths], cwd=repo)
+    _run_git(["push", push_url, f"HEAD:{resolved_branch}"], cwd=repo)
+    emit(f"[GIT] Pushed {len(staged_files)} file(s) from {', '.join(normalized_paths)} to {remote_name}/{resolved_branch}.")
+    return {
+        "enabled": True,
+        "pushed": True,
+        "branch": resolved_branch,
+        "remote_name": remote_name,
+        "paths": normalized_paths,
         "staged_files": staged_files,
     }
 

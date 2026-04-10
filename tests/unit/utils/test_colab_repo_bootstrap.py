@@ -356,6 +356,58 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     assert push_calls
     assert "gh-secret@" in push_calls[0][2]
 
+
+def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for name in ("src", "config", "scripts"):
+        (repo_root / name).mkdir(parents=True, exist_ok=True)
+    runtime_file = repo_root / "data" / "prepared_runtime_datasets" / "grape__fruit" / "split_manifest.json"
+    runtime_file.parent.mkdir(parents=True, exist_ok=True)
+    runtime_file.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    calls: list[list[str]] = []
+
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None):
+        calls.append(list(command))
+        args = list(command[1:])
+        if args == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
+        if args[:4] == ["diff", "--cached", "--name-only", "--"]:
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout="data/prepared_runtime_datasets/grape__fruit/split_manifest.json\n",
+            )
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    result = bootstrap.push_repo_paths_to_github(
+        repo_root,
+        ["data/prepared_runtime_datasets/grape__fruit"],
+        commit_message="Add prepared runtime dataset grape__fruit",
+        print_fn=lambda _: None,
+    )
+
+    assert result["pushed"] is True
+    add_calls = [call for call in calls if call[1] == "add"]
+    assert add_calls
+    assert add_calls[0][1:5] == ["add", "-A", "-f", "--"]
+    assert add_calls[0][-1] == "data/prepared_runtime_datasets/grape__fruit"
+
+    commit_calls = [call for call in calls if call[1] == "commit"]
+    assert commit_calls
+    assert commit_calls[0][-2:] == ["--", "data/prepared_runtime_datasets/grape__fruit"]
+
+    push_calls = [call for call in calls if call[1] == "push"]
+    assert push_calls
+    assert "gh-secret@" in push_calls[0][2]
+
+
 def test_probe_repo_update_status_reports_available_update(tmp_path: Path, monkeypatch):
     repo_root = tmp_path / "repo"
     for name in ("src", "config", "scripts"):

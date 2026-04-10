@@ -23,8 +23,9 @@ Practical flow:
 Rules:
 
 - Keep `data/ood_dataset/` for reusable OOD pools only. Nested folders are for organization, not class labels.
-- Keep `data/prepared_class_root_datasets/` and `data/prepared_runtime_datasets/` as local-only working areas unless you explicitly intend to change repo policy.
-- Do not commit runtime splits, manifests, or notebook-generated artifacts under `data/`.
+- Keep `data/prepared_class_root_datasets/` as a local-only working area.
+- `data/prepared_runtime_datasets/` is still ignored by default, but Notebook 0 can force-add and push a ready runtime dataset when `SAVE_RUNTIME_DATASET_TO_GITHUB=True`.
+- Do not commit other runtime splits, manifests, or notebook-generated artifacts under `data/` unless the notebook is explicitly pushing the prepared runtime dataset for reuse.
 - If you need a different local dataset location, override the notebook parameter instead of changing the tracked scaffold.
 
 Expected class-root input shape:

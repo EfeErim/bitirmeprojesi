@@ -117,8 +117,9 @@ This is the current Notebook 0 flow from start to finish:
 8. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
 9. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
 10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
+11. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub
 
-Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy and materializes the runtime dataset automatically after a clean audit; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass.
+Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy, materializes the runtime dataset after a clean audit, and pushes the ready runtime dataset to GitHub; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass, and set `SAVE_RUNTIME_DATASET_TO_GITHUB=False` only when you want the prepared runtime dataset to remain local to the Colab checkout.
 
 If a class has zero evaluation-eligible families after grouped prep, Notebook 0 records it under `skipped_classes` and omits that class from the materialized runtime dataset. Classes with only one or two eligible families still block materialization because they cannot support the maintained `continual`/`val`/`test` split contract.
 
@@ -532,13 +533,13 @@ Notebook 2 and the direct-adapter notebooks resolve the Hugging Face token from 
 
 The notebook validates the token before model access.
 
-Notebook 2 also resolves the GitHub push token from:
+Notebook 0 and Notebook 2 resolve the GitHub push token from:
 
 - `GH_TOKEN`
 - `GITHUB_TOKEN`
 - matching Colab secrets when running inside Colab
 
-If auto-push is enabled, the notebook uses that token after the repo mirror step.
+If auto-push is enabled, Notebook 0 uses that token to push `data/prepared_runtime_datasets/<dataset_key>/`, and Notebook 2 uses it after the repo mirror step.
 
 The same token is also used by the notebook bootstrap when it needs to clone a private GitHub repo into the Colab runtime.
 
