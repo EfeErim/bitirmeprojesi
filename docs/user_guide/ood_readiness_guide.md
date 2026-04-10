@@ -500,7 +500,7 @@ Whenever possible. Real unknown examples are the strongest current evidence sour
 
 ## BER Note
 
-`training.continual.ood.ber_enabled` is currently a training-only regularizer.
+`training.continual.ood.ber_enabled` is currently a training-only regularizer. It is disabled by default because the maintained new-adapter workflow initializes all supported classes at once; BER is most relevant when you explicitly add classes to an existing adapter.
 
 It does not change:
 

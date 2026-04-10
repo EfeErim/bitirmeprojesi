@@ -209,7 +209,7 @@ class ContinualSDLoRAConfig:
     grad_accumulation_steps: int = 4
     max_grad_norm: float = 1.0
     mixed_precision: str = "auto"
-    loss_name: str = "cross_entropy"
+    loss_name: str = "logitnorm"
     logitnorm_tau: float = 1.0
     label_smoothing: float = 0.0
     scheduler_name: str = "cosine"
@@ -486,7 +486,7 @@ class ContinualSDLoRAConfig:
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 4)),
             max_grad_norm=float(optimization.get("max_grad_norm", 1.0)),
             mixed_precision=str(optimization.get("mixed_precision", "auto")),
-            loss_name=str(optimization.get("loss_name", "cross_entropy")),
+            loss_name=str(optimization.get("loss_name", "logitnorm")),
             logitnorm_tau=float(optimization.get("logitnorm_tau", 1.0)),
             label_smoothing=float(optimization.get("label_smoothing", 0.0)),
             scheduler_name=str(scheduler.get("name", "cosine")),

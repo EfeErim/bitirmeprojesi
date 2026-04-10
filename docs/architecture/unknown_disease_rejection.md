@@ -42,8 +42,8 @@ Current maintained behavior:
 - the repo also exposes:
   - SURE+/DS-F1-inspired double scoring as diagnostic evidence
   - conformal thresholding or APS/RAPS set-valued prediction
-  - BER as an optional training regularizer
-  - LogitNorm as an opt-in alternative training loss
+  - LogitNorm as the default training loss
+  - BER as an optional incremental-training regularizer when explicitly enabled with cross-entropy
 
 Relevant current files:
 
@@ -145,7 +145,7 @@ Implication for this repo:
 
 ### 6. Overconfidence control is a realistic training lever
 
-LogitNorm directly targets overconfidence and is relatively low-risk to integrate into a standard classification pipeline.
+LogitNorm directly targets overconfidence and is relatively low-risk in a standard classification pipeline.
 
 Source:
 
@@ -154,7 +154,7 @@ Source:
 
 Implication for this repo:
 
-- LogitNorm is a strong candidate for controlled ablation against the current BER or plain cross-entropy path
+- LogitNorm is now the shipped default; BER and plain cross-entropy remain controlled comparison paths
 
 ### 7. Plant-disease-specific evidence suggests fine-tuning style matters
 
@@ -177,7 +177,7 @@ Given the current architecture, the most defensible near-term path is:
 1. Keep the maintained post-hoc detector stack.
 2. Prioritize semantic unknown evaluation slices.
 3. Compare `ensemble`, `energy`, and `knn` explicitly on those slices.
-4. Run a controlled `LogitNorm` ablation.
+4. Keep a controlled cross-entropy or BER ablation if LogitNorm hurts a crop-specific run.
 5. If needed, add small-scale auxiliary outlier exposure.
 6. Use APS/RAPS when the desired product behavior is abstention rather than a binary OOD-only flag.
 
@@ -242,7 +242,7 @@ At minimum report:
 
 ### Medium-risk experiments
 
-1. Disable BER and run `loss_name="logitnorm"`.
+1. Compare the LogitNorm default against an explicit `loss_name="cross_entropy"` baseline.
 2. Add a small auxiliary outlier set for OE-style training.
 3. Re-run the same method comparison on the same unknown slices.
 
@@ -270,7 +270,7 @@ Best next move:
 
 - focus on unknown disease rejection as a semantic near-OOD benchmark
 - compare `ensemble`, `energy`, and `knn` explicitly
-- run controlled `LogitNorm` and small auxiliary outlier ablations
+- compare the LogitNorm default against cross-entropy and small auxiliary outlier ablations
 
 If the repo needs one sentence of guidance, it is this:
 

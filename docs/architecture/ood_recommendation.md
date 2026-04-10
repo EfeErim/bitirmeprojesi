@@ -13,7 +13,7 @@ Recommended direction:
 1. Keep the current production-readiness flow and held-out fallback benchmark.
 2. Add a small reusable real `data/<crop>/ood/` pool with realistic hard negatives.
 3. Upgrade the scoring path to evaluate an energy-centric score plus a non-parametric nearest-neighbor score alongside the current detector.
-4. Add a low-risk overconfidence control such as LogitNorm during training.
+4. Keep LogitNorm as the default low-risk overconfidence control during training.
 5. Only after that, consider OE-style training or a learned reject option.
 
 If only one thing can be done next, it should be step 2: add a small real OOD pool and use it consistently across runs.
@@ -69,12 +69,12 @@ Inference for this repo:
 
 ### 4. Reducing overconfidence during training is a cheap improvement
 
-LogitNorm targets overconfidence directly and is simple to add to a cross-entropy training loop.  
+LogitNorm targets overconfidence directly and is simple to keep in the classifier loss path.
 Source: [Wei et al., 2022, ICML](https://proceedings.mlr.press/v162/wei22d.html)
 
 Inference for this repo:
 
-- LogitNorm is a better near-term training experiment than a large redesign
+- LogitNorm is a better maintained training default than a large redesign
 - it is likely cheaper to integrate than a full new OOD model family
 
 ### 5. Strong pretrained features still matter
@@ -147,7 +147,7 @@ Why this phase is second:
 
 Recommendation:
 
-- run a controlled experiment with LogitNorm in the classifier loss path
+- run a controlled cross-entropy comparison against the LogitNorm classifier loss path
 - accept it only if it preserves or improves known-class accuracy while improving OOD rejection
 
 Why this phase is third:
@@ -224,7 +224,7 @@ If I had to choose one concrete roadmap for this repo, it would be:
 1. Keep the current hard-gated readiness flow.
 2. Build a small reusable real `ood/` pool for each crop.
 3. Add energy and deep-kNN as competing OOD scores.
-4. Trial LogitNorm.
+4. Compare cross-entropy against the LogitNorm default.
 5. Add OE only if the earlier steps are still insufficient.
 
 That path is the best balance of:

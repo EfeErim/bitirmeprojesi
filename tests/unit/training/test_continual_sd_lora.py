@@ -41,7 +41,11 @@ def test_config_from_training_config_accepts_v6_contract():
                 "knn_backend": "chunked",
                 "conformal_method": "aps",
             },
-            "optimization": {"grad_accumulation_steps": 2, "scheduler": {"name": "linear"}},
+            "optimization": {
+                "grad_accumulation_steps": 2,
+                "loss_name": "cross_entropy",
+                "scheduler": {"name": "linear"},
+            },
             "evaluation": {"best_metric": "macro_f1"},
             "device": "cpu",
         }
@@ -76,6 +80,7 @@ def test_as_contract_dict_emits_normalized_training_surface():
         ber_enabled=True,
         ber_lambda_old=0.05,
         ber_lambda_new=0.2,
+        loss_name="cross_entropy",
         energy_temperature_mode="auto",
         energy_temperature=1.1,
         knn_backend="chunked",
@@ -191,6 +196,7 @@ def test_add_classes_updates_ber_partition_and_keeps_ber_metrics_available():
         fusion_output_dim=8,
         device="cpu",
         ber_enabled=True,
+        loss_name="cross_entropy",
         ber_lambda_old=0.1,
         ber_lambda_new=0.1,
     )
@@ -460,6 +466,7 @@ def test_training_step_uses_class_balanced_ce_weights_when_active(monkeypatch):
         fusion_layers=[2],
         fusion_output_dim=4,
         device="cpu",
+        loss_name="cross_entropy",
         label_smoothing=0.1,
         extra={"class_balance": {"weights_by_class": {"healthy": 0.8, "disease_a": 1.2}}},
     )
@@ -497,6 +504,7 @@ def test_training_step_uses_ber_loss_when_enabled():
         fusion_output_dim=4,
         device="cpu",
         ber_enabled=True,
+        loss_name="cross_entropy",
         label_smoothing=0.1,
     )
     trainer = ContinualSDLoRATrainer(cfg)
@@ -590,6 +598,7 @@ def test_train_batch_emits_ber_metrics_when_enabled():
         fusion_output_dim=4,
         device="cpu",
         ber_enabled=True,
+        loss_name="cross_entropy",
         ber_lambda_old=0.1,
         ber_lambda_new=0.1,
     )

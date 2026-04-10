@@ -66,6 +66,7 @@ Important current behavior:
 
 - requesting `device="cuda"` fails immediately when CUDA is unavailable
 - the notebook validates the dataset before training starts
+- auto-push to GitHub still requires a token with write access to the target repository, but push failures now log a warning and keep the run artifacts locally instead of aborting the notebook
 - training now resolves supported-class reference counts from `split_manifest.json` when that runtime manifest exists, otherwise from the runtime `continual` split counts
 - if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
@@ -398,6 +399,8 @@ These control the actual training process:
 - `training.continual.optimization.grad_accumulation_steps`
 - `training.continual.optimization.max_grad_norm`
 - `training.continual.optimization.mixed_precision`
+- `training.continual.optimization.loss_name`
+- `training.continual.optimization.logitnorm_tau`
 - `training.continual.optimization.label_smoothing`
 - `training.continual.optimization.scheduler`
 - `training.continual.early_stopping`
@@ -425,11 +428,17 @@ Current class-imbalance behavior layered on top of the sampler:
 
 - the workflow first resolves per-class reference counts from `split_manifest.json`; if that manifest is absent, it falls back to runtime `continual` counts
 - any supported class below `100` resolved images now hard-fails the run before adapter initialization
-- when all supported classes pass that floor and at least one supported class is in the `100-200` range, training cross-entropy automatically switches to class-balanced weighting based on the effective-number method from Cui et al.
+- when all supported classes pass that floor and at least one supported class is in the `100-200` range, the training loss automatically receives class-balanced weighting based on the effective-number method from Cui et al.
 - once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
-- the weighted loss applies only to training CE; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
+- the weighted loss applies only to the training classifier loss; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
 - the workflow records the resolved counts, activation decision, and normalized per-class weights in the training run context and summary artifacts
 - the `100` floor and `100-200` trigger are repo policy for this adapter workflow; the effective-number weighting itself is literature-backed, but these exact thresholds are engineering policy rather than paper-defined universal constants
+
+Current loss behavior:
+
+- the shipped default is `training.continual.optimization.loss_name: "logitnorm"`
+- set `loss_name: "cross_entropy"` when you want the plain CE baseline
+- `training.continual.ood.ber_enabled: true` is incompatible with LogitNorm, so BER experiments must explicitly use `loss_name: "cross_entropy"`
 
 ### OOD behavior
 
@@ -700,12 +709,13 @@ Read [ood_readiness_guide.md](ood_readiness_guide.md) for the full readiness log
 ## BER Rollout
 
 BER is currently an optional training-only experiment.
+The shipped default keeps BER disabled and uses LogitNorm instead.
 
 Recommended comparison workflow:
 
 1. keep the crop, seed, class set, and evidence source fixed
-2. run a BER-off baseline
-3. run BER candidates with different lambdas
+2. run the shipped BER-off LogitNorm baseline
+3. run BER candidates with `loss_name: "cross_entropy"` and different lambdas
 4. compare the same artifact families across runs
 
 Most useful files for that comparison:

@@ -23,7 +23,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
 
     assert cfg["config_schema_version"] == CURRENT_CONFIG_SCHEMA_VERSION
     continual = cfg["training"]["continual"]
-    assert continual["ood"]["ber_enabled"] is True
+    assert continual["ood"]["ber_enabled"] is False
     assert continual["ood"]["ber_lambda_old"] == 0.1
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
@@ -33,7 +33,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["learning_rate"] == 0.0002
     assert continual["deterministic"] is False
     assert continual["optimization"]["grad_accumulation_steps"] == 1
-    assert continual["optimization"]["loss_name"] == "cross_entropy"
+    assert continual["optimization"]["loss_name"] == "logitnorm"
     assert continual["optimization"]["logitnorm_tau"] == 1.0
     assert continual["optimization"]["scheduler"]["name"] == "cosine"
     assert continual["evaluation"]["best_metric"] == "val_loss"
@@ -63,7 +63,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["optimization"]["scheduler"]["name"] == "cosine"
     assert root_normalized["ood"]["primary_score_method"] == "auto"
     assert root_normalized["ood"]["threshold_factor"] == 3.0
-    assert root_normalized["ood"]["ber_enabled"] is True
+    assert root_normalized["ood"]["ber_enabled"] is False
     assert root_normalized["ood"]["sure_semantic_percentile"] == 90.0
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
     assert root_normalized["ood"]["conformal_method"] == "raps"

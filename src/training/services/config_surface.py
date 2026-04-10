@@ -31,7 +31,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
         "ood": {
             "threshold_factor": 3.0,
             "primary_score_method": "auto",
-            "ber_enabled": True,
+            "ber_enabled": False,
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
             "ber_warmup_steps": 50,
@@ -58,7 +58,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "max_grad_norm": 1.0,
             "mixed_precision": "auto",
             "label_smoothing": 0.0,
-            "loss_name": "cross_entropy",
+            "loss_name": "logitnorm",
             "logitnorm_tau": 1.0,
             "scheduler": {
                 "name": "cosine",
@@ -143,7 +143,7 @@ def normalize_continual_training_config(
 
     ood["threshold_factor"] = float(ood.get("threshold_factor", 3.0))
     ood["primary_score_method"] = normalize_requested_primary_score_method(ood.get("primary_score_method", "auto"))
-    ood["ber_enabled"] = bool(ood.get("ber_enabled", True))
+    ood["ber_enabled"] = bool(ood.get("ber_enabled", False))
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))
     ood["ber_warmup_steps"] = int(ood.get("ber_warmup_steps", 50))
@@ -175,7 +175,7 @@ def normalize_continual_training_config(
     optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))
     optimization["mixed_precision"] = str(optimization.get("mixed_precision", "auto"))
     optimization["label_smoothing"] = float(optimization.get("label_smoothing", 0.0))
-    optimization["loss_name"] = str(optimization.get("loss_name", "cross_entropy"))
+    optimization["loss_name"] = str(optimization.get("loss_name", "logitnorm"))
     optimization["logitnorm_tau"] = float(optimization.get("logitnorm_tau", 1.0))
     scheduler["name"] = str(scheduler.get("name", "cosine"))
     scheduler["warmup_ratio"] = float(scheduler.get("warmup_ratio", 0.1))

@@ -2,9 +2,9 @@
 
 ## Summary
 
-Planned workflow upgrades should stay focused on two maintained directions:
+Maintained workflow behavior stays focused on two directions:
 
-- keep LogitNorm supported as an opt-in training loss
+- keep LogitNorm as the shipped default training loss
 - keep OOD method comparison slice-aware without changing the current real-OOD guardrail
 
 The training workflow, adapter bundle, and inference payload contracts should remain stable.
@@ -14,9 +14,9 @@ The training workflow, adapter bundle, and inference payload contracts should re
 ### 1. LogitNorm Training Option
 
 - Keep `training.continual.optimization.loss_name` limited to `"cross_entropy"` or `"logitnorm"`.
-- Keep `training.continual.optimization.logitnorm_tau` as the opt-in LogitNorm parameter.
-- Keep cross-entropy as the shipped default.
-- Keep `ber_enabled=true` incompatible with `loss_name="logitnorm"` so the first comparison stays decision-isolated.
+- Keep `training.continual.optimization.logitnorm_tau` as the LogitNorm parameter.
+- Keep LogitNorm as the shipped default and cross-entropy as the explicit fallback.
+- Keep `ber_enabled=true` incompatible with `loss_name="logitnorm"` so BER rollout comparisons stay decision-isolated.
 - Persist `loss_name` and `logitnorm_tau` in training summary and adapter export metadata.
 - Surface the option directly in Notebook 2 with no hidden notebook-only override layer.
 
@@ -53,5 +53,5 @@ No additional dataset metadata sidecars or report-only split-diagnostic artifact
 
 - Notebook 0 remains ID-only prep.
 - Real `ood/` folder structure remains the maintained OOD slice surface.
-- LogitNorm stays opt-in until benchmark evidence justifies changing the default.
+- LogitNorm is the shipped default; BER and cross-entropy are explicit comparison settings.
 - Existing adapter export layout, inference payloads, and `production_readiness.json` status semantics remain unchanged.
