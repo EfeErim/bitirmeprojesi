@@ -55,12 +55,12 @@ Make sure you have these things ready:
 1. A dataset for one crop.
 2. A Colab runtime that has GPU access if you intend to use the default `cuda` path.
 3. A Hugging Face token if the required models need authenticated access.
-4. Enough storage for outputs, telemetry, and checkpoints if you enable Drive logging.
+4. Enough runtime storage for outputs, telemetry, and checkpoints.
 
 Private repo note:
 
 - if the notebook starts outside the repo workspace and this GitHub repo is private, set `GH_TOKEN` or `GITHUB_TOKEN` as a Colab secret before running the bootstrap cell
-- alternatively, mount Drive and set `AADS_REPO_ROOT` to an existing checkout so the notebook does not need to clone
+- alternatively, set `AADS_REPO_ROOT` to an existing checkout so the notebook does not need to clone
 
 Important current behavior:
 
@@ -79,7 +79,7 @@ This is the current Notebook 2 training flow from start to finish when the selec
 
 1. find or initialize the repo workspace
 2. install notebook requirements
-3. mount Google Drive when available
+3. prepare repo-local telemetry and checkpoint directories
 4. set `CROP_NAME` and `PART_NAME` in the run-identity cell
 5. run the access/update check cell and confirm token needs before a long run
 6. resolve a Hugging Face token from environment variables or Colab secrets
@@ -503,7 +503,7 @@ Current Colab default tradeoffs:
 - Notebook 2 can also validate every `N` epochs instead of every epoch; this reduces runtime but makes best-model and early-stopping decisions less responsive between validation checkpoints
 - checkpointing and live batch-progress cadence are scaled for the larger per-step sample count so resume points and logs do not become too sparse
 - the Colab environment now uses a much larger cache budget and can cache the continual train split too, which is intended for high-RAM A100 sessions to reduce repeated image decode and disk I/O
-- live batch-status telemetry is throttled so Drive does not get a tiny `latest_status.json` rewrite on every batch
+- live batch-status telemetry is throttled so `latest_status.json` is not rewritten on every batch
 
 ## Notebook-Only Top Cell Toggles
 
@@ -554,6 +554,7 @@ Notebook 2 writes to three locations. Each one exists for a different reason. Th
 outputs/colab_notebook_training/
   continual_sd_lora_adapter/
   artifacts/
+  telemetry_runtime/
 ```
 
 Use this when you want the immediate local result of the notebook run.
@@ -593,7 +594,7 @@ Important detail:
 
 - `checkpoint_state/` keeps checkpoint metadata plus only the mirrored best checkpoint
 - the mirrored best checkpoint is stored once; the manifests point to that directory instead of maintaining a second `best/` copy
-- the actual rolling checkpoint tree stays under the Drive checkpoint root
+- the actual rolling checkpoint tree stays under the repo-local telemetry checkpoint root
 
 Optional current behavior:
 
@@ -601,12 +602,12 @@ Optional current behavior:
 - the auto-push commit is scoped to `runs/<RUN_ID>/`, so unrelated staged repo changes are not included
 - the auto-push helper skips `.pt` checkpoint blobs, so large resume weights stay out of the normal GitHub history
 
-### 3. Drive telemetry
+### 3. Repo-local telemetry runtime
 
-Current Drive telemetry layout:
+Current Notebook 2 telemetry runtime layout:
 
 ```text
-<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/
+outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/
   checkpoints/
   artifacts/
     guided/
@@ -625,17 +626,18 @@ Current Drive telemetry layout:
   checkpoint_index.json
 ```
 
-Use this when you need durable notebook logs and checkpoint recovery across sessions.
+Use this for the active run's notebook logs, adapter-export mirror, and checkpoint recovery while the Colab runtime is alive.
 
 Important durability guardrail:
 
-- Drive telemetry is only treated as durable when the target is backed by an actual mounted Google Drive path
-- if Drive is not mounted yet, telemetry continues in the local spool instead of creating a fake `/content/drive/...` tree that would disappear with the runtime
+- Notebook 2 no longer requests Google Drive mount access by default
+- use the repo mirror and `AUTO_PUSH_TO_GITHUB=True` when you need artifacts to survive Colab runtime reset
+- the auto-push helper skips `.pt` checkpoint blobs, so rolling resume checkpoints are runtime-local unless you export them through a separate storage path
 
 Important current-state note:
 
 - Notebook 2 currently exports adapter assets to `artifacts/adapter_export/continual_sd_lora_adapter/`
-- Drive telemetry manifests point to the best rolling checkpoint; they do not maintain a second duplicated best-checkpoint tree
+- telemetry manifests point to the best rolling checkpoint; they do not maintain a second duplicated best-checkpoint tree
 
 ## How To Read The Main Training Artifacts
 
@@ -738,7 +740,7 @@ Current accepted `ADAPTER_DIR` patterns include:
 
 - direct asset dir: `.../continual_sd_lora_adapter/`
 - parent export dir: `outputs/colab_notebook_training/`
-- current Drive export dir: `.../telemetry/<RUN_ID>/artifacts/adapter_export/`
+- current telemetry export dir: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/`
 - direct metadata file: `.../adapter_meta.json`
 
 Current accepted `ADAPTER_ROOT` pattern:
@@ -784,7 +786,7 @@ You can deploy from any of these outputs:
 
 - `outputs/colab_notebook_training/continual_sd_lora_adapter/`
 - `runs/<RUN_ID>/outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/artifacts/adapter_export/continual_sd_lora_adapter/`
+- `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/continual_sd_lora_adapter/`
 
 If you want a different storage location, pass `--adapter-root` to the inference surface.
 

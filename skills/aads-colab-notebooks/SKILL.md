@@ -30,7 +30,7 @@ Load `skills/aads-training-ood/SKILL.md` for Notebook 0 or Notebook 2 training, 
 1. Keep notebooks as thin wrappers over maintained workflow and script surfaces instead of growing notebook-only orchestration.
 2. Notebook 0 is the audit-first grouped dataset preparation surface. Preserve its role in duplicate-aware review and optional runtime-dataset materialization.
 3. Notebook 2 accepts either a flat class-root dataset or an already prepared runtime dataset root. Workflow and CLI training still expect the runtime dataset contract. Do not blur those two contracts.
-4. Notebook 2 writes local outputs under `outputs/colab_notebook_training/`, mirrors non-checkpoint exports into `runs/<RUN_ID>/`, and keeps rolling checkpoints under the Drive telemetry root.
+4. Notebook 2 writes local outputs under `outputs/colab_notebook_training/`, uses repo-local telemetry/checkpoint storage by default, and mirrors non-checkpoint exports into `runs/<RUN_ID>/`.
 5. Notebook 3 is the fuller direct adapter validation surface, and Notebook 4 is its smaller widget wrapper. Both are separate from router-driven inference and should stay usable without the router.
 6. Keep Hugging Face token resolution aligned with the maintained sources documented in the Colab manual.
 7. When notebook prose, defaults, or exposed controls imply methodological claims about training, OOD handling, inference behavior, or data-prep policy, align them with the canonical workflow docs and literature-backed rationale where available. Avoid notebook-only scientific claims.

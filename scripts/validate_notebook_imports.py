@@ -489,12 +489,14 @@ def test_training_notebook_bootstrap_contract() -> None:
     _assert_update_check_contract(
         sources.first_code_source,
         "Notebook 2",
-        forbid_drive_bootstrap=False,
+        forbid_drive_bootstrap=True,
     )
 
     required_bootstrap_snippets = (
         "RUN_ID =",
         "TELEMETRY = ColabLiveTelemetry(",
+        "LOCAL_TELEMETRY_ROOT = ROOT / 'outputs' / 'colab_notebook_training' / 'telemetry_runtime'",
+        'exclude_dir_names=("checkpoints", "telemetry_runtime")',
         "CHECKPOINT_MANAGER =",
         "DEVICE =",
         "def rt(",
