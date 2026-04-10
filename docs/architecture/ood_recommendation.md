@@ -75,6 +75,7 @@ Source: [Wei et al., 2022, ICML](https://proceedings.mlr.press/v162/wei22d.html)
 Inference for this repo:
 
 - LogitNorm is a better maintained training default than a large redesign
+- the maintained train-time augmentation default is RandAugment, with `basic` and `none` retained for controlled ablations
 - it is likely cheaper to integrate than a full new OOD model family
 
 ### 5. Strong pretrained features still matter

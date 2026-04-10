@@ -66,11 +66,17 @@ class CropDataset(Dataset):
         cache_train_split: bool = False,
         error_policy: str = "tolerant",
         validate_images_on_init: bool = True,
+        augmentation_policy: str = "randaugment",
+        randaugment_num_ops: int = 2,
+        randaugment_magnitude: int = 7,
     ) -> None:
         self.data_dir = Path(data_dir)
         self.crop = str(crop)
         self.split = normalize_split(split)
         self.target_size = int(target_size)
+        self.augmentation_policy = str(augmentation_policy)
+        self.randaugment_num_ops = int(randaugment_num_ops)
+        self.randaugment_magnitude = int(randaugment_magnitude)
         self.use_cache = bool(use_cache)
         self.cache = LRUCache(cache_size) if self.use_cache else None
         self.cache_train_split = bool(cache_train_split)
@@ -92,7 +98,13 @@ class CropDataset(Dataset):
         self.image_paths, self.labels = self._load_data()
         if self.validate_images_on_init:
             self._validate_image_paths()
-        self.transform = build_image_transform(self.target_size, training=bool(transform))
+        self.transform = build_image_transform(
+            self.target_size,
+            training=bool(transform),
+            augmentation_policy=self.augmentation_policy,
+            randaugment_num_ops=self.randaugment_num_ops,
+            randaugment_magnitude=self.randaugment_magnitude,
+        )
 
     def _load_data(self) -> Tuple[List[Path], List[int]]:
         base_dir = self.data_dir / self.crop / self.split
@@ -214,6 +226,9 @@ class CropDataset(Dataset):
             "cache_size": len(self.cache) if self.cache is not None else 0,
             "cache_capacity": self.cache.capacity if self.cache is not None else 0,
             "cache_train_split": bool(self.cache_train_split),
+            "augmentation_policy": self.augmentation_policy,
+            "randaugment_num_ops": int(self.randaugment_num_ops),
+            "randaugment_magnitude": int(self.randaugment_magnitude),
             "load_error_count": len(self.load_errors),
             "skipped_files": list(self.skipped_files),
         }

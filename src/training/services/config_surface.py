@@ -11,6 +11,7 @@ DEFAULT_BACKBONE_MODEL_NAME = "facebook/dinov3-vitl16-pretrain-lvd1689m"
 DEFAULT_FUSION_LAYERS = [2, 5, 8, 11]
 DEFAULT_FUSION_OUTPUT_DIM = 768
 DEFAULT_DEVICE = "cuda"
+VALID_AUGMENTATION_POLICIES = {"none", "basic", "randaugment"}
 
 
 def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[str, Any]:
@@ -71,6 +72,9 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "sampler": "auto",
             "loader_error_policy": "tolerant",
             "target_size": 224,
+            "augmentation_policy": "randaugment",
+            "randaugment_num_ops": 2,
+            "randaugment_magnitude": 7,
             "cache_size": 1000,
             "validate_images_on_init": True,
         },
@@ -185,6 +189,18 @@ def normalize_continual_training_config(
     data["sampler"] = str(data.get("sampler", "auto"))
     data["loader_error_policy"] = str(data.get("loader_error_policy", "tolerant"))
     data["target_size"] = int(data.get("target_size", 224))
+    data["augmentation_policy"] = str(data.get("augmentation_policy", "randaugment")).strip().lower()
+    if data["augmentation_policy"] not in VALID_AUGMENTATION_POLICIES:
+        raise ValueError(
+            "training.continual.data.augmentation_policy must be one of: "
+            + ", ".join(sorted(VALID_AUGMENTATION_POLICIES))
+        )
+    data["randaugment_num_ops"] = int(data.get("randaugment_num_ops", 2))
+    if data["randaugment_num_ops"] < 1:
+        raise ValueError("training.continual.data.randaugment_num_ops must be at least 1.")
+    data["randaugment_magnitude"] = int(data.get("randaugment_magnitude", 7))
+    if not 0 <= data["randaugment_magnitude"] <= 30:
+        raise ValueError("training.continual.data.randaugment_magnitude must be between 0 and 30.")
     data["cache_size"] = int(data.get("cache_size", 1000))
     data["validate_images_on_init"] = bool(data.get("validate_images_on_init", True))
 

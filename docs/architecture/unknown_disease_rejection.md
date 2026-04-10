@@ -43,6 +43,7 @@ Current maintained behavior:
   - SURE+/DS-F1-inspired double scoring as diagnostic evidence
   - conformal thresholding or APS/RAPS set-valued prediction
   - LogitNorm as the default training loss
+  - RandAugment as the default train-time online augmentation policy
   - BER as an optional incremental-training regularizer when explicitly enabled with cross-entropy
 
 Relevant current files:

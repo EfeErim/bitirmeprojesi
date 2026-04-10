@@ -120,6 +120,9 @@ def create_training_loaders(
     sampler: str = "auto",
     seed: int = 42,
     validate_images_on_init: bool = True,
+    augmentation_policy: str = "randaugment",
+    randaugment_num_ops: int = 2,
+    randaugment_magnitude: int = 7,
     *,
     dataset_cls: type[CropDataset] = CropDataset,
     infer_classes_fn: Callable[[str, str], List[str]] = infer_crop_classes_from_layout,
@@ -165,6 +168,9 @@ def create_training_loaders(
             cache_train_split=cache_train_split,
             error_policy=error_policy,
             validate_images_on_init=validate_images_on_init,
+            augmentation_policy=augmentation_policy,
+            randaugment_num_ops=randaugment_num_ops,
+            randaugment_magnitude=randaugment_magnitude,
         )
         loader_generator = torch.Generator()
         loader_generator.manual_seed(int(seed) + split_seed_offset)
@@ -238,6 +244,9 @@ def create_training_loaders(
             cache_train_split=cache_train_split,
             error_policy=error_policy,
             validate_images_on_init=validate_images_on_init,
+            augmentation_policy=augmentation_policy,
+            randaugment_num_ops=randaugment_num_ops,
+            randaugment_magnitude=randaugment_magnitude,
         )
         ood_generator = torch.Generator()
         ood_generator.manual_seed(int(seed) + 30)

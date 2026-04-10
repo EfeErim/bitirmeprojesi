@@ -212,6 +212,9 @@ def prepare_training_run(
         sampler=str(sampler or data_cfg.get("sampler", "auto")),
         seed=int(training_cfg.get("seed", 42)),
         validate_images_on_init=bool(data_cfg.get("validate_images_on_init", True)),
+        augmentation_policy=str(data_cfg.get("augmentation_policy", "randaugment")),
+        randaugment_num_ops=int(data_cfg.get("randaugment_num_ops", 2)),
+        randaugment_magnitude=int(data_cfg.get("randaugment_magnitude", 7)),
         pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
     )
     loader_sizes = build_loader_sizes(loaders)

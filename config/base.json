@@ -68,6 +68,9 @@
         "sampler": "auto",
         "loader_error_policy": "tolerant",
         "target_size": 224,
+        "augmentation_policy": "randaugment",
+        "randaugment_num_ops": 2,
+        "randaugment_magnitude": 7,
         "cache_size": 1000,
         "validate_images_on_init": true
       },

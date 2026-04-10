@@ -41,6 +41,9 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["evaluation"]["ood_benchmark_min_classes"] == 3
     assert continual["data"]["sampler"] == "auto"
     assert continual["data"]["loader_error_policy"] == "tolerant"
+    assert continual["data"]["augmentation_policy"] == "randaugment"
+    assert continual["data"]["randaugment_num_ops"] == 2
+    assert continual["data"]["randaugment_magnitude"] == 7
     assert continual["data"]["cache_size"] == 20000
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
@@ -68,6 +71,9 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
     assert root_normalized["ood"]["conformal_method"] == "raps"
     assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
+    assert root_normalized["data"]["augmentation_policy"] == "randaugment"
+    assert root_normalized["data"]["randaugment_num_ops"] == 2
+    assert root_normalized["data"]["randaugment_magnitude"] == 7
 
 
 def test_extract_continual_training_config_rejects_flat_noncanonical_shape():
@@ -134,4 +140,19 @@ def test_extract_continual_training_config_normalizes_logitnorm_fields():
 
     assert normalized["optimization"]["loss_name"] == "logitnorm"
     assert normalized["optimization"]["logitnorm_tau"] == 0.7
+
+
+def test_extract_continual_training_config_rejects_invalid_augmentation_policy():
+    payload = {
+        "training": {
+            "continual": {
+                "data": {
+                    "augmentation_policy": "too_much",
+                }
+            }
+        }
+    }
+
+    with pytest.raises(ValueError, match="augmentation_policy"):
+        extract_continual_training_config(payload)
 

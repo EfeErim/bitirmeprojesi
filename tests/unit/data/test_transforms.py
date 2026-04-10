@@ -13,11 +13,34 @@ def test_build_image_transform_training_policy_contains_expected_transforms():
         "RandomHorizontalFlip",
         "RandomVerticalFlip",
         "RandomRotation",
+        "RandAugment",
+        "RandomApply",
+        "ToTensor",
+        "Normalize",
+    ]
+
+
+def test_build_image_transform_basic_training_policy_preserves_legacy_augments():
+    transform = build_image_transform(target_size=224, training=True, augmentation_policy="basic")
+    names = [step.__class__.__name__ for step in transform.transforms]
+
+    assert names == [
+        "RandomResizedCrop",
+        "RandomHorizontalFlip",
+        "RandomVerticalFlip",
+        "RandomRotation",
         "ColorJitter",
         "RandomApply",
         "ToTensor",
         "Normalize",
     ]
+
+
+def test_build_image_transform_none_training_policy_is_deterministic_resize():
+    transform = build_image_transform(target_size=224, training=True, augmentation_policy="none")
+    names = [step.__class__.__name__ for step in transform.transforms]
+
+    assert names == ["Resize", "ToTensor", "Normalize"]
 
 
 def test_build_image_transform_inference_policy_is_deterministic():

@@ -530,6 +530,9 @@ def test_training_notebook_bootstrap_contract() -> None:
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',
         'LORA_R = ',
+        'AUGMENTATION_POLICY = str(CONTINUAL_DATA_CFG.get("augmentation_policy", "randaugment")).strip().lower()',
+        'RANDAUGMENT_NUM_OPS = int(CONTINUAL_DATA_CFG.get("randaugment_num_ops", 2))',
+        'RANDAUGMENT_MAGNITUDE = int(CONTINUAL_DATA_CFG.get("randaugment_magnitude", 7))',
         'BER_ENABLED = False',
         'LOSS_NAME = "logitnorm"',
         'LOGITNORM_TAU = 1.0',
@@ -549,6 +552,8 @@ def test_training_notebook_bootstrap_contract() -> None:
     required_training_surface_snippets = (
         'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
+        'data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)',
+        'augmentation_policy=AUGMENTATION_POLICY',
         'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
         'list_repo_dataset_directories',
         'resolve_direct_repo_dataset_root',

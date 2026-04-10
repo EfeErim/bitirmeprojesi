@@ -412,6 +412,9 @@ These affect image loading and error tolerance:
 - `training.continual.data.sampler`
 - `training.continual.data.loader_error_policy`
 - `training.continual.data.target_size`
+- `training.continual.data.augmentation_policy`
+- `training.continual.data.randaugment_num_ops`
+- `training.continual.data.randaugment_magnitude`
 - `training.continual.data.cache_size`
 - `training.continual.data.cache_train_split`
 - `training.continual.data.validate_images_on_init`
@@ -423,6 +426,15 @@ Current sampler behavior:
 - `auto` switches the train loader to `WeightedRandomSampler` when the largest known-class count is at least `1.5x` the smallest non-zero class count
 - set `"shuffle"` or `"weighted"` explicitly when you do not want the automatic rule
 - this threshold is a repo-level engineering heuristic for long-tail handling, not a paper-faithful claim that one ratio is universally optimal
+
+Current augmentation behavior:
+
+- the shipped train-time online augmentation policy is `training.continual.data.augmentation_policy: "randaugment"`
+- supported policies are `"randaugment"`, `"basic"`, and `"none"`
+- `"basic"` keeps the earlier hand-written crop/flip/rotation/color-jitter/blur policy
+- `"none"` uses deterministic resize plus normalization for ablation runs
+- RandAugment is applied only to the training split; validation, test, OOD, and inference preprocessing stay deterministic
+- offline augmented image families still need the grouped split rules above, because online augmentation does not fix leakage from pre-generated variants
 
 Current class-imbalance behavior layered on top of the sampler:
 
