@@ -63,10 +63,10 @@ src/workflows/training.py -> TrainingWorkflow.run(...)
    - class detection
    - loader-size and split-count summaries
    - supported-class reference-count resolution from `split_manifest.json` or the runtime `continual` split
-   - early rejection when a supported class resolves below `100` images
+   - early rejection when a supported class resolves below `100` images unless explicit few-shot research mode is enabled
    - runtime-only class-balance metadata injection before adapter initialization
 3. `src/data/loaders.py` creates the training loaders from the runtime dataset. The shipped `training.continual.data.sampler` default is `"auto"`, which keeps shuffle for roughly balanced continual splits and promotes the train loader to weighted sampling when the largest class is at least 1.5x the smallest non-zero class.
-4. `src/training/services/class_balance.py` computes the training-side class-support policy and effective-number class-balanced weights. When all supported classes resolve to at least `100` images and at least one class is in the `100-200` band, the trainer applies Cui et al.-style effective-number weighting to the training cross-entropy across all supported classes while leaving validation/test loss unweighted for artifact comparability.
+4. `src/training/services/class_balance.py` computes the training-side class-support policy and effective-number class-balanced weights. When all supported classes resolve to at least `100` images and at least one class is in the `100-200` band, the trainer applies Cui et al.-style effective-number weighting to the training classifier loss across all supported classes while leaving validation/test loss unweighted for artifact comparability. Few-shot research mode can lower the hard floor for ablation runs while recording the production guardrail bypass in artifacts.
 5. `src/adapter/independent_crop_adapter.py` exposes the public adapter lifecycle.
 5. `src/training/continual_sd_lora.py` owns the actual training engine:
    - backbone loading

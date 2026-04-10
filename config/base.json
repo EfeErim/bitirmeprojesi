@@ -71,6 +71,8 @@
         "augmentation_policy": "randaugment",
         "randaugment_num_ops": 2,
         "randaugment_magnitude": 7,
+        "few_shot_research_mode": false,
+        "few_shot_min_class_samples": 1,
         "cache_size": 1000,
         "validate_images_on_init": true
       },

@@ -119,7 +119,7 @@ The maintained training path is:
 - classifier head on the fused representation
 - OOD calibration saved inside the exported adapter bundle
 - training loader sampling defaults to `auto`, promoting the train split to weighted sampling when class counts are materially imbalanced
-- training now resolves supported-class reference counts from `split_manifest.json` when available, otherwise from the runtime `continual` split; runs fail before adapter initialization if any supported class resolves below `100` images, and when at least one supported class lands in the `100-200` range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
+- training now resolves supported-class reference counts from `split_manifest.json` when available, otherwise from the runtime `continual` split; normal runs fail before adapter initialization if any supported class resolves below `100` images, explicit few-shot research runs record that production guardrail bypass in artifacts, and when at least one class lands in the eligible low-support range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
 
 The default inference deployment path is:
 

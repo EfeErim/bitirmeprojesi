@@ -96,7 +96,35 @@ def test_build_class_balance_runtime_reports_under_min_classes(tmp_path: Path):
 
     assert runtime["active"] is False
     assert runtime["under_min_classes"] == ["disease_a"]
+    assert runtime["production_under_min_classes"] == ["disease_a"]
+    assert runtime["production_guardrail_bypassed"] is False
     assert runtime["weights_by_class"] == {}
+
+
+def test_build_class_balance_runtime_records_few_shot_research_bypass(tmp_path: Path):
+    crop_root = tmp_path / "tomato"
+    _write_manifest(
+        crop_root,
+        [
+            {"class_name": "healthy", "image_count": 12},
+            {"class_name": "disease_a", "image_count": 8},
+        ],
+    )
+
+    runtime = build_class_balance_runtime(
+        crop_name="tomato",
+        data_dir=tmp_path,
+        detected_classes=["healthy", "disease_a"],
+        split_class_counts={"train": {"healthy": 9, "disease_a": 6}},
+        min_supported_samples=1,
+        few_shot_research_mode=True,
+    )
+
+    assert runtime["few_shot_research_mode"] is True
+    assert runtime["under_min_classes"] == []
+    assert runtime["production_under_min_classes"] == ["healthy", "disease_a"]
+    assert runtime["production_guardrail_bypassed"] is True
+    assert runtime["active"] is True
 
 
 def test_compute_effective_number_weights_normalizes_to_mean_one():

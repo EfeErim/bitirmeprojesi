@@ -187,6 +187,53 @@ def test_prepare_training_run_rejects_supported_classes_below_min_reference_coun
         )
 
 
+def test_prepare_training_run_allows_few_shot_research_mode(tmp_path: Path):
+    crop_root = tmp_path / "runtime" / "tomato"
+    crop_root.mkdir(parents=True, exist_ok=True)
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 12},
+                    {"class_name": "disease_a", "image_count": 8},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    config = _base_config()
+    config["training"]["continual"]["data"]["few_shot_research_mode"] = True
+    config["training"]["continual"]["data"]["few_shot_min_class_samples"] = 1
+    adapter = FakeAdapter()
+    loaders = {
+        "train": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "val": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+        "test": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
+    }
+
+    setup = prepare_training_run(
+        config=config,
+        device="cpu",
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime",
+        class_names=None,
+        num_workers=0,
+        pin_memory=False,
+        use_cache=False,
+        sampler=None,
+        error_policy=None,
+        run_id="run_1",
+        loader_factory=lambda **kwargs: loaders,
+        adapter_factory=lambda **kwargs: adapter,
+    )
+
+    assert setup.class_balance_runtime["few_shot_research_mode"] is True
+    assert setup.class_balance_runtime["production_guardrail_bypassed"] is True
+    assert setup.class_balance_runtime["production_under_min_classes"] == ["healthy", "disease_a"]
+    injected = adapter.initialized["config"]["training"]["continual"]["class_balance"]
+    assert injected["few_shot_research_mode"] is True
+
+
 def test_prepare_training_run_injects_active_class_balance_runtime(tmp_path: Path):
     crop_root = tmp_path / "runtime" / "tomato"
     crop_root.mkdir(parents=True, exist_ok=True)

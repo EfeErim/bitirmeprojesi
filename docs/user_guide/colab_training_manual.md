@@ -68,7 +68,7 @@ Important current behavior:
 - the notebook validates the dataset before training starts
 - auto-push to GitHub still requires a token with write access to the target repository, but push failures now log a warning and keep the run artifacts locally instead of aborting the notebook
 - training now resolves supported-class reference counts from `split_manifest.json` when that runtime manifest exists, otherwise from the runtime `continual` split counts
-- if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run
+- if any supported class resolves below `100` images, training fails before adapter initialization instead of silently trying a fragile few-shot run, unless you explicitly enable the research-only few-shot mode
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
 - Notebook 2 now inspects the selected repo dataset and auto-detects whether it is class-root or runtime-shaped
 - flat class-root input triggers grouped prep and runtime-dataset materialization before training
@@ -415,6 +415,8 @@ These affect image loading and error tolerance:
 - `training.continual.data.augmentation_policy`
 - `training.continual.data.randaugment_num_ops`
 - `training.continual.data.randaugment_magnitude`
+- `training.continual.data.few_shot_research_mode`
+- `training.continual.data.few_shot_min_class_samples`
 - `training.continual.data.cache_size`
 - `training.continual.data.cache_train_split`
 - `training.continual.data.validate_images_on_init`
@@ -439,12 +441,19 @@ Current augmentation behavior:
 Current class-imbalance behavior layered on top of the sampler:
 
 - the workflow first resolves per-class reference counts from `split_manifest.json`; if that manifest is absent, it falls back to runtime `continual` counts
-- any supported class below `100` resolved images now hard-fails the run before adapter initialization
+- any supported class below `100` resolved images now hard-fails the run before adapter initialization unless few-shot research mode is explicitly enabled
 - when all supported classes pass that floor and at least one supported class is in the `100-200` range, the training loss automatically receives class-balanced weighting based on the effective-number method from Cui et al.
 - once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
 - the weighted loss applies only to the training classifier loss; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
 - the workflow records the resolved counts, activation decision, and normalized per-class weights in the training run context and summary artifacts
 - the `100` floor and `100-200` trigger are repo policy for this adapter workflow; the effective-number weighting itself is literature-backed, but these exact thresholds are engineering policy rather than paper-defined universal constants
+
+Few-shot research mode:
+
+- `training.continual.data.few_shot_research_mode: true` bypasses the production `100` image/class floor for experiment runs only
+- `training.continual.data.few_shot_min_class_samples` defaults to `1` and is the lower hard floor used in that research mode
+- artifacts still record `production_under_min_classes` and `production_guardrail_bypassed` under the class-balance context
+- treat few-shot research runs as ablations, not deployment-ready adapter evidence
 
 Current loss behavior:
 

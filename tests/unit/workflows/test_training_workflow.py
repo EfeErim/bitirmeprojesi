@@ -1072,3 +1072,68 @@ def test_training_workflow_fails_for_supported_classes_below_min_reference_count
             data_dir=tmp_path / "runtime_data",
             output_dir=tmp_path / "outputs",
         )
+
+
+def test_training_workflow_records_few_shot_research_mode_in_artifacts(monkeypatch, tmp_path: Path):
+    runtime_root = tmp_path / "runtime_data" / "tomato"
+    runtime_root.mkdir(parents=True, exist_ok=True)
+    (runtime_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "classes": [
+                    {"class_name": "healthy", "image_count": 12},
+                    {"class_name": "disease_a", "image_count": 8},
+                ]
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.run_leave_one_class_out_benchmark",
+        lambda **kwargs: {},
+    )
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {
+                        "target_size": 224,
+                        "cache_size": 10,
+                        "loader_error_policy": "tolerant",
+                        "few_shot_research_mode": True,
+                        "few_shot_min_class_samples": 1,
+                    },
+                    "evaluation": {"require_ood_for_gate": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    run_context = json.loads((result.artifact_dir / "training" / "run_context.json").read_text(encoding="utf-8"))
+    summary = json.loads((result.artifact_dir / "training" / "summary.json").read_text(encoding="utf-8"))
+    assert run_context["class_balance"]["few_shot_research_mode"] is True
+    assert run_context["class_balance"]["production_guardrail_bypassed"] is True
+    assert summary["class_balance"]["production_under_min_classes"] == ["healthy", "disease_a"]

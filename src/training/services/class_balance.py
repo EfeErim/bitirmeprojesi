@@ -144,6 +144,8 @@ def build_class_balance_runtime(
     beta: float = CLASS_BALANCE_BETA,
     min_supported_samples: int = MIN_SUPPORTED_CLASS_SAMPLES,
     eligible_max_samples: int = CLASS_BALANCE_ELIGIBLE_MAX_SAMPLES,
+    production_min_supported_samples: int = MIN_SUPPORTED_CLASS_SAMPLES,
+    few_shot_research_mode: bool = False,
 ) -> Dict[str, Any]:
     resolved = resolve_reference_class_counts(
         crop_name=crop_name,
@@ -161,6 +163,11 @@ def build_class_balance_runtime(
         str(class_name)
         for class_name, count in resolved_counts.items()
         if int(count) < int(min_supported_samples)
+    ]
+    production_under_min_classes = [
+        str(class_name)
+        for class_name, count in resolved_counts.items()
+        if int(count) < int(production_min_supported_samples)
     ]
     eligible_classes = [
         str(class_name)
@@ -185,10 +192,16 @@ def build_class_balance_runtime(
         "missing_classes": missing_classes,
         "skipped_manifest_classes": [str(name) for name in list(resolved.get("skipped_manifest_classes", []))],
         "min_supported_samples": int(min_supported_samples),
+        "production_min_supported_samples": int(production_min_supported_samples),
+        "few_shot_research_mode": bool(few_shot_research_mode),
         "eligible_range": [int(min_supported_samples), int(eligible_max_samples)],
         "beta": float(beta),
         "eligible_classes": eligible_classes,
         "under_min_classes": under_min_classes,
+        "production_under_min_classes": production_under_min_classes,
+        "production_guardrail_bypassed": bool(
+            few_shot_research_mode and production_under_min_classes and not under_min_classes
+        ),
         "all_classes_resolved": bool(all_classes_resolved),
         "active": bool(active),
         "weights_by_class": weights_by_class,
