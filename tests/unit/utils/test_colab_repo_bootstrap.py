@@ -324,7 +324,7 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
 
     calls: list[list[str]] = []
 
-    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None):
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
         calls.append(list(command))
         args = list(command[1:])
         if args == ["branch", "--show-current"]:
@@ -354,7 +354,8 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
 
     push_calls = [call for call in calls if call[1] == "push"]
     assert push_calls
-    assert "gh-secret@" in push_calls[0][2]
+    assert push_calls[0][2] == "https://github.com/EfeErim/bitirmeprojesi.git"
+    assert "gh-secret" not in " ".join(push_calls[0])
 
 
 def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: Path, monkeypatch):
@@ -369,7 +370,7 @@ def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: 
 
     calls: list[list[str]] = []
 
-    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None):
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
         calls.append(list(command))
         args = list(command[1:])
         if args == ["branch", "--show-current"]:
@@ -405,7 +406,51 @@ def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: 
 
     push_calls = [call for call in calls if call[1] == "push"]
     assert push_calls
-    assert "gh-secret@" in push_calls[0][2]
+    assert push_calls[0][2] == "https://github.com/EfeErim/bitirmeprojesi.git"
+    assert "gh-secret" not in " ".join(push_calls[0])
+
+
+def test_push_repo_paths_to_github_redacts_token_from_push_errors(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for name in ("src", "config", "scripts"):
+        (repo_root / name).mkdir(parents=True, exist_ok=True)
+    runtime_file = repo_root / "data" / "prepared_runtime_datasets" / "grape__fruit" / "split_manifest.json"
+    runtime_file.parent.mkdir(parents=True, exist_ok=True)
+    runtime_file.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
+        args = list(command[1:])
+        if args == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
+        if args[:4] == ["diff", "--cached", "--name-only", "--"]:
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout="data/prepared_runtime_datasets/grape__fruit/split_manifest.json\n",
+            )
+        if args and args[0] == "push":
+            return subprocess.CompletedProcess(command, 128, stdout="remote rejected gh-secret\n")
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    try:
+        bootstrap.push_repo_paths_to_github(
+            repo_root,
+            ["data/prepared_runtime_datasets/grape__fruit"],
+            print_fn=lambda _: None,
+        )
+    except RuntimeError as exc:
+        message = str(exc)
+        assert "GitHub push failed" in message
+        assert "gh-secret" not in message
+        assert "<redacted>" in message
+    else:
+        raise AssertionError("Expected push failure")
 
 
 def test_probe_repo_update_status_reports_available_update(tmp_path: Path, monkeypatch):

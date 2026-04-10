@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import shutil
@@ -263,6 +264,52 @@ def _build_authenticated_remote_url(repo_url: str, token: str) -> str:
     return urlunsplit((parsed.scheme, f"{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
 
 
+def _clean_https_remote_url(repo_url: str) -> str:
+    parsed = urlsplit(str(repo_url or "").strip())
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise RuntimeError(
+            "GitHub auto-push currently supports only HTTPS remotes. "
+            "Set origin to an https:// URL or disable auto-push."
+        )
+    netloc = parsed.netloc.split("@", 1)[-1]
+    return urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment))
+
+
+def _redact_secret(value: str, secret: str) -> str:
+    redacted = str(value or "")
+    if secret:
+        redacted = redacted.replace(secret, "<redacted>")
+    return redacted
+
+
+def _run_git_push_with_token(*, repo: Path, remote_url: str, token: str, branch: str) -> None:
+    clean_remote_url = _clean_https_remote_url(remote_url)
+    auth_value = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+    env = os.environ.copy()
+    try:
+        config_count = int(str(env.get("GIT_CONFIG_COUNT", "0") or "0"))
+    except ValueError:
+        config_count = 0
+    env["GIT_CONFIG_COUNT"] = str(config_count + 1)
+    env[f"GIT_CONFIG_KEY_{config_count}"] = "http.https://github.com/.extraheader"
+    env[f"GIT_CONFIG_VALUE_{config_count}"] = f"AUTHORIZATION: basic {auth_value}"
+    completed = subprocess.run(
+        ["git", "push", clean_remote_url, f"HEAD:{branch}"],
+        cwd=str(repo),
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env=env,
+    )
+    if completed.returncode != 0:
+        output = _redact_secret(str(completed.stdout or ""), token)
+        raise RuntimeError(
+            f"GitHub push failed with exit code {completed.returncode}. "
+            f"Output:\n{output.strip() or '<no output>'}"
+        )
+
+
 def _build_repo_access_url(repo_url: str, token: Optional[str]) -> str:
     cleaned_url = str(repo_url or "").strip()
     if not cleaned_url or not token:
@@ -421,7 +468,6 @@ def push_repo_run_to_github(
         raise RuntimeError("Could not determine the target git branch for auto-push.")
 
     remote_url = _git_remote_url(repo, remote_name)
-    push_url = _build_authenticated_remote_url(remote_url, resolved_token)
     relative_run_dir = run_dir.relative_to(repo).as_posix()
     tracked_files = [
         path.relative_to(repo).as_posix()
@@ -451,7 +497,7 @@ def push_repo_run_to_github(
 
     message = str(commit_message or f"Add notebook 2 outputs for run {run_id}")
     _run_git(["commit", "-m", message, "--", relative_run_dir], cwd=repo)
-    _run_git(["push", push_url, f"HEAD:{resolved_branch}"], cwd=repo)
+    _run_git_push_with_token(repo=repo, remote_url=remote_url, token=resolved_token, branch=resolved_branch)
     emit(f"[GIT] Pushed {len(staged_files)} file(s) from runs/{run_id} to {remote_name}/{resolved_branch}.")
     return {
         "enabled": True,
@@ -500,7 +546,6 @@ def push_repo_paths_to_github(
         raise RuntimeError("Could not determine the target git branch for auto-push.")
 
     remote_url = _git_remote_url(repo, remote_name)
-    push_url = _build_authenticated_remote_url(remote_url, resolved_token)
 
     _run_git(["config", "user.name", os.environ.get("AADS_GIT_USER_NAME", "AADS Colab")], cwd=repo)
     _run_git(["config", "user.email", os.environ.get("AADS_GIT_USER_EMAIL", "aads-colab@local")], cwd=repo)
@@ -521,7 +566,7 @@ def push_repo_paths_to_github(
 
     message = str(commit_message or f"Add generated repo assets: {', '.join(normalized_paths)}")
     _run_git(["commit", "-m", message, "--", *normalized_paths], cwd=repo)
-    _run_git(["push", push_url, f"HEAD:{resolved_branch}"], cwd=repo)
+    _run_git_push_with_token(repo=repo, remote_url=remote_url, token=resolved_token, branch=resolved_branch)
     emit(f"[GIT] Pushed {len(staged_files)} file(s) from {', '.join(normalized_paths)} to {remote_name}/{resolved_branch}.")
     return {
         "enabled": True,
