@@ -509,6 +509,68 @@ def test_eval_risk_families_are_continual_only(tmp_path: Path, monkeypatch):
     assert "pngtree-preview-image.jpg" not in eval_files
 
 
+def test_zero_eval_eligible_class_is_skipped_during_materialization(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+    runtime_root = tmp_path / "runtime"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_clean_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_clean_{index}.jpg", offset=offset + 1)
+        _write_pattern(source_root / "Skip Me" / f"gan_leaf_{index}.jpg", offset=offset + 2)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+    assert summary["summary"]["skipped_classes"] == 1
+    assert summary["skipped_classes"][0]["class_name"] == "skip_me"
+    assert summary["class_health"]["skip_me"]["runtime_action"] == "skipped"
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    skipped_rows = [row for row in manifest_rows if row["normalized_class_name"] == "skip_me"]
+    assert skipped_rows
+    assert all(row["split"] == "skipped" for row in skipped_rows)
+    assert all(row["runtime_skipped"] for row in skipped_rows)
+
+    result_root = materialize_grouped_runtime_dataset(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        runtime_root=runtime_root,
+    )
+
+    crop_root = result_root / "tomato"
+    assert not any((crop_root / split_name / "skip_me").exists() for split_name in ("continual", "val", "test"))
+    assert (crop_root / "continual" / "healthy").exists()
+    assert (crop_root / "continual" / "early_blight").exists()
+
+
 def test_materialized_eval_splits_only_contain_canonical_clean_family_members(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"

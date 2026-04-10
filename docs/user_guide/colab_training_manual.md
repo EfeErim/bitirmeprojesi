@@ -120,6 +120,8 @@ This is the current Notebook 0 flow from start to finish:
 
 Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy and materializes the runtime dataset automatically after a clean audit; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass.
 
+If a class has zero evaluation-eligible families after grouped prep, Notebook 0 records it under `skipped_classes` and omits that class from the materialized runtime dataset. Classes with only one or two eligible families still block materialization because they cannot support the maintained `continual`/`val`/`test` split contract.
+
 ## The Dataset Format Notebook 2 Accepts
 
 Notebook 2 `class_root` mode expects the simplest possible input layout:

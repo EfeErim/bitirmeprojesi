@@ -1236,6 +1236,9 @@ def build_grouped_dataset_plan(
     family_assignments: Dict[str, str] = {}
     class_health: Dict[str, Any] = {}
     blocking_issues: List[str] = []
+    skipped_classes: List[Dict[str, Any]] = []
+    skipped_class_names: set[str] = set()
+    included_class_names: set[str] = set()
     for class_name in sorted({record.normalized_class_name for record in valid_records}):
         class_families = sorted(
             [
@@ -1251,7 +1254,7 @@ def build_grouped_dataset_plan(
             if detail["eval_eligible"]
         ]
         target = estimate_split_counts(len(eval_candidate_families))
-        class_health[class_name] = {
+        health_entry = {
             "image_count": sum(len(items) for _, items, _detail in class_families),
             "family_count": len(class_families),
             "eval_eligible_family_count": len(eval_candidate_families),
@@ -1272,7 +1275,24 @@ def build_grouped_dataset_plan(
                 }
             ),
         }
+        class_health[class_name] = health_entry
+        if len(eval_candidate_families) == 0:
+            skip_reason = "no evaluation-eligible families after grouped prep"
+            health_entry["runtime_action"] = "skipped"
+            health_entry["skip_reason"] = skip_reason
+            skipped_class_names.add(class_name)
+            skipped_classes.append(
+                {
+                    "class_name": class_name,
+                    "reason": skip_reason,
+                    "image_count": int(health_entry["image_count"]),
+                    "family_count": int(health_entry["family_count"]),
+                    "eval_eligible_family_count": 0,
+                }
+            )
+            continue
         if len(eval_candidate_families) < 3:
+            health_entry["runtime_action"] = "blocked"
             blocking_issues.append(
                 f"Class '{class_name}' has only {len(eval_candidate_families)} evaluation-eligible family/families after grouped prep."
             )
@@ -1286,10 +1306,13 @@ def build_grouped_dataset_plan(
             bundled_eval_families[bundle_key].append(detail["canonical_record"])
             bundle_to_family_ids[bundle_key].append(family_root)
         if len(bundled_eval_families) < 3:
+            health_entry["runtime_action"] = "blocked"
             blocking_issues.append(
                 f"Class '{class_name}' has only {len(bundled_eval_families)} source-like eval bundle(s) after grouped prep."
             )
             continue
+        health_entry["runtime_action"] = "included"
+        included_class_names.add(class_name)
         assignments = _assign_splits_for_units(
             units=[(bundle_key, records) for bundle_key, records in bundled_eval_families.items()],
             targets=target,
@@ -1298,14 +1321,21 @@ def build_grouped_dataset_plan(
             for family_root in bundle_to_family_ids.get(bundle_key, []):
                 family_assignments[family_root] = split_name
 
+    if skipped_classes and not included_class_names and not blocking_issues:
+        blocking_issues.append("No classes remain after skipping zero evaluation-eligible classes.")
+
     manifest_rows: List[Dict[str, Any]] = []
     for (class_name, family_root), items in sorted(families.items(), key=lambda item: (item[0][0], item[0][1])):
         family_detail = family_details[(class_name, family_root)]
         family_id = f"{class_name}__{family_root[:12]}"
-        assigned_split = family_assignments.get(family_root, "continual")
+        runtime_skipped = class_name in skipped_class_names
+        assigned_split = "skipped" if runtime_skipped else family_assignments.get(family_root, "continual")
         canonical_relative_path = str(family_detail["canonical_relative_path"])
         for item in sorted(items, key=lambda record: record.relative_path):
             split_name = (
+                "skipped"
+                if runtime_skipped
+                else
                 assigned_split
                 if bool(family_detail["eval_eligible"]) and item.relative_path == canonical_relative_path
                 else "continual"
@@ -1333,6 +1363,7 @@ def build_grouped_dataset_plan(
                     "family_canonical_relative_path": canonical_relative_path,
                     "is_family_canonical": bool(item.relative_path == canonical_relative_path),
                     "family_assignment": assigned_split,
+                    "runtime_skipped": bool(runtime_skipped),
                     "split": split_name,
                 }
             )
@@ -1352,6 +1383,13 @@ def build_grouped_dataset_plan(
             "same_class_high_risk_clusters": len(high_risk_review_clusters),
             "cross_class_conflicts": len(blocking_conflicts),
             "blocking_issues": len(blocking_issues),
+            "skipped_classes": len(skipped_classes),
+            "materialized_classes": len(included_class_names),
+            "skipped_images": sum(
+                len(items)
+                for (class_name, _family_root), items in families.items()
+                if class_name in skipped_class_names
+            ),
             "eval_eligible_families": sum(1 for detail in family_details.values() if detail["eval_eligible"]),
             "continual_only_families": sum(1 for detail in family_details.values() if not detail["eval_eligible"]),
             "eval_risk_images": sum(1 for record in valid_records if record.eval_quality_risk),
@@ -1367,6 +1405,7 @@ def build_grouped_dataset_plan(
         "normalization_report": normalization_report,
         "class_health": class_health,
         "blocking_issues": blocking_issues,
+        "skipped_classes": skipped_classes,
         "runtime_ready": not blocking_issues and not blocking_conflicts,
         "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / str(crop_name)).resolve()),
         "ood_handoff_checklist": {
@@ -1386,6 +1425,7 @@ def build_grouped_dataset_plan(
             "crop_name": str(crop_name),
             "source_root": str(class_root.resolve()),
             "blocking_issues": list(blocking_issues),
+            "skipped_classes": list(skipped_classes),
             "runtime_ready": bool(summary["runtime_ready"]),
             "rows": manifest_rows,
         },
