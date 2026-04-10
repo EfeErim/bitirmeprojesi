@@ -25,7 +25,6 @@ from src.data.dataset_layout import (
     IMAGE_EXTENSIONS,
     class_name_aliases,
     materialize_image,
-    estimate_split_counts,
     normalize_class_name,
 )
 from src.guided_artifacts import refresh_prep_guided_artifacts
@@ -46,6 +45,7 @@ BIOCLIP_REVIEW_MIN = 0.950
 DINO_CROSS_CLASS_BLOCK_MIN = 0.990
 BIOCLIP_CROSS_CLASS_BLOCK_MIN = 0.980
 DEFAULT_NEIGHBORS = 8
+GROUPED_SPLIT_POLICY = "grouped_family_canonical_eval_60_20_20"
 SOURCE_HINT_UNKNOWN = "unknown"
 QUALITY_WARN_MIN_SIZE = 224
 QUALITY_CRITICAL_MIN_SIZE = 160
@@ -247,8 +247,33 @@ def _infer_source_hint(class_dir: Path, image_path: Path) -> str:
 
 
 def _has_synthetic_hint(path_like: str) -> bool:
-    normalized = normalize_class_name(path_like)
-    return any(token in normalized for token in SYNTHETIC_HINT_KEYWORDS)
+    return bool(_synthetic_hint_matches(path_like))
+
+
+def _synthetic_hint_matches(path_like: str) -> List[str]:
+    normalized_relative = _normalize_relative_path(path_like)
+    parts = [normalize_class_name(part) for part in normalized_relative.split("/") if normalize_class_name(part)]
+    if len(parts) > 1:
+        # The first path component is the class folder. Do not let disease names such as
+        # botrytis_bunch_rot trip rotation-augmentation detection.
+        parts = parts[1:]
+    tokens = [
+        token
+        for part in parts
+        for token in normalize_class_name(Path(part).stem).split("_")
+        if token
+    ]
+    matches: List[str] = []
+    for index, token in enumerate(tokens):
+        if token in SYNTHETIC_HINT_KEYWORDS and token != "rot":
+            matches.append(token)
+            continue
+        if re.fullmatch(r"rot(?:90|180|270)", token):
+            matches.append(token)
+            continue
+        if token == "rot" and index + 1 < len(tokens) and tokens[index + 1] in {"90", "180", "270"}:
+            matches.append(f"{token}_{tokens[index + 1]}")
+    return matches
 
 
 def _normalized_path_tokens(path_like: str) -> List[str]:
@@ -355,10 +380,9 @@ def _compute_blur_and_brightness(image: Image.Image) -> tuple[float, float]:
 
 
 def _path_keyword_penalty(path_like: str) -> int:
-    normalized = normalize_class_name(path_like)
-    if not normalized:
+    if not str(path_like or "").strip():
         return len(SYNTHETIC_HINT_KEYWORDS)
-    return sum(1 for token in SYNTHETIC_HINT_KEYWORDS if token in normalized)
+    return len(_synthetic_hint_matches(path_like))
 
 
 def _record_preference_key(record: ImageRecord) -> tuple[Any, ...]:
@@ -872,7 +896,28 @@ def _family_targets(records: Sequence[ImageRecord]) -> Dict[str, tuple[int, int,
     for record in records:
         if not record.excluded_reason:
             totals[record.normalized_class_name] += 1
-    return {class_name: estimate_split_counts(total) for class_name, total in totals.items()}
+    return {class_name: _estimate_grouped_split_counts(total) for class_name, total in totals.items()}
+
+
+def _estimate_grouped_split_counts(total: int) -> tuple[int, int, int]:
+    if total <= 0:
+        return 0, 0, 0
+    if total < 3:
+        return total, 0, 0
+
+    val_count = max(1, round(total * 0.2))
+    test_count = max(1, round(total * 0.2))
+    train_count = total - val_count - test_count
+    if train_count < 1:
+        train_count = 1
+        overflow = train_count + val_count + test_count - total
+        while overflow > 0 and (val_count > 1 or test_count > 1):
+            if val_count >= test_count and val_count > 1:
+                val_count -= 1
+            elif test_count > 1:
+                test_count -= 1
+            overflow -= 1
+    return train_count, val_count, test_count
 
 
 def _auto_merge_same_class_source_like_families(
@@ -1253,7 +1298,7 @@ def build_grouped_dataset_plan(
             for family_root, _items, detail in class_families
             if detail["eval_eligible"]
         ]
-        target = estimate_split_counts(len(eval_candidate_families))
+        target = _estimate_grouped_split_counts(len(eval_candidate_families))
         health_entry = {
             "image_count": sum(len(items) for _, items, _detail in class_families),
             "family_count": len(class_families),
@@ -1562,7 +1607,7 @@ def materialize_grouped_runtime_dataset(
             "dataset_key": str(dataset_key),
             "source_root": str(class_root.resolve()),
             "artifact_root": str(artifact_root.resolve()),
-            "split_policy": "grouped_family_canonical_eval",
+            "split_policy": GROUPED_SPLIT_POLICY,
             "ood": ood_manifest,
             "rows": rows,
         },

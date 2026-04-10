@@ -128,7 +128,7 @@ It writes:
 - `split_manifest.json`
 
 
-The current split policy is effectively 80/10/10 with small-class safeguards.
+The grouped Notebook 0 and Notebook 2 class-root prep path uses a 60/20/20 family split target with small-class safeguards. The older non-grouped runtime-layout helper remains effectively 80/10/10.
 
 Important detail:
 

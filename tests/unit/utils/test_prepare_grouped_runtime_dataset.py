@@ -11,6 +11,8 @@ from scripts.prepare_grouped_runtime_dataset import (
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
+    _estimate_grouped_split_counts,
+    _has_synthetic_hint,
     _infer_source_like_group,
     scan_class_root_dataset,
 )
@@ -53,6 +55,22 @@ def test_normalize_prepared_class_name_uses_taxonomy_aliases():
 def test_build_prepared_dataset_key_includes_part_only_when_specified():
     assert build_prepared_dataset_key("tomato", "unspecified") == "tomato"
     assert build_prepared_dataset_key("Tomato", "Fruit") == "tomato__fruit"
+
+
+def test_synthetic_hint_ignores_class_name_rot_token():
+    assert not _has_synthetic_hint("botrytis_bunch_rot/Botrytis-cinerea.jpg")
+    assert not _has_synthetic_hint("botrytis_bunch_rot/0893d858-botrite_grappolo42.jpg")
+    assert _has_synthetic_hint("healthy/image_rot_90.jpg")
+    assert _has_synthetic_hint("healthy/image_rot90.jpg")
+    assert _has_synthetic_hint("healthy/image_aug_flip.jpg")
+
+
+def test_grouped_split_counts_use_60_20_20_targets():
+    assert _estimate_grouped_split_counts(0) == (0, 0, 0)
+    assert _estimate_grouped_split_counts(2) == (2, 0, 0)
+    assert _estimate_grouped_split_counts(3) == (1, 1, 1)
+    assert _estimate_grouped_split_counts(10) == (6, 2, 2)
+    assert _estimate_grouped_split_counts(39) == (23, 8, 8)
 
 
 def test_infer_source_like_group_prefers_capture_group_and_web_signals():
@@ -182,6 +200,8 @@ def test_materialize_grouped_runtime_dataset_writes_runtime_layout(tmp_path: Pat
     assert (crop_root / "val").exists()
     assert (crop_root / "test").exists()
     assert (crop_root / "split_manifest.json").exists()
+    manifest = json.loads((crop_root / "split_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["split_policy"] == "grouped_family_canonical_eval_60_20_20"
 
 
 def test_materialize_grouped_runtime_dataset_uses_part_aware_dataset_key(tmp_path: Path, monkeypatch):

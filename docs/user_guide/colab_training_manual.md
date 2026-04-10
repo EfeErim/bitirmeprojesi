@@ -209,7 +209,8 @@ The dataset materialization step is handled by `scripts/colab_dataset_layout.py`
 
 Current behavior:
 
-- the notebook uses an 80/10/10-style split policy with small-class safeguards
+- grouped Notebook 0 and Notebook 2 class-root prep uses a 60/20/20-style family split target with small-class safeguards
+- the older direct `scripts/colab_dataset_layout.py` helper still uses the 80/10/10-style split policy for non-grouped runtime layout conversion
 - the runtime split names are `continual`, `val`, and `test`
 - Notebook 2 now uses the automatic materialization strategy, which prefers links over full copies on Colab and other non-Windows systems
 - on Windows, materialization defaults to copying files instead of symlinks
