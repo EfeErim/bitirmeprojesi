@@ -458,6 +458,8 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'direct_class_root_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
     assert 'STATE["dataset_contract"] = dataset_contract' in sources.full_source
     assert "build_prepared_dataset_key" in sources.full_source
+    assert "from src.data.loaders import create_training_loaders" in sources.full_source
+    assert "src.utils.data_loader" not in sources.full_source
     assert 'if dataset_contract == "runtime":' in sources.full_source
     assert "Prepared runtime dataset is missing split folder(s)" in sources.full_source
     assert "OOD dataset parameters are ignored when the selected dataset is already runtime-shaped." in sources.full_source
