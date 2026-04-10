@@ -1,9 +1,10 @@
 # Data Workspace
 
-This repo keeps the maintained notebook dataset paths under `data/`. Most dataset contents are local working files rather than tracked source, but the repo currently includes two checked-in Notebook 0 example datasets:
+This repo keeps the maintained notebook dataset paths under `data/`. Most dataset contents are local working files rather than tracked source, but the repo currently includes three checked-in example dataset trees:
 
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
+- `data/ood_dataset/grape_fruit_ood_trial/`
 
 Use these paths:
 
@@ -53,7 +54,11 @@ data/ood_dataset/<dataset_name>/
   other_crops_optional/*
 ```
 
-For the checked-in grape datasets, point Notebook 0 or Notebook 2 `class_root` mode at one of these roots:
+For the checked-in grape class-root datasets, point Notebook 0 or Notebook 2 `class_root` mode at one of these roots:
 
 - `data/class_root_dataset/grape_fruit`
 - `data/class_root_dataset/grape_leaf`
+
+For the checked-in reusable OOD example pool, point Notebook 0 or Notebook 2 at:
+
+- `data/ood_dataset/grape_fruit_ood_trial`

@@ -44,6 +44,14 @@ data/class_root_dataset/*
 !data/class_root_dataset/grape_fruit/**
 !data/class_root_dataset/grape_leaf/
 !data/class_root_dataset/grape_leaf/**
+data/class_root_dataset/**/Desktop.ini
+data/class_root_dataset/**/desktop.ini
+data/ood_dataset/*
+!data/ood_dataset/.gitkeep
+!data/ood_dataset/grape_fruit_ood_trial/
+!data/ood_dataset/grape_fruit_ood_trial/**
+data/ood_dataset/**/Desktop.ini
+data/ood_dataset/**/desktop.ini
 data/prepared_class_root_datasets/*
 !data/prepared_class_root_datasets/.gitkeep
 data/prepared_runtime_datasets/*
@@ -54,6 +62,7 @@ data/images/
 data/processed/
 data/splits/
 data/metadata.json
+drive-download-*.zip
 *.pth
 *.pt
 *.pkl

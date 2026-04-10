@@ -136,7 +136,7 @@ These folders matter most:
 - `src/pipeline/` and `src/router/`: router-driven inference runtime
 - `scripts/`: notebook helpers, validation tools, and small entrypoints
 - `config/`: shipped JSON configuration
-- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets for Notebook 0
+- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets plus the `grape_fruit_ood_trial` example OOD pool
 - `docs/`: maintained Markdown documentation
 - `tests/`: unit, integration, and notebook-surface coverage
 
@@ -573,6 +573,7 @@ Tracked source of truth:
 - `README.md`
 - `colab_notebooks/*.ipynb`
 - root dependency files
+- the checked-in example datasets under `data/class_root_dataset/grape_fruit/`, `data/class_root_dataset/grape_leaf/`, and `data/ood_dataset/grape_fruit_ood_trial/`
 
 Local or generated only:
 
@@ -581,8 +582,9 @@ Local or generated only:
 - `outputs/`
 - `.runtime_tmp/`
 - caches and virtual environments
+- most other dataset contents under `data/`
 
-Do not treat generated outputs as tracked implementation files unless you explicitly need to inspect a local run.
+Do not treat generated outputs as tracked implementation files unless you explicitly need to inspect a local run. For the maintained dataset boundary and local-data rules, use `data/README.md`.
 
 ## Where To Read Next
 

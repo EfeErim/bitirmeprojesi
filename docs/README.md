@@ -157,49 +157,17 @@ When docs, older notes, or generated outputs disagree, prefer this order:
 
 ## Validation Commands
 
-Windows PowerShell should prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv`.
-
-Dependency policy:
-
-- root `requirements.txt` and `requirements_colab.txt` pin the maintained ML stack to validated minor lines
-- CI checks both the pinned baseline and the newest patch releases within those same minor lines
-- do not replace this with open-ended `latest` upgrades unless the repo surface has been revalidated
-
-Use the narrow maintained validation surface first:
-
-```powershell
-.\scripts\python.cmd scripts/validate_notebook_imports.py
-.\scripts\python.cmd scripts/validate_config_schema.py
-.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>
-pytest tests/unit tests/colab/test_smoke_training.py -q
-pytest tests/integration -q --runintegration
-.\scripts\python.cmd scripts/benchmark_surfaces.py
-```
+Use the maintained command list from [../README.md](../README.md). That file is the canonical quick-start surface for validation commands and dependency-policy notes.
 
 ## Tracked Vs Local Files
 
-Tracked:
+Use [../README.md](../README.md) for the repo-wide tracked-vs-generated boundary and [../data/README.md](../data/README.md) for the maintained dataset policy.
 
-- `src/`
-- `tests/`
-- `scripts/`
-- `config/`
-- `docs/`
-- root `README.md`
-- `colab_notebooks/*.ipynb`
-- root dependency files
+Current checked-in dataset exceptions:
 
-Local or generated:
-
-- most `data/class_root_dataset/` contents, except the checked-in `grape_fruit/` and `grape_leaf/` Notebook 0 dataset roots
-- `data/ood_dataset/`
-- `data/prepared_class_root_datasets/`
-- `data/prepared_runtime_datasets/`
-- `runs/<RUN_ID>/`
-- `models/adapters/<crop>/continual_sd_lora_adapter/`
-- `outputs/`
-- `.runtime_tmp/`
-- caches and virtual environments
+- `data/class_root_dataset/grape_fruit/`
+- `data/class_root_dataset/grape_leaf/`
+- `data/ood_dataset/grape_fruit_ood_trial/`
 
 ## Similar-Looking Paths That Often Cause Confusion
 
