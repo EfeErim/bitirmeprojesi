@@ -92,6 +92,7 @@ Use this when you need:
 These are reference notes, not the first documents a beginner should read:
 
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
+- [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)
 
 ## Archive
 

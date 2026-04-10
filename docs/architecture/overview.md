@@ -358,6 +358,7 @@ The repo validates the maintained surface through:
 - [../user_guide/colab_training_manual.md](../user_guide/colab_training_manual.md)
 - [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
 - [ood_recommendation.md](ood_recommendation.md)
+- [unknown_disease_rejection.md](unknown_disease_rejection.md)
 - [../archive/experimental_leave_one_class_out_ood.md](../archive/experimental_leave_one_class_out_ood.md)
 
 
