@@ -411,7 +411,7 @@ def test_training_workflow_persists_ood_method_comparison(monkeypatch, tmp_path:
 
     assert (result.artifact_dir / "test" / "ood_method_comparison.json").exists()
     assert (
-        result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "ensemble"
+        result.production_readiness["context"]["ood_method_comparison"]["selected_primary_score_method"] == "energy"
     )
 
 
@@ -554,7 +554,7 @@ def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mod
 
     assert result.production_readiness["context"]["ood_requested_primary_score_method"] == "auto"
     assert result.production_readiness["context"]["ood_primary_score_method"] == "ensemble"
-    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_guardrail"
+    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_no_method_metrics"
     assert saved_methods == [{"config": "ensemble", "detector": "ensemble"}]
 
 

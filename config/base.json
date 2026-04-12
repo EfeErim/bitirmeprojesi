@@ -65,7 +65,7 @@
         }
       },
       "data": {
-        "sampler": "auto",
+        "sampler": "weighted",
         "loader_error_policy": "tolerant",
         "target_size": 224,
         "augmentation_policy": "randaugment",

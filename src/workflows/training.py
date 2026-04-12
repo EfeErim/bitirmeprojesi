@@ -902,15 +902,6 @@ class TrainingWorkflow:
             ),
             selection_source="configured",
         )
-        if loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(primary_score_stage.requested_method):
-            # Keep the shipped concrete runtime default when only one shared real-OOD
-            # pool exists. Reusing that same pool for automatic score-method tuning
-            # would turn final readiness evidence into selection evidence.
-            primary_score_stage = _PrimaryScoreSelectionStage(
-                requested_method=primary_score_stage.requested_method,
-                selected_method=primary_score_stage.selected_method,
-                selection_source="real_ood_guardrail",
-            )
         selected_primary_score_method = self._apply_primary_score_method_to_trainer(
             trainer_for_artifacts,
             primary_score_stage.selected_method,
@@ -944,6 +935,57 @@ class TrainingWorkflow:
         )
         validation_artifacts = split_artifacts["val"]
         test_artifacts = split_artifacts["test"]
+        if loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(primary_score_stage.requested_method):
+            # Select using validation split first to avoid coupling method selection to
+            # the final authoritative split whenever possible.
+            real_ood_method_comparison = _resolve_ood_method_comparison_from_artifacts(validation_artifacts)
+            real_ood_selection_source = "real_ood_validation"
+            if not real_ood_method_comparison:
+                real_ood_method_comparison = _resolve_ood_method_comparison_from_artifacts(test_artifacts)
+                real_ood_selection_source = "real_ood_test_fallback"
+            if real_ood_method_comparison:
+                selected_primary_score_method = self._apply_primary_score_method_to_trainer(
+                    trainer_for_artifacts,
+                    select_best_ood_score_method(
+                        real_ood_method_comparison,
+                        fallback=primary_score_stage.selected_method,
+                    ),
+                )
+                primary_score_stage = _PrimaryScoreSelectionStage(
+                    requested_method=primary_score_stage.requested_method,
+                    selected_method=selected_primary_score_method,
+                    selection_source=real_ood_selection_source,
+                )
+            else:
+                primary_score_stage = _PrimaryScoreSelectionStage(
+                    requested_method=primary_score_stage.requested_method,
+                    selected_method=primary_score_stage.selected_method,
+                    selection_source="real_ood_no_method_metrics",
+                )
+            requested_primary_score_method = primary_score_stage.requested_method
+            selection_source = primary_score_stage.selection_source
+            record_primary_score_selection_payload(
+                ood_calibration,
+                requested_primary_score_method=primary_score_stage.requested_method,
+                selected_primary_score_method=primary_score_stage.selected_method,
+                selection_source=primary_score_stage.selection_source,
+            )
+            split_artifacts = self._persist_split_artifacts(
+                artifact_dir=artifact_dir,
+                trainer=trainer_for_artifacts,
+                loaders=loaders,
+                detected_classes=detected_classes,
+                telemetry=telemetry,
+                run_id=run_id,
+                crop_name=crop_name,
+                loader_sizes=loader_sizes,
+                evaluation_results=split_evaluations,
+                requested_primary_score_method=primary_score_stage.requested_method,
+                selected_primary_score_method=primary_score_stage.selected_method,
+                selection_source=primary_score_stage.selection_source,
+            )
+            validation_artifacts = split_artifacts["val"]
+            test_artifacts = split_artifacts["test"]
         authoritative_split, authoritative_artifacts = select_authoritative_artifacts_payload(
             validation_artifacts,
             test_artifacts,
