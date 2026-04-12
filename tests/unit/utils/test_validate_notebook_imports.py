@@ -59,3 +59,11 @@ def test_assert_repo_bootstrap_contract_rejects_drive_bootstrap():
             ),
             "Notebook X",
         )
+
+
+def test_training_notebook_bootstrap_contract_matches_repo_notebook():
+    validator.test_training_notebook_bootstrap_contract()
+
+
+def test_training_notebook_dataset_contract_matches_repo_notebook():
+    validator.test_training_notebook_dataset_contract_detection()

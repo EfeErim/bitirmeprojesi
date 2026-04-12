@@ -453,6 +453,11 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in sources.full_source
     assert "Notebook 0'un yazdigi <dataset_key>/continual|val|test|ood yapisini tutan repo-ici root." in sources.full_source
     assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in sources.full_source
+    assert "from scripts.colab_training_recommendations import (" in sources.full_source
+    assert "inspect_runtime_dataset" in sources.full_source
+    assert "inspect_runtime_hardware" in sources.full_source
+    assert "recommend_notebook_training_params" in sources.full_source
+    assert "resolve_effective_notebook_params" in sources.full_source
     assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
     assert 'STATE["runtime_dataset_key"] = selected_dataset_name' in sources.full_source
     assert "from src.data.loaders import create_training_loaders" in sources.full_source
@@ -460,6 +465,11 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert "No prepared runtime datasets were found under RUNTIME_DATASET_ROOT. Notebook 0'u once calistirin." in sources.full_source
     assert "Prepared runtime dataset is missing split folder(s)" in sources.full_source
     assert 'STATE["resolved_ood_root"] = resolved_ood_root_value' in sources.full_source
+    assert 'STATE["dataset_inspection"] = dataset_inspection' in sources.full_source
+    assert 'STATE["hardware_inspection"] = hardware_inspection' in sources.full_source
+    assert 'STATE["recommendation_report"] = recommendation_report' in sources.full_source
+    assert 'STATE["recommendation_decision"] = recommendation_decision' in sources.full_source
+    assert 'STATE["effective_params"] = effective_params' in sources.full_source
     assert "Notebook 2 harici OOD secmez; gercek OOD kaniti icin secilen runtime dataset icinde ood/ klasoru bulunmalidir." in sources.full_source
     assert "build_grouped_dataset_plan" not in sources.full_source
     assert "materialize_grouped_runtime_dataset" not in sources.full_source
@@ -525,6 +535,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
         'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"',
         'DATASET_NAME = ""',
+        'MANUAL_PARAM_OVERRIDES = {}',
         'EPOCHS = ',
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',
@@ -553,15 +564,23 @@ def test_training_notebook_bootstrap_contract() -> None:
         )
 
     required_training_surface_snippets = (
-        'optimization_cfg["loss_name"] = str(LOSS_NAME).strip().lower()',
-        'optimization_cfg["logitnorm_tau"] = float(LOGITNORM_TAU)',
+        'optimization_cfg["loss_name"] = str(effective_params["LOSS_NAME"]).strip().lower()',
+        'optimization_cfg["logitnorm_tau"] = float(effective_params["LOGITNORM_TAU"])',
         'data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)',
-        'data_cfg["few_shot_research_mode"] = bool(FEW_SHOT_RESEARCH_MODE)',
+        'data_cfg["few_shot_research_mode"] = bool(effective_params["FEW_SHOT_RESEARCH_MODE"])',
         'augmentation_policy=AUGMENTATION_POLICY',
         'STATE["resolved_ood_root"] = resolved_ood_root_value',
         'list_repo_dataset_directories',
         'resolve_direct_repo_dataset_root',
         'resolve_repo_relative_root',
+        'inspect_runtime_dataset',
+        'inspect_runtime_hardware',
+        'recommend_notebook_training_params',
+        'resolve_effective_notebook_params',
+        'Apply recommended parameters? [y/N]:',
+        'STATE["recommendation_decision"] = recommendation_decision',
+        'STATE["effective_params"] = effective_params',
+        'effective_params = dict(STATE.get("effective_params") or {})',
         'STATE["runtime_dataset_key"] = selected_dataset_name',
         'STATE["selected_dataset_name"] = selected_dataset_name',
     )
