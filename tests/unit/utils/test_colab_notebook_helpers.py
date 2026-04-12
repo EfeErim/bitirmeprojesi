@@ -1,5 +1,5 @@
-from datetime import datetime
 import json
+from datetime import datetime
 from pathlib import Path
 
 from scripts.colab_checkpointing import TrainingCheckpointManager
@@ -8,8 +8,9 @@ from scripts.colab_notebook_helpers import (
     build_notebook_completion_report,
     build_notebook_run_id,
     ensure_notebook_checkpoint_manager,
-    merge_training_summary_fields,
     maybe_auto_disconnect_colab_runtime,
+    merge_training_summary_fields,
+    persist_production_readiness_artifact,
     persist_validation_artifacts,
 )
 
@@ -42,6 +43,75 @@ def test_persist_validation_artifacts_supports_custom_artifact_subdir(tmp_path: 
 
     assert result["paths"]["report_txt"].exists()
     assert result["paths"]["report_txt"].parent.name == "test"
+
+
+def test_persist_validation_artifacts_forwards_extended_ood_artifacts(tmp_path: Path):
+    result = persist_validation_artifacts(
+        root=tmp_path,
+        y_true=[0, 1, 0, 1],
+        y_pred=[0, 1, 0, 1],
+        classes=["healthy", "disease_a"],
+        require_ood=True,
+        emit_metric_gate=False,
+        ood_labels=[0, 0, 0, 0, 1, 1],
+        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+        ood_scores_by_method={
+            "ensemble": [0.1, 0.2, 0.15, 0.18, 0.8, 0.9],
+            "energy": [0.2, 0.25, 0.22, 0.24, 0.86, 0.95],
+        },
+        ood_type_breakdown={
+            "blur": {
+                "sample_count": 2,
+                "method_metrics": {
+                    "ensemble": {"ood_auroc": 0.81, "ood_false_positive_rate": 0.12, "in_distribution_samples": 4},
+                    "energy": {"ood_auroc": 0.84, "ood_false_positive_rate": 0.08, "in_distribution_samples": 4},
+                },
+            }
+        },
+        prediction_rows=[
+            {
+                "sample_origin": "in_distribution",
+                "split_name": "test",
+                "image_path": "runtime/tomato/test/healthy/img1.jpg",
+                "true_label": "healthy",
+                "pred_label": "healthy",
+                "is_correct": True,
+                "class_confidence": 0.99,
+            }
+        ],
+        context={
+            "crop_name": "tomato",
+            "split_name": "test",
+            "ood_requested_primary_score_method": "auto",
+            "ood_primary_score_method": "ensemble",
+            "ood_primary_score_selection_source": "real_ood_guardrail",
+        },
+    )
+
+    assert "metric_gate_json" not in result["paths"]
+    assert result["paths"]["ood_type_breakdown_json"].exists()
+    assert result["paths"]["ood_method_comparison_json"].exists()
+    assert result["paths"]["predictions_csv"].exists()
+
+
+def test_persist_production_readiness_artifact_forwards_require_ood_flag(tmp_path: Path):
+    readiness = persist_production_readiness_artifact(
+        root=tmp_path,
+        classification_metric_gate={
+            "metrics": {
+                "accuracy": 1.0,
+                "macro_f1": 1.0,
+                "weighted_f1": 1.0,
+                "balanced_accuracy": 1.0,
+            }
+        },
+        classification_split="test",
+        ood_evidence_source="unavailable",
+        ood_metrics={},
+        require_ood=False,
+    )
+
+    assert readiness["payload"]["ood_evidence"]["evaluation"]["require_ood"] is False
 
 
 def test_ensure_notebook_checkpoint_manager_returns_existing_instance(tmp_path: Path):
@@ -337,7 +407,10 @@ def test_maybe_auto_disconnect_colab_runtime_skips_when_checks_are_incomplete(tm
     ]
     assert telemetry.latest_payloads[-1]["completion_soft_missing"] == ["executed_notebook_export"]
     assert lines == [
-        "[COLAB] Auto-disconnect skipped. Incomplete required checks: evaluation_artifacts, production_readiness, repo_exports",
+        (
+            "[COLAB] Auto-disconnect skipped. Incomplete required checks: "
+            "evaluation_artifacts, production_readiness, repo_exports"
+        ),
         "[COLAB] Soft-missing checks: executed_notebook_export",
     ]
 

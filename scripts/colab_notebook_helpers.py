@@ -330,12 +330,16 @@ def persist_validation_artifacts(
     telemetry_subdir: Optional[str] = None,
     gate_targets: Optional[Dict[str, float]] = None,
     require_ood: bool = False,
+    emit_metric_gate: bool = True,
     ood_labels: Optional[List[int]] = None,
     ood_scores: Optional[List[float]] = None,
+    ood_scores_by_method: Optional[Dict[str, List[float]]] = None,
     sure_ds_f1: Optional[float] = None,
     conformal_empirical_coverage: Optional[float] = None,
     conformal_avg_set_size: Optional[float] = None,
+    ood_type_breakdown: Optional[Dict[str, Any]] = None,
     context: Optional[Dict[str, Any]] = None,
+    prediction_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     return persist_validation_artifacts_core(
         artifact_root=_artifact_dir(root),
@@ -347,12 +351,16 @@ def persist_validation_artifacts(
         telemetry_subdir=telemetry_subdir,
         gate_targets=gate_targets,
         require_ood=require_ood,
+        emit_metric_gate=emit_metric_gate,
         ood_labels=ood_labels,
         ood_scores=ood_scores,
+        ood_scores_by_method=ood_scores_by_method,
         sure_ds_f1=sure_ds_f1,
         conformal_empirical_coverage=conformal_empirical_coverage,
         conformal_avg_set_size=conformal_avg_set_size,
+        ood_type_breakdown=ood_type_breakdown,
         context=context,
+        prediction_rows=prediction_rows,
     )
 
 
@@ -365,6 +373,7 @@ def persist_production_readiness_artifact(
     ood_metrics: Dict[str, Any] | None,
     targets: Optional[Dict[str, float]] = None,
     context: Optional[Dict[str, Any]] = None,
+    require_ood: bool = True,
     telemetry: Any = None,
 ) -> Dict[str, Any]:
     return persist_production_readiness_artifact_core(
@@ -375,6 +384,7 @@ def persist_production_readiness_artifact(
         ood_metrics=ood_metrics,
         targets=targets,
         context=context,
+        require_ood=require_ood,
         telemetry=telemetry,
     )
 
