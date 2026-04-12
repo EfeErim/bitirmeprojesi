@@ -6,6 +6,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -95,6 +96,14 @@ def install_colab_requirements(req_path: Path, in_colab: bool) -> None:
         )
 
 
+def _requirement_name(requirement_line: str) -> str:
+    requirement = str(requirement_line or "").strip().split(";", 1)[0].strip()
+    if not requirement:
+        return ""
+    match = re.match(r"([A-Za-z0-9_.-]+)", requirement)
+    return "" if match is None else str(match.group(1)).lower()
+
+
 def _flatten_colab_safe_requirements(req_path: Path, _seen: Optional[set[Path]] = None) -> list[str]:
     resolved_path = Path(req_path).expanduser().resolve()
     seen = set() if _seen is None else _seen
@@ -113,7 +122,7 @@ def _flatten_colab_safe_requirements(req_path: Path, _seen: Optional[set[Path]] 
             nested_path = (resolved_path.parent / include_path.strip()).resolve()
             filtered.extend(_flatten_colab_safe_requirements(nested_path, seen))
             continue
-        if lowered.startswith(TORCH_REQUIREMENT_PREFIXES):
+        if _requirement_name(stripped) in TORCH_REQUIREMENT_PREFIXES:
             continue
         filtered.append(stripped)
     return filtered
@@ -193,7 +202,10 @@ def export_current_colab_notebook(
     max_attempts = max(1, int(attempts))
     delay = max(0.0, float(retry_delay_sec))
     for attempt_index in range(max_attempts):
-        response = _message.blocking_request("get_ipynb", timeout_sec=30)
+        try:
+            response = _message.blocking_request("get_ipynb", timeout_sec=30)
+        except Exception:
+            response = None
         candidate = response.get("ipynb") if isinstance(response, dict) else None
         if isinstance(candidate, dict) and candidate:
             payload = candidate
@@ -306,7 +318,12 @@ def _run_git_push_with_token(*, repo: Path, remote_url: str, token: str, branch:
         output = _redact_secret(str(completed.stdout or ""), token)
         output_lower = output.lower()
         permission_hint = ""
-        if "permission to " in output_lower or "denied to" in output_lower or "http 403" in output_lower or "returned error: 403" in output_lower:
+        if (
+            "permission to " in output_lower
+            or "denied to" in output_lower
+            or "http 403" in output_lower
+            or "returned error: 403" in output_lower
+        ):
             permission_hint = (
                 " The token appears to lack write access to this repository. "
                 "Use a GitHub token from an account or PAT that can push to the target repo, "
@@ -575,7 +592,10 @@ def push_repo_paths_to_github(
     message = str(commit_message or f"Add generated repo assets: {', '.join(normalized_paths)}")
     _run_git(["commit", "-m", message, "--", *normalized_paths], cwd=repo)
     _run_git_push_with_token(repo=repo, remote_url=remote_url, token=resolved_token, branch=resolved_branch)
-    emit(f"[GIT] Pushed {len(staged_files)} file(s) from {', '.join(normalized_paths)} to {remote_name}/{resolved_branch}.")
+    emit(
+        f"[GIT] Pushed {len(staged_files)} file(s) from "
+        f"{', '.join(normalized_paths)} to {remote_name}/{resolved_branch}."
+    )
     return {
         "enabled": True,
         "pushed": True,
@@ -871,7 +891,10 @@ def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None
     emit = print if print_fn is None else print_fn
     token = resolve_hf_token()
     if not token:
-        emit("[HF] Token bulunamadi. Inference veya egitimden once HF_TOKEN adli Colab secret ya da env var tanimlayin.")
+        emit(
+            "[HF] Token bulunamadi. Inference veya egitimden once "
+            "HF_TOKEN adli Colab secret ya da env var tanimlayin."
+        )
         return False
 
     try:

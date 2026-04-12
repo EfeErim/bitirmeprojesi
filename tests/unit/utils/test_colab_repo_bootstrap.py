@@ -128,6 +128,39 @@ def test_export_current_colab_notebook_retries_empty_payload_then_succeeds(tmp_p
     assert payload["nbformat"] == 4
 
 
+def test_export_current_colab_notebook_treats_request_errors_as_soft_failures(tmp_path: Path, monkeypatch):
+    target = tmp_path / "executed.ipynb"
+    monkeypatch.setattr(bootstrap, "running_in_colab", lambda: True)
+    monkeypatch.setattr(bootstrap.time, "sleep", lambda *_args, **_kwargs: None)
+
+    responses = iter(
+        [
+            RuntimeError("runtime tearing down"),
+            {"ipynb": {"cells": [], "metadata": {}, "nbformat": 4, "nbformat_minor": 5}},
+        ]
+    )
+
+    def _blocking_request(*_args, **_kwargs):
+        value = next(responses)
+        if isinstance(value, Exception):
+            raise value
+        return value
+
+    fake_colab = ModuleType("google.colab")
+    fake_colab._message = SimpleNamespace(blocking_request=_blocking_request)
+    fake_google = ModuleType("google")
+    fake_google.colab = fake_colab
+
+    monkeypatch.setitem(sys.modules, "google", fake_google)
+    monkeypatch.setitem(sys.modules, "google.colab", fake_colab)
+
+    exported = bootstrap.export_current_colab_notebook(target, attempts=2, retry_delay_sec=0.0)
+
+    assert exported == target
+    payload = json.loads(target.read_text(encoding="utf-8"))
+    assert payload["nbformat_minor"] == 5
+
+
 def test_flatten_colab_safe_requirements_expands_nested_files_and_skips_torch_family(tmp_path: Path):
     root_req = tmp_path / "requirements_colab.txt"
     base_req = tmp_path / "requirements.txt"
@@ -163,6 +196,29 @@ def test_flatten_colab_safe_requirements_expands_nested_files_and_skips_torch_fa
         "transformers~=5.1.0",
         "open-clip-torch~=3.2.0",
         "psutil>=5.9.0",
+    ]
+
+
+def test_flatten_colab_safe_requirements_keeps_non_core_torch_packages(tmp_path: Path):
+    req = tmp_path / "requirements_colab.txt"
+    req.write_text(
+        "\n".join(
+            [
+                "torch~=2.10.0",
+                "torchmetrics>=1.4.0",
+                "torcheval==0.0.7",
+                "torchvision~=0.25.0",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    flattened = bootstrap._flatten_colab_safe_requirements(req)
+
+    assert flattened == [
+        "torchmetrics>=1.4.0",
+        "torcheval==0.0.7",
     ]
 
 
