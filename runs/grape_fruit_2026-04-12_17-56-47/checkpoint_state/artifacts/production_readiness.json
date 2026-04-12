@@ -1,0 +1,163 @@
+{
+  "status": "failed",
+  "passed": false,
+  "policy_passed": false,
+  "deployable": false,
+  "ood_evidence_source": "real_ood_split",
+  "classification_evidence": {
+    "split_name": "test",
+    "metrics": {
+      "accuracy": 0.7905405163764954,
+      "balanced_accuracy": 0.7440476190476191,
+      "macro_f1": 0.7253821027516552,
+      "ood_auroc": 0.6266346992153444,
+      "ood_false_positive_rate": 0.8918918918918919,
+      "classification_samples": 148,
+      "ood_samples": 155,
+      "in_distribution_samples": 148,
+      "sure_ds_f1": 0.10604651162790697,
+      "conformal_empirical_coverage": 0.9459459459459459,
+      "conformal_avg_set_size": 2.2432432432432434
+    },
+    "evaluation": {
+      "checks": {
+        "accuracy": {
+          "value": 0.7905405163764954,
+          "target": 0.93,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "balanced_accuracy": {
+          "value": 0.7440476190476191,
+          "target": 0.9,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "macro_f1": {
+          "value": 0.7253821027516552,
+          "target": 0.9,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        }
+      }
+    }
+  },
+  "ood_evidence": {
+    "source": "real_ood_split",
+    "metrics": {
+      "ood_auroc": 0.6266346992153444,
+      "ood_false_positive_rate": 0.8918918918918919,
+      "ood_samples": 155,
+      "in_distribution_samples": 148,
+      "sure_ds_f1": 0.10604651162790697,
+      "conformal_empirical_coverage": 0.9459459459459459,
+      "conformal_avg_set_size": 2.2432432432432434
+    },
+    "evaluation": {
+      "passed": false,
+      "require_ood": true,
+      "targets": {
+        "accuracy": 0.93,
+        "balanced_accuracy": 0.9,
+        "macro_f1": 0.9,
+        "ood_auroc": 0.92,
+        "ood_false_positive_rate": 0.05,
+        "ood_samples": 5.0,
+        "in_distribution_samples": 5.0,
+        "sure_ds_f1": 0.9,
+        "conformal_empirical_coverage": 0.95,
+        "conformal_avg_set_size": 2.0
+      },
+      "checks": {
+        "ood_auroc": {
+          "value": 0.6266346992153444,
+          "target": 0.92,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "ood_false_positive_rate": {
+          "value": 0.8918918918918919,
+          "target": 0.05,
+          "operator": "<=",
+          "asserted": true,
+          "passed": false
+        },
+        "ood_samples": {
+          "value": 155,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "in_distribution_samples": {
+          "value": 148,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "sure_ds_f1": {
+          "value": 0.10604651162790697,
+          "target": 0.9,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "conformal_empirical_coverage": {
+          "value": 0.9459459459459459,
+          "target": 0.95,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "conformal_avg_set_size": {
+          "value": 2.2432432432432434,
+          "target": 2.0,
+          "operator": "<=",
+          "asserted": true,
+          "passed": false
+        }
+      },
+      "gating": {
+        "status": "ready",
+        "reason": "all_required_metrics_present",
+        "missing_metrics": []
+      }
+    }
+  },
+  "missing_requirements": [
+    "accuracy",
+    "balanced_accuracy",
+    "macro_f1",
+    "ood_auroc",
+    "ood_false_positive_rate",
+    "sure_ds_f1",
+    "conformal_empirical_coverage",
+    "conformal_avg_set_size"
+  ],
+  "missing_deployment_requirements": [],
+  "targets": {
+    "accuracy": 0.93,
+    "balanced_accuracy": 0.9,
+    "macro_f1": 0.9,
+    "ood_auroc": 0.92,
+    "ood_false_positive_rate": 0.05,
+    "ood_samples": 5.0,
+    "in_distribution_samples": 5.0,
+    "sure_ds_f1": 0.9,
+    "conformal_empirical_coverage": 0.95,
+    "conformal_avg_set_size": 2.0
+  },
+  "context": {
+    "run_id": "grape_fruit_2026-04-12_17-56-47",
+    "crop_name": "grape",
+    "part_name": "fruit",
+    "classification_split": "test",
+    "ood_benchmark_status": null,
+    "ood_benchmark_passed": null
+  }
+}

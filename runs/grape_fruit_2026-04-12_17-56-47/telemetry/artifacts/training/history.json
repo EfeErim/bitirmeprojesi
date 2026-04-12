@@ -1,0 +1,931 @@
+{
+  "train_loss": [
+    1.6492340962092082,
+    1.6068995396296184,
+    1.606339951356252,
+    1.6005844672520955,
+    1.592974861462911,
+    1.5607627232869465,
+    1.4772279461224873,
+    1.3921907941500347,
+    1.349337637424469,
+    1.2888813018798828,
+    1.2079113920529683,
+    1.1801784833272297,
+    1.1443549195925395,
+    1.1287410457928975,
+    1.1135093569755554,
+    1.1234724521636963,
+    1.1305447022120159,
+    1.0953488945960999,
+    1.0911911328633626,
+    1.0870312253634136,
+    1.0986647407213848,
+    1.074444591999054,
+    1.0852702657381694,
+    1.0814119577407837,
+    1.0775970816612244
+  ],
+  "val_loss": [
+    1.4966456149075482,
+    1.7371999250875938,
+    1.582082748413086,
+    1.5457245272559088,
+    1.4319011134070319,
+    1.3758831249701011,
+    1.2969937936679736,
+    1.2194944297945178,
+    1.1434813608994354,
+    1.1524244401905988,
+    1.0333369019869212,
+    0.9191865179989789,
+    0.8017547839396709,
+    0.7248721001921473,
+    0.7848119220218143,
+    0.7365872344455203,
+    0.6761711175377304,
+    0.7110015838532835,
+    0.678461413125734,
+    0.6597097942958007,
+    0.6446614764832161,
+    0.6393046008573996,
+    0.6403182140878729,
+    0.643760813249124,
+    0.6445602379940651
+  ],
+  "val_accuracy": [
+    0.3581081081081081,
+    0.18243243243243243,
+    0.21621621621621623,
+    0.2972972972972973,
+    0.43243243243243246,
+    0.36486486486486486,
+    0.4797297297297297,
+    0.581081081081081,
+    0.5540540540540541,
+    0.5878378378378378,
+    0.6486486486486487,
+    0.6283783783783784,
+    0.722972972972973,
+    0.7432432432432432,
+    0.7027027027027027,
+    0.7094594594594594,
+    0.7635135135135135,
+    0.7567567567567568,
+    0.777027027027027,
+    0.7635135135135135,
+    0.7837837837837838,
+    0.7635135135135135,
+    0.777027027027027,
+    0.777027027027027,
+    0.7702702702702703
+  ],
+  "macro_precision": [
+    0.0716216191649437,
+    0.06794799864292145,
+    0.14406433701515198,
+    0.09641025960445404,
+    0.44790372252464294,
+    0.33318501710891724,
+    0.4013833999633789,
+    0.5357342958450317,
+    0.518770694732666,
+    0.5613786578178406,
+    0.6913160681724548,
+    0.5966473817825317,
+    0.6476960778236389,
+    0.6780022978782654,
+    0.6535557508468628,
+    0.6614152193069458,
+    0.7030976414680481,
+    0.6991338133811951,
+    0.7207210063934326,
+    0.704737663269043,
+    0.7406164407730103,
+    0.7190835475921631,
+    0.7292364239692688,
+    0.7292364239692688,
+    0.7104085683822632
+  ],
+  "macro_recall": [
+    0.20000000298023224,
+    0.3499999940395355,
+    0.2963162660598755,
+    0.22380952537059784,
+    0.4141060411930084,
+    0.3500898480415344,
+    0.3785489499568939,
+    0.45671606063842773,
+    0.5327044129371643,
+    0.5339173078536987,
+    0.6069406867027283,
+    0.5924528241157532,
+    0.6759883165359497,
+    0.6924527883529663,
+    0.6674528121948242,
+    0.672214686870575,
+    0.7138813734054565,
+    0.7176550030708313,
+    0.736702561378479,
+    0.718643307685852,
+    0.7555481195449829,
+    0.7341195344924927,
+    0.7474168539047241,
+    0.7474168539047241,
+    0.722416877746582
+  ],
+  "macro_f1": [
+    0.1054726392030716,
+    0.11256039142608643,
+    0.13873863220214844,
+    0.12611806392669678,
+    0.32965904474258423,
+    0.278604120016098,
+    0.30885571241378784,
+    0.41069310903549194,
+    0.47701603174209595,
+    0.48508962988853455,
+    0.5981552004814148,
+    0.5266461968421936,
+    0.6396620869636536,
+    0.6737861037254333,
+    0.6254908442497253,
+    0.6308349370956421,
+    0.6972618103027344,
+    0.6836138963699341,
+    0.7120611071586609,
+    0.6998472809791565,
+    0.7298911809921265,
+    0.7088620662689209,
+    0.7215222716331482,
+    0.7215222716331482,
+    0.7021030187606812
+  ],
+  "weighted_f1": [
+    0.18885303188014674,
+    0.06458088513967153,
+    0.18627397434131518,
+    0.15712178720010295,
+    0.3672447462339659,
+    0.3341963999980205,
+    0.395697207064242,
+    0.5381808925319362,
+    0.5355061711491765,
+    0.5402024243329022,
+    0.6139082522005648,
+    0.6008494609111065,
+    0.7137870273074588,
+    0.7387826249406144,
+    0.6877812050484322,
+    0.7028621982883763,
+    0.7609713786357158,
+    0.7463951626339475,
+    0.7653701369826859,
+    0.7585664182095915,
+    0.7833763328758446,
+    0.7612342318973025,
+    0.7728139000969965,
+    0.7728139000969965,
+    0.765729130925359
+  ],
+  "balanced_accuracy": [
+    0.20000000298023224,
+    0.3499999940395355,
+    0.2963162660598755,
+    0.22380952537059784,
+    0.4141060411930084,
+    0.3500898480415344,
+    0.3785489499568939,
+    0.45671606063842773,
+    0.5327044129371643,
+    0.5339173078536987,
+    0.6069406867027283,
+    0.5924528241157532,
+    0.6759883165359497,
+    0.6924527883529663,
+    0.6674528121948242,
+    0.672214686870575,
+    0.7138813734054565,
+    0.7176550030708313,
+    0.736702561378479,
+    0.718643307685852,
+    0.7555481195449829,
+    0.7341195344924927,
+    0.7474168539047241,
+    0.7474168539047241,
+    0.722416877746582
+  ],
+  "generalization_gap": [
+    -0.15258848130166003,
+    0.1303003854579754,
+    -0.024257202943166023,
+    -0.05485993999618666,
+    -0.16107374805587904,
+    -0.18487959831684542,
+    -0.18023415245451369,
+    -0.17269636435551683,
+    -0.20585627652503358,
+    -0.13645686168928406,
+    -0.17457449006604708,
+    -0.26099196532825086,
+    -0.3426001356528686,
+    -0.40386894560075015,
+    -0.32869743495374115,
+    -0.38688521771817597,
+    -0.45437358467428546,
+    -0.38434731074281636,
+    -0.4127297197376285,
+    -0.4273214310676129,
+    -0.4540032642381686,
+    -0.43513999114165436,
+    -0.4449520516502965,
+    -0.43765114449165965,
+    -0.4330368436671592
+  ],
+  "per_class_accuracy": [
+    {
+      "anthracnose": 0.0,
+      "botrytis_bunch_rot": 0.0,
+      "downy_mildew": 0.0,
+      "healthy": 1.0,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 1.0,
+      "botrytis_bunch_rot": 0.0,
+      "downy_mildew": 0.0,
+      "healthy": 0.0,
+      "powdery_mildew": 0.75
+    },
+    {
+      "anthracnose": 0.0476190485060215,
+      "botrytis_bunch_rot": 0.0,
+      "downy_mildew": 0.0,
+      "healthy": 0.43396225571632385,
+      "powdery_mildew": 1.0
+    },
+    {
+      "anthracnose": 0.1428571492433548,
+      "botrytis_bunch_rot": 0.976190447807312,
+      "downy_mildew": 0.0,
+      "healthy": 0.0,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 0.4285714328289032,
+      "botrytis_bunch_rot": 0.7142857313156128,
+      "downy_mildew": 0.8333333134651184,
+      "healthy": 0.09433962404727936,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 0.380952388048172,
+      "botrytis_bunch_rot": 0.0,
+      "downy_mildew": 0.9166666865348816,
+      "healthy": 0.4528301954269409,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 0.761904776096344,
+      "botrytis_bunch_rot": 0.1190476194024086,
+      "downy_mildew": 0.125,
+      "healthy": 0.8867924809455872,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.5,
+      "downy_mildew": 0.125,
+      "healthy": 0.849056601524353,
+      "powdery_mildew": 0.0
+    },
+    {
+      "anthracnose": 0.761904776096344,
+      "botrytis_bunch_rot": 0.2380952388048172,
+      "downy_mildew": 0.3333333432674408,
+      "healthy": 0.8301886916160583,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.9047619104385376,
+      "botrytis_bunch_rot": 0.2380952388048172,
+      "downy_mildew": 0.2083333283662796,
+      "healthy": 0.9433962106704712,
+      "powdery_mildew": 0.375
+    },
+    {
+      "anthracnose": 0.6666666865348816,
+      "botrytis_bunch_rot": 0.261904776096344,
+      "downy_mildew": 0.625,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.9047619104385376,
+      "botrytis_bunch_rot": 0.261904776096344,
+      "downy_mildew": 0.3333333432674408,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.9047619104385376,
+      "botrytis_bunch_rot": 0.4523809552192688,
+      "downy_mildew": 0.5416666865348816,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.6666666865348816,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.3571428656578064,
+      "downy_mildew": 0.7083333134651184,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.380952388048172,
+      "downy_mildew": 0.7083333134651184,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.5476190447807312,
+      "downy_mildew": 0.75,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.9047619104385376,
+      "botrytis_bunch_rot": 0.4523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.9523809552192688,
+      "botrytis_bunch_rot": 0.5,
+      "downy_mildew": 0.75,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8571428656578064,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.5
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.5476190447807312,
+      "downy_mildew": 0.8333333134651184,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.625
+    },
+    {
+      "anthracnose": 0.8095238208770752,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9622641801834106,
+      "powdery_mildew": 0.625
+    },
+    {
+      "anthracnose": 0.8571428656578064,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.625
+    },
+    {
+      "anthracnose": 0.8571428656578064,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.625
+    },
+    {
+      "anthracnose": 0.8571428656578064,
+      "botrytis_bunch_rot": 0.523809552192688,
+      "downy_mildew": 0.75,
+      "healthy": 0.9811320900917053,
+      "powdery_mildew": 0.5
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 24
+      },
+      {
+        "class_name": "anthracnose",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 21
+      }
+    ],
+    [
+      {
+        "class_name": "healthy",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 53
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 24
+      },
+      {
+        "class_name": "anthracnose",
+        "class_index": 0,
+        "accuracy": 0.0476190485060215,
+        "support": 21
+      }
+    ],
+    [
+      {
+        "class_name": "healthy",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 53
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 24
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 8
+      },
+      {
+        "class_name": "healthy",
+        "class_index": 3,
+        "accuracy": 0.09433962404727936,
+        "support": 53
+      },
+      {
+        "class_name": "anthracnose",
+        "class_index": 0,
+        "accuracy": 0.4285714328289032,
+        "support": 21
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 8
+      },
+      {
+        "class_name": "anthracnose",
+        "class_index": 0,
+        "accuracy": 0.380952388048172,
+        "support": 21
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 8
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.1190476194024086,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.125,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.125,
+        "support": 24
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.5,
+        "support": 42
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.2380952388048172,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.3333333432674408,
+        "support": 24
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.2083333283662796,
+        "support": 24
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.2380952388048172,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.375,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.261904776096344,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.625,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.261904776096344,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.3333333432674408,
+        "support": 24
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.4523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.5416666865348816,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.6666666865348816,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.3571428656578064,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.7083333134651184,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.380952388048172,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.7083333134651184,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.5476190447807312,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.4523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.5,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.5476190447807312,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.625,
+        "support": 8
+      },
+      {
+        "class_name": "anthracnose",
+        "class_index": 0,
+        "accuracy": 0.8095238208770752,
+        "support": 21
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.625,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.625,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.625,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ],
+    [
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 8
+      },
+      {
+        "class_name": "botrytis_bunch_rot",
+        "class_index": 1,
+        "accuracy": 0.523809552192688,
+        "support": 42
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 24
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 150,
+  "optimizer_steps": 150,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 22,
+  "best_metric_value": 0.6393046008573996
+}
