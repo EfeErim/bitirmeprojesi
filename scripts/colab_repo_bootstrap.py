@@ -304,9 +304,17 @@ def _run_git_push_with_token(*, repo: Path, remote_url: str, token: str, branch:
     )
     if completed.returncode != 0:
         output = _redact_secret(str(completed.stdout or ""), token)
+        output_lower = output.lower()
+        permission_hint = ""
+        if "permission to " in output_lower or "denied to" in output_lower or "http 403" in output_lower or "returned error: 403" in output_lower:
+            permission_hint = (
+                " The token appears to lack write access to this repository. "
+                "Use a GitHub token from an account or PAT that can push to the target repo, "
+                "or set AUTO_PUSH_TO_GITHUB=False to keep the run local."
+            )
         raise RuntimeError(
             f"GitHub push failed with exit code {completed.returncode}. "
-            f"Output:\n{output.strip() or '<no output>'}"
+            f"Output:\n{output.strip() or '<no output>'}{permission_hint}"
         )
 
 
