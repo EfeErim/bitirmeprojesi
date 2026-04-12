@@ -82,3 +82,36 @@ def test_checkpoint_manager_uses_unique_names_for_same_step_in_same_second(tmp_p
     assert first["path"] != second["path"]
     assert Path(first["path"]).exists()
     assert Path(second["path"]).exists()
+
+
+def test_checkpoint_manager_skips_prune_when_best_manifest_is_corrupt(tmp_path: Path):
+    manager = TrainingCheckpointManager(tmp_path / "telemetry" / "run_3", retention=1)
+
+    first = manager.save_checkpoint(
+        adapter=_FakeAdapter(),
+        session=_FakeSession(),
+        reason="best",
+        run_id="run_3",
+        mark_best=True,
+    )
+    manager.save_checkpoint(
+        adapter=_FakeAdapter(),
+        session=_FakeSession(),
+        reason="latest",
+        run_id="run_3",
+    )
+
+    manager.best_manifest_path.write_text("{not-json", encoding="utf-8")
+
+    third = manager.save_checkpoint(
+        adapter=_FakeAdapter(),
+        session=_FakeSession(),
+        reason="after_corruption",
+        run_id="run_3",
+    )
+
+    rows = manager.list_checkpoints()
+
+    assert Path(first["path"]).exists()
+    assert Path(third["path"]).exists()
+    assert len(rows) == 3

@@ -17,28 +17,35 @@ from src.training.services.class_balance import (
 from src.training.services.runtime_dataset import resolve_runtime_dataset
 
 
-def loader_size(loader: Any) -> int:
+def loader_size(loader: Any, *, loader_name: str = "loader") -> int:
+    if loader is None:
+        return 0
     dataset = getattr(loader, "dataset", None)
     if dataset is not None:
         try:
             return int(len(dataset))
-        except Exception:
-            return 0
+        except Exception as exc:
+            raise RuntimeError(f"Failed to determine dataset size for {loader_name}.") from exc
     try:
         return int(len(loader))
-    except Exception:
-        return 0
+    except Exception as exc:
+        raise RuntimeError(f"Failed to determine dataset size for {loader_name}.") from exc
 
 
 def build_loader_sizes(loaders: Dict[str, Any]) -> Dict[str, int]:
-    return {name: loader_size(loader) for name, loader in loaders.items()}
+    return {
+        name: loader_size(loader, loader_name=f"{name} loader")
+        for name, loader in loaders.items()
+    }
 
 
-def loader_batch_count(loader: Any) -> int:
+def loader_batch_count(loader: Any, *, loader_name: str = "loader") -> int:
+    if loader is None:
+        return 0
     try:
         return int(len(loader))
-    except Exception:
-        return 0
+    except Exception as exc:
+        raise RuntimeError(f"Failed to determine batch count for {loader_name}.") from exc
 
 
 def stringify_paths(value: Any) -> Any:
@@ -222,7 +229,10 @@ def prepare_training_run(
         pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
     )
     loader_sizes = build_loader_sizes(loaders)
-    loader_batch_counts = {name: loader_batch_count(loader) for name, loader in loaders.items()}
+    loader_batch_counts = {
+        name: loader_batch_count(loader, loader_name=f"{name} loader")
+        for name, loader in loaders.items()
+    }
     detected_classes, split_class_counts = _validate_training_layout(
         crop_name=crop_name,
         data_dir=data_dir,

@@ -1137,3 +1137,95 @@ def test_training_workflow_records_few_shot_research_mode_in_artifacts(monkeypat
     assert run_context["class_balance"]["few_shot_research_mode"] is True
     assert run_context["class_balance"]["production_guardrail_bypassed"] is True
     assert summary["class_balance"]["production_under_min_classes"] == ["healthy", "disease_a"]
+
+
+def test_training_workflow_does_not_write_readiness_when_adapter_export_fails(monkeypatch, tmp_path: Path):
+    class FailingExportAdapter(FakeAdapter):
+        def save_adapter(self, output_dir):
+            raise RuntimeError("simulated export failure")
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"]),
+            "val": FakeLoader(["healthy", "disease_a"]),
+            "test": FakeLoader(["healthy", "disease_a"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FailingExportAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=False),
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": False},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    with pytest.raises(RuntimeError, match="simulated export failure"):
+        workflow.run(
+            crop_name="tomato",
+            data_dir=tmp_path / "runtime_data",
+            output_dir=tmp_path / "outputs",
+        )
+
+    assert not (tmp_path / "outputs" / "training_metrics" / "production_readiness.json").exists()
+
+
+def test_training_workflow_surfaces_loader_length_failures(monkeypatch, tmp_path: Path):
+    class BrokenDataset:
+        def __init__(self):
+            self.classes = ["healthy"]
+
+        def __len__(self):
+            raise RuntimeError("dataset length exploded")
+
+    class BrokenLoader(list):
+        def __init__(self):
+            super().__init__([{"images": 1, "labels": 0}])
+            self.dataset = BrokenDataset()
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": BrokenLoader(),
+            "val": FakeLoader(["healthy"]),
+            "test": FakeLoader(["healthy"]),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", FakeAdapter)
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    with pytest.raises(RuntimeError, match="Failed to determine dataset size for train loader"):
+        workflow.run(
+            crop_name="tomato",
+            data_dir=tmp_path / "runtime_data",
+            output_dir=tmp_path / "outputs",
+        )

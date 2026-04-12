@@ -1027,35 +1027,21 @@ class TrainingWorkflow:
             ood_evidence_source=ood_evidence_source,
             ood_benchmark=ood_benchmark,
         )
-        readiness_artifacts = persist_production_readiness_artifact(
-            artifact_root=artifact_dir,
-            classification_metric_gate=(
-                dict(authoritative_artifacts.get("metric_gate", {}))
-                if isinstance(authoritative_artifacts, dict)
-                else None
-            ),
+        readiness_context = build_production_readiness_context_payload(
+            run_id=run_id,
+            crop_name=crop_name,
+            loader_sizes=loader_sizes,
+            loader_batch_counts=loader_batch_counts,
+            split_class_counts=split_class_counts,
+            calibration_split_name=calibration_split_name,
+            best_state_restored=best_state_restored,
             classification_split=authoritative_split,
-            ood_evidence_source=ood_evidence_source,
-            ood_metrics=ood_evidence_metrics,
-            context=build_production_readiness_context_payload(
-                run_id=run_id,
-                crop_name=crop_name,
-                loader_sizes=loader_sizes,
-                loader_batch_counts=loader_batch_counts,
-                split_class_counts=split_class_counts,
-                calibration_split_name=calibration_split_name,
-                best_state_restored=best_state_restored,
-                classification_split=authoritative_split,
-                requested_primary_score_method=requested_primary_score_method,
-                selected_primary_score_method=primary_score_stage.selected_method,
-                selection_source=primary_score_stage.selection_source,
-                ood_benchmark=ood_benchmark,
-                ood_method_comparison=ood_method_comparison_context,
-            ),
-            require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
-            telemetry=telemetry,
+            requested_primary_score_method=requested_primary_score_method,
+            selected_primary_score_method=primary_score_stage.selected_method,
+            selection_source=primary_score_stage.selection_source,
+            ood_benchmark=ood_benchmark,
+            ood_method_comparison=ood_method_comparison_context,
         )
-        production_readiness = dict(readiness_artifacts.get("payload", {}))
         record_adapter_export_metadata_payload(
             adapter,
             ood_calibration=ood_calibration,
@@ -1069,6 +1055,21 @@ class TrainingWorkflow:
             best_state_restored=best_state_restored,
         )
         adapter_dir = adapter.save_adapter(str(resolved_output_dir))
+        readiness_artifacts = persist_production_readiness_artifact(
+            artifact_root=artifact_dir,
+            classification_metric_gate=(
+                dict(authoritative_artifacts.get("metric_gate", {}))
+                if isinstance(authoritative_artifacts, dict)
+                else None
+            ),
+            classification_split=authoritative_split,
+            ood_evidence_source=ood_evidence_source,
+            ood_metrics=ood_evidence_metrics,
+            context=readiness_context,
+            require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
+            telemetry=telemetry,
+        )
+        production_readiness = dict(readiness_artifacts.get("payload", {}))
         self._emit_telemetry(
             telemetry,
             "production_readiness_ready",

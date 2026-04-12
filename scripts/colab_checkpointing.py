@@ -31,9 +31,12 @@ class TrainingCheckpointManager:
         self.checkpoints_dir.mkdir(parents=True, exist_ok=True)
 
     def _read_json(self, path: Path, default: Any) -> Any:
+        if not path.exists():
+            return default
         try:
             return read_json(path, default=default)
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to read checkpoint metadata %s: %s", path, exc)
             return default
 
     def _write_json(self, path: Path, payload: Any) -> None:
@@ -116,9 +119,19 @@ class TrainingCheckpointManager:
             return
         rows.sort(key=lambda row: str(row.get("created_at", "")), reverse=True)
         best_path = None
-        best = self.get_best()
-        if best and isinstance(best.get("path"), str):
-            best_path = Path(best["path"]).resolve()
+        if self.best_manifest_path.exists():
+            try:
+                best = read_json(self.best_manifest_path, default=None)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to read best checkpoint manifest %s; skipping checkpoint pruning to avoid "
+                    "losing the best checkpoint: %s",
+                    self.best_manifest_path,
+                    exc,
+                )
+                return
+            if isinstance(best, dict) and isinstance(best.get("path"), str):
+                best_path = Path(best["path"]).resolve()
 
         kept: List[Dict[str, Any]] = []
         removed: List[Dict[str, Any]] = []

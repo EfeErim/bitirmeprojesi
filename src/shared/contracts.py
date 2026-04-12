@@ -257,7 +257,7 @@ class RouterAnalysisResult:
 
         if self.primary_detection is not None and not isinstance(self.primary_detection, RouterDetection):
             self.primary_detection = RouterDetection.from_dict(self.primary_detection)
-        if self.detections:
+        if self.primary_detection is None and self.detections:
             self.primary_detection = self.detections[0]
 
         if self.detections_count is None:

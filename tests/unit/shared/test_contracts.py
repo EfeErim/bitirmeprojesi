@@ -27,6 +27,21 @@ def test_router_analysis_result_prefers_quality_score_when_present():
     assert [detection.crop for detection in result.detections] == ["potato", "tomato"]
 
 
+def test_router_analysis_result_preserves_explicit_primary_detection():
+    explicit_primary = RouterDetection(crop="tomato", part="leaf", crop_confidence=0.61, quality_score=0.40)
+    result = RouterAnalysisResult(
+        detections=[
+            explicit_primary,
+            RouterDetection(crop="potato", part="leaf", crop_confidence=0.95, quality_score=0.75),
+        ],
+        primary_detection=explicit_primary,
+    )
+
+    assert result.primary_detection is not None
+    assert result.primary_detection.crop == "tomato"
+    assert [detection.crop for detection in result.detections] == ["potato", "tomato"]
+
+
 def test_inference_result_serializes_router_summary_block():
     payload = InferenceResult(
         status="success",
