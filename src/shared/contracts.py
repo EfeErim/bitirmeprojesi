@@ -383,11 +383,12 @@ class InferenceResult:
             payload["message"] = str(self.message)
         if include_ood and self.ood_analysis is not None:
             payload["ood_analysis"] = self.ood_analysis.to_dict()
-        resolved_conformal_set = self.conformal_set
-        if resolved_conformal_set is None and self.ood_analysis is not None:
-            resolved_conformal_set = self.ood_analysis.conformal_set
-        if resolved_conformal_set is not None:
-            payload["conformal_set"] = list(resolved_conformal_set)
+        if include_ood:
+            resolved_conformal_set = self.conformal_set
+            if resolved_conformal_set is None and self.ood_analysis is not None:
+                resolved_conformal_set = self.ood_analysis.conformal_set
+            if resolved_conformal_set is not None:
+                payload["conformal_set"] = list(resolved_conformal_set)
         if self.router is not None:
             payload["router"] = self.router.to_summary_dict()
         return payload

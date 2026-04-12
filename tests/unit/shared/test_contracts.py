@@ -1,4 +1,4 @@
-from src.shared.contracts import InferenceResult, RouterAnalysisResult, RouterDetection
+from src.shared.contracts import InferenceResult, OODAnalysis, RouterAnalysisResult, RouterDetection
 
 
 def test_router_analysis_result_preserves_router_order_without_quality_scores():
@@ -72,3 +72,23 @@ def test_inference_result_serializes_router_summary_block():
             "quality_score": 0.8,
         },
     }
+
+
+def test_inference_result_omits_conformal_set_when_ood_is_disabled():
+    payload = InferenceResult(
+        status="success",
+        crop="tomato",
+        diagnosis="healthy",
+        confidence=0.88,
+        ood_analysis=OODAnalysis(
+            score_method="ensemble",
+            primary_score=0.1,
+            decision_threshold=0.8,
+            is_ood=False,
+            calibration_version=2,
+            conformal_set=["healthy"],
+        ),
+    ).to_dict(include_ood=False)
+
+    assert "ood_analysis" not in payload
+    assert "conformal_set" not in payload
