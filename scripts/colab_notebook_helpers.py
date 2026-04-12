@@ -27,6 +27,7 @@ from src.training.services.reporting import (
 matplotlib.use("Agg")
 
 _EXPECTED_REPO_EXPORTS = ("outputs", "telemetry", "checkpoint_state")
+_VALID_PRODUCTION_READINESS_STATUSES = {"ready", "provisional", "failed"}
 
 
 def _slug_label_component(value: str, *, default: str = "unspecified") -> str:
@@ -409,6 +410,8 @@ def build_notebook_completion_report(
 
     evaluation_artifacts = resolved_state.get("evaluation_artifacts")
     evaluation_splits = sorted(evaluation_artifacts.keys()) if isinstance(evaluation_artifacts, dict) else []
+    readiness = resolved_state.get("production_readiness") or {}
+    readiness_status = str(readiness.get("status", "") or "")
 
     summary_path = getattr(telemetry, "local_summary_path", None)
     repo_export_checks = {
@@ -421,8 +424,9 @@ def build_notebook_completion_report(
 
     checks = {
         "evaluation_artifacts": bool(evaluation_splits),
-        "production_readiness": isinstance(resolved_state.get("production_readiness"), dict)
-        and bool(resolved_state.get("production_readiness")),
+        "production_readiness": isinstance(readiness, dict)
+        and bool(readiness)
+        and readiness_status in _VALID_PRODUCTION_READINESS_STATUSES,
         "telemetry_summary": _path_exists(summary_path),
         "repo_exports": repo_exports_complete,
         "executed_notebook_export": _path_exists(notebook_export_path),
@@ -436,8 +440,6 @@ def build_notebook_completion_report(
     soft_check_names = ("executed_notebook_export",)
     missing = [name for name in blocking_check_names if not checks.get(name, False)]
     soft_missing = [name for name in soft_check_names if not checks.get(name, False)]
-    readiness = resolved_state.get("production_readiness") or {}
-    readiness_status = str(readiness.get("status", "") or "")
     completion_ready = not missing and readiness_status != "failed"
     if not completion_ready and readiness_status == "failed" and "production_readiness_failed" not in missing:
         missing = [*missing, "production_readiness_failed"]

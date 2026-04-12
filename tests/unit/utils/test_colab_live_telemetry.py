@@ -2,6 +2,7 @@
 import re
 import sys
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
@@ -91,6 +92,47 @@ def test_live_telemetry_throttles_batch_latest_status_writes(tmp_path, monkeypat
     telemetry.update_latest({"event_type": "batch_end", "epoch": 1, "batch": 3})
     third = json.loads(latest_path.read_text(encoding="utf-8"))
     assert third["status"]["batch"] == 3
+
+
+def test_live_telemetry_retries_latest_status_after_transient_drive_write_failure(tmp_path, monkeypatch):
+    drive_root = tmp_path / "drive"
+    local_root = tmp_path / "local"
+    telemetry = ColabLiveTelemetry(
+        notebook_name="nb2",
+        run_id="run_latest_retry",
+        drive_root=drive_root,
+        local_root=local_root,
+        sync_interval_sec=60.0,
+        latest_status_min_interval_sec=15.0,
+    )
+
+    import scripts.colab_live_telemetry as telemetry_module
+
+    original_write_json = telemetry_module.write_json
+    state = {"drive_latest_failures": 0}
+
+    def _flaky_write_json(path, payload, **kwargs):
+        target = Path(path)
+        if target == telemetry.drive_latest_path and state["drive_latest_failures"] == 0:
+            state["drive_latest_failures"] += 1
+            raise OSError("drive latest write blocked")
+        return original_write_json(path, payload, **kwargs)
+
+    monkeypatch.setattr(telemetry_module, "write_json", _flaky_write_json)
+
+    telemetry.update_latest({"event_type": "batch_end", "epoch": 1, "batch": 1})
+
+    assert telemetry.local_latest_path.exists()
+    assert not telemetry.drive_latest_path.exists()
+    assert telemetry._pending_latest_payload is not None
+    assert telemetry._pending_latest_drive_sync is True
+
+    telemetry.sync_pending()
+
+    drive_latest = json.loads(telemetry.drive_latest_path.read_text(encoding="utf-8"))
+    assert drive_latest["status"]["batch"] == 1
+    assert telemetry._pending_latest_payload is None
+    assert telemetry._pending_latest_drive_sync is False
 
 
 def test_capture_cell_output_writes_timestamped_drive_artifact(tmp_path):

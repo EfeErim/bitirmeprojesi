@@ -325,6 +325,31 @@ def test_build_notebook_completion_report_treats_missing_notebook_export_as_soft
     assert report["checks"]["executed_notebook_export"] is False
 
 
+def test_build_notebook_completion_report_rejects_unknown_readiness_status(tmp_path: Path):
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text("{}", encoding="utf-8")
+
+    repo_run_exports = {}
+    for name in ("outputs", "telemetry", "checkpoint_state"):
+        path = tmp_path / name
+        path.mkdir(parents=True, exist_ok=True)
+        repo_run_exports[name] = str(path)
+
+    report = build_notebook_completion_report(
+        state={
+            "evaluation_artifacts": {"test": {"metric_gate": {}}},
+            "production_readiness": {"status": "unknown_status"},
+        },
+        telemetry=_FakeTelemetry(summary_path),
+        repo_run_exports=repo_run_exports,
+        notebook_export_path=tmp_path / "executed.ipynb",
+    )
+
+    assert report["ready"] is False
+    assert report["checks"]["production_readiness"] is False
+    assert report["missing"] == ["production_readiness"]
+
+
 def test_maybe_auto_disconnect_colab_runtime_calls_unassign_when_ready(tmp_path: Path, monkeypatch):
     summary_path = tmp_path / "summary.json"
     summary_path.write_text("{}", encoding="utf-8")

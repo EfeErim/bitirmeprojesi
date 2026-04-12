@@ -180,6 +180,7 @@ class ColabLiveTelemetry:
         self._repo_notebook_exporter: Optional[Callable[[Path], Optional[Path]]] = None
         self._last_latest_write_at = 0.0
         self._pending_latest_payload: Optional[Dict[str, Any]] = None
+        self._pending_latest_drive_sync = False
         self._last_drive_issue: Optional[tuple[str, str]] = None
 
         self.local_run_dir.mkdir(parents=True, exist_ok=True)
@@ -408,17 +409,24 @@ class ColabLiveTelemetry:
 
     def _write_latest_payload(self, payload: Dict[str, Any]) -> None:
         write_json(self.local_latest_path, payload, sort_keys=True)
+        drive_synced = False
         if self._ensure_drive_surface():
             try:
                 write_json(self.drive_latest_path, payload, sort_keys=True)
                 self._record_drive_available(operation="write_latest_payload")
+                drive_synced = True
             except Exception as exc:
                 self._record_drive_unavailable(
                     operation="write_latest_payload",
                     error=f"{exc.__class__.__name__}: {exc}",
                 )
         self._last_latest_write_at = time.monotonic()
-        self._pending_latest_payload = None
+        if drive_synced:
+            self._pending_latest_payload = None
+            self._pending_latest_drive_sync = False
+        else:
+            self._pending_latest_payload = dict(payload)
+            self._pending_latest_drive_sync = True
 
     def _append_event_local(self, payload: Dict[str, Any]) -> None:
         _append_line(self.local_events_path, _safe_json(payload))
@@ -556,6 +564,7 @@ class ColabLiveTelemetry:
             "status": dict(status_payload or {}),
         }
         self._pending_latest_payload = payload
+        self._pending_latest_drive_sync = False
         if self._should_write_latest_now(payload, force=force):
             self._write_latest_payload(payload)
         self._periodic_sync()
@@ -635,7 +644,10 @@ class ColabLiveTelemetry:
 
     def sync_pending(self) -> None:
         pending = self._pending_latest_payload
-        if pending is not None and self._should_write_latest_now(pending, force=False):
+        if pending is not None and (
+            self._pending_latest_drive_sync
+            or self._should_write_latest_now(pending, force=False)
+        ):
             self._write_latest_payload(pending)
         self._sync_events()
         self._sync_logs()
