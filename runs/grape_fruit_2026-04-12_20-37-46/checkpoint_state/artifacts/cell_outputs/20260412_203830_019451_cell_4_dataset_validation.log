@@ -1,0 +1,9 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=grape_fruit_2026-04-12_20-37-46
+started_at=2026-04-12T20:38:30.019473+00:00
+finished_at=2026-04-12T20:38:30.029292+00:00
+duration_sec=0.010
+
+[DATASET] Yalnizca bir runtime dataset bulundu, otomatik secildi: grape__fruit
+[OOD] runtime ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/grape__fruit/ood
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/grape__fruit classes=5: ['anthracnose', 'botrytis_bunch_rot', 'downy_mildew', 'healthy', 'powdery_mildew']
