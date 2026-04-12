@@ -451,18 +451,18 @@ def test_repo_dataset_scaffold() -> None:
 def test_training_notebook_dataset_contract_detection() -> None:
     sources = _load_notebook_sources("2_interactive_adapter_training.ipynb")
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in sources.full_source
-    assert "Notebook secilen datasetin yapisina bakip class-root mu runtime mi oldugunu otomatik algilar." in sources.full_source
+    assert "Notebook 0'un yazdigi <dataset_key>/continual|val|test|ood yapisini tutan repo-ici root." in sources.full_source
     assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in sources.full_source
-    assert 'def _dataset_contract(candidate_root: Path) -> str:' in sources.full_source
     assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
-    assert 'direct_class_root_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
-    assert 'STATE["dataset_contract"] = dataset_contract' in sources.full_source
-    assert "build_prepared_dataset_key" in sources.full_source
+    assert 'STATE["runtime_dataset_key"] = selected_dataset_name' in sources.full_source
     assert "from src.data.loaders import create_training_loaders" in sources.full_source
     assert "src.utils.data_loader" not in sources.full_source
-    assert 'if dataset_contract == "runtime":' in sources.full_source
+    assert "No prepared runtime datasets were found under RUNTIME_DATASET_ROOT. Notebook 0'u once calistirin." in sources.full_source
     assert "Prepared runtime dataset is missing split folder(s)" in sources.full_source
-    assert "OOD dataset parameters are ignored when the selected dataset is already runtime-shaped." in sources.full_source
+    assert 'STATE["resolved_ood_root"] = resolved_ood_root_value' in sources.full_source
+    assert "Notebook 2 harici OOD secmez; gercek OOD kaniti icin secilen runtime dataset icinde ood/ klasoru bulunmalidir." in sources.full_source
+    assert "build_grouped_dataset_plan" not in sources.full_source
+    assert "materialize_grouped_runtime_dataset" not in sources.full_source
 
 
 def test_training_notebook_bootstrap_contract() -> None:
@@ -523,9 +523,8 @@ def test_training_notebook_bootstrap_contract() -> None:
 
     required_parameter_snippets = (
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
+        'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"',
         'DATASET_NAME = ""',
-        'OOD_DATASET_ROOT = "data/ood_dataset"',
-        'OOD_DATASET_NAME = ""',
         'EPOCHS = ',
         'BATCH_SIZE = ',
         'LEARNING_RATE = ',
@@ -533,8 +532,10 @@ def test_training_notebook_bootstrap_contract() -> None:
         'AUGMENTATION_POLICY = str(CONTINUAL_DATA_CFG.get("augmentation_policy", "randaugment")).strip().lower()',
         'RANDAUGMENT_NUM_OPS = int(CONTINUAL_DATA_CFG.get("randaugment_num_ops", 2))',
         'RANDAUGMENT_MAGNITUDE = int(CONTINUAL_DATA_CFG.get("randaugment_magnitude", 7))',
-        'FEW_SHOT_RESEARCH_MODE = bool(CONTINUAL_DATA_CFG.get("few_shot_research_mode", False))',
-        'FEW_SHOT_MIN_CLASS_SAMPLES = int(CONTINUAL_DATA_CFG.get("few_shot_min_class_samples", 1))',
+        'FEW_SHOT_RESEARCH_MODE = False',
+        'FEW_SHOT_MIN_CLASS_SAMPLES = 1',
+        'FEW_SHOT_RESEARCH_MODE = bool(FEW_SHOT_RESEARCH_MODE)',
+        'FEW_SHOT_MIN_CLASS_SAMPLES = int(FEW_SHOT_MIN_CLASS_SAMPLES)',
         'BER_ENABLED = False',
         'LOSS_NAME = "logitnorm"',
         'LOGITNORM_TAU = 1.0',
@@ -557,11 +558,11 @@ def test_training_notebook_bootstrap_contract() -> None:
         'data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)',
         'data_cfg["few_shot_research_mode"] = bool(FEW_SHOT_RESEARCH_MODE)',
         'augmentation_policy=AUGMENTATION_POLICY',
-        'STATE["resolved_ood_root"] = str(ood_root) if ood_root is not None else ""',
+        'STATE["resolved_ood_root"] = resolved_ood_root_value',
         'list_repo_dataset_directories',
         'resolve_direct_repo_dataset_root',
         'resolve_repo_relative_root',
-        'STATE["dataset_contract"] = dataset_contract',
+        'STATE["runtime_dataset_key"] = selected_dataset_name',
         'STATE["selected_dataset_name"] = selected_dataset_name',
     )
     for snippet in required_training_surface_snippets:
@@ -583,6 +584,10 @@ def test_training_notebook_bootstrap_contract() -> None:
         'LEARNING_RATE = float(CONTINUAL_CFG.get("learning_rate"',
         'source=merged_config(colab)',
         'defaults=config(colab)',
+        'DATASET_ROOT = "data/class_root_dataset"',
+        'OOD_DATASET_ROOT = "data/ood_dataset"',
+        'OOD_DATASET_NAME = ""',
+        'OOD_ROOT = ""',
     )
     for snippet in forbidden_parameter_snippets:
         _assert_not_contains(
@@ -707,8 +712,8 @@ CHECKS = (
     ValidationCheck(
         result_name="Notebook 2 Dataset Contract",
         step_id="NB2_RUNTIME",
-        description="Notebook 2 dataset contract auto-detection",
-        success_message="Notebook 2 auto-detects class-root vs runtime datasets",
+        description="Notebook 2 runtime dataset contract",
+        success_message="Notebook 2 requires a prepared runtime dataset from Notebook 0",
         failure_prefix="Notebook 2 dataset contract check failed",
         callback=test_training_notebook_dataset_contract_detection,
         requires_runtime_dependencies=False,

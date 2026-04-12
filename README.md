@@ -101,7 +101,7 @@ Notebook 0 is different:
 - It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
 - It can build a cleaned class-root working copy from the audit reports before runtime materialization.
 - It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
-- It is the audit-first surface for auditing, grouping, and optionally materializing the prepared runtime dataset for Notebook 2.
+- It is the audit-first surface for auditing, grouping, and materializing the prepared runtime dataset for Notebook 2.
 
 Notebook 3 is different:
 
@@ -208,31 +208,12 @@ pytest tests/integration -q --runintegration
 
 This is the most common beginner mistake, so treat these as two different contracts.
 
-### Notebook 2 input contract
+### Notebook 0 prep input contract
 
-Notebook 2 expects a flat class-root layout:
+Notebook 0 starts from a flat class-root layout:
 
 ```text
 <root>/<class>/<images>
-```
-
-Example:
-
-```text
-data/class_root_dataset/
-  healthy/
-    img001.jpg
-    img002.jpg
-  early_blight/
-    img003.jpg
-  late_blight/
-    img004.jpg
-```
-
-Validate that layout with:
-
-```powershell
-.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root data\class_root_dataset
 ```
 
 Current checked-in Notebook 0 examples:
@@ -252,9 +233,9 @@ or:
 REPO_DATASET_NAME = "grape_leaf"
 ```
 
-### Workflow and CLI training contract
+### Notebook 2 and workflow training contract
 
-The workflow code does not train from the flat layout directly. It expects a runtime split layout:
+Notebook 2 and the workflow code train only from the runtime split layout:
 
 ```text
 <data_dir>/<crop>/
@@ -264,13 +245,7 @@ The workflow code does not train from the flat layout directly. It expects a run
   ood/*
 ```
 
-Notebook 2 creates that layout automatically under:
-
-```text
-data/prepared_runtime_datasets/<crop>/
-```
-
-Notebook 0 can also materialize a prepared runtime dataset under:
+Notebook 0 materializes that layout under:
 
 ```text
 data/prepared_runtime_datasets/<crop_or_crop__part>/
@@ -282,7 +257,7 @@ Reusable repo-local OOD pools can live under:
 data/ood_dataset/<ood_dataset_name>/
 ```
 
-Notebook 0 and Notebook 2 can now pull one of those repo OOD folders into the materialized runtime `ood/` tree.
+Notebook 0 can pull one of those repo OOD folders into the materialized runtime `ood/` tree.
 
 When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
 
@@ -290,11 +265,11 @@ When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
 data/prepared_class_root_datasets/<crop_or_crop__part>/
 ```
 
-Notebook 2 now supports both paths:
+Notebook 2 now uses one path only:
 
-- Notebook 2 now auto-detects the selected repo dataset contract
-- if the selected dataset is flat class-root, it runs grouped prep/materialization and then trains
-- if the selected dataset already has `continual/`, `val/`, and `test/`, it trains directly from that prepared runtime dataset
+- run Notebook 0 first
+- let Notebook 0 write `data/prepared_runtime_datasets/<dataset_key>/`
+- point Notebook 2 at that prepared runtime dataset
 
 Current notebook UX detail:
 
@@ -303,9 +278,8 @@ Current notebook UX detail:
 
 Recommended usage:
 
-- use Notebook 0 first when you want to inspect audit artifacts before training
-- use Notebook 2 `class_root` mode when you want one notebook to prepare and train in one pass
-- use Notebook 2 on an already prepared runtime dataset when you want to skip prep automatically
+- use Notebook 0 first to inspect audit artifacts and materialize the runtime dataset
+- use Notebook 2 only on that prepared runtime dataset
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 

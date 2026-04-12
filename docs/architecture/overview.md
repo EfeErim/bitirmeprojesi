@@ -93,9 +93,9 @@ The supported adapter path is continual SD-LoRA only:
 
 There are two dataset contracts and they serve different purposes.
 
-### Contract 1: Notebook input
+### Contract 1: Notebook 0 prep input
 
-Notebook 2 accepts a flat class-root layout:
+Notebook 0 accepts a flat class-root layout:
 
 ```text
 <root>/<class>/<images>
@@ -103,11 +103,11 @@ Notebook 2 accepts a flat class-root layout:
 
 This is easier for a beginner to prepare by hand.
 
-Notebook 0 uses this contract for duplicate-aware audit before training and defaults to the repo-local staging root `data/class_root_dataset/`. Notebook 0 and Notebook 2 can also pull a reusable repo-local OOD tree from `data/ood_dataset/<dataset_name>/` when they materialize the runtime dataset. Notebook 2 auto-detects this contract and uses the same grouped prep logic before it materializes the runtime dataset for training.
+Notebook 0 uses this contract for duplicate-aware audit before training and defaults to the repo-local staging root `data/class_root_dataset/`. Notebook 0 can also pull a reusable repo-local OOD tree from `data/ood_dataset/<dataset_name>/` when it materializes the runtime dataset.
 
-### Contract 2: Runtime training layout
+### Contract 2: Notebook 2 and workflow runtime training layout
 
-Workflow and CLI training use a runtime split layout:
+Notebook 2, workflow training, and CLI training use a runtime split layout:
 
 ```text
 <data_dir>/<crop>/
@@ -121,14 +121,14 @@ This layout is what the code actually trains from.
 
 ### The conversion step
 
-`scripts/colab_dataset_layout.py` converts the flat notebook input into the runtime split layout.
+Notebook 0 owns the conversion from flat class-root input into the runtime split layout.
 
 It writes:
 
 - `split_manifest.json`
 
 
-The grouped Notebook 0 and Notebook 2 class-root prep path uses a 60/20/20 family split target with small-class safeguards. The older non-grouped runtime-layout helper remains effectively 80/10/10.
+The grouped Notebook 0 prep path uses a 60/20/20 family split target with small-class safeguards. The older non-grouped runtime-layout helper remains effectively 80/10/10.
 
 Important detail:
 
