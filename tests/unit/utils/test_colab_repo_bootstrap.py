@@ -380,11 +380,19 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
 
     calls: list[list[str]] = []
 
-    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None, timeout=None):  # noqa: ARG001
         calls.append(list(command))
         args = list(command[1:])
         if args == ["branch", "--show-current"]:
             return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["ls-remote", "--heads", "origin", "refs/heads/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="abc123\trefs/heads/master\n")
+        if args == ["fetch", "origin", "master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset", "--soft", "origin/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
         if args == ["remote", "get-url", "origin"]:
             return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
         if args[:4] == ["diff", "--cached", "--name-only", "--"]:
@@ -555,6 +563,15 @@ def test_probe_github_repo_access_distinguishes_public_and_token_required(monkey
 
     monkeypatch.setattr(bootstrap, "_run_capture", fake_run_capture)
     monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+    monkeypatch.setattr(
+        bootstrap,
+        "_run_git_ls_remote_with_token",
+        lambda remote_url, token, ref="HEAD": subprocess.CompletedProcess(
+            ["git", "ls-remote", remote_url, ref],
+            0,
+            stdout="sha\tHEAD\n",
+        ),
+    )
 
     report = bootstrap.probe_github_repo_access(repo_url="https://github.com/example/private-repo.git")
 
@@ -563,7 +580,7 @@ def test_probe_github_repo_access_distinguishes_public_and_token_required(monkey
     assert report["anonymous_read_access"] is False
     assert report["token_read_access"] is True
     assert report["push_ready"] is True
-    assert len(probes) == 2
+    assert len(probes) == 1
 
 
 def test_probe_hf_model_access_reports_token_required(monkeypatch):

@@ -19,6 +19,10 @@ from urllib.parse import urlsplit, urlunsplit
 HF_TOKEN_NAMES = ("HF_TOKEN", "HUGGINGFACE_TOKEN", "HUGGINGFACE_HUB_TOKEN")
 GITHUB_TOKEN_NAMES = ("GH_TOKEN", "GITHUB_TOKEN")
 TORCH_REQUIREMENT_PREFIXES = ("torch", "torchvision", "torchaudio")
+SENSITIVE_TEXT_SUFFIXES = {".json", ".jsonl", ".log", ".md", ".txt", ".yaml", ".yml", ".csv", ".ini"}
+MAX_PUSH_FILE_SIZE_BYTES = 95 * 1024 * 1024
+EXCLUDED_PUSH_SUFFIXES = {".pt"}
+EXCLUDED_PUSH_PATH_PARTS = ("checkpoint_state/checkpoints",)
 
 
 def is_repo_root(path: Path) -> bool:
@@ -294,6 +298,161 @@ def _redact_secret(value: str, secret: str) -> str:
     return redacted
 
 
+def _redact_possible_tokens(value: str, secret: Optional[str] = None) -> str:
+    redacted = _redact_secret(str(value or ""), str(secret or ""))
+    # Common GitHub token formats that should never be written to telemetry.
+    redacted = re.sub(r"\bgh[pousr]_[A-Za-z0-9_]{10,}\b", "<redacted>", redacted)
+    redacted = re.sub(r"\bgithub_pat_[A-Za-z0-9_]{10,}\b", "<redacted>", redacted)
+    redacted = re.sub(r"AUTHORIZATION\s*:\s*basic\s+[A-Za-z0-9+/=]+", "AUTHORIZATION: <redacted>", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r"AUTHORIZATION\s*:\s*bearer\s+[A-Za-z0-9_\-.=+/]+", "AUTHORIZATION: <redacted>", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r"x-access-token:[^\s@/]+", "x-access-token:<redacted>", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r"https://[^\s:@]+:[^\s@]+@github\.com", "https://<redacted>@github.com", redacted, flags=re.IGNORECASE)
+    return redacted
+
+
+def _redact_possible_tokens_with_secrets(value: str, secrets: Sequence[str]) -> str:
+    redacted = str(value or "")
+    for secret in [str(item).strip() for item in list(secrets or []) if str(item).strip()]:
+        redacted = _redact_possible_tokens(redacted, secret)
+    return _redact_possible_tokens(redacted, None)
+
+
+def _contains_possible_tokens(value: str) -> bool:
+    text = str(value or "")
+    patterns = (
+        r"\bgh[pousr]_[A-Za-z0-9_]{10,}\b",
+        r"\bgithub_pat_[A-Za-z0-9_]{10,}\b",
+        r"AUTHORIZATION\s*:\s*(?:basic|bearer)\s+[A-Za-z0-9_\-.=+/]+",
+        r"x-access-token:[^\s@/]+",
+        r"https://[^\s:@]+:[^\s@]+@github\.com",
+    )
+    return any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in patterns)
+
+
+def _redact_nested_obj(value: Any, explicit_secrets: Sequence[str]) -> Any:
+    if isinstance(value, dict):
+        return {key: _redact_nested_obj(item, explicit_secrets) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_nested_obj(item, explicit_secrets) for item in value]
+    if isinstance(value, str):
+        return _redact_possible_tokens_with_secrets(value, explicit_secrets)
+    return value
+
+
+def _sanitize_run_text_artifacts(run_dir: Path, *, explicit_secrets: Sequence[str]) -> dict[str, Any]:
+    scanned = 0
+    redacted_files = 0
+    leaks: list[str] = []
+
+    for path in sorted(run_dir.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in SENSITIVE_TEXT_SUFFIXES:
+            continue
+
+        scanned += 1
+        raw_text = path.read_text(encoding="utf-8", errors="ignore")
+        redacted_text = raw_text
+        suffix = path.suffix.lower()
+
+        if suffix == ".json":
+            try:
+                payload = json.loads(raw_text)
+                redacted_payload = _redact_nested_obj(payload, explicit_secrets)
+                redacted_text = json.dumps(redacted_payload, ensure_ascii=False, indent=2) + "\n"
+            except Exception:
+                redacted_text = _redact_possible_tokens_with_secrets(raw_text, explicit_secrets)
+        elif suffix == ".jsonl":
+            redacted_lines: list[str] = []
+            for raw_line in raw_text.splitlines():
+                stripped = raw_line.strip()
+                if not stripped:
+                    redacted_lines.append(raw_line)
+                    continue
+                try:
+                    parsed_line = json.loads(stripped)
+                    redacted_line_payload = _redact_nested_obj(parsed_line, explicit_secrets)
+                    redacted_lines.append(json.dumps(redacted_line_payload, ensure_ascii=False))
+                except Exception:
+                    redacted_lines.append(_redact_possible_tokens_with_secrets(raw_line, explicit_secrets))
+            redacted_text = "\n".join(redacted_lines)
+            if raw_text.endswith("\n"):
+                redacted_text += "\n"
+        else:
+            redacted_text = _redact_possible_tokens_with_secrets(raw_text, explicit_secrets)
+
+        if redacted_text != raw_text:
+            path.write_text(redacted_text, encoding="utf-8")
+            redacted_files += 1
+
+        if _contains_possible_tokens(redacted_text):
+            leaks.append(path.as_posix())
+
+    return {
+        "scanned": scanned,
+        "redacted_files": redacted_files,
+        "leaks": leaks,
+    }
+
+
+def _should_exclude_run_file_from_push(path: Path, *, run_dir: Path) -> tuple[bool, str]:
+    relative_to_run = path.relative_to(run_dir).as_posix().lower()
+    if path.suffix.lower() in EXCLUDED_PUSH_SUFFIXES:
+        return True, "excluded_suffix"
+    if any(part in relative_to_run for part in EXCLUDED_PUSH_PATH_PARTS):
+        return True, "excluded_checkpoint_path"
+    try:
+        if path.stat().st_size > MAX_PUSH_FILE_SIZE_BYTES:
+            return True, "excluded_large_file"
+    except OSError:
+        return True, "excluded_unreadable"
+    return False, "tracked"
+
+
+def _realign_local_branch_to_remote(repo: Path, *, remote_name: str, branch: str) -> bool:
+    remote_probe = _run_capture(["git", "ls-remote", "--heads", remote_name, f"refs/heads/{branch}"], cwd=repo)
+    if remote_probe.returncode != 0 or not str(remote_probe.stdout or "").strip():
+        return False
+
+    fetch_completed = _run_git(["fetch", remote_name, branch], cwd=repo, check=False, capture_output=True)
+    if fetch_completed.returncode != 0:
+        output = str(fetch_completed.stdout or "").strip() or "fetch failed"
+        raise RuntimeError(f"Git fetch failed before secure push: {output}")
+
+    soft_reset = _run_git(["reset", "--soft", f"{remote_name}/{branch}"], cwd=repo, check=False, capture_output=True)
+    if soft_reset.returncode != 0:
+        output = str(soft_reset.stdout or "").strip() or "soft reset failed"
+        raise RuntimeError(f"Git reset --soft failed before secure push: {output}")
+
+    unstage_reset = _run_git(["reset"], cwd=repo, check=False, capture_output=True)
+    if unstage_reset.returncode != 0:
+        output = str(unstage_reset.stdout or "").strip() or "unstage reset failed"
+        raise RuntimeError(f"Git reset failed before secure push: {output}")
+
+    return True
+
+
+def _run_git_ls_remote_with_token(*, remote_url: str, token: str, ref: str = "HEAD") -> subprocess.CompletedProcess[str]:
+    clean_remote_url = _clean_https_remote_url(remote_url)
+    auth_value = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
+    env = os.environ.copy()
+    try:
+        config_count = int(str(env.get("GIT_CONFIG_COUNT", "0") or "0"))
+    except ValueError:
+        config_count = 0
+    env["GIT_CONFIG_COUNT"] = str(config_count + 1)
+    env[f"GIT_CONFIG_KEY_{config_count}"] = "http.https://github.com/.extraheader"
+    env[f"GIT_CONFIG_VALUE_{config_count}"] = f"AUTHORIZATION: basic {auth_value}"
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    env["GCM_INTERACTIVE"] = "Never"
+    return subprocess.run(
+        ["git", "ls-remote", clean_remote_url, ref],
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        env=env,
+    )
+
+
 def _run_git_push_with_token(*, repo: Path, remote_url: str, token: str, branch: str) -> None:
     clean_remote_url = _clean_https_remote_url(remote_url)
     auth_value = base64.b64encode(f"x-access-token:{token}".encode("utf-8")).decode("ascii")
@@ -305,6 +464,8 @@ def _run_git_push_with_token(*, repo: Path, remote_url: str, token: str, branch:
     env["GIT_CONFIG_COUNT"] = str(config_count + 1)
     env[f"GIT_CONFIG_KEY_{config_count}"] = "http.https://github.com/.extraheader"
     env[f"GIT_CONFIG_VALUE_{config_count}"] = f"AUTHORIZATION: basic {auth_value}"
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    env["GCM_INTERACTIVE"] = "Never"
     completed = subprocess.run(
         ["git", "push", clean_remote_url, f"HEAD:{branch}"],
         cwd=str(repo),
@@ -475,7 +636,7 @@ def push_repo_run_to_github(
     token: Optional[str] = None,
     print_fn: Optional[Callable[[str], None]] = None,
 ) -> dict[str, object]:
-    """Commit and push one mirrored runs/<RUN_ID> tree, excluding .pt checkpoint blobs."""
+    """Commit and push one mirrored runs/<RUN_ID> tree, excluding checkpoint blobs and oversized files."""
     emit = print if print_fn is None else print_fn
     repo = Path(repo_root).expanduser().resolve()
     run_dir = repo / "runs" / str(run_id)
@@ -494,11 +655,36 @@ def push_repo_run_to_github(
 
     remote_url = _git_remote_url(repo, remote_name)
     relative_run_dir = run_dir.relative_to(repo).as_posix()
-    tracked_files = [
-        path.relative_to(repo).as_posix()
-        for path in sorted(run_dir.rglob("*"))
-        if path.is_file() and path.suffix.lower() != ".pt"
-    ]
+
+    realigned = _realign_local_branch_to_remote(repo, remote_name=remote_name, branch=resolved_branch)
+    if realigned:
+        emit(
+            f"[GIT] Local branch realigned to {remote_name}/{resolved_branch} before secure run push."
+        )
+
+    sanitize_report = _sanitize_run_text_artifacts(run_dir, explicit_secrets=[resolved_token, str(resolve_hf_token() or "")])
+    emit(
+        f"[SECURITY] scanned={sanitize_report['scanned']} redacted_files={sanitize_report['redacted_files']}"
+    )
+    leaks = list(sanitize_report.get("leaks", []))
+    if leaks:
+        preview = leaks[:10]
+        raise RuntimeError(
+            "Push blocked: secret-like patterns are still present after sanitization in "
+            f"{len(leaks)} file(s). First matches: {preview}"
+        )
+
+    tracked_files: list[str] = []
+    skipped_files: list[str] = []
+    for path in sorted(run_dir.rglob("*")):
+        if not path.is_file():
+            continue
+        relative_to_repo = path.relative_to(repo).as_posix()
+        excluded, _reason = _should_exclude_run_file_from_push(path, run_dir=run_dir)
+        if excluded:
+            skipped_files.append(relative_to_repo)
+            continue
+        tracked_files.append(relative_to_repo)
 
     _run_git(["config", "user.name", os.environ.get("AADS_GIT_USER_NAME", "AADS Colab")], cwd=repo)
     _run_git(["config", "user.email", os.environ.get("AADS_GIT_USER_EMAIL", "aads-colab@local")], cwd=repo)
@@ -506,9 +692,15 @@ def push_repo_run_to_github(
     if tracked_files:
         for chunk in _chunked(tracked_files):
             _run_git(["add", "-f", "--", *chunk], cwd=repo)
+    if skipped_files:
+        for chunk in _chunked(skipped_files):
+            _run_git(["rm", "--cached", "-r", "--ignore-unmatch", "--", *chunk], cwd=repo, check=False)
 
     staged = _run_git(["diff", "--cached", "--name-only", "--", relative_run_dir], cwd=repo, capture_output=True)
     staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
+    emit(
+        f"[GIT] Stage prepared for runs/{run_id}: staged={len(staged_files)} skipped={len(skipped_files)}"
+    )
     if not staged_files:
         emit(f"[GIT] No eligible repo mirror changes to push for runs/{run_id}.")
         return {
@@ -518,6 +710,7 @@ def push_repo_run_to_github(
             "remote_name": remote_name,
             "run_dir": str(run_dir),
             "staged_files": [],
+            "skipped_files": skipped_files,
         }
 
     message = str(commit_message or f"Add notebook 2 outputs for run {run_id}")
@@ -531,6 +724,7 @@ def push_repo_run_to_github(
         "remote_name": remote_name,
         "run_dir": str(run_dir),
         "staged_files": staged_files,
+        "skipped_files": skipped_files,
     }
 
 
@@ -725,12 +919,11 @@ def probe_github_repo_access(
     anonymous_ok = anonymous_probe.returncode == 0 and bool(str(anonymous_probe.stdout or "").strip())
 
     token_ok = anonymous_ok
-    token_detail = str(anonymous_probe.stdout or "").strip()
+    token_detail = _redact_possible_tokens(str(anonymous_probe.stdout or "").strip(), resolved_token)
     if not anonymous_ok and resolved_token:
-        auth_url = _build_repo_access_url(resolved_repo_url, resolved_token)
-        token_probe = _run_capture(["git", "ls-remote", auth_url, "HEAD"])
+        token_probe = _run_git_ls_remote_with_token(remote_url=resolved_repo_url, token=resolved_token, ref="HEAD")
         token_ok = token_probe.returncode == 0 and bool(str(token_probe.stdout or "").strip())
-        token_detail = str(token_probe.stdout or "").strip()
+        token_detail = _redact_possible_tokens(str(token_probe.stdout or "").strip(), resolved_token)
 
     if anonymous_ok:
         read_access_mode = "public"
@@ -751,7 +944,7 @@ def probe_github_repo_access(
         "token_read_access": bool(token_ok),
         "push_requires_auth": True,
         "push_ready": bool(push_ready),
-        "detail": token_detail if token_detail else str(anonymous_probe.stdout or "").strip(),
+        "detail": token_detail if token_detail else _redact_possible_tokens(str(anonymous_probe.stdout or "").strip(), resolved_token),
     }
 
 
