@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e20_s120_20260414_105847_220772",
+  "path": "/content/bitirmeprojesi/runs/grape_fruit_2026-04-14_10-56-34/checkpoint_state/checkpoints/ckpt_e20_s120_20260414_105847_220772",
+  "created_at": "2026-04-14T10:58:48.634307+00:00",
+  "global_step": 120,
+  "epoch": 20,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.8060745065276688
+}

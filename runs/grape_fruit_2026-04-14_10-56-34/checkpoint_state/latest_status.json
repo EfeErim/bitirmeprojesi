@@ -1,0 +1,25 @@
+{
+  "notebook": "2_interactive_adapter_training.ipynb",
+  "run_id": "grape_fruit_2026-04-14_10-56-34",
+  "status": {
+    "optimization_campaign": {
+      "campaign_json": "/content/bitirmeprojesi/runs/_index/notebook_optimization_campaigns/grape__fruit__39e9e518107aec04.json",
+      "campaign_seed": "grape__fruit__39e9e518107aec04",
+      "cohort_key": "",
+      "dataset_lineage_key": "grape__fruit::998d3343ff64ec853b520bad44ee1942c51289ce2f128cbc7de7ffd5ddf54b55",
+      "eligible_run_count": 0,
+      "executed_run_count": 2,
+      "frontier_count": 0,
+      "frontier_run_ids": [],
+      "last_completed_run_id": "grape_fruit_2026-04-14_10-56-34",
+      "mode": "continue",
+      "next_proposal_rank": null,
+      "next_proposal_signature": "",
+      "selected_proposal_rank": null,
+      "selected_proposal_signature": "",
+      "status": "bootstrap_pending"
+    },
+    "phase": "optimization_campaign_finalized"
+  },
+  "ts": "2026-04-14T10:59:03.070752+00:00"
+}
