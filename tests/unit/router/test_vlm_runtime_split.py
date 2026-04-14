@@ -292,6 +292,22 @@ def test_analyze_image_sam3_delegates_to_runtime_helpers(monkeypatch):
     assert result == expected
 
 
+def test_build_request_context_parses_string_runtime_booleans():
+    pipeline = _build_pipeline()
+    pipeline.vlm_config["timing_logs_enabled"] = "false"
+    pipeline.vlm_config["sam3_expand_with_supported_parts"] = "false"
+    context = sam3_runtime.build_request_context(
+        pipeline,
+        pil_image=Image.new("RGB", (8, 8), color="green"),
+        image_size=(3, 8, 8),
+        confidence_threshold=0.25,
+        max_detections=7,
+    )
+
+    assert context.timing_logs_enabled is False
+    assert context.sam3_prompts == ("plant",)
+
+
 def test_run_sam3_merges_results_across_prompt_sequence():
     pipeline = _build_pipeline()
     calls = []
@@ -543,4 +559,3 @@ def test_set_runtime_profile_refreshes_profile_derived_controls():
 
     assert pipeline.set_runtime_profile("open_set") is True
     assert pipeline.open_set_enabled is True
-

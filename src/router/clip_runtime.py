@@ -20,6 +20,7 @@ from src.router.prompt_clip_utils import (
     get_prompt_templates_for_type,
     open_set_unknown_prompts,
 )
+from src.router.runtime_surface import coerce_bool
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ def _strict_scoring_errors(runtime: Any) -> bool:
         configured = getattr(runtime, "strict_model_loading", None)
     if configured is None:
         return True
-    return bool(configured)
+    return coerce_bool(configured, default=True)
 
 
 @dataclass

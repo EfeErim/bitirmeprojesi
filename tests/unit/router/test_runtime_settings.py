@@ -79,3 +79,27 @@ def test_build_sam3_runtime_settings_uses_conservative_leaf_defaults():
     assert settings['part_open_set_margin'] == 0.10
     assert settings['part_unknown_label'] == 'unknown'
     assert settings['part_rejection_metadata_enabled'] is True
+
+
+def test_build_sam3_runtime_settings_parses_string_booleans_and_invalid_numeric_defaults():
+    policy_value = _policy_value_from(
+        {
+            ('dedupe', 'detection_nms_same_crop_only'): 'false',
+            ('part_resolution', 'leaf_visual_force_generic'): 'false',
+            ('focus_mode', 'focus_fallback_enabled'): 'false',
+            ('part_resolution', 'part_open_set_enabled'): 'false',
+            ('part_resolution', 'leaf_part_rebalance_threshold'): 'not-a-number',
+        }
+    )
+
+    settings = build_sam3_runtime_settings(
+        policy_value_fn=policy_value,
+        vlm_config={'ensemble_config': {}},
+        effective_threshold=0.25,
+    )
+
+    assert settings['detection_nms_same_crop_only'] is False
+    assert settings['leaf_visual_force_generic'] is False
+    assert settings['focus_fallback_enabled'] is False
+    assert settings['part_open_set_enabled'] is False
+    assert settings['leaf_part_rebalance_threshold'] == 0.52

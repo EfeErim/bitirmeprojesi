@@ -8,6 +8,7 @@ from src.router.policy_taxonomy_utils import (
     deep_merge_dicts,
     load_crop_part_compatibility,
     load_taxonomy,
+    policy_enabled,
     resolve_requested_profile,
 )
 
@@ -27,6 +28,11 @@ def test_build_policy_graph_applies_overrides():
     graph = build_policy_graph(vlm_config)
     assert graph["open_set_gate"]["enabled"] is False
     assert graph["roi_filter"]["enabled"] is True
+
+
+def test_policy_enabled_parses_string_booleans():
+    graph = {"open_set_gate": {"enabled": "false"}}
+    assert policy_enabled(graph, "open_set_gate", default=True) is False
 
 
 def test_resolve_requested_profile_prefers_env(monkeypatch):

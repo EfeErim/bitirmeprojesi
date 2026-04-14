@@ -39,6 +39,26 @@ def test_resolve_request_options_uses_defaults_when_not_overridden():
     assert options == RouterRequestOptions(confidence_threshold=0.35, max_detections=7)
 
 
+def test_resolve_request_options_normalizes_non_positive_max_detections():
+    options = resolve_request_options(
+        default_confidence_threshold=0.35,
+        default_max_detections=7,
+        max_detections=0,
+    )
+
+    assert options == RouterRequestOptions(confidence_threshold=0.35, max_detections=None)
+
+
+def test_resolve_runtime_controls_parses_string_booleans():
+    controls = resolve_runtime_controls(
+        {"vlm_enabled": "false", "vlm_open_set_enabled": "false"},
+        {"enabled": True, "open_set_enabled": True},
+    )
+
+    assert controls["enabled"] is False
+    assert controls["open_set_enabled"] is False
+
+
 def test_normalize_router_analysis_result_attaches_request_contract():
     request = RouterRequestOptions(confidence_threshold=0.2, max_detections=3)
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.router.label_normalization import normalize_part_label
+from src.router.runtime_surface import coerce_bool
 
 logger = logging.getLogger(__name__)
 
@@ -115,8 +116,8 @@ def policy_enabled(policy_graph: Dict[str, Dict[str, Any]], stage: str, default:
     """Return effective enabled flag for a policy stage."""
     stage_cfg = policy_graph.get(stage, {})
     if not isinstance(stage_cfg, dict):
-        return bool(default)
-    return bool(stage_cfg.get("enabled", default))
+        return coerce_bool(default, default=default)
+    return coerce_bool(stage_cfg.get("enabled", default), default=default)
 
 
 def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:

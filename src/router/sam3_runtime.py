@@ -47,6 +47,7 @@ from src.router.roi_pipeline import (
     run_sam3_roi_classification_stage,
 )
 from src.router.runtime_settings import build_sam3_runtime_settings, resolve_sam3_stage_order
+from src.router.runtime_surface import coerce_bool
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +99,7 @@ def build_request_context(
         settings=settings,
         sam3_prompts=resolve_sam3_text_prompts(runtime),
         sam3_threshold=settings["sam3_threshold"],
-        timing_logs_enabled=bool(runtime.vlm_config.get("timing_logs_enabled", True)),
+        timing_logs_enabled=coerce_bool(runtime.vlm_config.get("timing_logs_enabled", True), default=True),
         preprocess_ms=preprocess_ms,
     )
 
@@ -175,7 +176,7 @@ def resolve_sam3_text_prompts(runtime: Any) -> Tuple[str, ...]:
     if not prompt_candidates:
         prompt_candidates.append(base_prompt)
 
-    if bool(runtime.vlm_config.get("sam3_expand_with_supported_parts", True)):
+    if coerce_bool(runtime.vlm_config.get("sam3_expand_with_supported_parts", True), default=True):
         raw_part_prompts = runtime.vlm_config.get("sam3_part_prompts")
         if isinstance(raw_part_prompts, list):
             prompt_candidates.extend(str(prompt).strip() for prompt in raw_part_prompts if str(prompt).strip())

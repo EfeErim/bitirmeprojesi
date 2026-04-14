@@ -16,6 +16,21 @@ RouterAnalyzer = Callable[
 ]
 
 
+def coerce_bool(value: Any, default: bool = False) -> bool:
+    if value is None:
+        return bool(default)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return bool(default)
+
+
 def coerce_float(value: Any, default: float) -> float:
     try:
         return float(default if value is None else value)
@@ -39,10 +54,13 @@ def resolve_runtime_controls(config: Dict[str, Any], vlm_config: Dict[str, Any])
     raw_model_ids = vlm_config.get("model_ids", {})
     configured_ids = raw_model_ids if isinstance(raw_model_ids, dict) else {}
     return {
-        "enabled": config.get("vlm_enabled", vlm_config.get("enabled", False)),
+        "enabled": coerce_bool(config.get("vlm_enabled", vlm_config.get("enabled", False)), default=False),
         "confidence_threshold": config.get("vlm_confidence_threshold", vlm_config.get("confidence_threshold", 0.7)),
         "max_detections": None if configured_max_int <= 0 else configured_max_int,
-        "open_set_enabled": config.get("vlm_open_set_enabled", vlm_config.get("open_set_enabled", True)),
+        "open_set_enabled": coerce_bool(
+            config.get("vlm_open_set_enabled", vlm_config.get("open_set_enabled", True)),
+            default=True,
+        ),
         "open_set_min_confidence": coerce_float(
             config.get("vlm_open_set_min_confidence", vlm_config.get("open_set_min_confidence", 0.55)),
             0.55,
@@ -51,13 +69,19 @@ def resolve_runtime_controls(config: Dict[str, Any], vlm_config: Dict[str, Any])
             config.get("vlm_open_set_margin", vlm_config.get("open_set_margin", 0.10)),
             0.10,
         ),
-        "strict_model_loading": config.get(
-            "vlm_strict_model_loading",
-            vlm_config.get("strict_model_loading", strict_from_env),
+        "strict_model_loading": coerce_bool(
+            config.get(
+                "vlm_strict_model_loading",
+                vlm_config.get("strict_model_loading", strict_from_env),
+            ),
+            default=bool(strict_from_env),
         ),
-        "strict_scoring_errors": config.get(
-            "vlm_strict_scoring_errors",
-            vlm_config.get("strict_scoring_errors", True),
+        "strict_scoring_errors": coerce_bool(
+            config.get(
+                "vlm_strict_scoring_errors",
+                vlm_config.get("strict_scoring_errors", True),
+            ),
+            default=True,
         ),
         "model_source": config.get("vlm_model_source", vlm_config.get("model_source", "huggingface")),
         "model_ids": {
@@ -76,9 +100,10 @@ def resolve_request_options(
     options: Optional[RouterRequestOptions] = None,
 ) -> RouterRequestOptions:
     if options is not None:
+        resolved_max = coerce_non_negative_int(options.max_detections, default=0)
         return RouterRequestOptions(
-            confidence_threshold=float(options.confidence_threshold),
-            max_detections=None if options.max_detections is None else int(options.max_detections),
+            confidence_threshold=coerce_float(options.confidence_threshold, 0.7),
+            max_detections=(None if options.max_detections is None or resolved_max <= 0 else resolved_max),
         )
     resolved_default_threshold = coerce_float(default_confidence_threshold, 0.7)
     resolved_confidence_threshold = (
@@ -87,9 +112,12 @@ def resolve_request_options(
         else coerce_float(confidence_threshold, resolved_default_threshold)
     )
     resolved_max_detections = default_max_detections if max_detections is None else max_detections
+    resolved_max_detections_int = coerce_non_negative_int(resolved_max_detections, default=0)
     return RouterRequestOptions(
         confidence_threshold=float(resolved_confidence_threshold),
-        max_detections=None if resolved_max_detections is None else int(resolved_max_detections),
+        max_detections=(
+            None if resolved_max_detections is None or resolved_max_detections_int <= 0 else resolved_max_detections_int
+        ),
     )
 
 
