@@ -42,6 +42,7 @@ def _build_router_payload(analysis: RouterAnalysisResult) -> Dict[str, Any]:
         "router_confidence": 0.0 if detection is None else float(detection.crop_confidence),
         "message": str(analysis.message or ""),
         "router": analysis.to_summary_dict(),
+        "router_details": analysis.to_dict(),
     }
 
 

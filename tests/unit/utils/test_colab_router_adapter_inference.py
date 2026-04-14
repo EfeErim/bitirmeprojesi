@@ -89,6 +89,25 @@ def test_run_inference_runs_router_only_pipeline(monkeypatch, tmp_path: Path):
                 "part_confidence": 0.72,
             },
         },
+        "router_details": {
+            "status": "ok",
+            "detections": [
+                {
+                    "crop": "tomato",
+                    "part": "fruit",
+                    "crop_confidence": 0.95,
+                    "part_confidence": 0.72,
+                }
+            ],
+            "detections_count": 1,
+            "processing_time_ms": 0.0,
+            "primary_detection": {
+                "crop": "tomato",
+                "part": "fruit",
+                "crop_confidence": 0.95,
+                "part_confidence": 0.72,
+            },
+        },
         "adapter_target": {
             "crop": "tomato",
             "adapter_dir": "models\\adapters\\tomato\\continual_sd_lora_adapter",
@@ -147,6 +166,19 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
             "status": "skipped",
             "message": "Router skipped because crop_hint was provided.",
             "detections_count": 1,
+            "primary_detection": {
+                "crop": "tomato",
+                "part": "leaf",
+                "crop_confidence": 1.0,
+                "part_confidence": 1.0,
+            },
+        },
+        "router_details": {
+            "status": "skipped",
+            "message": "Router skipped because crop_hint was provided.",
+            "detections": [],
+            "detections_count": 1,
+            "processing_time_ms": 0.0,
             "primary_detection": {
                 "crop": "tomato",
                 "part": "leaf",
