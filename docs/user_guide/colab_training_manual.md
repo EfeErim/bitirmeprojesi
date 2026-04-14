@@ -194,7 +194,34 @@ runs/_index/
   trials.jsonl
   latest_registry.json
   pareto_inputs.json
+  pareto_frontiers.json
+  bayesian_recommendations.json
 ```
+
+Current phase-2 analysis behavior:
+
+- `pareto_frontiers.json` lists the non-dominated runs inside each comparable cohort
+- `bayesian_recommendations.json` proposes new parameter sets using only runs from the same dataset-lineage and model-family cohort
+- both files are rebuilt automatically when Notebook 2 traceability updates refresh the local run registry
+
+Notebook 2 campaign behavior:
+
+- Notebook 2 now exposes `OPTIMIZATION_CAMPAIGN_MODE` directly in the parameter cell:
+  - `disabled`: use the visible notebook parameters only
+  - `continue`: resume or create the dataset-aware optimizer campaign for the selected runtime dataset and auto-apply the next unseen proposal before training
+  - `stop`: mark the current notebook campaign as stopped and keep the visible notebook parameters unchanged
+- Notebook 2 keeps the campaign visible through `STATE["optimization_campaign"]`, telemetry latest-status updates, and the final run summary payload
+- Notebook 2 persists the campaign under `runs/_index/notebook_optimization_campaigns/`
+- each notebook execution still runs one visible training step at a time; if you want another optimizer step later, reopen or rerun Notebook 2 with `OPTIMIZATION_CAMPAIGN_MODE = "continue"`
+- this gives you a stop/resume loop without hiding additional training runs behind a background worker
+
+When you want to inspect or execute optimizer proposals directly from the repo, use:
+
+```powershell
+.\scripts\python.cmd scripts/optimize_training_runs.py --dataset-lineage-key <dataset_key>::<split_manifest_sha256> --crop-name <crop> --part-name <part>
+```
+
+Add `--execute --data-dir <runtime_dataset_root>` to launch the proposed workflow runs for that cohort.
 
 ## How The Split Is Created
 

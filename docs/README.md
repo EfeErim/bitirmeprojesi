@@ -114,6 +114,8 @@ Read:
 - `training/experiment_manifest.json` for dataset lineage and run identity
 - `training/optimization_record.json` for normalized parameters and objectives
 - `runs/_index/latest_registry.json` for the local aggregate registry view
+- `runs/_index/pareto_frontiers.json` for the current non-dominated runs inside each comparable cohort
+- `runs/_index/bayesian_recommendations.json` for the current Bayesian parameter proposals per cohort
 
 ### What dataset format does Notebook 2 accept?
 
@@ -152,9 +154,31 @@ runs/_index/
   trials.jsonl
   latest_registry.json
   pareto_inputs.json
+  pareto_frontiers.json
+  bayesian_recommendations.json
 ```
 
 Those files are now refreshed automatically on successful canonical training traceability writes when the run is mirrored under the repo `runs/` tree. The index script is still available for manual rebuilds.
+
+### Which command should I use to inspect or launch optimizer proposals for one dataset-aware cohort?
+
+Use:
+
+```powershell
+.\scripts\python.cmd scripts/optimize_training_runs.py --dataset-lineage-key <dataset_key>::<split_manifest_sha256> --crop-name <crop> --part-name <part>
+```
+
+Add `--execute --data-dir <runtime_dataset_root>` when you want the proposed settings to run through the canonical training workflow.
+
+### How do I stop or resume the optimizer loop from Notebook 2?
+
+Use the visible Notebook 2 parameter `OPTIMIZATION_CAMPAIGN_MODE`:
+
+- `disabled`: no optimizer campaign is applied
+- `continue`: Notebook 2 resumes or creates the dataset-aware campaign and auto-applies the next unseen proposal
+- `stop`: Notebook 2 marks the current campaign as stopped and leaves the visible parameters unchanged
+
+Notebook campaigns are saved under `runs/_index/notebook_optimization_campaigns/`, so you can resume later from the same dataset-aware cohort.
 
 ### Which inference file is canonical?
 

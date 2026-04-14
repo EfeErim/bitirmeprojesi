@@ -229,12 +229,18 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
     result = build_run_registry(runs_root=runs_root)
     latest_registry = result["latest_registry"]
     trials = [json.loads(line) for line in (runs_root / "_index" / "trials.jsonl").read_text(encoding="utf-8").splitlines()]
+    pareto_frontiers = json.loads((runs_root / "_index" / "pareto_frontiers.json").read_text(encoding="utf-8"))
+    bayesian_recommendations = json.loads((runs_root / "_index" / "bayesian_recommendations.json").read_text(encoding="utf-8"))
 
     assert latest_registry["trial_count"] == 2
     assert latest_registry["backfilled_count"] == 2
     assert latest_registry["cohort_count"] == 2
+    assert latest_registry["paths"]["pareto_frontiers_json"].endswith("pareto_frontiers.json")
+    assert latest_registry["paths"]["bayesian_recommendations_json"].endswith("bayesian_recommendations.json")
     assert {trial["record_quality"] for trial in trials} == {"backfilled"}
     assert {trial["comparability"]["cohort_key"] for trial in trials} == {
         "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
         "tomato__fruit::sha_b::tomato::fruit::continual_sd_lora::fake/backbone",
     }
+    assert pareto_frontiers["cohort_count"] == 2
+    assert bayesian_recommendations["cohort_count"] == 2

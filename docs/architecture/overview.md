@@ -300,6 +300,8 @@ runs/_index/
   trials.jsonl
   latest_registry.json
   pareto_inputs.json
+  pareto_frontiers.json
+  bayesian_recommendations.json
 ```
 
 The registry prefers canonical traceability files when they exist and falls back to best-effort reconstruction from older `summary`, `run_context`, readiness, and guided artifacts.
@@ -307,7 +309,20 @@ The registry prefers canonical traceability files when they exist and falls back
 Current automatic behavior:
 
 - when a training run writes canonical traceability artifacts successfully, the repo-local `runs/_index/` registry is refreshed best-effort
+- that same refresh now also rebuilds cohort-safe Pareto frontier summaries and Bayesian parameter recommendations from the indexed runs
 - the standalone script remains available when you want to rebuild the registry on demand across existing runs
+
+Phase 2 optimization entrypoint:
+
+```powershell
+.\scripts\python.cmd scripts/optimize_training_runs.py --dataset-lineage-key <dataset_key>::<split_manifest_sha256> --crop-name <crop> --part-name <part>
+```
+
+That optimizer surface reads the canonical run registry, stays inside one comparable cohort, and can either:
+
+- analyze the current Pareto frontier
+- emit Bayesian parameter proposals with nested config overrides
+- optionally launch new workflow runs for the selected cohort
 
 `training_metrics/` currently contains:
 
@@ -340,6 +355,9 @@ Current notebook naming/detail:
 - Notebook 2 exposes `CROP_NAME` and `PART_NAME` at the notebook surface
 - Notebook 2 run ids are human-readable and include crop/part/date-time information
 - maintained notebooks perform an early update/access check before the main long-running cells
+- Notebook 2 also exposes optimizer-campaign control at the parameter surface through `OPTIMIZATION_CAMPAIGN_MODE`
+- notebook campaigns are persisted under `runs/_index/notebook_optimization_campaigns/` so a user can stop after a satisfactory run or resume the same dataset-aware campaign later
+- when `OPTIMIZATION_CAMPAIGN_MODE="continue"`, Notebook 2 resolves the current comparable cohort, shows campaign status, and auto-applies the next unseen Bayesian proposal before the next visible training run
 
 
 ## Colab Support Layer

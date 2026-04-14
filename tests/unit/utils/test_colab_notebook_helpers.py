@@ -1,17 +1,27 @@
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 from scripts.colab_checkpointing import TrainingCheckpointManager
 from scripts.colab_notebook_helpers import (
     NotebookTrainingStatusPrinter,
+    apply_notebook_optimization_proposal,
     build_notebook_completion_report,
     build_notebook_run_id,
+    complete_notebook_training_run,
     ensure_notebook_checkpoint_manager,
+    finalize_notebook_optimization_campaign,
+    initialize_notebook_training_engine,
     maybe_auto_disconnect_colab_runtime,
     merge_training_summary_fields,
+    prepare_notebook_access_and_dataset,
     persist_production_readiness_artifact,
     persist_validation_artifacts,
+    resolve_notebook_optimization_campaign,
+    run_notebook_training_session,
+    summarize_notebook_optimization_campaign,
 )
 
 
@@ -697,5 +707,619 @@ def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_pa
     assert experiment_manifest["notebook_context"]["dataset_roots"]["runtime_dataset_key"] == "tomato__leaf"
     assert optimization_record["surface"] == "notebook_2"
     assert optimization_record["notebook_context"]["notebook_parameters"]["batch_size"] == 128
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _write_split_manifest(dataset_root: Path, dataset_key: str) -> None:
+    _write_json(
+        dataset_root / "split_manifest.json",
+        {
+            "schema_version": "v1_grouped_runtime_layout",
+            "crop_name": "tomato",
+            "part_name": "leaf",
+            "dataset_key": dataset_key,
+            "split_policy": "grouped_family_canonical_eval_60_20_20",
+        },
+    )
+
+
+def _write_canonical_run(*, runs_root: Path, run_name: str, dataset_lineage_key: str, learning_rate: float, macro_f1: float, auroc: float, fpr: float) -> None:
+    artifact_root = runs_root / run_name / "training_metrics"
+    manifest = {
+        "schema_version": "v1_training_experiment_manifest",
+        "record_quality": "canonical",
+        "run_id": run_name,
+        "run_label": run_name,
+        "created_at": "2026-04-14T12:00:00+00:00",
+        "surface": "workflow",
+        "crop_name": "tomato",
+        "part_name": "leaf",
+        "dataset_key": "tomato__leaf",
+        "dataset_lineage_key": dataset_lineage_key,
+        "model_family": {"engine": "continual_sd_lora", "backbone_model_name": "fake/backbone"},
+        "artifacts": {"artifact_root": str(artifact_root)},
+    }
+    optimization = {
+        "schema_version": "v1_training_optimization_record",
+        "record_quality": "canonical",
+        "run_id": run_name,
+        "run_label": run_name,
+        "created_at": "2026-04-14T12:00:00+00:00",
+        "surface": "workflow",
+        "crop_name": "tomato",
+        "part_name": "leaf",
+        "dataset_key": "tomato__leaf",
+        "dataset_lineage_key": dataset_lineage_key,
+        "comparability": {
+            "dataset_lineage_key": dataset_lineage_key,
+            "crop_name": "tomato",
+            "part_name": "leaf",
+            "engine": "continual_sd_lora",
+            "backbone_model_name": "fake/backbone",
+            "cohort_key": f"{dataset_lineage_key}::tomato::leaf::continual_sd_lora::fake/backbone",
+        },
+        "status": {
+            "readiness_status": "ready",
+            "readiness_passed": True,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split",
+        },
+        "parameters": {
+            "training.learning_rate": learning_rate,
+            "training.weight_decay": 0.01,
+            "training.num_epochs": 12,
+            "training.batch_size": 128,
+            "training.adapter.lora_r": 24,
+            "training.adapter.lora_alpha": 24,
+            "training.adapter.lora_dropout": 0.1,
+            "training.ood.threshold_factor": 3.0,
+            "training.optimization.logitnorm_tau": 1.0,
+            "training.data.randaugment_magnitude": 7,
+        },
+        "objectives": {
+            "classification.macro_f1": macro_f1,
+            "ood.ood_auroc": auroc,
+            "ood.ood_false_positive_rate": fpr,
+        },
+        "objective_directions": {
+            "classification.macro_f1": "maximize",
+            "ood.ood_auroc": "maximize",
+            "ood.ood_false_positive_rate": "minimize",
+        },
+        "artifacts": {"artifact_root": str(artifact_root)},
+    }
+    _write_json(artifact_root / "training" / "experiment_manifest.json", manifest)
+    _write_json(artifact_root / "training" / "optimization_record.json", optimization)
+
+
+def test_resolve_notebook_optimization_campaign_bootstrap_pending_when_no_trials(tmp_path: Path):
+    dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+    _write_split_manifest(dataset_root, "tomato__leaf")
+    (tmp_path / "runs").mkdir(parents=True, exist_ok=True)
+
+    campaign = resolve_notebook_optimization_campaign(
+        root=tmp_path,
+        runtime_dataset_root=dataset_root,
+        dataset_key="tomato__leaf",
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        notebook_parameters={"EPOCHS": 20, "BATCH_SIZE": 128, "LEARNING_RATE": 0.0002, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.1, "WEIGHT_DECAY": 0.01, "OOD_FACTOR": 3.0, "LOGITNORM_TAU": 1.0, "RANDAUGMENT_MAGNITUDE": 7},
+        mode="continue",
+    )
+
+    assert campaign["status"] == "bootstrap_pending"
+    assert Path(campaign["campaign_json"]).exists()
+    assert summarize_notebook_optimization_campaign(campaign)["executed_run_count"] == 0
+
+
+def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_path: Path):
+    campaign_path = tmp_path / "runs" / "_index" / "notebook_optimization_campaigns" / "campaign.json"
+    campaign_path.parent.mkdir(parents=True, exist_ok=True)
+    campaign = {
+        "campaign_json": str(campaign_path),
+        "status": "active",
+        "next_proposal": {
+            "rank": 1,
+            "signature": "sig_1",
+            "parameters": {
+                "training.learning_rate": 0.00015,
+                "training.num_epochs": 16,
+                "training.adapter.lora_r": 32,
+                "training.data.randaugment_magnitude": 9,
+            },
+        },
+    }
+
+    result = apply_notebook_optimization_proposal(
+        notebook_parameters={
+            "EPOCHS": 20,
+            "BATCH_SIZE": 128,
+            "LEARNING_RATE": 0.0002,
+            "LORA_R": 24,
+            "LORA_ALPHA": 24,
+            "LORA_DROPOUT": 0.1,
+            "WEIGHT_DECAY": 0.01,
+            "OOD_FACTOR": 3.0,
+            "LOGITNORM_TAU": 1.0,
+            "RANDAUGMENT_MAGNITUDE": 7,
+        },
+        campaign=campaign,
+        print_fn=lambda _line: None,
+    )
+
+    assert result["applied"] is True
+    assert result["notebook_parameters"]["LEARNING_RATE"] == 0.00015
+    assert result["notebook_parameters"]["EPOCHS"] == 16
+    assert result["notebook_parameters"]["LORA_R"] == 32
+    assert result["notebook_parameters"]["RANDAUGMENT_MAGNITUDE"] == 9
+
+
+def test_finalize_notebook_optimization_campaign_records_completed_run(tmp_path: Path):
+    dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+    _write_split_manifest(dataset_root, "tomato__leaf")
+    dataset_lineage_key = f"tomato__leaf::{hashlib.sha256((dataset_root / 'split_manifest.json').read_bytes()).hexdigest()}"
+    runs_root = tmp_path / "runs"
+    _write_canonical_run(
+        runs_root=runs_root,
+        run_name="run_a",
+        dataset_lineage_key=dataset_lineage_key,
+        learning_rate=0.00010,
+        macro_f1=0.82,
+        auroc=0.76,
+        fpr=0.18,
+    )
+
+    campaign = resolve_notebook_optimization_campaign(
+        root=tmp_path,
+        runtime_dataset_root=dataset_root,
+        dataset_key="tomato__leaf",
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        notebook_parameters={"EPOCHS": 20, "BATCH_SIZE": 128, "LEARNING_RATE": 0.0002, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.1, "WEIGHT_DECAY": 0.01, "OOD_FACTOR": 3.0, "LOGITNORM_TAU": 1.0, "RANDAUGMENT_MAGNITUDE": 7},
+        mode="continue",
+    )
+    applied = apply_notebook_optimization_proposal(
+        notebook_parameters={"EPOCHS": 20, "BATCH_SIZE": 128, "LEARNING_RATE": 0.0002, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.1, "WEIGHT_DECAY": 0.01, "OOD_FACTOR": 3.0, "LOGITNORM_TAU": 1.0, "RANDAUGMENT_MAGNITUDE": 7},
+        campaign=campaign,
+        print_fn=lambda _line: None,
+    )
+
+    finalized = finalize_notebook_optimization_campaign(
+        root=tmp_path,
+        campaign=applied["campaign"],
+        run_id="run_b",
+    )
+
+    assert "run_b" in finalized["executed_run_ids"]
+    assert finalized["last_completed_run_id"] == "run_b"
+    assert finalized["executed_proposal_signatures"]
+
+
+def test_prepare_notebook_access_and_dataset_collects_access_and_runtime_dataset(tmp_path: Path, monkeypatch):
+    dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
+    for split_name in ("continual", "val", "test", "ood"):
+        (dataset_root / split_name / "healthy").mkdir(parents=True, exist_ok=True)
+
+    access_report = {
+        "github": {"read_access_mode": "ok"},
+        "repo_updates": {"relation": "clean"},
+        "huggingface": {"access_mode": "token"},
+    }
+    monkeypatch.setattr(
+        "scripts.colab_repo_bootstrap.collect_notebook_access_report",
+        lambda repo_root, hf_model_ids: access_report,
+    )
+    monkeypatch.setattr(
+        "scripts.colab_repo_bootstrap.print_notebook_access_report",
+        lambda report, print_fn=None: (print_fn or print)(f"[ACCESS] {report['github']['read_access_mode']}"),
+    )
+
+    lines = []
+    result = prepare_notebook_access_and_dataset(
+        root=tmp_path,
+        base_config={"training": {"continual": {"backbone": {"model_name": "fake/backbone"}}}},
+        crop_name="tomato",
+        dataset_name="tomato__leaf",
+        runtime_dataset_root="data/prepared_runtime_datasets",
+        optimization_campaign_mode="continue",
+        print_fn=lines.append,
+    )
+
+    assert result["validated"] is True
+    assert result["runtime_dataset_key"] == "tomato__leaf"
+    assert result["selected_dataset_root"] == dataset_root
+    assert result["resolved_ood_root"] == str(dataset_root / "ood")
+    assert result["access_report"] == access_report
+    assert any("Detailed cohort status" in line for line in lines)
+
+
+def test_initialize_notebook_training_engine_applies_campaign_proposal_and_builds_loader_state(tmp_path: Path, monkeypatch):
+    dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
+    for split_name in ("continual", "val", "test"):
+        (dataset_root / split_name / "healthy").mkdir(parents=True, exist_ok=True)
+
+    class _FakeParam:
+        def __init__(self, count, requires_grad):
+            self._count = count
+            self.requires_grad = requires_grad
+
+        def numel(self):
+            return self._count
+
+    class _FakeAdapter:
+        def __init__(self, crop_name, device):
+            self.crop_name = crop_name
+            self.device = device
+            self.engine_calls = []
+
+        def initialize_engine(self, class_names, config):
+            self.engine_calls.append((list(class_names), dict(config)))
+
+        def parameters(self):
+            return [_FakeParam(10, True), _FakeParam(5, False)]
+
+    monkeypatch.setattr(
+        "scripts.colab_dataset_layout.resolve_notebook_training_classes",
+        lambda available_classes, crop_name, taxonomy_path: {
+            "selected_classes": ["healthy"],
+            "used_taxonomy_filter": True,
+            "reason": "matched",
+            "matched_classes": ["healthy"],
+            "unmatched_classes": [],
+        },
+    )
+    monkeypatch.setattr(
+        "src.adapter.independent_crop_adapter.IndependentCropAdapter",
+        _FakeAdapter,
+    )
+    monkeypatch.setattr(
+        "src.data.loaders.create_training_loaders",
+        lambda **kwargs: {"train": object(), "val": object(), "test": object()},
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.resolve_notebook_optimization_campaign",
+        lambda **kwargs: {
+            "status": "active",
+            "next_proposal": {"rank": 1, "signature": "sig_1"},
+            "frontier_run_ids": [],
+            "campaign_json": str(tmp_path / "runs" / "_index" / "notebook_optimization_campaigns" / "campaign.json"),
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.apply_notebook_optimization_proposal",
+        lambda **kwargs: {
+            "applied": True,
+            "notebook_parameters": dict(kwargs["notebook_parameters"], BATCH_SIZE=16, EPOCHS=14),
+            "campaign": dict(kwargs["campaign"], selected_proposal={"rank": 1, "signature": "sig_1"}),
+            "proposal": {"signature": "sig_1"},
+        },
+    )
+
+    state = {
+        "validated": True,
+        "runtime_dataset_root": dataset_root.parent,
+        "runtime_dataset_key": "tomato__leaf",
+        "selected_dataset_name": "tomato__leaf",
+        "resolved_ood_root": "",
+    }
+    result = initialize_notebook_training_engine(
+        root=tmp_path,
+        state=state,
+        base_config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake/backbone"},
+                    "adapter": {},
+                    "ood": {},
+                    "optimization": {"scheduler": {}},
+                }
+            }
+        },
+        crop_name="tomato",
+        part_name="leaf",
+        device="cpu",
+        deterministic=True,
+        notebook_parameters={
+            "EPOCHS": 12,
+            "BATCH_SIZE": 8,
+            "LEARNING_RATE": 2e-4,
+            "LORA_R": 24,
+            "LORA_ALPHA": 24,
+            "LORA_DROPOUT": 0.1,
+            "WEIGHT_DECAY": 0.01,
+            "OOD_FACTOR": 3.0,
+            "LOGITNORM_TAU": 1.0,
+            "RANDAUGMENT_MAGNITUDE": 7,
+        },
+        optimization_campaign_mode="continue",
+        data_settings={
+            "AUGMENTATION_POLICY": "randaugment",
+            "RANDAUGMENT_NUM_OPS": 2,
+            "FEW_SHOT_RESEARCH_MODE": False,
+            "FEW_SHOT_MIN_CLASS_SAMPLES": 3,
+        },
+        loader_settings={
+            "NUM_WORKERS": 0,
+            "PREFETCH": 2,
+            "USE_CACHE": False,
+            "CACHE_SIZE": 0,
+            "CACHE_TRAIN_SPLIT": True,
+            "TARGET_SIZE": 224,
+            "LOADER_ERROR_POLICY": "raise",
+            "DATA_SAMPLER": "weighted",
+            "SEED": 42,
+            "VALIDATE_IMAGES_ON_INIT": True,
+            "PIN_MEMORY": False,
+        },
+        ood_settings={
+            "sure_semantic_percentile": 90.0,
+            "sure_confidence_percentile": 97.0,
+            "conformal_alpha": 0.05,
+            "conformal_method": "raps",
+            "conformal_raps_lambda": 0.2,
+            "conformal_raps_k_reg": 1,
+            "ber_enabled": False,
+            "ber_lambda_old": 0.0,
+            "ber_lambda_new": 0.0,
+            "ber_warmup_steps": 0,
+        },
+        optimization_settings={
+            "grad_accumulation_steps": 1,
+            "max_grad_norm": 1.0,
+            "mixed_precision": "bf16",
+            "label_smoothing": 0.0,
+            "loss_name": "logitnorm",
+            "scheduler": {"name": "cosine", "warmup_ratio": 0.1, "min_lr": 1e-6, "step_on": "batch"},
+        },
+        early_stopping_settings={
+            "EARLY_STOPPING_PATIENCE": 3,
+            "EARLY_STOPPING_MIN_DELTA": 0.001,
+        },
+        print_fn=lambda _line: None,
+    )
+
+    assert result["notebook_parameters"]["BATCH_SIZE"] == 16
+    assert state["class_names"] == ["healthy"]
+    assert state["continual_config"]["batch_size"] == 16
+    assert state["continual_config"]["num_epochs"] == 14
+    assert state["adapter"].crop_name == "tomato"
+    assert result["trainable_params"] == 10
+
+
+def test_run_notebook_training_session_persists_history_and_marks_adapter_trained(tmp_path: Path):
+    class _FakeHistory:
+        def to_dict(self):
+            return {"train_loss": [0.4], "val_loss": [0.3], "stopped_early": False}
+
+    class _FakeSession:
+        def __init__(self, observers):
+            self._observers = observers
+
+        def run(self):
+            for observer in self._observers:
+                observer({"event_type": "batch_end", "payload": {"epoch": 1, "batch": 1, "total_batches": 1, "loss": 0.4, "lr": 0.0002, "samples_per_sec": 5.0, "elapsed_sec": 1.0, "eta_sec": 0.0, "global_step": 1}})
+                observer({"event_type": "epoch_end", "payload": {"epoch_done": 1, "epoch_loss": 0.4, "val_loss": 0.3, "val_accuracy": 0.9, "macro_f1": 0.88, "balanced_accuracy": 0.89, "generalization_gap": 0.02, "global_step": 1}})
+            return _FakeHistory()
+
+        def snapshot_state(self):
+            return {"progress_state": {"epoch": 1, "global_step": 1}}
+
+    class _FakeAdapter:
+        def __init__(self):
+            self.is_trained = False
+
+        def build_training_session(self, _train_loader, **kwargs):
+            return _FakeSession(kwargs["observers"])
+
+    class _FakeCheckpointManager:
+        def save_checkpoint(self, **kwargs):
+            return {"path": str(tmp_path / "checkpoint.pt"), "epoch": 1, "global_step": 1}
+
+    state = {
+        "adapter": _FakeAdapter(),
+        "loaders": {"train": object(), "val": object()},
+        "checkpoint_manager": _FakeCheckpointManager(),
+    }
+
+    result = run_notebook_training_session(
+        root=tmp_path,
+        state=state,
+        run_id="run_1",
+        epochs=1,
+        device="cpu",
+        stdout_batch_interval=50,
+        validation_every_n_epochs=1,
+        checkpoint_every_n_steps=0,
+        checkpoint_on_exception=True,
+        print_fn=lambda _line: None,
+    )
+
+    assert state["adapter"].is_trained is True
+    assert result["history"]["stopped_early"] is False
+    assert Path(tmp_path / "outputs" / "colab_notebook_training" / "artifacts" / "training" / "history.json").exists()
+    assert state["resume_state"]["progress_state"]["epoch"] == 1
+
+
+def test_complete_notebook_training_run_finalizes_outputs_with_helper_callbacks(tmp_path: Path, monkeypatch):
+    class _FakeModule:
+        def eval(self):
+            return None
+
+    class _FakeTrainer:
+        def __init__(self):
+            self.adapter_model = _FakeModule()
+            self.classifier = _FakeModule()
+            self.fusion = _FakeModule()
+
+    class _FakeDataset:
+        def __len__(self):
+            return 2
+
+    class _FakeLoader:
+        def __init__(self):
+            self.dataset = _FakeDataset()
+
+    class _FakeTelemetry:
+        def __init__(self):
+            self.artifacts_dir = tmp_path / "telemetry_artifacts"
+            self.artifacts_dir.mkdir(parents=True, exist_ok=True)
+            self.latest = []
+            self.summary = []
+            self.closed = []
+
+        def update_latest(self, payload, **_kwargs):
+            self.latest.append(dict(payload))
+
+        def emit_event(self, *_args, **_kwargs):
+            return None
+
+        def merge_summary_metadata(self, payload):
+            self.summary.append(dict(payload))
+
+        def close(self, payload):
+            self.closed.append(dict(payload))
+
+    evaluation = SimpleNamespace(
+        y_true=[0, 0],
+        y_pred=[0, 0],
+        ood_labels=[0, 1],
+        ood_scores=[0.1, 0.9],
+        sure_ds_f1=0.8,
+        conformal_empirical_coverage=0.9,
+        conformal_avg_set_size=1.2,
+        context={"extra": "value"},
+    )
+    monkeypatch.setattr(
+        "src.training.validation.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, ood_loader=None: evaluation,
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.persist_validation_artifacts",
+        lambda **kwargs: {
+            "metric_gate": {"metrics": {"ood_auroc": 0.91, "sure_ds_f1": 0.8, "conformal_empirical_coverage": 0.9}},
+            "report_dict": {"accuracy": 0.95},
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.persist_production_readiness_artifact",
+        lambda **kwargs: {
+            "payload": {"status": "ready", "passed": True, "ood_evidence_source": kwargs["ood_evidence_source"]}
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.merge_training_summary_fields",
+        lambda **kwargs: dict(kwargs["payload"]),
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.finalize_notebook_optimization_campaign",
+        lambda **kwargs: {
+            "status": "active",
+            "mode": "continue",
+            "frontier_count": 1,
+            "eligible_run_count": 2,
+            "executed_run_ids": ["run_1"],
+            "next_proposal": {"rank": 2, "signature": "sig_2"},
+            "campaign_json": str(tmp_path / "runs" / "_index" / "campaign.json"),
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.build_notebook_completion_report",
+        lambda **kwargs: {"checks": {"repo_exports": True}, "ready": True, "soft_missing": [], "missing": []},
+    )
+    disconnect_calls = []
+    monkeypatch.setattr(
+        "scripts.colab_notebook_helpers.maybe_auto_disconnect_colab_runtime",
+        lambda **kwargs: disconnect_calls.append(dict(kwargs)),
+    )
+
+    telemetry = _FakeTelemetry()
+    state = {
+        "adapter": SimpleNamespace(
+            _trainer=_FakeTrainer(),
+            class_to_idx={"healthy": 0},
+        ),
+        "loaders": {"val": _FakeLoader(), "test": _FakeLoader(), "ood": _FakeLoader()},
+        "continual_config": {
+            "batch_size": 8,
+            "learning_rate": 2e-4,
+            "adapter": {"lora_r": 24},
+            "ood": {"threshold_factor": 3.0},
+            "optimization": {"mixed_precision": "bf16"},
+        },
+        "runtime_dataset_key": "tomato__leaf",
+        "selected_dataset_name": "tomato__leaf",
+        "selected_dataset_root": tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf",
+        "resolved_ood_root": str(tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf" / "ood"),
+        "runtime_dataset_root": tmp_path / "data" / "prepared_runtime_datasets",
+        "access_report": {"github": {"read_access_mode": "ok"}},
+        "optimization_campaign": {"status": "active", "mode": "continue"},
+        "loader_settings": {"NUM_WORKERS": 0},
+        "training_runtime": {"checkpoint_every_n_steps": 0},
+    }
+    repo_run_dir = tmp_path / "runs" / "run_1"
+    repo_output_dir = repo_run_dir / "outputs"
+    repo_telemetry_dir = repo_run_dir / "telemetry"
+    repo_checkpoint_state_dir = repo_run_dir / "checkpoint_state"
+    repo_notebook_output_path = repo_run_dir / "executed.ipynb"
+    for path in (repo_output_dir, repo_telemetry_dir, repo_checkpoint_state_dir):
+        path.mkdir(parents=True, exist_ok=True)
+
+    save_calls = []
+
+    def _save_run_outputs():
+        save_calls.append("save")
+        return {
+            "outputs": str(repo_output_dir),
+            "telemetry": str(repo_telemetry_dir),
+            "checkpoint_state": str(repo_checkpoint_state_dir),
+        }
+
+    def _export_notebook(target: Path):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("{}", encoding="utf-8")
+        return str(target)
+
+    result = complete_notebook_training_run(
+        root=tmp_path,
+        state=state,
+        base_config={"training": {"continual": {"evaluation": {"ood_benchmark_auto_run": False}}}},
+        crop_name="tomato",
+        part_name="leaf",
+        run_id="run_1",
+        device="cpu",
+        epochs=12,
+        runtime_dataset_root="data/prepared_runtime_datasets",
+        repo_run_dir=repo_run_dir,
+        repo_output_dir=repo_output_dir,
+        repo_telemetry_dir=repo_telemetry_dir,
+        repo_checkpoint_state_dir=repo_checkpoint_state_dir,
+        repo_notebook_output_path=repo_notebook_output_path,
+        auto_push_to_github=False,
+        auto_push_remote_name="origin",
+        auto_push_branch="master",
+        auto_disconnect_runtime=True,
+        auto_disconnect_grace_seconds=0.0,
+        save_run_outputs_to_repo_fn=_save_run_outputs,
+        export_current_colab_notebook_fn=_export_notebook,
+        push_repo_run_to_github_fn=lambda *args, **kwargs: {"enabled": True, "pushed": True},
+        telemetry=telemetry,
+        print_fn=lambda _line: None,
+    )
+
+    assert "test" in result["evaluation_artifacts"]
+    assert result["production_readiness"]["status"] == "ready"
+    assert save_calls == ["save", "save", "save"]
+    assert state["git_push_report"]["enabled"] is False
+    assert state["auto_disconnect_report"]["checks"]["repo_exports"] is True
+    assert telemetry.closed[0]["status"] == "ok"
+    assert disconnect_calls
 
 

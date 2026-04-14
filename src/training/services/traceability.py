@@ -37,6 +37,8 @@ def _merge_registry_to_telemetry(telemetry: Any, registry_result: Mapping[str, A
         "trials_jsonl": "runs/_index/trials.jsonl",
         "latest_registry_json": "runs/_index/latest_registry.json",
         "pareto_inputs_json": "runs/_index/pareto_inputs.json",
+        "pareto_frontiers_json": "runs/_index/pareto_frontiers.json",
+        "bayesian_recommendations_json": "runs/_index/bayesian_recommendations.json",
     }
     for key, relative_path in paths.items():
         source_path = registry_result.get(key)
@@ -81,6 +83,8 @@ def _try_refresh_run_registry(*, artifact_root: str | Path, telemetry: Any = Non
         "latest_registry_json": str(result.get("latest_registry_json", "")) if result.get("latest_registry_json") else "",
         "trials_jsonl": str(result.get("trials_jsonl", "")) if result.get("trials_jsonl") else "",
         "pareto_inputs_json": str(result.get("pareto_inputs_json", "")) if result.get("pareto_inputs_json") else "",
+        "pareto_frontiers_json": str(result.get("pareto_frontiers_json", "")) if result.get("pareto_frontiers_json") else "",
+        "bayesian_recommendations_json": str(result.get("bayesian_recommendations_json", "")) if result.get("bayesian_recommendations_json") else "",
     }
 
 
