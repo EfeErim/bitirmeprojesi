@@ -248,6 +248,7 @@ def test_training_workflow_result_to_dict_stringifies_nested_paths(tmp_path: Pat
     result = TrainingWorkflowResult(
         run_id="run_1",
         crop_name="tomato",
+        part_name="leaf",
         class_names=["healthy"],
         history={"train_loss": [0.1]},
         loader_sizes={"train": 1},

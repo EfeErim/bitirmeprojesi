@@ -52,17 +52,20 @@ class FakeAdapter:
         }
 
 
-def _write_adapter_meta(root: Path, crop: str) -> Path:
-    adapter_dir = root / crop / "continual_sd_lora_adapter"
+def _write_adapter_meta(root: Path, crop: str, part: str = "leaf") -> Path:
+    adapter_dir = root / crop / part / "continual_sd_lora_adapter"
     adapter_dir.mkdir(parents=True, exist_ok=True)
-    (adapter_dir / "adapter_meta.json").write_text("{}", encoding="utf-8")
+    (adapter_dir / "adapter_meta.json").write_text(
+        "{\"crop_name\": \"%s\", \"part_name\": \"%s\"}" % (crop, part),
+        encoding="utf-8",
+    )
     return adapter_dir
 
 
 
 def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
-    _write_adapter_meta(adapter_root, "tomato")
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
 
     runtime = RouterAdapterRuntime(
         config={
@@ -122,7 +125,7 @@ def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tm
 
 def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
-    _write_adapter_meta(adapter_root, "tomato")
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
 
     runtime = RouterAdapterRuntime(
         config={
@@ -161,7 +164,7 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
 
 def test_part_hint_does_not_override_router_part_when_router_runs(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
-    _write_adapter_meta(adapter_root, "tomato")
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
 
     runtime = RouterAdapterRuntime(
         config={
@@ -339,7 +342,7 @@ def test_unknown_crop_status_updates_include_router_message(monkeypatch, tmp_pat
 
 def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
-    _write_adapter_meta(adapter_root, "tomato")
+    _write_adapter_meta(adapter_root, "tomato", "fruit")
 
     runtime = RouterAdapterRuntime(
         config={
@@ -478,8 +481,8 @@ def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_pat
         "[ROUTER] Loading models on cpu...",
         "[ROUTER] Ready.",
         "[ROUTER] crop=tomato part=leaf confidence=0.940",
-        "[ADAPTER] Loading adapter for crop=tomato...",
-        "[ADAPTER] Ready crop=tomato",
+        "[ADAPTER] Loading adapter for crop=tomato part=leaf...",
+        "[ADAPTER] Ready crop=tomato part=leaf",
         "[RESULT] status=success crop=tomato diagnosis=healthy confidence=0.910 ood=False",
     ]
 

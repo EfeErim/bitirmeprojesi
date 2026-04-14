@@ -46,19 +46,30 @@ def _build_router_payload(analysis: RouterAnalysisResult) -> Dict[str, Any]:
     }
 
 
-def _resolve_adapter_target(crop_name: Optional[str], *, config: Dict[str, Any]) -> Dict[str, Any]:
+def _resolve_adapter_target(
+    crop_name: Optional[str],
+    part_name: Optional[str],
+    *,
+    config: Dict[str, Any],
+) -> Dict[str, Any]:
     normalized_crop = str(crop_name or "").strip().lower()
+    normalized_part = str(part_name or "").strip().lower() or "unspecified"
     if not normalized_crop or normalized_crop == "unknown":
         return {
             "crop": None,
+            "part": None,
             "adapter_dir": None,
             "exists": False,
         }
     inference_cfg = config.get("inference", {}) if isinstance(config.get("inference"), dict) else {}
     adapter_root = Path(str(inference_cfg.get("adapter_root", "models/adapters")))
-    adapter_dir = adapter_root / normalized_crop / "continual_sd_lora_adapter"
+    adapter_dir = adapter_root / normalized_crop / normalized_part / "continual_sd_lora_adapter"
+    if not adapter_dir.exists():
+        legacy_adapter_dir = adapter_root / normalized_crop / "continual_sd_lora_adapter"
+        adapter_dir = legacy_adapter_dir if legacy_adapter_dir.exists() else adapter_dir
     return {
         "crop": normalized_crop,
+        "part": normalized_part,
         "adapter_dir": str(adapter_dir),
         "exists": adapter_dir.exists(),
     }
@@ -196,7 +207,7 @@ def run_inference(
         payload = _build_router_payload(analysis)
         payload["runtime_profile"] = str(runtime_profile or "")
         config = get_config(environment=config_env)
-        payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), config=config)
+        payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=config)
         if include_diagnostics:
             payload["diagnostics"] = _build_router_diagnostics(
                 analysis,
@@ -221,7 +232,7 @@ def run_inference(
     payload = _build_router_payload(analysis)
     payload["runtime_profile"] = str(getattr(router, "active_profile", runtime_profile or "") or "")
     router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
-    payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), config=router_config)
+    payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=router_config)
     if include_diagnostics:
         payload["diagnostics"] = _build_router_diagnostics(
             analysis,

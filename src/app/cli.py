@@ -23,6 +23,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     training = subparsers.add_parser("training", help="Run continual adapter training")
     training.add_argument("crop", help="Crop name")
+    training.add_argument("--part", dest="part_name")
     training.add_argument("data_dir", type=Path, help="Runtime dataset root")
     training.add_argument("output_dir", type=Path, help="Output directory for adapter assets")
     training.add_argument("--config-env", default="colab")
@@ -64,6 +65,7 @@ def main() -> int:
     )
     result = workflow.run(
         crop_name=args.crop,
+        part_name=args.part_name,
         data_dir=args.data_dir,
         output_dir=args.output_dir,
         num_epochs=args.num_epochs,

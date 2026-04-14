@@ -139,6 +139,12 @@ def _iter_crop_metadata_candidates(adapter_dir: Path) -> Iterable[Path]:
 
 
 def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: bool = False) -> Optional[str]:
+    for candidate in _iter_crop_metadata_candidates(adapter_dir):
+        inferred = _extract_crop_name_from_payload(
+            _read_json_if_exists(candidate, strict=strict_metadata)
+        )
+        if inferred is not None:
+            return inferred
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_crop = adapter_dir.parent.name.strip().lower()
         if parent_crop not in {
@@ -150,13 +156,6 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: boo
             "outputs",
         }:
             return parent_crop
-
-    for candidate in _iter_crop_metadata_candidates(adapter_dir):
-        inferred = _extract_crop_name_from_payload(
-            _read_json_if_exists(candidate, strict=strict_metadata)
-        )
-        if inferred is not None:
-            return inferred
     inferred_from_meta = _infer_crop_name_from_meta(adapter_dir, strict_metadata=strict_metadata)
     if inferred_from_meta is not None:
         return inferred_from_meta
@@ -263,6 +262,7 @@ def _resolve_adapter_dir(
     *,
     adapter_dir: Optional[str | Path] = None,
     adapter_root: Optional[str | Path] = None,
+    part_name: Optional[str] = None,
     config_env: Optional[str] = "colab",
 ) -> Path:
     if adapter_dir is not None:
@@ -290,10 +290,24 @@ def _resolve_adapter_dir(
     resolved = _first_adapter_dir(_iter_adapter_root_candidates(base_root, crop_key=crop_key))
     if resolved is not None:
         return resolved
+
+    discovered = discover_adapter_candidates([base_root], crop_name=crop_key)
+    if discovered:
+        normalized_part = str(part_name or "").strip().lower()
+        if normalized_part:
+            for candidate in discovered:
+                if str(candidate.get("part_name") or "").strip().lower() == normalized_part:
+                    return Path(str(candidate["adapter_dir"]))
+        for candidate in discovered:
+            candidate_part = str(candidate.get("part_name") or "").strip().lower()
+            if not candidate_part or candidate_part == "unspecified":
+                return Path(str(candidate["adapter_dir"]))
+        return Path(str(discovered[0]["adapter_dir"]))
+
     raise FileNotFoundError(
         f"Adapter not found for crop '{crop_key}' under adapter_root={base_root}. "
-        "Expected either <adapter_root>/<crop>/continual_sd_lora_adapter/, "
-        "<adapter_root>/<crop>/, or a direct adapter asset directory."
+        "Expected either <adapter_root>/<crop>/<part>/continual_sd_lora_adapter/, "
+        "<adapter_root>/<crop>/continual_sd_lora_adapter/, <adapter_root>/<crop>/, or a direct adapter asset directory."
     )
 
 
@@ -306,6 +320,7 @@ def _load_adapter_context(
     *,
     adapter_dir: Optional[str | Path] = None,
     adapter_root: Optional[str | Path] = None,
+    part_name: Optional[str] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
 ) -> tuple[Path, str, IndependentCropAdapter]:
@@ -313,6 +328,7 @@ def _load_adapter_context(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
+        part_name=part_name,
         config_env=config_env,
     )
     crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
@@ -335,6 +351,8 @@ def _summary_from_meta(meta: Dict[str, Any]) -> Dict[str, Any]:
         )
     ]
     return {
+        "crop_name": str(meta.get("crop_name", "") or ""),
+        "part_name": str(meta.get("part_name", "") or ""),
         "backbone_model_name": str(dict(meta.get("backbone", {})).get("model_name", "")),
         "class_names": ordered_classes,
         "class_count": len(ordered_classes),
@@ -422,7 +440,8 @@ def discover_adapter_candidates(
 
             meta = _read_adapter_meta(adapter_dir)
             meta_summary = _summary_from_meta(meta)
-            candidate_crop = inferred_crop or requested_crop
+            candidate_crop = inferred_crop or meta_summary.get("crop_name") or requested_crop
+            candidate_part = str(meta_summary.get("part_name") or "").strip().lower() or None
             run_id = _infer_run_id(adapter_dir)
             identity_key = _candidate_identity_key(
                 adapter_dir=adapter_dir,
@@ -432,6 +451,7 @@ def discover_adapter_candidates(
             candidate = {
                 "adapter_dir": str(adapter_dir),
                 "crop_name": candidate_crop,
+                "part_name": candidate_part,
                 "backbone_model_name": meta_summary["backbone_model_name"],
                 "class_count": meta_summary["class_count"],
                 "class_names": list(meta_summary["class_names"]),
@@ -827,12 +847,15 @@ def load_adapter_summary(
     adapter_root: Optional[str | Path] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
+    *,
+    part_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Resolve an adapter bundle and return a compact metadata summary."""
     resolved_dir = _resolve_adapter_dir(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
+        part_name=part_name,
         config_env=config_env,
     )
     crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
@@ -841,6 +864,7 @@ def load_adapter_summary(
     class_to_idx = dict(meta.get("class_to_idx", {}))
     summary = {
         "crop_name": crop_key,
+        "part_name": str(meta.get("part_name", "") or ""),
         "model_name": str(dict(meta.get("backbone", {})).get("model_name", "")),
         "engine": str(meta.get("engine", "continual_sd_lora")),
         "schema_version": str(meta.get("schema_version", "v6")),
@@ -863,12 +887,15 @@ def predict_single_image(
     device: str = "cuda",
     enable_robust_smoke: bool = False,
     robust_views: Optional[Sequence[str]] = None,
+    *,
+    part_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Run a single direct adapter prediction for a smoke test."""
     resolved_dir, _, adapter = _load_adapter_context(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
+        part_name=part_name,
         config_env=config_env,
         device=device,
     )
@@ -902,6 +929,8 @@ def predict_image_folder(
     adapter_root: Optional[str | Path] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
+    *,
+    part_name: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """Run direct adapter predictions for all supported images in a folder."""
     folder = Path(image_dir)
@@ -914,6 +943,7 @@ def predict_image_folder(
         crop_name,
         adapter_dir=adapter_dir,
         adapter_root=adapter_root,
+        part_name=part_name,
         config_env=config_env,
         device=device,
     )

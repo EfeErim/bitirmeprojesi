@@ -124,8 +124,10 @@ The maintained training path is:
 The default inference deployment path is:
 
 ```text
-models/adapters/<crop>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
+
+Legacy crop-only bundles still load, but future exports should land under the crop/part path.
 
 ## Repo Layout
 
@@ -497,15 +499,15 @@ Important current detail:
 Router inference looks for adapters here by default:
 
 ```text
-models/adapters/<crop>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
 
 You can deploy a trained adapter by copying one of these outputs there:
 
-- workflow output: `<output_dir>/continual_sd_lora_adapter/`
-- Notebook 2 local output: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- Notebook 2 repo mirror: `runs/<RUN_ID>/outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- Notebook 2 Drive export: `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/artifacts/adapter_export/continual_sd_lora_adapter/`
+- workflow output: `<output_dir>/<crop>/<part>/continual_sd_lora_adapter/`
+- Notebook 2 local output: `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- Notebook 2 repo mirror: `runs/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- Notebook 2 Drive export: `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 If you keep adapters somewhere else, pass `--adapter-root`.
 

@@ -83,6 +83,8 @@ def record_adapter_export_metadata(
     calibration_loader_size: int,
     authoritative_split: str,
     ood_evidence_source: str,
+    crop_name: str,
+    part_name: str,
     requested_primary_score_method: str,
     selected_primary_score_method: str,
     selection_source: str,
@@ -110,7 +112,11 @@ def record_adapter_export_metadata(
     )
     setter(
         ood_calibration=calibration_metadata,
-        adapter_runtime={"best_state_restored": bool(best_state_restored)},
+        adapter_runtime={
+            "best_state_restored": bool(best_state_restored),
+            "crop_name": str(crop_name or ""),
+            "part_name": str(part_name or "unspecified"),
+        },
     )
 
 

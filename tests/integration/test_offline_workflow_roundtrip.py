@@ -466,7 +466,7 @@ def offline_roundtrip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict:
         output_dir=tmp_path / "training_outputs",
     )
 
-    deployment_root = tmp_path / "models" / "adapters" / "tomato" / "continual_sd_lora_adapter"
+    deployment_root = tmp_path / "models" / "adapters" / "tomato" / "unspecified" / "continual_sd_lora_adapter"
     deployment_root.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(result.adapter_dir, deployment_root, dirs_exist_ok=True)
 

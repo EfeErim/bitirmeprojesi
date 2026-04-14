@@ -244,6 +244,11 @@ def _resolve_part_name(*, runtime_dataset_key: str, manifest_payload: Dict[str, 
     return "unspecified"
 
 
+def _normalize_part_name(part_name: Optional[str]) -> str:
+    normalized = str(part_name or "").strip().lower()
+    return normalized or "unspecified"
+
+
 def _nested_dict(source: JsonDict, *keys: str) -> JsonDict:
     current: Any = source
     for key in keys:
@@ -330,6 +335,7 @@ def _build_ood_method_comparison_context(
 class TrainingWorkflowResult:
     run_id: str
     crop_name: str
+    part_name: str
     class_names: List[str]
     history: Dict[str, Any]
     loader_sizes: Dict[str, int]
@@ -346,6 +352,7 @@ class TrainingWorkflowResult:
         return {
             "run_id": self.run_id,
             "crop_name": self.crop_name,
+            "part_name": self.part_name,
             "class_names": list(self.class_names),
             "history": dict(self.history),
             "loader_sizes": {str(k): int(v) for k, v in self.loader_sizes.items()},
@@ -812,6 +819,7 @@ class TrainingWorkflow:
         self,
         *,
         crop_name: str,
+        part_name: Optional[str] = None,
         data_dir: str | Path,
         output_dir: str | Path,
         class_names: Optional[Sequence[str]] = None,
@@ -840,6 +848,7 @@ class TrainingWorkflow:
             config=self.config,
             device=self.device,
             crop_name=crop_name,
+            part_name=_normalize_part_name(part_name) if part_name is not None else None,
             data_dir=resolved_data_dir,
             class_names=class_names,
             num_workers=num_workers,
@@ -862,16 +871,19 @@ class TrainingWorkflow:
         runtime_crop_root = Path(run_setup.runtime_crop_root)
         runtime_dataset_resolution_source = str(run_setup.runtime_dataset_resolution_source)
         runtime_manifest_payload = _read_dataset_manifest_payload(runtime_crop_root)
-        part_name = _resolve_part_name(
-            runtime_dataset_key=runtime_dataset_key,
-            manifest_payload=runtime_manifest_payload,
+        adapter = run_setup.adapter
+        resolved_part_name = (
+            _normalize_part_name(part_name)
+            if part_name is not None
+            else _resolve_part_name(runtime_dataset_key=runtime_dataset_key, manifest_payload=runtime_manifest_payload)
         )
+        if hasattr(adapter, "part_name"):
+            adapter.part_name = resolved_part_name
         run_created_at = datetime.now(timezone.utc).isoformat()
         split_class_counts = {
             str(split_name): {str(class_name): int(count) for class_name, count in counts.items()}
             for split_name, counts in dict(run_setup.split_class_counts).items()
         }
-        adapter = run_setup.adapter
         sampler_runtime = dict(run_setup.sampler_runtime)
         class_balance_runtime = dict(run_setup.class_balance_runtime)
         artifact_dir = resolved_output_dir / "training_metrics"
@@ -1074,6 +1086,8 @@ class TrainingWorkflow:
             calibration_loader_size=loader_size(calibration_loader),
             authoritative_split=authoritative_split,
             ood_evidence_source=ood_evidence_source,
+            crop_name=crop_name,
+            part_name=resolved_part_name,
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             selection_source=primary_score_stage.selection_source,
@@ -1111,7 +1125,7 @@ class TrainingWorkflow:
         summary_payload = build_training_summary_payload_dict(
             run_id=run_id,
             crop_name=crop_name,
-            part_name=part_name,
+            part_name=resolved_part_name,
             detected_classes=detected_classes,
             dataset_key=runtime_dataset_key,
             loader_sizes=loader_sizes,
@@ -1149,7 +1163,7 @@ class TrainingWorkflow:
             "created_at": run_created_at,
             "surface": "workflow",
             "crop_name": crop_name,
-            "part_name": part_name,
+            "part_name": resolved_part_name,
             "device": self.device,
             "python_version": sys.version.split()[0],
             "data_dir": str(resolved_data_dir),
@@ -1162,7 +1176,7 @@ class TrainingWorkflow:
             "dataset": {
                 "crop_root": str(runtime_crop_root.resolve()),
                 "crop_name": crop_name,
-                "part_name": part_name,
+                "part_name": resolved_part_name,
                 "dataset_key": runtime_dataset_key,
                 "resolution_source": runtime_dataset_resolution_source,
                 "manifests": _collect_dataset_manifest_context(runtime_crop_root),
@@ -1224,6 +1238,7 @@ class TrainingWorkflow:
         result = TrainingWorkflowResult(
             run_id=run_id,
             crop_name=crop_name,
+            part_name=resolved_part_name,
             class_names=detected_classes,
             history=history_payload,
             loader_sizes=loader_sizes,

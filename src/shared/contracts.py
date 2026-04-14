@@ -428,6 +428,7 @@ class AdapterMetadata:
     schema_version: str = "v6"
     engine: str = "continual_sd_lora"
     crop_name: str = ""
+    part_name: str = ""
     trainer_config: Dict[str, Any] = field(default_factory=dict)
     config_hash: str = ""
     backbone: Dict[str, Any] = field(default_factory=dict)
@@ -443,6 +444,7 @@ class AdapterMetadata:
             "schema_version": str(self.schema_version),
             "engine": str(self.engine),
             "crop_name": str(self.crop_name),
+            "part_name": str(self.part_name),
             "trainer_config": dict(self.trainer_config),
             "config_hash": str(self.config_hash),
             "backbone": dict(self.backbone),
@@ -461,6 +463,7 @@ class AdapterMetadata:
             schema_version=str(data.get("schema_version", "v6")),
             engine=str(data.get("engine", "continual_sd_lora")),
             crop_name=str(data.get("crop_name", "")),
+            part_name=str(data.get("part_name", "")),
             trainer_config=dict(data.get("trainer_config", {})),
             config_hash=str(data.get("config_hash", "")),
             backbone=dict(data.get("backbone", {})),

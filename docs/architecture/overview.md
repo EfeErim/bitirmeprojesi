@@ -168,8 +168,10 @@ If router initialization fails, the runtime discards that router instance and re
 The default deployment path is:
 
 ```text
-models/adapters/<crop>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
+
+If no part-specific bundle exists yet, the runtime still falls back to the legacy crop-only layout for older exports.
 
 If `crop_hint` is provided, the router step is skipped.
 In that case the payload still includes a `router` summary block with status `skipped` so callers can migrate to the structured router view without losing mirrored crop fields.
@@ -346,9 +348,9 @@ The repo mirror keeps notebook outputs, telemetry copies, and checkpoint manifes
 
 Current adapter export detail:
 
-- local notebook export: `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- workflow export: `<output_dir>/continual_sd_lora_adapter/`
-- Drive telemetry export: `artifacts/adapter_export/continual_sd_lora_adapter/`
+- local notebook export: `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- workflow export: `<output_dir>/<crop>/<part>/continual_sd_lora_adapter/`
+- Drive telemetry export: `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 Current notebook naming/detail:
 

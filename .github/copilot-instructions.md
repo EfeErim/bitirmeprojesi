@@ -36,7 +36,7 @@ Tracked source:
 Local or generated only:
 
 - `runs/<RUN_ID>/`
-- `models/adapters/<crop>/continual_sd_lora_adapter/`
+- `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - `outputs/`
 - `.runtime_tmp/`, caches, temp folders, virtualenvs
 

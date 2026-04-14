@@ -121,6 +121,7 @@ def build_runtime_adapter_metadata(
     schema_version: str,
     engine: str,
     crop_name: str,
+    part_name: str = "",
     model_name: str,
     ood_calibration_version: int,
     target_modules_resolved: list[str],
@@ -147,6 +148,7 @@ def build_runtime_adapter_metadata(
         schema_version=schema_version,
         engine=engine,
         crop_name=str(crop_name),
+        part_name=str(part_name),
         trainer_config=trainer_config,
         config_hash=str(getattr(trainer, "_config_hash", "")),
         backbone={

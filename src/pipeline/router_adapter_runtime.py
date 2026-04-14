@@ -13,6 +13,8 @@ from PIL import Image
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
+from src.shared.adapter_paths import normalize_adapter_name, resolve_adapter_bundle_dir
+from src.shared.json_utils import read_json_dict
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
     build_router_skipped_analysis,
@@ -45,6 +47,7 @@ class RouterLike(Protocol):
 class _CachedAdapter:
     adapter: IndependentCropAdapter
     adapter_dir: Path
+    part_name: str
     adapter_meta_mtime_ns: int
     adapter_meta_size: int
 
@@ -84,6 +87,10 @@ class RouterAdapterRuntime:
     def _build_adapter(self, crop_name: str) -> IndependentCropAdapter:
         return IndependentCropAdapter(crop_name=crop_name, device=str(self.device))
 
+    @staticmethod
+    def _adapter_cache_key(crop_name: str, part_name: Optional[str]) -> str:
+        return f"{normalize_adapter_name(crop_name)}::{normalize_adapter_name(part_name)}"
+
     def load_router(self) -> Any:
         if self.router is not None:
             readiness_probe = getattr(self.router, "is_ready", None)
@@ -109,17 +116,68 @@ class RouterAdapterRuntime:
             self._emit_status("[ROUTER] Ready.")
         return self.router
 
-    def _resolve_adapter_dir(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> Path:
+    def _resolve_adapter_dir(
+        self,
+        crop_name: str,
+        part_name: Optional[str] = None,
+        adapter_dir: Optional[str | Path] = None,
+    ) -> Path:
+        def _discover_fallback_adapter_dir(search_root: Path) -> Optional[Path]:
+            if not search_root.exists() or not search_root.is_dir():
+                return None
+
+            crop_key = normalize_adapter_name(crop_name)
+            requested_part = normalize_adapter_name(part_name) if part_name else ""
+            ranked_candidates: list[tuple[int, Path]] = []
+            for meta_path in sorted(search_root.rglob("adapter_meta.json")):
+                adapter_bundle_dir = meta_path.parent
+                if adapter_bundle_dir.name != "continual_sd_lora_adapter":
+                    continue
+                try:
+                    meta = read_json_dict(meta_path)
+                except Exception:
+                    continue
+                meta_crop = normalize_adapter_name(meta.get("crop_name")) if meta.get("crop_name") else ""
+                if meta_crop and meta_crop != crop_key:
+                    continue
+                meta_part = normalize_adapter_name(meta.get("part_name")) if meta.get("part_name") else ""
+                if requested_part and meta_part == requested_part:
+                    ranked_candidates.append((0, adapter_bundle_dir))
+                elif not requested_part and (not meta_part or meta_part == "unspecified"):
+                    ranked_candidates.append((1, adapter_bundle_dir))
+                elif not requested_part:
+                    ranked_candidates.append((2, adapter_bundle_dir))
+                elif meta_part in {"", "unspecified"}:
+                    ranked_candidates.append((1, adapter_bundle_dir))
+                else:
+                    ranked_candidates.append((2, adapter_bundle_dir))
+            if not ranked_candidates:
+                return None
+            ranked_candidates.sort(key=lambda item: (item[0], str(item[1])))
+            return ranked_candidates[0][1]
+
         if adapter_dir is not None:
             root = Path(adapter_dir)
-        else:
-            root = self.adapter_root / crop_name / "continual_sd_lora_adapter"
-        if root.is_dir() and (root / "adapter_meta.json").exists():
-            return root
-        raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
+            try:
+                return resolve_adapter_bundle_dir(root, crop_name=crop_name, part_name=part_name)
+            except FileNotFoundError as exc:
+                fallback = _discover_fallback_adapter_dir(root)
+                if fallback is not None:
+                    return fallback
+                raise FileNotFoundError(f"Could not resolve adapter bundle from {root}") from exc
+        try:
+            return resolve_adapter_bundle_dir(self.adapter_root, crop_name=crop_name, part_name=part_name)
+        except FileNotFoundError as exc:
+            fallback = _discover_fallback_adapter_dir(self.adapter_root)
+            if fallback is not None:
+                return fallback
+            expected_part = normalize_adapter_name(part_name) if part_name else "unspecified"
+            raise FileNotFoundError(
+                f"Adapter not found for crop '{crop_name}' part '{expected_part}' under {self.adapter_root}"
+            ) from exc
 
     @staticmethod
-    def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, int, int]:
+    def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, str, int, int]:
         resolved_dir = adapter_dir.resolve()
         meta_path = resolved_dir / "adapter_meta.json"
         try:
@@ -129,41 +187,54 @@ class RouterAdapterRuntime:
 
         # Adapter export rewrites adapter_meta.json after bundle assets are persisted,
         # so metadata freshness is the maintained reload marker for runtime caching.
+        meta = read_json_dict(meta_path)
         return (
             resolved_dir,
+            normalize_adapter_name(meta.get("part_name")) if meta.get("part_name") else "unspecified",
             int(meta_stat.st_mtime_ns),
             int(meta_stat.st_size),
         )
 
-    def load_adapter(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> IndependentCropAdapter:
+    def load_adapter(
+        self,
+        crop_name: str,
+        part_name: Optional[str] = None,
+        adapter_dir: Optional[str | Path] = None,
+    ) -> IndependentCropAdapter:
         crop_key = str(crop_name).strip().lower()
-        resolved_dir = self._resolve_adapter_dir(crop_key, adapter_dir=adapter_dir)
+        part_key = normalize_adapter_name(part_name) if part_name else None
+        resolved_dir = self._resolve_adapter_dir(crop_key, part_name=part_key, adapter_dir=adapter_dir)
         (
             resolved_cache_dir,
+            resolved_part_name,
             adapter_meta_mtime_ns,
             adapter_meta_size,
         ) = self._adapter_meta_state(resolved_dir)
-        cached = self.adapters.get(crop_key)
+        cache_key = self._adapter_cache_key(crop_key, part_key or resolved_part_name)
+        cached = self.adapters.get(cache_key)
         if cached is not None:
             if (
                 cached.adapter_dir == resolved_cache_dir
+                and cached.part_name == (part_key or resolved_part_name)
                 and cached.adapter_meta_mtime_ns == adapter_meta_mtime_ns
                 and cached.adapter_meta_size == adapter_meta_size
             ):
                 return cached.adapter
-            self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key}...")
+            self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key} part={part_key or resolved_part_name}...")
         else:
-            self._emit_status(f"[ADAPTER] Loading adapter for crop={crop_key}...")
+            self._emit_status(f"[ADAPTER] Loading adapter for crop={crop_key} part={part_key or resolved_part_name}...")
 
         adapter = self._build_adapter(crop_key)
+        adapter.part_name = part_key or resolved_part_name
         adapter.load_adapter(str(resolved_dir))
-        self.adapters[crop_key] = _CachedAdapter(
+        self.adapters[cache_key] = _CachedAdapter(
             adapter=adapter,
             adapter_dir=resolved_cache_dir,
+            part_name=part_key or resolved_part_name,
             adapter_meta_mtime_ns=adapter_meta_mtime_ns,
             adapter_meta_size=adapter_meta_size,
         )
-        self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
+        self._emit_status(f"[ADAPTER] Ready crop={crop_key} part={part_key or resolved_part_name}")
         return adapter
 
     def _coerce_image(self, image: ImageInput) -> Image.Image:
@@ -318,7 +389,7 @@ class RouterAdapterRuntime:
                 return result
 
         try:
-            adapter = self.load_adapter(crop_name)
+            adapter = self.load_adapter(crop_name, part_name=part_name)
         except FileNotFoundError as exc:
             result = build_adapter_unavailable_result(
                 crop_name=crop_name,

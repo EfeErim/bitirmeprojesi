@@ -27,7 +27,7 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1, Notebook 3, or Noteb
 ## Workflow
 
 1. Treat `InferenceWorkflow.predict(...)` as the canonical inference entrypoint.
-2. Preserve the default adapter layout `models/adapters/<crop>/continual_sd_lora_adapter/` unless the user explicitly wants a deployment-contract change.
+2. Preserve the default adapter layout `models/adapters/<crop>/<part>/continual_sd_lora_adapter/` unless the user explicitly wants a deployment-contract change.
 3. Keep router-driven inference and direct adapter smoke testing as separate supported surfaces.
 4. Preserve the typed inference payload contract and OOD metadata semantics when changing runtime behavior.
 5. If a change touches crop routing, inspect `src/router/router_pipeline.py`, `src/router/vlm_pipeline.py`, and `src/pipeline/router_adapter_runtime.py` before editing. If it touches the public payload, inspect `src/shared/contracts.py` too.

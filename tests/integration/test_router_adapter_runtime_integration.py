@@ -43,7 +43,7 @@ def test_runtime_integration_with_config_manager_and_fake_router(monkeypatch, tm
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
     adapter_root = tmp_path / "models" / "adapters"
-    adapter_dir = adapter_root / "tomato" / "continual_sd_lora_adapter"
+    adapter_dir = adapter_root / "tomato" / "leaf" / "continual_sd_lora_adapter"
     adapter_dir.mkdir(parents=True, exist_ok=True)
     (adapter_dir / "adapter_meta.json").write_text("{}", encoding="utf-8")
 
@@ -64,7 +64,7 @@ def test_runtime_retries_with_fresh_router_after_startup_failure(monkeypatch, tm
     cfg = ConfigurationManager(config_dir="config", environment="colab").load_all_configs()
 
     adapter_root = tmp_path / "models" / "adapters"
-    adapter_dir = adapter_root / "tomato" / "continual_sd_lora_adapter"
+    adapter_dir = adapter_root / "tomato" / "leaf" / "continual_sd_lora_adapter"
     adapter_dir.mkdir(parents=True, exist_ok=True)
     (adapter_dir / "adapter_meta.json").write_text("{}", encoding="utf-8")
 

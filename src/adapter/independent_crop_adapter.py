@@ -21,6 +21,7 @@ from src.adapter.checkpointing import (
     save_training_checkpoint as save_adapter_training_checkpoint,
 )
 from src.shared.contracts import AdapterMetadata
+from src.shared.adapter_paths import build_adapter_bundle_root, normalize_adapter_name, resolve_adapter_bundle_dir
 from src.shared.json_utils import deep_merge, read_json_dict, write_json
 from src.training.services.config_surface import extract_continual_training_config
 from src.training.services.runtime import resolve_runtime_device, resolve_session_num_epochs
@@ -57,10 +58,12 @@ class IndependentCropAdapter:
     def __init__(
         self,
         crop_name: str,
+        part_name: str = "unspecified",
         model_name: str = "facebook/dinov3-vitl16-pretrain-lvd1689m",
         device: str = "cuda",
     ) -> None:
         self.crop_name = str(crop_name)
+        self.part_name = normalize_adapter_name(part_name)
         self.model_name = str(model_name)
         self.device = resolve_runtime_device(device)
 
@@ -72,7 +75,12 @@ class IndependentCropAdapter:
         self._calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
         self._metadata_overrides: Dict[str, Any] = {}
 
-        logger.info("IndependentCropAdapter initialized for %s on %s", self.crop_name, self.device)
+        logger.info(
+            "IndependentCropAdapter initialized for %s/%s on %s",
+            self.crop_name,
+            self.part_name,
+            self.device,
+        )
 
     @property
     def target_modules_resolved(self) -> list[str]:
@@ -99,9 +107,7 @@ class IndependentCropAdapter:
 
     @staticmethod
     def _resolve_asset_dir(checkpoint_dir: str | Path) -> Path:
-        root = Path(checkpoint_dir)
-        asset_dir = root / "continual_sd_lora_adapter"
-        return asset_dir if asset_dir.exists() else root
+        return resolve_adapter_bundle_dir(checkpoint_dir)
 
     @property
     def trainer(self) -> "ContinualSDLoRATrainer":
@@ -298,6 +304,7 @@ class IndependentCropAdapter:
             schema_version=self.schema_version,
             engine=self.engine,
             crop_name=self.crop_name,
+            part_name=self.part_name,
             model_name=self.model_name,
             ood_calibration_version=self.ood_calibration_version,
             target_modules_resolved=list(self.target_modules_resolved),
@@ -308,10 +315,12 @@ class IndependentCropAdapter:
         trainer = self._require_trainer()
         self._ensure_ood_calibrated_for_export()
 
-        root = Path(checkpoint_dir)
+        root = build_adapter_bundle_root(checkpoint_dir, self.crop_name, self.part_name)
         asset_dir = trainer.save_adapter(str(root))
         meta_path = asset_dir / "adapter_meta.json"
-        metadata = read_json_dict(meta_path) if meta_path.exists() else self._metadata_payload()
+        metadata = self._metadata_payload()
+        if meta_path.exists():
+            metadata = deep_merge(read_json_dict(meta_path), metadata)
         if self._metadata_overrides:
             metadata = deep_merge(metadata, self._metadata_overrides)
         write_json(meta_path, metadata)
@@ -327,13 +336,21 @@ class IndependentCropAdapter:
 
         meta = AdapterMetadata.from_dict(read_json_dict(meta_path))
         exported_crop = str(meta.crop_name or "").strip().lower()
+        exported_part = str(meta.part_name or "").strip().lower()
         requested_crop = str(self.crop_name or "").strip().lower()
+        requested_part = str(self.part_name or "").strip().lower()
         if exported_crop and requested_crop and exported_crop != requested_crop:
             raise ValueError(
                 f"Adapter crop mismatch: requested '{self.crop_name}' but bundle declares '{meta.crop_name}'."
             )
+        if exported_part and requested_part and requested_part != "unspecified" and exported_part != requested_part:
+            raise ValueError(
+                f"Adapter part mismatch: requested '{self.part_name}' but bundle declares '{meta.part_name}'."
+            )
         if exported_crop:
             self.crop_name = str(meta.crop_name)
+        if exported_part:
+            self.part_name = normalize_adapter_name(meta.part_name)
         self.class_to_idx = dict(meta.class_to_idx)
 
         normalized = normalize_trainer_config(
@@ -354,6 +371,7 @@ class IndependentCropAdapter:
         """Return concise runtime adapter summary."""
         return {
             "crop_name": self.crop_name,
+            "part_name": self.part_name,
             "model_name": self.model_name,
             "engine": self.engine,
             "schema_version": self.schema_version,

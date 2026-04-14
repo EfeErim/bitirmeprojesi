@@ -75,6 +75,7 @@ class TrainingRunSetup:
     runtime_dataset_key: str
     runtime_crop_root: Path
     runtime_dataset_resolution_source: str
+    part_name: str
 
 
 def _dataset_class_counts(loader: Any) -> Dict[str, int]:
@@ -192,6 +193,7 @@ def prepare_training_run(
     config: Dict[str, Any],
     device: str,
     crop_name: str,
+    part_name: Optional[str],
     data_dir: str | Path,
     class_names: Optional[Sequence[str]],
     num_workers: Optional[int],
@@ -260,16 +262,25 @@ def prepare_training_run(
     if class_balance_runtime.get("under_min_classes"):
         raise ValueError(format_under_min_class_error(class_balance_runtime))
 
-    adapter = adapter_factory(
-        crop_name=crop_name,
-        model_name=str(
+    adapter_kwargs = {
+        "crop_name": crop_name,
+        "model_name": str(
             training_cfg.get(
                 "backbone",
                 {},
             ).get("model_name", "facebook/dinov3-vitl16-pretrain-lvd1689m")
         ),
-        device=device,
-    )
+        "device": device,
+    }
+    if part_name is not None:
+        adapter_kwargs["part_name"] = part_name
+    try:
+        adapter = adapter_factory(**adapter_kwargs)
+    except TypeError as exc:
+        if part_name is None or "part_name" not in str(exc):
+            raise
+        adapter_kwargs.pop("part_name", None)
+        adapter = adapter_factory(**adapter_kwargs)
     adapter.initialize_engine(
         class_names=detected_classes,
         config=_inject_class_balance_runtime(config, class_balance_runtime),
@@ -291,6 +302,7 @@ def prepare_training_run(
         runtime_dataset_key=resolved_dataset.dataset_key,
         runtime_crop_root=resolved_dataset.crop_root,
         runtime_dataset_resolution_source=resolved_dataset.resolution_source,
+        part_name=str(part_name or "unspecified"),
     )
 
 def build_artifact_payload(
