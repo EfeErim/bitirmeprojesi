@@ -1,0 +1,25 @@
+{
+  "split_name": "test",
+  "primary_score_method": "ensemble",
+  "score_methods": [
+    "energy",
+    "ensemble",
+    "knn"
+  ],
+  "metrics": {
+    "ood_auroc": 0.6051862673484295,
+    "ood_false_positive_rate": 0.8445945945945946,
+    "sure_ds_f1": 0.08475573866980576,
+    "conformal_empirical_coverage": 0.9864864864864865,
+    "conformal_avg_set_size": 3.445945945945946
+  },
+  "sample_counts": {
+    "classification_samples": 148,
+    "in_distribution_samples": 148,
+    "ood_samples": 111
+  },
+  "ood_types": [],
+  "ood_type_count": 0,
+  "ood_type_breakdown": {},
+  "method_comparison": {}
+}
