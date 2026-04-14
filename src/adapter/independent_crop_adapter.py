@@ -343,13 +343,19 @@ class IndependentCropAdapter:
             raise ValueError(
                 f"Adapter crop mismatch: requested '{self.crop_name}' but bundle declares '{meta.crop_name}'."
             )
-        if exported_part and requested_part and requested_part != "unspecified" and exported_part != requested_part:
+        if (
+            exported_part
+            and exported_part != "unspecified"
+            and requested_part
+            and requested_part != "unspecified"
+            and exported_part != requested_part
+        ):
             raise ValueError(
                 f"Adapter part mismatch: requested '{self.part_name}' but bundle declares '{meta.part_name}'."
             )
         if exported_crop:
             self.crop_name = str(meta.crop_name)
-        if exported_part:
+        if exported_part and exported_part != "unspecified":
             self.part_name = normalize_adapter_name(meta.part_name)
         self.class_to_idx = dict(meta.class_to_idx)
 
