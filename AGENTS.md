@@ -57,6 +57,7 @@ Project-local skills live under `skills/` and should be preferred for repo-speci
 - `aads-training-ood`: `skills/aads-training-ood/SKILL.md`
 - `aads-colab-notebooks`: `skills/aads-colab-notebooks/SKILL.md`
 - `aads-inference-runtime`: `skills/aads-inference-runtime/SKILL.md`
+- `aads-bugfix-debugging`: `skills/aads-bugfix-debugging/SKILL.md`
 - `aads-repo-hygiene`: `skills/aads-repo-hygiene/SKILL.md`
 
 Use the smallest set that covers the task.
@@ -72,13 +73,18 @@ Use the smallest set that covers the task.
 - Use `aads-training-ood` for `TrainingWorkflow.run(...)`, continual SD-LoRA config, OOD calibration, readiness artifacts, BER comparisons, and training-side adapter export semantics.
 - Use `aads-colab-notebooks` for Notebook 0, 1, 2, 3, or 4 changes, grouped dataset preparation, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
 - Use `aads-inference-runtime` for router inference, adapter lookup and deployment handoff, lazy adapter loading, direct adapter smoke testing, and inference payload behavior.
+- Use `aads-bugfix-debugging` for regressions, silent failures, invariant violations, unexpected fallback paths, boundary-validation gaps, and root-cause-driven bug fixes on maintained surfaces.
 - Use `aads-repo-hygiene` for CI, tests, benchmark capture, docs consistency, and tracked-vs-generated repo boundaries.
 
 ## Overlap Rules
 
 - Use `aads-training-ood` plus `aads-colab-notebooks` for Notebook 0 or Notebook 2 changes that affect dataset materialization, training contracts, or notebook/export mismatches.
+- Use `aads-training-ood` plus `aads-bugfix-debugging` for training-side bugs, silent metric or artifact drift, config-normalization regressions, or OOD/readiness contract breaks.
 - Use `aads-training-ood` plus `aads-repo-hygiene` for training-side code changes that also affect tests, docs, metrics, or CI coverage.
+- Use `aads-inference-runtime` plus `aads-bugfix-debugging` for router/runtime regressions, payload contract bugs, silent misrouting, adapter lookup failures, or degraded fallback behavior.
 - Use `aads-inference-runtime` plus `aads-repo-hygiene` for runtime bugfixes, adapter lookup regressions, or inference-facing docs and tests.
+- Use `aads-colab-notebooks` plus `aads-bugfix-debugging` for notebook wrapper failures, stale notebook state, dataset-materialization bugs, or notebook-only regressions.
+- Use `aads-bugfix-debugging` plus `aads-repo-hygiene` when the fix should add regression tests, validation commands, benchmark checks, or contributor-facing debugging guidance.
 - Use `aads-colab-notebooks` plus `aads-inference-runtime` for Notebook 1, Notebook 3, or Notebook 4 tasks that stay on inference and adapter-validation surfaces.
 - If a task spans training and inference through the saved adapter contract, anchor on the canonical workflow and runtime entrypoints rather than notebook-only behavior.
 
