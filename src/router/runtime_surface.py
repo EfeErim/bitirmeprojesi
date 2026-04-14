@@ -55,6 +55,10 @@ def resolve_runtime_controls(config: Dict[str, Any], vlm_config: Dict[str, Any])
             "vlm_strict_model_loading",
             vlm_config.get("strict_model_loading", strict_from_env),
         ),
+        "strict_scoring_errors": config.get(
+            "vlm_strict_scoring_errors",
+            vlm_config.get("strict_scoring_errors", True),
+        ),
         "model_source": config.get("vlm_model_source", vlm_config.get("model_source", "huggingface")),
         "model_ids": {
             "sam": configured_ids.get("sam", "facebook/sam3"),

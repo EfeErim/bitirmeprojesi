@@ -1,6 +1,7 @@
 import json
 from types import SimpleNamespace
 
+import pytest
 import torch
 from PIL import Image
 
@@ -113,6 +114,7 @@ def test_pipeline_falls_back_to_configured_labels_when_taxonomy_file_is_missing(
                 "vlm": {
                     "enabled": False,
                     "use_dynamic_taxonomy": True,
+                    "strict_taxonomy_loading": False,
                     "taxonomy_path": "config/definitely_missing_taxonomy.json",
                 },
             },
@@ -123,6 +125,51 @@ def test_pipeline_falls_back_to_configured_labels_when_taxonomy_file_is_missing(
     assert pipeline.crop_labels == ["tomato", "potato"]
     assert "leaf" in pipeline.part_labels
     assert pipeline.crop_part_compatibility["tomato"] == ["leaf", "fruit"]
+
+
+def test_pipeline_raises_when_dynamic_taxonomy_missing_in_strict_mode():
+    with pytest.raises(RuntimeError, match="Failed to load taxonomy"):
+        RouterPipeline(
+            config={
+                "router": {
+                    "crop_mapping": {
+                        "tomato": {"parts": ["leaf", "fruit"]},
+                        "potato": {"parts": ["leaf"]},
+                    },
+                    "vlm": {
+                        "enabled": False,
+                        "use_dynamic_taxonomy": True,
+                        "taxonomy_path": "config/definitely_missing_taxonomy.json",
+                    },
+                },
+            },
+            device="cpu",
+        )
+
+
+def test_analyze_image_result_includes_taxonomy_runtime_warnings_when_non_strict():
+    pipeline = RouterPipeline(
+        config={
+            "router": {
+                "crop_mapping": {
+                    "tomato": {"parts": ["leaf", "fruit"]},
+                },
+                "vlm": {
+                    "enabled": False,
+                    "use_dynamic_taxonomy": True,
+                    "strict_taxonomy_loading": False,
+                    "taxonomy_path": "config/definitely_missing_taxonomy.json",
+                },
+            },
+        },
+        device="cpu",
+    )
+
+    result = pipeline.analyze_image_result(Image.new("RGB", (8, 8), color="green"))
+
+    assert result.status == "unavailable"
+    assert "runtime_warnings" in result.metadata
+    assert any("Failed to load taxonomy" in warning for warning in result.metadata["runtime_warnings"])
 
 
 def test_clip_score_labels_ensemble_reuses_open_clip_image_embedding():
@@ -141,6 +188,50 @@ def test_clip_score_labels_ensemble_reuses_open_clip_image_embedding():
     assert best_score >= 0.0
     assert set(scores.keys()) == {"tomato", "potato"}
     assert model.encode_image_calls == 1
+
+
+def test_encode_and_score_raises_on_scoring_error_when_strict(monkeypatch):
+    pipeline = _build_pipeline()
+    pipeline.bioclip_backend = "transformers"
+    pipeline.bioclip = object()
+    pipeline.bioclip_processor = object()
+    pipeline.strict_scoring_errors = True
+
+    monkeypatch.setattr(
+        clip_runtime,
+        "_score_processor_batch",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    with pytest.raises(RuntimeError, match="Prompt encoding failed"):
+        clip_runtime.encode_and_score(
+            pipeline,
+            clip_runtime.ClipScoreRequest(image=Image.new("RGB", (8, 8), color="green")),
+            ["tomato"],
+        )
+
+
+def test_encode_and_score_batch_returns_zeros_when_non_strict(monkeypatch):
+    pipeline = _build_pipeline()
+    pipeline.bioclip_backend = "transformers"
+    pipeline.bioclip = object()
+    pipeline.bioclip_processor = object()
+    pipeline.strict_scoring_errors = False
+
+    monkeypatch.setattr(
+        clip_runtime,
+        "_score_processor_batch",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    output = clip_runtime.encode_and_score_batch(
+        pipeline,
+        [Image.new("RGB", (8, 8), color="green") for _ in range(2)],
+        ["tomato", "potato"],
+    )
+
+    assert tuple(output.shape) == (2, 2)
+    assert float(output.sum().item()) == 0.0
 
 
 def test_clip_score_labels_ensemble_batch_reuses_open_clip_image_embeddings():

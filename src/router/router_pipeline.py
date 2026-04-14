@@ -101,6 +101,10 @@ class RouterPipeline:
         # Dynamic taxonomy support
         self.use_dynamic_taxonomy = self.vlm_config.get('use_dynamic_taxonomy', False)
         self.taxonomy_path = self.vlm_config.get('taxonomy_path', 'config/plant_taxonomy.json')
+        self.strict_taxonomy_loading = bool(
+            self.vlm_config.get('strict_taxonomy_loading', self.use_dynamic_taxonomy)
+        )
+        self.runtime_warnings: List[str] = []
 
         crop_mapping = surface_config.crop_mapping
         self.crop_labels: List[str] = []
@@ -178,7 +182,10 @@ class RouterPipeline:
             )
             return True
         except Exception as e:
-            logger.warning(f"Failed to load taxonomy from {self.taxonomy_path}: {e}")
+            warning_message = f"Failed to load taxonomy from {self.taxonomy_path}: {e}"
+            if self.strict_taxonomy_loading:
+                raise RuntimeError(warning_message) from e
+            self._record_runtime_warning(warning_message)
             return False
 
     def _try_load_crop_part_compatibility(self) -> None:
@@ -187,7 +194,23 @@ class RouterPipeline:
             if self.crop_part_compatibility:
                 logger.info(f"Loaded crop-part compatibility for {len(self.crop_part_compatibility)} crops")
         except Exception as e:
-            logger.warning(f"Failed to load crop-part compatibility from {self.taxonomy_path}: {e}")
+            warning_message = f"Failed to load crop-part compatibility from {self.taxonomy_path}: {e}"
+            if self.strict_taxonomy_loading:
+                raise RuntimeError(warning_message) from e
+            self._record_runtime_warning(warning_message)
+
+    def _record_runtime_warning(self, message: str) -> None:
+        normalized = str(message or "").strip()
+        if not normalized:
+            return
+        logger.warning(normalized)
+        if normalized not in self.runtime_warnings:
+            self.runtime_warnings.append(normalized)
+
+    def _apply_runtime_warnings(self, result: RouterAnalysisResult) -> RouterAnalysisResult:
+        if self.runtime_warnings:
+            result.metadata.setdefault("runtime_warnings", list(self.runtime_warnings))
+        return result
 
     def _load_labels_from_config(self, crop_mapping: Dict[str, Any]) -> None:
         self.crop_labels = list(self.vlm_config.get('crop_labels', list(crop_mapping.keys())))
@@ -213,6 +236,7 @@ class RouterPipeline:
         self.open_set_min_confidence = float(controls["open_set_min_confidence"])
         self.open_set_margin = float(controls["open_set_margin"])
         self.strict_model_loading = bool(controls["strict_model_loading"])
+        self.strict_scoring_errors = bool(controls["strict_scoring_errors"])
         self.model_source = str(controls["model_source"])
         self.model_ids = dict(controls["model_ids"])
 
@@ -454,27 +478,27 @@ class RouterPipeline:
         pil_image, image_size = coerce_image_input(image_tensor)
 
         if not (self.enabled and self.models_loaded):
-            return RouterAnalysisResult(
+            return self._apply_runtime_warnings(RouterAnalysisResult(
                 status="unavailable",
                 message="vlm_pipeline_unavailable",
                 detections=[],
                 image_size=image_size,
                 processing_time_ms=0.0,
                 request=request,
-            )
+            ))
 
         analyzer = self._resolve_analyzer_for_active_pipeline()
         if analyzer is None:
-            return RouterAnalysisResult(
+            return self._apply_runtime_warnings(RouterAnalysisResult(
                 status="unavailable",
                 message="vlm_pipeline_analyzer_unavailable",
                 detections=[],
                 image_size=image_size,
                 processing_time_ms=0.0,
                 request=request,
-            )
+            ))
 
-        return self._normalize_router_analysis(
+        return self._apply_runtime_warnings(self._normalize_router_analysis(
             analyzer(
                 pil_image,
                 image_size,
@@ -482,7 +506,7 @@ class RouterPipeline:
                 request.max_detections,
             ),
             request=request,
-        )
+        ))
 
     def analyze_image(
         self,

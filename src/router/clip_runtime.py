@@ -24,6 +24,15 @@ from src.router.prompt_clip_utils import (
 logger = logging.getLogger(__name__)
 
 
+def _strict_scoring_errors(runtime: Any) -> bool:
+    configured = getattr(runtime, "strict_scoring_errors", None)
+    if configured is None:
+        configured = getattr(runtime, "strict_model_loading", None)
+    if configured is None:
+        return True
+    return bool(configured)
+
+
 @dataclass
 class ClipScoreRequest:
     """Request-local state so one scoring flow does not re-encode the same image."""
@@ -198,6 +207,8 @@ def _score_prompt_probabilities(
             return _score_processor_batch(runtime, request.image, prompts).detach().cpu()
         except Exception as exc:
             logger.error("Encoding failed: %s", exc)
+            if _strict_scoring_errors(runtime):
+                raise RuntimeError("Prompt scoring failed during router inference.") from exc
             return torch.zeros((1, len(prompts)), dtype=torch.float32)
 
     if images is None:
@@ -390,6 +401,8 @@ def encode_and_score(runtime: Any, request: ClipScoreRequest, prompts: List[str]
         return scores.detach().cpu().numpy().tolist()
     except Exception as exc:
         logger.error("Encoding failed: %s", exc)
+        if _strict_scoring_errors(runtime):
+            raise RuntimeError("Prompt encoding failed during router inference.") from exc
         return [0.0] * len(prompts)
 
 
@@ -420,6 +433,8 @@ def encode_and_score_batch(
         return torch.cat(outputs, dim=0) if outputs else torch.zeros((0, len(prompts)), dtype=torch.float32)
     except Exception as exc:
         logger.error("Batch encoding failed: %s", exc)
+        if _strict_scoring_errors(runtime):
+            raise RuntimeError("Batch prompt encoding failed during router inference.") from exc
         return torch.zeros((len(images), len(prompts)), dtype=torch.float32)
 
 

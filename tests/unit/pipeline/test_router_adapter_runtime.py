@@ -72,7 +72,11 @@ def test_predict_routes_and_loads_adapter(monkeypatch, tmp_path):
             "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
             "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
             "ood": {"threshold_factor": 2.0},
-            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": True,
+            },
         },
         device="cpu",
         adapter_root=adapter_root,
@@ -132,7 +136,11 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
             "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
             "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
             "ood": {"threshold_factor": 2.0},
-            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": True,
+            },
         },
         device="cpu",
         adapter_root=adapter_root,
@@ -195,9 +203,90 @@ def test_part_hint_does_not_override_router_part_when_router_runs(monkeypatch, t
 
     result = runtime.predict(Image.new("RGB", (32, 32), color="green"), part_hint="leaf")
 
-    assert result["status"] == "success"
+    assert result["status"] == "adapter_unavailable"
     assert result["part"] == "fruit"
     assert result["router"]["primary_detection"]["part"] == "fruit"
+
+
+def test_predict_returns_adapter_unavailable_on_part_mismatch_without_cross_part_fallback(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": False,
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class FruitRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "tomato",
+                        "part": "fruit",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FruitRouter())
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "adapter_unavailable"
+    assert "part 'fruit'" in result["message"]
+
+
+def test_predict_can_opt_in_to_cross_part_adapter_fallback(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": True,
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class FruitRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "tomato",
+                        "part": "fruit",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FruitRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "success"
+    assert result["part"] == "fruit"
 
 
 
@@ -354,7 +443,20 @@ def test_predict_result_returns_typed_contract(monkeypatch, tmp_path):
         device="cpu",
         adapter_root=adapter_root,
     )
-    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    class FruitRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "tomato",
+                        "part": "fruit",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FruitRouter())
     monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
 
     result = runtime.predict_result(Image.new("RGB", (32, 32), color="green"))

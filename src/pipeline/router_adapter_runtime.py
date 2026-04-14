@@ -71,6 +71,9 @@ class RouterAdapterRuntime:
         self.target_size = int(inference_cfg.get("target_size", 224))
         self.router_min_confidence = float(inference_cfg.get("router_min_confidence", 0.65))
         self.router_min_margin = float(inference_cfg.get("router_min_margin", 0.10))
+        self.allow_cross_part_adapter_fallback = bool(
+            inference_cfg.get("allow_cross_part_adapter_fallback", False)
+        )
         self.router: Optional[RouterLike] = None
         self.adapters: Dict[str, _CachedAdapter] = {}
         self.status_callback = status_callback
@@ -122,7 +125,7 @@ class RouterAdapterRuntime:
         part_name: Optional[str] = None,
         adapter_dir: Optional[str | Path] = None,
     ) -> Path:
-        def _discover_fallback_adapter_dir(search_root: Path) -> Optional[Path]:
+        def _discover_fallback_adapter_dir(search_root: Path, *, allow_cross_part: bool) -> Optional[Path]:
             if not search_root.exists() or not search_root.is_dir():
                 return None
 
@@ -147,6 +150,8 @@ class RouterAdapterRuntime:
                 meta_part = normalize_adapter_name(meta.get("part_name")) if meta.get("part_name") else ""
                 if requested_part and meta_part == requested_part:
                     ranked_candidates.append((0, adapter_bundle_dir))
+                elif requested_part and not allow_cross_part:
+                    continue
                 elif not requested_part and (not meta_part or meta_part == "unspecified"):
                     ranked_candidates.append((1, adapter_bundle_dir))
                 elif not requested_part:
@@ -165,14 +170,20 @@ class RouterAdapterRuntime:
             try:
                 return resolve_adapter_bundle_dir(root, crop_name=crop_name, part_name=part_name)
             except FileNotFoundError as exc:
-                fallback = _discover_fallback_adapter_dir(root)
+                fallback = _discover_fallback_adapter_dir(
+                    root,
+                    allow_cross_part=self.allow_cross_part_adapter_fallback,
+                )
                 if fallback is not None:
                     return fallback
                 raise FileNotFoundError(f"Could not resolve adapter bundle from {root}") from exc
         try:
             return resolve_adapter_bundle_dir(self.adapter_root, crop_name=crop_name, part_name=part_name)
         except FileNotFoundError as exc:
-            fallback = _discover_fallback_adapter_dir(self.adapter_root)
+            fallback = _discover_fallback_adapter_dir(
+                self.adapter_root,
+                allow_cross_part=self.allow_cross_part_adapter_fallback,
+            )
             if fallback is not None:
                 return fallback
             expected_part = normalize_adapter_name(part_name) if part_name else "unspecified"
