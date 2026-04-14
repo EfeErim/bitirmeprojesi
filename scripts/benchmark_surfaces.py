@@ -49,7 +49,15 @@ class _FakeAdapter:
         return {
             "status": "success",
             "disease": {"class_index": 0, "name": "healthy", "confidence": 0.9},
-            "ood_analysis": {`r`n                "score_method": "ensemble",`r`n                "primary_score": 0.1,`r`n                "decision_threshold": 0.8,`r`n                "candidate_scores": {"ensemble": 0.1},`r`n                "candidate_thresholds": {"ensemble": 0.8},`r`n                "is_ood": False,`r`n                "calibration_version": 1,`r`n            },
+            "ood_analysis": {
+                "score_method": "ensemble",
+                "primary_score": 0.1,
+                "decision_threshold": 0.8,
+                "candidate_scores": {"ensemble": 0.1},
+                "candidate_thresholds": {"ensemble": 0.8},
+                "is_ood": False,
+                "calibration_version": 1,
+            },
         }
 
 

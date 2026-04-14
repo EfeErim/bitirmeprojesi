@@ -1358,8 +1358,9 @@ def complete_notebook_training_run(
     telemetry: Any = None,
     print_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
-    import matplotlib.pyplot as plt
     from datetime import datetime, timezone
+
+    import matplotlib.pyplot as plt
 
     from src.adapter.independent_crop_adapter import IndependentCropAdapter
     from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
@@ -2489,4 +2490,3 @@ def maybe_auto_disconnect_colab_runtime(
         emit(f"[COLAB] Auto-disconnect failed: {report['disconnect_error']}")
         _publish_status("auto_disconnect_failed", disconnect_error=report["disconnect_error"])
     return report
-

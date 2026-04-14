@@ -1,10 +1,13 @@
 import json
 
+import pytest
+
 from src.core.config_manager import ConfigurationManager
 
 
 def _write_base_config(path, *, training_ood=None, top_level_ood=None):
     payload = {
+        "config_schema_version": 1,
         "router": {"enabled": True, "type": "enhanced"},
         "training": {
             "continual": {
@@ -27,19 +30,16 @@ def test_config_manager_backfills_training_ood_threshold_from_top_level(tmp_path
     _write_base_config(config_dir / "base.json", top_level_ood={"threshold_factor": 2.5})
 
     manager = ConfigurationManager(config_dir=str(config_dir))
-    merged = manager.load_all_configs()
-
-    assert merged["training"]["continual"]["ood"]["threshold_factor"] == 2.5
-    assert "ood" not in merged
+    with pytest.raises(ValueError, match="Unsupported top-level config sections: ood"):
+        manager.load_all_configs()
 
 
-def test_config_manager_prefers_training_ood_threshold_on_conflict(tmp_path):
+def test_config_manager_keeps_canonical_training_ood_threshold(tmp_path):
     config_dir = tmp_path / "config"
     config_dir.mkdir(parents=True, exist_ok=True)
     _write_base_config(
         config_dir / "base.json",
         training_ood={"threshold_factor": 1.8},
-        top_level_ood={"threshold_factor": 3.0},
     )
 
     manager = ConfigurationManager(config_dir=str(config_dir))
