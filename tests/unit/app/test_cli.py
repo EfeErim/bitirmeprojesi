@@ -134,6 +134,7 @@ def test_cli_training_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
             num_epochs=None,
             num_workers=None,
             validation_every_n_epochs=None,
+            part_name=None,
         ):
             calls["run"] = {
                 "crop_name": crop_name,
@@ -142,6 +143,7 @@ def test_cli_training_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
                 "num_epochs": num_epochs,
                 "num_workers": num_workers,
                 "validation_every_n_epochs": validation_every_n_epochs,
+                "part_name": part_name,
             }
             return FakeResult()
 
@@ -179,6 +181,7 @@ def test_cli_training_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
         "num_epochs": 3,
         "num_workers": 2,
         "validation_every_n_epochs": 4,
+        "part_name": None,
     }
     assert json.loads(capsys.readouterr().out) == {
         "run_id": "run_cli",

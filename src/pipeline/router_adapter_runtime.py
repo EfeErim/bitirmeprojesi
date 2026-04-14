@@ -135,7 +135,11 @@ class RouterAdapterRuntime:
                     continue
                 try:
                     meta = read_json_dict(meta_path)
-                except Exception:
+                except Exception as exc:
+                    logger.debug(
+                        f"Failed to read adapter metadata from {meta_path}; skipping this adapter bundle",
+                        exc_info=exc,
+                    )
                     continue
                 meta_crop = normalize_adapter_name(meta.get("crop_name")) if meta.get("crop_name") else ""
                 if meta_crop and meta_crop != crop_key:

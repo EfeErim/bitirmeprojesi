@@ -874,6 +874,10 @@ def load_adapter_summary(
         "ood_calibration_version": int(dict(meta.get("ood_calibration", {})).get("version", 0)),
     }
     summary.update(meta_summary)
+    # Keep resolved crop/part values authoritative when metadata is missing.
+    summary["crop_name"] = crop_key
+    if not str(summary.get("part_name") or "").strip():
+        summary["part_name"] = "unspecified"
     summary["resolved_adapter_dir"] = str(resolved_dir)
     return summary
 

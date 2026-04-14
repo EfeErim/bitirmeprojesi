@@ -57,6 +57,8 @@ def test_record_adapter_export_metadata_passes_runtime_metadata():
         calibration_loader_size=12,
         authoritative_split="test",
         ood_evidence_source="real_ood_split",
+        crop_name="tomato",
+        part_name="fruit",
         requested_primary_score_method="auto",
         selected_primary_score_method="energy",
         selection_source="real_ood_split",
@@ -75,7 +77,11 @@ def test_record_adapter_export_metadata_passes_runtime_metadata():
                 "primary_score_method": "energy",
                 "selection_source": "real_ood_split",
             },
-            "adapter_runtime": {"best_state_restored": True},
+            "adapter_runtime": {
+                "best_state_restored": True,
+                "crop_name": "tomato",
+                "part_name": "fruit",
+            },
         }
     ]
 

@@ -1,10 +1,17 @@
+import logging
 from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
 
 
 def _clamp_unit_interval(value: Any, *, default: float) -> float:
     try:
         resolved = float(value)
-    except Exception:
+    except Exception as exc:
+        logger.debug(
+            f"Failed to coerce value to float; using default {default}",
+            exc_info=exc,
+        )
         resolved = float(default)
     return max(0.0, min(1.0, resolved))
 
@@ -12,7 +19,11 @@ def _clamp_unit_interval(value: Any, *, default: float) -> float:
 def _coerce_non_negative_float(value: Any, *, default: float) -> float:
     try:
         resolved = float(value)
-    except Exception:
+    except Exception as exc:
+        logger.debug(
+            f"Failed to coerce value to float; using default {default}",
+            exc_info=exc,
+        )
         resolved = float(default)
     return max(0.0, resolved)
 

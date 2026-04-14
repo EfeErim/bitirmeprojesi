@@ -176,8 +176,11 @@ def load_clip_like_model(runtime: Any, model_id: str) -> Tuple[Any, Any]:
                 "preprocess": preprocess_val,
                 "tokenizer": tokenizer,
             }, model
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug(
+                f"Failed to load CLIP/BioCLIP model '{model_id}' via open_clip; will attempt transformers fallback",
+                exc_info=exc,
+            )
 
     try:
         from transformers import AutoModel, AutoProcessor

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import random
 import shutil
@@ -11,6 +12,8 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from src.shared.json_utils import read_json, write_json
+
+logger = logging.getLogger(__name__)
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 MATERIALIZATION_STRATEGIES = {"auto", "copy", "symlink", "hardlink"}
@@ -522,7 +525,11 @@ def prepare_runtime_dataset_layout(
             source_path = Path(class_root) / rel_path
             try:
                 destination_relative_path = rel_path.relative_to(source_class_name)
-            except Exception:
+            except Exception as exc:
+                logger.debug(
+                    f"Could not resolve relative path {rel_path} from source class {source_class_name}; using filename only",
+                    exc_info=exc,
+                )
                 destination_relative_path = Path(rel_path.name)
             images.append((source_path, destination_relative_path))
         rng.shuffle(images)

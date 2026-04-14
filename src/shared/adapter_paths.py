@@ -64,6 +64,10 @@ def resolve_adapter_bundle_dir(
     crop_name: Optional[str] = None,
     part_name: Optional[str] = None,
 ) -> Path:
+    base_path = Path(base_dir)
+    # If base_dir itself is an adapter bundle, return it directly
+    if is_adapter_bundle_dir(base_path):
+        return base_path
     for candidate in iter_adapter_bundle_candidates(base_dir, crop_name=crop_name, part_name=part_name):
         if is_adapter_bundle_dir(candidate):
             return candidate
