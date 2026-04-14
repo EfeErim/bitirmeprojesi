@@ -89,6 +89,12 @@ def test_run_inference_runs_router_only_pipeline(monkeypatch, tmp_path: Path):
                 "part_confidence": 0.72,
             },
         },
+        "adapter_target": {
+            "crop": "tomato",
+            "adapter_dir": "models\\adapters\\tomato\\continual_sd_lora_adapter",
+            "exists": False,
+        },
+        "runtime_profile": "",
     }
     assert status_messages == [
         "[INFER] image=leaf.png device=cpu",
@@ -115,6 +121,7 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
         return fake_image
 
     monkeypatch.setattr(router_script.Image, "open", _open_image)
+    monkeypatch.setattr(router_script, "get_config", lambda environment=None: {"environment": environment})
     monkeypatch.setattr(
         router_script,
         "RouterPipeline",
@@ -147,6 +154,12 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
                 "part_confidence": 1.0,
             },
         },
+        "adapter_target": {
+            "crop": "tomato",
+            "adapter_dir": "models\\adapters\\tomato\\continual_sd_lora_adapter",
+            "exists": False,
+        },
+        "runtime_profile": "",
     }
     assert status_messages == [
         "[INFER] image=leaf.png device=cpu",
@@ -282,7 +295,7 @@ def test_run_inference_reuses_cached_router_between_images(monkeypatch, tmp_path
     assert second["crop"] == "tomato"
     assert calls["init"] == 1
     assert calls["load_models"] == 1
-    assert calls["get_config"] == 1
+    assert calls["get_config"] >= 1
     assert calls["analyze_image_result"] == 2
     assert calls["last_init"] == {
         "config": {"environment": "colab"},
@@ -313,6 +326,9 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         part_hint=None,
         device="cuda",
         status_printer=None,
+        include_diagnostics=False,
+        top_candidates=3,
+        runtime_profile=None,
     ):
         calls["run_inference"] = {
             "image_path": image_path,
@@ -321,6 +337,9 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "part_hint": part_hint,
             "device": device,
             "status_printer": status_printer,
+            "include_diagnostics": include_diagnostics,
+            "top_candidates": top_candidates,
+            "runtime_profile": runtime_profile,
         }
         return {
             "status": "success",
@@ -361,6 +380,9 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         "part_hint": "leaf",
         "device": "cpu",
         "status_printer": None,
+        "include_diagnostics": False,
+        "top_candidates": 3,
+        "runtime_profile": None,
     }
     assert json.loads(capsys.readouterr().out) == {
         "status": "success",

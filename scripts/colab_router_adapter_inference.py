@@ -21,6 +21,13 @@ RouterCacheKey = tuple[str, str]
 _ROUTER_SESSION_CACHE: dict[RouterCacheKey, RouterPipeline] = {}
 
 
+def _coerce_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except Exception:
+        return float(default)
+
+
 def _emit_status(status_printer: Optional[StatusPrinter], message: str) -> None:
     if status_printer is not None:
         status_printer(str(message))
@@ -35,6 +42,71 @@ def _build_router_payload(analysis: RouterAnalysisResult) -> Dict[str, Any]:
         "router_confidence": 0.0 if detection is None else float(detection.crop_confidence),
         "message": str(analysis.message or ""),
         "router": analysis.to_summary_dict(),
+    }
+
+
+def _resolve_adapter_target(crop_name: Optional[str], *, config: Dict[str, Any]) -> Dict[str, Any]:
+    normalized_crop = str(crop_name or "").strip().lower()
+    if not normalized_crop or normalized_crop == "unknown":
+        return {
+            "crop": None,
+            "adapter_dir": None,
+            "exists": False,
+        }
+    inference_cfg = config.get("inference", {}) if isinstance(config.get("inference"), dict) else {}
+    adapter_root = Path(str(inference_cfg.get("adapter_root", "models/adapters")))
+    adapter_dir = adapter_root / normalized_crop / "continual_sd_lora_adapter"
+    return {
+        "crop": normalized_crop,
+        "adapter_dir": str(adapter_dir),
+        "exists": adapter_dir.exists(),
+    }
+
+
+def _extract_top_crop_candidates(analysis: RouterAnalysisResult, *, top_candidates: int) -> list[Dict[str, Any]]:
+    best_by_crop: Dict[str, Dict[str, Any]] = {}
+    for detection in analysis.detections:
+        crop_name = str(detection.crop or "unknown").strip().lower() or "unknown"
+        candidate = {
+            "crop": crop_name,
+            "part": str(detection.part or "unknown").strip().lower() or "unknown",
+            "crop_confidence": float(detection.crop_confidence),
+            "part_confidence": float(detection.part_confidence),
+            "quality_score": None if detection.quality_score is None else float(detection.quality_score),
+        }
+        existing = best_by_crop.get(crop_name)
+        if existing is None or candidate["crop_confidence"] > float(existing.get("crop_confidence", 0.0)):
+            best_by_crop[crop_name] = candidate
+
+    ordered = sorted(
+        best_by_crop.values(),
+        key=lambda item: float(item.get("crop_confidence", 0.0)),
+        reverse=True,
+    )
+    return ordered[: max(1, int(top_candidates))]
+
+
+def _build_router_diagnostics(
+    analysis: RouterAnalysisResult,
+    *,
+    top_candidates: int,
+) -> Dict[str, Any]:
+    top_crop_candidates = _extract_top_crop_candidates(analysis, top_candidates=top_candidates)
+    primary = analysis.primary_detection
+    primary_payload = {} if primary is None else primary.to_dict()
+
+    best_confidence = _coerce_float(primary_payload.get("crop_confidence"), 0.0)
+    second_confidence = 0.0
+    if len(top_crop_candidates) > 1:
+        second_confidence = _coerce_float(top_crop_candidates[1].get("crop_confidence"), 0.0)
+
+    return {
+        "top_crop_candidates": top_crop_candidates,
+        "crop_confidence_margin": round(best_confidence - second_confidence, 4),
+        "raw_part_label": str(primary_payload.get("raw_part_label", "") or ""),
+        "raw_part_confidence": _coerce_float(primary_payload.get("raw_part_confidence"), 0.0),
+        "part_unknown_confidence": _coerce_float(primary_payload.get("part_unknown_confidence"), 0.0),
+        "part_rejection_reason": str(primary_payload.get("part_rejection_reason", "") or ""),
     }
 
 
@@ -53,10 +125,19 @@ def ensure_router_ready(
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
     reuse_cached: bool = True,
+    runtime_profile: Optional[str] = None,
 ) -> RouterPipeline:
     cache_key = _router_cache_key(config_env=config_env, device=device)
     cached_router = _ROUTER_SESSION_CACHE.get(cache_key) if reuse_cached else None
     if cached_router is not None:
+        if runtime_profile and hasattr(cached_router, "set_runtime_profile"):
+            cached_profile = str(getattr(cached_router, "active_profile", "") or "")
+            if cached_profile != str(runtime_profile).strip():
+                cached_router.set_runtime_profile(str(runtime_profile).strip())
+                _emit_status(
+                    status_printer,
+                    f"[ROUTER] Applied runtime profile={str(runtime_profile).strip()} on cached router.",
+                )
         if cached_router.is_ready():
             _emit_status(status_printer, f"[ROUTER] Reusing cached models on {device}.")
             _emit_status(status_printer, "[ROUTER] Ready.")
@@ -66,6 +147,9 @@ def ensure_router_ready(
     _emit_status(status_printer, f"[ROUTER] Loading models on {device}...")
     config = get_config(environment=config_env)
     router = RouterPipeline(config=config, device=device)
+    if runtime_profile and hasattr(router, "set_runtime_profile"):
+        router.set_runtime_profile(str(runtime_profile).strip())
+        _emit_status(status_printer, f"[ROUTER] Applied runtime profile={str(runtime_profile).strip()}.")
     router.load_models()
     if not router.is_ready():
         raise RuntimeError(
@@ -88,6 +172,9 @@ def run_inference(
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
     reuse_router: bool = True,
+    include_diagnostics: bool = False,
+    top_candidates: int = 3,
+    runtime_profile: Optional[str] = None,
 ) -> Dict[str, Any]:
     image_ref = Path(image_path)
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
@@ -106,6 +193,14 @@ def run_inference(
             router_confidence=1.0,
         )
         payload = _build_router_payload(analysis)
+        payload["runtime_profile"] = str(runtime_profile or "")
+        config = get_config(environment=config_env)
+        payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), config=config)
+        if include_diagnostics:
+            payload["diagnostics"] = _build_router_diagnostics(
+                analysis,
+                top_candidates=top_candidates,
+            )
         _emit_status(
             status_printer,
             f"[RESULT] status={payload['status']} crop={payload['crop'] or 'unknown'} "
@@ -118,10 +213,19 @@ def run_inference(
         device=device,
         status_printer=status_printer,
         reuse_cached=reuse_router,
+        runtime_profile=runtime_profile,
     )
 
     analysis = router.analyze_image_result(image)
     payload = _build_router_payload(analysis)
+    payload["runtime_profile"] = str(getattr(router, "active_profile", runtime_profile or "") or "")
+    router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
+    payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), config=router_config)
+    if include_diagnostics:
+        payload["diagnostics"] = _build_router_diagnostics(
+            analysis,
+            top_candidates=top_candidates,
+        )
     _emit_status(
         status_printer,
         f"[ROUTER] crop={payload['crop'] or 'unknown'} "
@@ -144,6 +248,21 @@ def main() -> int:
     parser.add_argument("--crop", dest="crop_hint", help="Optional crop hint to bypass the router")
     parser.add_argument("--part", dest="part_hint", help="Optional part hint")
     parser.add_argument("--device", default="cuda", help="Torch device preference")
+    parser.add_argument(
+        "--runtime-profile",
+        help="Optional router runtime profile override (for example: balanced or fast).",
+    )
+    parser.add_argument(
+        "--diagnostics",
+        action="store_true",
+        help="Include router diagnostics (top candidates, confidence margin, rejection evidence).",
+    )
+    parser.add_argument(
+        "--top-candidates",
+        default=3,
+        type=int,
+        help="Number of crop candidates to include when --diagnostics is enabled.",
+    )
     args = parser.parse_args()
 
     result = run_inference(
@@ -152,6 +271,9 @@ def main() -> int:
         crop_hint=args.crop_hint,
         part_hint=args.part_hint,
         device=args.device,
+        include_diagnostics=bool(args.diagnostics),
+        top_candidates=int(args.top_candidates),
+        runtime_profile=args.runtime_profile,
     )
     print(json.dumps(result, indent=2))
     return 0
