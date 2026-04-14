@@ -928,6 +928,7 @@ class TrainingWorkflow:
             loaders=loaders,
         )
         split_evaluations = split_evaluation_stage.as_dict()
+        real_ood_present = loader_size(loaders.get("ood")) > 0
         primary_score_stage = _PrimaryScoreSelectionStage(
             requested_method=normalize_requested_primary_score_method(
                 training_cfg.get("ood", {}).get("primary_score_method", "auto")
@@ -946,6 +947,52 @@ class TrainingWorkflow:
             selected_method=selected_primary_score_method,
             selection_source=primary_score_stage.selection_source,
         )
+        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
+        if real_ood_present and is_auto_primary_score_method(primary_score_stage.requested_method):
+            primary_score_stage = _PrimaryScoreSelectionStage(
+                requested_method=primary_score_stage.requested_method,
+                selected_method=primary_score_stage.selected_method,
+                selection_source="real_ood_guardrail",
+            )
+
+        ood_stage = _OODEvidenceStage(source="", metrics={}, benchmark={})
+        if not real_ood_present:
+            ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
+                crop_name=crop_name,
+                detected_classes=detected_classes,
+                loaders=loaders,
+                authoritative_artifacts={},
+                artifact_dir=artifact_dir,
+                run_id=run_id,
+                num_epochs=num_epochs,
+                telemetry=telemetry,
+                min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
+            )
+            ood_stage = _OODEvidenceStage(
+                source=ood_evidence_source,
+                metrics=dict(ood_evidence_metrics),
+                benchmark=dict(ood_benchmark),
+            )
+            if ood_stage.source == "held_out_benchmark" and is_auto_primary_score_method(
+                primary_score_stage.requested_method
+            ):
+                benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison", {}))
+                if not benchmark_method_comparison:
+                    benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison_metrics", {}))
+                if benchmark_method_comparison:
+                    selected_primary_score_method = self._apply_primary_score_method_to_trainer(
+                        trainer_for_artifacts,
+                        select_best_ood_score_method(
+                            benchmark_method_comparison,
+                            fallback=primary_score_stage.selected_method,
+                        ),
+                    )
+                    primary_score_stage = _PrimaryScoreSelectionStage(
+                        requested_method=primary_score_stage.requested_method,
+                        selected_method=selected_primary_score_method,
+                        selection_source="held_out_benchmark",
+                    )
+
         requested_primary_score_method = primary_score_stage.requested_method
         selection_source = primary_score_stage.selection_source
         record_primary_score_selection_payload(
@@ -970,57 +1017,6 @@ class TrainingWorkflow:
         )
         validation_artifacts = split_artifacts["val"]
         test_artifacts = split_artifacts["test"]
-        if loader_size(loaders.get("ood")) > 0 and is_auto_primary_score_method(primary_score_stage.requested_method):
-            # Select using validation split first to avoid coupling method selection to
-            # the final authoritative split whenever possible.
-            real_ood_method_comparison = _resolve_ood_method_comparison_from_artifacts(validation_artifacts)
-            real_ood_selection_source = "real_ood_validation"
-            if not real_ood_method_comparison:
-                real_ood_method_comparison = _resolve_ood_method_comparison_from_artifacts(test_artifacts)
-                real_ood_selection_source = "real_ood_test_fallback"
-            if real_ood_method_comparison:
-                selected_primary_score_method = self._apply_primary_score_method_to_trainer(
-                    trainer_for_artifacts,
-                    select_best_ood_score_method(
-                        real_ood_method_comparison,
-                        fallback=primary_score_stage.selected_method,
-                    ),
-                )
-                primary_score_stage = _PrimaryScoreSelectionStage(
-                    requested_method=primary_score_stage.requested_method,
-                    selected_method=selected_primary_score_method,
-                    selection_source=real_ood_selection_source,
-                )
-            else:
-                primary_score_stage = _PrimaryScoreSelectionStage(
-                    requested_method=primary_score_stage.requested_method,
-                    selected_method=primary_score_stage.selected_method,
-                    selection_source="real_ood_no_method_metrics",
-                )
-            requested_primary_score_method = primary_score_stage.requested_method
-            selection_source = primary_score_stage.selection_source
-            record_primary_score_selection_payload(
-                ood_calibration,
-                requested_primary_score_method=primary_score_stage.requested_method,
-                selected_primary_score_method=primary_score_stage.selected_method,
-                selection_source=primary_score_stage.selection_source,
-            )
-            split_artifacts = self._persist_split_artifacts(
-                artifact_dir=artifact_dir,
-                trainer=trainer_for_artifacts,
-                loaders=loaders,
-                detected_classes=detected_classes,
-                telemetry=telemetry,
-                run_id=run_id,
-                crop_name=crop_name,
-                loader_sizes=loader_sizes,
-                evaluation_results=split_evaluations,
-                requested_primary_score_method=primary_score_stage.requested_method,
-                selected_primary_score_method=primary_score_stage.selected_method,
-                selection_source=primary_score_stage.selection_source,
-            )
-            validation_artifacts = split_artifacts["val"]
-            test_artifacts = split_artifacts["test"]
         authoritative_split, authoritative_artifacts = select_authoritative_artifacts_payload(
             validation_artifacts,
             test_artifacts,
@@ -1031,71 +1027,23 @@ class TrainingWorkflow:
             split_evaluations.get("test"),
             calibration_split_name=calibration_split_name,
         )
-        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
-        ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
-            crop_name=crop_name,
-            detected_classes=detected_classes,
-            loaders=loaders,
-            authoritative_artifacts=authoritative_artifacts,
-            artifact_dir=artifact_dir,
-            run_id=run_id,
-            num_epochs=num_epochs,
-            telemetry=telemetry,
-            min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
-        )
-        ood_stage = _OODEvidenceStage(
-            source=ood_evidence_source,
-            metrics=dict(ood_evidence_metrics),
-            benchmark=dict(ood_benchmark),
-        )
-        if ood_stage.source == "held_out_benchmark" and is_auto_primary_score_method(
-            primary_score_stage.requested_method
-        ):
-            benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison", {}))
-            if not benchmark_method_comparison:
-                benchmark_method_comparison = dict(ood_stage.benchmark.get("method_comparison_metrics", {}))
-            if benchmark_method_comparison:
-                selected_primary_score_method = self._apply_primary_score_method_to_trainer(
-                    trainer_for_artifacts,
-                    select_best_ood_score_method(
-                        benchmark_method_comparison,
-                        fallback=primary_score_stage.selected_method,
-                    ),
-                )
-                primary_score_stage = _PrimaryScoreSelectionStage(
-                    requested_method=primary_score_stage.requested_method,
-                    selected_method=selected_primary_score_method,
-                    selection_source="held_out_benchmark",
-                )
-                requested_primary_score_method = primary_score_stage.requested_method
-                selection_source = primary_score_stage.selection_source
-                record_primary_score_selection_payload(
-                    ood_calibration,
-                    requested_primary_score_method=primary_score_stage.requested_method,
-                    selected_primary_score_method=primary_score_stage.selected_method,
-                    selection_source=primary_score_stage.selection_source,
-                )
-                split_artifacts = self._persist_split_artifacts(
-                    artifact_dir=artifact_dir,
-                    trainer=trainer_for_artifacts,
-                    loaders=loaders,
-                    detected_classes=detected_classes,
-                    telemetry=telemetry,
-                    run_id=run_id,
-                    crop_name=crop_name,
-                    loader_sizes=loader_sizes,
-                    evaluation_results=split_evaluations,
-                    requested_primary_score_method=primary_score_stage.requested_method,
-                    selected_primary_score_method=primary_score_stage.selected_method,
-                    selection_source=primary_score_stage.selection_source,
-                )
-                validation_artifacts = split_artifacts["val"]
-                test_artifacts = split_artifacts["test"]
-                authoritative_split, authoritative_artifacts = select_authoritative_artifacts_payload(
-                    validation_artifacts,
-                    test_artifacts,
-                    calibration_split_name=calibration_split_name,
-                )
+        if real_ood_present:
+            ood_evidence_source, ood_evidence_metrics, ood_benchmark = self._resolve_ood_evidence(
+                crop_name=crop_name,
+                detected_classes=detected_classes,
+                loaders=loaders,
+                authoritative_artifacts=authoritative_artifacts,
+                artifact_dir=artifact_dir,
+                run_id=run_id,
+                num_epochs=num_epochs,
+                telemetry=telemetry,
+                min_classes=int(evaluation_cfg.get("ood_benchmark_min_classes", 3)),
+            )
+            ood_stage = _OODEvidenceStage(
+                source=ood_evidence_source,
+                metrics=dict(ood_evidence_metrics),
+                benchmark=dict(ood_benchmark),
+            )
         ood_evidence_source = ood_stage.source
         ood_evidence_metrics = dict(ood_stage.metrics)
         ood_benchmark = dict(ood_stage.benchmark)

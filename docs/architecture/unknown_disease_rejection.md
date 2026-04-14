@@ -37,7 +37,7 @@ Current maintained behavior:
   - `ensemble`: Mahalanobis-style feature distance plus energy z-score
   - `energy`: raw energy score
   - `knn`: class-local nearest-neighbor distance
-- the shipped config keeps `primary_score_method: "auto"` at the public surface, but under real `ood/` evidence the workflow keeps the runtime detector on `ensemble` instead of auto-tuning on the same final evidence
+- the shipped config keeps `primary_score_method: "auto"` at the public surface, but under real `ood/` evidence the workflow keeps the runtime detector on the configured `ensemble` guardrail instead of auto-tuning on that same final evidence
 - if no real `ood/` split exists, the workflow falls back to a leave-one-class-out held-out benchmark and can use that proxy evidence for score selection
 - the repo also exposes:
   - SURE+/DS-F1-inspired double scoring as diagnostic evidence

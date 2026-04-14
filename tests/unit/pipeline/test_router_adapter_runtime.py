@@ -443,7 +443,7 @@ def test_predict_rejects_uncertain_router_handoff(monkeypatch, tmp_path):
     result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
 
     assert result["status"] == "router_uncertain"
-    assert result["crop"] is None
+    assert result["crop"] == "tomato"
     assert result["router_confidence"] == 0.61
     assert result["router"]["primary_detection"]["crop"] == "tomato"
     assert "min_confidence=0.650" in result["message"]

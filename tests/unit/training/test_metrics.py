@@ -62,6 +62,28 @@ def test_compute_plan_metrics_reports_fpr_at_95_tpr():
     assert inverted["ood_false_positive_rate"] == 1.0
 
 
+def test_compute_plan_metrics_logs_ood_metric_failures(monkeypatch, caplog):
+    from src.training.services import metrics as metrics_module
+
+    def _raise_auc(*_args, **_kwargs):
+        raise RuntimeError("forced_roc_failure")
+
+    monkeypatch.setattr(metrics_module, "roc_auc_score", _raise_auc)
+
+    with caplog.at_level("WARNING"):
+        result = compute_plan_metrics(
+            y_true=[0, 1, 0, 1],
+            y_pred=[0, 1, 0, 1],
+            ood_labels=[0, 0, 0, 0, 1, 1, 1, 1],
+            ood_scores=[0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9],
+        )
+
+    assert result["ood_auroc"] is None
+    assert result["ood_false_positive_rate"] is None
+    assert "Failed to compute OOD detection metrics" in caplog.text
+    assert "forced_roc_failure" in caplog.text
+
+
 def test_persist_validation_artifacts_records_extended_gate_metrics(tmp_path):
     result = persist_validation_artifacts(
         artifact_root=tmp_path / "training_metrics",

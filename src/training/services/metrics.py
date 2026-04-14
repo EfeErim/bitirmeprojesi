@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
@@ -9,6 +10,8 @@ import torch
 from sklearn.metrics import balanced_accuracy_score, f1_score, roc_auc_score, roc_curve
 
 from src.shared.json_utils import read_json, write_json
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_PLAN_TARGETS = {
     "accuracy": 0.93,
@@ -150,7 +153,13 @@ def compute_ood_detection_metrics(
                     valid_tpr = tpr >= 0.95
                     if valid_tpr.any():
                         ood_fpr = float(fpr[valid_tpr].min())
-                except Exception:
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to compute OOD detection metrics with ood_total=%s in_dist_total=%s: %s",
+                        ood_total,
+                        in_dist_total,
+                        exc,
+                    )
                     ood_auroc = None
                     ood_fpr = None
     return {

@@ -313,6 +313,7 @@ class RouterAdapterRuntime:
             uncertainty_message = self._router_uncertainty_message(router_analysis)
             if uncertainty_message:
                 result = build_router_uncertain_result(
+                    crop_name=crop_name,
                     part_name=part_name,
                     router_confidence=router_confidence,
                     message=uncertainty_message,

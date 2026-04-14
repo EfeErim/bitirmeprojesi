@@ -103,6 +103,7 @@ def build_router_unavailable_result(*, message: str, include_ood: bool) -> Infer
 
 def build_router_uncertain_result(
     *,
+    crop_name: str | None,
     part_name: str | None,
     router_confidence: float,
     message: str,
@@ -112,9 +113,14 @@ def build_router_uncertain_result(
     normalized_router = normalize_router_analysis(router_analysis)
     if not normalized_router.message:
         normalized_router.message = str(message)
+    resolved_crop_name = str(crop_name or "").strip() or None
+    if resolved_crop_name is None and normalized_router.primary_detection is not None:
+        candidate_crop = str(normalized_router.primary_detection.crop or "").strip().lower()
+        if candidate_crop and candidate_crop != "unknown":
+            resolved_crop_name = candidate_crop
     return InferenceResult(
         status="router_uncertain",
-        crop=None,
+        crop=resolved_crop_name,
         part=part_name,
         router_confidence=float(router_confidence),
         diagnosis=None,
