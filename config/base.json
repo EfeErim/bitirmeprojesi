@@ -74,7 +74,7 @@
         "few_shot_research_mode": false,
         "few_shot_min_class_samples": 1,
         "cache_size": 1000,
-        "validate_images_on_init": true
+        "validate_images_on_init": false
       },
       "early_stopping": {
         "enabled": true,
@@ -170,8 +170,6 @@
   },
   "inference": {
     "adapter_root": "models/adapters",
-    "lazy_load": true,
-    "cache_enabled": false,
     "target_size": 224,
     "router_min_confidence": 0.65,
     "router_min_margin": 0.10

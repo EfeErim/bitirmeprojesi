@@ -78,7 +78,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "few_shot_research_mode": False,
             "few_shot_min_class_samples": 1,
             "cache_size": 1000,
-            "validate_images_on_init": True,
+            "validate_images_on_init": False,
         },
         "early_stopping": {
             "enabled": True,
@@ -208,7 +208,7 @@ def normalize_continual_training_config(
     if data["few_shot_min_class_samples"] < 1:
         raise ValueError("training.continual.data.few_shot_min_class_samples must be at least 1.")
     data["cache_size"] = int(data.get("cache_size", 1000))
-    data["validate_images_on_init"] = bool(data.get("validate_images_on_init", True))
+    data["validate_images_on_init"] = bool(data.get("validate_images_on_init", False))
 
     evaluation_best_metric = str(evaluation.get("best_metric", early_stopping.get("metric", "val_loss")))
     evaluation["best_metric"] = evaluation_best_metric

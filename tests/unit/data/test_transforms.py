@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 
-from src.data.transforms import build_image_transform, preprocess_image
+from src.data.transforms import build_image_transform, get_inference_image_transform, preprocess_image
 
 
 def test_build_image_transform_training_policy_contains_expected_transforms():
@@ -64,3 +64,14 @@ def test_preprocess_image_supports_numpy_rgb_input():
     tensor = preprocess_image(array, target_size=224)
 
     assert tensor.shape == (3, 224, 224)
+
+
+def test_get_inference_image_transform_caches_by_target_size():
+    get_inference_image_transform.cache_clear()
+
+    first = get_inference_image_transform(224)
+    second = get_inference_image_transform(224)
+    third = get_inference_image_transform(256)
+
+    assert first is second
+    assert first is not third

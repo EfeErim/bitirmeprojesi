@@ -43,6 +43,8 @@ class ConfigurationManager:
         self._merged_config: Optional[Dict[str, Any]] = None
 
     def load_base_config(self) -> Dict[str, Any]:
+        if self._base_config is not None:
+            return copy.deepcopy(self._base_config)
         base_path = self.config_dir / "base.json"
         self._base_config = migrate_config_payload(_read_json(base_path))
         return copy.deepcopy(self._base_config)
@@ -86,6 +88,8 @@ class ConfigurationManager:
         return migrate_config_payload(_read_json(env_path))
 
     def load_all_configs(self) -> Dict[str, Any]:
+        if self._merged_config is not None:
+            return copy.deepcopy(self._merged_config)
         merged = self.load_base_config()
         if self._environment:
             merged = _deep_merge(merged, self.get_environment_config(self._environment))

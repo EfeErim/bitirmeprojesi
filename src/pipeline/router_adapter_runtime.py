@@ -47,8 +47,6 @@ class _CachedAdapter:
     adapter_dir: Path
     adapter_meta_mtime_ns: int
     adapter_meta_size: int
-    adapter_max_entry_mtime_ns: int
-    adapter_entry_count: int
 
 
 class RouterAdapterRuntime:
@@ -121,7 +119,7 @@ class RouterAdapterRuntime:
         raise FileNotFoundError(f"Adapter not found for crop '{crop_name}' at {root}")
 
     @staticmethod
-    def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, int, int, int, int]:
+    def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, int, int]:
         resolved_dir = adapter_dir.resolve()
         meta_path = resolved_dir / "adapter_meta.json"
         try:
@@ -129,14 +127,12 @@ class RouterAdapterRuntime:
         except FileNotFoundError as exc:
             raise FileNotFoundError(f"No adapter assets found under {resolved_dir}") from exc
 
-        entry_stats = [entry.stat() for entry in sorted(resolved_dir.iterdir())]
-        max_entry_mtime_ns = max((int(stat.st_mtime_ns) for stat in entry_stats), default=int(meta_stat.st_mtime_ns))
+        # Adapter export rewrites adapter_meta.json after bundle assets are persisted,
+        # so metadata freshness is the maintained reload marker for runtime caching.
         return (
             resolved_dir,
             int(meta_stat.st_mtime_ns),
             int(meta_stat.st_size),
-            int(max_entry_mtime_ns),
-            len(entry_stats),
         )
 
     def load_adapter(self, crop_name: str, adapter_dir: Optional[str | Path] = None) -> IndependentCropAdapter:
@@ -146,8 +142,6 @@ class RouterAdapterRuntime:
             resolved_cache_dir,
             adapter_meta_mtime_ns,
             adapter_meta_size,
-            adapter_max_entry_mtime_ns,
-            adapter_entry_count,
         ) = self._adapter_meta_state(resolved_dir)
         cached = self.adapters.get(crop_key)
         if cached is not None:
@@ -155,8 +149,6 @@ class RouterAdapterRuntime:
                 cached.adapter_dir == resolved_cache_dir
                 and cached.adapter_meta_mtime_ns == adapter_meta_mtime_ns
                 and cached.adapter_meta_size == adapter_meta_size
-                and cached.adapter_max_entry_mtime_ns == adapter_max_entry_mtime_ns
-                and cached.adapter_entry_count == adapter_entry_count
             ):
                 return cached.adapter
             self._emit_status(f"[ADAPTER] Reloading adapter for crop={crop_key}...")
@@ -170,8 +162,6 @@ class RouterAdapterRuntime:
             adapter_dir=resolved_cache_dir,
             adapter_meta_mtime_ns=adapter_meta_mtime_ns,
             adapter_meta_size=adapter_meta_size,
-            adapter_max_entry_mtime_ns=adapter_max_entry_mtime_ns,
-            adapter_entry_count=adapter_entry_count,
         )
         self._emit_status(f"[ADAPTER] Ready crop={crop_key}")
         return adapter

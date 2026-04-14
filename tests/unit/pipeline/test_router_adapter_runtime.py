@@ -521,7 +521,7 @@ def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path
 
 
 
-def test_load_adapter_reloads_when_non_metadata_bundle_file_changes(monkeypatch, tmp_path):
+def test_load_adapter_keeps_cached_bundle_when_only_non_metadata_files_change(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     adapter_dir = _write_adapter_meta(adapter_root, "tomato")
     classifier_path = adapter_dir / "classifier.pth"
@@ -553,8 +553,8 @@ def test_load_adapter_reloads_when_non_metadata_bundle_file_changes(monkeypatch,
 
     second = runtime.load_adapter("tomato")
 
-    assert first is not second
-    assert len(built_adapters) == 2
+    assert first is second
+    assert len(built_adapters) == 1
 
 
 

@@ -275,6 +275,29 @@ def test_crop_dataset_reads_nested_class_images(tmp_path: Path):
     assert dataset.image_paths[0].name == "nested.jpg"
 
 
+def test_crop_dataset_default_skips_init_validation(tmp_path: Path, monkeypatch):
+    _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")
+    verify_calls = {"count": 0}
+    original_verify = datasets.CropDataset._verify_image_file
+
+    def _counting_verify(path):
+        verify_calls["count"] += 1
+        return original_verify(path)
+
+    monkeypatch.setattr(datasets.CropDataset, "_verify_image_file", staticmethod(_counting_verify))
+
+    dataset = datasets.CropDataset(
+        data_dir=str(tmp_path),
+        crop="tomato",
+        split="train",
+        transform=False,
+        use_cache=False,
+    )
+
+    assert len(dataset) == 1
+    assert verify_calls["count"] == 0
+
+
 
 def test_crop_dataset_init_validation_uses_lightweight_verify_before_first_decode(tmp_path: Path, monkeypatch):
     _write_image(tmp_path / "tomato" / "continual" / "healthy" / "train.jpg")

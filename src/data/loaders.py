@@ -119,7 +119,7 @@ def create_training_loaders(
     error_policy: str = "tolerant",
     sampler: str = "auto",
     seed: int = 42,
-    validate_images_on_init: bool = True,
+    validate_images_on_init: bool = False,
     augmentation_policy: str = "randaugment",
     randaugment_num_ops: int = 2,
     randaugment_magnitude: int = 7,

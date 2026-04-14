@@ -16,6 +16,8 @@ def test_colab_training_surface_normalizes_runtime_aliases():
     assert colab_training["validation_every_n_epochs"] == 2
     assert colab_training["stdout_progress_batch_interval"] == 12
     assert colab_training["stdout_progress_min_interval_sec"] == 15.0
+    assert "lazy_load" not in cfg["inference"]
+    assert "cache_enabled" not in cfg["inference"]
 
 
 def test_training_continual_surface_exposes_reliability_defaults():
@@ -74,6 +76,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["conformal_method"] == "raps"
     assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
     assert root_normalized["data"]["augmentation_policy"] == "randaugment"
+    assert root_normalized["data"]["validate_images_on_init"] is False
     assert root_normalized["data"]["randaugment_num_ops"] == 2
     assert root_normalized["data"]["randaugment_magnitude"] == 7
     assert root_normalized["data"]["few_shot_research_mode"] is False

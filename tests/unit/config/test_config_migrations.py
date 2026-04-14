@@ -120,6 +120,35 @@ def test_load_config_file_leaves_non_surface_payload_untouched(tmp_path):
     assert payload == {"crops": {"tomato": ["leaf"]}}
 
 
+def test_load_all_configs_reuses_cached_merged_payload(tmp_path, monkeypatch):
+    config_dir = tmp_path / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    _write_json(config_dir / "base.json", _canonical_base_payload())
+    _write_json(
+        config_dir / "env_alias.json",
+        {
+            "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION,
+            "colab": {"training": {"checkpoint_every_n_steps": 123}},
+        },
+    )
+
+    read_calls = {"count": 0}
+    original_read_json = __import__("src.core.config_manager", fromlist=["_read_json"])._read_json
+
+    def _counting_read_json(path):
+        read_calls["count"] += 1
+        return original_read_json(path)
+
+    monkeypatch.setattr("src.core.config_manager._read_json", _counting_read_json)
+
+    manager = ConfigurationManager(config_dir=str(config_dir), environment="env_alias")
+    first = manager.load_all_configs()
+    second = manager.load_all_configs()
+
+    assert first == second
+    assert read_calls["count"] == 2
+
+
 def test_is_versioned_config_surface_payload_matches_supported_sections():
     assert is_versioned_config_surface_payload({"training": {}}) is True
     assert is_versioned_config_surface_payload({"colab": {}}) is True

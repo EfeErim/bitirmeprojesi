@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, List, Union
 
 import numpy as np
@@ -105,6 +106,12 @@ def build_image_transform(
     return transforms.Compose(steps)
 
 
+@lru_cache(maxsize=8)
+def get_inference_image_transform(target_size: int) -> "transforms.Compose":
+    """Cache deterministic inference transforms by target size."""
+    return build_image_transform(int(target_size), training=False)
+
+
 def preprocess_image(image: Union[np.ndarray, Image.Image], target_size: int = 224) -> torch.Tensor:
     """Normalize a single image into an ImageNet-style tensor."""
     if isinstance(image, np.ndarray):
@@ -128,4 +135,4 @@ def preprocess_image(image: Union[np.ndarray, Image.Image], target_size: int = 2
         raise ValueError(f"Unsupported image type: {type(image)}")
     if image.mode != "RGB":
         image = image.convert("RGB")
-    return build_image_transform(int(target_size), training=False)(image)
+    return get_inference_image_transform(int(target_size))(image)

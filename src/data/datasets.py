@@ -65,7 +65,7 @@ class CropDataset(Dataset):
         cache_size: int = 1000,
         cache_train_split: bool = False,
         error_policy: str = "tolerant",
-        validate_images_on_init: bool = True,
+        validate_images_on_init: bool = False,
         augmentation_policy: str = "randaugment",
         randaugment_num_ops: int = 2,
         randaugment_magnitude: int = 7,

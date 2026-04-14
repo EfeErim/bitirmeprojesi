@@ -448,6 +448,12 @@ Current sampler behavior:
 - set `"shuffle"` or `"weighted"` explicitly when you do not want the automatic rule
 - this threshold is a repo-level engineering heuristic for long-tail handling, not a paper-faithful claim that one ratio is universally optimal
 
+Current init-validation behavior:
+
+- the shipped default is `training.continual.data.validate_images_on_init: false`
+- turn it on when you want an eager file-integrity sweep before the first batch
+- leaving it off avoids a full `Image.verify()` pass across every split during loader construction
+
 Current augmentation behavior:
 
 - the shipped train-time online augmentation policy is `training.continual.data.augmentation_policy: "randaugment"`
