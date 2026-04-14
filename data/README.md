@@ -1,5 +1,37 @@
 # Data Workspace
 
+## Minimal Workflow (Use This First)
+
+If the folder layout feels heavy, use this 2-folder rule:
+
+1. Put raw class folders in `data/class_root_dataset/<dataset_name>/`.
+2. Train from `data/prepared_runtime_datasets/<dataset_key>/` after Notebook 0 prepares it.
+
+You can ignore the other folders unless you have a specific need:
+
+- `data/ood_dataset/`: optional reusable unknown/OOD image pools
+- `data/prepared_class_root_datasets/`: optional cleaned intermediate copy from Notebook 0
+
+In short: start from `class_root_dataset`, end at `prepared_runtime_datasets`.
+
+## Class Root Vs Runtime (Plain English)
+
+Class root = your raw folder-by-class images.
+
+- Think: "my original dataset as I collected it"
+- Shape: one folder per class, images inside each class folder
+
+Runtime = the training-ready dataset after preparation.
+
+- Think: "the final package the training code expects"
+- Shape: split folders plus OOD folder (`continual/`, `val/`, `test/`, `ood/`)
+
+Quick mapping:
+
+1. Class root is input.
+2. Notebook 0 prepares/splits it.
+3. Runtime is output and used by training.
+
 This repo keeps the maintained notebook dataset paths under `data/`. Most dataset contents are local working files rather than tracked source, but the repo currently includes three checked-in example dataset trees:
 
 - `data/class_root_dataset/grape_fruit/`
