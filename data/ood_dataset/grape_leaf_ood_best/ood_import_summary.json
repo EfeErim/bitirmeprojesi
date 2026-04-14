@@ -1,0 +1,21 @@
+{
+  "dataset": "grape_leaf_ood_best",
+  "source_root": "D:\\bitirme projesi\\.runtime_tmp\\grape_ood_20260404",
+  "destination": "D:\\bitirme projesi\\data\\ood_dataset\\grape_leaf_ood_best",
+  "copied_images": 155,
+  "deduped_images": 19,
+  "low_res_removed": 0,
+  "min_side_filter": 160,
+  "bucket_counts": {
+    "easy_negatives": 25,
+    "other_plants_and_fruits": 43,
+    "unsupported_grape_conditions": 87
+  },
+  "source_bucket_counts": {
+    "<root>": 18,
+    "Diğer bitkilerde yapraklar ve meyveler": 43,
+    "Üzüm bahçeleri alakasız ve saçma fotoğraflar": 25,
+    "Üzüm dahil olmayan hastalıklar ve kök hastalıkları": 88
+  },
+  "sample_dropped": []
+}

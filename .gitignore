@@ -50,6 +50,10 @@ data/ood_dataset/*
 !data/ood_dataset/.gitkeep
 !data/ood_dataset/grape_fruit_ood_trial/
 !data/ood_dataset/grape_fruit_ood_trial/**
+!data/ood_dataset/grape_fruit_ood_best/
+!data/ood_dataset/grape_fruit_ood_best/**
+!data/ood_dataset/grape_leaf_ood_best/
+!data/ood_dataset/grape_leaf_ood_best/**
 !data/ood_dataset/tomato_leaf_ood_best/
 !data/ood_dataset/tomato_leaf_ood_best/**
 !data/ood_dataset/tomato_fruit_ood_best/
