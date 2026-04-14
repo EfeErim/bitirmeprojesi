@@ -727,7 +727,17 @@ def _write_split_manifest(dataset_root: Path, dataset_key: str) -> None:
     )
 
 
-def _write_canonical_run(*, runs_root: Path, run_name: str, dataset_lineage_key: str, learning_rate: float, macro_f1: float, auroc: float, fpr: float) -> None:
+def _write_canonical_run(
+    *,
+    runs_root: Path,
+    run_name: str,
+    dataset_lineage_key: str,
+    learning_rate: float,
+    macro_f1: float,
+    auroc: float,
+    fpr: float,
+    backbone_model_name: str = "fake/backbone",
+) -> None:
     artifact_root = runs_root / run_name / "training_metrics"
     manifest = {
         "schema_version": "v1_training_experiment_manifest",
@@ -740,7 +750,7 @@ def _write_canonical_run(*, runs_root: Path, run_name: str, dataset_lineage_key:
         "part_name": "leaf",
         "dataset_key": "tomato__leaf",
         "dataset_lineage_key": dataset_lineage_key,
-        "model_family": {"engine": "continual_sd_lora", "backbone_model_name": "fake/backbone"},
+        "model_family": {"engine": "continual_sd_lora", "backbone_model_name": backbone_model_name},
         "artifacts": {"artifact_root": str(artifact_root)},
     }
     optimization = {
@@ -759,8 +769,8 @@ def _write_canonical_run(*, runs_root: Path, run_name: str, dataset_lineage_key:
             "crop_name": "tomato",
             "part_name": "leaf",
             "engine": "continual_sd_lora",
-            "backbone_model_name": "fake/backbone",
-            "cohort_key": f"{dataset_lineage_key}::tomato::leaf::continual_sd_lora::fake/backbone",
+            "backbone_model_name": backbone_model_name,
+            "cohort_key": f"{dataset_lineage_key}::tomato::leaf::continual_sd_lora::{backbone_model_name}",
         },
         "status": {
             "readiness_status": "ready",
@@ -816,6 +826,50 @@ def test_resolve_notebook_optimization_campaign_bootstrap_pending_when_no_trials
     assert campaign["status"] == "bootstrap_pending"
     assert Path(campaign["campaign_json"]).exists()
     assert summarize_notebook_optimization_campaign(campaign)["executed_run_count"] == 0
+
+
+def test_resolve_notebook_optimization_campaign_falls_back_to_legacy_dataset_key(tmp_path: Path):
+    dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
+    dataset_root.mkdir(parents=True, exist_ok=True)
+    _write_split_manifest(dataset_root, "tomato__leaf")
+
+    # Legacy runs may only carry dataset_key as lineage and blank backbone metadata.
+    _write_canonical_run(
+        runs_root=tmp_path / "runs",
+        run_name="run_legacy",
+        dataset_lineage_key="tomato__leaf",
+        learning_rate=0.00012,
+        macro_f1=0.80,
+        auroc=0.72,
+        fpr=0.20,
+        backbone_model_name="",
+    )
+
+    campaign = resolve_notebook_optimization_campaign(
+        root=tmp_path,
+        runtime_dataset_root=dataset_root,
+        dataset_key="tomato__leaf",
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        notebook_parameters={
+            "EPOCHS": 20,
+            "BATCH_SIZE": 128,
+            "LEARNING_RATE": 0.0002,
+            "LORA_R": 24,
+            "LORA_ALPHA": 24,
+            "LORA_DROPOUT": 0.1,
+            "WEIGHT_DECAY": 0.01,
+            "OOD_FACTOR": 3.0,
+            "LOGITNORM_TAU": 1.0,
+            "RANDAUGMENT_MAGNITUDE": 7,
+        },
+        mode="continue",
+    )
+
+    assert campaign["status"] == "active"
+    assert campaign["cohort_match_mode"] == "legacy_dataset_key_blank_backbone"
+    assert campaign["eligible_run_count"] == 1
 
 
 def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_path: Path):

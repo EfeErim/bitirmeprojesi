@@ -405,6 +405,91 @@ def _resolve_runtime_dataset_identity(
     }
 
 
+def _select_notebook_campaign_trials(
+    *,
+    trials: List[Dict[str, Any]],
+    select_trials_for_cohort_fn: Callable[..., List[Dict[str, Any]]],
+    dataset_lineage_key: str,
+    dataset_key: str,
+    crop_name: str,
+    part_name: str,
+    backbone_model_name: str,
+    engine: str,
+) -> tuple[List[Dict[str, Any]], str]:
+    # Keep campaign continuity across legacy records that predate lineage hashing or backbone recording.
+    lineage = str(dataset_lineage_key or "")
+    dataset = str(dataset_key or "")
+    backbone = str(backbone_model_name or "")
+
+    common = {
+        "crop_name": crop_name,
+        "part_name": part_name,
+        "engine": engine,
+    }
+    attempts: List[tuple[str, Dict[str, Any]]] = []
+    if lineage:
+        attempts.append(
+            (
+                "strict_lineage_backbone",
+                {
+                    **common,
+                    "dataset_lineage_key": lineage,
+                    "backbone_model_name": backbone,
+                },
+            )
+        )
+    if dataset:
+        attempts.append(
+            (
+                "legacy_dataset_key_backbone",
+                {
+                    **common,
+                    "dataset_key": dataset,
+                    "backbone_model_name": backbone,
+                },
+            )
+        )
+    if backbone:
+        if lineage:
+            attempts.append(
+                (
+                    "strict_lineage_blank_backbone",
+                    {
+                        **common,
+                        "dataset_lineage_key": lineage,
+                        "backbone_model_name": "",
+                    },
+                )
+            )
+        if dataset:
+            attempts.append(
+                (
+                    "legacy_dataset_key_blank_backbone",
+                    {
+                        **common,
+                        "dataset_key": dataset,
+                        "backbone_model_name": "",
+                    },
+                )
+            )
+        if lineage:
+            attempts.append(("strict_lineage_any_backbone", {**common, "dataset_lineage_key": lineage}))
+        if dataset:
+            attempts.append(("legacy_dataset_key_any_backbone", {**common, "dataset_key": dataset}))
+
+    seen = set()
+    for label, filters in attempts:
+        key = tuple(sorted((k, str(v)) for k, v in filters.items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        selected = select_trials_for_cohort_fn(trials, **filters)
+        if selected:
+            return selected, label
+
+    return [], "no_match"
+
+
 def resolve_notebook_optimization_campaign(
     *,
     root: Path,
@@ -448,9 +533,11 @@ def resolve_notebook_optimization_campaign(
 
     build_run_registry(runs_root=runs_root, output_root=index_root)
     trials = _load_trials_jsonl(index_root / "trials.jsonl")
-    selected_trials = select_trials_for_cohort(
-        trials,
+    selected_trials, cohort_match_mode = _select_notebook_campaign_trials(
+        trials=trials,
+        select_trials_for_cohort_fn=select_trials_for_cohort,
         dataset_lineage_key=str(dataset_identity.get("dataset_lineage_key", "") or ""),
+        dataset_key=str(dataset_identity.get("dataset_key", "") or dataset_key),
         crop_name=str(dataset_identity.get("crop_name", "") or crop_name),
         part_name=str(dataset_identity.get("part_name", "") or part_name),
         backbone_model_name=backbone_model_name,
@@ -493,6 +580,7 @@ def resolve_notebook_optimization_campaign(
         "part_name": dataset_identity.get("part_name"),
         "engine": engine,
         "backbone_model_name": backbone_model_name,
+        "cohort_match_mode": cohort_match_mode,
         "cohort_key": str(recommendation_cohort.get("cohort_key", "") or frontier_cohort.get("cohort_key", "") or ""),
         "frontier_count": int(frontier_cohort.get("frontier_count", 0) or 0),
         "frontier_run_ids": list(frontier_cohort.get("frontier_run_ids", [])),
@@ -621,9 +709,11 @@ def finalize_notebook_optimization_campaign(
     index_root = root / "runs" / "_index"
     build_run_registry(runs_root=runs_root, output_root=index_root)
     trials = _load_trials_jsonl(index_root / "trials.jsonl")
-    selected_trials = select_trials_for_cohort(
-        trials,
+    selected_trials, cohort_match_mode = _select_notebook_campaign_trials(
+        trials=trials,
+        select_trials_for_cohort_fn=select_trials_for_cohort,
         dataset_lineage_key=str(payload.get("dataset_lineage_key", "") or ""),
+        dataset_key=str(payload.get("dataset_key", "") or ""),
         crop_name=str(payload.get("crop_name", "") or ""),
         part_name=str(payload.get("part_name", "") or ""),
         backbone_model_name=str(payload.get("backbone_model_name", "") or ""),
@@ -660,6 +750,7 @@ def finalize_notebook_optimization_campaign(
     payload.update(
         {
             "cohort_key": str(recommendation_cohort.get("cohort_key", "") or frontier_cohort.get("cohort_key", "") or payload.get("cohort_key", "")),
+            "cohort_match_mode": cohort_match_mode,
             "frontier_count": int(frontier_cohort.get("frontier_count", 0) or 0),
             "frontier_run_ids": list(frontier_cohort.get("frontier_run_ids", [])),
             "eligible_run_count": int(recommendation_cohort.get("eligible_run_count", 0) or 0),
