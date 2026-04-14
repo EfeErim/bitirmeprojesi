@@ -95,6 +95,26 @@ TRAINING_STATIC_ENTRY_SPECS = [
         "read_order": 2,
     },
     {
+        "relative_path": "training/experiment_manifest.json",
+        "category": "training",
+        "priority": "high",
+        "title_tr": "Deney manifesti",
+        "description_tr": "Koşunun dataset soyunu, crop/part kimliğini ve canonical izlenebilirlik alanlarını içerir.",
+        "reader_goal": "Bu koşunun hangi veri ve kimlikle üretildiğini doğrulamak",
+        "decision_importance": "run_overview",
+        "read_order": 3,
+    },
+    {
+        "relative_path": "training/optimization_record.json",
+        "category": "training",
+        "priority": "high",
+        "title_tr": "Optimizasyon kaydı",
+        "description_tr": "Pareto ve Bayesian optimization hazırlığı için normalize parametre ve metrik özetini içerir.",
+        "reader_goal": "Koşuyu optimizer-facing metrik ve parametreleriyle karşılaştırmak",
+        "decision_importance": "run_overview",
+        "read_order": 4,
+    },
+    {
         "relative_path": "test/metric_gate.json",
         "category": "test",
         "priority": "critical",
@@ -102,7 +122,7 @@ TRAINING_STATIC_ENTRY_SPECS = [
         "description_tr": "Held-out test performansının gate kararını içerir.",
         "reader_goal": "Asıl test kararını görmek",
         "decision_importance": "deploy_decision",
-        "read_order": 3,
+        "read_order": 5,
     },
     {
         "relative_path": "validation/metric_gate.json",
@@ -112,7 +132,7 @@ TRAINING_STATIC_ENTRY_SPECS = [
         "description_tr": "Validation split üzerinde ölçülen yardımcı gate kararı.",
         "reader_goal": "Test öncesi referans performansı görmek",
         "decision_importance": "supporting_diagnostic",
-        "read_order": 4,
+        "read_order": 6,
     },
     {
         "relative_path": "ood_benchmark/summary.json",
@@ -122,7 +142,7 @@ TRAINING_STATIC_ENTRY_SPECS = [
         "description_tr": "Gerçek OOD yoksa kullanılan held-out benchmark sonucunu özetler.",
         "reader_goal": "OOD fallback kanıtını incelemek",
         "decision_importance": "ood_decision",
-        "read_order": 5,
+        "read_order": 7,
     },
     {
         "relative_path": "training/history.json",

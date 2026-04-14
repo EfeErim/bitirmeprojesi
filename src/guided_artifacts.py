@@ -150,8 +150,10 @@ def _load_training_overview(artifact_root: Path) -> Dict[str, Any]:
     payload = {
         "run_id": summary.get("run_id", ""),
         "run_label": summary.get("run_label", summary.get("run_id", "")),
+        "surface": summary.get("surface", ""),
         "crop_name": summary.get("crop_name", ""),
         "part_name": summary.get("part_name", "unspecified"),
+        "dataset_key": summary.get("dataset_key", ""),
         "classification_split": dict(readiness).get("classification_split", ""),
         "readiness_status": dict(readiness).get("status", ""),
         "readiness_passed": dict(readiness).get("passed"),

@@ -8,6 +8,7 @@ import logging
 import subprocess
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequence
 
@@ -33,6 +34,11 @@ from src.training.services.reporting import (
     persist_training_run_context_artifact,
     persist_training_summary_artifact,
     persist_validation_artifacts,
+)
+from src.training.services.traceability import (
+    build_experiment_manifest,
+    build_optimization_record,
+    persist_traceability_artifacts,
 )
 from src.training.validation import evaluate_model_with_artifact_metrics
 from src.workflows.training_readiness import (
@@ -210,9 +216,32 @@ def _collect_dataset_manifest_context(crop_root: Path) -> JsonDict:
                 "sha256": _sha256_file(manifest_path),
                 "schema_version": manifest_json.get("schema_version"),
                 "source_root": manifest_json.get("source_root"),
+                "crop_name": manifest_json.get("crop_name"),
+                "part_name": manifest_json.get("part_name"),
+                "dataset_key": manifest_json.get("dataset_key"),
+                "split_policy": manifest_json.get("split_policy"),
+                "ood": manifest_json.get("ood"),
             }
         )
     return {filename: payload}
+
+
+def _read_dataset_manifest_payload(crop_root: Path) -> JsonDict:
+    manifest_path = crop_root / "split_manifest.json"
+    if not manifest_path.exists():
+        return {}
+    return read_json(manifest_path, default={}, expect_type=dict)
+
+
+def _resolve_part_name(*, runtime_dataset_key: str, manifest_payload: Dict[str, Any]) -> str:
+    manifest_part_name = str(manifest_payload.get("part_name", "") or "").strip().lower()
+    if manifest_part_name:
+        return manifest_part_name
+    dataset_key = str(runtime_dataset_key or "").strip().lower()
+    if "__" in dataset_key:
+        _crop_name, part_name = dataset_key.split("__", 1)
+        return str(part_name or "unspecified")
+    return "unspecified"
 
 
 def _nested_dict(source: JsonDict, *keys: str) -> JsonDict:
@@ -832,6 +861,12 @@ class TrainingWorkflow:
         runtime_dataset_key = str(run_setup.runtime_dataset_key)
         runtime_crop_root = Path(run_setup.runtime_crop_root)
         runtime_dataset_resolution_source = str(run_setup.runtime_dataset_resolution_source)
+        runtime_manifest_payload = _read_dataset_manifest_payload(runtime_crop_root)
+        part_name = _resolve_part_name(
+            runtime_dataset_key=runtime_dataset_key,
+            manifest_payload=runtime_manifest_payload,
+        )
+        run_created_at = datetime.now(timezone.utc).isoformat()
         split_class_counts = {
             str(split_name): {str(class_name): int(count) for class_name, count in counts.items()}
             for split_name, counts in dict(run_setup.split_class_counts).items()
@@ -1128,13 +1163,17 @@ class TrainingWorkflow:
         summary_payload = build_training_summary_payload_dict(
             run_id=run_id,
             crop_name=crop_name,
+            part_name=part_name,
             detected_classes=detected_classes,
+            dataset_key=runtime_dataset_key,
             loader_sizes=loader_sizes,
             loader_batch_counts=loader_batch_counts,
             split_class_counts=split_class_counts,
             class_balance=class_balance_runtime,
             adapter_dir=adapter_dir,
             artifact_dir=str(artifact_dir),
+            created_at=run_created_at,
+            surface="workflow",
             checkpoint_records=checkpoint_records,
             ood_calibration=ood_calibration,
             history_payload=history_payload,
@@ -1156,45 +1195,75 @@ class TrainingWorkflow:
             telemetry=telemetry,
         )
         repo_root = Path(__file__).resolve().parents[2]
+        run_context_payload = {
+            "schema_version": "v1_training_run_context",
+            "run_id": run_id,
+            "created_at": run_created_at,
+            "surface": "workflow",
+            "crop_name": crop_name,
+            "part_name": part_name,
+            "device": self.device,
+            "python_version": sys.version.split()[0],
+            "data_dir": str(resolved_data_dir),
+            "output_dir": str(resolved_output_dir),
+            "artifact_dir": str(artifact_dir),
+            "adapter_dir": str(adapter_dir),
+            "resolved_config": dict(self.config),
+            "git": _collect_git_context(repo_root),
+            "package_versions": _collect_package_versions(),
+            "dataset": {
+                "crop_root": str(runtime_crop_root.resolve()),
+                "crop_name": crop_name,
+                "part_name": part_name,
+                "dataset_key": runtime_dataset_key,
+                "resolution_source": runtime_dataset_resolution_source,
+                "manifests": _collect_dataset_manifest_context(runtime_crop_root),
+            },
+            "loader_sizes": dict(loader_sizes),
+            "loader_batch_counts": dict(loader_batch_counts),
+            "split_class_counts": dict(split_class_counts),
+            "class_balance": dict(class_balance_runtime),
+            "training_runtime": {
+                "calibration_split_name": calibration_split_name,
+                "best_state_restored": bool(best_state_restored),
+                "ood_requested_primary_score_method": requested_primary_score_method,
+                "ood_primary_score_method": primary_score_stage.selected_method,
+                "ood_primary_score_selection_source": selection_source,
+                "ood_evidence_source": ood_evidence_source,
+                "train_sampler": sampler_runtime,
+            },
+            "production_readiness_status": production_readiness.get("status"),
+        }
         run_context_artifacts = persist_training_run_context_artifact(
             artifact_root=artifact_dir,
-            context_payload={
-                "schema_version": "v1_training_run_context",
-                "run_id": run_id,
-                "crop_name": crop_name,
-                "device": self.device,
-                "python_version": sys.version.split()[0],
-                "data_dir": str(resolved_data_dir),
-                "output_dir": str(resolved_output_dir),
-                "artifact_dir": str(artifact_dir),
-                "adapter_dir": str(adapter_dir),
-                "resolved_config": dict(self.config),
-                "git": _collect_git_context(repo_root),
-                "package_versions": _collect_package_versions(),
-                "dataset": {
-                    "crop_root": str(runtime_crop_root.resolve()),
-                    "dataset_key": runtime_dataset_key,
-                    "resolution_source": runtime_dataset_resolution_source,
-                    "manifests": _collect_dataset_manifest_context(runtime_crop_root),
-                },
-                "loader_sizes": dict(loader_sizes),
-                "loader_batch_counts": dict(loader_batch_counts),
-                "split_class_counts": dict(split_class_counts),
-                "class_balance": dict(class_balance_runtime),
-                "training_runtime": {
-                    "calibration_split_name": calibration_split_name,
-                    "best_state_restored": bool(best_state_restored),
-                    "ood_requested_primary_score_method": requested_primary_score_method,
-                    "ood_primary_score_method": primary_score_stage.selected_method,
-                    "ood_primary_score_selection_source": selection_source,
-                    "ood_evidence_source": ood_evidence_source,
-                    "train_sampler": sampler_runtime,
-                },
-                "production_readiness_status": production_readiness.get("status"),
-            },
+            context_payload=run_context_payload,
             telemetry=telemetry,
         )
-        training_artifacts = {**training_artifacts, **run_context_artifacts}
+        experiment_manifest = build_experiment_manifest(
+            summary_payload=summary_payload,
+            run_context_payload=run_context_payload,
+            artifact_root=artifact_dir,
+            explicit_surface="workflow",
+            created_at=run_created_at,
+            record_quality="canonical",
+        )
+        optimization_record = build_optimization_record(
+            summary_payload=summary_payload,
+            run_context_payload=run_context_payload,
+            production_readiness_payload=production_readiness,
+            authoritative_artifacts=authoritative_artifacts,
+            artifact_root=artifact_dir,
+            explicit_surface="workflow",
+            created_at=run_created_at,
+            record_quality="canonical",
+        )
+        traceability_artifacts = persist_traceability_artifacts(
+            artifact_root=artifact_dir,
+            experiment_manifest=experiment_manifest,
+            optimization_record=optimization_record,
+            telemetry=telemetry,
+        )
+        training_artifacts = {**training_artifacts, **run_context_artifacts, **traceability_artifacts}
         artifact_payload = build_artifact_payload(
             training_artifacts=training_artifacts,
             validation_artifacts=validation_artifacts,

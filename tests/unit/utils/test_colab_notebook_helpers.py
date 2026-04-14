@@ -524,9 +524,129 @@ class _ArtifactMergingTelemetry:
 def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_path: Path):
     telemetry = _ArtifactMergingTelemetry()
     artifact_root = tmp_path / "outputs" / "colab_notebook_training" / "artifacts"
+    training_dir = artifact_root / "training"
     (artifact_root / "test").mkdir(parents=True, exist_ok=True)
+    training_dir.mkdir(parents=True, exist_ok=True)
     (artifact_root / "production_readiness.json").write_text("{}", encoding="utf-8")
     (artifact_root / "test" / "metric_gate.json").write_text("{}", encoding="utf-8")
+    (training_dir / "run_context.json").write_text(
+        json.dumps(
+            {
+                "run_id": "tomato_leaf_2026-03-23_10-11-12",
+                "created_at": "2026-03-23T10:11:12+00:00",
+                "crop_name": "tomato",
+                "part_name": "leaf",
+                "resolved_config": {
+                    "training": {
+                        "continual": {
+                            "backbone": {"model_name": "fake/backbone"},
+                            "adapter": {"lora_r": 24, "lora_alpha": 24, "lora_dropout": 0.1},
+                            "fusion": {"layers": [2, 5, 8, 11], "output_dim": 768, "dropout": 0.1, "gating": "softmax"},
+                            "ood": {
+                                "threshold_factor": 3.0,
+                                "primary_score_method": "ensemble",
+                                "radial_l2_enabled": True,
+                                "radial_beta_range": [0.5, 2.0],
+                                "radial_beta_steps": 16,
+                                "sure_enabled": True,
+                                "sure_semantic_percentile": 90.0,
+                                "sure_confidence_percentile": 97.0,
+                                "conformal_enabled": True,
+                                "conformal_alpha": 0.05,
+                                "conformal_method": "raps",
+                                "conformal_raps_lambda": 0.2,
+                                "conformal_raps_k_reg": 1,
+                            },
+                            "learning_rate": 0.0002,
+                            "weight_decay": 0.01,
+                            "num_epochs": 20,
+                            "batch_size": 128,
+                            "seed": 42,
+                            "optimization": {
+                                "loss_name": "logitnorm",
+                                "logitnorm_tau": 1.0,
+                                "grad_accumulation_steps": 4,
+                                "mixed_precision": "bf16",
+                                "max_grad_norm": 1.0,
+                                "scheduler": {
+                                    "name": "cosine",
+                                    "warmup_ratio": 0.1,
+                                    "min_lr": 1e-6,
+                                    "step_on": "batch",
+                                },
+                            },
+                            "data": {
+                                "sampler": "auto",
+                                "augmentation_policy": "randaugment",
+                                "randaugment_num_ops": 2,
+                                "randaugment_magnitude": 7,
+                            },
+                        }
+                    }
+                },
+                "dataset": {
+                    "crop_root": "/content/data/prepared_runtime_datasets/tomato__leaf",
+                    "dataset_key": "tomato__leaf",
+                    "resolution_source": "manifest:split_manifest.json",
+                    "manifests": {
+                        "split_manifest.json": {
+                            "path": "/content/data/prepared_runtime_datasets/tomato__leaf/split_manifest.json",
+                            "exists": True,
+                            "sha256": "sha_summary_test",
+                            "schema_version": "v1_grouped_runtime_layout",
+                            "source_root": "/content/source/tomato_leaf",
+                            "crop_name": "tomato",
+                            "part_name": "leaf",
+                            "dataset_key": "tomato__leaf",
+                            "split_policy": "grouped_family_canonical_eval_60_20_20",
+                            "ood": {
+                                "source_root": "/content/ood/tomato_leaf",
+                                "image_count": 20,
+                                "image_fingerprint": "ood_fp_summary",
+                            },
+                        }
+                    },
+                },
+                "training_runtime": {"train_sampler": {"resolved_sampler": "weighted"}},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (artifact_root / "test" / "classification_report.json").write_text(
+        json.dumps(
+            {
+                "accuracy": 0.95,
+                "macro avg": {"f1-score": 0.93},
+                "weighted avg": {"f1-score": 0.92},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (artifact_root / "production_readiness.json").write_text(
+        json.dumps(
+            {
+                "status": "failed",
+                "passed": False,
+                "ood_evidence_source": "real_ood_split",
+                "classification_evidence": {
+                    "split_name": "test",
+                    "metrics": {"accuracy": 0.95, "balanced_accuracy": 0.94, "macro_f1": 0.93},
+                },
+                "ood_evidence": {
+                    "metrics": {
+                        "ood_auroc": 0.91,
+                        "ood_false_positive_rate": 0.04,
+                        "sure_ds_f1": 0.90,
+                        "conformal_empirical_coverage": 0.96,
+                        "conformal_avg_set_size": 1.2,
+                        "ood_samples": 20,
+                        "in_distribution_samples": 30,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
 
     payload = merge_training_summary_fields(
         root=tmp_path,
@@ -536,20 +656,46 @@ def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_pa
             "run_label": "tomato_leaf_2026-03-23_10-11-12",
             "crop_name": "tomato",
             "part_name": "leaf",
+            "dataset_key": "tomato__leaf",
+            "created_at": "2026-03-23T10:11:12+00:00",
+            "notebook_surface": "2_interactive_adapter_training.ipynb",
+            "dataset_roots": {
+                "runtime_dataset_key": "tomato__leaf",
+                "runtime_dataset_root": "data/prepared_runtime_datasets/tomato__leaf",
+            },
+            "notebook_parameters": {"batch_size": 128, "learning_rate": 0.0002},
+            "readiness_summary": {
+                "status": "failed",
+                "passed": False,
+                "ood_evidence_source": "real_ood_split",
+            },
         },
     )
 
     summary_path = artifact_root / "training" / "summary.json"
+    experiment_manifest_path = artifact_root / "training" / "experiment_manifest.json"
+    optimization_record_path = artifact_root / "training" / "optimization_record.json"
     guided_dir = artifact_root / "guided"
     catalog = json.loads((guided_dir / "02_file_catalog.json").read_text(encoding="utf-8"))
 
     assert summary_path.exists()
     assert payload["part_name"] == "leaf"
+    assert experiment_manifest_path.exists()
+    assert optimization_record_path.exists()
     assert (guided_dir / "00_start_here.md").exists()
     assert (guided_dir / "01_run_overview.json").exists()
     assert any(entry["relative_path"] == "training/summary.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "training/experiment_manifest.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "training/optimization_record.json" for entry in catalog["entries"])
     assert any(relative_path == "training/summary.json" for _source, relative_path in telemetry.copied)
     assert telemetry.catalog_entries
     assert telemetry.summary_metadata
+
+    experiment_manifest = json.loads(experiment_manifest_path.read_text(encoding="utf-8"))
+    optimization_record = json.loads(optimization_record_path.read_text(encoding="utf-8"))
+    assert experiment_manifest["surface"] == "notebook_2"
+    assert experiment_manifest["notebook_context"]["dataset_roots"]["runtime_dataset_key"] == "tomato__leaf"
+    assert optimization_record["surface"] == "notebook_2"
+    assert optimization_record["notebook_context"]["notebook_parameters"]["batch_size"] == 128
 
 

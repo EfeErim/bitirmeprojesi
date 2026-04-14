@@ -183,8 +183,17 @@ def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_
     assert result.adapter_dir.exists()
     assert result.artifact_dir is not None and result.artifact_dir.exists()
     assert (result.artifact_dir / "training" / "results.png").exists()
+    assert (result.artifact_dir / "training" / "experiment_manifest.json").exists()
+    assert (result.artifact_dir / "training" / "optimization_record.json").exists()
     assert checkpoint_manager.calls
     assert result.checkpoint_records[0]["reason"] == "batch_interval"
+
+    experiment_manifest = json.loads((result.artifact_dir / "training" / "experiment_manifest.json").read_text(encoding="utf-8"))
+    optimization_record = json.loads((result.artifact_dir / "training" / "optimization_record.json").read_text(encoding="utf-8"))
+    assert experiment_manifest["surface"] == "workflow"
+    assert experiment_manifest["part_name"] == "unspecified"
+    assert optimization_record["comparability"]["engine"] == "continual_sd_lora"
+    assert "authoritative_split" in optimization_record["status"]
 
 
 def test_training_workflow_uses_colab_validation_cadence(monkeypatch, tmp_path: Path):
@@ -477,9 +486,15 @@ def test_training_workflow_resolves_prepared_runtime_dataset_key_for_crop(monkey
 
     assert loader_calls[0]["crop"] == "tomato__fruit"
     run_context = json.loads((result.artifact_dir / "training" / "run_context.json").read_text(encoding="utf-8"))
+    summary = json.loads((result.artifact_dir / "training" / "summary.json").read_text(encoding="utf-8"))
+    experiment_manifest = json.loads((result.artifact_dir / "training" / "experiment_manifest.json").read_text(encoding="utf-8"))
     assert run_context["dataset"]["dataset_key"] == "tomato__fruit"
+    assert run_context["dataset"]["part_name"] == "fruit"
     assert Path(run_context["dataset"]["crop_root"]) == dataset_root.resolve()
     assert run_context["dataset"]["resolution_source"] == "manifest:split_manifest.json"
+    assert summary["dataset_key"] == "tomato__fruit"
+    assert summary["part_name"] == "fruit"
+    assert experiment_manifest["dataset_lineage_key"] == "tomato__fruit::" + run_context["dataset"]["manifests"]["split_manifest.json"]["sha256"]
 
 
 def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mode(monkeypatch, tmp_path: Path):

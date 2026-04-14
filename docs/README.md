@@ -84,6 +84,7 @@ Use this when you need:
 - the end-to-end inference flow
 - the current config flow
 - the artifact writing path
+- the canonical run-lineage and optimization-record artifacts
 - the main file-to-responsibility map
 - the canonical primary-detection rule and router retry semantics after startup failures
 
@@ -105,6 +106,14 @@ These notes are historical context only. Do not treat them as maintained methodo
 ### Which file tells me whether a trained adapter is deployable?
 
 Read `production_readiness.json`. The readiness guide explains its fields.
+
+### Which files tell me how one training run should be compared for optimization work?
+
+Read:
+
+- `training/experiment_manifest.json` for dataset lineage and run identity
+- `training/optimization_record.json` for normalized parameters and objectives
+- `runs/_index/latest_registry.json` for the local aggregate registry view
 
 ### What dataset format does Notebook 2 accept?
 
@@ -135,6 +144,17 @@ models/adapters/<crop>/continual_sd_lora_adapter/
 ### Which training file is canonical?
 
 `src/workflows/training.py`
+
+### Where is the local run registry written?
+
+```text
+runs/_index/
+  trials.jsonl
+  latest_registry.json
+  pareto_inputs.json
+```
+
+Those files are now refreshed automatically on successful canonical training traceability writes when the run is mirrored under the repo `runs/` tree. The index script is still available for manual rebuilds.
 
 ### Which inference file is canonical?
 

@@ -23,6 +23,12 @@ from src.training.services.reporting import (
 from src.training.services.reporting import (
     persist_validation_artifacts as persist_validation_artifacts_core,
 )
+from src.training.services.traceability import (
+    build_experiment_manifest,
+    build_optimization_record,
+    load_authoritative_artifacts_from_root,
+    persist_traceability_artifacts,
+)
 
 matplotlib.use("Agg")
 
@@ -56,6 +62,7 @@ def merge_training_summary_fields(
     write_json(summary_path, merged, ensure_ascii=False, sort_keys=False)
     if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
         telemetry.copy_artifact_file(summary_path, "training/summary.json")
+    _refresh_traceability_records(root=_artifact_dir(root), summary_payload=merged, telemetry=telemetry)
     refresh_training_guided_artifacts(
         _artifact_dir(root),
         telemetry=telemetry,
@@ -64,6 +71,55 @@ def merge_training_summary_fields(
         generated_by="scripts.colab_notebook_helpers",
     )
     return merged
+
+
+def _resolve_traceability_surface(summary_payload: Dict[str, Any]) -> str:
+    notebook_surface = str(summary_payload.get("notebook_surface", "") or "")
+    if notebook_surface.endswith("2_interactive_adapter_training.ipynb"):
+        return "notebook_2"
+    return str(summary_payload.get("surface", "") or "workflow")
+
+
+def _refresh_traceability_records(*, root: Path, summary_payload: Dict[str, Any], telemetry: Any = None) -> None:
+    run_context_path = root / "training" / "run_context.json"
+    if not run_context_path.exists():
+        return
+    run_context = read_json(run_context_path, default={}, expect_type=dict)
+    production_readiness = read_json(root / "production_readiness.json", default={}, expect_type=dict)
+    classification_split = str(
+        production_readiness.get("classification_evidence", {}).get("split_name", "")
+        if isinstance(production_readiness.get("classification_evidence"), dict)
+        else ""
+    )
+    authoritative_artifacts = load_authoritative_artifacts_from_root(
+        root,
+        classification_split=classification_split,
+    )
+    resolved_surface = _resolve_traceability_surface(summary_payload)
+    experiment_manifest = build_experiment_manifest(
+        summary_payload=summary_payload,
+        run_context_payload=run_context,
+        artifact_root=root,
+        explicit_surface=resolved_surface,
+        created_at=str(summary_payload.get("created_at", "") or run_context.get("created_at", "") or ""),
+        record_quality="canonical",
+    )
+    optimization_record = build_optimization_record(
+        summary_payload=summary_payload,
+        run_context_payload=run_context,
+        production_readiness_payload=production_readiness,
+        authoritative_artifacts=authoritative_artifacts,
+        artifact_root=root,
+        explicit_surface=resolved_surface,
+        created_at=str(summary_payload.get("created_at", "") or run_context.get("created_at", "") or ""),
+        record_quality="canonical",
+    )
+    persist_traceability_artifacts(
+        artifact_root=root,
+        experiment_manifest=experiment_manifest,
+        optimization_record=optimization_record,
+        telemetry=telemetry,
+    )
 
 
 def _artifact_dir(root: Path, *parts: str) -> Path:

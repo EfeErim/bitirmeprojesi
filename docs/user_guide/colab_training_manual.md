@@ -94,9 +94,10 @@ This is the current Notebook 2 training flow from start to finish:
 15. use real `ood/` data when present inside the selected runtime dataset, otherwise run the held-out fallback benchmark automatically
 16. write `production_readiness.json`
 17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
-18. mirror outputs into `runs/<RUN_ID>/`
-19. optionally auto-push the mirrored run record to GitHub
-20. optionally auto-disconnect the Colab runtime after final exports succeed
+18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
+19. mirror outputs into `runs/<RUN_ID>/`
+20. optionally auto-push the mirrored run record to GitHub
+21. optionally auto-disconnect the Colab runtime after final exports succeed
 
 Important recommendation:
 
@@ -158,6 +159,42 @@ Contract reminder:
 - Notebook 0 accepts the flat class-root layout and writes the runtime dataset
 - Notebook 2 and `TrainingWorkflow.run(...)` both use the runtime split layout
 - Notebook 0 remains the maintained audit-first surface when you want to inspect or fix prep issues before training
+
+## Notebook 2 run identity and traceability
+
+Notebook 2 run identity is still anchored on the mirrored repo run directory:
+
+```text
+runs/<RUN_ID>/
+```
+
+Current traceability rules:
+
+- `RUN_ID` identifies the notebook execution record
+- `crop_name`, `part_name`, and `dataset_key` identify the training cohort
+- `dataset_key` should match the prepared runtime dataset folder selected under `data/prepared_runtime_datasets/`
+- dataset lineage is finalized by the selected runtime dataset plus the SHA-256 of its `split_manifest.json`
+
+The canonical optimizer-facing files live inside the mirrored artifact tree:
+
+```text
+runs/<RUN_ID>/outputs/colab_notebook_training/artifacts/training/
+  summary.json
+  run_context.json
+  experiment_manifest.json
+  optimization_record.json
+```
+
+Notebook 2 keeps using the summary-merge helper surface, but it now updates the same canonical manifest and optimization-record schema that the workflow writes. That means notebook-specific metadata such as the selected runtime dataset key, notebook parameter overrides, readiness summary, and mirrored export paths lands in the same traceability contract instead of a notebook-only side structure.
+
+When the canonical traceability files are updated successfully, the repo-local aggregate registry is also refreshed best-effort under:
+
+```text
+runs/_index/
+  trials.jsonl
+  latest_registry.json
+  pareto_inputs.json
+```
 
 ## How The Split Is Created
 

@@ -259,6 +259,56 @@ Training writes:
   training_metrics/
 ```
 
+### Run lineage and optimizer-facing records
+
+Each training run now writes two canonical traceability artifacts under:
+
+```text
+<output_dir>/training_metrics/training/
+  experiment_manifest.json
+  optimization_record.json
+```
+
+These files do not replace `training/summary.json` or `training/run_context.json`. Instead, they normalize those existing workflow artifacts into a stable experiment-record surface for later Bayesian optimization and Pareto analysis.
+
+Current contract:
+
+- `experiment_manifest.json` is the immutable run-lineage record
+- `optimization_record.json` is the optimizer-facing parameter and objective record
+- runs are only comparable when dataset lineage, crop, part, engine, and backbone match
+
+The dataset-lineage key is:
+
+```text
+<dataset_key>::<split_manifest_sha256>
+```
+
+This prevents optimizer code from mixing runs that came from different prepared runtime datasets even when the crop name is the same.
+
+### Repo-local run registry
+
+Historical and new training runs can be indexed locally with:
+
+```powershell
+.\scripts\python.cmd scripts/index_training_runs.py --runs-root runs
+```
+
+That script writes local-generated registry outputs under:
+
+```text
+runs/_index/
+  trials.jsonl
+  latest_registry.json
+  pareto_inputs.json
+```
+
+The registry prefers canonical traceability files when they exist and falls back to best-effort reconstruction from older `summary`, `run_context`, readiness, and guided artifacts.
+
+Current automatic behavior:
+
+- when a training run writes canonical traceability artifacts successfully, the repo-local `runs/_index/` registry is refreshed best-effort
+- the standalone script remains available when you want to rebuild the registry on demand across existing runs
+
 `training_metrics/` currently contains:
 
 - `training/`
