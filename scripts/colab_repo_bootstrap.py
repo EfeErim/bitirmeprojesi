@@ -176,6 +176,37 @@ def running_in_colab() -> bool:
     return True
 
 
+def detect_runtime_environment() -> dict[str, Any]:
+    """Detect where the notebook is currently running and return a summary dict.
+
+    Returns a dict with keys:
+    - ``runtime``: one of ``"colab"``, ``"kaggle"``, ``"sagemaker"``, ``"local"``
+    - ``repo_root``: resolved repo root path as a string, or ``None``
+    - ``cwd``: current working directory as a string
+    """
+    # Determine runtime type
+    if running_in_colab():
+        runtime = "colab"
+    elif os.environ.get("KAGGLE_KERNEL_RUN_TYPE"):
+        runtime = "kaggle"
+    elif os.environ.get("SM_CURRENT_HOST") or os.environ.get("SAGEMAKER_JOB_NAME"):
+        runtime = "sagemaker"
+    else:
+        runtime = "local"
+
+    # Resolve repo root if possible
+    try:
+        repo_root: Optional[str] = str(resolve_repo_root())
+    except Exception:
+        repo_root = None
+
+    return {
+        "runtime": runtime,
+        "repo_root": repo_root,
+        "cwd": str(Path.cwd().resolve()),
+    }
+
+
 def mount_drive_if_available(force_remount: bool = False) -> None:
     if not running_in_colab():
         return
@@ -1030,10 +1061,12 @@ def collect_notebook_access_report(
         else {"status": "unavailable", "message": "Repository root is not available yet."}
     )
     huggingface = probe_hf_model_access(list(hf_model_ids or []))
+    environment = detect_runtime_environment()
     return {
         "github": github,
         "repo_updates": updates,
         "huggingface": huggingface,
+        "environment": environment,
     }
 
 
@@ -1046,6 +1079,23 @@ def print_notebook_access_report(
     github = dict(report.get("github", {}))
     updates = dict(report.get("repo_updates", {}))
     huggingface = dict(report.get("huggingface", {}))
+    environment = dict(report.get("environment", {}))
+
+    runtime = str(environment.get("runtime", ""))
+    repo_root_env = environment.get("repo_root")
+    cwd_env = environment.get("cwd")
+    runtime_labels = {
+        "colab": "Google Colab",
+        "kaggle": "Kaggle",
+        "sagemaker": "Amazon SageMaker",
+        "local": "yerel makine",
+    }
+    runtime_label = runtime_labels.get(runtime, runtime) if runtime else "bilinmiyor"
+    emit(f"[ORTAM] Calisma ortami: {runtime_label}")
+    if repo_root_env:
+        emit(f"[ORTAM] Repo koku: {repo_root_env}")
+    if cwd_env:
+        emit(f"[ORTAM] Calisma dizini: {cwd_env}")
 
     relation = str(updates.get("relation", "unknown"))
     if relation == "up_to_date":
