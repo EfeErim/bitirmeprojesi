@@ -1088,7 +1088,7 @@ def print_notebook_access_report(
         "colab": "Google Colab",
         "kaggle": "Kaggle",
         "sagemaker": "Amazon SageMaker",
-        "local": "yerel makine",
+        "local": "Yerel makine",
     }
     runtime_label = runtime_labels.get(runtime, runtime) if runtime else "bilinmiyor"
     emit(f"[ORTAM] Calisma ortami: {runtime_label}")
