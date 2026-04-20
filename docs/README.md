@@ -119,11 +119,17 @@ Read:
 
 ### What dataset format does Notebook 2 accept?
 
-Flat class-root:
+Prepared runtime dataset:
 
 ```text
-<root>/<class>/<images>
+data/prepared_runtime_datasets/<dataset_key>/
+  continual/<class>/*
+  val/<class>/*
+  test/<class>/*
+  ood/*
 ```
+
+Use Notebook 0 for flat class-root audit and materialization before opening Notebook 2.
 
 ### What dataset format does workflow or CLI training accept?
 

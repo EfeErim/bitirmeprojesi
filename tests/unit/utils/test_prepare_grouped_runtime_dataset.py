@@ -252,11 +252,17 @@ def test_materialize_grouped_runtime_dataset_uses_part_aware_dataset_key(tmp_pat
     summary = build_grouped_dataset_plan(
         class_root=source_root,
         crop_name="tomato",
+        part_name="fruit",
         artifact_root=artifact_root,
         taxonomy_path=None,
     )
 
     assert summary["runtime_ready"] is True
+    assert summary["part_name"] == "fruit"
+    assert Path(summary["prepared_runtime_root"]).name == "tomato__fruit"
+    proposed = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))
+    assert proposed["part_name"] == "fruit"
+    assert proposed["dataset_key"] == "tomato__fruit"
 
     result_root = materialize_grouped_runtime_dataset(
         class_root=source_root,

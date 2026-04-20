@@ -72,6 +72,7 @@ Important current behavior:
 - every maintained notebook now begins with an access/update check cell so you can confirm repo freshness, GitHub access mode, and Hugging Face access mode before long runs
 - Notebook 2 now expects a prepared runtime dataset under `data/prepared_runtime_datasets/`
 - Notebook 0 is the maintained surface for grouped prep, runtime-dataset materialization, and optional OOD pool injection
+- Notebook 0 skips OOD copying by default when `OOD_DATASET_NAME` and `OOD_ROOT` are blank; set one of those values, or set `ASK_FOR_OOD_ROOT=True`, when you want an interactive OOD path prompt
 
 ## Notebook 2 In Plain English
 
@@ -117,10 +118,10 @@ This is the current Notebook 0 flow from start to finish:
 7. normalize class names against the crop taxonomy when possible
 8. audit exact duplicates, perceptual-hash neighbors, DINOv3/BioCLIP similarity families, source-style proxy groups, and label-risk cues
 9. write review artifacts, label-risk artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
-10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
-11. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub
+10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<dataset_key>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
+11. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub when a token is available; token or push failures leave the local dataset and run artifacts in place
 
-Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy, materializes the runtime dataset after a clean audit, and pushes the ready runtime dataset to GitHub; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass, and set `SAVE_RUNTIME_DATASET_TO_GITHUB=False` only when you want the prepared runtime dataset to remain local to the Colab checkout.
+Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy, materializes the runtime dataset after a clean audit, and attempts to push the ready runtime dataset to GitHub; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass, and set `SAVE_RUNTIME_DATASET_TO_GITHUB=False` when you want the prepared runtime dataset to remain local to the Colab checkout.
 
 For adapter performance, treat Notebook 0 as a curation tool, not just a cleanup tool:
 

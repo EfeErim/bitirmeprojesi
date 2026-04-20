@@ -410,6 +410,7 @@ def test_data_prep_notebook_contract() -> None:
         "OOD_DATASET_ROOT =",
         "OOD_DATASET_NAME =",
         "OOD_ROOT =",
+        "ASK_FOR_OOD_ROOT =",
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
         "MATERIALIZE_AFTER_REVIEW =",
@@ -425,6 +426,9 @@ def test_data_prep_notebook_contract() -> None:
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in sources.full_source
+    assert "evaluate_layout(root=dataset_root)" in sources.full_source
+    assert "ASK_FOR_OOD_ROOT" in sources.full_source
+    assert "list_repo_dataset_directories" in sources.full_source
     assert "build_prepared_dataset_key" in sources.full_source
     assert "prepare_class_root_for_materialization" in sources.full_source
     assert "def _resolve_repo_dataset_root" in sources.full_source

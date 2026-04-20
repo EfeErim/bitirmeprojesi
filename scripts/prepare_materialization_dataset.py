@@ -194,6 +194,7 @@ def prepare_class_root_for_materialization(
     rerun_summary = build_grouped_dataset_plan(
         class_root=prepared_class_root,
         crop_name=crop_name,
+        part_name=part_name,
         artifact_root=prepared_artifact_root,
         taxonomy_path=taxonomy_path,
         dino_model_id=dino_model_id,

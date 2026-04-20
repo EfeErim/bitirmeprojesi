@@ -1376,6 +1376,7 @@ def build_grouped_dataset_plan(
     *,
     class_root: Path,
     crop_name: str,
+    part_name: str = "unspecified",
     artifact_root: Path,
     taxonomy_path: Optional[Path] = None,
     dino_model_id: str = DEFAULT_DINOV3_MODEL_ID,
@@ -1909,6 +1910,7 @@ def build_grouped_dataset_plan(
     summary = {
         "schema_version": "v1_grouped_data_prep",
         "crop_name": str(crop_name),
+        "part_name": str(part_name),
         "source_root": str(class_root.resolve()),
         "summary": {
             "total_images": len(records),
@@ -1951,10 +1953,10 @@ def build_grouped_dataset_plan(
         "blocking_issues": blocking_issues,
         "skipped_classes": skipped_classes,
         "runtime_ready": not blocking_issues and not blocking_conflicts,
-        "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / str(crop_name)).resolve()),
+        "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / build_prepared_dataset_key(crop_name, part_name)).resolve()),
         "ood_handoff_checklist": {
             "status": "pending",
-            "message": "Prepare a separate runtime_dataset/<crop>/ood tree after ID-side prep completes.",
+            "message": "Prepare a separate runtime_dataset/<dataset_key>/ood tree after ID-side prep completes.",
         },
     }
     label_risk_summary["train_only_routed_count"] = sum(1 for row in manifest_rows if row.get("train_only_routed"))
@@ -1970,6 +1972,8 @@ def build_grouped_dataset_plan(
         {
             "schema_version": "v1_grouped_split_manifest",
             "crop_name": str(crop_name),
+            "part_name": str(part_name),
+            "dataset_key": build_prepared_dataset_key(crop_name, part_name),
             "source_root": str(class_root.resolve()),
             "blocking_issues": list(blocking_issues),
             "skipped_classes": list(skipped_classes),
@@ -2015,8 +2019,9 @@ def build_grouped_dataset_plan(
         artifact_root,
         overview_updates={
             "crop_name": str(crop_name),
+            "part_name": str(part_name),
             "runtime_ready": bool(summary["runtime_ready"]),
-            "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / str(crop_name)).resolve()),
+            "prepared_runtime_root": str((DEFAULT_RUNTIME_ROOT / build_prepared_dataset_key(crop_name, part_name)).resolve()),
         },
     )
     return summary
@@ -2197,6 +2202,7 @@ def main() -> int:
     summary = build_grouped_dataset_plan(
         class_root=args.root,
         crop_name=args.crop,
+        part_name=args.part,
         artifact_root=args.artifact_root,
         taxonomy_path=args.taxonomy_path,
         device=args.device,
@@ -2218,4 +2224,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

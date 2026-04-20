@@ -178,6 +178,7 @@ def _load_prep_overview(artifact_root: Path) -> Dict[str, Any]:
     nested_summary = dict(summary.get("summary", {})) if isinstance(summary.get("summary"), dict) else {}
     payload = {
         "crop_name": summary.get("crop_name", ""),
+        "part_name": summary.get("part_name", ""),
         "source_root": summary.get("source_root", ""),
         "runtime_ready": summary.get("runtime_ready"),
         "prepared_runtime_root": summary.get("prepared_runtime_root", ""),

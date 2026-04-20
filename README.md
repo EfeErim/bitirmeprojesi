@@ -225,7 +225,7 @@ Current checked-in Notebook 0 examples:
 - `data/class_root_dataset/tomato_fruit/`
 - `data/class_root_dataset/tomato_leaf/`
 
-Because both datasets live under the shared repo staging root, Notebook 0 now prompts you to choose one of them from the repo by default. You can still prefill the dataset name or explicit repo-relative path if you want to skip the prompt:
+Because these datasets live under the shared repo staging root, Notebook 0 now prompts you to choose one of them from the repo by default. You can still prefill the dataset name or explicit repo-relative path if you want to skip the prompt:
 
 ```python
 REPO_DATASET_NAME = "grape_fruit"
