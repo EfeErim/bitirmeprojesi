@@ -138,7 +138,7 @@ These folders matter most:
 - `src/pipeline/` and `src/router/`: router-driven inference runtime
 - `scripts/`: notebook helpers, validation tools, and small entrypoints
 - `config/`: shipped JSON configuration
-- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in `grape_fruit` and `grape_leaf` class-root datasets plus the `grape_fruit_ood_trial` example OOD pool
+- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in grape and tomato class-root datasets plus reusable `*_ood_best` example OOD pools
 - `docs/`: maintained Markdown documentation
 - `tests/`: unit, integration, and notebook-surface coverage
 
@@ -222,6 +222,8 @@ Current checked-in Notebook 0 examples:
 
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
+- `data/class_root_dataset/tomato_fruit/`
+- `data/class_root_dataset/tomato_leaf/`
 
 Because both datasets live under the shared repo staging root, Notebook 0 now prompts you to choose one of them from the repo by default. You can still prefill the dataset name or explicit repo-relative path if you want to skip the prompt:
 
@@ -549,7 +551,7 @@ Tracked source of truth:
 - `README.md`
 - `colab_notebooks/*.ipynb`
 - root dependency files
-- the checked-in example datasets under `data/class_root_dataset/grape_fruit/`, `data/class_root_dataset/grape_leaf/`, and `data/ood_dataset/grape_fruit_ood_trial/`
+- the checked-in example datasets under `data/class_root_dataset/{grape,tomato}_{fruit,leaf}/` and `data/ood_dataset/*_ood_best/`
 
 Local or generated only:
 

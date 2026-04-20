@@ -400,8 +400,9 @@ def test_data_prep_notebook_contract() -> None:
         )
     for snippet in (
         "REPO_DATASET_ROOT =",
-        "REPO_DATASET_NAME =",
+        'REPO_DATASET_NAME = ""',
         "DATASET_ROOT =",
+        "IMPORT_FROM_DRIVE = False",
         "CROP_NAME =",
         "PART_NAME =",
         "PREP_ARTIFACT_ROOT =",
@@ -420,6 +421,7 @@ def test_data_prep_notebook_contract() -> None:
         "PREP_BIOCLIP_MODEL_ID =",
     ):
         assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
+    assert "IMPORT_FROM_DRIVE = FALSE" not in parameter_source
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in sources.full_source
@@ -470,7 +472,7 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'STATE["recommendation_report"] = recommendation_report' in sources.full_source
     assert 'STATE["recommendation_decision"] = recommendation_decision' in sources.full_source
     assert 'STATE["effective_params"] = effective_params' in sources.full_source
-    assert "Notebook 2 harici OOD secmez; gercek OOD kaniti icin secilen runtime dataset icinde ood/ klasoru bulunmalidir." in sources.full_source
+    assert "Notebook 2 sadece runtime dataset icindeki ood/ klasorunu kullanir." in sources.full_source
     assert "build_grouped_dataset_plan" not in sources.full_source
     assert "materialize_grouped_runtime_dataset" not in sources.full_source
 

@@ -883,6 +883,13 @@ def _compute_neighbor_pairs(
 ) -> Dict[tuple[str, str], float]:
     if embeddings.size == 0 or len(paths) < 2:
         return {}
+    # Guard against rare NaN/Inf rows from model outputs or normalization.
+    finite_mask = np.isfinite(embeddings).all(axis=1)
+    if not bool(np.all(finite_mask)):
+        embeddings = embeddings[finite_mask]
+        paths = [path for path, keep in zip(paths, finite_mask) if bool(keep)]
+    if embeddings.size == 0 or len(paths) < 2:
+        return {}
     neigh = NearestNeighbors(
         n_neighbors=min(len(paths), max(2, int(neighbors))),
         metric="cosine",

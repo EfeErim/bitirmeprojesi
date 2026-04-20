@@ -212,7 +212,9 @@ Current checked-in dataset exceptions:
 
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
-- `data/ood_dataset/grape_fruit_ood_trial/`
+- `data/class_root_dataset/tomato_fruit/`
+- `data/class_root_dataset/tomato_leaf/`
+- `data/ood_dataset/*_ood_best/`
 
 ## Similar-Looking Paths That Often Cause Confusion
 

@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 
 from scripts.prepare_grouped_runtime_dataset import (
     ImageRecord,
+    _compute_neighbor_pairs,
     build_prepared_dataset_key,
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
@@ -113,6 +114,24 @@ def test_infer_source_like_group_prefers_capture_group_and_web_signals():
 
     assert _infer_source_like_group(captured) == "hint:source_a"
     assert _infer_source_like_group(web) == "web:istockphoto:1320751459"
+
+
+def test_compute_neighbor_pairs_skips_non_finite_embedding_rows():
+    embeddings = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [np.nan, 0.0, 1.0],
+            [0.0, 1.0, 0.0],
+        ],
+        dtype=np.float32,
+    )
+    paths = ["a.jpg", "b.jpg", "c.jpg"]
+
+    pairs = _compute_neighbor_pairs(embeddings, paths=paths, neighbors=2)
+
+    # Non-finite row (b.jpg) should be ignored instead of crashing NearestNeighbors.
+    assert all("b.jpg" not in pair for pair in pairs)
+    assert ("a.jpg", "c.jpg") in pairs
 
 
 def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path: Path, monkeypatch):

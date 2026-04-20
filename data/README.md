@@ -32,16 +32,21 @@ Quick mapping:
 2. Notebook 0 prepares/splits it.
 3. Runtime is output and used by training.
 
-This repo keeps the maintained notebook dataset paths under `data/`. Most dataset contents are local working files rather than tracked source, but the repo currently includes three checked-in example dataset trees:
+This repo keeps the maintained notebook dataset paths under `data/`. Most dataset contents are local working files rather than tracked source, but the repo currently includes checked-in example dataset trees:
 
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
-- `data/ood_dataset/grape_fruit_ood_trial/`
+- `data/class_root_dataset/tomato_fruit/`
+- `data/class_root_dataset/tomato_leaf/`
+- `data/ood_dataset/grape_fruit_ood_best/`
+- `data/ood_dataset/grape_leaf_ood_best/`
+- `data/ood_dataset/tomato_fruit_ood_best/`
+- `data/ood_dataset/tomato_leaf_ood_best/`
 
 Use these paths:
 
-- `data/class_root_dataset/`: flat class-root datasets for Notebook 0 audit and Notebook 2 `class_root` mode
-- `data/ood_dataset/`: repo-local OOD pools that Notebook 0 and Notebook 2 can materialize into runtime `ood/`
+- `data/class_root_dataset/`: flat class-root datasets for Notebook 0 audit
+- `data/ood_dataset/`: repo-local OOD pools that Notebook 0 can materialize into runtime `ood/`
 - `data/prepared_class_root_datasets/`: Notebook 0 cleaned working copies created from audit reports
 - `data/prepared_runtime_datasets/`: prepared runtime datasets used by Notebook 0 materialization and Notebook 2 `runtime` mode
 
@@ -87,11 +92,16 @@ data/ood_dataset/<dataset_name>/
   other_crops_optional/*
 ```
 
-For the checked-in grape class-root datasets, point Notebook 0 or Notebook 2 `class_root` mode at one of these roots:
+For a checked-in class-root dataset, point Notebook 0 at one of these roots:
 
 - `data/class_root_dataset/grape_fruit`
 - `data/class_root_dataset/grape_leaf`
+- `data/class_root_dataset/tomato_fruit`
+- `data/class_root_dataset/tomato_leaf`
 
-For the checked-in reusable OOD example pool, point Notebook 0 or Notebook 2 at:
+For a checked-in reusable OOD example pool, point Notebook 0 at one of:
 
-- `data/ood_dataset/grape_fruit_ood_trial`
+- `data/ood_dataset/grape_fruit_ood_best`
+- `data/ood_dataset/grape_leaf_ood_best`
+- `data/ood_dataset/tomato_fruit_ood_best`
+- `data/ood_dataset/tomato_leaf_ood_best`
