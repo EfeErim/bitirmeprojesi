@@ -186,6 +186,9 @@ def _load_prep_overview(artifact_root: Path) -> Dict[str, Any]:
         "excluded_images": nested_summary.get("excluded_images"),
         "same_class_review_pairs": nested_summary.get("same_class_review_pairs"),
         "cross_class_conflicts": nested_summary.get("cross_class_conflicts"),
+        "source_style_risk_images": nested_summary.get("source_style_risk_images"),
+        "label_review_candidates": nested_summary.get("label_review_candidates"),
+        "train_only_routed_images": nested_summary.get("train_only_routed_images"),
     }
     return {key: value for key, value in payload.items() if value not in (None, "", [], {})}
 

@@ -362,6 +362,13 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
     assert int(rows[0]["adjacency_distance"]) <= int(rows[-1]["adjacency_distance"])
     assert rows[0]["triage_resolution"] == "manual_review"
 
+    label_summary = json.loads((artifact_root / "label_risk_summary.json").read_text(encoding="utf-8"))
+    with (artifact_root / "label_review_candidates.csv").open("r", encoding="utf-8", newline="") as handle:
+        label_rows = list(csv.DictReader(handle))
+    assert label_summary["review_candidate_count"] == len(label_rows)
+    assert label_rows
+    assert {row["label_risk_level"] for row in label_rows} == {"review_candidate"}
+
 
 def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
@@ -527,6 +534,156 @@ def test_eval_risk_families_are_continual_only(tmp_path: Path, monkeypatch):
     }
     assert "Ekran görüntüsü 2026-03-04 001701.jpg" not in eval_files
     assert "pngtree-preview-image.jpg" not in eval_files
+
+
+def test_source_style_risk_is_train_only_and_excluded_from_eval(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_clean_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_clean_{index}.jpg", offset=offset + 1)
+
+    _write_pattern(source_root / "Healthy" / "download_612x612_leaf_a.jpg", offset=23)
+    _write_pattern(source_root / "Early Blight" / "download_612x612_leaf_b.jpg", offset=24)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+    assert summary["summary"]["source_style_risk_images"] == 2
+    assert summary["summary"]["train_only_routed_images"] == 2
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    style_risk_rows = [row for row in manifest_rows if row["source_style_risk"]]
+    assert style_risk_rows
+    assert all(row["split"] == "continual" for row in style_risk_rows)
+    assert all(row["train_only_routed"] for row in style_risk_rows)
+
+
+def test_source_style_filter_blocks_when_safe_eval_families_are_insufficient(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    for class_name, base_offset in {"Healthy": 2, "Early Blight": 5}.items():
+        _write_pattern(source_root / class_name / "clean_0.jpg", offset=base_offset)
+        _write_pattern(source_root / class_name / "clean_1.jpg", offset=base_offset + 8)
+        _write_pattern(source_root / class_name / "download_612x612_leaf.jpg", offset=base_offset + 16)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is False
+    assert summary["summary"]["source_style_risk_images"] == 2
+    assert any("only 2 evaluation-eligible" in item for item in summary["blocking_issues"])
+
+
+def test_label_train_only_risk_is_excluded_from_canonical_eval(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    for index, offset in enumerate((2, 10, 18)):
+        _write_pattern(source_root / "Healthy" / f"healthy_clean_{index}.jpg", offset=offset)
+        _write_pattern(source_root / "Early Blight" / f"disease_clean_{index}.jpg", offset=offset + 1)
+
+    _write_pattern(source_root / "Healthy" / "leaf_real.jpg", offset=24)
+    _write_pattern(source_root / "Healthy" / "leaf_aug_flip.jpg", offset=25)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {
+            tuple(sorted((real_path, aug_path))): 0.97
+            for real_path in paths
+            for aug_path in paths
+            if "real" in real_path and "aug" in aug_path
+        },
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._phash_distance",
+        lambda a, b: 6,
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+    )
+
+    assert summary["runtime_ready"] is True
+    assert summary["summary"]["label_train_only_risk_images"] == 2
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    label_risk_rows = [row for row in manifest_rows if row["label_risk_level"] == "train_only_risk"]
+    assert len(label_risk_rows) == 2
+    assert all(row["split"] == "continual" for row in label_risk_rows)
+    assert all(row["train_only_routed"] for row in label_risk_rows)
 
 
 def test_zero_eval_eligible_class_is_skipped_during_materialization(tmp_path: Path, monkeypatch):
@@ -765,4 +922,7 @@ def test_grouped_dataset_plan_writes_guided_catalog(tmp_path: Path, monkeypatch)
     assert (guided_dir / "00_start_here.md").exists()
     assert (guided_dir / "01_prep_overview.json").exists()
     assert any(entry["relative_path"] == "prep_summary.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "label_risk_summary.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "label_review_candidates.csv" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "source_style_groups.csv" for entry in catalog["entries"])
     assert any(entry["title_tr"] == "Materyalize edilmis runtime split manifesti" for entry in catalog["entries"])

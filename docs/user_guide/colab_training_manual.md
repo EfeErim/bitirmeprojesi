@@ -22,7 +22,7 @@ If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ### Notebook 0
 
-Notebook 0 audits a flat class-root dataset from the repo workspace, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, writes review artifacts, and can materialize a prepared runtime dataset. If `CROP_NAME` or `PART_NAME` are left blank in the parameter cell, Notebook 0 now prompts for them after the dataset is selected and suggests defaults from the dataset folder name when possible.
+Notebook 0 audits a flat class-root dataset from the repo workspace, groups likely duplicate and augmentation families with DINOv3 and BioCLIP-2.5 similarity signals, applies conservative metadata-free source-style and label-risk triage, writes review artifacts, and can materialize a prepared runtime dataset. If `CROP_NAME` or `PART_NAME` are left blank in the parameter cell, Notebook 0 now prompts for them after the dataset is selected and suggests defaults from the dataset folder name when possible.
 
 ### Notebook 2
 
@@ -115,12 +115,21 @@ This is the current Notebook 0 flow from start to finish:
 5. choose the repo dataset under `REPO_DATASET_ROOT`; if you leave `REPO_DATASET_NAME` blank the notebook prompts you, and `DATASET_ROOT` is only for an explicit repo-relative override
 6. scan the flat class-root dataset
 7. normalize class names against the crop taxonomy when possible
-8. audit exact duplicates, perceptual-hash neighbors, and DINOv3/BioCLIP similarity families
-9. write review artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
+8. audit exact duplicates, perceptual-hash neighbors, DINOv3/BioCLIP similarity families, source-style proxy groups, and label-risk cues
+9. write review artifacts, label-risk artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
 10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<crop>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
 11. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub
 
 Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy, materializes the runtime dataset after a clean audit, and pushes the ready runtime dataset to GitHub; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass, and set `SAVE_RUNTIME_DATASET_TO_GITHUB=False` only when you want the prepared runtime dataset to remain local to the Colab checkout.
+
+For adapter performance, treat Notebook 0 as a curation tool, not just a cleanup tool:
+
+- keep exact duplicates and near-duplicate families together before the final split
+- prefer same-crop unsupported diseases, blur, occlusion, and other realistic hard negatives in `ood/`
+- keep reused source packages, capture sessions, and offline augmentation families visible in the audit outputs
+- materialize only after the report says the class support and source separation are trustworthy enough for training
+
+Notebook 0 keeps canonical `val` and `test` stricter than `continual`. A sample must be the family canonical item and must avoid synthetic, eval-quality, source-style, and label-risk flags before it can enter canonical evaluation. Risky but usable third-party samples are retained for `continual` by default. The label triage is heuristic and review-assisted; it is not ground truth.
 
 If a class has zero evaluation-eligible families after grouped prep, Notebook 0 records it under `skipped_classes` and omits that class from the materialized runtime dataset. Classes with only one or two eligible families still block materialization because they cannot support the maintained `continual`/`val`/`test` split contract.
 
@@ -352,9 +361,10 @@ Do not claim full source independence unless you can actually verify it. Instead
 1. keep dataset-package boundaries visible when you still know them
 2. run exact duplicate detection
 3. run near-duplicate detection
-4. group suspiciously similar images together even if you are not fully certain they share one original
-5. split by those groups instead of by individual images
-6. describe the evaluation honestly as grouped held-out, grouped balanced, or random-after-merge
+4. let Notebook 0 use path tokens, stock-site or screenshot hints, aspect/resolution buckets, border/layout traits, and web-export cues as weak provenance proxies when metadata is missing
+5. group suspiciously similar or source-style-related images together even if you are not fully certain they share one original
+6. split by those groups instead of by individual images
+7. describe the evaluation honestly as grouped held-out, grouped balanced, or random-after-merge
 
 This is still much more trustworthy than merging everything first and relying on an image-level random split.
 

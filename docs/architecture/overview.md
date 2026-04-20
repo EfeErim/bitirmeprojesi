@@ -128,7 +128,15 @@ It writes:
 - `split_manifest.json`
 
 
-The grouped Notebook 0 prep path uses a 60/20/20 family split target with small-class safeguards. The older non-grouped runtime-layout helper remains effectively 80/10/10.
+The grouped Notebook 0 prep path uses a 60/20/20 family split target with small-class safeguards. Before materialization, it now also applies conservative metadata-free prep filters:
+
+- source-style proxy grouping from observable cues such as path tokens, stock-site or screenshot hints, aspect/resolution buckets, border/layout traits, web-export naming, and existing source hints
+- label-risk triage from strong cross-class conflicts, same-class review clusters, and the grouped representation-review surface
+- canonical eval eligibility that requires the family canonical sample and excludes synthetic, eval-quality-risk, source-style-risked, and non-clear label-risk samples
+
+These filters do not delete usable samples. Risky but non-blocking samples stay eligible for `continual` and are kept out of canonical `val`/`test`. Label triage is a heuristic audit and review aid, not a ground-truth relabeling system.
+
+The older non-grouped runtime-layout helper remains effectively 80/10/10.
 
 Important detail:
 

@@ -85,6 +85,7 @@ SOURCE_LIKE_WEBSITE_KEYWORDS = (
     "alamy",
 )
 SOURCE_LIKE_GROUP_UNKNOWN = "unknown"
+SOURCE_STYLE_GROUP_UNKNOWN = "unknown"
 STEM_NOISE_KEYWORDS = {
     "copy",
     "edited",
@@ -105,6 +106,41 @@ STEM_NOISE_KEYWORDS = {
     "final",
     "web",
 }
+SOURCE_STYLE_RISK_KEYWORDS = tuple(
+    sorted(
+        set(EVAL_RISK_KEYWORDS)
+        | {
+            "depositphotos",
+            "dreamstime",
+            "watermark",
+            "watermarked",
+            "sample",
+            "preview",
+            "download",
+            "resized",
+            "compressed",
+            "whatsapp",
+            "telegram",
+            "facebook",
+            "instagram",
+        }
+    )
+)
+WEB_EXPORT_KEYWORDS = (
+    "download",
+    "preview",
+    "resized",
+    "compressed",
+    "web",
+    "whatsapp",
+    "telegram",
+    "facebook",
+    "instagram",
+)
+LABEL_RISK_CLEAR = "clear"
+LABEL_RISK_TRAIN_ONLY = "train_only_risk"
+LABEL_RISK_REVIEW = "review_candidate"
+LABEL_RISK_BLOCKING = "blocking_conflict"
 
 
 @dataclass
@@ -126,6 +162,23 @@ class ImageRecord:
     phash_hex: str
     class_order_index: int
     excluded_reason: str = ""
+    source_style_group: str = SOURCE_STYLE_GROUP_UNKNOWN
+    source_style_risk: bool = False
+    source_style_reason: str = ""
+    aspect_ratio_bucket: str = "unknown"
+    resolution_bucket: str = "unknown"
+    border_layout: str = "unknown"
+    compression_style: str = "unknown"
+
+
+@dataclass
+class LabelRiskRecord:
+    relative_path: str
+    normalized_class_name: str
+    label_risk_level: str
+    label_risk_reason: str
+    label_risk_score: float
+    train_only_routed: bool = False
 
 
 @dataclass
@@ -379,6 +432,169 @@ def _compute_blur_and_brightness(image: Image.Image) -> tuple[float, float]:
     return blur_score, brightness_mean
 
 
+def _aspect_ratio_bucket(width: int, height: int) -> str:
+    if width <= 0 or height <= 0:
+        return "unknown"
+    ratio = float(width) / float(height)
+    if ratio < 0.70:
+        return "portrait_narrow"
+    if ratio < 0.90:
+        return "portrait"
+    if ratio <= 1.10:
+        return "square"
+    if ratio <= 1.45:
+        return "landscape"
+    return "landscape_wide"
+
+
+def _resolution_bucket(width: int, height: int) -> str:
+    if width <= 0 or height <= 0:
+        return "unknown"
+    min_dim = min(int(width), int(height))
+    max_dim = max(int(width), int(height))
+    if min_dim < QUALITY_CRITICAL_MIN_SIZE:
+        return "tiny"
+    if min_dim < QUALITY_WARN_MIN_SIZE:
+        return "small"
+    if max_dim <= 768:
+        return "web_small"
+    if max_dim <= 1400:
+        return "web_medium"
+    return "large"
+
+
+def _detect_border_layout(image: Image.Image) -> str:
+    if image.width < 16 or image.height < 16:
+        return "too_small"
+    pixels = np.asarray(image, dtype=np.float32) / 255.0
+    band = max(2, min(image.width, image.height) // 32)
+    border = np.concatenate(
+        [
+            pixels[:band, :, :].reshape(-1, 3),
+            pixels[-band:, :, :].reshape(-1, 3),
+            pixels[:, :band, :].reshape(-1, 3),
+            pixels[:, -band:, :].reshape(-1, 3),
+        ],
+        axis=0,
+    )
+    center = pixels[band:-band, band:-band, :].reshape(-1, 3)
+    if center.size == 0:
+        return "too_small"
+    border_mean = float(border.mean())
+    center_mean = float(center.mean())
+    border_std = float(border.std())
+    center_std = float(center.std())
+    if border_std < 0.035 and abs(border_mean - center_mean) > 0.18:
+        if border_mean > 0.82:
+            return "light_frame"
+        if border_mean < 0.18:
+            return "dark_frame"
+        return "flat_frame"
+    if center_std > 0 and border_std / max(center_std, 1e-6) < 0.35 and abs(border_mean - center_mean) > 0.10:
+        return "letterbox_or_margin"
+    return "natural"
+
+
+def _compression_style(path_like: str, width: int, height: int) -> str:
+    normalized = normalize_class_name(path_like)
+    suffix = Path(str(path_like or "")).suffix.lower().lstrip(".") or "unknown"
+    if re.search(r"(?:^|_)(?:\d{2,5})x(?:\d{2,5})(?:_|$)", normalized):
+        return f"web_export_{suffix}"
+    if any(keyword in normalized for keyword in WEB_EXPORT_KEYWORDS):
+        return f"web_export_{suffix}"
+    if width > 0 and height > 0 and max(width, height) in {224, 256, 299, 320, 512, 612, 640, 768, 1024}:
+        return f"common_res_{suffix}"
+    return suffix
+
+
+def _source_style_keyword_matches(path_like: str) -> List[str]:
+    tokens = _normalized_path_tokens(path_like)
+    normalized = "_".join(tokens)
+    return [keyword for keyword in SOURCE_STYLE_RISK_KEYWORDS if keyword in normalized]
+
+
+def _infer_source_style_group(record: ImageRecord) -> str:
+    source_like_group = str(record.source_like_group or SOURCE_LIKE_GROUP_UNKNOWN).strip()
+    if source_like_group != SOURCE_LIKE_GROUP_UNKNOWN:
+        return source_like_group
+
+    keyword_matches = _source_style_keyword_matches(record.relative_path)
+    if keyword_matches:
+        keyword = keyword_matches[0]
+        return (
+            f"style:{keyword}:{record.aspect_ratio_bucket}:"
+            f"{record.resolution_bucket}:{record.compression_style}"
+        )
+
+    if record.border_layout in {"light_frame", "dark_frame", "flat_frame", "letterbox_or_margin"}:
+        return (
+            f"layout:{record.border_layout}:{record.aspect_ratio_bucket}:"
+            f"{record.resolution_bucket}:{record.compression_style}"
+        )
+
+    if record.source_hint and record.source_hint != SOURCE_HINT_UNKNOWN:
+        return f"hint:{normalize_class_name(record.source_hint)}"
+    return SOURCE_STYLE_GROUP_UNKNOWN
+
+
+def _apply_source_style_risk(records: Sequence[ImageRecord]) -> List[Dict[str, Any]]:
+    groups: Dict[tuple[str, str], List[ImageRecord]] = defaultdict(list)
+    for record in records:
+        group = str(record.source_style_group or SOURCE_STYLE_GROUP_UNKNOWN).strip()
+        if group == SOURCE_STYLE_GROUP_UNKNOWN:
+            continue
+        groups[(record.normalized_class_name, group)].append(record)
+
+    rows: List[Dict[str, Any]] = []
+    for (class_name, group), group_records in sorted(groups.items(), key=lambda item: item[0]):
+        keyword_hits = sorted({hit for record in group_records for hit in _source_style_keyword_matches(record.relative_path)})
+        has_web_or_screenshot = group.startswith(("web:", "screenshot:"))
+        has_style_group = group.startswith(("style:", "layout:"))
+        has_eval_risk = any(record.eval_quality_risk for record in group_records)
+        has_web_export = any(str(record.compression_style).startswith("web_export") for record in group_records)
+        layout_hits = sorted(
+            {
+                record.border_layout
+                for record in group_records
+                if record.border_layout in {"light_frame", "dark_frame", "flat_frame", "letterbox_or_margin"}
+            }
+        )
+        risk_reasons: List[str] = []
+        if has_web_or_screenshot:
+            risk_reasons.append("web_or_screenshot_source_style")
+        if keyword_hits:
+            risk_reasons.append("path_keyword:" + "|".join(keyword_hits[:5]))
+        if has_eval_risk:
+            risk_reasons.append("eval_quality_proxy")
+        if has_web_export:
+            risk_reasons.append("web_export_signature")
+        if layout_hits:
+            risk_reasons.append("layout:" + "|".join(layout_hits))
+        if has_style_group:
+            risk_reasons.append("weak_style_cluster")
+
+        risk = bool(risk_reasons) and (len(group_records) >= 2 or has_web_or_screenshot or has_eval_risk or has_style_group)
+        reason = "; ".join(risk_reasons) if risk_reasons else ""
+        for record in group_records:
+            record.source_style_risk = bool(risk)
+            record.source_style_reason = reason if risk else ""
+        rows.append(
+            {
+                "normalized_class_name": class_name,
+                "source_style_group": group,
+                "image_count": len(group_records),
+                "source_style_risk": bool(risk),
+                "source_style_reason": reason,
+                "aspect_ratio_buckets": "|".join(sorted({record.aspect_ratio_bucket for record in group_records})),
+                "resolution_buckets": "|".join(sorted({record.resolution_bucket for record in group_records})),
+                "border_layouts": "|".join(sorted({record.border_layout for record in group_records})),
+                "compression_styles": "|".join(sorted({record.compression_style for record in group_records})),
+                "relative_paths": "|".join(record.relative_path for record in sorted(group_records, key=lambda item: item.relative_path)),
+            }
+        )
+    return rows
+
+
 def _path_keyword_penalty(path_like: str) -> int:
     if not str(path_like or "").strip():
         return len(SYNTHETIC_HINT_KEYWORDS)
@@ -444,6 +660,7 @@ def scan_class_root_dataset(
             readable = False
             width = 0
             height = 0
+            border_layout = "unknown"
             blur_score = 0.0
             brightness_mean = 0.0
             exact_hash = ""
@@ -453,6 +670,7 @@ def scan_class_root_dataset(
                 with Image.open(image_path) as raw:
                     image = ImageOps.exif_transpose(raw.convert("RGB"))
                     width, height = image.size
+                    border_layout = _detect_border_layout(image)
                     blur_score, brightness_mean = _compute_blur_and_brightness(image)
                     phash_hex = _compute_phash_hex(image)
                     readable = True
@@ -477,6 +695,10 @@ def scan_class_root_dataset(
                     readable=readable,
                     width=int(width),
                     height=int(height),
+                    aspect_ratio_bucket=_aspect_ratio_bucket(width, height),
+                    resolution_bucket=_resolution_bucket(width, height),
+                    border_layout=border_layout,
+                    compression_style=_compression_style(relative_path, width, height),
                     blur_score=float(blur_score),
                     brightness_mean=float(brightness_mean),
                     exact_hash=exact_hash,
@@ -490,6 +712,7 @@ def scan_class_root_dataset(
     for record in records:
         record.source_like_group = _infer_source_like_group(record)
         record.eval_quality_risk = _has_eval_quality_risk(record)
+        record.source_style_group = _infer_source_style_group(record)
     return records, normalization_report
 
 
@@ -823,6 +1046,145 @@ def _triage_review_clusters(
     return unresolved_pairs, cluster_rows, auto_resolved_clusters
 
 
+def _risk_rank(level: str) -> int:
+    return {
+        LABEL_RISK_CLEAR: 0,
+        LABEL_RISK_TRAIN_ONLY: 1,
+        LABEL_RISK_REVIEW: 2,
+        LABEL_RISK_BLOCKING: 3,
+    }.get(str(level), 0)
+
+
+def _merge_label_risk(
+    label_risks: Dict[str, LabelRiskRecord],
+    *,
+    record: ImageRecord,
+    level: str,
+    reason: str,
+    score: float,
+) -> None:
+    existing = label_risks.get(record.relative_path)
+    if existing is not None and _risk_rank(existing.label_risk_level) > _risk_rank(level):
+        return
+    if existing is not None and _risk_rank(existing.label_risk_level) == _risk_rank(level):
+        reasons = [item for item in [existing.label_risk_reason, reason] if item]
+        existing.label_risk_reason = "; ".join(dict.fromkeys(reasons))
+        existing.label_risk_score = max(float(existing.label_risk_score), float(score))
+        return
+    label_risks[record.relative_path] = LabelRiskRecord(
+        relative_path=record.relative_path,
+        normalized_class_name=record.normalized_class_name,
+        label_risk_level=level,
+        label_risk_reason=reason,
+        label_risk_score=float(score),
+    )
+
+
+def _build_label_risk_audit(
+    *,
+    records: Sequence[ImageRecord],
+    review_pairs: Sequence[ReviewPair],
+    auto_resolved_review_clusters: Sequence[ReviewCluster],
+    blocking_conflicts: Sequence[ReviewPair],
+) -> tuple[Dict[str, LabelRiskRecord], List[Dict[str, Any]], Dict[str, Any]]:
+    record_lookup = {record.relative_path: record for record in records}
+    label_risks: Dict[str, LabelRiskRecord] = {
+        record.relative_path: LabelRiskRecord(
+            relative_path=record.relative_path,
+            normalized_class_name=record.normalized_class_name,
+            label_risk_level=LABEL_RISK_CLEAR,
+            label_risk_reason="",
+            label_risk_score=0.0,
+        )
+        for record in records
+    }
+
+    for pair in blocking_conflicts:
+        for path in (pair.path_a, pair.path_b):
+            record = record_lookup.get(path)
+            if record is None:
+                continue
+            _merge_label_risk(
+                label_risks,
+                record=record,
+                level=LABEL_RISK_BLOCKING,
+                reason=pair.reason or "strong cross-class duplicate/conflict",
+                score=1.0,
+            )
+
+    for pair in review_pairs:
+        reason = pair.triage_reason or pair.reason or "borderline same-class review cluster"
+        for path in (pair.path_a, pair.path_b):
+            record = record_lookup.get(path)
+            if record is None:
+                continue
+            _merge_label_risk(
+                label_risks,
+                record=record,
+                level=LABEL_RISK_REVIEW,
+                reason=reason,
+                score=0.75,
+            )
+
+    for cluster in auto_resolved_review_clusters:
+        paths = [path for path in str(cluster.relative_paths or "").split("|") if path]
+        reason = cluster.reason or "auto-routed borderline same-class cluster"
+        for path in paths:
+            record = record_lookup.get(path)
+            if record is None:
+                continue
+            _merge_label_risk(
+                label_risks,
+                record=record,
+                level=LABEL_RISK_TRAIN_ONLY,
+                reason=reason,
+                score=0.45,
+            )
+
+    review_candidates: List[Dict[str, Any]] = []
+    for risk in sorted(
+        label_risks.values(),
+        key=lambda item: (-_risk_rank(item.label_risk_level), -item.label_risk_score, item.normalized_class_name, item.relative_path),
+    ):
+        if risk.label_risk_level != LABEL_RISK_REVIEW:
+            continue
+        review_candidates.append(
+            {
+                "relative_path": risk.relative_path,
+                "normalized_class_name": risk.normalized_class_name,
+                "label_risk_level": risk.label_risk_level,
+                "label_risk_reason": risk.label_risk_reason,
+                "label_risk_score": round(float(risk.label_risk_score), 4),
+            }
+        )
+
+    level_counts = {
+        level: sum(1 for risk in label_risks.values() if risk.label_risk_level == level)
+        for level in (LABEL_RISK_CLEAR, LABEL_RISK_TRAIN_ONLY, LABEL_RISK_REVIEW, LABEL_RISK_BLOCKING)
+    }
+    summary = {
+        "schema_version": "v1_label_risk_summary",
+        "total_images": len(records),
+        "level_counts": level_counts,
+        "review_candidate_count": level_counts[LABEL_RISK_REVIEW],
+        "train_only_risk_count": level_counts[LABEL_RISK_TRAIN_ONLY],
+        "blocking_conflict_count": level_counts[LABEL_RISK_BLOCKING],
+        "signals": {
+            "cross_class_conflicts": len(blocking_conflicts),
+            "same_class_review_pairs": len(review_pairs),
+            "auto_resolved_same_class_clusters": len(auto_resolved_review_clusters),
+            "neighbor_disagreement_scope": "exact/phash conflicts plus grouped same-class representation review",
+        },
+        "policy": {
+            "clear": "eligible for canonical eval if other split filters pass",
+            "train_only_risk": "usable for continual only",
+            "review_candidate": "kept out of canonical eval and emitted for manual review",
+            "blocking_conflict": "materialization-blocking through cross-class conflict policy",
+        },
+    }
+    return label_risks, review_candidates, summary
+
+
 def _build_hash_groups(records: Sequence[ImageRecord], *, key_name: str) -> Dict[str, List[ImageRecord]]:
     groups: Dict[str, List[ImageRecord]] = defaultdict(list)
     for record in records:
@@ -947,6 +1309,16 @@ def _bundle_key_for_family(
     family_id: str,
     family_records: Sequence[ImageRecord],
 ) -> str:
+    source_style_groups = {
+        record.source_style_group
+        for record in family_records
+        if record.source_style_group and record.source_style_group != SOURCE_STYLE_GROUP_UNKNOWN
+    }
+    if len(source_style_groups) == 1:
+        source_style_group = next(iter(source_style_groups))
+        if source_style_group.startswith(("capture:", "web:", "screenshot:", "hint:", "style:", "layout:")):
+            return source_style_group
+
     source_like_groups = {
         record.source_like_group
         for record in family_records
@@ -1032,6 +1404,7 @@ def build_grouped_dataset_plan(
             f"Excluded {availability_exclusions['unreadable_after_scan']} image(s) that became unreadable after the initial scan.",
         )
     valid_records = [record for record in records if not record.excluded_reason]
+    source_style_group_rows = _apply_source_style_risk(valid_records)
     class_to_records: Dict[str, List[ImageRecord]] = defaultdict(list)
     for record in valid_records:
         class_to_records[record.normalized_class_name].append(record)
@@ -1217,6 +1590,12 @@ def build_grouped_dataset_plan(
         uf=uf,
     )
     high_risk_review_clusters = [row for row in review_clusters if row.resolution != "auto_resolve"]
+    label_risk_by_path, label_review_candidates, label_risk_summary = _build_label_risk_audit(
+        records=valid_records,
+        review_pairs=review_pairs,
+        auto_resolved_review_clusters=auto_resolved_review_clusters,
+        blocking_conflicts=blocking_conflicts,
+    )
 
     review_pairs = sorted(
         review_pairs,
@@ -1245,15 +1624,45 @@ def build_grouped_dataset_plan(
     for family_key, items in families.items():
         ordered_items = sorted(items, key=lambda record: record.relative_path)
         canonical_record = _select_canonical_record(ordered_items)
+        canonical_label_risk = label_risk_by_path.get(
+            canonical_record.relative_path,
+            LabelRiskRecord(
+                relative_path=canonical_record.relative_path,
+                normalized_class_name=canonical_record.normalized_class_name,
+                label_risk_level=LABEL_RISK_CLEAR,
+                label_risk_reason="",
+                label_risk_score=0.0,
+            ),
+        )
         review_excluded = any(item.relative_path in review_excluded_paths for item in ordered_items)
         family_has_synthetic = any(item.synthetic_hint for item in ordered_items)
         family_has_eval_risk = any(item.eval_quality_risk for item in ordered_items)
+        family_has_source_style_risk = any(item.source_style_risk for item in ordered_items)
+        family_label_risk_levels = sorted(
+            {
+                label_risk_by_path.get(
+                    item.relative_path,
+                    LabelRiskRecord(
+                        relative_path=item.relative_path,
+                        normalized_class_name=item.normalized_class_name,
+                        label_risk_level=LABEL_RISK_CLEAR,
+                        label_risk_reason="",
+                        label_risk_score=0.0,
+                    ),
+                ).label_risk_level
+                for item in ordered_items
+            },
+            key=_risk_rank,
+            reverse=True,
+        )
         bundle_key = _bundle_key_for_family(
             family_id=str(family_key[1]),
             family_records=ordered_items,
         )
         if review_excluded:
             family_role = "review_excluded"
+        elif canonical_record.source_style_risk:
+            family_role = "source_style_risk_family"
         elif canonical_record.synthetic_hint:
             family_role = "synthetic_family"
         elif canonical_record.eval_quality_risk:
@@ -1262,6 +1671,8 @@ def build_grouped_dataset_plan(
             family_role = "canonical_with_synthetic_derivatives"
         elif family_has_eval_risk:
             family_role = "canonical_with_eval_risk_derivatives"
+        elif canonical_label_risk.label_risk_level != LABEL_RISK_CLEAR:
+            family_role = "label_risk_family"
         elif len(ordered_items) > 1:
             family_role = "canonical_with_derivatives"
         else:
@@ -1269,12 +1680,20 @@ def build_grouped_dataset_plan(
         family_details[family_key] = {
             "canonical_record": canonical_record,
             "canonical_relative_path": canonical_record.relative_path,
-            "eval_eligible": (not review_excluded) and (not canonical_record.synthetic_hint) and (not canonical_record.eval_quality_risk),
+            "eval_eligible": (
+                (not review_excluded)
+                and (not canonical_record.synthetic_hint)
+                and (not canonical_record.eval_quality_risk)
+                and (not canonical_record.source_style_risk)
+                and canonical_label_risk.label_risk_level == LABEL_RISK_CLEAR
+            ),
             "family_role": family_role,
             "family_size": len(ordered_items),
             "review_excluded": review_excluded,
             "family_has_synthetic": family_has_synthetic,
             "family_has_eval_risk": family_has_eval_risk,
+            "family_has_source_style_risk": family_has_source_style_risk,
+            "family_label_risk_levels": "|".join(family_label_risk_levels),
             "bundle_key": bundle_key,
         }
 
@@ -1311,12 +1730,38 @@ def build_grouped_dataset_plan(
             "eval_risk_count": sum(
                 1 for _, items, _detail in class_families for item in items if item.eval_quality_risk
             ),
+            "source_style_risk_count": sum(
+                1 for _, items, _detail in class_families for item in items if item.source_style_risk
+            ),
+            "label_risk_count": sum(
+                1
+                for _, items, _detail in class_families
+                for item in items
+                if label_risk_by_path.get(
+                    item.relative_path,
+                    LabelRiskRecord(
+                        relative_path=item.relative_path,
+                        normalized_class_name=item.normalized_class_name,
+                        label_risk_level=LABEL_RISK_CLEAR,
+                        label_risk_reason="",
+                        label_risk_score=0.0,
+                    ),
+                ).label_risk_level
+                != LABEL_RISK_CLEAR
+            ),
             "review_excluded_family_count": sum(1 for _family_root, _items, detail in class_families if detail["review_excluded"]),
             "source_like_bundle_count": len(
                 {
                     str(detail["bundle_key"])
                     for _family_root, _items, detail in class_families
                     if str(detail.get("bundle_key", "")).strip()
+                }
+            ),
+            "source_style_bundle_count": len(
+                {
+                    str(detail["bundle_key"])
+                    for _family_root, _items, detail in class_families
+                    if str(detail.get("bundle_key", "")).startswith(("style:", "layout:"))
                 }
             ),
         }
@@ -1377,14 +1822,36 @@ def build_grouped_dataset_plan(
         assigned_split = "skipped" if runtime_skipped else family_assignments.get(family_root, "continual")
         canonical_relative_path = str(family_detail["canonical_relative_path"])
         for item in sorted(items, key=lambda record: record.relative_path):
+            label_risk = label_risk_by_path.get(
+                item.relative_path,
+                LabelRiskRecord(
+                    relative_path=item.relative_path,
+                    normalized_class_name=item.normalized_class_name,
+                    label_risk_level=LABEL_RISK_CLEAR,
+                    label_risk_reason="",
+                    label_risk_score=0.0,
+                ),
+            )
+            is_family_canonical = bool(item.relative_path == canonical_relative_path)
             split_name = (
                 "skipped"
                 if runtime_skipped
                 else
                 assigned_split
-                if bool(family_detail["eval_eligible"]) and item.relative_path == canonical_relative_path
+                if bool(family_detail["eval_eligible"]) and is_family_canonical
                 else "continual"
             )
+            train_only_reasons: List[str] = []
+            if item.synthetic_hint:
+                train_only_reasons.append("synthetic_hint")
+            if item.eval_quality_risk:
+                train_only_reasons.append("eval_quality_risk")
+            if item.source_style_risk:
+                train_only_reasons.append("source_style_risk")
+            if label_risk.label_risk_level in {LABEL_RISK_TRAIN_ONLY, LABEL_RISK_REVIEW}:
+                train_only_reasons.append(f"label_{label_risk.label_risk_level}")
+            train_only_routed = bool(split_name == "continual" and train_only_reasons)
+            label_risk.train_only_routed = bool(train_only_routed)
             manifest_rows.append(
                 {
                     "relative_path": item.relative_path,
@@ -1392,10 +1859,17 @@ def build_grouped_dataset_plan(
                     "normalized_class_name": item.normalized_class_name,
                     "source_hint": item.source_hint,
                     "source_like_group": item.source_like_group,
+                    "source_style_group": item.source_style_group,
+                    "source_style_risk": item.source_style_risk,
+                    "source_style_reason": item.source_style_reason,
                     "synthetic_hint": item.synthetic_hint,
                     "eval_quality_risk": item.eval_quality_risk,
                     "width": item.width,
                     "height": item.height,
+                    "aspect_ratio_bucket": item.aspect_ratio_bucket,
+                    "resolution_bucket": item.resolution_bucket,
+                    "border_layout": item.border_layout,
+                    "compression_style": item.compression_style,
                     "blur_score": round(item.blur_score, 4),
                     "brightness_mean": round(item.brightness_mean, 4),
                     "exact_hash": item.exact_hash,
@@ -1406,7 +1880,19 @@ def build_grouped_dataset_plan(
                     "family_eval_eligible": bool(family_detail["eval_eligible"]),
                     "family_bundle_key": str(family_detail.get("bundle_key") or ""),
                     "family_canonical_relative_path": canonical_relative_path,
-                    "is_family_canonical": bool(item.relative_path == canonical_relative_path),
+                    "is_family_canonical": is_family_canonical,
+                    "label_risk_level": label_risk.label_risk_level,
+                    "label_risk_reason": label_risk.label_risk_reason,
+                    "label_risk_score": round(float(label_risk.label_risk_score), 4),
+                    "train_only_routed": train_only_routed,
+                    "train_only_route_reason": "|".join(train_only_reasons),
+                    "canonical_eval_safe": bool(
+                        is_family_canonical
+                        and not item.synthetic_hint
+                        and not item.eval_quality_risk
+                        and not item.source_style_risk
+                        and label_risk.label_risk_level == LABEL_RISK_CLEAR
+                    ),
                     "family_assignment": assigned_split,
                     "runtime_skipped": bool(runtime_skipped),
                     "split": split_name,
@@ -1438,6 +1924,12 @@ def build_grouped_dataset_plan(
             "eval_eligible_families": sum(1 for detail in family_details.values() if detail["eval_eligible"]),
             "continual_only_families": sum(1 for detail in family_details.values() if not detail["eval_eligible"]),
             "eval_risk_images": sum(1 for record in valid_records if record.eval_quality_risk),
+            "source_style_risk_images": sum(1 for record in valid_records if record.source_style_risk),
+            "source_style_risk_groups": sum(1 for row in source_style_group_rows if row.get("source_style_risk")),
+            "label_review_candidates": len(label_review_candidates),
+            "label_train_only_risk_images": label_risk_summary["level_counts"][LABEL_RISK_TRAIN_ONLY],
+            "label_blocking_conflict_images": label_risk_summary["level_counts"][LABEL_RISK_BLOCKING],
+            "train_only_routed_images": sum(1 for row in manifest_rows if row.get("train_only_routed")),
             "review_excluded_paths": len(review_excluded_paths),
             "excluded_reason_breakdown": {
                 "unreadable": len([record for record in records if record.excluded_reason == "unreadable"]),
@@ -1458,10 +1950,13 @@ def build_grouped_dataset_plan(
             "message": "Prepare a separate runtime_dataset/<crop>/ood tree after ID-side prep completes.",
         },
     }
+    label_risk_summary["train_only_routed_count"] = sum(1 for row in manifest_rows if row.get("train_only_routed"))
+    label_risk_summary["review_queue_path"] = "label_review_candidates.csv"
 
     artifact_root.mkdir(parents=True, exist_ok=True)
     write_json(artifact_root / "prep_summary.json", summary, ensure_ascii=False)
     write_json(artifact_root / "label_normalization_report.json", normalization_report, ensure_ascii=False)
+    write_json(artifact_root / "label_risk_summary.json", label_risk_summary, ensure_ascii=False)
     write_json(artifact_root / "class_health_report.json", class_health, ensure_ascii=False)
     write_json(
         artifact_root / "proposed_split_manifest.json",
@@ -1483,6 +1978,8 @@ def build_grouped_dataset_plan(
     )
     _write_csv(artifact_root / "dataset_manifest.csv", [asdict(record) for record in records])
     _write_csv(artifact_root / "family_manifest.csv", manifest_rows)
+    _write_csv(artifact_root / "source_style_groups.csv", source_style_group_rows)
+    _write_csv(artifact_root / "label_review_candidates.csv", label_review_candidates)
     _write_csv(artifact_root / "same_class_review_candidates.csv", [asdict(pair) for pair in review_pairs])
     _write_csv(artifact_root / "same_class_review_clusters.csv", [asdict(cluster) for cluster in review_clusters])
     _write_csv(
