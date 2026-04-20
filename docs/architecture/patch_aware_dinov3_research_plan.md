@@ -15,6 +15,12 @@ Default invariants:
 - Training keeps `legacy_multiscale` as the default fusion mode.
 - Existing adapters remain loadable without migration.
 
+Current repo boundary:
+
+- Cross-class exact-hash and identical-pHash conflict blocking already exists and must stay active in both legacy and research modes.
+- The missing cross-class piece is representation-based candidate mining and patch-aware reranking.
+- In research mode, global DINO cosine may be used to generate tractable candidate sets, but it must not be the final DINO decision signal.
+
 ## Implementation Changes
 
 ### 1. Patch-aware Notebook 0 audit
@@ -31,13 +37,24 @@ Research-mode behavior:
 - Exclude CLS and register tokens from patch comparisons.
 - Use patch-aware DINO as the authoritative DINO signal in research mode.
 - Keep global DINO cosine as an auxiliary diagnostic artifact only.
+- Treat patch-token tensors as intermediate audit data. Do not write full per-image patch tensors as tracked or guided artifacts by default.
+
+DINOv3 token contract:
+
+- This research path assumes a DINOv3 ViT-style backbone output with rank-3 `last_hidden_state` shaped `[B, T, D]`.
+- Token splitting follows the Hugging Face DINOv3 ViT layout:
+  - `last_hidden_state[:, 0, :]` is the CLS token
+  - `last_hidden_state[:, 1:1 + num_register_tokens, :]` are register tokens
+  - `last_hidden_state[:, 1 + num_register_tokens:, :]` are patch tokens
+- `num_register_tokens` must come from `model.config.num_register_tokens`, defaulting to `0` only when the attribute is absent.
+- If the loaded model exposes a ConvNeXT-style feature map or any non-rank-3 DINO output, research patch-aware mode should fail clearly instead of silently falling back to global pooling.
 
 Patch-aware similarity definition:
 
 - Normalize patch embeddings per image.
 - Compute all-pairs cosine similarity between patch tokens of image A and image B.
 - For each patch in A, keep the best matching patch in B; repeat from B to A.
-- Apply top-k trimming to both directional match vectors.
+- Apply top-k trimming to both directional match vectors by keeping the highest `PATCH_AWARE_TOPK` best-match scores per direction. If `PATCH_AWARE_TOPK` is larger than the available patch count, use all available patch matches.
 - Define `patch_dino_score` as the mean of the trimmed directional means.
 
 Research-mode decision policy:
@@ -49,19 +66,29 @@ Research-mode decision policy:
 - Cross-class block uses `PATCH_DINO_CROSS_CLASS_BLOCK_MIN`
 - Exact duplicates still block immediately
 
+Same-class patch-aware candidate generation:
+
+- Keep exact duplicate and pHash family behavior unchanged.
+- Generate same-class representation candidates with the current DINO neighbor workflow or an equivalent global-DINO-first coarse index.
+- Rerank those same-class candidates with `patch_dino_score`.
+- Use `patch_dino_score`, not global DINO cosine, for research-mode same-class auto-merge and review decisions.
+- BioCLIP remains a stabilizer for conservative auto-merge and review context, not the authoritative DINO signal.
+
 Cross-class patch-aware candidate generation:
 
-- Add an explicit cross-class candidate-mining stage. This does not exist in the current implementation and must be added for patch-aware cross-class blocking to have any effect.
+- Add an explicit representation-based cross-class candidate-mining stage. Exact-hash and identical-pHash cross-class blocking already exist; the new stage is only for DINO-based cross-class conflicts.
 - Candidate generation should be global-DINO-first to keep the research path tractable:
   - build a pooled global DINO index across readable images
   - retrieve only top cross-class candidates per image
   - rerank those candidates with the patch-aware score
 - Only the reranked candidate set participates in cross-class patch-aware blocking.
+- Cross-class candidate generation must deduplicate symmetric pairs before patch reranking.
 
 Notebook 0 parameter additions:
 
 - `PATCH_AWARE_AUDIT_ENABLED`
 - `PATCH_AWARE_TOPK`
+- `PATCH_AWARE_CROSS_CLASS_CANDIDATES`
 - `PATCH_DINO_AUTO_MIN`
 - `PATCH_DINO_REVIEW_MIN`
 - `PATCH_DINO_CROSS_CLASS_BLOCK_MIN`
@@ -95,6 +122,19 @@ Architecture rules:
 - Add a new fusion mode:
   - `legacy_multiscale` for current behavior
   - `research_local_global_dinov3` for the new path
+- Keep the existing `MultiScaleFeatureFusion` implementation and tests valid for `legacy_multiscale`.
+
+Fusion input contract:
+
+- Legacy mode keeps the current contract:
+  - trainer extracts hidden states
+  - trainer selects `training.continual.fusion.layers`
+  - `MultiScaleFeatureFusion` receives the selected tensors and may mean-pool token tensors
+- Research mode must not reuse that lossy contract.
+- Research mode should either:
+  - pass the selected hidden states into a research fusion module that preserves token axes, or
+  - pass the full hidden-state sequence into a research fusion module that performs its own layer selection
+- The chosen approach must be explicit in code and tests. Do not hide the behavior behind `MultiScaleFeatureFusion`.
 
 Token handling in research mode:
 
@@ -103,6 +143,7 @@ Token handling in research mode:
   - register tokens, using `model.config.num_register_tokens`
   - patch tokens
 - Stop collapsing `[B, T, D]` features via plain mean pooling in research mode.
+- Validate that each selected hidden state has enough tokens for `1 + num_register_tokens` before slicing patch tokens.
 
 Research head structure:
 
@@ -164,6 +205,14 @@ Persistence requirements:
 - Checkpoint save and load must restore the correct fusion module before state restoration.
 - Exported adapter load must reconstruct the correct fusion module from `adapter_meta.json`.
 
+Implementation touchpoints:
+
+- `src/training/services/config_surface.py` must normalize `fusion.mode` and research-only fusion fields while preserving legacy defaults.
+- `ContinualSDLoRAConfig` must expose the normalized fusion mode and branch-shaping fields through both `from_training_config(...)` and `as_contract_dict()`.
+- Trainer initialization must use a fusion factory that chooses `MultiScaleFeatureFusion` for `legacy_multiscale` and the research head for `research_local_global_dinov3`.
+- `encode(...)` must route hidden states according to fusion mode so the research head receives token-preserving tensors.
+- `build_adapter_metadata(...)`, runtime adapter metadata, checkpoint snapshots, checkpoint restore, exported adapter load, and direct adapter summaries must preserve and surface the `fusion` payload without dropping research fields.
+
 ### 4. Notebook and validation updates
 
 Notebook 0:
@@ -181,7 +230,7 @@ Notebook 2:
 Notebook 3:
 
 - No new public interface is required.
-- `scripts.colab_adapter_smoke_test.py` already surfaces arbitrary `fusion` metadata.
+- `scripts.colab_adapter_smoke_test.py` already carries arbitrary `fusion` metadata through its summary dictionaries.
 - Extend summary and discovery coverage so research `fusion.mode` is visible and non-breaking.
 
 Validation:
@@ -197,6 +246,8 @@ Update only the docs that would otherwise become misleading:
 - Notebook 0 user guidance: describe patch-aware audit as research-only
 - Architecture overview: describe the local-global head as an experimental path, not maintained default
 - Avoid any claim that the implementation is a paper-faithful reproduction
+- Cite the official DINOv3 token-layout documentation when describing CLS, register, and patch token slicing.
+- Label the patch-aware audit and local-global head as engineering research adaptations unless the implementation and evaluation are later aligned with a specific paper.
 
 ## Test Plan
 
@@ -205,11 +256,14 @@ Update only the docs that would otherwise become misleading:
 Add tests for:
 
 - patch-token extraction excluding CLS and register tokens
+- clear failure for non-rank-3 or non-ViT-style DINO outputs in patch-aware mode
 - symmetric patch-aware similarity scoring
 - top-k trimmed patch score behavior on synthetic token layouts
 - research-mode same-class merge and review decisions
 - research-mode cross-class candidate mining and blocking
+- symmetric deduplication of cross-class representation candidates
 - config normalization for legacy and research fusion modes
+- research fusion input routing that preserves token axes
 - research fusion module forward-pass output shape
 - research adapter metadata roundtrip
 - checkpoint restore and adapter reload for research fusion mode
@@ -239,3 +293,7 @@ Add:
 - OOD calibration stays on the final fused representation in this iteration.
 - Patch-aware audit uses full patch-aware DINO scoring in research mode, but auto-merge remains conservative.
 - Existing adapters and config payloads remain backward-compatible without migration.
+
+## References
+
+- Hugging Face Transformers DINOv3 documentation, for the ViT `last_hidden_state` layout with CLS, register tokens, and patch tokens: <https://huggingface.co/docs/transformers/en/model_doc/dinov3>
