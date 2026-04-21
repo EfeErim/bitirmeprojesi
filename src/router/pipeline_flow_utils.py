@@ -49,6 +49,6 @@ def resolve_effective_max_detections(max_detections: Optional[int]) -> Optional[
 
     try:
         max_det_int = int(max_detections)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         max_det_int = 0
     return None if max_det_int <= 0 else max_det_int

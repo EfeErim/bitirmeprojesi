@@ -150,6 +150,14 @@ def run_optimizer(args: argparse.Namespace) -> JsonDict:
     proposals = list(summary.get("bayesian_recommendations", {}).get("proposals", []))
     if not proposals:
         raise ValueError("No Bayesian proposals are available to execute for the selected cohort.")
+    eligible_run_count = int(summary.get("bayesian_recommendations", {}).get("eligible_run_count", 0) or 0)
+    search_strategy = str(summary.get("bayesian_recommendations", {}).get("search_strategy", "") or "")
+    if eligible_run_count <= 0 and not bool(getattr(args, "allow_bootstrap_execute", False)):
+        raise ValueError(
+            "Execution is blocked because the selected cohort has zero eligible Bayesian evidence "
+            "(all observed runs were excluded). Re-run without --execute, improve readiness evidence, "
+            "or pass --allow-bootstrap-execute to explicitly execute random-bootstrap proposals."
+        )
 
     base_config = get_config(environment=args.config_env)
     campaign_id = _build_campaign_id(crop_name=crop_name, part_name=part_name)
@@ -159,6 +167,9 @@ def run_optimizer(args: argparse.Namespace) -> JsonDict:
         "cohort_key": cohort_key,
         "comparability": comparability,
         "search_strategy": summary.get("bayesian_recommendations", {}).get("search_strategy"),
+        "eligible_run_count": eligible_run_count,
+        "bootstrap_execution_allowed": bool(getattr(args, "allow_bootstrap_execute", False)),
+        "bootstrap_execution_used": bool(search_strategy == "random_bootstrap"),
         "objective_names": args.objectives or list(DEFAULT_PARETO_OBJECTIVES),
         "proposal_count": len(proposals),
         "proposals": proposals,
@@ -234,6 +245,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--random-seed", type=int, default=42)
     parser.add_argument("--search-space", type=Path)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument(
+        "--allow-bootstrap-execute",
+        action="store_true",
+        help=(
+            "Allow --execute when a cohort has zero eligible Bayesian evidence and recommendations "
+            "fall back to random bootstrap."
+        ),
+    )
     parser.add_argument("--config-env", default="colab")
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--data-dir", type=Path)

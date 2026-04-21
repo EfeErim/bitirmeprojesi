@@ -233,6 +233,11 @@ When you want to inspect or execute optimizer proposals directly from the repo, 
 
 Add `--execute --data-dir <runtime_dataset_root>` to launch the proposed workflow runs for that cohort.
 
+Execution safety policy:
+
+- `--execute` is blocked by default when the selected cohort has zero eligible Bayesian evidence (for example, all runs were excluded for readiness).
+- pass `--allow-bootstrap-execute` only when you intentionally want to run fallback random-bootstrap proposals.
+
 ## How The Split Is Created
 
 The dataset materialization step is handled by `scripts/colab_dataset_layout.py`.

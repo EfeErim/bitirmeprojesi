@@ -123,7 +123,7 @@ def _update_detector_artifact_state_for_batch(
 def _infer_ood_type_from_path(image_path: Any, *, split_name: str) -> str:
     try:
         parts = list(getattr(image_path, "parts", []))
-    except Exception:
+    except (TypeError, AttributeError):
         parts = []
     if not parts:
         text = str(image_path)

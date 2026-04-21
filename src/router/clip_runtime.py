@@ -108,7 +108,7 @@ def _limit_prompt_templates(
         return templates
     try:
         prompt_limit = int(num_prompts)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         prompt_limit = 0
     if prompt_limit > 0:
         return templates[:prompt_limit]
@@ -160,7 +160,7 @@ def _build_limited_prompt_batch(
     prompt_templates = get_prompt_templates_for_type(vlm_config, label_type)
     try:
         prompt_limit = int(num_prompts)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         prompt_limit = 0
     if prompt_limit > 0:
         prompt_templates = prompt_templates[:prompt_limit]

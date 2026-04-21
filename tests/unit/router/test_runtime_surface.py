@@ -1,6 +1,7 @@
 from PIL import Image
 
 from src.router.runtime_surface import (
+    coerce_non_negative_int,
     normalize_router_analysis_result,
     resolve_request_options,
     resolve_router_analyzer,
@@ -57,6 +58,10 @@ def test_resolve_runtime_controls_parses_string_booleans():
 
     assert controls["enabled"] is False
     assert controls["open_set_enabled"] is False
+
+
+def test_coerce_non_negative_int_clamps_negative_default_on_parse_failure():
+    assert coerce_non_negative_int("not-an-int", default=-4) == 0
 
 
 def test_normalize_router_analysis_result_attaches_request_contract():

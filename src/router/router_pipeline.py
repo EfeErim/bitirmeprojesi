@@ -295,7 +295,7 @@ class RouterPipeline:
             else:
                 try:
                     tensor = torch.as_tensor(chunk)
-                except Exception:
+                except (TypeError, ValueError, RuntimeError):
                     continue
             if tensor.numel() <= 0:
                 continue

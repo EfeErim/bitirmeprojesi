@@ -32,17 +32,19 @@ def coerce_bool(value: Any, default: bool = False) -> bool:
 
 
 def coerce_float(value: Any, default: float) -> float:
+    fallback = float(default)
     try:
-        return float(default if value is None else value)
-    except Exception:
-        return float(default)
+        return fallback if value is None else float(value)
+    except (TypeError, ValueError, OverflowError):
+        return fallback
 
 
 def coerce_non_negative_int(value: Any, default: int = 0) -> int:
+    fallback = max(0, int(default))
     try:
-        return max(0, int(default if value is None else value))
-    except Exception:
-        return int(default)
+        return max(0, int(fallback if value is None else value))
+    except (TypeError, ValueError, OverflowError):
+        return fallback
 
 
 def resolve_runtime_controls(config: Dict[str, Any], vlm_config: Dict[str, Any]) -> Dict[str, Any]:

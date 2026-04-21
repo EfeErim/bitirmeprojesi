@@ -151,7 +151,7 @@ def sanitize_bbox(bbox: Optional[BoundingBox], image_width: int, image_height: i
 
     try:
         x1, y1, x2, y2 = [float(v) for v in bbox]
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return None
 
     x1 = max(0.0, min(float(image_width), x1))

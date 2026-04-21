@@ -148,5 +148,5 @@ def get_clip_logit_scale(model: Any) -> float:
         else:
             scale_value = float(logit_scale_attr)
         return max(1.0, min(scale_value, 100.0))
-    except Exception:
+    except (TypeError, ValueError, OverflowError, RuntimeError, AttributeError):
         return 1.0

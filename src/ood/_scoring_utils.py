@@ -37,10 +37,11 @@ def select_temperature_from_logits(
 ) -> tuple[float, float]:
     resolved_labels = labels.reshape(-1).to(dtype=torch.long, device=logits.device)
     if logits.ndim != 2 or logits.shape[0] != resolved_labels.shape[0] or logits.shape[0] <= 0:
-        return 1.0, float("inf")
+        raise ValueError("Temperature calibration requires logits shaped [N, C] with matching non-empty labels.")
 
     best_temperature = 1.0
     best_nll = float("inf")
+    last_error: RuntimeError | None = None
     for candidate in candidate_temperatures:
         temperature = normalize_temperature(float(candidate))
         try:
@@ -48,12 +49,17 @@ def select_temperature_from_logits(
                 temperature_scale_logits(logits, temperature),
                 resolved_labels,
             )
-        except Exception:
+        except RuntimeError as exc:
+            last_error = exc
             continue
         loss_value = float(loss.item())
         if loss_value < best_nll:
             best_temperature = temperature
             best_nll = loss_value
+    if best_nll == float("inf"):
+        if last_error is not None:
+            raise RuntimeError("Temperature calibration failed for every candidate temperature.") from last_error
+        raise ValueError("Temperature calibration requires at least one valid candidate temperature.")
     return best_temperature, best_nll
 
 

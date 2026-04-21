@@ -207,3 +207,183 @@ def test_run_optimizer_executes_proposals(monkeypatch, tmp_path: Path):
     assert Path(result["campaign_json"]).exists()
     assert any("init" in call for call in calls)
     assert any("run" in call for call in calls)
+
+
+def test_run_optimizer_blocks_execute_without_eligible_bayesian_evidence(monkeypatch, tmp_path: Path):
+    import src.workflows.training as training_module
+
+    runs_root = tmp_path / "runs"
+    _materialize_runs(runs_root)
+
+    class FailIfCalledWorkflow:
+        def __init__(self, *, config, environment, device):
+            raise AssertionError("TrainingWorkflow should not be constructed when execution is blocked")
+
+    monkeypatch.setattr(training_module, "TrainingWorkflow", FailIfCalledWorkflow)
+    monkeypatch.setattr(
+        "scripts.optimize_training_runs.get_config",
+        lambda environment="colab": {"training": {"continual": {"learning_rate": 0.0001}}},
+    )
+
+    args = argparse.Namespace(
+        runs_root=runs_root,
+        index_root=runs_root / "_index",
+        cohort_key=None,
+        dataset_lineage_key="tomato__leaf::sha_a",
+        dataset_key=None,
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        engine="continual_sd_lora",
+        objectives=[],
+        proposal_count=1,
+        candidate_pool_size=32,
+        random_seed=5,
+        search_space=None,
+        execute=True,
+        allow_bootstrap_execute=False,
+        config_env="colab",
+        device="cpu",
+        data_dir=tmp_path / "runtime_dataset",
+        run_output_root=runs_root,
+        num_workers=2,
+        validation_every_n_epochs=3,
+    )
+
+    from scripts.optimize_training_runs import run_optimizer as run_optimizer_local
+
+    # Force bootstrap-only recommendations to simulate zero eligible Bayesian evidence.
+    monkeypatch.setattr(
+        "scripts.optimize_training_runs.build_bayesian_recommendations",
+        lambda *a, **k: {
+            "cohorts": [
+                {
+                    "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
+                    "comparability": {
+                        "dataset_lineage_key": "tomato__leaf::sha_a",
+                        "crop_name": "tomato",
+                        "part_name": "leaf",
+                        "engine": "continual_sd_lora",
+                        "backbone_model_name": "fake/backbone",
+                        "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
+                    },
+                    "eligible_run_count": 0,
+                    "search_strategy": "random_bootstrap",
+                    "best_observed_run_id": "",
+                    "best_observed_score": None,
+                    "proposals": [
+                        {
+                            "rank": 1,
+                            "parameters": {"training.learning_rate": 0.00011},
+                            "config_override": {"training": {"continual": {"learning_rate": 0.00011}}},
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    try:
+        run_optimizer_local(args)
+        raise AssertionError("Expected ValueError when bootstrap execution is not allowed")
+    except ValueError as exc:
+        assert "--allow-bootstrap-execute" in str(exc)
+
+
+def test_run_optimizer_allows_execute_with_bootstrap_override(monkeypatch, tmp_path: Path):
+    import src.workflows.training as training_module
+
+    runs_root = tmp_path / "runs"
+    _materialize_runs(runs_root)
+    calls: list[dict] = []
+
+    class FakeResult:
+        def __init__(self, run_id: str) -> None:
+            self._run_id = run_id
+
+        def to_dict(self) -> dict:
+            return {"run_id": self._run_id, "status": "completed"}
+
+    class FakeWorkflow:
+        def __init__(self, *, config, environment, device):
+            calls.append({"init": {"config": config, "environment": environment, "device": device}})
+
+        def run(self, *, crop_name, data_dir, output_dir, num_workers=None, validation_every_n_epochs=None, run_id=""):
+            calls.append(
+                {
+                    "run": {
+                        "crop_name": crop_name,
+                        "data_dir": data_dir,
+                        "output_dir": output_dir,
+                        "num_workers": num_workers,
+                        "validation_every_n_epochs": validation_every_n_epochs,
+                        "run_id": run_id,
+                    }
+                }
+            )
+            return FakeResult(run_id)
+
+    monkeypatch.setattr(training_module, "TrainingWorkflow", FakeWorkflow)
+    monkeypatch.setattr(
+        "scripts.optimize_training_runs.get_config",
+        lambda environment="colab": {"training": {"continual": {"learning_rate": 0.0001}}},
+    )
+    monkeypatch.setattr(
+        "scripts.optimize_training_runs.build_bayesian_recommendations",
+        lambda *a, **k: {
+            "cohorts": [
+                {
+                    "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
+                    "comparability": {
+                        "dataset_lineage_key": "tomato__leaf::sha_a",
+                        "crop_name": "tomato",
+                        "part_name": "leaf",
+                        "engine": "continual_sd_lora",
+                        "backbone_model_name": "fake/backbone",
+                        "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
+                    },
+                    "eligible_run_count": 0,
+                    "search_strategy": "random_bootstrap",
+                    "best_observed_run_id": "",
+                    "best_observed_score": None,
+                    "proposals": [
+                        {
+                            "rank": 1,
+                            "parameters": {"training.learning_rate": 0.00013},
+                            "config_override": {"training": {"continual": {"learning_rate": 0.00013}}},
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+
+    args = argparse.Namespace(
+        runs_root=runs_root,
+        index_root=runs_root / "_index",
+        cohort_key=None,
+        dataset_lineage_key="tomato__leaf::sha_a",
+        dataset_key=None,
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        engine="continual_sd_lora",
+        objectives=[],
+        proposal_count=1,
+        candidate_pool_size=32,
+        random_seed=5,
+        search_space=None,
+        execute=True,
+        allow_bootstrap_execute=True,
+        config_env="colab",
+        device="cpu",
+        data_dir=tmp_path / "runtime_dataset",
+        run_output_root=runs_root,
+        num_workers=2,
+        validation_every_n_epochs=3,
+    )
+
+    result = run_optimizer(args)
+
+    assert result["executed_runs"]
+    assert any("run" in call for call in calls)

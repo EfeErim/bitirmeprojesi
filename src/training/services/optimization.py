@@ -524,7 +524,7 @@ def _fit_gaussian_process(X: np.ndarray, y: np.ndarray) -> Any:
     try:
         from sklearn.gaussian_process import GaussianProcessRegressor
         from sklearn.gaussian_process.kernels import ConstantKernel, Matern, WhiteKernel
-    except Exception:
+    except ImportError:
         return None
     kernel = ConstantKernel(1.0, (0.1, 10.0)) * Matern(length_scale=1.0, nu=2.5) + WhiteKernel(noise_level=1e-4)
     model = GaussianProcessRegressor(

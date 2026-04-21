@@ -61,10 +61,10 @@ def _repair_mojibake_tree(value: Any) -> Any:
 def _relative_path(path: Path, base_dir: Path) -> str:
     try:
         return path.resolve().relative_to(base_dir.resolve()).as_posix()
-    except Exception:
+    except (OSError, RuntimeError, ValueError):
         try:
             return Path(os.path.relpath(path.resolve(), base_dir.resolve())).as_posix()
-        except Exception:
+        except (OSError, ValueError):
             return path.as_posix()
 
 

@@ -37,7 +37,7 @@ class DiagnosticScoutingAnalyzer:
         configured_max = config.get("vlm_max_detections", vlm_conf.get("max_detections", 0))
         try:
             configured_max_int = int(configured_max)
-        except Exception:
+        except (TypeError, ValueError, OverflowError):
             configured_max_int = 0
         self.max_detections = None if configured_max_int <= 0 else configured_max_int
 

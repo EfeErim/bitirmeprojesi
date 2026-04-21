@@ -3,7 +3,7 @@
 import pytest
 import torch
 
-from src.ood._scoring_utils import distribution_threshold, ensemble_threshold
+from src.ood._scoring_utils import distribution_threshold, ensemble_threshold, select_temperature_from_logits
 from src.ood.continual_ood import ClassCalibration, ContinualOODDetector
 from src.training.services.persistence import restore_ood_state
 
@@ -12,6 +12,22 @@ def test_distribution_threshold_alias_matches_ensemble_threshold():
     values = torch.tensor([1.0, 2.0, 3.0], dtype=torch.float32)
 
     assert distribution_threshold(values, 2.0) == ensemble_threshold(values, 2.0)
+
+
+def test_select_temperature_from_logits_requires_matching_shapes():
+    logits = torch.randn(4, 3, dtype=torch.float32)
+    labels = torch.tensor([0, 1, 2], dtype=torch.long)
+
+    with pytest.raises(ValueError, match="matching non-empty labels"):
+        select_temperature_from_logits(logits, labels, candidate_temperatures=[0.5, 1.0, 1.5])
+
+
+def test_select_temperature_from_logits_requires_candidate_temperatures():
+    logits = torch.randn(4, 2, dtype=torch.float32)
+    labels = torch.tensor([0, 1, 0, 1], dtype=torch.long)
+
+    with pytest.raises(ValueError, match="at least one valid candidate"):
+        select_temperature_from_logits(logits, labels, candidate_temperatures=[])
 
 
 def test_continual_ood_calibration_and_score_contract():

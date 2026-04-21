@@ -97,7 +97,7 @@ def resolve_session_num_epochs(config: Any, explicit_num_epochs: Optional[int], 
     configured = getattr(config, "num_epochs", default)
     try:
         return int(max(1, int(configured)))
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         return int(max(1, default))
 
 

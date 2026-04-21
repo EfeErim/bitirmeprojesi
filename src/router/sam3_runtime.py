@@ -159,7 +159,7 @@ def _mask_count(masks: Any) -> int:
 def _resolve_positive_int(value: Any, default: int) -> int:
     try:
         resolved = int(value)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         resolved = int(default)
     return max(1, resolved)
 
@@ -207,7 +207,7 @@ def resolve_sam3_text_prompts(runtime: Any) -> Tuple[str, ...]:
     raw_limit = runtime.vlm_config.get("sam3_prompt_limit")
     try:
         prompt_limit = int(raw_limit)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         prompt_limit = 0
     if prompt_limit > 0:
         deduped = deduped[:prompt_limit]

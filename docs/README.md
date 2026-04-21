@@ -176,6 +176,11 @@ Use:
 
 Add `--execute --data-dir <runtime_dataset_root>` when you want the proposed settings to run through the canonical training workflow.
 
+Execution safety policy:
+
+- `--execute` is blocked by default when the selected cohort has zero eligible Bayesian evidence (for example, all runs were excluded for readiness).
+- pass `--allow-bootstrap-execute` only when you intentionally want to run fallback random-bootstrap proposals.
+
 ### How do I stop or resume the optimizer loop from Notebook 2?
 
 Use the visible Notebook 2 parameter `OPTIMIZATION_CAMPAIGN_MODE`:

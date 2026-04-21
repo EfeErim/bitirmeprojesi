@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import time
 import traceback
 from collections import Counter
@@ -41,6 +42,8 @@ _OOD_BENCHMARK_METRIC_NAMES = (
     "conformal_avg_set_size",
 )
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class _BenchmarkRunPreparation:
@@ -76,12 +79,16 @@ def _loader_size(loader: Any) -> int:
     if dataset is not None:
         try:
             return int(len(dataset))
-        except Exception:
-            return 0
+        except TypeError:
+            pass
+        except Exception as exc:
+            raise RuntimeError("Failed to resolve dataset length for OOD benchmark loader.") from exc
     try:
         return int(len(loader))
-    except Exception:
+    except TypeError:
         return 0
+    except Exception as exc:
+        raise RuntimeError("Failed to resolve loader length for OOD benchmark loader.") from exc
 
 
 def _utc_now_iso() -> str:
@@ -341,7 +348,11 @@ def _load_existing_benchmark_summary(artifact_root: Path) -> Dict[str, Any]:
         return {}
     try:
         return json.loads(summary_path.read_text(encoding="utf-8"))
-    except Exception:
+    except json.JSONDecodeError as exc:
+        logger.warning("Ignoring invalid OOD benchmark summary at %s: %s", summary_path, exc)
+        return {}
+    except OSError as exc:
+        logger.warning("Ignoring unreadable OOD benchmark summary at %s: %s", summary_path, exc)
         return {}
 
 
@@ -423,7 +434,7 @@ def _resource_snapshot(device: str) -> Dict[str, Any]:
                 3,
             ),
         }
-    except Exception:
+    except (RuntimeError, ValueError, TypeError, OSError):
         return {}
 
 

@@ -1,12 +1,14 @@
-﻿import json
+import json
 from pathlib import Path
 
+import pytest
 import torch
 from torch.utils.data import DataLoader, Dataset
 
 from src.training.services.ood_benchmark import (
     _build_benchmark_summary_payload,
     _build_resume_key,
+    _loader_size,
     run_leave_one_class_out_benchmark,
 )
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
@@ -124,6 +126,32 @@ def _build_loaders(classes, *, train_items=3, eval_items=5):
         "val": DataLoader(ToyDataset(classes, eval_items), batch_size=2, shuffle=False),
         "test": DataLoader(ToyDataset(classes, eval_items), batch_size=2, shuffle=False),
     }
+
+
+def test_loader_size_raises_for_dataset_runtime_errors():
+    class _BrokenDataset:
+        def __len__(self):
+            raise RuntimeError("boom")
+
+    class _Loader:
+        dataset = _BrokenDataset()
+
+    with pytest.raises(RuntimeError, match="dataset length"):
+        _loader_size(_Loader())
+
+
+def test_loader_size_falls_back_to_loader_len_for_lenless_dataset():
+    class _LenlessDataset:
+        def __len__(self):
+            raise TypeError("len unavailable")
+
+    class _Loader:
+        dataset = _LenlessDataset()
+
+        def __len__(self):
+            return 7
+
+    assert _loader_size(_Loader()) == 7
 
 
 def test_run_leave_one_class_out_benchmark_writes_aggregate_artifacts(monkeypatch, tmp_path: Path):

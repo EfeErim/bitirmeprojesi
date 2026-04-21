@@ -26,10 +26,11 @@ def _tensor_to_list(value: Any, *, strict: bool, class_id: str, field_name: str)
 
 
 def _float_field(value: Any, *, default: float) -> float:
+    fallback = float(default)
     try:
-        return float(default if value is None else value)
-    except Exception:
-        return float(default)
+        return fallback if value is None else float(value)
+    except (TypeError, ValueError, OverflowError):
+        return fallback
 
 
 def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, Any]:

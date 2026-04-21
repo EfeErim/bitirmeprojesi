@@ -206,7 +206,7 @@ def build_sam3_runtime_settings(
     max_rois_raw = policy_value_fn("roi_filter", "max_rois_for_classification", 0)
     try:
         max_rois = int(max_rois_raw)
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         max_rois = 0
     settings["max_rois_for_classification"] = None if max_rois <= 0 else max_rois
 
@@ -220,11 +220,11 @@ def build_sam3_runtime_settings(
 
     try:
         settings["crop_num_prompts"] = int(crop_num_prompts_raw) if crop_num_prompts_raw is not None else None
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         settings["crop_num_prompts"] = None
     try:
         settings["part_num_prompts"] = int(part_num_prompts_raw) if part_num_prompts_raw is not None else None
-    except Exception:
+    except (TypeError, ValueError, OverflowError):
         settings["part_num_prompts"] = None
 
     quality_weights = vlm_config.get("quality_score_weights", {})

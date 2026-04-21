@@ -204,7 +204,7 @@ def compute_leaf_likeness(
 
     try:
         roi_np = np.asarray(roi_image.convert("RGB"), dtype=np.float32)
-    except Exception:
+    except (TypeError, ValueError, OSError):
         return 0.0
 
     if roi_np.size == 0:
