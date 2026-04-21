@@ -1,0 +1,51 @@
+{
+  "tomato_anthracnose_fruit": {
+    "precision": 0.8695652173913043,
+    "recall": 1.0,
+    "f1-score": 0.9302325581395349,
+    "support": 40.0
+  },
+  "tomato_blossom_end_rot_fruit": {
+    "precision": 0.875,
+    "recall": 1.0,
+    "f1-score": 0.9333333333333333,
+    "support": 28.0
+  },
+  "tomato_fruit_cracking_fruit": {
+    "precision": 0.9285714285714286,
+    "recall": 0.975,
+    "f1-score": 0.9512195121951219,
+    "support": 40.0
+  },
+  "tomato_gray_mold_fruit": {
+    "precision": 0.9629629629629629,
+    "recall": 0.9629629629629629,
+    "f1-score": 0.9629629629629629,
+    "support": 54.0
+  },
+  "tomato_healthy_fruit": {
+    "precision": 0.972972972972973,
+    "recall": 0.75,
+    "f1-score": 0.8470588235294118,
+    "support": 48.0
+  },
+  "tomato_late_blight_fruit": {
+    "precision": 1.0,
+    "recall": 0.9666666666666667,
+    "f1-score": 0.9830508474576272,
+    "support": 30.0
+  },
+  "accuracy": 0.9333333333333333,
+  "macro avg": {
+    "precision": 0.9348454303164447,
+    "recall": 0.9424382716049383,
+    "f1-score": 0.9346430062696652,
+    "support": 240.0
+  },
+  "weighted avg": {
+    "precision": 0.9380340355883835,
+    "recall": 0.9333333333333333,
+    "f1-score": 0.9314240212494175,
+    "support": 240.0
+  }
+}

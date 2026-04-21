@@ -1,0 +1,771 @@
+{
+  "train_loss": [
+    1.7957123619014934,
+    1.6021108485884585,
+    1.3268851142818645,
+    1.2324075900902183,
+    1.1695194426229445,
+    1.1264760352797427,
+    1.1092498888403683,
+    1.0869211342375158,
+    1.0675557387077201,
+    1.0582564968173787,
+    1.056307362297834,
+    1.0526847031156896,
+    1.0473258697380454,
+    1.043793583320359,
+    1.0411495394625907,
+    1.0389810174198475,
+    1.0386452351586293,
+    1.0371382660784965,
+    1.034189256571107,
+    1.0310355909800126
+  ],
+  "val_loss": [
+    1.8143420934677124,
+    1.668790372212728,
+    1.249585008621216,
+    0.9513023694356283,
+    0.8171112497647604,
+    0.6519614537556966,
+    0.5000928461551666,
+    0.37330090602238974,
+    0.4420636385679245,
+    0.3308495889107386,
+    0.35397091607252756,
+    0.4410219778617223,
+    0.34475020120541255,
+    0.3356083020567894,
+    0.2569649358590444,
+    0.2847454808652401,
+    0.27223750005165737,
+    0.32307137350241344,
+    0.28228406806786854,
+    0.2811246570199728
+  ],
+  "val_accuracy": [
+    0.17083333333333334,
+    0.3875,
+    0.625,
+    0.7333333333333333,
+    0.775,
+    0.8291666666666667,
+    0.8625,
+    0.9,
+    0.8791666666666667,
+    0.9083333333333333,
+    0.9125,
+    0.8833333333333333,
+    0.9,
+    0.9125,
+    0.9375,
+    0.9291666666666667,
+    0.9375,
+    0.9041666666666667,
+    0.9291666666666667,
+    0.9333333333333333
+  ],
+  "macro_precision": [
+    0.10326492041349411,
+    0.45412299036979675,
+    0.6429299116134644,
+    0.7317833304405212,
+    0.7784741520881653,
+    0.8495535850524902,
+    0.8628618121147156,
+    0.9037511348724365,
+    0.8828081488609314,
+    0.9062040448188782,
+    0.9127569794654846,
+    0.8888928294181824,
+    0.9020586609840393,
+    0.9129729866981506,
+    0.9399707913398743,
+    0.9335460066795349,
+    0.9412162899971008,
+    0.9057238698005676,
+    0.9318022131919861,
+    0.9348454475402832
+  ],
+  "macro_recall": [
+    0.1597222238779068,
+    0.4079364836215973,
+    0.6308972835540771,
+    0.7653219103813171,
+    0.8054563999176025,
+    0.8528439402580261,
+    0.8827160000801086,
+    0.9146605134010315,
+    0.8966049551963806,
+    0.9209105372428894,
+    0.9250771999359131,
+    0.9007716178894043,
+    0.9146605134010315,
+    0.9250771999359131,
+    0.9459105134010315,
+    0.9389660954475403,
+    0.9459105134010315,
+    0.9181327819824219,
+    0.9389660954475403,
+    0.9424383044242859
+  ],
+  "macro_f1": [
+    0.11068165302276611,
+    0.36791667342185974,
+    0.5992550253868103,
+    0.7195045351982117,
+    0.7529516816139221,
+    0.8228510022163391,
+    0.8548248410224915,
+    0.9001390933990479,
+    0.8761374950408936,
+    0.9077133536338806,
+    0.912375271320343,
+    0.8789252638816833,
+    0.8991281986236572,
+    0.9111099243164062,
+    0.9398654103279114,
+    0.9327028393745422,
+    0.9407681822776794,
+    0.9020161628723145,
+    0.93088299036026,
+    0.934643030166626
+  ],
+  "weighted_f1": [
+    0.11010079383850098,
+    0.3637801806131999,
+    0.5983531951904297,
+    0.7044133504231771,
+    0.7378484725952148,
+    0.8059556961059571,
+    0.8458942413330078,
+    0.8926531473795573,
+    0.8673914591471354,
+    0.9038651784261068,
+    0.9073677698771159,
+    0.8717217127482096,
+    0.8922754287719726,
+    0.9076769510904948,
+    0.9357870737711589,
+    0.9265750249226888,
+    0.9360571543375651,
+    0.8977378209431967,
+    0.926691182454427,
+    0.931424077351888
+  ],
+  "balanced_accuracy": [
+    0.1597222238779068,
+    0.4079364836215973,
+    0.6308972835540771,
+    0.7653219103813171,
+    0.8054563999176025,
+    0.8528439402580261,
+    0.8827160000801086,
+    0.9146605134010315,
+    0.8966049551963806,
+    0.9209105372428894,
+    0.9250771999359131,
+    0.9007716178894043,
+    0.9146605134010315,
+    0.9250771999359131,
+    0.9459105134010315,
+    0.9389660954475403,
+    0.9459105134010315,
+    0.9181327819824219,
+    0.9389660954475403,
+    0.9424383044242859
+  ],
+  "generalization_gap": [
+    0.018629731566218943,
+    0.06667952362426943,
+    -0.0773001056606486,
+    -0.28110522065459,
+    -0.35240819285818414,
+    -0.47451458152404613,
+    -0.6091570426852018,
+    -0.713620228215126,
+    -0.6254921001397956,
+    -0.7274069079066401,
+    -0.7023364462253066,
+    -0.6116627252539673,
+    -0.7025756685326329,
+    -0.7081852812635697,
+    -0.7841846036035462,
+    -0.7542355365546074,
+    -0.7664077351069719,
+    -0.714066892576083,
+    -0.7519051885032385,
+    -0.7499109339600398
+  ],
+  "per_class_accuracy": [
+    {
+      "tomato_anthracnose_fruit": 0.0,
+      "tomato_blossom_end_rot_fruit": 0.0,
+      "tomato_fruit_cracking_fruit": 0.25,
+      "tomato_gray_mold_fruit": 0.0,
+      "tomato_healthy_fruit": 0.5416666865348816,
+      "tomato_late_blight_fruit": 0.1666666716337204
+    },
+    {
+      "tomato_anthracnose_fruit": 0.6499999761581421,
+      "tomato_blossom_end_rot_fruit": 0.2142857164144516,
+      "tomato_fruit_cracking_fruit": 0.32499998807907104,
+      "tomato_gray_mold_fruit": 0.3333333432674408,
+      "tomato_healthy_fruit": 0.125,
+      "tomato_late_blight_fruit": 0.800000011920929
+    },
+    {
+      "tomato_anthracnose_fruit": 0.75,
+      "tomato_blossom_end_rot_fruit": 0.3571428656578064,
+      "tomato_fruit_cracking_fruit": 0.8500000238418579,
+      "tomato_gray_mold_fruit": 0.7407407164573669,
+      "tomato_healthy_fruit": 0.1875,
+      "tomato_late_blight_fruit": 0.8999999761581421
+    },
+    {
+      "tomato_anthracnose_fruit": 0.949999988079071,
+      "tomato_blossom_end_rot_fruit": 0.8928571343421936,
+      "tomato_fruit_cracking_fruit": 0.8999999761581421,
+      "tomato_gray_mold_fruit": 0.7407407164573669,
+      "tomato_healthy_fruit": 0.2083333283662796,
+      "tomato_late_blight_fruit": 0.8999999761581421
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 0.9285714030265808,
+      "tomato_fruit_cracking_fruit": 0.949999988079071,
+      "tomato_gray_mold_fruit": 0.8333333134651184,
+      "tomato_healthy_fruit": 0.1875,
+      "tomato_late_blight_fruit": 0.9333333373069763
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 0.9642857313156128,
+      "tomato_fruit_cracking_fruit": 0.949999988079071,
+      "tomato_gray_mold_fruit": 0.9444444179534912,
+      "tomato_healthy_fruit": 0.2916666567325592,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.949999988079071,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.4166666567325592,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.5833333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.949999988079071,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.5,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.949999988079071,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.6458333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.6458333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.5,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.5833333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.6458333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.7708333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.7291666865348816,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.7708333134651184,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.6041666865348816,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.7291666865348816,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    },
+    {
+      "tomato_anthracnose_fruit": 1.0,
+      "tomato_blossom_end_rot_fruit": 1.0,
+      "tomato_fruit_cracking_fruit": 0.9750000238418579,
+      "tomato_gray_mold_fruit": 0.9629629850387573,
+      "tomato_healthy_fruit": 0.75,
+      "tomato_late_blight_fruit": 0.9666666388511658
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 40
+      },
+      {
+        "class_name": "tomato_blossom_end_rot_fruit",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 28
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.125,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_blossom_end_rot_fruit",
+        "class_index": 1,
+        "accuracy": 0.2142857164144516,
+        "support": 28
+      },
+      {
+        "class_name": "tomato_fruit_cracking_fruit",
+        "class_index": 2,
+        "accuracy": 0.32499998807907104,
+        "support": 40
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.1875,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_blossom_end_rot_fruit",
+        "class_index": 1,
+        "accuracy": 0.3571428656578064,
+        "support": 28
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.2083333283662796,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_blossom_end_rot_fruit",
+        "class_index": 1,
+        "accuracy": 0.8928571343421936,
+        "support": 28
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.1875,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.8333333134651184,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_blossom_end_rot_fruit",
+        "class_index": 1,
+        "accuracy": 0.9285714030265808,
+        "support": 28
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.2916666567325592,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9444444179534912,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_fruit_cracking_fruit",
+        "class_index": 2,
+        "accuracy": 0.949999988079071,
+        "support": 40
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.4166666567325592,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_fruit_cracking_fruit",
+        "class_index": 2,
+        "accuracy": 0.949999988079071,
+        "support": 40
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.5833333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_fruit_cracking_fruit",
+        "class_index": 2,
+        "accuracy": 0.949999988079071,
+        "support": 40
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.6458333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_fruit_cracking_fruit",
+        "class_index": 2,
+        "accuracy": 0.949999988079071,
+        "support": 40
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.6458333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.5,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.5833333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.6458333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.7708333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.7291666865348816,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.7708333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.6041666865348816,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.7291666865348816,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "tomato_healthy_fruit",
+        "class_index": 4,
+        "accuracy": 0.75,
+        "support": 48
+      },
+      {
+        "class_name": "tomato_gray_mold_fruit",
+        "class_index": 3,
+        "accuracy": 0.9629629850387573,
+        "support": 54
+      },
+      {
+        "class_name": "tomato_late_blight_fruit",
+        "class_index": 5,
+        "accuracy": 0.9666666388511658,
+        "support": 30
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 1180,
+  "optimizer_steps": 1180,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 15,
+  "best_metric_value": 0.2569649358590444
+}

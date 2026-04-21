@@ -1,0 +1,12 @@
+                              precision    recall  f1-score   support
+
+    tomato_anthracnose_fruit       0.91      1.00      0.95        40
+tomato_blossom_end_rot_fruit       0.85      1.00      0.92        28
+ tomato_fruit_cracking_fruit       0.91      1.00      0.95        40
+      tomato_gray_mold_fruit       0.98      0.94      0.96        54
+        tomato_healthy_fruit       1.00      0.79      0.88        48
+    tomato_late_blight_fruit       1.00      0.97      0.98        30
+
+                    accuracy                           0.94       240
+                   macro avg       0.94      0.95      0.94       240
+                weighted avg       0.95      0.94      0.94       240

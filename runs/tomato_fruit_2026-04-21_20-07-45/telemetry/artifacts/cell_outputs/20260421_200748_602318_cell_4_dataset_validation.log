@@ -1,0 +1,19 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=tomato_fruit_2026-04-21_20-07-45
+started_at=2026-04-21T20:07:48.602339+00:00
+finished_at=2026-04-21T20:08:49.207421+00:00
+duration_sec=60.605
+
+[DATASET] Yalnizca bir runtime dataset bulundu, otomatik secildi: tomato__fruit
+[OOD] explicit ood root=/content/bitirmeprojesi/data/ood_dataset/tomato_fruit_ood_best
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__fruit classes=6: ['tomato_anthracnose_fruit', 'tomato_blossom_end_rot_fruit', 'tomato_fruit_cracking_fruit', 'tomato_gray_mold_fruit', 'tomato_healthy_fruit', 'tomato_late_blight_fruit']
+[RECOMMEND][DATASET] scale=medium continual=3787 val=240 test=240 ood=127 classes=6
+[RECOMMEND][HW] device=cuda gpu=NVIDIA A100-SXM4-80GB vram_gb=79.25 cpu_count=12
+[RECOMMEND][WARN] Manifest rows include 3627 synthetic-hint item(s); keep main benchmark claims conservative.
+[RECOMMEND][WARN] Manifest rows include 6 eval-quality-risk item(s); prefer cautious regularization.
+[RECOMMEND] Onerilen degisiklikler:
+  - BATCH_SIZE: 64 -> 96 | Derived from the active hardware tier (device=cuda, vram_gb=79.25).
+  - EPOCHS: 24 -> 12 | Uses the fixed schedule for a medium continual split (3787 image(s)).
+  - NUM_WORKERS: 12 -> 6 | Derived from device=cuda and cpu_count=12.
+  - VALIDATION_EVERY_N_EPOCHS: 1 -> 2 | Keeps validation cadence aligned with the medium epoch schedule.
+[RECOMMEND][FINAL] epochs=24 bs=64 lr=0.0001 lora=24/24 dropout=0.2 accum=1 workers=12 prefetch=8
