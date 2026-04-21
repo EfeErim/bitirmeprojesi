@@ -749,6 +749,20 @@ def _resolve_amp_dtype(device: str) -> Any:
     return torch.bfloat16 if major >= 8 else torch.float16
 
 
+def _resolve_embedding_device(device: str) -> str:
+    requested = str(device or "cpu").strip() or "cpu"
+    if requested.startswith("cuda"):
+        import torch
+
+        try:
+            cuda_available = bool(torch.cuda.is_available())
+        except Exception:
+            cuda_available = False
+        if not cuda_available:
+            return "cpu"
+    return requested
+
+
 def _load_dinov3_components(model_id: str, *, device: str = "cpu") -> tuple[Any, Any]:
     from transformers import AutoImageProcessor, AutoModel
 
@@ -1391,6 +1405,13 @@ def build_grouped_dataset_plan(
 
     import torch
 
+    requested_device = str(device or "cpu").strip() or "cpu"
+    device = _resolve_embedding_device(requested_device)
+    if device != requested_device:
+        _progress(
+            progress_fn,
+            f"Requested embedding device '{requested_device}' is unavailable; falling back to '{device}'.",
+        )
     amp_dtype = _resolve_amp_dtype(device)
     effective_batch_size = max(1, int(batch_size))
     normalized_under_min_eval_policy = str(under_min_eval_policy or "block").strip().lower()
@@ -1951,6 +1972,8 @@ def build_grouped_dataset_plan(
         "crop_name": str(crop_name),
         "part_name": str(part_name),
         "under_min_eval_policy": normalized_under_min_eval_policy,
+        "requested_device": requested_device,
+        "embedding_device": device,
         "source_root": str(class_root.resolve()),
         "summary": {
             "total_images": len(records),

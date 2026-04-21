@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw
 from scripts.prepare_grouped_runtime_dataset import (
     ImageRecord,
     _compute_neighbor_pairs,
+    _resolve_embedding_device,
     build_prepared_dataset_key,
     build_grouped_dataset_plan,
     materialize_grouped_runtime_dataset,
@@ -132,6 +133,16 @@ def test_compute_neighbor_pairs_skips_non_finite_embedding_rows():
     # Non-finite row (b.jpg) should be ignored instead of crashing NearestNeighbors.
     assert all("b.jpg" not in pair for pair in pairs)
     assert ("a.jpg", "c.jpg") in pairs
+
+
+def test_resolve_embedding_device_falls_back_when_cuda_unavailable(monkeypatch):
+    import torch
+
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+
+    assert _resolve_embedding_device("cuda") == "cpu"
+    assert _resolve_embedding_device("cuda:0") == "cpu"
+    assert _resolve_embedding_device("cpu") == "cpu"
 
 
 def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path: Path, monkeypatch):
