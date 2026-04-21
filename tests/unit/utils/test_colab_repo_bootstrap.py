@@ -422,6 +422,53 @@ def test_push_repo_run_to_github_skips_pt_files(tmp_path: Path, monkeypatch):
     assert "gh-secret" not in " ".join(push_calls[0])
 
 
+def test_push_repo_run_to_github_accepts_nested_run_relative_dir(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for name in ("src", "config", "scripts"):
+        (repo_root / name).mkdir(parents=True, exist_ok=True)
+    run_dir = repo_root / "runs" / "grape" / "fruit" / "run_1"
+    keep_file = run_dir / "outputs" / "summary.json"
+    keep_file.parent.mkdir(parents=True, exist_ok=True)
+    keep_file.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    calls: list[list[str]] = []
+
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None, timeout=None):  # noqa: ARG001
+        calls.append(list(command))
+        args = list(command[1:])
+        if args == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["ls-remote", "--heads", "origin", "refs/heads/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="abc123\trefs/heads/master\n")
+        if args == ["fetch", "origin", "master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset", "--soft", "origin/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
+        if args[:4] == ["diff", "--cached", "--name-only", "--"]:
+            return subprocess.CompletedProcess(command, 0, stdout="runs/grape/fruit/run_1/outputs/summary.json\n")
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    result = bootstrap.push_repo_run_to_github(
+        repo_root,
+        "run_1",
+        run_relative_dir=Path("runs") / "grape" / "fruit" / "run_1",
+        print_fn=lambda _: None,
+    )
+
+    assert result["pushed"] is True
+    commit_calls = [call for call in calls if call[1] == "commit"]
+    assert commit_calls
+    assert commit_calls[0][-2:] == ["--", "runs/grape/fruit/run_1"]
+
+
 def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: Path, monkeypatch):
     repo_root = tmp_path / "repo"
     for name in ("src", "config", "scripts"):

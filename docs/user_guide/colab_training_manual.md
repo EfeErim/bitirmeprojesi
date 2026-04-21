@@ -96,7 +96,7 @@ This is the current Notebook 2 training flow from start to finish:
 16. write `production_readiness.json`
 17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
 18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
-19. mirror outputs into `runs/<RUN_ID>/`
+19. mirror outputs into `runs/<crop>/<part>/<RUN_ID>/`
 20. optionally auto-push the mirrored run record to GitHub
 21. optionally auto-disconnect the Colab runtime after final exports succeed
 
@@ -173,10 +173,10 @@ Contract reminder:
 
 ## Notebook 2 run identity and traceability
 
-Notebook 2 run identity is still anchored on the mirrored repo run directory:
+Notebook 2 run identity is anchored on the crop/part-scoped mirrored repo run directory:
 
 ```text
-runs/<RUN_ID>/
+runs/<crop>/<part>/<RUN_ID>/
 ```
 
 Current traceability rules:
@@ -189,7 +189,7 @@ Current traceability rules:
 The canonical optimizer-facing files live inside the mirrored artifact tree:
 
 ```text
-runs/<RUN_ID>/outputs/colab_notebook_training/artifacts/training/
+runs/<crop>/<part>/<RUN_ID>/outputs/colab_notebook_training/artifacts/training/
   summary.json
   run_context.json
   experiment_manifest.json
@@ -657,7 +657,7 @@ These files organize the raw artifacts; they do not replace them.
 Notebook 2 mirrors non-checkpoint outputs into:
 
 ```text
-runs/<RUN_ID>/
+runs/<crop>/<part>/<RUN_ID>/
   notebooks/2_interactive_adapter_training.executed.ipynb
   outputs/colab_notebook_training/
   telemetry/
@@ -674,8 +674,8 @@ Important detail:
 
 Optional current behavior:
 
-- if `AUTO_PUSH_TO_GITHUB` is enabled and `GH_TOKEN` or `GITHUB_TOKEN` is available, Notebook 2 commits and pushes `runs/<RUN_ID>/` after the mirror step
-- the auto-push commit is scoped to `runs/<RUN_ID>/`, so unrelated staged repo changes are not included
+- if `AUTO_PUSH_TO_GITHUB` is enabled and `GH_TOKEN` or `GITHUB_TOKEN` is available, Notebook 2 commits and pushes `runs/<crop>/<part>/<RUN_ID>/` after the mirror step
+- the auto-push commit is scoped to `runs/<crop>/<part>/<RUN_ID>/`, so unrelated staged repo changes are not included
 - the auto-push helper skips `.pt` checkpoint blobs, so large resume weights stay out of the normal GitHub history
 
 ### 3. Repo-local telemetry runtime
@@ -864,7 +864,7 @@ models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 You can deploy from any of these outputs:
 
 - `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
-- `runs/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- `runs/<crop>/<part>/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
 - `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 If you want a different storage location, pass `--adapter-root` to the inference surface.

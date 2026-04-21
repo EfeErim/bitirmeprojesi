@@ -71,6 +71,13 @@ def _find_run_dir(artifact_root: Path, runs_root: Path) -> Path:
     while current != current.parent:
         if current.parent == runs_root:
             return current
+        if current.parent.is_relative_to(runs_root) and (
+            (current / "outputs").is_dir()
+            or (current / "telemetry").is_dir()
+            or (current / "checkpoint_state").is_dir()
+            or (current / "notebooks").is_dir()
+        ):
+            return current
         current = current.parent
     return artifact_root
 

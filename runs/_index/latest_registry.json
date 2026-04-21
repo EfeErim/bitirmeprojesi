@@ -1,0 +1,41 @@
+{
+  "schema_version": "v1_training_run_registry",
+  "generated_at": "2026-04-21T20:07:29.179077+00:00",
+  "optimization_profile": "accuracy_plus_ood",
+  "bayesian_optimization_enabled": false,
+  "trial_count": 3,
+  "canonical_count": 0,
+  "backfilled_count": 3,
+  "cohort_count": 2,
+  "paths": {
+    "trials_jsonl": "runs\\_index\\trials.jsonl",
+    "pareto_inputs_json": "runs\\_index\\pareto_inputs.json",
+    "pareto_frontiers_json": "runs\\_index\\pareto_frontiers.json"
+  },
+  "cohorts": [
+    {
+      "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
+      "run_count": 2,
+      "comparability": {
+        "dataset_lineage_key": "grape__fruit",
+        "crop_name": "grape",
+        "part_name": "fruit",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora"
+      }
+    },
+    {
+      "cohort_key": "tomato__leaf::tomato::leaf::continual_sd_lora",
+      "run_count": 1,
+      "comparability": {
+        "dataset_lineage_key": "tomato__leaf",
+        "crop_name": "tomato",
+        "part_name": "leaf",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "tomato__leaf::tomato::leaf::continual_sd_lora"
+      }
+    }
+  ]
+}

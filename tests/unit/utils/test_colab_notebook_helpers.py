@@ -9,6 +9,7 @@ from scripts.colab_notebook_helpers import (
     NotebookTrainingStatusPrinter,
     apply_notebook_optimization_proposal,
     build_notebook_completion_report,
+    build_notebook_run_dir,
     build_notebook_run_id,
     complete_notebook_training_run,
     ensure_notebook_checkpoint_manager,
@@ -513,6 +514,17 @@ def test_build_notebook_run_id_includes_crop_part_and_timestamp():
     )
 
     assert run_id == "tomato_leaf_upper_part_2026-03-23_10-11-12"
+
+
+def test_build_notebook_run_dir_groups_by_crop_and_part(tmp_path: Path):
+    run_dir = build_notebook_run_dir(
+        tmp_path,
+        "Tomato Leaf",
+        "Upper Part",
+        "tomato_leaf_upper_part_2026-03-23_10-11-12",
+    )
+
+    assert run_dir == tmp_path / "runs" / "tomato_leaf" / "upper_part" / "tomato_leaf_upper_part_2026-03-23_10-11-12"
 
 
 class _ArtifactMergingTelemetry:

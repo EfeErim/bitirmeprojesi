@@ -79,6 +79,24 @@ def test_collect_trial_records_dedupes_mirrored_notebook_artifacts(tmp_path: Pat
     )
 
 
+def test_collect_trial_records_resolves_nested_crop_part_run_dir(tmp_path: Path):
+    runs_root = tmp_path / "runs"
+    run_dir = runs_root / "tomato" / "leaf" / "tomato_leaf_2026-04-14_12-00-00"
+    artifact_root = run_dir / "outputs" / "colab_notebook_training" / "artifacts"
+    manifest, optimization = _canonical_record(
+        run_id="tomato_leaf_2026-04-14_12-00-00",
+        cohort_key="cohort_a",
+        artifact_root=artifact_root,
+    )
+    _write_json(artifact_root / "training" / "experiment_manifest.json", manifest)
+    _write_json(artifact_root / "training" / "optimization_record.json", optimization)
+
+    trials = collect_trial_records(runs_root)
+
+    assert len(trials) == 1
+    assert Path(trials[0]["registry_source"]["run_dir"]) == run_dir
+
+
 def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: Path):
     runs_root = tmp_path / "runs"
     first_root = runs_root / "run_a" / "training_metrics"

@@ -1628,6 +1628,7 @@ def complete_notebook_training_run(
             git_push_report = push_repo_run_to_github_fn(
                 root,
                 run_id,
+                run_relative_dir=repo_run_dir.relative_to(root),
                 remote_name=auto_push_remote_name,
                 branch=auto_push_branch,
                 print_fn=emit,
@@ -1670,6 +1671,12 @@ def build_notebook_run_id(crop_name: str, part_name: str = "unspecified", *, now
     crop = _slug_label_component(crop_name, default="crop")
     part = _slug_label_component(part_name, default="unspecified")
     return f"{crop}_{part}_{stamp}"
+
+
+def build_notebook_run_dir(root: Path, crop_name: str, part_name: str, run_id: str) -> Path:
+    crop = _slug_label_component(crop_name, default="crop")
+    part = _slug_label_component(part_name, default="unspecified")
+    return Path(root) / "runs" / crop / part / str(run_id)
 
 
 def merge_training_summary_fields(

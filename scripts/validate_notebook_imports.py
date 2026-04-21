@@ -523,6 +523,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         "REPO_RUN_DIR =",
         "REPO_NOTEBOOK_OUTPUT_PATH =",
         "def save_run_outputs_to_repo()",
+        "build_notebook_run_dir",
         "build_notebook_run_id",
     )
     missing = [snippet for snippet in required_bootstrap_snippets if snippet not in bootstrap_source]
@@ -538,6 +539,7 @@ def test_training_notebook_bootstrap_contract() -> None:
     assert 'PART_NAME = "unspecified"' in run_identity_source
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
+    assert "REPO_RUN_DIR = build_notebook_run_dir(ROOT, CROP_NAME, PART_NAME, RUN_ID)" in bootstrap_source
 
     required_parameter_snippets = (
         'PART_NAME = globals().get("PART_NAME", "unspecified")',

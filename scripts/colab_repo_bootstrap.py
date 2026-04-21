@@ -630,16 +630,23 @@ def push_repo_run_to_github(
     repo_root: str | Path,
     run_id: str,
     *,
+    run_relative_dir: Optional[str | Path] = None,
     remote_name: str = "origin",
     branch: Optional[str] = None,
     commit_message: Optional[str] = None,
     token: Optional[str] = None,
     print_fn: Optional[Callable[[str], None]] = None,
 ) -> dict[str, object]:
-    """Commit and push one mirrored runs/<RUN_ID> tree, excluding checkpoint blobs and oversized files."""
+    """Commit and push one mirrored run tree, excluding checkpoint blobs and oversized files."""
     emit = print if print_fn is None else print_fn
     repo = Path(repo_root).expanduser().resolve()
-    run_dir = repo / "runs" / str(run_id)
+    if run_relative_dir is None:
+        run_dir = repo / "runs" / str(run_id)
+    else:
+        raw_run_relative_dir = str(run_relative_dir).strip().replace("\\", "/")
+        if not raw_run_relative_dir or raw_run_relative_dir.startswith("/") or ".." in Path(raw_run_relative_dir).parts:
+            raise ValueError(f"Run directory must be a repo-relative path: {run_relative_dir}")
+        run_dir = repo / raw_run_relative_dir
     if not is_repo_root(repo):
         raise FileNotFoundError(f"Repository root not found: {repo}")
     if not run_dir.is_dir():
@@ -698,11 +705,9 @@ def push_repo_run_to_github(
 
     staged = _run_git(["diff", "--cached", "--name-only", "--", relative_run_dir], cwd=repo, capture_output=True)
     staged_files = [line.strip() for line in str(staged.stdout or "").splitlines() if line.strip()]
-    emit(
-        f"[GIT] Stage prepared for runs/{run_id}: staged={len(staged_files)} skipped={len(skipped_files)}"
-    )
+    emit(f"[GIT] Stage prepared for {relative_run_dir}: staged={len(staged_files)} skipped={len(skipped_files)}")
     if not staged_files:
-        emit(f"[GIT] No eligible repo mirror changes to push for runs/{run_id}.")
+        emit(f"[GIT] No eligible repo mirror changes to push for {relative_run_dir}.")
         return {
             "enabled": True,
             "pushed": False,
@@ -716,7 +721,7 @@ def push_repo_run_to_github(
     message = str(commit_message or f"Add notebook 2 outputs for run {run_id}")
     _run_git(["commit", "-m", message, "--", relative_run_dir], cwd=repo)
     _run_git_push_with_token(repo=repo, remote_url=remote_url, token=resolved_token, branch=resolved_branch)
-    emit(f"[GIT] Pushed {len(staged_files)} file(s) from runs/{run_id} to {remote_name}/{resolved_branch}.")
+    emit(f"[GIT] Pushed {len(staged_files)} file(s) from {relative_run_dir} to {remote_name}/{resolved_branch}.")
     return {
         "enabled": True,
         "pushed": True,
