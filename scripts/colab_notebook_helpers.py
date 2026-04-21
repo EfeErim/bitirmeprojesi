@@ -360,17 +360,10 @@ def prepare_notebook_access_and_dataset(
         },
     )
 
-    emit(
-        f"[OPT] mode={optimization_campaign_mode} dataset_lineage will be resolved from "
-        f"{selected_dataset_root / 'split_manifest.json'}"
-    )
+    emit(f"[OPT] Bayesian campaign automation is disabled. dataset_lineage={selected_dataset_root / 'split_manifest.json'}")
     resolved_mode = str(optimization_campaign_mode or "").strip().lower()
-    if resolved_mode == "continue":
-        emit("[OPT] Detailed cohort status and the next proposal will be resolved during engine init.")
-    elif resolved_mode == "stop":
-        emit("[OPT] Campaign stop is armed. Existing campaign state will be marked stopped during engine init.")
-    else:
-        emit("[OPT] Campaign automation is disabled for this notebook run.")
+    if resolved_mode in {"continue", "stop"}:
+        emit("[OPT] Requested campaign mode is ignored because Bayesian optimization is disabled.")
 
     return {
         "access_report": access_report,
@@ -508,12 +501,11 @@ def resolve_notebook_optimization_campaign(
 ) -> Dict[str, Any]:
     from scripts.index_training_runs import build_run_registry
     from src.training.services.optimization import (
-        build_bayesian_recommendations,
         build_pareto_frontiers,
         select_trials_for_cohort,
     )
 
-    resolved_mode = str(mode or "disabled").strip().lower()
+    resolved_mode = "disabled"
     dataset_identity = _resolve_runtime_dataset_identity(
         runtime_dataset_root=Path(runtime_dataset_root),
         dataset_key=dataset_key,
@@ -546,22 +538,16 @@ def resolve_notebook_optimization_campaign(
         engine=engine,
     )
     pareto_payload = build_pareto_frontiers(selected_trials, objective_names=objective_names)
-    recommendation_payload = build_bayesian_recommendations(
-        selected_trials,
-        objective_names=objective_names,
-        search_space_payload=_NOTEBOOK_OPTIMIZATION_SEARCH_SPACE,
-        proposal_count=3,
-    )
     frontier_cohort = pareto_payload.get("cohorts", [{}])[0] if pareto_payload.get("cohorts") else {}
-    recommendation_cohort = recommendation_payload.get("cohorts", [{}])[0] if recommendation_payload.get("cohorts") else {}
-
+    recommendation_cohort = {
+        "eligible_run_count": 0,
+        "search_strategy": "disabled",
+        "best_observed_run_id": "",
+        "best_observed_score": None,
+        "proposals": [],
+    }
     executed_signatures = set(str(item) for item in existing.get("executed_proposal_signatures", []))
     next_proposal = {}
-    for proposal in recommendation_cohort.get("proposals", []):
-        signature = str(proposal.get("signature", "") or "")
-        if signature and signature not in executed_signatures:
-            next_proposal = dict(proposal)
-            break
 
     status = "disabled"
     if resolved_mode == "stop":
@@ -597,7 +583,7 @@ def resolve_notebook_optimization_campaign(
         "manifest_sha256": dataset_identity.get("manifest_sha256"),
         "updated_at": datetime.utcnow().isoformat() + "Z",
         "notebook_parameters": dict(notebook_parameters or {}),
-        "recommendation_generated_at": recommendation_payload.get("generated_at"),
+        "recommendation_generated_at": "",
     }
     if existing:
         campaign.setdefault("created_at", existing.get("created_at"))
@@ -692,7 +678,6 @@ def finalize_notebook_optimization_campaign(
 ) -> Dict[str, Any]:
     from scripts.index_training_runs import build_run_registry
     from src.training.services.optimization import (
-        build_bayesian_recommendations,
         build_pareto_frontiers,
         select_trials_for_cohort,
     )
@@ -723,14 +708,15 @@ def finalize_notebook_optimization_campaign(
     )
     objective_names = list(payload.get("objective_names", _DEFAULT_PARETO_OBJECTIVES))
     pareto_payload = build_pareto_frontiers(selected_trials, objective_names=objective_names)
-    recommendation_payload = build_bayesian_recommendations(
-        selected_trials,
-        objective_names=objective_names,
-        search_space_payload=_NOTEBOOK_OPTIMIZATION_SEARCH_SPACE,
-        proposal_count=3,
-    )
     frontier_cohort = pareto_payload.get("cohorts", [{}])[0] if pareto_payload.get("cohorts") else {}
-    recommendation_cohort = recommendation_payload.get("cohorts", [{}])[0] if recommendation_payload.get("cohorts") else {}
+    recommendation_cohort = {
+        "cohort_key": str(frontier_cohort.get("cohort_key", "") or payload.get("cohort_key", "")),
+        "eligible_run_count": 0,
+        "search_strategy": "disabled",
+        "best_observed_run_id": "",
+        "best_observed_score": None,
+        "proposals": [],
+    }
 
     executed_run_ids = list(payload.get("executed_run_ids", []))
     if run_id and run_id not in executed_run_ids:
@@ -742,12 +728,6 @@ def finalize_notebook_optimization_campaign(
         executed_signatures.append(selected_signature)
 
     next_proposal = {}
-    executed_set = set(executed_signatures)
-    for proposal in recommendation_cohort.get("proposals", []):
-        signature = str(proposal.get("signature", "") or "")
-        if signature and signature not in executed_set:
-            next_proposal = dict(proposal)
-            break
 
     payload.update(
         {
@@ -761,7 +741,7 @@ def finalize_notebook_optimization_campaign(
             "last_completed_run_id": str(run_id or payload.get("last_completed_run_id", "") or ""),
             "next_proposal": next_proposal,
             "updated_at": datetime.utcnow().isoformat() + "Z",
-            "recommendation_generated_at": recommendation_payload.get("generated_at"),
+            "recommendation_generated_at": "",
         }
     )
     if str(payload.get("mode", "") or "") == "stop":
@@ -928,6 +908,9 @@ def initialize_notebook_training_engine(
         emit(f"[CLASSES] taxonomy-unmatched classes kept: {class_resolution['unmatched_classes']}")
 
     resolved_parameters = dict(notebook_parameters or {})
+    resolved_optimization_campaign_mode = str(optimization_campaign_mode or "").strip().lower()
+    if resolved_optimization_campaign_mode in {"continue", "stop"}:
+        emit("[OPT] Bayesian optimization is disabled; visible notebook parameters will be used.")
     optimization_campaign = resolve_notebook_optimization_campaign(
         root=root,
         runtime_dataset_root=runtime_data_root / dataset_key,
@@ -936,7 +919,7 @@ def initialize_notebook_training_engine(
         part_name=part_name,
         backbone_model_name=str(dict(base_config or {}).get("training", {}).get("continual", {}).get("backbone", {}).get("model_name", "")),
         notebook_parameters=resolved_parameters,
-        mode=optimization_campaign_mode,
+        mode="disabled",
         telemetry=telemetry,
     )
     print_notebook_optimization_campaign_status(optimization_campaign, print_fn=emit)

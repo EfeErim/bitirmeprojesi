@@ -115,7 +115,8 @@ Read:
 - `training/optimization_record.json` for normalized parameters and objectives
 - `runs/_index/latest_registry.json` for the local aggregate registry view
 - `runs/_index/pareto_frontiers.json` for the current non-dominated runs inside each comparable cohort
-- `runs/_index/bayesian_recommendations.json` for the current Bayesian parameter proposals per cohort
+
+Bayesian proposal generation is currently disabled. Fresh registry rebuilds do not write `runs/_index/bayesian_recommendations.json`.
 
 ### What dataset format does Notebook 2 accept?
 
@@ -161,12 +162,11 @@ runs/_index/
   latest_registry.json
   pareto_inputs.json
   pareto_frontiers.json
-  bayesian_recommendations.json
 ```
 
 Those files are now refreshed automatically on successful canonical training traceability writes when the run is mirrored under the repo `runs/` tree. The index script is still available for manual rebuilds.
 
-### Which command should I use to inspect or launch optimizer proposals for one dataset-aware cohort?
+### Which command should I use to inspect one dataset-aware cohort?
 
 Use:
 
@@ -174,22 +174,13 @@ Use:
 .\scripts\python.cmd scripts/optimize_training_runs.py --dataset-lineage-key <dataset_key>::<split_manifest_sha256> --crop-name <crop> --part-name <part>
 ```
 
-Add `--execute --data-dir <runtime_dataset_root>` when you want the proposed settings to run through the canonical training workflow.
+This command reports Pareto context only. Bayesian proposals and `--execute` optimization runs are disabled.
 
-Execution safety policy:
+### Is the Notebook 2 optimizer loop active?
 
-- `--execute` is blocked by default when the selected cohort has zero eligible Bayesian evidence (for example, all runs were excluded for readiness).
-- pass `--allow-bootstrap-execute` only when you intentionally want to run fallback random-bootstrap proposals.
+No. Bayesian optimizer campaign automation is disabled.
 
-### How do I stop or resume the optimizer loop from Notebook 2?
-
-Use the visible Notebook 2 parameter `OPTIMIZATION_CAMPAIGN_MODE`:
-
-- `disabled`: no optimizer campaign is applied
-- `continue`: Notebook 2 resumes or creates the dataset-aware campaign and auto-applies the next unseen proposal
-- `stop`: Notebook 2 marks the current campaign as stopped and leaves the visible parameters unchanged
-
-Notebook campaigns are saved under `runs/_index/notebook_optimization_campaigns/`, so you can resume later from the same dataset-aware cohort.
+Notebook 2 uses the visible training parameters only. If `OPTIMIZATION_CAMPAIGN_MODE` is set to `continue` or `stop`, the helper ignores it and records disabled campaign status.
 
 ### Which inference file is canonical?
 

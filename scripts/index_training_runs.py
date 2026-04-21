@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a local training-run registry for optimizer and Pareto preparation."""
+"""Build a local training-run registry for Pareto preparation."""
 
 from __future__ import annotations
 
@@ -16,11 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.shared.json_utils import read_json, write_json
-from src.training.services.optimization import (
-    DEFAULT_SEARCH_SPACE,
-    build_bayesian_recommendations,
-    build_pareto_frontiers,
-)
+from src.training.services.optimization import build_pareto_frontiers
 from src.training.services.traceability import (
     build_experiment_manifest,
     build_optimization_record,
@@ -291,19 +287,14 @@ def write_registry(
     pareto_inputs_path = write_json(root / "pareto_inputs.json", pareto_inputs, ensure_ascii=False)
     pareto_frontiers = build_pareto_frontiers(materialized_trials)
     pareto_frontiers_path = write_json(root / "pareto_frontiers.json", pareto_frontiers, ensure_ascii=False)
-    bayesian_recommendations = build_bayesian_recommendations(
-        materialized_trials,
-        search_space_payload=DEFAULT_SEARCH_SPACE,
-    )
-    bayesian_recommendations_path = write_json(
-        root / "bayesian_recommendations.json",
-        bayesian_recommendations,
-        ensure_ascii=False,
-    )
+    stale_bayesian_recommendations_path = root / "bayesian_recommendations.json"
+    if stale_bayesian_recommendations_path.exists():
+        stale_bayesian_recommendations_path.unlink()
     latest_registry_payload = {
         "schema_version": REGISTRY_SCHEMA,
         "generated_at": pareto_inputs["generated_at"],
         "optimization_profile": "accuracy_plus_ood",
+        "bayesian_optimization_enabled": False,
         "trial_count": len(materialized_trials),
         "canonical_count": sum(1 for trial in materialized_trials if trial.get("record_quality") == "canonical"),
         "backfilled_count": sum(1 for trial in materialized_trials if trial.get("record_quality") == "backfilled"),
@@ -312,7 +303,6 @@ def write_registry(
             "trials_jsonl": str(trials_jsonl),
             "pareto_inputs_json": str(pareto_inputs_path),
             "pareto_frontiers_json": str(pareto_frontiers_path),
-            "bayesian_recommendations_json": str(bayesian_recommendations_path),
         },
         "cohorts": [
             {
@@ -328,7 +318,6 @@ def write_registry(
         "trials_jsonl": trials_jsonl,
         "pareto_inputs_json": pareto_inputs_path,
         "pareto_frontiers_json": pareto_frontiers_path,
-        "bayesian_recommendations_json": bayesian_recommendations_path,
         "latest_registry_json": latest_registry_path,
         "latest_registry": latest_registry_payload,
     }

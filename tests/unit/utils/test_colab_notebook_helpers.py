@@ -824,7 +824,7 @@ def test_resolve_notebook_optimization_campaign_bootstrap_pending_when_no_trials
         mode="continue",
     )
 
-    assert campaign["status"] == "bootstrap_pending"
+    assert campaign["status"] == "disabled"
     assert Path(campaign["campaign_json"]).exists()
     assert summarize_notebook_optimization_campaign(campaign)["executed_run_count"] == 0
 
@@ -868,9 +868,9 @@ def test_resolve_notebook_optimization_campaign_falls_back_to_legacy_dataset_key
         mode="continue",
     )
 
-    assert campaign["status"] == "active"
+    assert campaign["status"] == "disabled"
     assert campaign["cohort_match_mode"] == "legacy_dataset_key_blank_backbone"
-    assert campaign["eligible_run_count"] == 1
+    assert campaign["eligible_run_count"] == 0
 
 
 def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_path: Path):
@@ -958,7 +958,7 @@ def test_finalize_notebook_optimization_campaign_records_completed_run(tmp_path:
 
     assert "run_b" in finalized["executed_run_ids"]
     assert finalized["last_completed_run_id"] == "run_b"
-    assert finalized["executed_proposal_signatures"]
+    assert finalized["executed_proposal_signatures"] == []
 
 
 def test_prepare_notebook_access_and_dataset_collects_access_and_runtime_dataset(tmp_path: Path, monkeypatch):
@@ -996,7 +996,7 @@ def test_prepare_notebook_access_and_dataset_collects_access_and_runtime_dataset
     assert result["selected_dataset_root"] == dataset_root
     assert result["resolved_ood_root"] == str(dataset_root / "ood")
     assert result["access_report"] == access_report
-    assert any("Detailed cohort status" in line for line in lines)
+    assert any("Bayesian campaign automation is disabled" in line for line in lines)
 
 
 def test_initialize_notebook_training_engine_applies_campaign_proposal_and_builds_loader_state(tmp_path: Path, monkeypatch):

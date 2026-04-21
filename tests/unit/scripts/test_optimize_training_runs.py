@@ -2,6 +2,8 @@ import argparse
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.optimize_training_runs import run_optimizer
 
 
@@ -134,9 +136,11 @@ def test_run_optimizer_analyzes_single_cohort(tmp_path: Path):
 
     assert result["selected_cohort"]["comparability"]["cohort_key"].endswith("fake/backbone")
     assert result["selected_cohort"]["pareto_frontier"]["frontier_count"] >= 1
-    assert result["selected_cohort"]["bayesian_recommendations"]["proposal_count"] == 2
+    assert result["bayesian_optimization_enabled"] is False
+    assert result["selected_cohort"]["bayesian_recommendations"]["proposal_count"] == 0
+    assert result["selected_cohort"]["bayesian_recommendations"]["search_strategy"] == "disabled"
     assert Path(result["registry_paths"]["pareto_frontiers_json"]).exists()
-    assert Path(result["registry_paths"]["bayesian_recommendations_json"]).exists()
+    assert "bayesian_recommendations_json" not in result["registry_paths"]
 
 
 def test_run_optimizer_executes_proposals(monkeypatch, tmp_path: Path):
@@ -173,10 +177,6 @@ def test_run_optimizer_executes_proposals(monkeypatch, tmp_path: Path):
             return FakeResult(run_id)
 
     monkeypatch.setattr(training_module, "TrainingWorkflow", FakeWorkflow)
-    monkeypatch.setattr(
-        "scripts.optimize_training_runs.get_config",
-        lambda environment="colab": {"training": {"continual": {"learning_rate": 0.0001}}},
-    )
     args = argparse.Namespace(
         runs_root=runs_root,
         index_root=runs_root / "_index",
@@ -201,12 +201,9 @@ def test_run_optimizer_executes_proposals(monkeypatch, tmp_path: Path):
         validation_every_n_epochs=3,
     )
 
-    result = run_optimizer(args)
-
-    assert result["executed_runs"]
-    assert Path(result["campaign_json"]).exists()
-    assert any("init" in call for call in calls)
-    assert any("run" in call for call in calls)
+    with pytest.raises(ValueError, match="Bayesian optimization execution is disabled"):
+        run_optimizer(args)
+    assert calls == []
 
 
 def test_run_optimizer_blocks_execute_without_eligible_bayesian_evidence(monkeypatch, tmp_path: Path):
@@ -220,10 +217,6 @@ def test_run_optimizer_blocks_execute_without_eligible_bayesian_evidence(monkeyp
             raise AssertionError("TrainingWorkflow should not be constructed when execution is blocked")
 
     monkeypatch.setattr(training_module, "TrainingWorkflow", FailIfCalledWorkflow)
-    monkeypatch.setattr(
-        "scripts.optimize_training_runs.get_config",
-        lambda environment="colab": {"training": {"continual": {"learning_rate": 0.0001}}},
-    )
 
     args = argparse.Namespace(
         runs_root=runs_root,
@@ -252,42 +245,8 @@ def test_run_optimizer_blocks_execute_without_eligible_bayesian_evidence(monkeyp
 
     from scripts.optimize_training_runs import run_optimizer as run_optimizer_local
 
-    # Force bootstrap-only recommendations to simulate zero eligible Bayesian evidence.
-    monkeypatch.setattr(
-        "scripts.optimize_training_runs.build_bayesian_recommendations",
-        lambda *a, **k: {
-            "cohorts": [
-                {
-                    "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
-                    "comparability": {
-                        "dataset_lineage_key": "tomato__leaf::sha_a",
-                        "crop_name": "tomato",
-                        "part_name": "leaf",
-                        "engine": "continual_sd_lora",
-                        "backbone_model_name": "fake/backbone",
-                        "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
-                    },
-                    "eligible_run_count": 0,
-                    "search_strategy": "random_bootstrap",
-                    "best_observed_run_id": "",
-                    "best_observed_score": None,
-                    "proposals": [
-                        {
-                            "rank": 1,
-                            "parameters": {"training.learning_rate": 0.00011},
-                            "config_override": {"training": {"continual": {"learning_rate": 0.00011}}},
-                        }
-                    ],
-                }
-            ]
-        },
-    )
-
-    try:
+    with pytest.raises(ValueError, match="Bayesian optimization execution is disabled"):
         run_optimizer_local(args)
-        raise AssertionError("Expected ValueError when bootstrap execution is not allowed")
-    except ValueError as exc:
-        assert "--allow-bootstrap-execute" in str(exc)
 
 
 def test_run_optimizer_allows_execute_with_bootstrap_override(monkeypatch, tmp_path: Path):
@@ -324,39 +283,6 @@ def test_run_optimizer_allows_execute_with_bootstrap_override(monkeypatch, tmp_p
             return FakeResult(run_id)
 
     monkeypatch.setattr(training_module, "TrainingWorkflow", FakeWorkflow)
-    monkeypatch.setattr(
-        "scripts.optimize_training_runs.get_config",
-        lambda environment="colab": {"training": {"continual": {"learning_rate": 0.0001}}},
-    )
-    monkeypatch.setattr(
-        "scripts.optimize_training_runs.build_bayesian_recommendations",
-        lambda *a, **k: {
-            "cohorts": [
-                {
-                    "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
-                    "comparability": {
-                        "dataset_lineage_key": "tomato__leaf::sha_a",
-                        "crop_name": "tomato",
-                        "part_name": "leaf",
-                        "engine": "continual_sd_lora",
-                        "backbone_model_name": "fake/backbone",
-                        "cohort_key": "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone",
-                    },
-                    "eligible_run_count": 0,
-                    "search_strategy": "random_bootstrap",
-                    "best_observed_run_id": "",
-                    "best_observed_score": None,
-                    "proposals": [
-                        {
-                            "rank": 1,
-                            "parameters": {"training.learning_rate": 0.00013},
-                            "config_override": {"training": {"continual": {"learning_rate": 0.00013}}},
-                        }
-                    ],
-                }
-            ]
-        },
-    )
 
     args = argparse.Namespace(
         runs_root=runs_root,
@@ -383,7 +309,6 @@ def test_run_optimizer_allows_execute_with_bootstrap_override(monkeypatch, tmp_p
         validation_every_n_epochs=3,
     )
 
-    result = run_optimizer(args)
-
-    assert result["executed_runs"]
-    assert any("run" in call for call in calls)
+    with pytest.raises(ValueError, match="Bayesian optimization execution is disabled"):
+        run_optimizer(args)
+    assert calls == []
