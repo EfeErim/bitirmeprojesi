@@ -1,0 +1,187 @@
+[CELL_CAPTURE] cell=Cell 6: Training
+run_id=tomato_leaf_2026-04-21_19-33-49
+started_at=2026-04-21T19:38:26.188719+00:00
+finished_at=2026-04-21T19:54:22.316565+00:00
+duration_sec=956.128
+
+[TRAIN] epochs=18 device=cuda batch_interval=12
+[TRAIN] epoch=1 batch=12/100 loss=0.0000 lr=0.000150 speed=266.3s/s elapsed=15s eta=2226s
+[TRAIN] epoch=1 batch=24/100 loss=0.0000 lr=0.000150 speed=265.9s/s elapsed=19s eta=1433s
+[TRAIN] epoch=1 batch=36/100 loss=0.0000 lr=0.000150 speed=266.3s/s elapsed=24s eta=1165s
+[TRAIN] epoch=1 batch=48/100 loss=0.0000 lr=0.000150 speed=266.3s/s elapsed=28s eta=1030s
+[TRAIN] epoch=1 batch=60/100 loss=0.0000 lr=0.000150 speed=265.9s/s elapsed=33s eta=947s
+[TRAIN] epoch=1 batch=72/100 loss=0.0000 lr=0.000149 speed=265.9s/s elapsed=37s eta=890s
+[TRAIN] epoch=1 batch=84/100 loss=0.0000 lr=0.000149 speed=265.8s/s elapsed=42s eta=848s
+[TRAIN] epoch=1 batch=96/100 loss=0.0000 lr=0.000149 speed=266.3s/s elapsed=46s eta=815s
+[CKPT] epoch_end epoch=1 step=100
+[EPOCH] 1/18: train_loss=2.0184 val_loss=1.5868 val_acc=0.6606 macro_f1=0.6397 * BEST
+[TRAIN] epoch=2 batch=12/100 loss=0.0000 lr=0.000149 speed=204.1s/s elapsed=70s eta=1052s
+[TRAIN] epoch=2 batch=24/100 loss=0.0000 lr=0.000148 speed=265.5s/s elapsed=75s eta=1013s
+[TRAIN] epoch=2 batch=36/100 loss=0.0000 lr=0.000148 speed=265.7s/s elapsed=79s eta=971s
+[TRAIN] epoch=2 batch=48/100 loss=0.0000 lr=0.000148 speed=266.1s/s elapsed=84s eta=936s
+[TRAIN] epoch=2 batch=60/100 loss=0.0000 lr=0.000147 speed=265.1s/s elapsed=88s eta=905s
+[TRAIN] epoch=2 batch=72/100 loss=0.0000 lr=0.000147 speed=265.8s/s elapsed=93s eta=877s
+[TRAIN] epoch=2 batch=84/100 loss=0.0000 lr=0.000146 speed=265.8s/s elapsed=97s eta=853s
+[TRAIN] epoch=2 batch=96/100 loss=0.0000 lr=0.000146 speed=265.8s/s elapsed=102s eta=831s
+[CKPT] epoch_end epoch=2 step=200
+[EPOCH] 2/18: train_loss=1.5736 val_loss=0.7064 val_acc=0.8494 macro_f1=0.8349 * BEST
+[TRAIN] epoch=3 batch=12/100 loss=0.0000 lr=0.000145 speed=254.1s/s elapsed=123s eta=923s
+[TRAIN] epoch=3 batch=24/100 loss=0.0000 lr=0.000144 speed=263.8s/s elapsed=129s eta=904s
+[TRAIN] epoch=3 batch=36/100 loss=0.0000 lr=0.000144 speed=265.6s/s elapsed=133s eta=881s
+[TRAIN] epoch=3 batch=48/100 loss=0.0000 lr=0.000143 speed=266.1s/s elapsed=137s eta=860s
+[CKPT] batch_250 epoch=3 step=250
+[TRAIN] epoch=3 batch=60/100 loss=0.0000 lr=0.000142 speed=265.9s/s elapsed=143s eta=849s
+[TRAIN] epoch=3 batch=72/100 loss=0.0000 lr=0.000142 speed=265.5s/s elapsed=148s eta=830s
+[TRAIN] epoch=3 batch=84/100 loss=0.0000 lr=0.000141 speed=265.9s/s elapsed=152s eta=812s
+[TRAIN] epoch=3 batch=96/100 loss=0.0000 lr=0.000140 speed=265.7s/s elapsed=157s eta=796s
+[CKPT] epoch_end epoch=3 step=300
+[EPOCH] 3/18: train_loss=1.4572 val_loss=0.5301 val_acc=0.8871 macro_f1=0.8813 * BEST
+[TRAIN] epoch=4 batch=12/100 loss=0.0000 lr=0.000139 speed=161.8s/s elapsed=178s eta=847s
+[TRAIN] epoch=4 batch=24/100 loss=0.0000 lr=0.000138 speed=265.5s/s elapsed=183s eta=834s
+[TRAIN] epoch=4 batch=36/100 loss=0.0000 lr=0.000138 speed=266.1s/s elapsed=188s eta=817s
+[TRAIN] epoch=4 batch=48/100 loss=0.0000 lr=0.000137 speed=265.2s/s elapsed=192s eta=801s
+[TRAIN] epoch=4 batch=60/100 loss=0.0000 lr=0.000136 speed=265.8s/s elapsed=196s eta=786s
+[TRAIN] epoch=4 batch=72/100 loss=0.0000 lr=0.000135 speed=265.8s/s elapsed=201s eta=771s
+[TRAIN] epoch=4 batch=84/100 loss=0.0000 lr=0.000134 speed=265.7s/s elapsed=205s eta=757s
+[TRAIN] epoch=4 batch=96/100 loss=0.0000 lr=0.000133 speed=265.7s/s elapsed=210s eta=744s
+[CKPT] epoch_end epoch=4 step=400
+[EPOCH] 4/18: train_loss=1.4233 val_loss=0.3988 val_acc=0.9106 macro_f1=0.9117 * BEST
+[TRAIN] epoch=5 batch=12/100 loss=0.0000 lr=0.000132 speed=180.1s/s elapsed=232s eta=782s
+[TRAIN] epoch=5 batch=24/100 loss=0.0000 lr=0.000131 speed=265.4s/s elapsed=237s eta=770s
+[TRAIN] epoch=5 batch=36/100 loss=0.0000 lr=0.000129 speed=265.5s/s elapsed=242s eta=756s
+[TRAIN] epoch=5 batch=48/100 loss=0.0000 lr=0.000128 speed=265.7s/s elapsed=246s eta=742s
+[TRAIN] epoch=5 batch=60/100 loss=0.0000 lr=0.000127 speed=266.1s/s elapsed=250s eta=729s
+[TRAIN] epoch=5 batch=72/100 loss=0.0000 lr=0.000126 speed=265.7s/s elapsed=255s eta=717s
+[TRAIN] epoch=5 batch=84/100 loss=0.0000 lr=0.000125 speed=266.0s/s elapsed=259s eta=705s
+[TRAIN] epoch=5 batch=96/100 loss=0.0000 lr=0.000124 speed=265.5s/s elapsed=264s eta=693s
+[CKPT] batch_250 epoch=5 step=500
+[CKPT] epoch_end epoch=5 step=500
+[EPOCH] 5/18: train_loss=1.4041 val_loss=0.3704 val_acc=0.9244 macro_f1=0.9245 * BEST
+[TRAIN] epoch=6 batch=12/100 loss=0.0000 lr=0.000122 speed=221.2s/s elapsed=287s eta=723s
+[TRAIN] epoch=6 batch=24/100 loss=0.0000 lr=0.000121 speed=266.1s/s elapsed=292s eta=712s
+[TRAIN] epoch=6 batch=36/100 loss=0.0000 lr=0.000120 speed=265.9s/s elapsed=297s eta=699s
+[TRAIN] epoch=6 batch=48/100 loss=0.0000 lr=0.000118 speed=265.0s/s elapsed=301s eta=688s
+[TRAIN] epoch=6 batch=60/100 loss=0.0000 lr=0.000117 speed=265.6s/s elapsed=305s eta=676s
+[TRAIN] epoch=6 batch=72/100 loss=0.0000 lr=0.000116 speed=265.7s/s elapsed=310s eta=665s
+[TRAIN] epoch=6 batch=84/100 loss=0.0000 lr=0.000115 speed=265.7s/s elapsed=314s eta=655s
+[TRAIN] epoch=6 batch=96/100 loss=0.0000 lr=0.000113 speed=265.3s/s elapsed=319s eta=644s
+[EPOCH] 6/18: train_loss=1.3870 val_loss=0.3870 val_acc=0.9322 macro_f1=0.9341
+[TRAIN] epoch=7 batch=12/100 loss=0.0000 lr=0.000111 speed=199.8s/s elapsed=338s eta=655s
+[TRAIN] epoch=7 batch=24/100 loss=0.0000 lr=0.000110 speed=265.7s/s elapsed=342s eta=645s
+[TRAIN] epoch=7 batch=36/100 loss=0.0000 lr=0.000109 speed=265.2s/s elapsed=347s eta=635s
+[TRAIN] epoch=7 batch=48/100 loss=0.0000 lr=0.000107 speed=264.5s/s elapsed=351s eta=624s
+[TRAIN] epoch=7 batch=60/100 loss=0.0000 lr=0.000106 speed=265.7s/s elapsed=356s eta=614s
+[TRAIN] epoch=7 batch=72/100 loss=0.0000 lr=0.000104 speed=265.8s/s elapsed=360s eta=604s
+[TRAIN] epoch=7 batch=84/100 loss=0.0000 lr=0.000103 speed=265.4s/s elapsed=365s eta=595s
+[TRAIN] epoch=7 batch=96/100 loss=0.0000 lr=0.000101 speed=265.7s/s elapsed=369s eta=585s
+[EPOCH] 7/18: train_loss=1.3812 val_loss=0.3852 val_acc=0.9322 macro_f1=0.9343
+[TRAIN] epoch=8 batch=12/100 loss=0.0000 lr=0.000100 speed=212.2s/s elapsed=388s eta=593s
+[TRAIN] epoch=8 batch=24/100 loss=0.0000 lr=0.000098 speed=266.1s/s elapsed=393s eta=584s
+[TRAIN] epoch=8 batch=36/100 loss=0.0000 lr=0.000097 speed=265.8s/s elapsed=397s eta=574s
+[TRAIN] epoch=8 batch=48/100 loss=0.0000 lr=0.000095 speed=265.9s/s elapsed=402s eta=565s
+[CKPT] batch_250 epoch=8 step=750
+[TRAIN] epoch=8 batch=60/100 loss=0.0000 lr=0.000094 speed=265.4s/s elapsed=408s eta=558s
+[TRAIN] epoch=8 batch=72/100 loss=0.0000 lr=0.000092 speed=265.7s/s elapsed=412s eta=549s
+[TRAIN] epoch=8 batch=84/100 loss=0.0000 lr=0.000090 speed=266.1s/s elapsed=417s eta=540s
+[TRAIN] epoch=8 batch=96/100 loss=0.0000 lr=0.000089 speed=265.9s/s elapsed=421s eta=531s
+[CKPT] epoch_end epoch=8 step=800
+[EPOCH] 8/18: train_loss=1.3715 val_loss=0.3571 val_acc=0.9313 macro_f1=0.9340 * BEST
+[TRAIN] epoch=9 batch=12/100 loss=0.0000 lr=0.000087 speed=246.5s/s elapsed=443s eta=539s
+[TRAIN] epoch=9 batch=24/100 loss=0.0000 lr=0.000085 speed=265.7s/s elapsed=447s eta=530s
+[TRAIN] epoch=9 batch=36/100 loss=0.0000 lr=0.000084 speed=265.6s/s elapsed=452s eta=521s
+[TRAIN] epoch=9 batch=48/100 loss=0.0000 lr=0.000082 speed=265.9s/s elapsed=456s eta=512s
+[TRAIN] epoch=9 batch=60/100 loss=0.0000 lr=0.000081 speed=266.1s/s elapsed=461s eta=503s
+[TRAIN] epoch=9 batch=72/100 loss=0.0000 lr=0.000079 speed=265.4s/s elapsed=465s eta=495s
+[TRAIN] epoch=9 batch=84/100 loss=0.0000 lr=0.000078 speed=265.5s/s elapsed=469s eta=486s
+[TRAIN] epoch=9 batch=96/100 loss=0.0000 lr=0.000076 speed=265.3s/s elapsed=474s eta=478s
+[EPOCH] 9/18: train_loss=1.3694 val_loss=0.3715 val_acc=0.9365 macro_f1=0.9391
+[TRAIN] epoch=10 batch=12/100 loss=0.0000 lr=0.000074 speed=179.5s/s elapsed=493s eta=480s
+[TRAIN] epoch=10 batch=24/100 loss=0.0000 lr=0.000072 speed=266.0s/s elapsed=497s eta=471s
+[TRAIN] epoch=10 batch=36/100 loss=0.0000 lr=0.000071 speed=265.7s/s elapsed=502s eta=463s
+[TRAIN] epoch=10 batch=48/100 loss=0.0000 lr=0.000069 speed=265.9s/s elapsed=506s eta=455s
+[TRAIN] epoch=10 batch=60/100 loss=0.0000 lr=0.000068 speed=265.1s/s elapsed=511s eta=447s
+[TRAIN] epoch=10 batch=72/100 loss=0.0000 lr=0.000066 speed=265.7s/s elapsed=515s eta=439s
+[TRAIN] epoch=10 batch=84/100 loss=0.0000 lr=0.000065 speed=265.6s/s elapsed=519s eta=431s
+[TRAIN] epoch=10 batch=96/100 loss=0.0000 lr=0.000063 speed=266.0s/s elapsed=524s eta=423s
+[CKPT] batch_250 epoch=10 step=1000
+[EPOCH] 10/18: train_loss=1.3645 val_loss=0.3720 val_acc=0.9378 macro_f1=0.9403
+[TRAIN] epoch=11 batch=12/100 loss=0.0000 lr=0.000061 speed=214.5s/s elapsed=546s eta=425s
+[TRAIN] epoch=11 batch=24/100 loss=0.0000 lr=0.000060 speed=265.5s/s elapsed=550s eta=417s
+[TRAIN] epoch=11 batch=36/100 loss=0.0000 lr=0.000058 speed=265.5s/s elapsed=555s eta=409s
+[TRAIN] epoch=11 batch=48/100 loss=0.0000 lr=0.000056 speed=265.7s/s elapsed=559s eta=401s
+[TRAIN] epoch=11 batch=60/100 loss=0.0000 lr=0.000055 speed=265.9s/s elapsed=564s eta=393s
+[TRAIN] epoch=11 batch=72/100 loss=0.0000 lr=0.000053 speed=265.9s/s elapsed=568s eta=386s
+[TRAIN] epoch=11 batch=84/100 loss=0.0000 lr=0.000052 speed=265.9s/s elapsed=572s eta=378s
+[TRAIN] epoch=11 batch=96/100 loss=0.0000 lr=0.000051 speed=265.1s/s elapsed=577s eta=371s
+[CKPT] epoch_end epoch=11 step=1100
+[EPOCH] 11/18: train_loss=1.3634 val_loss=0.3403 val_acc=0.9437 macro_f1=0.9459 * BEST
+[TRAIN] epoch=12 batch=12/100 loss=0.0000 lr=0.000049 speed=226.4s/s elapsed=598s eta=370s
+[TRAIN] epoch=12 batch=24/100 loss=0.0000 lr=0.000047 speed=265.7s/s elapsed=603s eta=363s
+[TRAIN] epoch=12 batch=36/100 loss=0.0000 lr=0.000046 speed=265.3s/s elapsed=607s eta=355s
+[TRAIN] epoch=12 batch=48/100 loss=0.0000 lr=0.000044 speed=265.8s/s elapsed=612s eta=347s
+[TRAIN] epoch=12 batch=60/100 loss=0.0000 lr=0.000043 speed=265.5s/s elapsed=616s eta=340s
+[TRAIN] epoch=12 batch=72/100 loss=0.0000 lr=0.000041 speed=265.4s/s elapsed=621s eta=333s
+[TRAIN] epoch=12 batch=84/100 loss=0.0000 lr=0.000040 speed=265.7s/s elapsed=625s eta=325s
+[TRAIN] epoch=12 batch=96/100 loss=0.0000 lr=0.000039 speed=265.6s/s elapsed=630s eta=318s
+[CKPT] epoch_end epoch=12 step=1200
+[EPOCH] 12/18: train_loss=1.3592 val_loss=0.3329 val_acc=0.9424 macro_f1=0.9448 * BEST
+[TRAIN] epoch=13 batch=12/100 loss=0.0000 lr=0.000037 speed=139.6s/s elapsed=651s eta=316s
+[TRAIN] epoch=13 batch=24/100 loss=0.0000 lr=0.000036 speed=266.1s/s elapsed=656s eta=309s
+[TRAIN] epoch=13 batch=36/100 loss=0.0000 lr=0.000034 speed=265.7s/s elapsed=660s eta=301s
+[TRAIN] epoch=13 batch=48/100 loss=0.0000 lr=0.000033 speed=265.9s/s elapsed=665s eta=294s
+[CKPT] batch_250 epoch=13 step=1250
+[TRAIN] epoch=13 batch=60/100 loss=0.0000 lr=0.000032 speed=265.2s/s elapsed=671s eta=287s
+[TRAIN] epoch=13 batch=72/100 loss=0.0000 lr=0.000030 speed=265.8s/s elapsed=675s eta=280s
+[TRAIN] epoch=13 batch=84/100 loss=0.0000 lr=0.000029 speed=265.4s/s elapsed=680s eta=273s
+[TRAIN] epoch=13 batch=96/100 loss=0.0000 lr=0.000028 speed=265.8s/s elapsed=684s eta=266s
+[CKPT] epoch_end epoch=13 step=1300
+[EPOCH] 13/18: train_loss=1.3590 val_loss=0.3037 val_acc=0.9450 macro_f1=0.9466 * BEST
+[TRAIN] epoch=14 batch=12/100 loss=0.0000 lr=0.000026 speed=205.7s/s elapsed=706s eta=263s
+[TRAIN] epoch=14 batch=24/100 loss=0.0000 lr=0.000025 speed=264.8s/s elapsed=711s eta=256s
+[TRAIN] epoch=14 batch=36/100 loss=0.0000 lr=0.000024 speed=265.6s/s elapsed=715s eta=248s
+[TRAIN] epoch=14 batch=48/100 loss=0.0000 lr=0.000023 speed=265.5s/s elapsed=720s eta=241s
+[TRAIN] epoch=14 batch=60/100 loss=0.0000 lr=0.000022 speed=265.9s/s elapsed=724s eta=234s
+[TRAIN] epoch=14 batch=72/100 loss=0.0000 lr=0.000021 speed=265.5s/s elapsed=729s eta=227s
+[TRAIN] epoch=14 batch=84/100 loss=0.0000 lr=0.000020 speed=265.1s/s elapsed=733s eta=220s
+[TRAIN] epoch=14 batch=96/100 loss=0.0000 lr=0.000019 speed=265.8s/s elapsed=738s eta=213s
+[EPOCH] 14/18: train_loss=1.3567 val_loss=0.3176 val_acc=0.9450 macro_f1=0.9473
+[TRAIN] epoch=15 batch=12/100 loss=0.0000 lr=0.000017 speed=182.3s/s elapsed=757s eta=208s
+[TRAIN] epoch=15 batch=24/100 loss=0.0000 lr=0.000016 speed=265.7s/s elapsed=761s eta=201s
+[TRAIN] epoch=15 batch=36/100 loss=0.0000 lr=0.000016 speed=265.5s/s elapsed=765s eta=194s
+[TRAIN] epoch=15 batch=48/100 loss=0.0000 lr=0.000015 speed=265.4s/s elapsed=770s eta=187s
+[TRAIN] epoch=15 batch=60/100 loss=0.0000 lr=0.000014 speed=265.3s/s elapsed=774s eta=180s
+[TRAIN] epoch=15 batch=72/100 loss=0.0000 lr=0.000013 speed=266.0s/s elapsed=779s eta=174s
+[TRAIN] epoch=15 batch=84/100 loss=0.0000 lr=0.000012 speed=265.1s/s elapsed=783s eta=167s
+[TRAIN] epoch=15 batch=96/100 loss=0.0000 lr=0.000011 speed=265.9s/s elapsed=788s eta=160s
+[CKPT] batch_250 epoch=15 step=1500
+[EPOCH] 15/18: train_loss=1.3553 val_loss=0.3166 val_acc=0.9447 macro_f1=0.9468
+[TRAIN] epoch=16 batch=12/100 loss=0.0000 lr=0.000010 speed=157.5s/s elapsed=809s eta=154s
+[TRAIN] epoch=16 batch=24/100 loss=0.0000 lr=0.000009 speed=265.7s/s elapsed=814s eta=147s
+[TRAIN] epoch=16 batch=36/100 loss=0.0000 lr=0.000009 speed=265.8s/s elapsed=818s eta=141s
+[TRAIN] epoch=16 batch=48/100 loss=0.0000 lr=0.000008 speed=265.9s/s elapsed=823s eta=134s
+[TRAIN] epoch=16 batch=60/100 loss=0.0000 lr=0.000007 speed=265.4s/s elapsed=827s eta=127s
+[TRAIN] epoch=16 batch=72/100 loss=0.0000 lr=0.000007 speed=265.6s/s elapsed=832s eta=121s
+[TRAIN] epoch=16 batch=84/100 loss=0.0000 lr=0.000006 speed=265.8s/s elapsed=836s eta=114s
+[TRAIN] epoch=16 batch=96/100 loss=0.0000 lr=0.000006 speed=265.8s/s elapsed=841s eta=107s
+[EPOCH] 16/18: train_loss=1.3559 val_loss=0.3104 val_acc=0.9470 macro_f1=0.9493
+[TRAIN] epoch=17 batch=12/100 loss=0.0000 lr=0.000005 speed=183.3s/s elapsed=859s eta=100s
+[TRAIN] epoch=17 batch=24/100 loss=0.0000 lr=0.000004 speed=265.9s/s elapsed=864s eta=94s
+[TRAIN] epoch=17 batch=36/100 loss=0.0000 lr=0.000004 speed=265.6s/s elapsed=868s eta=87s
+[TRAIN] epoch=17 batch=48/100 loss=0.0000 lr=0.000004 speed=265.6s/s elapsed=873s eta=80s
+[TRAIN] epoch=17 batch=60/100 loss=0.0000 lr=0.000003 speed=265.5s/s elapsed=877s eta=74s
+[TRAIN] epoch=17 batch=72/100 loss=0.0000 lr=0.000003 speed=265.5s/s elapsed=882s eta=67s
+[TRAIN] epoch=17 batch=84/100 loss=0.0000 lr=0.000003 speed=266.0s/s elapsed=886s eta=61s
+[TRAIN] epoch=17 batch=96/100 loss=0.0000 lr=0.000002 speed=265.6s/s elapsed=890s eta=55s
+[EPOCH] 17/18: train_loss=1.3530 val_loss=0.3073 val_acc=0.9470 macro_f1=0.9489
+[TRAIN] epoch=18 batch=12/100 loss=0.0000 lr=0.000002 speed=235.8s/s elapsed=910s eta=47s
+[TRAIN] epoch=18 batch=24/100 loss=0.0000 lr=0.000002 speed=266.0s/s elapsed=914s eta=40s
+[TRAIN] epoch=18 batch=36/100 loss=0.0000 lr=0.000001 speed=265.2s/s elapsed=918s eta=34s
+[TRAIN] epoch=18 batch=48/100 loss=0.0000 lr=0.000001 speed=265.9s/s elapsed=923s eta=27s
+[CKPT] batch_250 epoch=18 step=1750
+[TRAIN] epoch=18 batch=60/100 loss=0.0000 lr=0.000001 speed=265.6s/s elapsed=929s eta=21s
+[TRAIN] epoch=18 batch=72/100 loss=0.0000 lr=0.000001 speed=265.7s/s elapsed=934s eta=15s
+[TRAIN] epoch=18 batch=84/100 loss=0.0000 lr=0.000001 speed=265.6s/s elapsed=938s eta=8s
+[TRAIN] epoch=18 batch=96/100 loss=0.0000 lr=0.000001 speed=265.6s/s elapsed=942s eta=2s
+[CKPT] epoch_end epoch=18 step=1800
+[EPOCH] 18/18: train_loss=1.3561 val_loss=0.3060 val_acc=0.9463 macro_f1=0.9484
+[TRAIN] Complete. elapsed=955.9s stopped_early=True stopped_by_user=False cycles=1
