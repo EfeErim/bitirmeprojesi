@@ -63,19 +63,37 @@ def _summarize_manifest_rows(rows: list[Any]) -> Dict[str, Any]:
 
 def _manifest_class_counts(payload: Dict[str, Any]) -> Dict[str, int]:
     classes = payload.get("classes", [])
-    if not isinstance(classes, list):
-        return {}
     counts: Dict[str, int] = {}
-    for entry in classes:
-        if not isinstance(entry, dict):
-            continue
-        class_name = normalize_class_name(entry.get("class_name", ""))
-        if not class_name:
-            continue
-        try:
-            counts[class_name] = int(entry.get("image_count"))
-        except (TypeError, ValueError):
-            continue
+    if isinstance(classes, list):
+        for entry in classes:
+            if not isinstance(entry, dict):
+                continue
+            class_name = normalize_class_name(entry.get("class_name", ""))
+            if not class_name:
+                continue
+            try:
+                counts[class_name] = int(entry.get("reference_image_count", entry.get("image_count")))
+            except (TypeError, ValueError):
+                continue
+    if counts:
+        return counts
+
+    rows = payload.get("rows", [])
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            split_name = str(row.get("split", "")).strip().lower()
+            if split_name not in {"continual", "val", "test"}:
+                continue
+            if bool(row.get("runtime_skipped")) or bool(row.get("generated_offline_augmentation")):
+                continue
+            if bool(row.get("synthetic_hint")):
+                continue
+            class_name = normalize_class_name(row.get("normalized_class_name", row.get("class_name", "")))
+            if not class_name:
+                continue
+            counts[class_name] = int(counts.get(class_name, 0)) + 1
     return counts
 
 

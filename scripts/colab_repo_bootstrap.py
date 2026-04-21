@@ -277,7 +277,7 @@ def _build_authenticated_remote_url(repo_url: str, token: str) -> str:
             "Set origin to an https:// URL or disable auto-push."
         )
     netloc = parsed.netloc.split("@", 1)[-1]
-    return urlunsplit((parsed.scheme, f"{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+    return urlunsplit((parsed.scheme, f"x-access-token:{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
 
 
 def _clean_https_remote_url(repo_url: str) -> str:

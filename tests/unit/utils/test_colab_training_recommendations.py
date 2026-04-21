@@ -101,6 +101,60 @@ def test_inspect_runtime_dataset_reads_manifest_backed_risk_hints(tmp_path: Path
     assert report["manifest_row_summary"]["eval_quality_risk_count"] == 1
 
 
+def test_inspect_runtime_dataset_prefers_reference_image_count_for_augmented_manifests(tmp_path: Path):
+    root = tmp_path / "grape__fruit_train_aug"
+    _write_images(root, "continual", "healthy", 300)
+    _write_images(root, "continual", "powdery_mildew", 138)
+    _write_images(root, "val", "healthy", 10)
+    _write_images(root, "val", "powdery_mildew", 8)
+    _write_images(root, "test", "healthy", 10)
+    _write_images(root, "test", "powdery_mildew", 8)
+    (root / "split_manifest.json").write_text(
+        """
+        {
+          "classes": [
+            {"class_name": "healthy", "image_count": 320, "reference_image_count": 100},
+            {"class_name": "powdery_mildew", "image_count": 154, "reference_image_count": 46}
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    report = inspect_runtime_dataset(root)
+
+    assert report["manifest_class_counts"] == {"healthy": 100, "powdery_mildew": 46}
+    assert report["under_min_classes"] == ["powdery_mildew"]
+
+
+def test_inspect_runtime_dataset_counts_grouped_manifest_rows_as_reference(tmp_path: Path):
+    root = tmp_path / "grape__fruit"
+    _write_images(root, "continual", "healthy", 5)
+    _write_images(root, "continual", "powdery_mildew", 5)
+    _write_images(root, "val", "healthy", 1)
+    _write_images(root, "test", "healthy", 1)
+    (root / "split_manifest.json").write_text(
+        """
+        {
+          "rows": [
+            {"normalized_class_name": "healthy", "split": "continual"},
+            {"normalized_class_name": "healthy", "split": "val"},
+            {"normalized_class_name": "healthy", "split": "test"},
+            {"normalized_class_name": "healthy", "split": "continual", "generated_offline_augmentation": true},
+            {"normalized_class_name": "healthy", "split": "continual", "synthetic_hint": true},
+            {"normalized_class_name": "powdery_mildew", "split": "continual"}
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    report = inspect_runtime_dataset(root)
+
+    assert report["manifest_class_counts"] == {"healthy": 3, "powdery_mildew": 1}
+    assert report["reference_class_counts"] == {"healthy": 3, "powdery_mildew": 1}
+
+
 def test_inspect_runtime_dataset_falls_back_without_manifest(tmp_path: Path):
     root = tmp_path / "tomato"
     _write_images(root, "continual", "healthy", 40)

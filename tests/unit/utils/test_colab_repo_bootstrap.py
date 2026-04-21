@@ -81,7 +81,7 @@ def test_maybe_clone_repo_uses_github_token_for_https_clone(tmp_path: Path, monk
     assert resolved == clone_target
     assert calls
     assert calls[0][:3] == ["git", "clone", "--depth"]
-    assert calls[0][4] == "https://gh-secret@github.com/EfeErim/bitirmeprojesi.git"
+    assert calls[0][4] == "https://x-access-token:gh-secret@github.com/EfeErim/bitirmeprojesi.git"
 
 
 def test_export_current_colab_notebook_returns_none_on_empty_payload(tmp_path: Path, monkeypatch):

@@ -57,21 +57,39 @@ def _manifest_class_counts(crop_root: Path) -> tuple[str, Dict[str, int], list[s
     if not filename:
         return "", {}, []
     classes = payload.get("classes", [])
-    if not isinstance(classes, list):
-        return filename, {}, []
     counts: Dict[str, int] = {}
     skipped: list[str] = []
-    for entry in classes:
-        if not isinstance(entry, dict):
-            continue
-        class_name = normalize_class_name(entry.get("class_name", ""))
-        if not class_name:
-            continue
-        raw_count = entry.get("image_count")
-        try:
-            counts[class_name] = int(raw_count)
-        except (TypeError, ValueError):
-            skipped.append(class_name)
+    if isinstance(classes, list):
+        for entry in classes:
+            if not isinstance(entry, dict):
+                continue
+            class_name = normalize_class_name(entry.get("class_name", ""))
+            if not class_name:
+                continue
+            raw_count = entry.get("reference_image_count", entry.get("image_count"))
+            try:
+                counts[class_name] = int(raw_count)
+            except (TypeError, ValueError):
+                skipped.append(class_name)
+    if counts:
+        return filename, counts, skipped
+
+    rows = payload.get("rows", [])
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            split_name = str(row.get("split", "")).strip().lower()
+            if split_name not in {"continual", "val", "test"}:
+                continue
+            if bool(row.get("runtime_skipped")) or bool(row.get("generated_offline_augmentation")):
+                continue
+            if bool(row.get("synthetic_hint")):
+                continue
+            class_name = normalize_class_name(row.get("normalized_class_name", row.get("class_name", "")))
+            if not class_name:
+                continue
+            counts[class_name] = int(counts.get(class_name, 0)) + 1
     return filename, counts, skipped
 
 

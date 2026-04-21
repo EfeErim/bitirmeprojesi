@@ -353,6 +353,14 @@ For example, if you have a grape dataset and you multiplied the images with Robo
 
 If you want to measure whether augmentation helps, compare two controlled runs against the same clean held-out test set instead of silently mixing augmented variants into that test set.
 
+When you need materialized offline variants after a clean runtime split, use the repo helper instead of re-splitting a mixed folder:
+
+```powershell
+.\scripts\python.cmd scripts/augment_runtime_train_split.py --source-root data\prepared_runtime_datasets\grape__fruit_curated --output-root data\prepared_runtime_datasets\grape__fruit_curated_train_aug --variants-per-image 2
+```
+
+The helper copies the selected runtime dataset, generates deterministic PIL variants only from `continual/` images, leaves `val/`, `test/`, and `ood/` unchanged, and writes `reference_image_count` into `split_manifest.json`. Training and Notebook 2 use that reference count for the production minimum, so generated variants can improve optimization exposure without being counted as independent real-image support.
+
 ### When source separation is uncertain
 
 Public plant-disease datasets often do not provide enough metadata to prove that all sources are fully independent. Different dataset packages may reuse the same original photo, a resized copy, a crop, or an offline augmentation family.
@@ -472,6 +480,8 @@ Current augmentation behavior:
 - `"basic"` keeps the earlier hand-written crop/flip/rotation/color-jitter/blur policy
 - `"none"` uses deterministic resize plus normalization for ablation runs
 - RandAugment is applied only to the training split; validation, test, OOD, and inference preprocessing stay deterministic
+- optional materialized offline augmentation is available through `scripts/augment_runtime_train_split.py`; it must run after the runtime split exists and it only writes generated files under `continual/`
+- runtime manifests may include `reference_image_count` so generated offline augmentations do not satisfy the production minimum image-count guardrail by themselves
 - offline augmented image families still need the grouped split rules above, because online augmentation does not fix leakage from pre-generated variants
 
 Current class-imbalance behavior layered on top of the sampler:

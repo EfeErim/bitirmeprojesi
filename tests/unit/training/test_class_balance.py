@@ -40,6 +40,60 @@ def test_resolve_reference_class_counts_prefers_manifest_and_normalizes_names(tm
     assert resolved["missing_classes"] == []
 
 
+def test_resolve_reference_class_counts_prefers_reference_image_count(tmp_path: Path):
+    crop_root = tmp_path / "grape__fruit"
+    _write_manifest(
+        crop_root,
+        [
+            {"class_name": "healthy", "image_count": 300, "reference_image_count": 100},
+            {"class_name": "powdery_mildew", "image_count": 138, "reference_image_count": 46},
+        ],
+    )
+
+    resolved = resolve_reference_class_counts(
+        crop_name="grape",
+        data_dir=tmp_path,
+        dataset_key="grape__fruit",
+        detected_classes=["healthy", "powdery_mildew"],
+        split_class_counts={"train": {"healthy": 260, "powdery_mildew": 92}},
+    )
+
+    assert resolved["count_source"] == "manifest:split_manifest.json"
+    assert resolved["resolved_class_counts"] == {"healthy": 100, "powdery_mildew": 46}
+
+
+def test_resolve_reference_class_counts_uses_grouped_manifest_rows(tmp_path: Path):
+    crop_root = tmp_path / "grape__fruit"
+    crop_root.mkdir(parents=True)
+    (crop_root / "split_manifest.json").write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {"normalized_class_name": "healthy", "split": "continual"},
+                    {"normalized_class_name": "healthy", "split": "val"},
+                    {"normalized_class_name": "healthy", "split": "test"},
+                    {"normalized_class_name": "healthy", "split": "continual", "generated_offline_augmentation": True},
+                    {"normalized_class_name": "healthy", "split": "continual", "synthetic_hint": True},
+                    {"normalized_class_name": "powdery_mildew", "split": "continual"},
+                    {"normalized_class_name": "powdery_mildew", "split": "skipped", "runtime_skipped": True},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    resolved = resolve_reference_class_counts(
+        crop_name="grape",
+        data_dir=tmp_path,
+        dataset_key="grape__fruit",
+        detected_classes=["healthy", "powdery_mildew"],
+        split_class_counts={"train": {"healthy": 30, "powdery_mildew": 30}},
+    )
+
+    assert resolved["count_source"] == "manifest:split_manifest.json"
+    assert resolved["resolved_class_counts"] == {"healthy": 3, "powdery_mildew": 1}
+
+
 def test_resolve_reference_class_counts_falls_back_to_train_split_without_manifest(tmp_path: Path):
     resolved = resolve_reference_class_counts(
         crop_name="tomato",
