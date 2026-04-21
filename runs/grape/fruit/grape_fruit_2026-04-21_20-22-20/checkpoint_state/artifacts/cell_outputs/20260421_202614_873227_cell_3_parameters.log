@@ -1,0 +1,16 @@
+[CELL_CAPTURE] cell=Cell 3: Parameters
+run_id=grape_fruit_2026-04-21_20-22-20
+started_at=2026-04-21T20:26:14.873257+00:00
+finished_at=2026-04-21T20:26:15.870320+00:00
+duration_sec=0.997
+
+[HF] Kimlik dogrulandi: Grizzmann
+[GIT] Auto-push on kontrolu gecti: GitHub token cozuldu.
+[CONFIG] source=notebook_cell crop=grape epochs=30 bs=32 lr=0.0001 resume=fresh ber=False loss=logitnorm tau=1.0 auto_disconnect=True auto_push=True bayes_opt=False
+[DATASET] runtime_root=data/prepared_runtime_datasets/grape__fruit dataset_name=<ask>
+[OOD] ood_root=data/ood_dataset/grape_fruit_ood_best ask_for_ood_root=True
+[RUNTIME] defaults=notebook_cell mp=bf16 workers=12 prefetch=8 sched=cosine wd=0.02 accum=1 grad_clip=1.0 label_smooth=0.0 warmup=0.1 early_stop=5/0.0 val_every=2 cache_train=True aug=randaugment randaug=2/7 few_shot_research=False min_class=1
+[OOD] factor=3.25 sure=90.0/97.0 conformal=raps alpha=0.05 raps_lambda=0.2 raps_k=1
+
+[STDERR]
+Note: Environment variable`HF_TOKEN` is set and is the current active token independently from the token you've just configured.

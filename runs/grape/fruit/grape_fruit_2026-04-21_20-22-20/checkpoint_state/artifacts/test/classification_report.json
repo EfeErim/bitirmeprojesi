@@ -1,0 +1,45 @@
+{
+  "anthracnose": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 23.0
+  },
+  "botrytis_bunch_rot": {
+    "precision": 0.9761904761904762,
+    "recall": 0.8367346938775511,
+    "f1-score": 0.9010989010989011,
+    "support": 49.0
+  },
+  "downy_mildew": {
+    "precision": 0.875,
+    "recall": 0.84,
+    "f1-score": 0.8571428571428571,
+    "support": 25.0
+  },
+  "healthy": {
+    "precision": 0.9305555555555556,
+    "recall": 0.9852941176470589,
+    "f1-score": 0.9571428571428572,
+    "support": 68.0
+  },
+  "powdery_mildew": {
+    "precision": 0.5384615384615384,
+    "recall": 0.7777777777777778,
+    "f1-score": 0.6363636363636364,
+    "support": 9.0
+  },
+  "accuracy": 0.9137931034482759,
+  "macro avg": {
+    "precision": 0.864041514041514,
+    "recall": 0.8879613178604776,
+    "f1-score": 0.8703496503496504,
+    "support": 174.0
+  },
+  "weighted avg": {
+    "precision": 0.9243233618233618,
+    "recall": 0.9137931034482759,
+    "f1-score": 0.9160655436517505,
+    "support": 174.0
+  }
+}

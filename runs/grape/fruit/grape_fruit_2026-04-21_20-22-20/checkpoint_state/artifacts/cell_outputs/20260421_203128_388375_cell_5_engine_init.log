@@ -1,0 +1,13 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=grape_fruit_2026-04-21_20-22-20
+started_at=2026-04-21T20:31:28.388402+00:00
+finished_at=2026-04-21T20:31:48.365456+00:00
+duration_sec=19.977
+
+[OOD] selected ood root=/content/bitirmeprojesi/data/ood_dataset/grape_fruit_ood_best
+[CLASSES] ['anthracnose', 'botrytis_bunch_rot', 'downy_mildew', 'healthy', 'powdery_mildew']
+[CLASSES] mode=taxonomy_filter reason=full_taxonomy_alignment matched=5 unmatched=0
+[ENGINE][OOD_CFG] {"ber_enabled": false, "ber_lambda_new": 0.1, "ber_lambda_old": 0.1, "ber_warmup_steps": 50, "conformal_alpha": 0.05, "conformal_enabled": true, "conformal_method": "raps", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.2, "energy_temperature": 1.0, "energy_temperature_mode": "fixed", "energy_temperature_range": [0.5, 3.0], "energy_temperature_steps": 16, "knn_backend": "auto", "knn_chunk_size": 2048, "primary_score_method": "auto", "radial_beta_range": [0.5, 2.0], "radial_beta_steps": 16, "radial_l2_enabled": true, "sure_confidence_percentile": 97.0, "sure_enabled": true, "sure_semantic_percentile": 90.0, "threshold_factor": 3.25}
+[ENGINE][OPT_CFG] loss=logitnorm tau=1.0 label_smoothing=0.0 mixed_precision=bf16
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Hazir. trainable_params=13,771,017  classes=5
