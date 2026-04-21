@@ -14,7 +14,7 @@ import torch.nn as nn
 
 try:
     import numpy as np
-except Exception:  # pragma: no cover - optional dependency in some local sandboxes
+except ImportError:  # pragma: no cover - optional dependency in some local sandboxes
     np = None  # type: ignore[assignment]
 
 from src.adapter.multi_scale_fusion import MultiScaleFeatureFusion, select_multiscale_features
@@ -73,7 +73,7 @@ try:
     from transformers import AutoModel as _loaded_auto_model
 
     AUTO_MODEL_FACTORY = _loaded_auto_model
-except Exception:  # pragma: no cover - test fallback
+except ImportError:  # pragma: no cover - test fallback
     pass
 
 # Preserve the historical module-level names so tests and callers can monkeypatch
@@ -91,7 +91,7 @@ try:
     PEFT_LORA_CONFIG = _loaded_lora_config
     PEFT_MODEL_CLASS = _loaded_peft_model
     PEFT_GET_MODEL = _loaded_peft_get_model
-except Exception:  # pragma: no cover - test fallback
+except ImportError:  # pragma: no cover - test fallback
     pass
 
 LoraConfig = PEFT_LORA_CONFIG

@@ -49,7 +49,7 @@ _FLOAT_EPS = 1e-6
 
 try:
     import faiss as _faiss
-except Exception:  # pragma: no cover - optional acceleration
+except ImportError:  # pragma: no cover - optional acceleration
     _faiss = None
 
 

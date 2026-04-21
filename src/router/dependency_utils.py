@@ -38,7 +38,7 @@ def check_vlm_dependencies(
                 "DINOv3 landed in Transformers 4.56.0+, but the maintained baseline is the latest validated 5.1.x "
                 "line for the repo's DINOv3 + SAM3 surface. Install: !pip install 'transformers~=5.1.0'"
             )
-    except Exception as exc:
+    except (ImportError, AttributeError, TypeError, ValueError) as exc:
         result["transformers_warning"] = f"Could not check transformers version: {exc}"
 
     optional_packages = {

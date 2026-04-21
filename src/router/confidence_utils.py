@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 def _clamp_unit_interval(value: Any, *, default: float) -> float:
     try:
         resolved = float(value)
-    except Exception as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         logger.debug(
             f"Failed to coerce value to float; using default {default}",
             exc_info=exc,
@@ -19,7 +19,7 @@ def _clamp_unit_interval(value: Any, *, default: float) -> float:
 def _coerce_non_negative_float(value: Any, *, default: float) -> float:
     try:
         resolved = float(value)
-    except Exception as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         logger.debug(
             f"Failed to coerce value to float; using default {default}",
             exc_info=exc,

@@ -24,11 +24,13 @@ def loader_size(loader: Any, *, loader_name: str = "loader") -> int:
     if dataset is not None:
         try:
             return int(len(dataset))
+        except TypeError:
+            pass
         except Exception as exc:
             raise RuntimeError(f"Failed to determine dataset size for {loader_name}.") from exc
     try:
         return int(len(loader))
-    except Exception as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise RuntimeError(f"Failed to determine dataset size for {loader_name}.") from exc
 
 
@@ -44,7 +46,7 @@ def loader_batch_count(loader: Any, *, loader_name: str = "loader") -> int:
         return 0
     try:
         return int(len(loader))
-    except Exception as exc:
+    except (TypeError, ValueError, OverflowError) as exc:
         raise RuntimeError(f"Failed to determine batch count for {loader_name}.") from exc
 
 
