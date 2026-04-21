@@ -434,7 +434,7 @@ def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: 
 
     calls: list[list[str]] = []
 
-    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None, timeout=None):  # noqa: ARG001
         calls.append(list(command))
         args = list(command[1:])
         if args == ["branch", "--show-current"]:
@@ -474,6 +474,61 @@ def test_push_repo_paths_to_github_force_adds_ignored_runtime_dataset(tmp_path: 
     assert "gh-secret" not in " ".join(push_calls[0])
 
 
+def test_push_repo_paths_to_github_realigns_before_runtime_dataset_commit(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for name in ("src", "config", "scripts"):
+        (repo_root / name).mkdir(parents=True, exist_ok=True)
+    runtime_file = repo_root / "data" / "prepared_runtime_datasets" / "grape__fruit" / "split_manifest.json"
+    runtime_file.parent.mkdir(parents=True, exist_ok=True)
+    runtime_file.write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
+
+    calls: list[list[str]] = []
+    emitted: list[str] = []
+
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None, timeout=None):  # noqa: ARG001
+        calls.append(list(command))
+        args = list(command[1:])
+        if args == ["branch", "--show-current"]:
+            return subprocess.CompletedProcess(command, 0, stdout="master\n")
+        if args == ["remote", "get-url", "origin"]:
+            return subprocess.CompletedProcess(command, 0, stdout="https://github.com/EfeErim/bitirmeprojesi.git\n")
+        if args == ["ls-remote", "--heads", "origin", "refs/heads/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="remote-sha\trefs/heads/master\n")
+        if args == ["fetch", "origin", "master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset", "--soft", "origin/master"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args == ["reset"]:
+            return subprocess.CompletedProcess(command, 0, stdout="")
+        if args[:4] == ["diff", "--cached", "--name-only", "--"]:
+            return subprocess.CompletedProcess(
+                command,
+                0,
+                stdout="data/prepared_runtime_datasets/grape__fruit/split_manifest.json\n",
+            )
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+
+    result = bootstrap.push_repo_paths_to_github(
+        repo_root,
+        ["data/prepared_runtime_datasets/grape__fruit"],
+        commit_message="Add prepared runtime dataset grape__fruit",
+        print_fn=emitted.append,
+    )
+
+    assert result["pushed"] is True
+    assert "[GIT] Local branch realigned to origin/master before secure path push." in emitted
+
+    fetch_index = calls.index(["git", "fetch", "origin", "master"])
+    add_index = next(index for index, call in enumerate(calls) if call[1:5] == ["add", "-A", "-f", "--"])
+    commit_index = next(index for index, call in enumerate(calls) if call[1] == "commit")
+    push_index = next(index for index, call in enumerate(calls) if call[1] == "push")
+    assert fetch_index < add_index < commit_index < push_index
+
+
 def test_push_repo_paths_to_github_redacts_token_from_push_errors(tmp_path: Path, monkeypatch):
     repo_root = tmp_path / "repo"
     for name in ("src", "config", "scripts"):
@@ -484,7 +539,7 @@ def test_push_repo_paths_to_github_redacts_token_from_push_errors(tmp_path: Path
 
     monkeypatch.setattr(bootstrap, "resolve_github_token", lambda: "gh-secret")
 
-    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None):  # noqa: ARG001
+    def fake_run(command, cwd=None, check=True, stdout=None, stderr=None, text=None, env=None, timeout=None):  # noqa: ARG001
         args = list(command[1:])
         if args == ["branch", "--show-current"]:
             return subprocess.CompletedProcess(command, 0, stdout="master\n")

@@ -766,6 +766,12 @@ def push_repo_paths_to_github(
 
     remote_url = _git_remote_url(repo, remote_name)
 
+    realigned = _realign_local_branch_to_remote(repo, remote_name=remote_name, branch=resolved_branch)
+    if realigned:
+        emit(
+            f"[GIT] Local branch realigned to {remote_name}/{resolved_branch} before secure path push."
+        )
+
     _run_git(["config", "user.name", os.environ.get("AADS_GIT_USER_NAME", "AADS Colab")], cwd=repo)
     _run_git(["config", "user.email", os.environ.get("AADS_GIT_USER_EMAIL", "aads-colab@local")], cwd=repo)
     _run_git(["add", "-A", "-f", "--", *normalized_paths], cwd=repo)
