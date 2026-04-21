@@ -113,7 +113,7 @@ This is the current Notebook 0 flow from start to finish:
 2. install notebook requirements
 3. run the access/update check cell and confirm token needs before the audit
 4. resolve a Hugging Face token from environment variables or Colab secrets
-5. choose a dataset: repo-local datasets under `REPO_DATASET_ROOT` are shown as numbered options when `REPO_DATASET_NAME` is blank; when `IMPORT_FROM_DRIVE=True`, the notebook scans `DRIVE_DATASET_PATH`, shows Drive dataset options when `DRIVE_DATASET_NAME` is blank, copies the selected dataset into the repo workspace, and updates `DATASET_ROOT`
+5. choose a dataset: if `DRIVE_DATASET_PATH` is blank, repo-local datasets under `REPO_DATASET_ROOT` are shown as numbered options when `REPO_DATASET_NAME` is blank; if `DRIVE_DATASET_PATH` is filled and `IMPORT_FROM_DRIVE=True`, the notebook scans that Drive path, shows Drive dataset options when `DRIVE_DATASET_NAME` is blank, copies the selected dataset into the repo workspace, and updates `DATASET_ROOT`
 6. scan the flat class-root dataset
 7. normalize class names against the crop taxonomy when possible
 8. audit exact duplicates, perceptual-hash neighbors, DINOv3/BioCLIP similarity families, source-style proxy groups, and label-risk cues

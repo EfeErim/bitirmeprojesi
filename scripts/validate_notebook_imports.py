@@ -402,7 +402,7 @@ def test_data_prep_notebook_contract() -> None:
         "REPO_DATASET_ROOT =",
         'REPO_DATASET_NAME = ""',
         "DATASET_ROOT =",
-        "IMPORT_FROM_DRIVE = False",
+        "IMPORT_FROM_DRIVE = True",
         "CROP_NAME =",
         "PART_NAME =",
         "PREP_ARTIFACT_ROOT =",
