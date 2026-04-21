@@ -123,6 +123,7 @@ def create_training_loaders(
     augmentation_policy: str = "randaugment",
     randaugment_num_ops: int = 2,
     randaugment_magnitude: int = 7,
+    ood_root: str | Path | None = None,
     *,
     dataset_cls: type[CropDataset] = CropDataset,
     infer_classes_fn: Callable[[str, str], List[str]] = infer_crop_classes_from_layout,
@@ -230,12 +231,15 @@ def create_training_loaders(
         )
         setattr(loaders[split], "_sampler_class_counts", dict(sampler_runtime["class_counts"]))
 
-    ood_root = Path(data_dir) / crop / "ood"
-    if ood_root.exists():
+    resolved_ood_root = Path(ood_root).expanduser() if ood_root is not None and str(ood_root).strip() else Path(data_dir) / crop / "ood"
+    if resolved_ood_root.exists():
+        if not resolved_ood_root.is_dir():
+            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
         ood_dataset = dataset_cls(
             data_dir=data_dir,
             crop=crop,
             split="ood",
+            split_root=resolved_ood_root,
             class_names=resolved_classes,
             transform=False,
             target_size=target_size,

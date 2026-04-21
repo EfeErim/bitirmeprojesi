@@ -233,6 +233,8 @@ def prepare_notebook_access_and_dataset(
     crop_name: str,
     dataset_name: str,
     runtime_dataset_root: str | Path,
+    ood_root: str | Path = "",
+    ask_for_ood_root: bool = False,
     optimization_campaign_mode: str = "disabled",
     telemetry: Any = None,
     print_fn: Optional[Callable[[str], None]] = None,
@@ -338,12 +340,30 @@ def prepare_notebook_access_and_dataset(
         raise RuntimeError(f"No class subdirectories in prepared runtime split: {selected_dataset_root / 'continual'}")
 
     runtime_root = selected_dataset_root.parent
-    resolved_ood_root = selected_dataset_root / "ood"
-    if resolved_ood_root.is_dir():
-        emit(f"[OOD] runtime ood root={resolved_ood_root}")
+    default_ood_root = selected_dataset_root / "ood"
+    requested_ood_root = str(ood_root or "").strip()
+    if ask_for_ood_root and not requested_ood_root:
+        default_hint = str(default_ood_root) if default_ood_root.is_dir() else ""
+        prompt = "OOD klasoru yolunu girin"
+        if default_hint:
+            prompt += f" [Enter={default_hint}]"
+        requested_ood_root = str(input(prompt + ": ")).strip()
+        if not requested_ood_root and default_hint:
+            requested_ood_root = default_hint
+
+    if requested_ood_root:
+        resolved_ood_root = Path(requested_ood_root).expanduser()
+        if not resolved_ood_root.is_absolute():
+            resolved_ood_root = (root / resolved_ood_root).resolve()
+        if not resolved_ood_root.is_dir():
+            raise RuntimeError(f"OOD klasoru bulunamadi veya klasor degil: {resolved_ood_root}")
+        emit(f"[OOD] explicit ood root={resolved_ood_root}")
         resolved_ood_root_value = str(resolved_ood_root)
+    elif default_ood_root.is_dir():
+        emit(f"[OOD] runtime ood root={default_ood_root}")
+        resolved_ood_root_value = str(default_ood_root)
     else:
-        emit("[OOD] Gercek OOD split bulunamadi. Notebook 2 sadece runtime dataset icindeki ood/ klasorunu kullanir.")
+        emit("[OOD] Gercek OOD split secilmedi; fallback held-out benchmark kullanilabilir.")
         resolved_ood_root_value = ""
     emit(f"[DATASET] runtime root={selected_dataset_root} classes={len(class_names)}: {class_names}")
 
@@ -887,7 +907,7 @@ def initialize_notebook_training_engine(
     )
     resolved_ood_root = str(state.get("resolved_ood_root") or "").strip()
     if resolved_ood_root:
-        emit(f"[OOD] runtime ood root={resolved_ood_root}")
+        emit(f"[OOD] selected ood root={resolved_ood_root}")
 
     class_resolution = resolve_notebook_training_classes(
         available_classes=available,
@@ -982,6 +1002,7 @@ def initialize_notebook_training_engine(
         augmentation_policy=str(data_settings["AUGMENTATION_POLICY"]),
         randaugment_num_ops=int(resolved_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])),
         randaugment_magnitude=int(resolved_parameters["RANDAUGMENT_MAGNITUDE"]),
+        ood_root=resolved_ood_root or None,
         pin_memory=bool(loader_settings["PIN_MEMORY"]),
         **loader_kwargs,
     )

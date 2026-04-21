@@ -158,7 +158,7 @@ def _coerce_like(reference: Any, value: Any) -> Any:
     return value
 
 
-def inspect_runtime_dataset(dataset_root: Path) -> Dict[str, Any]:
+def inspect_runtime_dataset(dataset_root: Path, ood_root: Path | str | None = None) -> Dict[str, Any]:
     """Inspect the selected runtime dataset root for Notebook 2 recommendations."""
 
     resolved_root = Path(dataset_root).expanduser().resolve()
@@ -167,10 +167,14 @@ def inspect_runtime_dataset(dataset_root: Path) -> Dict[str, Any]:
         split_name: int(sum(class_counts.values()))
         for split_name, class_counts in split_class_counts.items()
     }
-    ood_root = resolved_root / "ood"
+    resolved_ood_root = (
+        Path(ood_root).expanduser().resolve()
+        if ood_root is not None and str(ood_root).strip()
+        else resolved_root / "ood"
+    )
     ood_count = 0
-    if ood_root.is_dir():
-        ood_count = sum(1 for item in ood_root.rglob("*") if _is_image(item))
+    if resolved_ood_root.is_dir():
+        ood_count = sum(1 for item in resolved_ood_root.rglob("*") if _is_image(item))
     manifest_path = resolved_root / "split_manifest.json"
     manifest_payload = (
         read_json(manifest_path, default={}, expect_type=dict)
@@ -232,8 +236,12 @@ def inspect_runtime_dataset(dataset_root: Path) -> Dict[str, Any]:
         "dataset_root": str(resolved_root),
         "manifest_path": str(manifest_path),
         "manifest_present": bool(manifest_payload),
-        "split_presence": {split_name: (resolved_root / split_name).is_dir() for split_name in (*RUNTIME_SPLITS, "ood")},
+        "split_presence": {
+            **{split_name: (resolved_root / split_name).is_dir() for split_name in RUNTIME_SPLITS},
+            "ood": resolved_ood_root.is_dir(),
+        },
         "split_totals": {**split_totals, "ood": int(ood_count)},
+        "ood_root": str(resolved_ood_root),
         "split_class_counts": split_class_counts,
         "manifest_class_counts": manifest_class_counts,
         "reference_class_counts": reference_class_counts,

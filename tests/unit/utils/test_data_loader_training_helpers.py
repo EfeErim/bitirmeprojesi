@@ -154,6 +154,28 @@ def test_create_training_loaders_adds_optional_ood_loader(tmp_path: Path):
     assert batch["labels"].tolist() == [-1]
 
 
+def test_create_training_loaders_accepts_explicit_ood_root(tmp_path: Path):
+    runtime_root = tmp_path / "runtime"
+    external_ood_root = tmp_path / "external_ood"
+    _write_image(runtime_root / "tomato" / "continual" / "healthy" / "train.jpg")
+    _write_image(runtime_root / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(runtime_root / "tomato" / "test" / "healthy" / "test.jpg")
+    _write_image(external_ood_root / "unknown" / "ood.jpg", color=(0, 0, 255))
+
+    loaders = create_training_loaders(
+        data_dir=str(runtime_root),
+        crop="tomato",
+        batch_size=2,
+        num_workers=0,
+        seed=7,
+        ood_root=external_ood_root,
+    )
+
+    assert "ood" in loaders
+    assert len(loaders["ood"].dataset) == 1
+    assert loaders["ood"].dataset.image_paths[0] == external_ood_root / "unknown" / "ood.jpg"
+
+
 
 def test_crop_dataset_strict_error_policy_rejects_invalid_images(tmp_path: Path):
     bad_image = tmp_path / "tomato" / "continual" / "healthy" / "bad.jpg"
@@ -204,6 +226,24 @@ def test_crop_dataset_supports_optional_ood_split(tmp_path: Path):
         data_dir=str(tmp_path),
         crop="tomato",
         split="ood",
+        transform=False,
+        use_cache=False,
+    )
+
+    assert len(dataset) == 2
+    assert dataset.labels == [-1, -1]
+
+
+def test_crop_dataset_supports_explicit_ood_split_root(tmp_path: Path):
+    external_ood_root = tmp_path / "custom_ood"
+    _write_image(external_ood_root / "unknown_a" / "a.jpg")
+    _write_image(external_ood_root / "unknown_b" / "b.jpg", color=(0, 0, 255))
+
+    dataset = datasets.CropDataset(
+        data_dir=str(tmp_path / "runtime"),
+        crop="tomato",
+        split="ood",
+        split_root=external_ood_root,
         transform=False,
         use_cache=False,
     )

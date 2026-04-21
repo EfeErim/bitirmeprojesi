@@ -101,6 +101,22 @@ def test_inspect_runtime_dataset_reads_manifest_backed_risk_hints(tmp_path: Path
     assert report["manifest_row_summary"]["eval_quality_risk_count"] == 1
 
 
+def test_inspect_runtime_dataset_accepts_explicit_ood_root(tmp_path: Path):
+    root = tmp_path / "grape__fruit"
+    external_ood_root = tmp_path / "external_ood"
+    _write_images(root, "continual", "healthy", 120)
+    _write_images(root, "val", "healthy", 10)
+    _write_images(root, "test", "healthy", 10)
+    _write_images(external_ood_root, "unknown", "hard_negative", 3)
+
+    report = inspect_runtime_dataset(root, ood_root=external_ood_root)
+
+    assert report["split_totals"]["ood"] == 3
+    assert report["ood_root"] == str(external_ood_root.resolve())
+    assert report["real_ood_present"] is True
+    assert report["split_presence"]["ood"] is True
+
+
 def test_inspect_runtime_dataset_prefers_reference_image_count_for_augmented_manifests(tmp_path: Path):
     root = tmp_path / "grape__fruit_train_aug"
     _write_images(root, "continual", "healthy", 300)

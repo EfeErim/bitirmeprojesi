@@ -92,7 +92,7 @@ This is the current Notebook 2 training flow from start to finish:
 12. restore the best model state
 13. calibrate OOD
 14. write validation and test artifacts
-15. use real `ood/` data when present inside the selected runtime dataset, otherwise run the held-out fallback benchmark automatically
+15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, otherwise run the held-out fallback benchmark automatically
 16. write `production_readiness.json`
 17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
 18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
@@ -151,7 +151,8 @@ Important distinction:
 - Notebook 0 owns flat class-root audit and split materialization
 - Notebook 2 trains only from the already prepared runtime dataset
 - the real `ood/` pool is separate unknown-input evidence, not another class
-- if you maintain a real OOD pool, it belongs under the runtime dataset as `data/prepared_runtime_datasets/<dataset_key>/ood/`; Notebook 0 is the maintained surface that writes it there
+- if you maintain a real OOD pool, the preferred durable location is `data/prepared_runtime_datasets/<dataset_key>/ood/`; Notebook 0 is the maintained surface that writes it there
+- Notebook 2 also asks for an explicit OOD folder path. Use that prompt when the OOD pool already exists elsewhere in the Colab workspace and you do not want to rematerialize the runtime dataset.
 
 The generated runtime dataset includes:
 

@@ -476,7 +476,9 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'STATE["recommendation_report"] = recommendation_report' in sources.full_source
     assert 'STATE["recommendation_decision"] = recommendation_decision' in sources.full_source
     assert 'STATE["effective_params"] = effective_params' in sources.full_source
-    assert "Notebook 2 sadece runtime dataset icindeki ood/ klasorunu kullanir." in sources.full_source
+    assert "ASK_FOR_OOD_ROOT = True" in sources.full_source
+    assert "OOD klasoru yolunu girin" in sources.full_source
+    assert "ood_root=resolved_ood_root or None" in sources.full_source
     assert "build_grouped_dataset_plan" not in sources.full_source
     assert "materialize_grouped_runtime_dataset" not in sources.full_source
 
@@ -541,6 +543,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         'PART_NAME = globals().get("PART_NAME", "unspecified")',
         'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"',
         'DATASET_NAME = ""',
+        'OOD_ROOT = ""',
+        'ASK_FOR_OOD_ROOT = True',
         'MANUAL_PARAM_OVERRIDES = {}',
         'EPOCHS = ',
         'BATCH_SIZE = ',
@@ -612,7 +616,6 @@ def test_training_notebook_bootstrap_contract() -> None:
         'DATASET_ROOT = "data/class_root_dataset"',
         'OOD_DATASET_ROOT = "data/ood_dataset"',
         'OOD_DATASET_NAME = ""',
-        'OOD_ROOT = ""',
     )
     for snippet in forbidden_parameter_snippets:
         _assert_not_contains(

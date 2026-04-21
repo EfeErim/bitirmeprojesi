@@ -69,10 +69,12 @@ class CropDataset(Dataset):
         augmentation_policy: str = "randaugment",
         randaugment_num_ops: int = 2,
         randaugment_magnitude: int = 7,
+        split_root: str | Path | None = None,
     ) -> None:
         self.data_dir = Path(data_dir)
         self.crop = str(crop)
         self.split = normalize_split(split)
+        self.split_root = Path(split_root).expanduser() if split_root is not None else None
         self.target_size = int(target_size)
         self.augmentation_policy = str(augmentation_policy)
         self.randaugment_num_ops = int(randaugment_num_ops)
@@ -107,7 +109,7 @@ class CropDataset(Dataset):
         )
 
     def _load_data(self) -> Tuple[List[Path], List[int]]:
-        base_dir = self.data_dir / self.crop / self.split
+        base_dir = self.split_root if self.split_root is not None else self.data_dir / self.crop / self.split
         if not base_dir.exists():
             return [], []
 
