@@ -625,7 +625,9 @@ Notebook 2 writes to three locations. Each one exists for a different reason. Th
 
 ```text
 outputs/colab_notebook_training/
-  continual_sd_lora_adapter/
+  <crop>/
+    <part>/
+      continual_sd_lora_adapter/
   artifacts/
   telemetry_runtime/
 ```
@@ -689,7 +691,9 @@ outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/
     test/
     ood_benchmark/
     adapter_export/
-      continual_sd_lora_adapter/
+      <crop>/
+        <part>/
+          continual_sd_lora_adapter/
   events.jsonl
   runtime.log
   latest_status.json
@@ -709,7 +713,7 @@ Important durability guardrail:
 
 Important current-state note:
 
-- Notebook 2 currently exports adapter assets to `artifacts/adapter_export/continual_sd_lora_adapter/`
+- Notebook 2 currently exports adapter assets to `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 - telemetry manifests point to the best rolling checkpoint; they do not maintain a second duplicated best-checkpoint tree
 
 ## How To Read The Main Training Artifacts
@@ -853,14 +857,14 @@ Use Notebook 3 when you want:
 Router inference looks for adapters here by default:
 
 ```text
-models/adapters/<crop>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
 
 You can deploy from any of these outputs:
 
-- `outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- `runs/<RUN_ID>/outputs/colab_notebook_training/continual_sd_lora_adapter/`
-- `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/continual_sd_lora_adapter/`
+- `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- `runs/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 If you want a different storage location, pass `--adapter-root` to the inference surface.
 

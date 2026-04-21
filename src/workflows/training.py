@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequ
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
+from src.shared.adapter_paths import build_adapter_bundle_root
 from src.shared.json_utils import read_json
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.ood_score_selection import (
@@ -877,6 +878,7 @@ class TrainingWorkflow:
             if part_name is not None
             else _resolve_part_name(runtime_dataset_key=runtime_dataset_key, manifest_payload=runtime_manifest_payload)
         )
+        run_output_dir = build_adapter_bundle_root(resolved_output_dir, crop_name, resolved_part_name)
         if hasattr(adapter, "part_name"):
             adapter.part_name = resolved_part_name
         run_created_at = datetime.now(timezone.utc).isoformat()
@@ -886,7 +888,7 @@ class TrainingWorkflow:
         }
         sampler_runtime = dict(run_setup.sampler_runtime)
         class_balance_runtime = dict(run_setup.class_balance_runtime)
-        artifact_dir = resolved_output_dir / "training_metrics"
+        artifact_dir = run_output_dir / "training_metrics"
         session, batch_recorder, checkpoint_records = self._create_training_session(
             adapter=adapter,
             loaders=loaders,
@@ -910,7 +912,7 @@ class TrainingWorkflow:
                 "run_id": run_id,
                 "crop_name": crop_name,
                 "data_dir": str(resolved_data_dir),
-                "output_dir": str(resolved_output_dir),
+                "output_dir": str(run_output_dir),
             },
             phase="training",
         )
@@ -1093,7 +1095,7 @@ class TrainingWorkflow:
             selection_source=primary_score_stage.selection_source,
             best_state_restored=best_state_restored,
         )
-        adapter_dir = adapter.save_adapter(str(resolved_output_dir))
+        adapter_dir = adapter.save_adapter(str(run_output_dir))
         readiness_artifacts = persist_production_readiness_artifact(
             artifact_root=artifact_dir,
             classification_metric_gate=(
@@ -1167,7 +1169,8 @@ class TrainingWorkflow:
             "device": self.device,
             "python_version": sys.version.split()[0],
             "data_dir": str(resolved_data_dir),
-            "output_dir": str(resolved_output_dir),
+            "output_dir": str(run_output_dir),
+            "output_root": str(resolved_output_dir),
             "artifact_dir": str(artifact_dir),
             "adapter_dir": str(adapter_dir),
             "resolved_config": dict(self.config),

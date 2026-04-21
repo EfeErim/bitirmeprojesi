@@ -146,9 +146,23 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: boo
         if inferred is not None:
             return inferred
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
-        parent_crop = adapter_dir.parent.name.strip().lower()
+        parent_name = adapter_dir.parent.name.strip().lower()
+        grandparent_name = adapter_dir.parent.parent.name.strip().lower()
+        reserved_path_names = {
+            "adapter",
+            "adapters",
+            "adapter_export",
+            "artifacts",
+            "colab_notebook_training",
+            "models",
+            "outputs",
+        }
+        if grandparent_name and parent_name not in reserved_path_names and grandparent_name not in reserved_path_names:
+            return grandparent_name
+        parent_crop = parent_name
         if parent_crop not in {
             "adapter",
+            "adapters",
             "adapter_export",
             "artifacts",
             "colab_notebook_training",
@@ -160,6 +174,36 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: boo
     if inferred_from_meta is not None:
         return inferred_from_meta
     return None
+
+
+def _infer_part_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
+    if adapter_dir.name != "continual_sd_lora_adapter":
+        return None
+    parent_part = adapter_dir.parent.name.strip().lower()
+    grandparent_crop = adapter_dir.parent.parent.name.strip().lower()
+    if not parent_part or not grandparent_crop:
+        return None
+    if grandparent_crop in {
+        "adapter",
+        "adapters",
+        "adapter_export",
+        "artifacts",
+        "colab_notebook_training",
+        "models",
+        "outputs",
+    }:
+        return None
+    if parent_part in {
+        "adapter",
+        "adapters",
+        "adapter_export",
+        "artifacts",
+        "colab_notebook_training",
+        "models",
+        "outputs",
+    }:
+        return None
+    return parent_part
 
 
 def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
@@ -194,19 +238,42 @@ def _infer_run_id(adapter_dir: Path) -> str:
 
 def _adapter_source_rank(adapter_dir: Path) -> int:
     normalized = adapter_dir.as_posix().lower()
-    if "/runs/" in normalized and "/outputs/colab_notebook_training/continual_sd_lora_adapter" in normalized:
+    if (
+        "/runs/" in normalized
+        and "/outputs/colab_notebook_training/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 0
-    if "/runs/" in normalized and "/checkpoint_state/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+    if (
+        "/runs/" in normalized
+        and "/checkpoint_state/artifacts/adapter_export/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 4
-    if "/runs/" in normalized and "/telemetry/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+    if (
+        "/runs/" in normalized
+        and "/telemetry/artifacts/adapter_export/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 2
-    if "/runs/" in normalized and "/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+    if (
+        "/runs/" in normalized
+        and "/artifacts/adapter_export/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 1
-    if "/telemetry/" in normalized and "/artifacts/adapter_export/continual_sd_lora_adapter" in normalized:
+    if (
+        "/telemetry/" in normalized
+        and "/artifacts/adapter_export/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 3
     if "/models/adapters/" in normalized and normalized.endswith("/continual_sd_lora_adapter"):
         return 5
-    if normalized.endswith("/outputs/colab_notebook_training/continual_sd_lora_adapter"):
+    if (
+        "/outputs/colab_notebook_training/" in normalized
+        and normalized.endswith("/continual_sd_lora_adapter")
+    ):
         return 6
     return 7
 
@@ -238,9 +305,12 @@ def _iter_explicit_adapter_dir_candidates(path: Path) -> Iterable[Path]:
         yield path / relative
 
 
-def _iter_adapter_root_candidates(path: Path, *, crop_key: str) -> Iterable[Path]:
+def _iter_adapter_root_candidates(path: Path, *, crop_key: str, part_key: Optional[str] = None) -> Iterable[Path]:
     yield path
     yield path / "continual_sd_lora_adapter"
+    if part_key:
+        yield path / crop_key / part_key / "continual_sd_lora_adapter"
+        yield path / crop_key / part_key
     yield path / crop_key
     yield path / crop_key / "continual_sd_lora_adapter"
 
@@ -267,7 +337,16 @@ def _resolve_adapter_dir(
 ) -> Path:
     if adapter_dir is not None:
         root = Path(adapter_dir)
-        resolved = _first_adapter_dir(_iter_explicit_adapter_dir_candidates(root))
+        explicit_candidates = list(_iter_explicit_adapter_dir_candidates(root))
+        if crop_name is not None:
+            explicit_candidates.extend(
+                _iter_adapter_root_candidates(
+                    root,
+                    crop_key=_normalize_crop_name(crop_name),
+                    part_key=str(part_name or "").strip().lower() or None,
+                )
+            )
+        resolved = _first_adapter_dir(explicit_candidates)
         if resolved is not None:
             return resolved
         raise FileNotFoundError(
@@ -287,7 +366,13 @@ def _resolve_adapter_dir(
         )
 
     crop_key = _normalize_crop_name(crop_name)
-    resolved = _first_adapter_dir(_iter_adapter_root_candidates(base_root, crop_key=crop_key))
+    resolved = _first_adapter_dir(
+        _iter_adapter_root_candidates(
+            base_root,
+            crop_key=crop_key,
+            part_key=str(part_name or "").strip().lower() or None,
+        )
+    )
     if resolved is not None:
         return resolved
 
@@ -441,7 +526,11 @@ def discover_adapter_candidates(
             meta = _read_adapter_meta(adapter_dir)
             meta_summary = _summary_from_meta(meta)
             candidate_crop = inferred_crop or meta_summary.get("crop_name") or requested_crop
-            candidate_part = str(meta_summary.get("part_name") or "").strip().lower() or None
+            candidate_part = (
+                str(meta_summary.get("part_name") or "").strip().lower()
+                or _infer_part_name_from_adapter_dir(adapter_dir)
+                or None
+            )
             run_id = _infer_run_id(adapter_dir)
             identity_key = _candidate_identity_key(
                 adapter_dir=adapter_dir,
@@ -975,6 +1064,3 @@ __all__ = [
     "predict_single_image",
     "predict_image_folder",
 ]
-
-
-

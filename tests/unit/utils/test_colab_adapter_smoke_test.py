@@ -288,6 +288,22 @@ def test_load_adapter_summary_infers_crop_from_local_export_artifacts(monkeypatc
     assert summary["crop_name"] == "tomato"
 
 
+def test_load_adapter_summary_resolves_crop_part_local_export_root(monkeypatch, tmp_path: Path):
+    export_root = tmp_path / "outputs" / "colab_notebook_training"
+    asset_dir = _write_adapter_export(export_root / "tomato" / "leaf")
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+
+    summary = smoke.load_adapter_summary(
+        "tomato",
+        adapter_dir=export_root,
+        part_name="leaf",
+        device="cpu",
+    )
+
+    assert summary["resolved_adapter_dir"] == str(asset_dir)
+    assert summary["crop_name"] == "tomato"
+
+
 
 def test_load_adapter_summary_infers_crop_from_adapter_meta_classes(monkeypatch, tmp_path: Path):
     export_root = tmp_path / "outputs" / "adapter_export"

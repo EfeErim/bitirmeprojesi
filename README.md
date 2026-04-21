@@ -399,29 +399,31 @@ Workflow and CLI training write:
 
 ```text
 <output_dir>/
-  continual_sd_lora_adapter/
-  training_metrics/
-    training/
-      results.png
-      results.csv
-      history.json
-      history.csv
-      batch_metrics.csv
-      summary.json
-    validation/
-      classification_report.txt
-      classification_report.json
-      per_class_metrics.csv
-      confusion_matrix.csv
-      confusion_matrix.png
-      confusion_matrix_normalized.png
-      metric_gate.json
-    test/
-      ...
-    ood_benchmark/
-      summary.json
-      per_fold.csv
-    production_readiness.json
+  <crop>/
+    <part>/
+      continual_sd_lora_adapter/
+      training_metrics/
+        training/
+          results.png
+          results.csv
+          history.json
+          history.csv
+          batch_metrics.csv
+          summary.json
+        validation/
+          classification_report.txt
+          classification_report.json
+          per_class_metrics.csv
+          confusion_matrix.csv
+          confusion_matrix.png
+          confusion_matrix_normalized.png
+          metric_gate.json
+        test/
+          ...
+        ood_benchmark/
+          summary.json
+          per_fold.csv
+        production_readiness.json
 ```
 
 What these files mean:
@@ -441,7 +443,9 @@ Notebook 2 writes to three places. The artifact roots now also include a `guided
 
 ```text
 outputs/colab_notebook_training/
-  continual_sd_lora_adapter/
+  <crop>/
+    <part>/
+      continual_sd_lora_adapter/
   artifacts/
     guided/
 ```
@@ -482,7 +486,9 @@ For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop,
     test/
     ood_benchmark/
     adapter_export/
-      continual_sd_lora_adapter/
+      <crop>/
+        <part>/
+          continual_sd_lora_adapter/
   events.jsonl
   runtime.log
   latest_status.json
@@ -494,7 +500,7 @@ For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop,
 
 Important current detail:
 
-- Notebook 2 exports the Drive adapter bundle under `artifacts/adapter_export/continual_sd_lora_adapter/`.
+- Notebook 2 exports the Drive adapter bundle under `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
 
 ## How Deployment Handoff Works
 

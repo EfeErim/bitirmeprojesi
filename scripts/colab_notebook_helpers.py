@@ -15,6 +15,7 @@ from typing import Any, Callable, Dict, List, Optional
 import matplotlib
 
 from src.guided_artifacts import refresh_training_guided_artifacts
+from src.shared.adapter_paths import build_adapter_bundle_root
 from src.shared.json_utils import deep_merge, read_json, write_json
 from src.training.services.reporting import (
     persist_production_readiness_artifact as persist_production_readiness_artifact_core,
@@ -957,6 +958,8 @@ def initialize_notebook_training_engine(
     )
 
     adapter = IndependentCropAdapter(crop_name=resolved_crop_name, device=device)
+    if hasattr(adapter, "part_name"):
+        adapter.part_name = str(part_name or "unspecified").strip().lower() or "unspecified"
     emit("[ENGINE] Initializing adapter (may download backbone)...")
     adapter.initialize_engine(class_names=final_class_names, config={"training": {"continual": continual_cfg}})
 
@@ -1004,6 +1007,8 @@ def initialize_notebook_training_engine(
         {
             "runtime_dataset_root": runtime_data_root,
             "runtime_dataset_key": dataset_key,
+            "crop_name": resolved_crop_name,
+            "part_name": str(part_name or "unspecified").strip().lower() or "unspecified",
             "class_names": final_class_names,
             "class_resolution": class_resolution,
             "adapter": adapter,
@@ -1113,7 +1118,10 @@ def calibrate_and_save_notebook_adapter(
     if rt_fn is not None:
         rt_fn("Cell 7: calibration and adapter save started", phase="export")
 
-    checkpoint_dir = Path(root) / "outputs" / "colab_notebook_training"
+    notebook_output_root = Path(root) / "outputs" / "colab_notebook_training"
+    crop_name = str(state.get("crop_name") or getattr(adapter, "crop_name", "") or "").strip().lower()
+    part_name = str(state.get("part_name") or getattr(adapter, "part_name", "") or "unspecified").strip().lower()
+    checkpoint_dir = build_adapter_bundle_root(notebook_output_root, crop_name, part_name)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     adapter.save_adapter(str(checkpoint_dir))
     asset_dir = checkpoint_dir / "continual_sd_lora_adapter"
@@ -1124,10 +1132,16 @@ def calibrate_and_save_notebook_adapter(
     if not asset_dir.exists():
         raise RuntimeError(f"Beklenen adapter klasoru bulunamadi: {asset_dir}")
 
-    telemetry_adapter_root = getattr(telemetry, "artifacts_dir", Path(root)) / "adapter_export" / "continual_sd_lora_adapter"
+    telemetry_adapter_root = (
+        getattr(telemetry, "artifacts_dir", Path(root))
+        / "adapter_export"
+        / crop_name
+        / part_name
+        / "continual_sd_lora_adapter"
+    )
     for path_in_adapter in sorted(asset_dir.rglob("*")):
         if path_in_adapter.is_file():
-            relative_path = path_in_adapter.relative_to(checkpoint_dir).as_posix()
+            relative_path = path_in_adapter.relative_to(notebook_output_root).as_posix()
             _call_if_present(telemetry, "copy_artifact_file", path_in_adapter, f"adapter_export/{relative_path}")
             try:
                 emit(f" - {path_in_adapter.relative_to(Path(root))}")
@@ -1155,13 +1169,16 @@ def calibrate_and_save_notebook_adapter(
 def _notebook_repo_extra_entries(
     *,
     repo_output_dir: Path,
+    crop_name: str,
+    part_name: str,
     repo_notebook_output_path: Path,
     repo_telemetry_dir: Path,
     repo_checkpoint_state_dir: Path,
 ) -> List[Dict[str, Any]]:
+    adapter_dir = build_adapter_bundle_root(repo_output_dir, crop_name, part_name) / "continual_sd_lora_adapter"
     return [
         {
-            "path": repo_output_dir / "continual_sd_lora_adapter",
+            "path": adapter_dir,
             "category": "adapter_export",
             "priority": "high",
             "title_tr": "Repo mirror adapter export klasoru",
@@ -1481,6 +1498,8 @@ def complete_notebook_training_run(
     notebook_export_result = export_current_colab_notebook_fn(repo_notebook_output_path)
     extra_entries = _notebook_repo_extra_entries(
         repo_output_dir=repo_output_dir,
+        crop_name=crop_name,
+        part_name=part_name,
         repo_notebook_output_path=repo_notebook_output_path,
         repo_telemetry_dir=repo_telemetry_dir,
         repo_checkpoint_state_dir=repo_checkpoint_state_dir,

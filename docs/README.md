@@ -147,7 +147,7 @@ Runtime split layout:
 ### Where should deployed adapters live by default?
 
 ```text
-models/adapters/<crop>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
 
 ### Which training file is canonical?
@@ -222,4 +222,4 @@ Current checked-in dataset exceptions:
 
 - `requirements_colab.txt` at the repo root is the canonical Colab dependency list.
 - `colab_notebooks/requirements_colab.txt` is only a wrapper so notebook-local bootstrap can find the root file.
-- Notebook 2 currently exports Drive adapter assets under `artifacts/adapter_export/continual_sd_lora_adapter/`.
+- Notebook 2 currently exports Drive adapter assets under `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.

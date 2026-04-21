@@ -181,6 +181,8 @@ def test_training_workflow_runs_adapter_session_and_checkpoint(monkeypatch, tmp_
     assert result.class_names == ["healthy", "disease_a"]
     assert result.history["train_loss"] == [0.1]
     assert result.adapter_dir.exists()
+    assert result.adapter_dir == tmp_path / "outputs" / "tomato" / "unspecified" / "continual_sd_lora_adapter"
+    assert result.artifact_dir == tmp_path / "outputs" / "tomato" / "unspecified" / "training_metrics"
     assert result.artifact_dir is not None and result.artifact_dir.exists()
     assert (result.artifact_dir / "training" / "results.png").exists()
     assert (result.artifact_dir / "training" / "experiment_manifest.json").exists()
@@ -659,7 +661,15 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
                     "conformal_avg_set_size": 1.0,
                 },
                 "paths": {
-                    "summary_json": str(tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json")
+                    "summary_json": str(
+                        tmp_path
+                        / "outputs"
+                        / "tomato"
+                        / "unspecified"
+                        / "training_metrics"
+                        / "ood_benchmark"
+                        / "summary.json"
+                    )
                 },
             }
         ),
@@ -784,7 +794,15 @@ def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp
                     "conformal_avg_set_size": 1.0,
                 },
                 "paths": {
-                    "summary_json": str(tmp_path / "outputs" / "training_metrics" / "ood_benchmark" / "summary.json")
+                    "summary_json": str(
+                        tmp_path
+                        / "outputs"
+                        / "tomato"
+                        / "unspecified"
+                        / "training_metrics"
+                        / "ood_benchmark"
+                        / "summary.json"
+                    )
                 },
             }
         ),
@@ -1198,7 +1216,9 @@ def test_training_workflow_does_not_write_readiness_when_adapter_export_fails(mo
             output_dir=tmp_path / "outputs",
         )
 
-    assert not (tmp_path / "outputs" / "training_metrics" / "production_readiness.json").exists()
+    assert not (
+        tmp_path / "outputs" / "tomato" / "unspecified" / "training_metrics" / "production_readiness.json"
+    ).exists()
 
 
 def test_training_workflow_surfaces_loader_length_failures(monkeypatch, tmp_path: Path):

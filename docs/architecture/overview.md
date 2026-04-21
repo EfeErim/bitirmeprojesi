@@ -265,8 +265,10 @@ Training writes:
 
 ```text
 <output_dir>/
-  continual_sd_lora_adapter/
-  training_metrics/
+  <crop>/
+    <part>/
+      continual_sd_lora_adapter/
+      training_metrics/
 ```
 
 ### Run lineage and optimizer-facing records
@@ -274,7 +276,7 @@ Training writes:
 Each training run now writes two canonical traceability artifacts under:
 
 ```text
-<output_dir>/training_metrics/training/
+<output_dir>/<crop>/<part>/training_metrics/training/
   experiment_manifest.json
   optimization_record.json
 ```
