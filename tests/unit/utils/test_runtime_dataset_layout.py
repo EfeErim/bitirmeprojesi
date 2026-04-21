@@ -5,8 +5,11 @@ from PIL import Image
 
 from scripts.colab_dataset_layout import (
     build_runtime_split_manifest,
+    list_dataset_directories_from_parent,
     list_repo_dataset_directories,
+    looks_like_class_root_dataset,
     prepare_runtime_dataset_layout,
+    resolve_dataset_directory_from_parent,
     resolve_direct_repo_dataset_root,
     resolve_notebook_training_classes,
     resolve_repo_dataset_directory,
@@ -165,6 +168,45 @@ def test_list_repo_dataset_directories_returns_sorted_child_dirs(tmp_path: Path)
     )
 
     assert [path.name for path in result] == ["grape_fruit", "grape_leaf"]
+
+
+def test_resolve_dataset_directory_from_parent_prompts_for_drive_style_parent(tmp_path: Path):
+    dataset_parent = tmp_path / "drive" / "datasets"
+    (dataset_parent / "grape_leaf" / "healthy").mkdir(parents=True)
+    (dataset_parent / "tomato_leaf" / "healthy").mkdir(parents=True)
+    prompts: list[str] = []
+    printed: list[str] = []
+
+    def _input(prompt: str) -> str:
+        prompts.append(prompt)
+        return "1"
+
+    def _print(message: str) -> None:
+        printed.append(message)
+
+    selected_name, selected_path, dataset_names = resolve_dataset_directory_from_parent(
+        dataset_parent=dataset_parent,
+        requested_name="",
+        prompt_label="Drive dataset",
+        input_fn=_input,
+        print_fn=_print,
+    )
+
+    assert selected_name == "grape_leaf"
+    assert selected_path == dataset_parent / "grape_leaf"
+    assert dataset_names == ["grape_leaf", "tomato_leaf"]
+    assert prompts
+    assert any("Drive dataset" in line for line in printed)
+
+
+def test_list_dataset_directories_from_parent_accepts_direct_class_root(tmp_path: Path):
+    dataset_root = tmp_path / "drive" / "Uzum Yaprak"
+    _write_images(dataset_root, "healthy", 1)
+
+    result = list_dataset_directories_from_parent(dataset_parent=dataset_root)
+
+    assert looks_like_class_root_dataset(dataset_root)
+    assert result == [dataset_root]
 
 
 def test_resolve_direct_repo_dataset_root_accepts_dataset_path_under_repo_staging_parent(tmp_path: Path):

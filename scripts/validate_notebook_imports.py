@@ -428,12 +428,12 @@ def test_data_prep_notebook_contract() -> None:
     assert "build_grouped_dataset_plan" in sources.full_source
     assert "evaluate_layout(root=dataset_root)" in sources.full_source
     assert "ASK_FOR_OOD_ROOT" in sources.full_source
-    assert "list_repo_dataset_directories" in sources.full_source
+    assert "resolve_dataset_directory_from_parent" in sources.full_source
     assert "build_prepared_dataset_key" in sources.full_source
     assert "prepare_class_root_for_materialization" in sources.full_source
     assert "def _resolve_repo_dataset_root" in sources.full_source
     assert "resolve_repo_dataset_directory" in sources.full_source
-    assert 'dataset_source = "repo"' in sources.full_source
+    assert 'dataset_source = "drive" if IMPORT_FROM_DRIVE' in sources.full_source
     assert 'STATE["dataset_name"] = dataset_name' in sources.full_source
     assert 'STATE["dataset_source"] = dataset_source' in sources.full_source
     assert "MATERIALIZE_AFTER_REVIEW = True" in sources.full_source

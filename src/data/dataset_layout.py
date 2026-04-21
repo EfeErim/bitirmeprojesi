@@ -71,6 +71,106 @@ def list_repo_dataset_directories(
     )
 
 
+def _has_image_file(directory: Path) -> bool:
+    for path in directory.rglob("*"):
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS:
+            return True
+    return False
+
+
+def looks_like_class_root_dataset(dataset_root: str | Path) -> bool:
+    """Return True when a directory looks like a flat class-root dataset."""
+    root = Path(dataset_root).expanduser()
+    if not root.is_dir():
+        return False
+    try:
+        class_dirs = [path for path in root.iterdir() if path.is_dir() and not path.name.startswith(".")]
+    except OSError:
+        return False
+    return bool(class_dirs) and any(_has_image_file(class_dir) for class_dir in class_dirs)
+
+
+def list_dataset_directories_from_parent(
+    *,
+    dataset_parent: str | Path,
+    allow_direct_dataset_root: bool = True,
+) -> list[Path]:
+    """List selectable dataset directories under a local or Drive parent path."""
+    parent = Path(dataset_parent).expanduser()
+    if not parent.is_dir():
+        raise RuntimeError(f"Dataset parent not found: {parent}")
+    if allow_direct_dataset_root and looks_like_class_root_dataset(parent):
+        return [parent]
+    return sorted(
+        [path for path in parent.iterdir() if path.is_dir() and not path.name.startswith(".")],
+        key=lambda path: path.name.lower(),
+    )
+
+
+def resolve_dataset_directory_from_parent(
+    *,
+    dataset_parent: str | Path,
+    requested_name: str = "",
+    prompt_label: str = "dataset",
+    input_fn: Callable[[str], str] = input,
+    print_fn: Callable[[str], None] = print,
+    allow_direct_dataset_root: bool = True,
+) -> tuple[str, Path, list[str]]:
+    """Resolve a dataset directory by explicit name, numeric choice, or prompt."""
+    parent = Path(dataset_parent).expanduser()
+    dataset_dirs = list_dataset_directories_from_parent(
+        dataset_parent=parent,
+        allow_direct_dataset_root=allow_direct_dataset_root,
+    )
+    dataset_names = [path.name for path in dataset_dirs]
+    if not dataset_names:
+        raise RuntimeError(f"No dataset directories were found under {parent}")
+
+    requested = str(requested_name or "").strip()
+    if requested:
+        if requested.isdigit():
+            selected_index = int(requested) - 1
+            if selected_index < 0 or selected_index >= len(dataset_names):
+                raise RuntimeError(
+                    f"Requested {prompt_label} index is out of range: {requested}. "
+                    f"Available options: {dataset_names}"
+                )
+            selected_name = dataset_names[selected_index]
+        elif requested in dataset_names:
+            selected_name = requested
+        else:
+            raise RuntimeError(
+                f"Requested {prompt_label} '{requested}' was not found under {parent}. "
+                f"Available options: {dataset_names}"
+            )
+    elif len(dataset_names) == 1:
+        selected_name = dataset_names[0]
+        print_fn(f"[DATASET] Only one {prompt_label} bulundu, otomatik secildi: {selected_name}")
+    else:
+        print_fn(f"[DATASET] Kullanilabilir {prompt_label} secenekleri ({parent}):")
+        for index, dataset_name in enumerate(dataset_names, start=1):
+            print_fn(f"  [{index}] {dataset_name}")
+        raw_choice = str(
+            input_fn(
+                f"Kullanilacak {prompt_label} icin isim ya da numara girin "
+                f"(1-{len(dataset_names)}): "
+            )
+        ).strip()
+        if not raw_choice:
+            raise RuntimeError(f"{prompt_label.capitalize()} secimi bos birakilamaz.")
+        return resolve_dataset_directory_from_parent(
+            dataset_parent=parent,
+            requested_name=raw_choice,
+            prompt_label=prompt_label,
+            input_fn=input_fn,
+            print_fn=print_fn,
+            allow_direct_dataset_root=allow_direct_dataset_root,
+        )
+
+    selected_path = next(path for path in dataset_dirs if path.name == selected_name)
+    return selected_name, selected_path, dataset_names
+
+
 def resolve_direct_repo_dataset_root(
     *,
     repo_root: str | Path,
