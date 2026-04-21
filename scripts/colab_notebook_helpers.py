@@ -49,6 +49,7 @@ _NOTEBOOK_OPTIMIZATION_SEARCH_SPACE = {
         {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
         {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
         {"name": "training.optimization.logitnorm_tau", "type": "float", "low": 0.5, "high": 2.0},
+        {"name": "training.data.randaugment_num_ops", "type": "int", "low": 1, "high": 4, "step": 1},
         {"name": "training.data.randaugment_magnitude", "type": "int", "low": 3, "high": 12, "step": 1},
     ],
 }
@@ -62,6 +63,7 @@ _NOTEBOOK_PARAM_MAP = {
     "training.adapter.lora_dropout": "LORA_DROPOUT",
     "training.ood.threshold_factor": "OOD_FACTOR",
     "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
+    "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
     "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
 }
 _DEFAULT_PARETO_OBJECTIVES = (
@@ -820,7 +822,9 @@ def _build_notebook_continual_config(
 
     data_cfg = continual_cfg.setdefault("data", {})
     data_cfg["augmentation_policy"] = str(data_settings["AUGMENTATION_POLICY"])
-    data_cfg["randaugment_num_ops"] = int(data_settings["RANDAUGMENT_NUM_OPS"])
+    data_cfg["randaugment_num_ops"] = int(
+        notebook_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])
+    )
     data_cfg["randaugment_magnitude"] = int(notebook_parameters["RANDAUGMENT_MAGNITUDE"])
     data_cfg["few_shot_research_mode"] = bool(data_settings["FEW_SHOT_RESEARCH_MODE"])
     data_cfg["few_shot_min_class_samples"] = int(data_settings["FEW_SHOT_MIN_CLASS_SAMPLES"])
@@ -990,7 +994,7 @@ def initialize_notebook_training_engine(
         seed=int(loader_settings["SEED"]),
         validate_images_on_init=bool(loader_settings["VALIDATE_IMAGES_ON_INIT"]),
         augmentation_policy=str(data_settings["AUGMENTATION_POLICY"]),
-        randaugment_num_ops=int(data_settings["RANDAUGMENT_NUM_OPS"]),
+        randaugment_num_ops=int(resolved_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])),
         randaugment_magnitude=int(resolved_parameters["RANDAUGMENT_MAGNITUDE"]),
         pin_memory=bool(loader_settings["PIN_MEMORY"]),
         **loader_kwargs,

@@ -133,6 +133,7 @@ def prepare_class_root_for_materialization(
     neighbors: int = DEFAULT_NEIGHBORS,
     cleanup_seed: int = DEFAULT_SEED,
     quarantine_cross_class_conflicts: bool = True,
+    under_min_eval_policy: str = "block",
     materialization_strategy: str = "auto",
     progress_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
@@ -202,6 +203,7 @@ def prepare_class_root_for_materialization(
         device=device,
         batch_size=batch_size,
         neighbors=neighbors,
+        under_min_eval_policy=under_min_eval_policy,
         progress_fn=progress_fn,
     )
 
@@ -214,6 +216,7 @@ def prepare_class_root_for_materialization(
         "part_name": str(part_name),
         "dataset_key": build_prepared_dataset_key(crop_name, part_name),
         "cleanup_seed": int(cleanup_seed),
+        "under_min_eval_policy": str(under_min_eval_policy),
         "materialization_strategy": str(materialization_strategy),
         "quarantine_cross_class_conflicts": bool(quarantine_cross_class_conflicts),
         "mirror_summary": dict(mirror_summary),
@@ -280,6 +283,13 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not quarantine images listed in cross_class_conflicts.csv.",
     )
+    parser.add_argument(
+        "--under-min-eval-policy",
+        type=str,
+        default="block",
+        choices=("block", "skip"),
+        help="Whether classes with <3 eval families/source bundles should block or be skipped.",
+    )
     return parser
 
 
@@ -301,6 +311,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         neighbors=args.neighbors,
         cleanup_seed=args.cleanup_seed,
         quarantine_cross_class_conflicts=not bool(args.skip_cross_class_quarantine),
+        under_min_eval_policy=args.under_min_eval_policy,
         materialization_strategy=args.materialization_strategy,
         progress_fn=lambda message: print(f"[PREP] {message}"),
     )

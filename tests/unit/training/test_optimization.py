@@ -22,6 +22,7 @@ def _trial(
     threshold_factor: float,
     logitnorm_tau: float,
     randaugment_magnitude: int,
+    randaugment_num_ops: int = 2,
     readiness_passed: bool = True,
 ) -> dict:
     parameters = {
@@ -35,6 +36,7 @@ def _trial(
         "training.fusion.dropout": fusion_dropout,
         "training.ood.threshold_factor": threshold_factor,
         "training.optimization.logitnorm_tau": logitnorm_tau,
+        "training.data.randaugment_num_ops": randaugment_num_ops,
         "training.data.randaugment_magnitude": randaugment_magnitude,
     }
     return {
@@ -76,6 +78,7 @@ def test_build_training_config_override_maps_flat_parameters():
         {
             "training.learning_rate": 0.0002,
             "training.adapter.lora_r": 32,
+            "training.data.randaugment_num_ops": 3,
             "training.data.randaugment_magnitude": 9,
         }
     )
@@ -85,7 +88,7 @@ def test_build_training_config_override_maps_flat_parameters():
             "continual": {
                 "learning_rate": 0.0002,
                 "adapter": {"lora_r": 32},
-                "data": {"randaugment_magnitude": 9},
+                "data": {"randaugment_num_ops": 3, "randaugment_magnitude": 9},
             }
         }
     }

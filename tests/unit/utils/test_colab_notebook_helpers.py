@@ -788,6 +788,7 @@ def _write_canonical_run(
             "training.adapter.lora_dropout": 0.1,
             "training.ood.threshold_factor": 3.0,
             "training.optimization.logitnorm_tau": 1.0,
+            "training.data.randaugment_num_ops": 2,
             "training.data.randaugment_magnitude": 7,
         },
         "objectives": {
@@ -885,6 +886,7 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
                 "training.learning_rate": 0.00015,
                 "training.num_epochs": 16,
                 "training.adapter.lora_r": 32,
+                "training.data.randaugment_num_ops": 3,
                 "training.data.randaugment_magnitude": 9,
             },
         },
@@ -901,6 +903,7 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
             "WEIGHT_DECAY": 0.01,
             "OOD_FACTOR": 3.0,
             "LOGITNORM_TAU": 1.0,
+            "RANDAUGMENT_NUM_OPS": 2,
             "RANDAUGMENT_MAGNITUDE": 7,
         },
         campaign=campaign,
@@ -911,6 +914,7 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
     assert result["notebook_parameters"]["LEARNING_RATE"] == 0.00015
     assert result["notebook_parameters"]["EPOCHS"] == 16
     assert result["notebook_parameters"]["LORA_R"] == 32
+    assert result["notebook_parameters"]["RANDAUGMENT_NUM_OPS"] == 3
     assert result["notebook_parameters"]["RANDAUGMENT_MAGNITUDE"] == 9
 
 
@@ -1034,10 +1038,13 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
         "src.adapter.independent_crop_adapter.IndependentCropAdapter",
         _FakeAdapter,
     )
-    monkeypatch.setattr(
-        "src.data.loaders.create_training_loaders",
-        lambda **kwargs: {"train": object(), "val": object(), "test": object()},
-    )
+    loader_calls = []
+
+    def _fake_create_training_loaders(**kwargs):
+        loader_calls.append(dict(kwargs))
+        return {"train": object(), "val": object(), "test": object()}
+
+    monkeypatch.setattr("src.data.loaders.create_training_loaders", _fake_create_training_loaders)
     monkeypatch.setattr(
         "scripts.colab_notebook_helpers.resolve_notebook_optimization_campaign",
         lambda **kwargs: {
@@ -1051,7 +1058,7 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
         "scripts.colab_notebook_helpers.apply_notebook_optimization_proposal",
         lambda **kwargs: {
             "applied": True,
-            "notebook_parameters": dict(kwargs["notebook_parameters"], BATCH_SIZE=16, EPOCHS=14),
+            "notebook_parameters": dict(kwargs["notebook_parameters"], BATCH_SIZE=16, EPOCHS=14, RANDAUGMENT_NUM_OPS=4),
             "campaign": dict(kwargs["campaign"], selected_proposal={"rank": 1, "signature": "sig_1"}),
             "proposal": {"signature": "sig_1"},
         },
@@ -1091,6 +1098,7 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
             "WEIGHT_DECAY": 0.01,
             "OOD_FACTOR": 3.0,
             "LOGITNORM_TAU": 1.0,
+            "RANDAUGMENT_NUM_OPS": 2,
             "RANDAUGMENT_MAGNITUDE": 7,
         },
         optimization_campaign_mode="continue",
@@ -1144,6 +1152,8 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
     assert state["class_names"] == ["healthy"]
     assert state["continual_config"]["batch_size"] == 16
     assert state["continual_config"]["num_epochs"] == 14
+    assert state["continual_config"]["data"]["randaugment_num_ops"] == 4
+    assert loader_calls[0]["randaugment_num_ops"] == 4
     assert state["adapter"].crop_name == "tomato"
     assert result["trainable_params"] == 10
 
@@ -1375,5 +1385,4 @@ def test_complete_notebook_training_run_finalizes_outputs_with_helper_callbacks(
     assert state["auto_disconnect_report"]["checks"]["repo_exports"] is True
     assert telemetry.closed[0]["status"] == "ok"
     assert disconnect_calls
-
 

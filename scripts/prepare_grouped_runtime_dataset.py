@@ -1384,6 +1384,7 @@ def build_grouped_dataset_plan(
     device: str = "cpu",
     batch_size: int = 16,
     neighbors: int = DEFAULT_NEIGHBORS,
+    under_min_eval_policy: str = "block",
     progress_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
     import gc
@@ -1392,6 +1393,9 @@ def build_grouped_dataset_plan(
 
     amp_dtype = _resolve_amp_dtype(device)
     effective_batch_size = max(1, int(batch_size))
+    normalized_under_min_eval_policy = str(under_min_eval_policy or "block").strip().lower()
+    if normalized_under_min_eval_policy not in {"block", "skip"}:
+        raise ValueError("under_min_eval_policy must be either 'block' or 'skip'.")
 
     _progress(progress_fn, "Scanning class-root dataset and computing hashes.")
     records, normalization_report = scan_class_root_dataset(
@@ -1790,10 +1794,26 @@ def build_grouped_dataset_plan(
             )
             continue
         if len(eval_candidate_families) < 3:
-            health_entry["runtime_action"] = "blocked"
-            blocking_issues.append(
-                f"Class '{class_name}' has only {len(eval_candidate_families)} evaluation-eligible family/families after grouped prep."
+            shortage_reason = (
+                f"Class '{class_name}' has only {len(eval_candidate_families)} "
+                "evaluation-eligible family/families after grouped prep."
             )
+            if normalized_under_min_eval_policy == "skip":
+                health_entry["runtime_action"] = "skipped"
+                health_entry["skip_reason"] = shortage_reason
+                skipped_class_names.add(class_name)
+                skipped_classes.append(
+                    {
+                        "class_name": class_name,
+                        "reason": shortage_reason,
+                        "image_count": int(health_entry["image_count"]),
+                        "family_count": int(health_entry["family_count"]),
+                        "eval_eligible_family_count": int(health_entry["eval_eligible_family_count"]),
+                    }
+                )
+            else:
+                health_entry["runtime_action"] = "blocked"
+                blocking_issues.append(shortage_reason)
             continue
         bundled_eval_families: Dict[str, List[ImageRecord]] = defaultdict(list)
         bundle_to_family_ids: Dict[str, List[str]] = defaultdict(list)
@@ -1804,10 +1824,26 @@ def build_grouped_dataset_plan(
             bundled_eval_families[bundle_key].append(detail["canonical_record"])
             bundle_to_family_ids[bundle_key].append(family_root)
         if len(bundled_eval_families) < 3:
-            health_entry["runtime_action"] = "blocked"
-            blocking_issues.append(
-                f"Class '{class_name}' has only {len(bundled_eval_families)} source-like eval bundle(s) after grouped prep."
+            shortage_reason = (
+                f"Class '{class_name}' has only {len(bundled_eval_families)} "
+                "source-like eval bundle(s) after grouped prep."
             )
+            if normalized_under_min_eval_policy == "skip":
+                health_entry["runtime_action"] = "skipped"
+                health_entry["skip_reason"] = shortage_reason
+                skipped_class_names.add(class_name)
+                skipped_classes.append(
+                    {
+                        "class_name": class_name,
+                        "reason": shortage_reason,
+                        "image_count": int(health_entry["image_count"]),
+                        "family_count": int(health_entry["family_count"]),
+                        "eval_eligible_family_count": int(health_entry["eval_eligible_family_count"]),
+                    }
+                )
+            else:
+                health_entry["runtime_action"] = "blocked"
+                blocking_issues.append(shortage_reason)
             continue
         health_entry["runtime_action"] = "included"
         included_class_names.add(class_name)
@@ -1820,7 +1856,10 @@ def build_grouped_dataset_plan(
                 family_assignments[family_root] = split_name
 
     if skipped_classes and not included_class_names and not blocking_issues:
-        blocking_issues.append("No classes remain after skipping zero evaluation-eligible classes.")
+        if normalized_under_min_eval_policy == "skip":
+            blocking_issues.append("No classes remain after applying under-minimum evaluation skip policy.")
+        else:
+            blocking_issues.append("No classes remain after skipping zero evaluation-eligible classes.")
 
     manifest_rows: List[Dict[str, Any]] = []
     for (class_name, family_root), items in sorted(families.items(), key=lambda item: (item[0][0], item[0][1])):
@@ -1911,6 +1950,7 @@ def build_grouped_dataset_plan(
         "schema_version": "v1_grouped_data_prep",
         "crop_name": str(crop_name),
         "part_name": str(part_name),
+        "under_min_eval_policy": normalized_under_min_eval_policy,
         "source_root": str(class_root.resolve()),
         "summary": {
             "total_images": len(records),
@@ -2184,6 +2224,13 @@ def main() -> int:
     parser.add_argument("--device", type=str, default="cpu", help="Embedding device (cpu or cuda).")
     parser.add_argument("--batch-size", type=int, default=16, help="Embedding batch size.")
     parser.add_argument("--neighbors", type=int, default=DEFAULT_NEIGHBORS, help="Neighbors per image.")
+    parser.add_argument(
+        "--under-min-eval-policy",
+        type=str,
+        default="block",
+        choices=("block", "skip"),
+        help="Whether classes with <3 eval families/source bundles should block or be skipped.",
+    )
     parser.add_argument("--materialize", action="store_true", help="Materialize runtime dataset if no blockers.")
     parser.add_argument(
         "--runtime-root",
@@ -2208,6 +2255,7 @@ def main() -> int:
         device=args.device,
         batch_size=args.batch_size,
         neighbors=args.neighbors,
+        under_min_eval_policy=args.under_min_eval_policy,
     )
     print(json.dumps(summary, indent=2))
     if args.materialize:

@@ -62,6 +62,7 @@ def _canonical_record(*, run_id: str, artifact_root: Path, created_at: str, macr
             "training.fusion.dropout": 0.1,
             "training.ood.threshold_factor": 3.0,
             "training.optimization.logitnorm_tau": 1.0,
+            "training.data.randaugment_num_ops": 2,
             "training.data.randaugment_magnitude": 7,
         },
         "objectives": {

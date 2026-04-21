@@ -653,6 +653,55 @@ def test_source_style_filter_blocks_when_safe_eval_families_are_insufficient(tmp
     assert any("only 2 evaluation-eligible" in item for item in summary["blocking_issues"])
 
 
+def test_under_min_eval_policy_skip_skips_classes_with_too_few_eval_families(tmp_path: Path, monkeypatch):
+    source_root = tmp_path / "source"
+    artifact_root = tmp_path / "artifacts"
+
+    for class_name, base_offset in {"Healthy": 2, "Early Blight": 5}.items():
+        _write_pattern(source_root / class_name / "clean_0.jpg", offset=base_offset)
+        _write_pattern(source_root / class_name / "clean_1.jpg", offset=base_offset + 8)
+        _write_pattern(source_root / class_name / "download_612x612_leaf.jpg", offset=base_offset + 16)
+
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_dinov3_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._load_bioclip_components",
+        lambda model_id, device="cpu": (object(), _FakeModel()),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_dinov3_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._encode_bioclip_with_components",
+        lambda paths, **kwargs: _fake_embeddings(paths, model_id="fake", batch_size=0, device="cpu"),
+    )
+    monkeypatch.setattr(
+        "scripts.prepare_grouped_runtime_dataset._compute_neighbor_pairs",
+        lambda embeddings, *, paths, neighbors: {},
+    )
+
+    summary = build_grouped_dataset_plan(
+        class_root=source_root,
+        crop_name="tomato",
+        artifact_root=artifact_root,
+        taxonomy_path=None,
+        under_min_eval_policy="skip",
+    )
+
+    assert summary["runtime_ready"] is False
+    assert summary["under_min_eval_policy"] == "skip"
+    assert summary["summary"]["skipped_classes"] == 2
+    assert "No classes remain" in summary["blocking_issues"][0]
+    assert summary["class_health"]["healthy"]["runtime_action"] == "skipped"
+
+    manifest_rows = json.loads((artifact_root / "proposed_split_manifest.json").read_text(encoding="utf-8"))["rows"]
+    assert manifest_rows
+    assert all(row["split"] == "skipped" for row in manifest_rows)
+
+
 def test_label_train_only_risk_is_excluded_from_canonical_eval(tmp_path: Path, monkeypatch):
     source_root = tmp_path / "source"
     artifact_root = tmp_path / "artifacts"
