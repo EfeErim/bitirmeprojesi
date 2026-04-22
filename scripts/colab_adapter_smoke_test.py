@@ -44,6 +44,11 @@ def predict_image_folder(*args, **kwargs):
     return _impl.predict_image_folder(*args, **kwargs)
 
 
+def build_prediction_visualization_images(*args, **kwargs):
+    _sync_impl()
+    return _impl.build_prediction_visualization_images(*args, **kwargs)
+
+
 __all__ = [
     "DEFAULT_DISCOVERY_ROOTS",
     "DEFAULT_ROBUST_VIEWS",
@@ -54,6 +59,7 @@ __all__ = [
     "_iter_adapter_meta_paths",
     "_prepare_view_tensor",
     "_target_size",
+    "build_prediction_visualization_images",
     "discover_adapter_candidates",
     "load_adapter_summary",
     "predict_image_folder",

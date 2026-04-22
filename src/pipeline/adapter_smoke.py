@@ -8,7 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
-from PIL import Image, ImageOps, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
@@ -648,10 +648,10 @@ def _normalize_pil_image(image: Image.Image, *, target_size: int) -> Any:
     return transform(image)
 
 
-def _prepare_view_tensor(image: Image.Image, *, target_size: int, view_name: str) -> Any:
+def _prepare_view_image(image: Image.Image, *, target_size: int, view_name: str) -> Image.Image:
     rgb_image = image.convert("RGB")
     if view_name == "full_resize":
-        return preprocess_image(rgb_image, target_size=target_size)
+        return rgb_image.resize((int(target_size), int(target_size)), Image.Resampling.BILINEAR)
 
     if view_name == "resize_pad":
         width, height = rgb_image.size
@@ -668,7 +668,7 @@ def _prepare_view_tensor(image: Image.Image, *, target_size: int, view_name: str
         paste_x = (int(target_size) - resized.width) // 2
         paste_y = (int(target_size) - resized.height) // 2
         canvas.paste(resized, (paste_x, paste_y))
-        return _normalize_pil_image(canvas, target_size=int(target_size))
+        return canvas
 
     if view_name == "center_crop":
         width, height = rgb_image.size
@@ -699,10 +699,19 @@ def _prepare_view_tensor(image: Image.Image, *, target_size: int, view_name: str
                 method=Image.Resampling.BILINEAR,
                 centering=(0.5, 0.5),
             )
-        return _normalize_pil_image(cropped, target_size=int(target_size))
+        return cropped.convert("RGB")
 
     raise ValueError(
         f"Unsupported robust smoke view '{view_name}'. Expected one of: {', '.join(DEFAULT_ROBUST_VIEWS)}."
+    )
+
+
+def _prepare_view_tensor(image: Image.Image, *, target_size: int, view_name: str) -> Any:
+    if view_name == "full_resize":
+        return preprocess_image(image.convert("RGB"), target_size=target_size)
+    return _normalize_pil_image(
+        _prepare_view_image(image, target_size=int(target_size), view_name=view_name),
+        target_size=int(target_size),
     )
 
 
@@ -735,6 +744,113 @@ def _predict_image_view(
         resolved_adapter_dir=resolved_adapter_dir,
         view_name=view_name,
     )
+
+
+def _predict_payload_confidence_for_class(
+    adapter: IndependentCropAdapter,
+    image_tensor: Any,
+    *,
+    target_class_index: int,
+) -> float:
+    payload = adapter.predict_with_ood(image_tensor)
+    disease = dict(payload.get("disease", {}))
+    try:
+        predicted_index = int(disease.get("class_index"))
+    except (TypeError, ValueError):
+        return 0.0
+    if predicted_index != int(target_class_index):
+        return 0.0
+    try:
+        return float(disease.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _occlusion_sensitivity_grid(
+    image_tensor: Any,
+    *,
+    adapter: IndependentCropAdapter,
+    target_class_index: int,
+    baseline_confidence: float,
+    grid_size: int,
+) -> List[List[float]]:
+    import torch
+
+    if not torch.is_tensor(image_tensor):
+        raise ValueError("Occlusion visualization requires a torch tensor image.")
+    if image_tensor.ndim != 3:
+        raise ValueError("Occlusion visualization expects an image tensor shaped [C, H, W].")
+
+    resolved_grid = int(max(2, min(16, grid_size)))
+    _, height, width = image_tensor.shape
+    heatmap = torch.zeros((resolved_grid, resolved_grid), dtype=torch.float32)
+    baseline = float(max(0.0, baseline_confidence))
+    if height <= 0 or width <= 0:
+        return heatmap.tolist()
+
+    for row_index in range(resolved_grid):
+        top = int(round(row_index * height / resolved_grid))
+        bottom = int(round((row_index + 1) * height / resolved_grid))
+        for col_index in range(resolved_grid):
+            left = int(round(col_index * width / resolved_grid))
+            right = int(round((col_index + 1) * width / resolved_grid))
+            masked = image_tensor.detach().clone()
+            masked[:, top:bottom, left:right] = 0.0
+            occluded_confidence = _predict_payload_confidence_for_class(
+                adapter,
+                masked,
+                target_class_index=int(target_class_index),
+            )
+            heatmap[row_index, col_index] = max(0.0, baseline - occluded_confidence)
+
+    max_drop = float(heatmap.max().item()) if heatmap.numel() else 0.0
+    if max_drop > 0.0:
+        heatmap = heatmap / max_drop
+    return [[round(float(value), 6) for value in row] for row in heatmap.tolist()]
+
+
+def _add_occlusion_visualization(
+    result: Dict[str, Any],
+    image: Image.Image,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    view_name: str,
+    grid_size: int,
+) -> None:
+    if str(result.get("status", "")).strip().lower() == "error":
+        return
+    predicted_index = result.get("predicted_index")
+    if predicted_index is None:
+        return
+    try:
+        target_class_index = int(predicted_index)
+        baseline_confidence = float(result.get("confidence", 0.0))
+    except (TypeError, ValueError):
+        return
+
+    view_image = _prepare_view_image(image, target_size=int(target_size), view_name=view_name)
+    view_tensor = _normalize_pil_image(view_image, target_size=int(target_size))
+    grid = _occlusion_sensitivity_grid(
+        view_tensor,
+        adapter=adapter,
+        target_class_index=target_class_index,
+        baseline_confidence=baseline_confidence,
+        grid_size=int(grid_size),
+    )
+    result["visualization"] = {
+        "method": "occlusion_sensitivity",
+        "explanation": (
+            "Patches are hidden one at a time; brighter cells mark larger drops in the "
+            "predicted-class confidence. This is a model-agnostic diagnostic, not proof of causality."
+        ),
+        "view_name": str(view_name),
+        "target_class_index": target_class_index,
+        "target_class_name": result.get("predicted_class"),
+        "baseline_confidence": baseline_confidence,
+        "grid_size": int(max(2, min(16, grid_size))),
+        "heatmap": grid,
+    }
 
 
 def _normalize_requested_views(robust_views: Optional[Sequence[str]]) -> List[str]:
@@ -870,6 +986,8 @@ def _predict_single_image_robust(
     target_size: int,
     resolved_adapter_dir: Path,
     robust_views: Sequence[str],
+    explain_prediction: bool = False,
+    explanation_grid_size: int = 7,
 ) -> Dict[str, Any]:
     image_name = image_path.name
     rows: List[Dict[str, Any]] = []
@@ -915,6 +1033,15 @@ def _predict_single_image_robust(
         result,
         view_consistency=result["view_consistency"],
     )
+    if explain_prediction:
+        _add_occlusion_visualization(
+            result,
+            base_image,
+            adapter=adapter,
+            target_size=target_size,
+            view_name=primary_view,
+            grid_size=explanation_grid_size,
+        )
     return result
 
 
@@ -924,19 +1051,83 @@ def _predict_image_row(
     adapter: IndependentCropAdapter,
     target_size: int,
     resolved_adapter_dir: Path,
+    explain_prediction: bool = False,
+    explanation_grid_size: int = 7,
 ) -> Dict[str, Any]:
     with Image.open(image_path) as image:
+        base_image = image.convert("RGB")
         row = _predict_image_view(
             image_path.name,
-            image,
+            base_image,
             adapter=adapter,
             target_size=target_size,
             resolved_adapter_dir=resolved_adapter_dir,
             view_name="full_resize",
         )
+        if explain_prediction:
+            _add_occlusion_visualization(
+                row,
+                base_image,
+                adapter=adapter,
+                target_size=target_size,
+                view_name="full_resize",
+                grid_size=explanation_grid_size,
+            )
     row.pop("view_name", None)
     row["image_path"] = str(image_path)
     return row
+
+
+def _heat_color(value: float) -> tuple[int, int, int, int]:
+    intensity = max(0.0, min(1.0, float(value)))
+    red = int(255)
+    green = int(round(224 * (1.0 - intensity) + 80 * intensity))
+    blue = int(round(130 * (1.0 - intensity)))
+    alpha = int(round(35 + 165 * intensity))
+    return red, green, blue, alpha
+
+
+def _heatmap_overlay_image(base_image: Image.Image, heatmap: Sequence[Sequence[float]]) -> Image.Image:
+    overlay = Image.new("RGBA", base_image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    rows = len(heatmap)
+    cols = max((len(row) for row in heatmap), default=0)
+    if rows <= 0 or cols <= 0:
+        return base_image.convert("RGBA")
+    width, height = base_image.size
+    for row_index, row in enumerate(heatmap):
+        for col_index, value in enumerate(row):
+            left = int(round(col_index * width / cols))
+            right = int(round((col_index + 1) * width / cols))
+            top = int(round(row_index * height / rows))
+            bottom = int(round((row_index + 1) * height / rows))
+            draw.rectangle((left, top, right, bottom), fill=_heat_color(float(value)))
+    return Image.alpha_composite(base_image.convert("RGBA"), overlay).convert("RGB")
+
+
+def build_prediction_visualization_images(
+    image_path: str | Path,
+    result: Dict[str, Any],
+) -> Dict[str, Image.Image]:
+    """Build notebook-display images from a prediction result visualization payload."""
+    visualization = dict(result.get("visualization", {}))
+    if visualization.get("method") != "occlusion_sensitivity":
+        return {}
+    heatmap = visualization.get("heatmap")
+    if not isinstance(heatmap, list) or not heatmap:
+        return {}
+    view_name = str(visualization.get("view_name") or "full_resize")
+    grid_size = int(visualization.get("grid_size") or len(heatmap))
+    with Image.open(image_path) as opened:
+        view_image = _prepare_view_image(
+            opened.convert("RGB"),
+            target_size=grid_size * 64,
+            view_name=view_name,
+        )
+    return {
+        "model_view": view_image,
+        "occlusion_overlay": _heatmap_overlay_image(view_image, heatmap),
+    }
 
 
 def _error_row(image_path: Path, *, resolved_adapter_dir: Path, error: Exception) -> Dict[str, Any]:
@@ -1009,6 +1200,8 @@ def predict_single_image(
     device: str = "cuda",
     enable_robust_smoke: bool = False,
     robust_views: Optional[Sequence[str]] = None,
+    explain_prediction: bool = False,
+    explanation_grid_size: int = 7,
     *,
     part_name: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -1029,12 +1222,16 @@ def predict_single_image(
             target_size=_target_size(config_env),
             resolved_adapter_dir=resolved_dir,
             robust_views=_normalize_requested_views(robust_views),
+            explain_prediction=bool(explain_prediction),
+            explanation_grid_size=int(explanation_grid_size),
         )
     return _predict_image_row(
         image_ref,
         adapter=adapter,
         target_size=_target_size(config_env),
         resolved_adapter_dir=resolved_dir,
+        explain_prediction=bool(explain_prediction),
+        explanation_grid_size=int(explanation_grid_size),
     )
 
 
@@ -1088,6 +1285,7 @@ def predict_image_folder(
 
 
 __all__ = [
+    "build_prediction_visualization_images",
     "discover_adapter_candidates",
     "load_adapter_summary",
     "predict_single_image",

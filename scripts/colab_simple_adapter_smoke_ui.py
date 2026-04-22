@@ -12,6 +12,7 @@ from IPython.display import HTML, clear_output, display
 from PIL import Image
 
 from src.pipeline.adapter_smoke import (
+    build_prediction_visualization_images,
     discover_adapter_candidates,
     load_adapter_summary,
     predict_single_image,
@@ -242,6 +243,13 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
     robustness_warning_text = ", ".join(robustness_warning_codes) if robustness_warning_codes else "-"
     uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
     warning_details = _warning_details_html(view_consistency, uncertainty)
+    visualization = dict(result.get("visualization", {}))
+    visualization_line = ""
+    if visualization.get("method") == "occlusion_sensitivity":
+        visualization_line = (
+            '<div style="color:#374151;"><b style="color:#111827;">Gorsel Aciklama:</b> '
+            f"{escape(str(visualization.get('view_name') or '-'))} gorunumu icin occlusion sensitivity haritasi hazir.</div>"
+        )
     return f"""
     <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
       <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#111827;">{'Tahmin Basarisiz' if status == 'error' else 'Tahmin Sonucu'}</div>
@@ -254,6 +262,7 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
       <div style="color:#374151;"><b style="color:#111827;">OOD Score:</b> {score_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Karar Esigi:</b> {threshold_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Robustluk:</b> <span style="color:{robustness_accent};font-weight:600;">{escape(robustness_status)}</span></div>
+      {visualization_line}
       <div style="margin-top:6px;color:#374151;"><b style="color:#111827;">Robustluk Aciklamasi:</b>{warning_details}</div>
       <div style="color:#374151;word-break:break-word;"><b style="color:#111827;">Goruntu:</b> {escape(str(image_path))}</div>
       {'<div style="color:#b91c1c;word-break:break-word;"><b style="color:#991b1b;">Hata:</b> ' + escape(error_text) + '</div>' if error_text else ''}
@@ -275,6 +284,8 @@ def launch_simple_adapter_smoke_ui(
     config_env: str = "colab",
     device: str = "cuda",
     upload_dir_name: str = "notebook4_uploads",
+    enable_prediction_visualization: bool = True,
+    explanation_grid_size: int = 7,
 ) -> None:
     """Render the minimal direct-adapter smoke-test UI used by Notebook 4.
 
@@ -339,6 +350,12 @@ def launch_simple_adapter_smoke_ui(
         description="Resim:",
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
+    )
+    visualization_checkbox = widgets.Checkbox(
+        value=bool(enable_prediction_visualization),
+        description="Occlusion haritasi",
+        indent=False,
+        layout=widgets.Layout(width="95%"),
     )
     refresh_button = widgets.Button(description="Adapterleri Yenile", button_style="info")
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
@@ -419,7 +436,14 @@ def launch_simple_adapter_smoke_ui(
                 config_env=config_env,
                 device=device,
                 enable_robust_smoke=True,
+                explain_prediction=bool(visualization_checkbox.value),
+                explanation_grid_size=int(explanation_grid_size),
             )
+            visualization_images = build_prediction_visualization_images(image_path, result)
+            if visualization_images:
+                display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve occlusion haritasi</div>"))
+                display(visualization_images["model_view"])
+                display(visualization_images["occlusion_overlay"])
             render_result(summary, result, image_path)
             display(
                 HTML(
@@ -439,6 +463,7 @@ def launch_simple_adapter_smoke_ui(
                 adapter_dropdown,
                 adapter_path_text,
                 image_path_text,
+                visualization_checkbox,
                 widgets.HBox([refresh_button, run_button]),
                 status_output,
                 result_output,

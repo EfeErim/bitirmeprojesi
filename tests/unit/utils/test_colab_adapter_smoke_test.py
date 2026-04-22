@@ -339,6 +339,40 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
     assert "views" not in result
 
 
+def test_predict_single_image_can_attach_occlusion_visualization(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (12, 10), color="green").save(image_path)
+
+    def zero_preprocess(_image, target_size=224):
+        return torch.zeros(3, target_size, target_size)
+
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAdapter(crop_name, device))
+    monkeypatch.setattr(smoke, "preprocess_image", zero_preprocess)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        explain_prediction=True,
+        explanation_grid_size=3,
+    )
+
+    visualization = result["visualization"]
+    assert visualization["method"] == "occlusion_sensitivity"
+    assert visualization["view_name"] == "full_resize"
+    assert visualization["target_class_name"] == "blight"
+    assert visualization["grid_size"] == 3
+    assert len(visualization["heatmap"]) == 3
+    assert len(visualization["heatmap"][0]) == 3
+
+    images = smoke.build_prediction_visualization_images(image_path, result)
+    assert set(images) == {"model_view", "occlusion_overlay"}
+    assert images["model_view"].size == images["occlusion_overlay"].size
+
+
 
 def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_path: Path):
     asset_dir = _write_current_drive_adapter_export(tmp_path / "telemetry" / "run_123", crop_name="tomato")

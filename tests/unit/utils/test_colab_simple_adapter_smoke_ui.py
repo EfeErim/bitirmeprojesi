@@ -51,6 +51,7 @@ def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_p
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
         VBox=_FakeWidget,
@@ -86,6 +87,7 @@ def test_launch_simple_adapter_smoke_ui_collapses_run_mirrors_by_default(monkeyp
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
         VBox=_FakeWidget,
@@ -128,6 +130,7 @@ def test_launch_simple_adapter_smoke_ui_keeps_legacy_show_all_collapsed(monkeypa
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
         VBox=_FakeWidget,
@@ -170,6 +173,7 @@ def test_launch_simple_adapter_smoke_ui_can_show_mirrors_for_debug(monkeypatch, 
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
         VBox=_FakeWidget,
@@ -215,6 +219,34 @@ def test_build_result_html_sets_explicit_contrast_colors():
     assert "summary style=\"cursor:pointer;color:#111827;font-weight:600;\"" in html
     assert "Stable across derived views" in html
     assert "Status:</b> unknown" in html
+
+
+def test_build_result_html_mentions_occlusion_visualization_when_available():
+    html = ui._build_result_html(
+        {
+            "resolved_adapter_dir": "/tmp/adapter",
+            "crop_name": "tomato",
+        },
+        {
+            "status": "success",
+            "predicted_class": "septoria",
+            "confidence": 0.9712,
+            "is_ood": False,
+            "primary_score": 0.8673,
+            "decision_threshold": 1.8515,
+            "view_consistency": {"stable": True, "warning_codes": []},
+            "uncertainty_diagnostics": {"warning_codes": []},
+            "visualization": {
+                "method": "occlusion_sensitivity",
+                "view_name": "full_resize",
+                "heatmap": [[0.0, 1.0], [0.25, 0.5]],
+            },
+        },
+        image_path=ui.Path("/tmp/leaf.png"),
+    )
+
+    assert "Gorsel Aciklama" in html
+    assert "occlusion sensitivity haritasi hazir" in html
 
 
 def test_build_result_html_surfaces_error_state_without_in_distribution_label():
