@@ -1,12 +1,12 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-04-21T20:07:29.179077+00:00",
+  "generated_at": "2026-04-22T11:35:10.170677+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": false,
-  "trial_count": 3,
+  "trial_count": 6,
   "canonical_count": 0,
-  "backfilled_count": 3,
-  "cohort_count": 2,
+  "backfilled_count": 6,
+  "cohort_count": 4,
   "paths": {
     "trials_jsonl": "runs\\_index\\trials.jsonl",
     "pareto_inputs_json": "runs\\_index\\pareto_inputs.json",
@@ -15,7 +15,7 @@
   "cohorts": [
     {
       "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "grape__fruit",
         "crop_name": "grape",
@@ -23,6 +23,30 @@
         "engine": "continual_sd_lora",
         "backbone_model_name": "",
         "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora"
+      }
+    },
+    {
+      "cohort_key": "grape__leaf::grape::leaf::continual_sd_lora",
+      "run_count": 1,
+      "comparability": {
+        "dataset_lineage_key": "grape__leaf",
+        "crop_name": "grape",
+        "part_name": "leaf",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "grape__leaf::grape::leaf::continual_sd_lora"
+      }
+    },
+    {
+      "cohort_key": "tomato__fruit::tomato::fruit::continual_sd_lora",
+      "run_count": 1,
+      "comparability": {
+        "dataset_lineage_key": "tomato__fruit",
+        "crop_name": "tomato",
+        "part_name": "fruit",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "tomato__fruit::tomato::fruit::continual_sd_lora"
       }
     },
     {
