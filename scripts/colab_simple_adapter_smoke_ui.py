@@ -271,11 +271,16 @@ def launch_simple_adapter_smoke_ui(
     *,
     search_roots: Optional[list[str | Path]] = None,
     show_all_adapters: bool = False,
+    show_mirror_adapters: bool = False,
     config_env: str = "colab",
     device: str = "cuda",
     upload_dir_name: str = "notebook4_uploads",
 ) -> None:
-    """Render the minimal direct-adapter smoke-test UI used by Notebook 4."""
+    """Render the minimal direct-adapter smoke-test UI used by Notebook 4.
+
+    ``show_all_adapters`` is kept for older notebook copies, but mirror exports
+    are hidden unless ``show_mirror_adapters`` is explicitly enabled.
+    """
     if widgets is None:
         raise RuntimeError(
             "This notebook UI requires ipywidgets. Re-run the bootstrap cell after dependency installation."
@@ -300,7 +305,7 @@ def launch_simple_adapter_smoke_ui(
     adapter_candidates = discover_adapter_candidates(
         resolved_search_roots,
         crop_name=None,
-        collapse_run_mirrors=not show_all_adapters,
+        collapse_run_mirrors=not show_mirror_adapters,
     )
     dropdown_options = [
         (candidate["display_name"], index)
@@ -378,7 +383,7 @@ def launch_simple_adapter_smoke_ui(
         adapter_candidates = discover_adapter_candidates(
             resolved_search_roots,
             crop_name=None,
-            collapse_run_mirrors=not show_all_adapters,
+            collapse_run_mirrors=not show_mirror_adapters,
         )
         options = [
             (candidate["display_name"], index)

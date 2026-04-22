@@ -109,7 +109,7 @@ def test_launch_simple_adapter_smoke_ui_collapses_run_mirrors_by_default(monkeyp
     assert calls[0]["collapse_run_mirrors"] is True
 
 
-def test_launch_simple_adapter_smoke_ui_can_show_all_mirrors_for_debug(monkeypatch, tmp_path):
+def test_launch_simple_adapter_smoke_ui_keeps_legacy_show_all_collapsed(monkeypatch, tmp_path):
     class _FakeWidget:
         def __init__(self, *args, **kwargs):
             self.value = kwargs.get("value")
@@ -147,6 +147,48 @@ def test_launch_simple_adapter_smoke_ui_can_show_all_mirrors_for_debug(monkeypat
     monkeypatch.setattr(ui, "clear_output", lambda *_args, **_kwargs: None)
 
     ui.launch_simple_adapter_smoke_ui(tmp_path, show_all_adapters=True)
+
+    assert calls[0]["collapse_run_mirrors"] is True
+
+
+def test_launch_simple_adapter_smoke_ui_can_show_mirrors_for_debug(monkeypatch, tmp_path):
+    class _FakeWidget:
+        def __init__(self, *args, **kwargs):
+            self.value = kwargs.get("value")
+            self.options = kwargs.get("options")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def on_click(self, _handler):
+            return None
+
+    fake_widgets = types.SimpleNamespace(
+        HTML=_FakeWidget,
+        Dropdown=_FakeWidget,
+        Text=_FakeWidget,
+        Button=_FakeWidget,
+        Output=_FakeWidget,
+        VBox=_FakeWidget,
+        HBox=_FakeWidget,
+        Layout=lambda **kwargs: kwargs,
+    )
+    calls: list[dict[str, object]] = []
+
+    def _fake_discover(*_args, **kwargs):
+        calls.append(kwargs)
+        return []
+
+    monkeypatch.setattr(ui, "widgets", fake_widgets)
+    monkeypatch.setattr(ui, "_running_in_colab", lambda: True)
+    monkeypatch.setattr(ui, "discover_adapter_candidates", _fake_discover)
+    monkeypatch.setattr(ui, "display", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(ui, "clear_output", lambda *_args, **_kwargs: None)
+
+    ui.launch_simple_adapter_smoke_ui(tmp_path, show_mirror_adapters=True)
 
     assert calls[0]["collapse_run_mirrors"] is False
 
