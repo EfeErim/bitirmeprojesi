@@ -119,6 +119,50 @@ def test_build_result_html_surfaces_error_state_without_in_distribution_label():
     assert "In-distribution" not in html
 
 
+def test_build_result_html_explains_robustness_warning_codes():
+    html = ui._build_result_html(
+        {
+            "resolved_adapter_dir": "/tmp/adapter",
+            "crop_name": "grape",
+        },
+        {
+            "status": "success",
+            "predicted_class": "botrytis_bunch_rot",
+            "confidence": 0.6829,
+            "is_ood": False,
+            "primary_score": 0.4000,
+            "decision_threshold": 1.4792,
+            "view_consistency": {
+                "stable": False,
+                "warning_codes": ["view_class_disagreement", "view_confidence_spread_high"],
+                "predicted_classes": {
+                    "full_resize": "botrytis_bunch_rot",
+                    "resize_pad": "healthy",
+                },
+                "ood_votes": {
+                    "full_resize": False,
+                    "resize_pad": False,
+                },
+                "confidence_min": 0.44,
+                "confidence_max": 0.6829,
+                "confidence_spread": 0.2429,
+            },
+            "uncertainty_diagnostics": {
+                "warning_codes": ["confidence_not_calibrated", "view_instability"],
+            },
+        },
+        image_path=ui.Path("/tmp/grape.png"),
+    )
+
+    assert "Robustluk Aciklamasi" in html
+    assert "farkli gorunumler farkli siniflar tahmin etti" in html
+    assert "full_resize: botrytis_bunch_rot; resize_pad: healthy" in html
+    assert "gorunumler arasindaki confidence farki yuksek" in html
+    assert "fark 24.29 puan" in html
+    assert "kalibre edilmis olasilik gibi yorumlanmamalidir" in html
+    assert "robust gorunumler stabil degil" in html
+
+
 def test_persist_upload_value_writes_uploaded_bytes(tmp_path: Path):
     persisted = ui._persist_upload_value(
         (

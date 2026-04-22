@@ -80,6 +80,113 @@ def _persist_upload_value(upload_value: Any, upload_dir: Path) -> Optional[Path]
     return target_path
 
 
+def _format_optional_float(value: Any, *, scale: float = 1.0, suffix: str = "", precision: int = 2) -> str:
+    if value is None:
+        return "-"
+    try:
+        return f"{float(value) * scale:.{precision}f}{suffix}"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _format_mapping_items(mapping: Any, *, value_formatter: Optional[Any] = None) -> str:
+    if not isinstance(mapping, dict) or not mapping:
+        return "-"
+    parts: list[str] = []
+    for key, value in mapping.items():
+        rendered_value = value_formatter(value) if value_formatter else str(value)
+        parts.append(f"{key}: {rendered_value}")
+    return "; ".join(parts)
+
+
+def _bool_vote_label(value: Any) -> str:
+    if value is True:
+        return "OOD"
+    if value is False:
+        return "In-distribution"
+    return "-"
+
+
+def _warning_detail_items(
+    view_consistency: dict[str, Any],
+    uncertainty: dict[str, Any],
+) -> list[str]:
+    view_warning_codes = [str(code) for code in list(view_consistency.get("warning_codes", []))]
+    uncertainty_warning_codes = [str(code) for code in list(uncertainty.get("warning_codes", []))]
+    items: list[str] = [
+        "Robust smoke, ayni gorseli farkli on-isleme gorunumleriyle tekrar tahmin eder; sonuc degisiyorsa tek tahmine guvenmeden goruntuyu ve adapteri manuel incelemek gerekir."
+    ]
+
+    if bool(view_consistency.get("stable")):
+        items.append(
+            "Stabil: uretilen gorunumler ayni sinifi ve ayni OOD kararini verdi; belirgin confidence farki veya gorunum hatasi yok."
+        )
+    elif not view_warning_codes and not uncertainty_warning_codes:
+        items.append(
+            "Inceleme onerisi var ama ayrintili uyari kodu gelmedi; ham JSON altindan views alanini kontrol edin."
+        )
+
+    view_warning_explanations = {
+        "view_class_disagreement": (
+            "view_class_disagreement: farkli gorunumler farkli siniflar tahmin etti. "
+            "Gorunum bazli siniflar: "
+            + _format_mapping_items(view_consistency.get("predicted_classes"))
+        ),
+        "view_ood_disagreement": (
+            "view_ood_disagreement: gorunumler OOD kararinda ayrildi. "
+            "Gorunum bazli kararlar: "
+            + _format_mapping_items(view_consistency.get("ood_votes"), value_formatter=_bool_vote_label)
+        ),
+        "view_confidence_spread_high": (
+            "view_confidence_spread_high: gorunumler arasindaki confidence farki yuksek. "
+            "Min "
+            + _format_optional_float(view_consistency.get("confidence_min"), scale=100.0, suffix="%")
+            + ", max "
+            + _format_optional_float(view_consistency.get("confidence_max"), scale=100.0, suffix="%")
+            + ", fark "
+            + _format_optional_float(view_consistency.get("confidence_spread"), scale=100.0, suffix=" puan")
+            + "."
+        ),
+        "view_error_present": (
+            "view_error_present: en az bir gorunum tahmini hata verdi. Hata veren gorunumler: "
+            + (", ".join(str(name) for name in view_consistency.get("failed_views", [])) or "-")
+        ),
+    }
+    uncertainty_warning_explanations = {
+        "prediction_error": "prediction_error: ana gorunum tahmini hata verdi; hata satirini ve ham JSON'u kontrol edin.",
+        "confidence_not_calibrated": (
+            "confidence_not_calibrated: confidence top-1 softmax degeridir; kalibre edilmis olasilik gibi yorumlanmamalidir."
+        ),
+        "ood_flagged": "ood_flagged: ana gorunum adapter esigine gore OOD olarak isaretlendi.",
+        "sure_confidence_reject": "sure_confidence_reject: daha siki confidence kontrolu tahmini reddetti.",
+        "conformal_set_wide": (
+            "conformal_set_wide: birden fazla makul sinif var; conformal set: "
+            + (", ".join(str(item) for item in uncertainty.get("conformal_set", [])) or "-")
+        ),
+        "view_instability": "view_instability: robust gorunumler stabil degil; yukaridaki view uyarilari karar nedenini gosterir.",
+    }
+
+    for code in view_warning_codes:
+        items.append(view_warning_explanations.get(code, f"{code}: tanimli olmayan view uyarisi; ham JSON'u kontrol edin."))
+    for code in uncertainty_warning_codes:
+        items.append(
+            uncertainty_warning_explanations.get(
+                code,
+                f"{code}: tanimli olmayan belirsizlik uyarisi; ham JSON'u kontrol edin.",
+            )
+        )
+
+    return items
+
+
+def _warning_details_html(view_consistency: dict[str, Any], uncertainty: dict[str, Any]) -> str:
+    rows = "\n".join(
+        f"<li style=\"margin:4px 0;\">{escape(item)}</li>"
+        for item in _warning_detail_items(view_consistency, uncertainty)
+    )
+    return f"<ul style=\"margin:6px 0 0 18px;padding:0;color:#374151;\">{rows}</ul>"
+
+
 def _upload_via_colab_files(upload_dir: Path) -> Optional[Path]:
     try:
         from google.colab import files
@@ -134,6 +241,7 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
         robustness_accent = "#b45309"
     robustness_warning_text = ", ".join(robustness_warning_codes) if robustness_warning_codes else "-"
     uncertainty_warning_text = ", ".join(uncertainty_warning_codes) if uncertainty_warning_codes else "-"
+    warning_details = _warning_details_html(view_consistency, uncertainty)
     return f"""
     <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
       <div style="font-size:18px;font-weight:700;margin-bottom:8px;color:#111827;">{'Tahmin Basarisiz' if status == 'error' else 'Tahmin Sonucu'}</div>
@@ -146,6 +254,7 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
       <div style="color:#374151;"><b style="color:#111827;">OOD Score:</b> {score_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Karar Esigi:</b> {threshold_text}</div>
       <div style="color:#374151;"><b style="color:#111827;">Robustluk:</b> <span style="color:{robustness_accent};font-weight:600;">{escape(robustness_status)}</span></div>
+      <div style="margin-top:6px;color:#374151;"><b style="color:#111827;">Robustluk Aciklamasi:</b>{warning_details}</div>
       <div style="color:#374151;word-break:break-word;"><b style="color:#111827;">Goruntu:</b> {escape(str(image_path))}</div>
       {'<div style="color:#b91c1c;word-break:break-word;"><b style="color:#991b1b;">Hata:</b> ' + escape(error_text) + '</div>' if error_text else ''}
       <details style="margin-top:10px;color:#374151;">
