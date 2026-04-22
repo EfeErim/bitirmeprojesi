@@ -1,4 +1,5 @@
 from src.adapter import independent_crop_adapter as adapter_module
+from src.adapter.checkpointing import normalize_trainer_config
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.training.types import TrainingCheckpointPayload
 
@@ -66,3 +67,28 @@ def test_adapter_checkpoint_save_load(monkeypatch, tmp_path):
     assert loaded["run_id"] == "run_123"
     assert loaded["progress_state"]["global_step"] == 42
     assert loaded["best_metric_state"]["best_metric_name"] == "val_loss"
+
+
+def test_normalize_trainer_config_infers_cross_entropy_for_legacy_ber_export():
+    normalized = normalize_trainer_config(
+        {"ood": {"ber_enabled": True}},
+        model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        device="cpu",
+    )
+
+    assert normalized["ood"]["ber_enabled"] is True
+    assert normalized["optimization"]["loss_name"] == "cross_entropy"
+
+
+def test_normalize_trainer_config_preserves_explicit_ber_loss_name():
+    normalized = normalize_trainer_config(
+        {
+            "ood": {"ber_enabled": True},
+            "optimization": {"loss_name": "logitnorm"},
+        },
+        model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        device="cpu",
+    )
+
+    assert normalized["ood"]["ber_enabled"] is True
+    assert normalized["optimization"]["loss_name"] == "logitnorm"

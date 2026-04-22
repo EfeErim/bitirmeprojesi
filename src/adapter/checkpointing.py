@@ -16,6 +16,39 @@ TrainerFactory = Callable[[Dict[str, Any]], Any]
 CheckpointPayloadFactory = Callable[[], type[Any]]
 
 
+def _extract_continual_source(payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    data = dict(payload or {})
+    training = data.get("training")
+    if isinstance(training, dict) and isinstance(training.get("continual"), dict):
+        return dict(training.get("continual", {}))
+    return data
+
+
+def _has_explicit_loss_name(payload: Optional[Dict[str, Any]]) -> bool:
+    source = _extract_continual_source(payload)
+    optimization = source.get("optimization")
+    return isinstance(optimization, dict) and "loss_name" in optimization
+
+
+def _apply_legacy_ber_loss_compatibility(
+    normalized: Dict[str, Any],
+    *,
+    source_config: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Keep old BER adapter exports loadable when loss metadata was absent."""
+    ood = normalized.get("ood")
+    optimization = normalized.get("optimization")
+    if not isinstance(ood, dict) or not isinstance(optimization, dict):
+        return normalized
+    if not bool(ood.get("ber_enabled", False)):
+        return normalized
+    if _has_explicit_loss_name(source_config):
+        return normalized
+
+    optimization["loss_name"] = "cross_entropy"
+    return normalized
+
+
 def resolve_training_checkpoint_root(checkpoint_dir: str | Path) -> Path:
     root = Path(checkpoint_dir)
     if root.is_dir() and (root / "training_checkpoint").exists():
@@ -35,6 +68,10 @@ def normalize_trainer_config(
         trainer_config,
         model_name=str(model_name),
         device=device,
+    )
+    normalized = _apply_legacy_ber_loss_compatibility(
+        normalized,
+        source_config=trainer_config,
     )
     if isinstance(backbone, dict) and backbone:
         normalized["backbone"] = {**dict(normalized.get("backbone", {})), **dict(backbone)}
