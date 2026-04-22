@@ -43,6 +43,10 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "radial_l2_enabled": True,
             "radial_beta_range": [0.5, 2.0],
             "radial_beta_steps": 16,
+            "real_split_enabled": True,
+            "real_split_dev_fraction": 0.4,
+            "real_split_min_per_slice": 2,
+            "real_split_manifest_name": "ood_split_manifest.json",
             "knn_backend": "auto",
             "knn_chunk_size": 2048,
             "sure_enabled": True,
@@ -165,6 +169,12 @@ def normalize_continual_training_config(
         raw_beta_range = [0.5, 2.0]
     ood["radial_beta_range"] = [float(raw_beta_range[0]), float(raw_beta_range[1])]
     ood["radial_beta_steps"] = int(ood.get("radial_beta_steps", 16))
+    ood["real_split_enabled"] = bool(ood.get("real_split_enabled", True))
+    ood["real_split_dev_fraction"] = max(0.05, min(0.95, float(ood.get("real_split_dev_fraction", 0.4))))
+    ood["real_split_min_per_slice"] = max(2, int(ood.get("real_split_min_per_slice", 2)))
+    ood["real_split_manifest_name"] = str(
+        ood.get("real_split_manifest_name", "ood_split_manifest.json") or "ood_split_manifest.json"
+    )
     ood["knn_backend"] = str(ood.get("knn_backend", "auto"))
     ood["knn_chunk_size"] = int(ood.get("knn_chunk_size", 2048))
     ood["sure_enabled"] = bool(ood.get("sure_enabled", True))
@@ -248,4 +258,3 @@ def extract_continual_training_config(
                 "Continual training config must be provided under training.continual or as a canonical continual block."
             )
     return normalize_continual_training_config(source, model_name=model_name, device=device)
-

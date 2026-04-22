@@ -72,6 +72,10 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["ber_enabled"] is False
     assert root_normalized["ood"]["sure_semantic_percentile"] == 90.0
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
+    assert root_normalized["ood"]["real_split_enabled"] is True
+    assert root_normalized["ood"]["real_split_dev_fraction"] == 0.4
+    assert root_normalized["ood"]["real_split_min_per_slice"] == 2
+    assert root_normalized["ood"]["real_split_manifest_name"] == "ood_split_manifest.json"
     assert root_normalized["ood"]["conformal_method"] == "raps"
     assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
     assert root_normalized["data"]["augmentation_policy"] == "randaugment"
@@ -176,4 +180,3 @@ def test_extract_continual_training_config_normalizes_allow_under_min_training()
     normalized = extract_continual_training_config(payload)
 
     assert normalized["data"]["allow_under_min_training"] is True
-

@@ -155,6 +155,9 @@ def _resolve_loader_sample_types(
     if not is_ood_loader:
         return None
     dataset = getattr(eval_loader, "dataset", None)
+    sample_types = getattr(dataset, "ood_sample_types", None)
+    if isinstance(sample_types, list) and sample_types:
+        return [str(sample_type or "unlabeled") for sample_type in sample_types]
     image_paths = getattr(dataset, "image_paths", None)
     split_name = str(getattr(dataset, "split", "") or "")
     if not image_paths or split_name.lower() != "ood":

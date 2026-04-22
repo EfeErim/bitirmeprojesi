@@ -12,6 +12,7 @@ import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from .datasets import CropDataset, infer_crop_classes_from_layout
+from .ood_splits import ensure_ood_split_manifest, manifest_slice_map, select_manifest_paths
 
 VALID_SAMPLERS = {"auto", "shuffle", "weighted"}
 AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO = 1.5
@@ -124,6 +125,10 @@ def create_training_loaders(
     randaugment_num_ops: int = 2,
     randaugment_magnitude: int = 7,
     ood_root: str | Path | None = None,
+    real_ood_split_enabled: bool = True,
+    real_ood_split_dev_fraction: float = 0.4,
+    real_ood_split_min_per_slice: int = 2,
+    real_ood_split_manifest_name: str = "ood_split_manifest.json",
     *,
     dataset_cls: type[CropDataset] = CropDataset,
     infer_classes_fn: Callable[[str, str], List[str]] = infer_crop_classes_from_layout,
@@ -231,10 +236,12 @@ def create_training_loaders(
         )
         setattr(loaders[split], "_sampler_class_counts", dict(sampler_runtime["class_counts"]))
 
-    resolved_ood_root = Path(ood_root).expanduser() if ood_root is not None and str(ood_root).strip() else Path(data_dir) / crop / "ood"
-    if resolved_ood_root.exists():
-        if not resolved_ood_root.is_dir():
-            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
+    def _build_ood_loader(
+        *,
+        split_paths: List[Path] | None = None,
+        split_name: str = "ood",
+        seed_offset: int = 30,
+    ) -> DataLoader:
         ood_dataset = dataset_cls(
             data_dir=data_dir,
             crop=crop,
@@ -252,15 +259,34 @@ def create_training_loaders(
             randaugment_num_ops=randaugment_num_ops,
             randaugment_magnitude=randaugment_magnitude,
         )
+        if split_paths is not None:
+            allowed = {str(path.resolve(strict=False)) for path in split_paths}
+            selected_paths: List[Path] = []
+            selected_labels: List[int] = []
+            selected_types: List[str] = []
+            sample_types = list(getattr(ood_dataset, "ood_sample_types", []))
+            for index, image_path in enumerate(list(getattr(ood_dataset, "image_paths", []))):
+                if str(Path(image_path).resolve(strict=False)) not in allowed:
+                    continue
+                selected_paths.append(image_path)
+                selected_labels.append(-1)
+                if index < len(sample_types):
+                    selected_types.append(str(sample_types[index]))
+                else:
+                    selected_types.append("unlabeled")
+            ood_dataset.image_paths = selected_paths
+            ood_dataset.labels = selected_labels
+            ood_dataset.ood_sample_types = selected_types
+
         ood_generator = torch.Generator()
-        ood_generator.manual_seed(int(seed) + 30)
+        ood_generator.manual_seed(int(seed) + seed_offset)
         ood_extra_kwargs = dict(dataloader_kwargs)
         if num_workers <= 0:
             ood_extra_kwargs.pop("prefetch_factor", None)
         elif prefetch_factor is not None:
             ood_extra_kwargs["prefetch_factor"] = int(prefetch_factor)
 
-        loaders["ood"] = DataLoader(
+        loader = DataLoader(
             ood_dataset,
             batch_size=batch_size,
             shuffle=False,
@@ -272,6 +298,48 @@ def create_training_loaders(
             generator=ood_generator,
             **ood_extra_kwargs,
         )
-        setattr(loaders["ood"], "_seed_base", int(seed) + 30)
-        setattr(loaders["ood"], "_sampler_seed_base", int(seed) + 130)
+        setattr(loader, "_seed_base", int(seed) + seed_offset)
+        setattr(loader, "_sampler_seed_base", int(seed) + 100 + seed_offset)
+        setattr(loader, "_ood_split_name", split_name)
+        return loader
+
+    resolved_ood_root = Path(ood_root).expanduser() if ood_root is not None and str(ood_root).strip() else Path(data_dir) / crop / "ood"
+    if resolved_ood_root.exists():
+        if not resolved_ood_root.is_dir():
+            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
+        manifest = None
+        if bool(real_ood_split_enabled):
+            try:
+                manifest = ensure_ood_split_manifest(
+                    resolved_ood_root,
+                    manifest_name=str(real_ood_split_manifest_name or "ood_split_manifest.json"),
+                    seed=int(seed),
+                    dev_fraction=float(real_ood_split_dev_fraction),
+                    min_per_slice=int(real_ood_split_min_per_slice),
+                )
+            except OSError:
+                manifest = None
+        if manifest is not None:
+            dev_paths = select_manifest_paths(resolved_ood_root, manifest, "dev")
+            test_paths = select_manifest_paths(resolved_ood_root, manifest, "test")
+            if dev_paths and test_paths:
+                slice_map = manifest_slice_map(resolved_ood_root, manifest)
+                loaders["ood_dev"] = _build_ood_loader(split_paths=dev_paths, split_name="ood_dev", seed_offset=31)
+                loaders["ood"] = _build_ood_loader(split_paths=test_paths, split_name="ood_test", seed_offset=30)
+                for loader in (loaders["ood_dev"], loaders["ood"]):
+                    dataset = getattr(loader, "dataset", None)
+                    if dataset is not None:
+                        dataset.ood_sample_types = [
+                            slice_map.get(str(Path(path).resolve(strict=False)), "unlabeled")
+                            for path in list(getattr(dataset, "image_paths", []))
+                        ]
+                    setattr(loader, "_ood_split_manifest", manifest)
+                    setattr(
+                        loader,
+                        "_ood_split_manifest_path",
+                        str(resolved_ood_root / str(real_ood_split_manifest_name or "ood_split_manifest.json")),
+                    )
+                return loaders
+
+        loaders["ood"] = _build_ood_loader(split_name="ood", seed_offset=30)
     return loaders

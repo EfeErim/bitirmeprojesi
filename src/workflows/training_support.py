@@ -209,6 +209,7 @@ def prepare_training_run(
 ) -> TrainingRunSetup:
     training_cfg = dict(config.get("training", {}).get("continual", {}))
     data_cfg = dict(training_cfg.get("data", {}))
+    ood_cfg = dict(training_cfg.get("ood", {}))
     colab_cfg = dict(config.get("colab", {}).get("training", {}))
     resolved_run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}")
     resolved_dataset = resolve_runtime_dataset(data_dir=data_dir, crop_name=crop_name)
@@ -230,6 +231,12 @@ def prepare_training_run(
         augmentation_policy=str(data_cfg.get("augmentation_policy", "randaugment")),
         randaugment_num_ops=int(data_cfg.get("randaugment_num_ops", 2)),
         randaugment_magnitude=int(data_cfg.get("randaugment_magnitude", 7)),
+        real_ood_split_enabled=bool(ood_cfg.get("real_split_enabled", True)),
+        real_ood_split_dev_fraction=float(ood_cfg.get("real_split_dev_fraction", 0.4)),
+        real_ood_split_min_per_slice=int(ood_cfg.get("real_split_min_per_slice", 2)),
+        real_ood_split_manifest_name=str(
+            ood_cfg.get("real_split_manifest_name", "ood_split_manifest.json") or "ood_split_manifest.json"
+        ),
         pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
     )
     loader_sizes = build_loader_sizes(loaders)

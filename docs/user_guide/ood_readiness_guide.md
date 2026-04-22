@@ -117,6 +117,7 @@ Current behavior:
 - one shared `ood/` pool can be reused across runs for the same crop
 - for repo-local notebook workflows, a reusable OOD pool can be staged under `data/ood_dataset/<dataset_name>/` and then materialized into `data/prepared_runtime_datasets/<dataset_key>/ood/`
 - when real `ood/` data is evaluated, the top-level folder under `ood/` is emitted as `ood_type` in validation and test artifacts so you can inspect near/far/non-plant/blur-style slices without turning them into supported labels
+- when real-OOD splitting is enabled and the pool has enough images, training writes or reuses `ood/ood_split_manifest.json`, creates a slice-aware `ood_dev` assignment plus a held-out `ood_test` assignment, and uses the held-out test assignment for final readiness OOD evidence
 
 ## How To Build A Real `ood/` Pool
 
@@ -180,9 +181,18 @@ The folder names above are only for human organization. The workflow evaluates e
 
 Reporting detail:
 
-- the workflow still computes the main OOD gate on the pooled `ood/` split
+- the workflow computes the main OOD gate on the held-out real-OOD test assignment when automatic splitting is viable, otherwise on the legacy pooled `ood/` loader
 - additional `ood_type_breakdown.json` artifacts summarize AUROC and FPR by top-level `ood/` folder when that structure exists
 - `ood_evidence_summary.json` records the pooled OOD metrics, sample counts, and discovered real-OOD slice names for that split
+
+Automatic real-OOD dev/test splitting:
+
+- `training.continual.ood.real_split_enabled` defaults to `true`
+- the loader preserves the input `ood/<slice>/*` tree and writes a manifest instead of copying images
+- each slice with at least `real_split_min_per_slice` images contributes at least one image to `ood_dev` and one image to the held-out final OOD test assignment
+- slices below that minimum are kept in the final test assignment and marked as too small for dev splitting in the manifest
+- if the manifest cannot produce both non-empty dev and test assignments, the repo falls back to the legacy pooled `ood/` loader
+- `ood_dev` is for future score-selection or optimization surfaces; `production_readiness.json` uses the final held-out real-OOD test assignment exposed as the normal `ood` loader
 
 ## What Happens When Real OOD Data Exists
 
@@ -192,7 +202,7 @@ The workflow:
 
 1. trains the final model on the known classes
 2. calibrates OOD
-3. evaluates the model on a known-class split plus the real `ood/` pool
+3. evaluates the model on a known-class split plus the held-out real-OOD test assignment when automatic splitting is viable, otherwise the real `ood/` pool
 4. uses those results in the final readiness decision
 
 When this path is available, the readiness artifact records the OOD evidence source as:

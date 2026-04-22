@@ -12,6 +12,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from .cache import LRUCache
+from .ood_splits import infer_ood_slice
 from .transforms import build_image_transform
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,7 @@ class CropDataset(Dataset):
         self.classes = inferred or default_crop_classes(self.crop)
         self.class_to_idx = {name: idx for idx, name in enumerate(self.classes)}
         self.idx_to_class = {idx: name for name, idx in self.class_to_idx.items()}
+        self.ood_sample_types: List[str] = []
         self.image_paths, self.labels = self._load_data()
         if self.validate_images_on_init:
             self._validate_image_paths()
@@ -119,6 +121,7 @@ class CropDataset(Dataset):
                 for path in base_dir.rglob("*")
                 if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
             )
+            self.ood_sample_types = [infer_ood_slice(path, base_dir) for path in ood_paths]
             return ood_paths, [-1] * len(ood_paths)
 
         image_paths: List[Path] = []
@@ -162,6 +165,13 @@ class CropDataset(Dataset):
         if failed:
             self.load_errors.extend(failed)
             self.skipped_files.extend(row["path"] for row in failed)
+            valid_path_set = {str(path) for path in valid_paths}
+            if self.split == "ood" and self.ood_sample_types:
+                self.ood_sample_types = [
+                    sample_type
+                    for path, sample_type in zip(self.image_paths, self.ood_sample_types)
+                    if str(path) in valid_path_set
+                ]
             self.image_paths = valid_paths
             self.labels = valid_labels
 

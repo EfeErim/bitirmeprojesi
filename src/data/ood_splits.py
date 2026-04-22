@@ -1,0 +1,239 @@
+"""Persistent, slice-aware real-OOD split assignment helpers."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import random
+from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Mapping, Optional
+
+OOD_SPLIT_MANIFEST_SCHEMA = "v1_real_ood_split_manifest"
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tif", ".tiff"}
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _image_paths(root: Path) -> List[Path]:
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+    )
+
+
+def infer_ood_slice(path: Path, root: Path) -> str:
+    """Return the top-level OOD slice for a file under ``root``."""
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return "unlabeled"
+    parts = list(relative.parts)
+    if len(parts) <= 1:
+        return "unlabeled"
+    return str(parts[0] or "unlabeled")
+
+
+def _collect_entries(root: Path) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    for path in _image_paths(root):
+        relative_path = path.relative_to(root).as_posix()
+        entries.append(
+            {
+                "relative_path": relative_path,
+                "slice": infer_ood_slice(path, root),
+                "sha256": _sha256_file(path),
+                "size_bytes": int(path.stat().st_size),
+            }
+        )
+    return entries
+
+
+def _manifest_matches(
+    manifest: Mapping[str, Any],
+    entries: Iterable[Mapping[str, Any]],
+    *,
+    seed: int,
+    dev_fraction: float,
+    min_per_slice: int,
+) -> bool:
+    if int(manifest.get("seed", -1)) != int(seed):
+        return False
+    if abs(float(manifest.get("dev_fraction", -1.0)) - float(dev_fraction)) > 1e-9:
+        return False
+    if int(manifest.get("min_per_slice", -1)) != int(min_per_slice):
+        return False
+    manifest_entries = dict(manifest.get("entries", {})) if isinstance(manifest.get("entries"), Mapping) else {}
+    current = {
+        str(entry.get("relative_path")): str(entry.get("sha256"))
+        for entry in entries
+    }
+    recorded = {
+        str(path): str(payload.get("sha256"))
+        for path, payload in manifest_entries.items()
+        if isinstance(payload, Mapping)
+    }
+    return bool(current) and recorded == current
+
+
+def _load_manifest(path: Path) -> Optional[Dict[str, Any]]:
+    if not path.exists():
+        return None
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if payload.get("schema_version") != OOD_SPLIT_MANIFEST_SCHEMA:
+        return None
+    return payload
+
+
+def _assign_splits(
+    entries: List[Dict[str, Any]],
+    *,
+    seed: int,
+    dev_fraction: float,
+    min_per_slice: int,
+) -> tuple[Dict[str, str], Dict[str, Any]]:
+    rng = random.Random(int(seed))
+    by_slice: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    for entry in entries:
+        by_slice[str(entry["slice"])].append(entry)
+
+    assignments: Dict[str, str] = {}
+    slice_summaries: Dict[str, Any] = {}
+    for slice_name, slice_entries in sorted(by_slice.items(), key=lambda item: item[0]):
+        shuffled = list(slice_entries)
+        rng.shuffle(shuffled)
+        count = len(shuffled)
+        if count < int(min_per_slice):
+            for entry in shuffled:
+                assignments[str(entry["relative_path"])] = "test"
+            slice_summaries[slice_name] = {
+                "total": count,
+                "dev": 0,
+                "test": count,
+                "split_policy": "test_only_below_min_per_slice",
+            }
+            continue
+
+        dev_count = int(round(float(count) * float(dev_fraction)))
+        dev_count = max(1, min(count - 1, dev_count))
+        dev_paths = {str(entry["relative_path"]) for entry in shuffled[:dev_count]}
+        for entry in shuffled:
+            relative_path = str(entry["relative_path"])
+            assignments[relative_path] = "dev" if relative_path in dev_paths else "test"
+        slice_summaries[slice_name] = {
+            "total": count,
+            "dev": dev_count,
+            "test": count - dev_count,
+            "split_policy": "slice_stratified",
+        }
+    return assignments, slice_summaries
+
+
+def ensure_ood_split_manifest(
+    ood_root: str | Path,
+    *,
+    manifest_name: str = "ood_split_manifest.json",
+    seed: int = 42,
+    dev_fraction: float = 0.4,
+    min_per_slice: int = 2,
+) -> Dict[str, Any]:
+    """Create or reuse a persistent manifest for real-OOD dev/test splits."""
+    root = Path(ood_root).expanduser()
+    if not root.is_dir():
+        raise NotADirectoryError(f"OOD root is not a directory: {root}")
+
+    entries = _collect_entries(root)
+    manifest_path = root / str(manifest_name or "ood_split_manifest.json")
+    existing = _load_manifest(manifest_path)
+    resolved_dev_fraction = max(0.05, min(0.95, float(dev_fraction)))
+    resolved_min_per_slice = max(2, int(min_per_slice))
+    if existing is not None and _manifest_matches(
+        existing,
+        entries,
+        seed=int(seed),
+        dev_fraction=resolved_dev_fraction,
+        min_per_slice=resolved_min_per_slice,
+    ):
+        return existing
+
+    assignments, slice_summaries = _assign_splits(
+        entries,
+        seed=int(seed),
+        dev_fraction=resolved_dev_fraction,
+        min_per_slice=resolved_min_per_slice,
+    )
+    split_counts = {"dev": 0, "test": 0}
+    entry_payload: Dict[str, Any] = {}
+    for entry in entries:
+        relative_path = str(entry["relative_path"])
+        split = str(assignments.get(relative_path, "test"))
+        split_counts[split] = int(split_counts.get(split, 0)) + 1
+        entry_payload[relative_path] = {
+            "split": split,
+            "slice": str(entry["slice"]),
+            "sha256": str(entry["sha256"]),
+            "size_bytes": int(entry["size_bytes"]),
+        }
+
+    manifest = {
+        "schema_version": OOD_SPLIT_MANIFEST_SCHEMA,
+        "created_at": _utc_now_iso(),
+        "source_root": str(root.resolve()),
+        "seed": int(seed),
+        "dev_fraction": resolved_dev_fraction,
+        "min_per_slice": resolved_min_per_slice,
+        "split_counts": split_counts,
+        "slice_summaries": slice_summaries,
+        "entries": entry_payload,
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    return manifest
+
+
+def select_manifest_paths(
+    ood_root: str | Path,
+    manifest: Mapping[str, Any],
+    split: str,
+) -> List[Path]:
+    root = Path(ood_root).expanduser()
+    target_split = str(split or "").strip().lower()
+    entries = dict(manifest.get("entries", {})) if isinstance(manifest.get("entries"), Mapping) else {}
+    selected: List[Path] = []
+    for relative_path, payload in sorted(entries.items(), key=lambda item: str(item[0])):
+        if not isinstance(payload, Mapping):
+            continue
+        if str(payload.get("split", "")).strip().lower() != target_split:
+            continue
+        selected.append(root / str(relative_path))
+    return selected
+
+
+def manifest_slice_map(
+    ood_root: str | Path,
+    manifest: Mapping[str, Any],
+) -> Dict[str, str]:
+    root = Path(ood_root).expanduser()
+    entries = dict(manifest.get("entries", {})) if isinstance(manifest.get("entries"), Mapping) else {}
+    result: Dict[str, str] = {}
+    for relative_path, payload in entries.items():
+        if not isinstance(payload, Mapping):
+            continue
+        result[str((root / str(relative_path)).resolve(strict=False))] = str(payload.get("slice", "unlabeled") or "unlabeled")
+    return result

@@ -287,7 +287,7 @@ Recommended usage:
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for future tuning/optimization surfaces, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 ## Training, Step By Step
 
@@ -304,7 +304,7 @@ In practice, the flow is:
 7. Calibrate OOD using the chosen calibration split.
 8. Save the adapter.
 9. Write evaluation artifacts for validation and test.
-10. Use real `ood/` data if it exists, otherwise run the held-out fallback benchmark automatically.
+10. Use held-out real-OOD test evidence from `ood/` when automatic splitting is viable, use legacy pooled real `ood/` evidence when it is not, otherwise run the held-out fallback benchmark automatically.
 11. Write the final readiness verdict to `production_readiness.json`.
 
 ## Inference, Step By Step

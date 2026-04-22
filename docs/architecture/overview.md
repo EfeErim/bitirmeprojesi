@@ -136,12 +136,15 @@ The grouped Notebook 0 prep path uses a 60/20/20 family split target with small-
 
 These filters do not delete usable samples. Risky but non-blocking samples stay eligible for `continual` and are kept out of canonical `val`/`test`. Label triage is a heuristic audit and review aid, not a ground-truth relabeling system.
 
+Notebook 0 also writes `human_review_packet.json` and, when interactive review is enabled, pauses only around high-impact audit outcomes. The safe defaults keep uncertain but usable samples train-only, block direct materialization when cross-class conflicts or split blockers remain, and let clean audits continue without image-by-image review. The packet exposes the fixed conservative pHash, DINOv3, and BioCLIP-2.5 thresholds used for evidence generation; it is a review gate, not automatic threshold calibration.
+
 The older non-grouped runtime-layout helper remains effectively 80/10/10.
 
 Important detail:
 
 - the workflow uses the runtime folder name `continual`
 - workflow loading maps the logical training split onto that folder
+- real `ood/` pools stay in one input tree, but loader construction can write or reuse `ood/ood_split_manifest.json` and expose a manifest-only `ood_dev` assignment plus a held-out final OOD test assignment; the final assignment is loaded as the normal `ood` loader used by readiness
 
 ## Inference Architecture
 
