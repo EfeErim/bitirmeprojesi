@@ -175,12 +175,16 @@ def _load_training_overview(artifact_root: Path) -> Dict[str, Any]:
 
 def _load_prep_overview(artifact_root: Path) -> Dict[str, Any]:
     summary = read_json(artifact_root / "prep_summary.json", default={}, expect_type=dict)
+    human_review = read_json(artifact_root / "human_review_packet.json", default={}, expect_type=dict)
     nested_summary = dict(summary.get("summary", {})) if isinstance(summary.get("summary"), dict) else {}
     payload = {
         "crop_name": summary.get("crop_name", ""),
         "part_name": summary.get("part_name", ""),
         "source_root": summary.get("source_root", ""),
         "runtime_ready": summary.get("runtime_ready"),
+        "human_review_pause_recommended": human_review.get("pause_recommended"),
+        "human_review_recommended_action": human_review.get("recommended_action", ""),
+        "human_review_safe_default": human_review.get("safe_default_decision", ""),
         "prepared_runtime_root": summary.get("prepared_runtime_root", ""),
         "blocking_issue_count": nested_summary.get("blocking_issues"),
         "readable_images": nested_summary.get("readable_images"),

@@ -10,7 +10,9 @@ from scripts.prepare_grouped_runtime_dataset import (
     _compute_neighbor_pairs,
     _resolve_embedding_device,
     build_prepared_dataset_key,
+    build_human_review_packet,
     build_grouped_dataset_plan,
+    format_human_review_packet,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
     _estimate_grouped_split_counts,
@@ -404,6 +406,21 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
     assert label_summary["review_candidate_count"] == len(label_rows)
     assert label_rows
     assert {row["label_risk_level"] for row in label_rows} == {"review_candidate"}
+
+    packet = json.loads((artifact_root / "human_review_packet.json").read_text(encoding="utf-8"))
+    assert packet["pause_recommended"] is True
+    assert packet["recommended_action"] in {
+        "prepare_clean_working_copy_or_stop",
+        "confirm_train_only_routing_before_materialization",
+    }
+    assert any(point["id"] == "label_or_family_review_queue" for point in packet["decision_points"])
+    assert "label_review_candidates.csv" in packet["review_artifacts"]
+    assert "dino_auto_min" in packet["threshold_policy"]
+    rebuilt = build_human_review_packet(summary, artifact_root=artifact_root, max_review_items=1)
+    assert rebuilt["counts"]["label_review_candidates"] == len(label_rows)
+    rendered = format_human_review_packet(rebuilt)
+    assert "Notebook 0 audit gate" in rendered
+    assert "label_review_candidates" in rendered
 
 
 def test_low_risk_same_class_review_clusters_are_auto_resolved(tmp_path: Path, monkeypatch):
@@ -1007,6 +1024,7 @@ def test_grouped_dataset_plan_writes_guided_catalog(tmp_path: Path, monkeypatch)
     assert (guided_dir / "00_start_here.md").exists()
     assert (guided_dir / "01_prep_overview.json").exists()
     assert any(entry["relative_path"] == "prep_summary.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "human_review_packet.json" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "label_risk_summary.json" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "label_review_candidates.csv" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "source_style_groups.csv" for entry in catalog["entries"])

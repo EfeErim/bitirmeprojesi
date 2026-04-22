@@ -117,9 +117,10 @@ This is the current Notebook 0 flow from start to finish:
 6. scan the flat class-root dataset
 7. normalize class names against the crop taxonomy when possible
 8. audit exact duplicates, perceptual-hash neighbors, DINOv3/BioCLIP similarity families, source-style proxy groups, and label-risk cues
-9. write review artifacts, label-risk artifacts, a grouped split manifest, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
-10. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<dataset_key>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
-11. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub when a token is available; token or push failures leave the local dataset and run artifacts in place
+9. write review artifacts, label-risk artifacts, a grouped split manifest, `human_review_packet.json`, and guided navigation files such as `guided/00_start_here.md` and `guided/02_file_catalog.json`
+10. when `INTERACTIVE_AUDIT_REVIEW=True`, pause only on high-impact audit outcomes such as cross-class conflicts, label-review candidates, source-style risk routing, or skipped classes; pressing Enter accepts the conservative default routing
+11. optionally materialize a prepared runtime dataset under `data/prepared_runtime_datasets/<dataset_key>/` and pull a repo OOD tree from `data/ood_dataset/<dataset_name>/` into the runtime `ood/` folder when you want Notebook 0 to complete the full prep flow itself
+12. if `SAVE_RUNTIME_DATASET_TO_GITHUB=True`, force-add and push the prepared runtime dataset path to GitHub when a token is available; token or push failures leave the local dataset and run artifacts in place
 
 Current Notebook 0 behavior keeps audit outputs under the repo workspace and mirrored repo run directory. It no longer copies the data-prep artifacts or prepared runtime dataset into the Drive telemetry tree. By default, Notebook 0 also prepares the report-based working copy, materializes the runtime dataset after a clean audit, and attempts to push the ready runtime dataset to GitHub; set `PREPARE_DATASET_FROM_REPORTS=False` or `MATERIALIZE_AFTER_REVIEW=False` only when you intentionally want an audit-only pass, and set `SAVE_RUNTIME_DATASET_TO_GITHUB=False` when you want the prepared runtime dataset to remain local to the Colab checkout.
 
@@ -131,6 +132,8 @@ For adapter performance, treat Notebook 0 as a curation tool, not just a cleanup
 - materialize only after the report says the class support and source separation are trustworthy enough for training
 
 Notebook 0 keeps canonical `val` and `test` stricter than `continual`. A sample must be the family canonical item and must avoid synthetic, eval-quality, source-style, and label-risk flags before it can enter canonical evaluation. Risky but usable third-party samples are retained for `continual` by default. The label triage is heuristic and review-assisted; it is not ground truth.
+
+The human-in-loop gate is intentionally short. It summarizes the audit into `human_review_packet.json`, prints the recommended action, and asks for confirmation only when the conservative prep rules changed benchmark scope or found evidence that direct materialization would be unsafe. The gate does not auto-relabel images and does not claim dataset-specific threshold calibration; pHash, DINOv3, and BioCLIP-2.5 thresholds remain repo heuristics that generate routing and review evidence. This keeps the notebook automatic for routine datasets while still giving the user a chance to stop when the benchmark could be misleading.
 
 If a class has zero evaluation-eligible families after grouped prep, Notebook 0 records it under `skipped_classes` and omits that class from the materialized runtime dataset. Classes with only one or two eligible families still block materialization because they cannot support the maintained `continual`/`val`/`test` split contract.
 

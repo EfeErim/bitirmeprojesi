@@ -421,6 +421,8 @@ def test_data_prep_notebook_contract() -> None:
         "PREPARED_CLASS_ROOT =",
         "PREPARE_DATASET_FROM_REPORTS =",
         "MATERIALIZE_AFTER_REVIEW =",
+        "INTERACTIVE_AUDIT_REVIEW =",
+        "MAX_INTERACTIVE_REVIEW_ITEMS =",
         "SAVE_RUNTIME_DATASET_TO_GITHUB =",
         "RUNTIME_DATASET_PUSH_REMOTE_NAME =",
         "RUNTIME_DATASET_PUSH_BRANCH =",
@@ -432,6 +434,8 @@ def test_data_prep_notebook_contract() -> None:
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in sources.full_source
+    assert "build_human_review_packet" in sources.full_source
+    assert "format_human_review_packet" in sources.full_source
     assert "evaluate_layout(root=dataset_root)" in sources.full_source
     assert "ASK_FOR_OOD_ROOT" in sources.full_source
     assert "resolve_dataset_directory_from_parent" in sources.full_source
