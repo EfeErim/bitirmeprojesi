@@ -245,10 +245,21 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
     warning_details = _warning_details_html(view_consistency, uncertainty)
     visualization = dict(result.get("visualization", {}))
     visualization_line = ""
-    if visualization.get("method") == "occlusion_sensitivity":
+    if visualization.get("status") == "unavailable":
+        visualization_line = (
+            '<div style="color:#b45309;"><b style="color:#92400e;">Gorsel Aciklama:</b> '
+            f"{escape(str(visualization.get('method') or '-'))} hazirlanamadi: "
+            f"{escape(str(visualization.get('error') or '-'))}</div>"
+        )
+    elif visualization.get("method") == "occlusion_sensitivity":
         visualization_line = (
             '<div style="color:#374151;"><b style="color:#111827;">Gorsel Aciklama:</b> '
             f"{escape(str(visualization.get('view_name') or '-'))} gorunumu icin occlusion sensitivity haritasi hazir.</div>"
+        )
+    elif visualization.get("method") == "attention_map":
+        visualization_line = (
+            '<div style="color:#374151;"><b style="color:#111827;">Gorsel Aciklama:</b> '
+            f"{escape(str(visualization.get('view_name') or '-'))} gorunumu icin attention map hazir.</div>"
         )
     return f"""
     <div style="border:1px solid #d0d7de;border-radius:10px;padding:16px;margin-top:12px;background:#ffffff;color:#111827;box-shadow:0 1px 3px rgba(15,23,42,0.08);">
@@ -285,6 +296,7 @@ def launch_simple_adapter_smoke_ui(
     device: str = "cuda",
     upload_dir_name: str = "notebook4_uploads",
     enable_prediction_visualization: bool = True,
+    explanation_method: str = "attention_map",
     explanation_grid_size: int = 7,
 ) -> None:
     """Render the minimal direct-adapter smoke-test UI used by Notebook 4.
@@ -326,7 +338,7 @@ def launch_simple_adapter_smoke_ui(
     title = widgets.HTML("<h3 style=\"margin:0 0 8px 0;\">Basit Adapter Testi</h3>")
     help_parts = ["Adapter secin veya yol girin."]
     if _running_in_colab():
-        help_parts.append("Resim alani bos birakilirsa <b>Tahmin Et</b> Notebook 3 gibi Colab upload penceresi acar.")
+        help_parts.append("Yeni tahmin icin hucreyi tekrar calistirmadan resim yukleyin veya mevcut resim yolunu degistirin.")
     else:
         help_parts.append("Colab disinda <b>Resim</b> alanina mevcut dosya yolunu girin.")
     help_text = widgets.HTML("<p style=\"margin:0 0 12px 0;\">" + " ".join(help_parts) + "</p>")
@@ -346,18 +358,35 @@ def launch_simple_adapter_smoke_ui(
     )
     image_path_text = widgets.Text(
         value="",
-        placeholder="Colab'da bos birakirsaniz upload acilir; aksi halde mevcut dosya yolunu girin",
+        placeholder="Mevcut dosya yolunu girin veya asagidaki yukleme dugmesini kullanin",
         description="Resim:",
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
     )
+    upload_widget = widgets.FileUpload(
+        accept="image/*",
+        multiple=False,
+        description="Resim Yukle",
+        layout=widgets.Layout(width="180px"),
+    )
     visualization_checkbox = widgets.Checkbox(
         value=bool(enable_prediction_visualization),
-        description="Occlusion haritasi",
+        description="Gorsel aciklama",
         indent=False,
         layout=widgets.Layout(width="95%"),
     )
+    explanation_method_dropdown = widgets.Dropdown(
+        options=[
+            ("Attention map", "attention_map"),
+            ("Occlusion sensitivity", "occlusion_sensitivity"),
+        ],
+        value=str(explanation_method),
+        description="Yontem:",
+        layout=widgets.Layout(width="95%"),
+        style={"description_width": "80px"},
+    )
     refresh_button = widgets.Button(description="Adapterleri Yenile", button_style="info")
+    clear_image_button = widgets.Button(description="Yeni Resim", button_style="warning")
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
     status_output = widgets.Output()
     result_output = widgets.Output()
@@ -388,6 +417,21 @@ def launch_simple_adapter_smoke_ui(
                 return uploaded_path
             raise ValueError("Colab upload iptal edildi veya dosya secilmedi.")
         raise ValueError("Bir resim yolu girin. Colab'da bos birakirsaniz upload penceresi acilir.")
+
+    def handle_widget_upload(change: Any = None) -> None:
+        uploaded_path = _persist_upload_value(upload_widget.value, upload_dir)
+        if uploaded_path is None:
+            return
+        image_path_text.value = str(uploaded_path)
+        with status_output:
+            clear_output(wait=True)
+            print(f"Yuklenen resim hazir: {uploaded_path.name}")
+
+    def clear_image(_button: Any = None) -> None:
+        image_path_text.value = ""
+        with status_output:
+            clear_output(wait=True)
+            print("Yeni resim yukleyin veya Resim alanina dosya yolu girin.")
 
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
         display(HTML(_build_result_html(summary, result, image_path)))
@@ -438,12 +482,13 @@ def launch_simple_adapter_smoke_ui(
                 enable_robust_smoke=True,
                 explain_prediction=bool(visualization_checkbox.value),
                 explanation_grid_size=int(explanation_grid_size),
+                explanation_method=str(explanation_method_dropdown.value),
             )
             visualization_images = build_prediction_visualization_images(image_path, result)
             if visualization_images:
-                display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve occlusion haritasi</div>"))
+                display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
                 display(visualization_images["model_view"])
-                display(visualization_images["occlusion_overlay"])
+                display(visualization_images["heatmap_overlay"])
             render_result(summary, result, image_path)
             display(
                 HTML(
@@ -454,7 +499,9 @@ def launch_simple_adapter_smoke_ui(
             )
 
     refresh_button.on_click(refresh)
+    clear_image_button.on_click(clear_image)
     run_button.on_click(run_prediction)
+    upload_widget.observe(handle_widget_upload, names="value")
     display(
         widgets.VBox(
             [
@@ -463,7 +510,9 @@ def launch_simple_adapter_smoke_ui(
                 adapter_dropdown,
                 adapter_path_text,
                 image_path_text,
+                widgets.HBox([upload_widget, clear_image_button]),
                 visualization_checkbox,
+                explanation_method_dropdown,
                 widgets.HBox([refresh_button, run_button]),
                 status_output,
                 result_output,

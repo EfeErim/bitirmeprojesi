@@ -47,10 +47,14 @@ def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_p
         def on_click(self, _handler):
             return None
 
+        def observe(self, _handler, names=None):
+            return None
+
     fake_widgets = types.SimpleNamespace(
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        FileUpload=_FakeWidget,
         Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
@@ -83,10 +87,14 @@ def test_launch_simple_adapter_smoke_ui_collapses_run_mirrors_by_default(monkeyp
         def on_click(self, _handler):
             return None
 
+        def observe(self, _handler, names=None):
+            return None
+
     fake_widgets = types.SimpleNamespace(
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        FileUpload=_FakeWidget,
         Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
@@ -126,10 +134,14 @@ def test_launch_simple_adapter_smoke_ui_keeps_legacy_show_all_collapsed(monkeypa
         def on_click(self, _handler):
             return None
 
+        def observe(self, _handler, names=None):
+            return None
+
     fake_widgets = types.SimpleNamespace(
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        FileUpload=_FakeWidget,
         Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
@@ -169,10 +181,14 @@ def test_launch_simple_adapter_smoke_ui_can_show_mirrors_for_debug(monkeypatch, 
         def on_click(self, _handler):
             return None
 
+        def observe(self, _handler, names=None):
+            return None
+
     fake_widgets = types.SimpleNamespace(
         HTML=_FakeWidget,
         Dropdown=_FakeWidget,
         Text=_FakeWidget,
+        FileUpload=_FakeWidget,
         Checkbox=_FakeWidget,
         Button=_FakeWidget,
         Output=_FakeWidget,
@@ -247,6 +263,63 @@ def test_build_result_html_mentions_occlusion_visualization_when_available():
 
     assert "Gorsel Aciklama" in html
     assert "occlusion sensitivity haritasi hazir" in html
+
+
+def test_build_result_html_mentions_attention_visualization_when_available():
+    html = ui._build_result_html(
+        {
+            "resolved_adapter_dir": "/tmp/adapter",
+            "crop_name": "tomato",
+        },
+        {
+            "status": "success",
+            "predicted_class": "septoria",
+            "confidence": 0.9712,
+            "is_ood": False,
+            "primary_score": 0.8673,
+            "decision_threshold": 1.8515,
+            "view_consistency": {"stable": True, "warning_codes": []},
+            "uncertainty_diagnostics": {"warning_codes": []},
+            "visualization": {
+                "status": "success",
+                "method": "attention_map",
+                "view_name": "full_resize",
+                "heatmap": [[0.0, 1.0], [0.25, 0.5]],
+            },
+        },
+        image_path=ui.Path("/tmp/leaf.png"),
+    )
+
+    assert "Gorsel Aciklama" in html
+    assert "attention map hazir" in html
+
+
+def test_build_result_html_mentions_unavailable_visualization():
+    html = ui._build_result_html(
+        {
+            "resolved_adapter_dir": "/tmp/adapter",
+            "crop_name": "tomato",
+        },
+        {
+            "status": "success",
+            "predicted_class": "septoria",
+            "confidence": 0.9712,
+            "is_ood": False,
+            "primary_score": 0.8673,
+            "decision_threshold": 1.8515,
+            "view_consistency": {"stable": True, "warning_codes": []},
+            "uncertainty_diagnostics": {"warning_codes": []},
+            "visualization": {
+                "status": "unavailable",
+                "method": "attention_map",
+                "error": "The loaded backbone did not return attentions.",
+            },
+        },
+        image_path=ui.Path("/tmp/leaf.png"),
+    )
+
+    assert "hazirlanamadi" in html
+    assert "attention_map" in html
 
 
 def test_build_result_html_surfaces_error_state_without_in_distribution_label():

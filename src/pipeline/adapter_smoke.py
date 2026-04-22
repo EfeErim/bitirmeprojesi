@@ -18,6 +18,8 @@ from src.shared.json_utils import read_json_dict
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 DEFAULT_ROBUST_VIEWS = ("full_resize", "resize_pad", "center_crop")
 IMAGE_MEAN_PAD_RGB = (124, 116, 104)
+DEFAULT_EXPLANATION_METHOD = "occlusion_sensitivity"
+SUPPORTED_EXPLANATION_METHODS = {"occlusion_sensitivity", "attention_map"}
 DEFAULT_DISCOVERY_ROOTS = (
     Path("."),
     Path("outputs"),
@@ -839,6 +841,7 @@ def _add_occlusion_visualization(
         grid_size=int(grid_size),
     )
     result["visualization"] = {
+        "status": "success",
         "method": "occlusion_sensitivity",
         "explanation": (
             "Patches are hidden one at a time; brighter cells mark larger drops in the "
@@ -851,6 +854,216 @@ def _add_occlusion_visualization(
         "grid_size": int(max(2, min(16, grid_size))),
         "heatmap": grid,
     }
+
+
+def _normalization_error_visualization(method: str, error: Exception) -> Dict[str, Any]:
+    return {
+        "status": "unavailable",
+        "method": str(method),
+        "error": str(error),
+    }
+
+
+def _normalize_explanation_method(explanation_method: str | None) -> str:
+    normalized = str(explanation_method or DEFAULT_EXPLANATION_METHOD).strip().lower()
+    if normalized in {"occlusion", "occlusion_map"}:
+        return "occlusion_sensitivity"
+    if normalized in {"attention", "attention_rollout", "attention_weights"}:
+        return "attention_map"
+    if normalized not in SUPPORTED_EXPLANATION_METHODS:
+        raise ValueError(
+            "Unsupported explanation_method: "
+            f"{explanation_method}. Expected one of: {', '.join(sorted(SUPPORTED_EXPLANATION_METHODS))}."
+        )
+    return normalized
+
+
+def _patch_grid_shape(patch_count: int, config: Any) -> tuple[int, int]:
+    import math
+
+    count = int(max(1, patch_count))
+    square = int(math.sqrt(count))
+    if square * square == count:
+        return square, square
+
+    image_size = getattr(config, "image_size", None)
+    patch_size = getattr(config, "patch_size", None)
+    try:
+        if isinstance(image_size, (list, tuple)):
+            image_height, image_width = int(image_size[0]), int(image_size[1])
+        else:
+            image_height = image_width = int(image_size)
+        patch = int(patch_size)
+        rows = max(1, image_height // max(1, patch))
+        cols = max(1, image_width // max(1, patch))
+        if rows * cols == count:
+            return rows, cols
+    except (TypeError, ValueError):
+        pass
+
+    return 1, count
+
+
+def _normalize_heatmap_tensor(values: Any, *, rows: int, cols: int) -> List[List[float]]:
+    import torch
+
+    heatmap = values.detach().float().reshape(int(rows), int(cols)).cpu()
+    heatmap = heatmap - heatmap.min()
+    max_value = float(heatmap.max().item()) if heatmap.numel() else 0.0
+    if max_value > 0.0:
+        heatmap = heatmap / max_value
+    return [[round(float(value), 6) for value in row] for row in heatmap.tolist()]
+
+
+def _extract_attention_heatmap(
+    image_tensor: Any,
+    *,
+    adapter: IndependentCropAdapter,
+) -> Dict[str, Any]:
+    import torch
+
+    if not torch.is_tensor(image_tensor):
+        raise ValueError("Attention visualization requires a torch tensor image.")
+    if image_tensor.ndim != 3:
+        raise ValueError("Attention visualization expects an image tensor shaped [C, H, W].")
+
+    trainer = adapter.trainer
+    model = getattr(trainer, "adapter_model", None)
+    if model is None:
+        raise RuntimeError("Adapter model is not initialized; attention tensors cannot be captured.")
+
+    config = _resolve_attention_config(model, trainer)
+    if config is None:
+        raise RuntimeError("Loaded adapter model does not expose a config for attention capture.")
+
+    previous_attn_impl = getattr(config, "_attn_implementation", None)
+    attn_impl_changed = False
+    if hasattr(config, "_attn_implementation") and previous_attn_impl != "eager":
+        setattr(config, "_attn_implementation", "eager")
+        attn_impl_changed = True
+
+    try:
+        if hasattr(trainer, "set_eval_mode"):
+            trainer.set_eval_mode()
+        with torch.inference_mode():
+            outputs = model(
+                image_tensor.unsqueeze(0).to(trainer.device, non_blocking=True),
+                output_attentions=True,
+                output_hidden_states=True,
+            )
+    finally:
+        if attn_impl_changed:
+            setattr(config, "_attn_implementation", previous_attn_impl)
+
+    attentions = getattr(outputs, "attentions", None)
+    if not attentions:
+        raise RuntimeError(
+            "The loaded backbone did not return attentions. DINOv3 ViT requires an eager attention backend; "
+            "DINOv3 ConvNeXT-style backbones do not expose attention maps."
+        )
+
+    layer_attention = attentions[-1]
+    if layer_attention.ndim != 4:
+        raise RuntimeError(f"Expected attention tensor [B, H, T, T], got shape {tuple(layer_attention.shape)}.")
+
+    token_count = int(layer_attention.shape[-1])
+    register_count = int(getattr(config, "num_register_tokens", 0) or 0)
+    patch_start = 1 + max(0, register_count)
+    if patch_start >= token_count:
+        raise RuntimeError(
+            f"Attention tensor has {token_count} tokens, leaving no patch tokens after CLS/register tokens."
+        )
+
+    patch_attention = layer_attention[0, :, 0, patch_start:].mean(dim=0)
+    rows, cols = _patch_grid_shape(int(patch_attention.numel()), config)
+    return {
+        "heatmap": _normalize_heatmap_tensor(patch_attention, rows=rows, cols=cols),
+        "attention_layer": -1,
+        "attention_head_aggregation": "mean",
+        "source_token": "cls",
+        "register_tokens": register_count,
+        "patch_tokens": int(patch_attention.numel()),
+        "grid_size": rows if rows == cols else [rows, cols],
+        "attention_backend": "eager",
+    }
+
+
+def _resolve_attention_config(model: Any, trainer: Any) -> Any:
+    for candidate in (
+        getattr(model, "config", None),
+        getattr(getattr(model, "base_model", None), "config", None),
+        getattr(getattr(getattr(model, "base_model", None), "model", None), "config", None),
+        getattr(trainer, "config", None),
+    ):
+        if candidate is not None and (
+            hasattr(candidate, "_attn_implementation")
+            or hasattr(candidate, "num_register_tokens")
+            or hasattr(candidate, "patch_size")
+        ):
+            return candidate
+    return None
+
+
+def _add_attention_visualization(
+    result: Dict[str, Any],
+    image: Image.Image,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    view_name: str,
+) -> None:
+    if str(result.get("status", "")).strip().lower() == "error":
+        return
+
+    try:
+        view_image = _prepare_view_image(image, target_size=int(target_size), view_name=view_name)
+        view_tensor = _normalize_pil_image(view_image, target_size=int(target_size))
+        attention_payload = _extract_attention_heatmap(view_tensor, adapter=adapter)
+        result["visualization"] = {
+            "status": "success",
+            "method": "attention_map",
+            "explanation": (
+                "Last-layer CLS-to-patch attention averaged across heads. This shows attention routing, "
+                "not a causal explanation of the prediction."
+            ),
+            "view_name": str(view_name),
+            "target_class_index": result.get("predicted_index"),
+            "target_class_name": result.get("predicted_class"),
+            **attention_payload,
+        }
+    except (AttributeError, RuntimeError, TypeError, ValueError) as exc:
+        result["visualization"] = _normalization_error_visualization("attention_map", exc)
+
+
+def _add_prediction_visualization(
+    result: Dict[str, Any],
+    image: Image.Image,
+    *,
+    adapter: IndependentCropAdapter,
+    target_size: int,
+    view_name: str,
+    grid_size: int,
+    explanation_method: str,
+) -> None:
+    method = _normalize_explanation_method(explanation_method)
+    if method == "attention_map":
+        _add_attention_visualization(
+            result,
+            image,
+            adapter=adapter,
+            target_size=target_size,
+            view_name=view_name,
+        )
+        return
+
+    _add_occlusion_visualization(
+        result,
+        image,
+        adapter=adapter,
+        target_size=target_size,
+        view_name=view_name,
+        grid_size=grid_size,
+    )
 
 
 def _normalize_requested_views(robust_views: Optional[Sequence[str]]) -> List[str]:
@@ -988,6 +1201,7 @@ def _predict_single_image_robust(
     robust_views: Sequence[str],
     explain_prediction: bool = False,
     explanation_grid_size: int = 7,
+    explanation_method: str = DEFAULT_EXPLANATION_METHOD,
 ) -> Dict[str, Any]:
     image_name = image_path.name
     rows: List[Dict[str, Any]] = []
@@ -1034,13 +1248,14 @@ def _predict_single_image_robust(
         view_consistency=result["view_consistency"],
     )
     if explain_prediction:
-        _add_occlusion_visualization(
+        _add_prediction_visualization(
             result,
             base_image,
             adapter=adapter,
             target_size=target_size,
             view_name=primary_view,
             grid_size=explanation_grid_size,
+            explanation_method=explanation_method,
         )
     return result
 
@@ -1053,6 +1268,7 @@ def _predict_image_row(
     resolved_adapter_dir: Path,
     explain_prediction: bool = False,
     explanation_grid_size: int = 7,
+    explanation_method: str = DEFAULT_EXPLANATION_METHOD,
 ) -> Dict[str, Any]:
     with Image.open(image_path) as image:
         base_image = image.convert("RGB")
@@ -1065,13 +1281,14 @@ def _predict_image_row(
             view_name="full_resize",
         )
         if explain_prediction:
-            _add_occlusion_visualization(
+            _add_prediction_visualization(
                 row,
                 base_image,
                 adapter=adapter,
                 target_size=target_size,
                 view_name="full_resize",
                 grid_size=explanation_grid_size,
+                explanation_method=explanation_method,
             )
     row.pop("view_name", None)
     row["image_path"] = str(image_path)
@@ -1111,7 +1328,7 @@ def build_prediction_visualization_images(
 ) -> Dict[str, Image.Image]:
     """Build notebook-display images from a prediction result visualization payload."""
     visualization = dict(result.get("visualization", {}))
-    if visualization.get("method") != "occlusion_sensitivity":
+    if visualization.get("method") not in {"occlusion_sensitivity", "attention_map"}:
         return {}
     heatmap = visualization.get("heatmap")
     if not isinstance(heatmap, list) or not heatmap:
@@ -1124,9 +1341,11 @@ def build_prediction_visualization_images(
             target_size=grid_size * 64,
             view_name=view_name,
         )
+    overlay = _heatmap_overlay_image(view_image, heatmap)
     return {
         "model_view": view_image,
-        "occlusion_overlay": _heatmap_overlay_image(view_image, heatmap),
+        "heatmap_overlay": overlay,
+        "occlusion_overlay": overlay,
     }
 
 
@@ -1202,6 +1421,7 @@ def predict_single_image(
     robust_views: Optional[Sequence[str]] = None,
     explain_prediction: bool = False,
     explanation_grid_size: int = 7,
+    explanation_method: str = DEFAULT_EXPLANATION_METHOD,
     *,
     part_name: Optional[str] = None,
 ) -> Dict[str, Any]:
@@ -1224,6 +1444,7 @@ def predict_single_image(
             robust_views=_normalize_requested_views(robust_views),
             explain_prediction=bool(explain_prediction),
             explanation_grid_size=int(explanation_grid_size),
+            explanation_method=explanation_method,
         )
     return _predict_image_row(
         image_ref,
@@ -1232,6 +1453,7 @@ def predict_single_image(
         resolved_adapter_dir=resolved_dir,
         explain_prediction=bool(explain_prediction),
         explanation_grid_size=int(explanation_grid_size),
+        explanation_method=explanation_method,
     )
 
 
@@ -1285,6 +1507,8 @@ def predict_image_folder(
 
 
 __all__ = [
+    "DEFAULT_EXPLANATION_METHOD",
+    "SUPPORTED_EXPLANATION_METHODS",
     "build_prediction_visualization_images",
     "discover_adapter_candidates",
     "load_adapter_summary",

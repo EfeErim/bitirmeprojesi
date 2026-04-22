@@ -1,5 +1,7 @@
 ﻿from pathlib import Path
 
+from types import SimpleNamespace
+
 import torch
 from PIL import Image
 
@@ -50,6 +52,36 @@ class _ScriptedViewAdapter(_FakeAdapter):
     def predict_with_ood(self, image):
         marker = round(float(image[0, 0, 0].item()), 2)
         return dict(self.payloads_by_marker[marker])
+
+
+class _FakeAttentionConfig:
+    image_size = 16
+    patch_size = 8
+    num_register_tokens = 1
+    _attn_implementation = "sdpa"
+
+
+class _FakeAttentionModel:
+    def __init__(self):
+        self.config = _FakeAttentionConfig()
+
+    def __call__(self, pixel_values, *, output_attentions: bool, output_hidden_states: bool):
+        assert output_attentions is True
+        assert output_hidden_states is True
+        assert self.config._attn_implementation == "eager"
+        attention = torch.zeros((1, 2, 6, 6), dtype=torch.float32, device=pixel_values.device)
+        attention[:, :, 0, 2:] = torch.tensor([0.1, 0.2, 0.3, 0.4], dtype=torch.float32, device=pixel_values.device)
+        return SimpleNamespace(attentions=(attention,))
+
+
+class _FakeAttentionAdapter(_FakeAdapter):
+    @property
+    def trainer(self):
+        return SimpleNamespace(
+            adapter_model=_FakeAttentionModel(),
+            device=torch.device("cpu"),
+            set_eval_mode=lambda: None,
+        )
 
 
 def _write_adapter_export(root: Path) -> Path:
@@ -369,8 +401,42 @@ def test_predict_single_image_can_attach_occlusion_visualization(monkeypatch, tm
     assert len(visualization["heatmap"][0]) == 3
 
     images = smoke.build_prediction_visualization_images(image_path, result)
-    assert set(images) == {"model_view", "occlusion_overlay"}
+    assert set(images) == {"model_view", "heatmap_overlay", "occlusion_overlay"}
     assert images["model_view"].size == images["occlusion_overlay"].size
+
+
+def test_predict_single_image_can_attach_attention_visualization(monkeypatch, tmp_path: Path):
+    asset_dir = _write_adapter_export(tmp_path / "adapter_export")
+    image_path = tmp_path / "leaf.png"
+    Image.new("RGB", (12, 10), color="green").save(image_path)
+
+    def zero_preprocess(_image, target_size=224):
+        return torch.zeros(3, target_size, target_size)
+
+    monkeypatch.setattr(smoke, "_build_adapter", lambda crop_name, device: _FakeAttentionAdapter(crop_name, device))
+    monkeypatch.setattr(smoke, "preprocess_image", zero_preprocess)
+    monkeypatch.setattr(smoke, "_target_size", lambda _env: 16)
+
+    result = smoke.predict_single_image(
+        image_path,
+        "tomato",
+        adapter_dir=asset_dir,
+        device="cpu",
+        explain_prediction=True,
+        explanation_method="attention_map",
+    )
+
+    visualization = result["visualization"]
+    assert visualization["status"] == "success"
+    assert visualization["method"] == "attention_map"
+    assert visualization["register_tokens"] == 1
+    assert visualization["patch_tokens"] == 4
+    assert visualization["grid_size"] == 2
+    assert visualization["heatmap"] == [[0.0, 0.333333], [0.666667, 1.0]]
+
+    images = smoke.build_prediction_visualization_images(image_path, result)
+    assert set(images) == {"model_view", "heatmap_overlay", "occlusion_overlay"}
+    assert images["model_view"].size == images["heatmap_overlay"].size
 
 
 
