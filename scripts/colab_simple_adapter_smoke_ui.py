@@ -270,7 +270,7 @@ def launch_simple_adapter_smoke_ui(
     root: str | Path,
     *,
     search_roots: Optional[list[str | Path]] = None,
-    show_all_adapters: bool = True,
+    show_all_adapters: bool = False,
     config_env: str = "colab",
     device: str = "cuda",
     upload_dir_name: str = "notebook4_uploads",
