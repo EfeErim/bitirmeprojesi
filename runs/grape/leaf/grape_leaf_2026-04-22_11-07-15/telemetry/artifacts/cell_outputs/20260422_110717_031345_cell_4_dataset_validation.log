@@ -1,0 +1,17 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=grape_leaf_2026-04-22_11-07-15
+started_at=2026-04-22T11:07:17.031366+00:00
+finished_at=2026-04-22T11:07:56.023879+00:00
+duration_sec=38.992
+
+[DATASET] Yalnizca bir runtime dataset bulundu, otomatik secildi: grape__leaf
+[OOD] explicit ood root=/content/bitirmeprojesi/data/ood_dataset/grape_leaf_ood_best
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/grape__leaf classes=6: ['downy_mildew', 'esca', 'grapevine_fanleaf_virus', 'healthy', 'leafroll_virus', 'powdery_mildew']
+[RECOMMEND][DATASET] scale=small continual=839 val=216 test=216 ood=209 classes=6
+[RECOMMEND][HW] device=cuda gpu=NVIDIA A100-SXM4-80GB vram_gb=79.25 cpu_count=12
+[RECOMMEND][WARN] Manifest rows include 174 eval-quality-risk item(s); prefer cautious regularization.
+[RECOMMEND] Onerilen degisiklikler:
+  - BATCH_SIZE: 32 -> 96 | Derived from the active hardware tier (device=cuda, vram_gb=79.25).
+  - EPOCHS: 24 -> 16 | Uses the fixed schedule for a small continual split (839 image(s)).
+  - NUM_WORKERS: 12 -> 6 | Derived from device=cuda and cpu_count=12.
+[RECOMMEND][FINAL] epochs=24 bs=32 lr=0.0001 lora=16/16 dropout=0.2 accum=1 workers=12 prefetch=8

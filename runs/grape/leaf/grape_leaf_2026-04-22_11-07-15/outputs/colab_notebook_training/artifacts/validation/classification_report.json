@@ -1,0 +1,51 @@
+{
+  "downy_mildew": {
+    "precision": 0.9111111111111111,
+    "recall": 0.8913043478260869,
+    "f1-score": 0.9010989010989011,
+    "support": 46.0
+  },
+  "esca": {
+    "precision": 0.9772727272727273,
+    "recall": 0.8958333333333334,
+    "f1-score": 0.9347826086956522,
+    "support": 48.0
+  },
+  "grapevine_fanleaf_virus": {
+    "precision": 0.7586206896551724,
+    "recall": 0.8461538461538461,
+    "f1-score": 0.8,
+    "support": 26.0
+  },
+  "healthy": {
+    "precision": 0.9038461538461539,
+    "recall": 1.0,
+    "f1-score": 0.9494949494949495,
+    "support": 47.0
+  },
+  "leafroll_virus": {
+    "precision": 0.9444444444444444,
+    "recall": 0.8292682926829268,
+    "f1-score": 0.8831168831168831,
+    "support": 41.0
+  },
+  "powdery_mildew": {
+    "precision": 0.7,
+    "recall": 0.875,
+    "f1-score": 0.7777777777777778,
+    "support": 8.0
+  },
+  "accuracy": 0.8981481481481481,
+  "macro avg": {
+    "precision": 0.8658825210549348,
+    "recall": 0.8895933033326989,
+    "f1-score": 0.874378520030694,
+    "support": 216.0
+  },
+  "weighted avg": {
+    "precision": 0.9043857935380925,
+    "recall": 0.8981481481481481,
+    "f1-score": 0.8989647765010085,
+    "support": 216.0
+  }
+}

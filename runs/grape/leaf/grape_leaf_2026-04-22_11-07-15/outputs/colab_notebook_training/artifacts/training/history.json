@@ -1,0 +1,919 @@
+{
+  "train_loss": [
+    1.821711159669436,
+    1.7888985230372503,
+    1.761193179167234,
+    1.5821375067417438,
+    1.4095498094191918,
+    1.3694962217257574,
+    1.2996227191044734,
+    1.268301716217628,
+    1.225773261143611,
+    1.1952743392724257,
+    1.1859248234675481,
+    1.152499767450186,
+    1.1539071477376497,
+    1.1449004365847661,
+    1.1287441161962657,
+    1.124684819808373,
+    1.127542481972621,
+    1.1297495135894189,
+    1.107232460608849,
+    1.1262292082493122,
+    1.1131414771080017,
+    1.110013567484342,
+    1.1226138976904063,
+    1.1181693581434398
+  ],
+  "val_loss": [
+    1.83104407787323,
+    1.7336255311965942,
+    1.6664431669093944,
+    1.2161671320597331,
+    1.0574214193556044,
+    0.7394073362703677,
+    0.6701321535640292,
+    0.5733650221868798,
+    0.5911321684166237,
+    0.4640059639458303,
+    0.5257485580665094,
+    0.3929387066099379,
+    0.4014563819876424,
+    0.41492642772694427,
+    0.33844023377255156,
+    0.38162790873536356,
+    0.3385388557281759,
+    0.33639939060365714,
+    0.34820850455650576,
+    0.3245239884213165,
+    0.3353946019929868,
+    0.3314698157073171,
+    0.332413949072361,
+    0.33031426811659775
+  ],
+  "val_accuracy": [
+    0.12037037037037036,
+    0.2916666666666667,
+    0.20833333333333334,
+    0.5324074074074074,
+    0.5555555555555556,
+    0.7175925925925926,
+    0.7685185185185185,
+    0.8148148148148148,
+    0.8055555555555556,
+    0.8518518518518519,
+    0.8287037037037037,
+    0.8935185185185185,
+    0.8842592592592593,
+    0.8842592592592593,
+    0.8981481481481481,
+    0.875,
+    0.9074074074074074,
+    0.9074074074074074,
+    0.8842592592592593,
+    0.9074074074074074,
+    0.8981481481481481,
+    0.8935185185185185,
+    0.8935185185185185,
+    0.8981481481481481
+  ],
+  "macro_precision": [
+    0.020061729475855827,
+    0.11152162402868271,
+    0.48751530051231384,
+    0.4485795795917511,
+    0.5650326609611511,
+    0.7163746953010559,
+    0.7455039024353027,
+    0.7846457362174988,
+    0.788122832775116,
+    0.8180134892463684,
+    0.810467004776001,
+    0.8625810146331787,
+    0.8548720479011536,
+    0.8513731360435486,
+    0.8661189079284668,
+    0.83697110414505,
+    0.8683390617370605,
+    0.8736708760261536,
+    0.8467766642570496,
+    0.8821182250976562,
+    0.8652167320251465,
+    0.8608262538909912,
+    0.8608262538909912,
+    0.8658825755119324
+  ],
+  "macro_recall": [
+    0.1666666716337204,
+    0.23222625255584717,
+    0.31012776494026184,
+    0.6027290225028992,
+    0.586561381816864,
+    0.7290513515472412,
+    0.7649510502815247,
+    0.8157088160514832,
+    0.8208073973655701,
+    0.8432328104972839,
+    0.8351166248321533,
+    0.8864119648933411,
+    0.8847396969795227,
+    0.8800342679023743,
+    0.8928222060203552,
+    0.8702917098999023,
+    0.9018210768699646,
+    0.897723376750946,
+    0.8754947781562805,
+    0.897723376750946,
+    0.8895933032035828,
+    0.8831830024719238,
+    0.8831830024719238,
+    0.8895933032035828
+  ],
+  "macro_f1": [
+    0.03581267222762108,
+    0.13765469193458557,
+    0.17095686495304108,
+    0.4644823968410492,
+    0.4879702627658844,
+    0.6677594184875488,
+    0.7445512413978577,
+    0.7852898240089417,
+    0.7882905006408691,
+    0.824537456035614,
+    0.8157244324684143,
+    0.8710514903068542,
+    0.8635508418083191,
+    0.8579484820365906,
+    0.876160204410553,
+    0.8445785045623779,
+    0.8792259097099304,
+    0.8831685185432434,
+    0.856110155582428,
+    0.8883246779441833,
+    0.8743181228637695,
+    0.8689995408058167,
+    0.8689995408058167,
+    0.874378502368927
+  ],
+  "weighted_f1": [
+    0.025864709306646277,
+    0.16833699191058124,
+    0.18103467093573677,
+    0.49349728337040655,
+    0.512860757333261,
+    0.7225799560546875,
+    0.7670117130985966,
+    0.8127951445402922,
+    0.8044503529866537,
+    0.8510102872495298,
+    0.827951572559498,
+    0.8942450064199942,
+    0.8849215330900969,
+    0.8849098064281322,
+    0.898877603036386,
+    0.8759328347665293,
+    0.9087304715757016,
+    0.9081218860767506,
+    0.8850843641493056,
+    0.9080331590440538,
+    0.8988393854211878,
+    0.8940563201904297,
+    0.8940563201904297,
+    0.8989648465757016
+  ],
+  "balanced_accuracy": [
+    0.1666666716337204,
+    0.23222625255584717,
+    0.31012776494026184,
+    0.6027290225028992,
+    0.586561381816864,
+    0.7290513515472412,
+    0.7649510502815247,
+    0.8157088160514832,
+    0.8208073973655701,
+    0.8432328104972839,
+    0.8351166248321533,
+    0.8864119648933411,
+    0.8847396969795227,
+    0.8800342679023743,
+    0.8928222060203552,
+    0.8702917098999023,
+    0.9018210768699646,
+    0.897723376750946,
+    0.8754947781562805,
+    0.897723376750946,
+    0.8895933032035828,
+    0.8831830024719238,
+    0.8831830024719238,
+    0.8895933032035828
+  ],
+  "generalization_gap": [
+    0.009332918203794005,
+    -0.05527299184065604,
+    -0.09475001225783952,
+    -0.36597037468201066,
+    -0.3521283900635874,
+    -0.6300888854553897,
+    -0.6294905655404441,
+    -0.6949366940307482,
+    -0.6346410927269872,
+    -0.7312683753265954,
+    -0.6601762654010387,
+    -0.7595610608402481,
+    -0.7524507657500072,
+    -0.7299740088578219,
+    -0.7903038824237141,
+    -0.7430569110730094,
+    -0.7890036262444451,
+    -0.7933501229857618,
+    -0.7590239560523433,
+    -0.8017052198279957,
+    -0.777746875115015,
+    -0.7785437517770251,
+    -0.7901999486180453,
+    -0.787855090026842
+  ],
+  "per_class_accuracy": [
+    {
+      "downy_mildew": 0.0,
+      "esca": 0.0,
+      "grapevine_fanleaf_virus": 1.0,
+      "healthy": 0.0,
+      "leafroll_virus": 0.0,
+      "powdery_mildew": 0.0
+    },
+    {
+      "downy_mildew": 0.0,
+      "esca": 0.0,
+      "grapevine_fanleaf_virus": 0.0,
+      "healthy": 0.978723406791687,
+      "leafroll_virus": 0.4146341383457184,
+      "powdery_mildew": 0.0
+    },
+    {
+      "downy_mildew": 0.021739130839705467,
+      "esca": 0.6041666865348816,
+      "grapevine_fanleaf_virus": 0.19230769574642181,
+      "healthy": 0.042553190141916275,
+      "leafroll_virus": 0.0,
+      "powdery_mildew": 1.0
+    },
+    {
+      "downy_mildew": 0.0,
+      "esca": 0.5416666865348816,
+      "grapevine_fanleaf_virus": 0.6538461446762085,
+      "healthy": 0.957446813583374,
+      "leafroll_virus": 0.46341463923454285,
+      "powdery_mildew": 1.0
+    },
+    {
+      "downy_mildew": 0.06521739065647125,
+      "esca": 0.5625,
+      "grapevine_fanleaf_virus": 0.6538461446762085,
+      "healthy": 1.0,
+      "leafroll_virus": 0.4878048896789551,
+      "powdery_mildew": 0.75
+    },
+    {
+      "downy_mildew": 0.41304346919059753,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.6538461446762085,
+      "healthy": 1.0,
+      "leafroll_virus": 0.5365853905677795,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.6304348111152649,
+      "esca": 0.7083333134651184,
+      "grapevine_fanleaf_virus": 0.7692307829856873,
+      "healthy": 1.0,
+      "leafroll_virus": 0.7317073345184326,
+      "powdery_mildew": 0.75
+    },
+    {
+      "downy_mildew": 0.695652186870575,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.7692307829856873,
+      "healthy": 1.0,
+      "leafroll_virus": 0.6585366129875183,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.6521739363670349,
+      "esca": 0.7916666865348816,
+      "grapevine_fanleaf_virus": 0.9230769276618958,
+      "healthy": 1.0,
+      "leafroll_virus": 0.6829268336296082,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8260869383811951,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.7307692170143127,
+      "healthy": 1.0,
+      "leafroll_virus": 0.7317073345184326,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.717391312122345,
+      "esca": 0.7916666865348816,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.7804877758026123,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8478260636329651,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8536585569381714,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.760869562625885,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.9230769276618958,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8536585569381714,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8478260636329651,
+      "esca": 0.9166666865348816,
+      "grapevine_fanleaf_virus": 0.8846153616905212,
+      "healthy": 1.0,
+      "leafroll_virus": 0.7560975551605225,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8478260636329651,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8846153616905212,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8536585569381714,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.782608687877655,
+      "esca": 0.9375,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.7804877758026123,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.9166666865348816,
+      "grapevine_fanleaf_virus": 0.9230769276618958,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8048780560493469,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8780487775802612,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8695651888847351,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.807692289352417,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8048780560493469,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8780487775802612,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8292682766914368,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.807692289352417,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8292682766914368,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.807692289352417,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8292682766914368,
+      "powdery_mildew": 0.875
+    },
+    {
+      "downy_mildew": 0.8913043737411499,
+      "esca": 0.8958333134651184,
+      "grapevine_fanleaf_virus": 0.8461538553237915,
+      "healthy": 1.0,
+      "leafroll_virus": 0.8292682766914368,
+      "powdery_mildew": 0.875
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 48
+      },
+      {
+        "class_name": "healthy",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 47
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 46
+      }
+    ],
+    [
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 48
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 46
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 26
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 41
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.021739130839705467,
+        "support": 46
+      },
+      {
+        "class_name": "healthy",
+        "class_index": 3,
+        "accuracy": 0.042553190141916275,
+        "support": 47
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.46341463923454285,
+        "support": 41
+      },
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.5416666865348816,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.06521739065647125,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.4878048896789551,
+        "support": 41
+      },
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.5625,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.41304346919059753,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.5365853905677795,
+        "support": 41
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.6538461446762085,
+        "support": 26
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.6304348111152649,
+        "support": 46
+      },
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.7083333134651184,
+        "support": 48
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.7317073345184326,
+        "support": 41
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.6585366129875183,
+        "support": 41
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.695652186870575,
+        "support": 46
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.7692307829856873,
+        "support": 26
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.6521739363670349,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.6829268336296082,
+        "support": 41
+      },
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.7916666865348816,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.7307692170143127,
+        "support": 26
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.7317073345184326,
+        "support": 41
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8260869383811951,
+        "support": 46
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.717391312122345,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.7804877758026123,
+        "support": 41
+      },
+      {
+        "class_name": "esca",
+        "class_index": 1,
+        "accuracy": 0.7916666865348816,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8478260636329651,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8536585569381714,
+        "support": 41
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.760869562625885,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8536585569381714,
+        "support": 41
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.7560975551605225,
+        "support": 41
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8478260636329651,
+        "support": 46
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8478260636329651,
+        "support": 46
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8536585569381714,
+        "support": 41
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.7804877758026123,
+        "support": 41
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.782608687877655,
+        "support": 46
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8048780560493469,
+        "support": 41
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8913043737411499,
+        "support": 46
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8780487775802612,
+        "support": 41
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8048780560493469,
+        "support": 41
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.807692289352417,
+        "support": 26
+      },
+      {
+        "class_name": "downy_mildew",
+        "class_index": 0,
+        "accuracy": 0.8695651888847351,
+        "support": 46
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8780487775802612,
+        "support": 41
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8292682766914368,
+        "support": 41
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.807692289352417,
+        "support": 26
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8292682766914368,
+        "support": 41
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.807692289352417,
+        "support": 26
+      },
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8292682766914368,
+        "support": 41
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ],
+    [
+      {
+        "class_name": "leafroll_virus",
+        "class_index": 4,
+        "accuracy": 0.8292682766914368,
+        "support": 41
+      },
+      {
+        "class_name": "grapevine_fanleaf_virus",
+        "class_index": 2,
+        "accuracy": 0.8461538553237915,
+        "support": 26
+      },
+      {
+        "class_name": "powdery_mildew",
+        "class_index": 5,
+        "accuracy": 0.875,
+        "support": 8
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 624,
+  "optimizer_steps": 624,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 20,
+  "best_metric_value": 0.3245239884213165
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e20_s520_20260422_111049_803927",
+  "path": "/content/bitirmeprojesi/runs/grape/leaf/grape_leaf_2026-04-22_11-07-15/checkpoint_state/checkpoints/ckpt_e20_s520_20260422_111049_803927",
+  "created_at": "2026-04-22T11:10:51.264338+00:00",
+  "global_step": 520,
+  "epoch": 20,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.3245239884213165
+}

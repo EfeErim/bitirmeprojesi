@@ -1,0 +1,12 @@
+                         precision    recall  f1-score   support
+
+           downy_mildew       0.91      0.89      0.90        46
+                   esca       0.98      0.90      0.93        48
+grapevine_fanleaf_virus       0.76      0.85      0.80        26
+                healthy       0.90      1.00      0.95        47
+         leafroll_virus       0.94      0.83      0.88        41
+         powdery_mildew       0.70      0.88      0.78         8
+
+               accuracy                           0.90       216
+              macro avg       0.87      0.89      0.87       216
+           weighted avg       0.90      0.90      0.90       216
