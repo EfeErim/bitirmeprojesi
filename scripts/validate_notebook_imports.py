@@ -313,7 +313,8 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
 
     assert "collect_notebook_access_report" in sources.full_source
     assert "print_notebook_access_report" in sources.full_source
-    assert "from scripts.colab_simple_adapter_smoke_ui import launch_simple_adapter_smoke_ui" in sources.full_source
+    assert "from scripts import colab_simple_adapter_smoke_ui" in sources.full_source
+    assert "importlib.reload(colab_simple_adapter_smoke_ui)" in sources.full_source
     assert "launch_simple_adapter_smoke_ui(ROOT)" in sources.full_source
 
 
