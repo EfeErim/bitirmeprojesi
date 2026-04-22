@@ -270,6 +270,7 @@ def launch_simple_adapter_smoke_ui(
     root: str | Path,
     *,
     search_roots: Optional[list[str | Path]] = None,
+    show_all_adapters: bool = True,
     config_env: str = "colab",
     device: str = "cuda",
     upload_dir_name: str = "notebook4_uploads",
@@ -296,7 +297,11 @@ def launch_simple_adapter_smoke_ui(
     upload_dir = root_path / ".runtime_tmp" / upload_dir_name
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    adapter_candidates = discover_adapter_candidates(resolved_search_roots, crop_name=None)
+    adapter_candidates = discover_adapter_candidates(
+        resolved_search_roots,
+        crop_name=None,
+        collapse_run_mirrors=not show_all_adapters,
+    )
     dropdown_options = [
         (candidate["display_name"], index)
         for index, candidate in enumerate(adapter_candidates)
@@ -370,7 +375,11 @@ def launch_simple_adapter_smoke_ui(
         with status_output:
             clear_output(wait=True)
             print("Adapter listesi yenileniyor...")
-        adapter_candidates = discover_adapter_candidates(resolved_search_roots, crop_name=None)
+        adapter_candidates = discover_adapter_candidates(
+            resolved_search_roots,
+            crop_name=None,
+            collapse_run_mirrors=not show_all_adapters,
+        )
         options = [
             (candidate["display_name"], index)
             for index, candidate in enumerate(adapter_candidates)

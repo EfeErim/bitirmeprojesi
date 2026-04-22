@@ -519,6 +519,7 @@ def discover_adapter_candidates(
     search_roots: Optional[Sequence[str | Path]] = None,
     *,
     crop_name: Optional[str] = None,
+    collapse_run_mirrors: bool = True,
 ) -> List[Dict[str, Any]]:
     """Search one or more roots for adapter bundles and return selection-ready metadata."""
     requested_crop = _normalize_crop_name(crop_name) if crop_name else None
@@ -554,12 +555,15 @@ def discover_adapter_candidates(
                 or None
             )
             run_id = _infer_run_id(adapter_dir)
-            identity_key = _candidate_identity_key(
-                adapter_dir=adapter_dir,
-                crop_name=candidate_crop,
-                part_name=candidate_part,
-                run_id=run_id,
-            )
+            if collapse_run_mirrors:
+                identity_key = _candidate_identity_key(
+                    adapter_dir=adapter_dir,
+                    crop_name=candidate_crop,
+                    part_name=candidate_part,
+                    run_id=run_id,
+                )
+            else:
+                identity_key = f"path:{adapter_dir.resolve()}"
             candidate = {
                 "adapter_dir": str(adapter_dir),
                 "crop_name": candidate_crop,
@@ -575,6 +579,8 @@ def discover_adapter_candidates(
             }
             existing = candidates_by_identity.get(identity_key)
             if existing is not None:
+                if not collapse_run_mirrors:
+                    continue
                 existing_rank = _adapter_source_rank(Path(str(existing.get("adapter_dir", ""))))
                 candidate_rank = _adapter_source_rank(adapter_dir)
                 if (candidate_rank, len(str(adapter_dir))) >= (
