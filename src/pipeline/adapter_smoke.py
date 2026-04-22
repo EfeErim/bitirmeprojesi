@@ -294,9 +294,15 @@ def _adapter_source_rank(adapter_dir: Path) -> int:
     return 7
 
 
-def _candidate_identity_key(*, adapter_dir: Path, crop_name: Optional[str], run_id: str) -> str:
+def _candidate_identity_key(
+    *,
+    adapter_dir: Path,
+    crop_name: Optional[str],
+    part_name: Optional[str],
+    run_id: str,
+) -> str:
     if run_id:
-        return f"run:{run_id}:{crop_name or 'unknown'}"
+        return f"run:{run_id}:{crop_name or 'unknown'}:{part_name or 'unknown'}"
     return f"path:{adapter_dir.resolve()}"
 
 
@@ -551,6 +557,7 @@ def discover_adapter_candidates(
             identity_key = _candidate_identity_key(
                 adapter_dir=adapter_dir,
                 crop_name=candidate_crop,
+                part_name=candidate_part,
                 run_id=run_id,
             )
             candidate = {
