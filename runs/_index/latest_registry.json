@@ -1,21 +1,21 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-04-22T11:35:10.170677+00:00",
+  "generated_at": "2026-04-22T20:08:42.635146+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": false,
-  "trial_count": 6,
+  "trial_count": 4,
   "canonical_count": 0,
-  "backfilled_count": 6,
+  "backfilled_count": 4,
   "cohort_count": 4,
   "paths": {
-    "trials_jsonl": "runs\\_index\\trials.jsonl",
-    "pareto_inputs_json": "runs\\_index\\pareto_inputs.json",
-    "pareto_frontiers_json": "runs\\_index\\pareto_frontiers.json"
+    "trials_jsonl": "D:\\bitirme projesi\\runs\\_index\\trials.jsonl",
+    "pareto_inputs_json": "D:\\bitirme projesi\\runs\\_index\\pareto_inputs.json",
+    "pareto_frontiers_json": "D:\\bitirme projesi\\runs\\_index\\pareto_frontiers.json"
   },
   "cohorts": [
     {
       "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
-      "run_count": 3,
+      "run_count": 1,
       "comparability": {
         "dataset_lineage_key": "grape__fruit",
         "crop_name": "grape",

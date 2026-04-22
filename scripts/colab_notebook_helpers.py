@@ -827,8 +827,7 @@ def _build_notebook_continual_config(
         notebook_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])
     )
     data_cfg["randaugment_magnitude"] = int(notebook_parameters["RANDAUGMENT_MAGNITUDE"])
-    data_cfg["few_shot_research_mode"] = bool(data_settings["FEW_SHOT_RESEARCH_MODE"])
-    data_cfg["few_shot_min_class_samples"] = int(data_settings["FEW_SHOT_MIN_CLASS_SAMPLES"])
+    data_cfg["allow_under_min_training"] = bool(data_settings["ALLOW_UNDER_MIN_TRAINING"])
 
     ood_cfg = continual_cfg.setdefault("ood", {})
     ood_cfg["threshold_factor"] = float(notebook_parameters["OOD_FACTOR"])

@@ -247,21 +247,17 @@ def prepare_training_run(
     )
 
     sampler_runtime = _resolve_loader_sampler_runtime(loaders.get("train"))
-    few_shot_research_mode = bool(data_cfg.get("few_shot_research_mode", False))
-    few_shot_min_class_samples = int(data_cfg.get("few_shot_min_class_samples", 1))
+    allow_under_min_training = bool(data_cfg.get("allow_under_min_training", False))
     class_balance_runtime = build_class_balance_runtime(
         crop_name=crop_name,
         data_dir=data_dir,
         detected_classes=detected_classes,
         split_class_counts=split_class_counts,
         dataset_key=resolved_dataset.dataset_key,
-        min_supported_samples=(
-            few_shot_min_class_samples if few_shot_research_mode else MIN_SUPPORTED_CLASS_SAMPLES
-        ),
         production_min_supported_samples=MIN_SUPPORTED_CLASS_SAMPLES,
-        few_shot_research_mode=few_shot_research_mode,
+        allow_under_min_training=allow_under_min_training,
     )
-    if class_balance_runtime.get("under_min_classes"):
+    if class_balance_runtime.get("under_min_classes") and not allow_under_min_training:
         raise ValueError(format_under_min_class_error(class_balance_runtime))
 
     adapter_kwargs = {

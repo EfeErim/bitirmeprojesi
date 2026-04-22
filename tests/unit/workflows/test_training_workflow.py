@@ -1108,7 +1108,7 @@ def test_training_workflow_fails_for_supported_classes_below_min_reference_count
         )
 
 
-def test_training_workflow_records_few_shot_research_mode_in_artifacts(monkeypatch, tmp_path: Path):
+def test_training_workflow_records_allow_under_min_training_in_artifacts(monkeypatch, tmp_path: Path):
     runtime_root = tmp_path / "runtime_data" / "tomato"
     runtime_root.mkdir(parents=True, exist_ok=True)
     (runtime_root / "split_manifest.json").write_text(
@@ -1149,8 +1149,7 @@ def test_training_workflow_records_few_shot_research_mode_in_artifacts(monkeypat
                         "target_size": 224,
                         "cache_size": 10,
                         "loader_error_policy": "tolerant",
-                        "few_shot_research_mode": True,
-                        "few_shot_min_class_samples": 1,
+                        "allow_under_min_training": True,
                     },
                     "evaluation": {"require_ood_for_gate": False},
                 }
@@ -1168,7 +1167,7 @@ def test_training_workflow_records_few_shot_research_mode_in_artifacts(monkeypat
 
     run_context = json.loads((result.artifact_dir / "training" / "run_context.json").read_text(encoding="utf-8"))
     summary = json.loads((result.artifact_dir / "training" / "summary.json").read_text(encoding="utf-8"))
-    assert run_context["class_balance"]["few_shot_research_mode"] is True
+    assert run_context["class_balance"]["allow_under_min_training"] is True
     assert run_context["class_balance"]["production_guardrail_bypassed"] is True
     assert summary["class_balance"]["production_under_min_classes"] == ["healthy", "disease_a"]
 

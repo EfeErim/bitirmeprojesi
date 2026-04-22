@@ -448,8 +448,7 @@ These affect image loading and error tolerance:
 - `training.continual.data.augmentation_policy`
 - `training.continual.data.randaugment_num_ops`
 - `training.continual.data.randaugment_magnitude`
-- `training.continual.data.few_shot_research_mode`
-- `training.continual.data.few_shot_min_class_samples`
+- `training.continual.data.allow_under_min_training`
 - `training.continual.data.cache_size`
 - `training.continual.data.cache_train_split`
 - `training.continual.data.validate_images_on_init`
@@ -482,20 +481,19 @@ Current augmentation behavior:
 Current class-imbalance behavior layered on top of the sampler:
 
 - the workflow first resolves per-class reference counts from `split_manifest.json`; if that manifest is absent, it falls back to runtime `continual` counts
-- any supported class below `100` resolved images now hard-fails the run before adapter initialization unless few-shot research mode is explicitly enabled
+- any supported class below `100` resolved images hard-fails the run before adapter initialization unless `training.continual.data.allow_under_min_training` is set to `true`
 - when all supported classes pass that floor and at least one supported class is in the `100-200` range, the training loss automatically receives class-balanced weighting based on the effective-number method from Cui et al.
 - once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
 - the weighted loss applies only to the training classifier loss; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
 - the workflow records the resolved counts, activation decision, and normalized per-class weights in the training run context and summary artifacts
 - the `100` floor and `100-200` trigger are repo policy for this adapter workflow; the effective-number weighting itself is literature-backed, but these exact thresholds are engineering policy rather than paper-defined universal constants
 
-Few-shot research mode:
+Under-min training toggle:
 
-- in Notebook 2, set `FEW_SHOT_RESEARCH_MODE = True` in the top parameter cell to run a few-shot ablation
-- `training.continual.data.few_shot_research_mode: true` bypasses the production `100` image/class floor for experiment runs only
-- `FEW_SHOT_MIN_CLASS_SAMPLES` controls the notebook lower hard floor; the canonical config key is `training.continual.data.few_shot_min_class_samples` and defaults to `1`
+- in Notebook 2, set `ALLOW_UNDER_MIN_TRAINING = True` in the top parameter cell to let the run continue when one or more supported classes are below the `100` image/class floor
+- `training.continual.data.allow_under_min_training: true` bypasses the production `100` image/class floor for experiment runs only
 - artifacts still record `production_under_min_classes` and `production_guardrail_bypassed` under the class-balance context
-- treat few-shot research runs as ablations, not deployment-ready adapter evidence
+- treat under-min training runs as ablations, not deployment-ready adapter evidence
 
 Current loss behavior:
 
@@ -582,8 +580,7 @@ Current Colab default tradeoffs:
 Notebook 2 also exposes a small set of notebook-level toggles:
 
 - `CACHE_TRAIN_SPLIT`
-- `FEW_SHOT_RESEARCH_MODE`
-- `FEW_SHOT_MIN_CLASS_SAMPLES`
+- `ALLOW_UNDER_MIN_TRAINING`
 - `BER_ENABLED`
 - `BER_LAMBDA_OLD`
 - `BER_LAMBDA_NEW`

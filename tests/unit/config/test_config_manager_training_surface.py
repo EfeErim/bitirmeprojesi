@@ -46,8 +46,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["data"]["augmentation_policy"] == "randaugment"
     assert continual["data"]["randaugment_num_ops"] == 2
     assert continual["data"]["randaugment_magnitude"] == 7
-    assert continual["data"]["few_shot_research_mode"] is False
-    assert continual["data"]["few_shot_min_class_samples"] == 1
+    assert continual["data"]["allow_under_min_training"] is False
     assert continual["data"]["cache_size"] == 20000
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
@@ -79,8 +78,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["data"]["validate_images_on_init"] is False
     assert root_normalized["data"]["randaugment_num_ops"] == 2
     assert root_normalized["data"]["randaugment_magnitude"] == 7
-    assert root_normalized["data"]["few_shot_research_mode"] is False
-    assert root_normalized["data"]["few_shot_min_class_samples"] == 1
+    assert root_normalized["data"]["allow_under_min_training"] is False
 
 
 def test_extract_continual_training_config_rejects_flat_noncanonical_shape():
@@ -164,18 +162,18 @@ def test_extract_continual_training_config_rejects_invalid_augmentation_policy()
         extract_continual_training_config(payload)
 
 
-def test_extract_continual_training_config_rejects_invalid_few_shot_minimum():
+def test_extract_continual_training_config_normalizes_allow_under_min_training():
     payload = {
         "training": {
             "continual": {
                 "data": {
-                    "few_shot_research_mode": True,
-                    "few_shot_min_class_samples": 0,
+                    "allow_under_min_training": True,
                 }
             }
         }
     }
 
-    with pytest.raises(ValueError, match="few_shot_min_class_samples"):
-        extract_continual_training_config(payload)
+    normalized = extract_continual_training_config(payload)
+
+    assert normalized["data"]["allow_under_min_training"] is True
 

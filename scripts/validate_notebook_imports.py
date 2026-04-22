@@ -403,9 +403,15 @@ def test_data_prep_notebook_contract() -> None:
         "REPO_DATASET_ROOT =",
         'REPO_DATASET_NAME = ""',
         "DATASET_ROOT =",
-        "IMPORT_FROM_DRIVE = True",
+        "IMPORT_FROM_DRIVE = False",
+        "DRIVE_DATASET_PATH =",
+        "DRIVE_DATASET_NAME =",
         "CROP_NAME =",
         "PART_NAME =",
+    ):
+        assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
+    assert "IMPORT_FROM_DRIVE = FALSE" not in parameter_source
+    for snippet in (
         "PREP_ARTIFACT_ROOT =",
         "PREPARED_RUNTIME_ROOT =",
         "OOD_DATASET_ROOT =",
@@ -422,8 +428,7 @@ def test_data_prep_notebook_contract() -> None:
         "PREP_DINOV3_MODEL_ID =",
         "PREP_BIOCLIP_MODEL_ID =",
     ):
-        assert snippet in parameter_source, f"Notebook 0 parameter cell is missing: {snippet}"
-    assert "IMPORT_FROM_DRIVE = FALSE" not in parameter_source
+        assert snippet in bootstrap_source, f"Notebook 0 bootstrap is missing: {snippet}"
     assert "collect_notebook_access_report" in access_check_source
     assert "print_notebook_access_report" in access_check_source
     assert "build_grouped_dataset_plan" in sources.full_source
@@ -556,10 +561,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         'AUGMENTATION_POLICY = str(CONTINUAL_DATA_CFG.get("augmentation_policy", "randaugment")).strip().lower()',
         'RANDAUGMENT_NUM_OPS = int(CONTINUAL_DATA_CFG.get("randaugment_num_ops", 2))',
         'RANDAUGMENT_MAGNITUDE = int(CONTINUAL_DATA_CFG.get("randaugment_magnitude", 7))',
-        'FEW_SHOT_RESEARCH_MODE = False',
-        'FEW_SHOT_MIN_CLASS_SAMPLES = 1',
-        'FEW_SHOT_RESEARCH_MODE = bool(FEW_SHOT_RESEARCH_MODE)',
-        'FEW_SHOT_MIN_CLASS_SAMPLES = int(FEW_SHOT_MIN_CLASS_SAMPLES)',
+        'ALLOW_UNDER_MIN_TRAINING = False',
+        'ALLOW_UNDER_MIN_TRAINING = bool(ALLOW_UNDER_MIN_TRAINING)',
         'BER_ENABLED = False',
         'LOSS_NAME = "logitnorm"',
         'LOGITNORM_TAU = 1.0',
@@ -580,7 +583,7 @@ def test_training_notebook_bootstrap_contract() -> None:
         'optimization_cfg["loss_name"] = str(effective_params["LOSS_NAME"]).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(effective_params["LOGITNORM_TAU"])',
         'data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)',
-        'data_cfg["few_shot_research_mode"] = bool(effective_params["FEW_SHOT_RESEARCH_MODE"])',
+        'data_cfg["allow_under_min_training"] = bool(effective_params["ALLOW_UNDER_MIN_TRAINING"])',
         'augmentation_policy=AUGMENTATION_POLICY',
         'STATE["resolved_ood_root"] = resolved_ood_root_value',
         'list_repo_dataset_directories',

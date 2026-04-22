@@ -1117,8 +1117,7 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
         data_settings={
             "AUGMENTATION_POLICY": "randaugment",
             "RANDAUGMENT_NUM_OPS": 2,
-            "FEW_SHOT_RESEARCH_MODE": False,
-            "FEW_SHOT_MIN_CLASS_SAMPLES": 3,
+            "ALLOW_UNDER_MIN_TRAINING": False,
         },
         loader_settings={
             "NUM_WORKERS": 0,

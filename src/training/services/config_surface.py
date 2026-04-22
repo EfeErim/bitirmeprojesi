@@ -75,8 +75,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "augmentation_policy": "randaugment",
             "randaugment_num_ops": 2,
             "randaugment_magnitude": 7,
-            "few_shot_research_mode": False,
-            "few_shot_min_class_samples": 1,
+            "allow_under_min_training": False,
             "cache_size": 1000,
             "validate_images_on_init": False,
         },
@@ -203,10 +202,7 @@ def normalize_continual_training_config(
     data["randaugment_magnitude"] = int(data.get("randaugment_magnitude", 7))
     if not 0 <= data["randaugment_magnitude"] <= 30:
         raise ValueError("training.continual.data.randaugment_magnitude must be between 0 and 30.")
-    data["few_shot_research_mode"] = bool(data.get("few_shot_research_mode", False))
-    data["few_shot_min_class_samples"] = int(data.get("few_shot_min_class_samples", 1))
-    if data["few_shot_min_class_samples"] < 1:
-        raise ValueError("training.continual.data.few_shot_min_class_samples must be at least 1.")
+    data["allow_under_min_training"] = bool(data.get("allow_under_min_training", False))
     data["cache_size"] = int(data.get("cache_size", 1000))
     data["validate_images_on_init"] = bool(data.get("validate_images_on_init", False))
 

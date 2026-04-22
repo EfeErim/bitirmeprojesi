@@ -192,7 +192,7 @@ def test_prepare_training_run_rejects_supported_classes_below_min_reference_coun
         )
 
 
-def test_prepare_training_run_allows_few_shot_research_mode(tmp_path: Path):
+def test_prepare_training_run_allows_under_min_training_when_enabled(tmp_path: Path):
     crop_root = tmp_path / "runtime" / "tomato"
     crop_root.mkdir(parents=True, exist_ok=True)
     (crop_root / "split_manifest.json").write_text(
@@ -207,8 +207,7 @@ def test_prepare_training_run_allows_few_shot_research_mode(tmp_path: Path):
         encoding="utf-8",
     )
     config = _base_config()
-    config["training"]["continual"]["data"]["few_shot_research_mode"] = True
-    config["training"]["continual"]["data"]["few_shot_min_class_samples"] = 1
+    config["training"]["continual"]["data"]["allow_under_min_training"] = True
     adapter = FakeAdapter()
     loaders = {
         "train": FakeLoader(["healthy", "disease_a"], [0, 1], 1),
@@ -233,11 +232,11 @@ def test_prepare_training_run_allows_few_shot_research_mode(tmp_path: Path):
         adapter_factory=lambda **kwargs: adapter,
     )
 
-    assert setup.class_balance_runtime["few_shot_research_mode"] is True
+    assert setup.class_balance_runtime["allow_under_min_training"] is True
     assert setup.class_balance_runtime["production_guardrail_bypassed"] is True
     assert setup.class_balance_runtime["production_under_min_classes"] == ["healthy", "disease_a"]
     injected = adapter.initialized["config"]["training"]["continual"]["class_balance"]
-    assert injected["few_shot_research_mode"] is True
+    assert injected["allow_under_min_training"] is True
 
 
 def test_prepare_training_run_injects_active_class_balance_runtime(tmp_path: Path):

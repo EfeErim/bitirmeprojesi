@@ -56,8 +56,7 @@ def _base_params(**overrides):
         "CHECKPOINT_EVERY_N_STEPS": 250,
         "CHECKPOINT_ON_EXCEPTION": True,
         "STDOUT_BATCH_INTERVAL": 12,
-        "FEW_SHOT_RESEARCH_MODE": False,
-        "FEW_SHOT_MIN_CLASS_SAMPLES": 1,
+        "ALLOW_UNDER_MIN_TRAINING": False,
         "RESUME_MODE": "fresh",
     }
     params.update(overrides)

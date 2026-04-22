@@ -218,7 +218,7 @@ def inspect_runtime_dataset(dataset_root: Path, ood_root: Path | str | None = No
         blockers.append(
             "Supported classes remain below the production minimum of "
             f"{MIN_SUPPORTED_CLASS_SAMPLES} images/class: {details}. "
-            "Enable FEW_SHOT_RESEARCH_MODE manually only for a research-only run."
+            "Enable ALLOW_UNDER_MIN_TRAINING manually only for a research-only run."
         )
     if not manifest_payload:
         warnings.append("split_manifest.json was not found; recommendations fall back to runtime split counts.")
