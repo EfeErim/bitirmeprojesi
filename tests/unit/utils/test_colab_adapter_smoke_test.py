@@ -655,6 +655,46 @@ def test_discover_adapter_candidates_collapses_same_run_mirrors_preferring_repo_
 
 
 
+def test_discover_adapter_candidates_keeps_nested_crop_part_runs_separate(tmp_path: Path):
+    project_root = tmp_path / "project"
+    first_run = "tomato_fruit_2026-04-21_20-07-45"
+    second_run = "tomato_fruit_2026-04-22_09-13-11"
+    first_asset_dir = _write_adapter_export_with_crop_info(
+        project_root
+        / "runs"
+        / "tomato"
+        / "fruit"
+        / first_run
+        / "outputs"
+        / "colab_notebook_training"
+        / "tomato"
+        / "fruit",
+        crop_name="tomato",
+    )
+    second_asset_dir = _write_adapter_export_with_crop_info(
+        project_root
+        / "runs"
+        / "tomato"
+        / "fruit"
+        / second_run
+        / "outputs"
+        / "colab_notebook_training"
+        / "tomato"
+        / "fruit",
+        crop_name="tomato",
+    )
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 2
+    candidates_by_run = {candidate["run_id"]: candidate for candidate in candidates}
+    assert set(candidates_by_run) == {first_run, second_run}
+    assert candidates_by_run[first_run]["adapter_dir"] == str(first_asset_dir)
+    assert candidates_by_run[second_run]["adapter_dir"] == str(second_asset_dir)
+    assert "run=tomato_fruit_2026-04-22_09-13-11" in candidates_by_run[second_run]["display_name"]
+
+
+
 def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
     project_root = tmp_path / "project"
     asset_dir = _write_adapter_export_with_crop_info(

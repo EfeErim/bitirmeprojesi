@@ -220,11 +220,27 @@ def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
 
 def _infer_run_id(adapter_dir: Path) -> str:
     parts = list(adapter_dir.parts)
-    reserved = {"artifacts", "adapter_export", "continual_sd_lora_adapter", "checkpoint_state", "outputs"}
+    reserved = {
+        "artifacts",
+        "adapter_export",
+        "continual_sd_lora_adapter",
+        "checkpoint_state",
+        "outputs",
+        "telemetry",
+    }
     if "runs" in parts:
         idx = parts.index("runs")
-        if idx + 1 < len(parts):
-            candidate = str(parts[idx + 1]).strip()
+        marker_offsets = [
+            offset
+            for offset, part in enumerate(parts[idx + 1 :], start=idx + 1)
+            if part in {"outputs", "telemetry", "checkpoint_state"}
+        ]
+        if marker_offsets:
+            candidate = str(parts[marker_offsets[0] - 1]).strip()
+            if candidate and candidate not in reserved:
+                return candidate
+        for candidate_part in reversed(parts[idx + 1 :]):
+            candidate = str(candidate_part).strip()
             if candidate and candidate not in reserved:
                 return candidate
     if "telemetry" in parts:
