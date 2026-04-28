@@ -248,12 +248,15 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
     latest_registry = result["latest_registry"]
     trials = [json.loads(line) for line in (runs_root / "_index" / "trials.jsonl").read_text(encoding="utf-8").splitlines()]
     pareto_frontiers = json.loads((runs_root / "_index" / "pareto_frontiers.json").read_text(encoding="utf-8"))
+    automatic_wins = (runs_root / "_index" / "automatic_wins.md").read_text(encoding="utf-8")
 
     assert latest_registry["trial_count"] == 2
     assert latest_registry["backfilled_count"] == 2
     assert latest_registry["cohort_count"] == 2
     assert latest_registry["bayesian_optimization_enabled"] is False
     assert latest_registry["paths"]["pareto_frontiers_json"].endswith("pareto_frontiers.json")
+    assert latest_registry["paths"]["automatic_wins_markdown"].endswith("automatic_wins.md")
+    assert str(result["automatic_wins_markdown"]).endswith("automatic_wins.md")
     assert "bayesian_recommendations_json" not in latest_registry["paths"]
     assert not (runs_root / "_index" / "bayesian_recommendations.json").exists()
     assert {trial["record_quality"] for trial in trials} == {"backfilled"}
@@ -262,3 +265,7 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
         "tomato__fruit::sha_b::tomato::fruit::continual_sd_lora::fake/backbone",
     }
     assert pareto_frontiers["cohort_count"] == 2
+    assert "# Automatic Wins" in automatic_wins
+    assert "### tomato / leaf" in automatic_wins
+    assert "run_a_run" in automatic_wins
+    assert "0.9300" in automatic_wins

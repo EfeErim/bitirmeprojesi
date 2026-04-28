@@ -136,7 +136,7 @@ The grouped Notebook 0 prep path uses a 60/20/20 family split target with small-
 
 These filters do not delete usable samples. Risky but non-blocking samples stay eligible for `continual` and are kept out of canonical `val`/`test`. Label triage is a heuristic audit and review aid, not a ground-truth relabeling system.
 
-Notebook 0 also writes `human_review_packet.json` and, when interactive review is enabled, pauses only around high-impact audit outcomes. The safe defaults keep uncertain but usable samples train-only, block direct materialization when cross-class conflicts or split blockers remain, and let clean audits continue without image-by-image review. The packet exposes the fixed conservative pHash, DINOv3, and BioCLIP-2.5 thresholds used for evidence generation; it is a review gate, not automatic threshold calibration.
+Notebook 0 also writes `human_review_packet.json` plus `label_review_summary.json` and, when interactive review is enabled, pauses only around high-impact audit outcomes. The safe defaults keep uncertain but usable samples train-only, block direct materialization when cross-class conflicts or split blockers remain, and let clean audits continue without image-by-image review. The packet exposes the fixed conservative pHash, DINOv3, and BioCLIP-2.5 thresholds used for evidence generation; it is a review gate, not automatic threshold calibration.
 
 The older non-grouped runtime-layout helper remains effectively 80/10/10.
 
@@ -316,6 +316,7 @@ runs/_index/
   latest_registry.json
   pareto_inputs.json
   pareto_frontiers.json
+  automatic_wins.md
 ```
 
 The registry prefers canonical traceability files when they exist and falls back to best-effort reconstruction from older `summary`, `run_context`, readiness, and guided artifacts.
@@ -324,6 +325,7 @@ Current automatic behavior:
 
 - when a training run writes canonical traceability artifacts successfully, the repo-local `runs/_index/` registry is refreshed best-effort
 - that same refresh now also rebuilds cohort-safe Pareto frontier summaries from the indexed runs
+- that same refresh also writes `automatic_wins.md`, a human-readable Markdown summary of Pareto-frontier winners by comparable cohort
 - Bayesian proposal generation is disabled, so fresh registry rebuilds do not write `bayesian_recommendations.json`
 - the standalone script remains available when you want to rebuild the registry on demand across existing runs
 

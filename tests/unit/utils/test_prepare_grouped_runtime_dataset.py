@@ -11,6 +11,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     _resolve_embedding_device,
     build_prepared_dataset_key,
     build_human_review_packet,
+    build_label_review_summary,
     build_grouped_dataset_plan,
     format_human_review_packet,
     materialize_grouped_runtime_dataset,
@@ -408,6 +409,7 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
     assert {row["label_risk_level"] for row in label_rows} == {"review_candidate"}
 
     packet = json.loads((artifact_root / "human_review_packet.json").read_text(encoding="utf-8"))
+    label_review_summary = json.loads((artifact_root / "label_review_summary.json").read_text(encoding="utf-8"))
     assert packet["pause_recommended"] is True
     assert packet["recommended_action"] in {
         "prepare_clean_working_copy_or_stop",
@@ -415,9 +417,21 @@ def test_review_candidates_include_adjacency_ranking_fields(tmp_path: Path, monk
     }
     assert any(point["id"] == "label_or_family_review_queue" for point in packet["decision_points"])
     assert "label_review_candidates.csv" in packet["review_artifacts"]
+    assert "label_review_summary.json" in packet["review_artifacts"]
     assert "dino_auto_min" in packet["threshold_policy"]
     rebuilt = build_human_review_packet(summary, artifact_root=artifact_root, max_review_items=1)
     assert rebuilt["counts"]["label_review_candidates"] == len(label_rows)
+    rebuilt_label_review_summary = build_label_review_summary(
+        summary,
+        label_risk_summary=label_summary,
+        human_review_packet=rebuilt,
+        label_review_candidates=label_rows,
+        max_preview_items=1,
+    )
+    assert label_review_summary["human_in_the_loop"]["enabled"] is True
+    assert label_review_summary["review_queue"]["path"] == "label_review_candidates.csv"
+    assert label_review_summary["counts"]["label_review_candidates"] == len(label_rows)
+    assert rebuilt_label_review_summary["review_queue"]["preview"] == [label_rows[0]]
     rendered = format_human_review_packet(rebuilt)
     assert "Notebook 0 audit gate" in rendered
     assert "label_review_candidates" in rendered
@@ -1025,6 +1039,7 @@ def test_grouped_dataset_plan_writes_guided_catalog(tmp_path: Path, monkeypatch)
     assert (guided_dir / "01_prep_overview.json").exists()
     assert any(entry["relative_path"] == "prep_summary.json" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "human_review_packet.json" for entry in catalog["entries"])
+    assert any(entry["relative_path"] == "label_review_summary.json" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "label_risk_summary.json" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "label_review_candidates.csv" for entry in catalog["entries"])
     assert any(entry["relative_path"] == "source_style_groups.csv" for entry in catalog["entries"])

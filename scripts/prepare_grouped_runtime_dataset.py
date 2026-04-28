@@ -47,6 +47,7 @@ BIOCLIP_CROSS_CLASS_BLOCK_MIN = 0.980
 DEFAULT_NEIGHBORS = 8
 GROUPED_SPLIT_POLICY = "grouped_family_canonical_eval_60_20_20"
 HUMAN_REVIEW_PACKET_FILENAME = "human_review_packet.json"
+LABEL_REVIEW_SUMMARY_FILENAME = "label_review_summary.json"
 SOURCE_HINT_UNKNOWN = "unknown"
 QUALITY_WARN_MIN_SIZE = 224
 QUALITY_CRITICAL_MIN_SIZE = 160
@@ -2024,6 +2025,7 @@ def build_grouped_dataset_plan(
         },
     }
     summary["human_review_packet_path"] = HUMAN_REVIEW_PACKET_FILENAME
+    summary["label_review_summary_path"] = LABEL_REVIEW_SUMMARY_FILENAME
     label_risk_summary["train_only_routed_count"] = sum(1 for row in manifest_rows if row.get("train_only_routed"))
     label_risk_summary["review_queue_path"] = "label_review_candidates.csv"
 
@@ -2082,6 +2084,13 @@ def build_grouped_dataset_plan(
     )
     human_review_packet = build_human_review_packet(summary, artifact_root=artifact_root)
     write_json(artifact_root / HUMAN_REVIEW_PACKET_FILENAME, human_review_packet, ensure_ascii=False)
+    label_review_summary = build_label_review_summary(
+        summary,
+        label_risk_summary=label_risk_summary,
+        human_review_packet=human_review_packet,
+        label_review_candidates=label_review_candidates,
+    )
+    write_json(artifact_root / LABEL_REVIEW_SUMMARY_FILENAME, label_review_summary, ensure_ascii=False)
     refresh_prep_guided_artifacts(
         artifact_root,
         overview_updates={
@@ -2314,6 +2323,7 @@ def build_human_review_packet(
         "decision_points": decision_points,
         "review_artifacts": [
             "human_review_packet.json",
+            LABEL_REVIEW_SUMMARY_FILENAME,
             "prep_summary.json",
             "class_health_report.json",
             "label_review_candidates.csv",
@@ -2321,6 +2331,66 @@ def build_human_review_packet(
             "cross_class_conflicts.csv",
             "source_style_groups.csv",
         ],
+    }
+
+
+def build_label_review_summary(
+    summary: Dict[str, Any],
+    *,
+    label_risk_summary: Dict[str, Any],
+    human_review_packet: Dict[str, Any],
+    label_review_candidates: Sequence[Dict[str, Any]],
+    max_preview_items: int = 10,
+) -> Dict[str, Any]:
+    """Build the Notebook 0 label-quality summary anchored on the human review gate."""
+
+    nested_summary = dict(summary.get("summary", {}) or {})
+    review_preview = [dict(item) for item in list(label_review_candidates)[: max(0, int(max_preview_items))]]
+    return {
+        "schema_version": "v1_label_review_summary",
+        "surface": "notebook_0_grouped_dataset_preparation",
+        "runtime_ready": bool(summary.get("runtime_ready")),
+        "crop_name": str(summary.get("crop_name", "") or ""),
+        "part_name": str(summary.get("part_name", "") or ""),
+        "source_root": str(summary.get("source_root", "") or ""),
+        "prepared_runtime_root": str(summary.get("prepared_runtime_root", "") or ""),
+        "human_in_the_loop": {
+            "enabled": True,
+            "pause_recommended": bool(human_review_packet.get("pause_recommended")),
+            "recommended_action": str(human_review_packet.get("recommended_action", "") or ""),
+            "safe_default_decision": str(human_review_packet.get("safe_default_decision", "") or ""),
+            "review_artifacts": list(human_review_packet.get("review_artifacts", []) or []),
+        },
+        "counts": {
+            "label_review_candidates": int(nested_summary.get("label_review_candidates", 0) or 0),
+            "label_train_only_risk_images": int(nested_summary.get("label_train_only_risk_images", 0) or 0),
+            "label_blocking_conflict_images": int(nested_summary.get("label_blocking_conflict_images", 0) or 0),
+            "same_class_high_risk_clusters": int(nested_summary.get("same_class_high_risk_clusters", 0) or 0),
+            "cross_class_conflicts": int(nested_summary.get("cross_class_conflicts", 0) or 0),
+            "train_only_routed_images": int(nested_summary.get("train_only_routed_images", 0) or 0),
+            "source_style_risk_images": int(nested_summary.get("source_style_risk_images", 0) or 0),
+            "skipped_classes": int(nested_summary.get("skipped_classes", 0) or 0),
+        },
+        "label_risk_levels": dict(label_risk_summary.get("level_counts", {}) or {}),
+        "policy": dict(label_risk_summary.get("policy", {}) or {}),
+        "signals": dict(label_risk_summary.get("signals", {}) or {}),
+        "review_queue": {
+            "path": "label_review_candidates.csv",
+            "candidate_count": int(label_risk_summary.get("review_candidate_count", 0) or 0),
+            "preview": review_preview,
+        },
+        "artifacts": {
+            "human_review_packet_json": HUMAN_REVIEW_PACKET_FILENAME,
+            "label_risk_summary_json": "label_risk_summary.json",
+            "label_review_candidates_csv": "label_review_candidates.csv",
+            "same_class_high_risk_clusters_csv": "same_class_high_risk_clusters.csv",
+            "cross_class_conflicts_csv": "cross_class_conflicts.csv",
+            "class_health_report_json": "class_health_report.json",
+        },
+        "note": (
+            "This is the Notebook 0 audit-time label-quality surface. It summarizes heuristic label-risk routing "
+            "and the human review gate before runtime-dataset materialization. It does not auto-relabel samples."
+        ),
     }
 
 

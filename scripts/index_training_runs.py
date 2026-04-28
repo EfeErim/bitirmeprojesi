@@ -27,6 +27,7 @@ JsonDict = Dict[str, Any]
 
 REGISTRY_SCHEMA = "v1_training_run_registry"
 TRIAL_SCHEMA = "v1_training_registry_trial"
+AUTOMATIC_WINS_FILENAME = "automatic_wins.md"
 
 
 def _utc_now_iso() -> str:
@@ -276,6 +277,105 @@ def build_pareto_inputs(trials: Iterable[JsonDict]) -> JsonDict:
     }
 
 
+def _format_metric(value: Any) -> str:
+    try:
+        return f"{float(value):.4f}"
+    except (TypeError, ValueError):
+        return "n/a"
+
+
+def _render_automatic_wins_markdown(
+    *,
+    latest_registry: JsonDict,
+    pareto_frontiers: JsonDict,
+) -> str:
+    generated_at = str(latest_registry.get("generated_at", "") or "")
+    lines: List[str] = [
+        "# Automatic Wins",
+        "",
+        "Generated automatically from the local run registry. A cohort `win` means a Pareto-frontier run inside one comparable cohort.",
+        "",
+        "## Registry Snapshot",
+        "",
+        f"- Generated at: `{generated_at}`",
+        f"- Optimization profile: `{latest_registry.get('optimization_profile', '')}`",
+        f"- Indexed trials: `{latest_registry.get('trial_count', 0)}`",
+        f"- Comparable cohorts: `{latest_registry.get('cohort_count', 0)}`",
+        f"- Canonical records: `{latest_registry.get('canonical_count', 0)}`",
+        f"- Backfilled records: `{latest_registry.get('backfilled_count', 0)}`",
+        "",
+        "## Cohort Winners",
+        "",
+    ]
+
+    cohorts = list(pareto_frontiers.get("cohorts", []) or [])
+    if not cohorts:
+        lines.append("No comparable cohorts were indexed.")
+        lines.append("")
+        return "\n".join(lines)
+
+    for cohort in cohorts:
+        if not isinstance(cohort, dict):
+            continue
+        comparability = dict(cohort.get("comparability", {})) if isinstance(cohort.get("comparability"), dict) else {}
+        crop_name = str(comparability.get("crop_name", "") or "unknown")
+        part_name = str(comparability.get("part_name", "") or "unspecified")
+        cohort_key = str(cohort.get("cohort_key", "") or "")
+        frontier_runs = list(cohort.get("frontier_runs", []) or [])
+        excluded_runs = list(cohort.get("excluded_runs", []) or [])
+        lines.extend(
+            [
+                f"### {crop_name} / {part_name}",
+                "",
+                f"- Cohort key: `{cohort_key}`",
+                f"- Eligible runs: `{cohort.get('eligible_run_count', 0)}`",
+                f"- Excluded runs: `{cohort.get('excluded_run_count', 0)}`",
+                f"- Frontier wins: `{cohort.get('frontier_count', 0)}`",
+                "",
+            ]
+        )
+        if frontier_runs:
+            lines.append("| Run ID | Macro F1 | OOD AUROC | OOD FPR | Readiness | Artifact Root |")
+            lines.append("| --- | ---: | ---: | ---: | --- | --- |")
+            for run in frontier_runs:
+                if not isinstance(run, dict):
+                    continue
+                status = dict(run.get("status", {})) if isinstance(run.get("status"), dict) else {}
+                objectives = dict(run.get("objectives", {})) if isinstance(run.get("objectives"), dict) else {}
+                lines.append(
+                    "| "
+                    + " | ".join(
+                        [
+                            str(run.get("run_id", "") or ""),
+                            _format_metric(objectives.get("classification.macro_f1")),
+                            _format_metric(objectives.get("ood.ood_auroc")),
+                            _format_metric(objectives.get("ood.ood_false_positive_rate")),
+                            str(status.get("readiness_status", "") or ""),
+                            f"`{run.get('artifact_root', '') or ''}`",
+                        ]
+                    )
+                    + " |"
+                )
+            lines.append("")
+        else:
+            lines.append("No eligible Pareto-frontier wins were found for this cohort.")
+            if excluded_runs:
+                lines.append("")
+                lines.append("| Excluded Run ID | Reason |")
+                lines.append("| --- | --- |")
+                for run in excluded_runs:
+                    if not isinstance(run, dict):
+                        continue
+                    lines.append(
+                        f"| {str(run.get('run_id', '') or '')} | {str(run.get('reason', '') or '')} |"
+                    )
+                lines.append("")
+            else:
+                lines.append("")
+
+    return "\n".join(lines)
+
+
 def write_registry(
     *,
     trials: Iterable[JsonDict],
@@ -320,11 +420,19 @@ def write_registry(
             for cohort in pareto_inputs.get("cohorts", [])
         ],
     }
+    automatic_wins_markdown = _render_automatic_wins_markdown(
+        latest_registry=latest_registry_payload,
+        pareto_frontiers=pareto_frontiers,
+    )
+    automatic_wins_markdown_path = root / AUTOMATIC_WINS_FILENAME
+    automatic_wins_markdown_path.write_text(automatic_wins_markdown, encoding="utf-8")
+    latest_registry_payload["paths"]["automatic_wins_markdown"] = str(automatic_wins_markdown_path)
     latest_registry_path = write_json(root / "latest_registry.json", latest_registry_payload, ensure_ascii=False)
     return {
         "trials_jsonl": trials_jsonl,
         "pareto_inputs_json": pareto_inputs_path,
         "pareto_frontiers_json": pareto_frontiers_path,
+        "automatic_wins_markdown": automatic_wins_markdown_path,
         "latest_registry_json": latest_registry_path,
         "latest_registry": latest_registry_payload,
     }

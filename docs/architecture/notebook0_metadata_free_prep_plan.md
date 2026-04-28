@@ -54,6 +54,7 @@ Required behavior:
 
 New artifacts/interfaces:
 
+- `label_review_summary.json`
 - `label_review_candidates.csv`
 - `label_risk_summary.json`
 - additional row-level fields in the grouped manifest / family manifest such as:
