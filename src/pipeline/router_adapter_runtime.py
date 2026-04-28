@@ -13,7 +13,11 @@ from PIL import Image
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
-from src.shared.adapter_paths import normalize_adapter_name, resolve_adapter_bundle_dir
+from src.shared.adapter_paths import (
+    ADAPTER_BUNDLE_DIR_NAME,
+    normalize_adapter_name,
+    resolve_adapter_bundle_dir,
+)
 from src.shared.json_utils import read_json_dict
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
@@ -126,6 +130,18 @@ class RouterAdapterRuntime:
         adapter_dir: Optional[str | Path] = None,
     ) -> Path:
         def _discover_fallback_adapter_dir(search_root: Path, *, allow_cross_part: bool) -> Optional[Path]:
+            def _infer_path_metadata(adapter_bundle_dir: Path) -> tuple[str, str]:
+                try:
+                    relative_parts = adapter_bundle_dir.relative_to(search_root).parts
+                except ValueError:
+                    return "", ""
+                if len(relative_parts) >= 3 and relative_parts[-1] == ADAPTER_BUNDLE_DIR_NAME:
+                    return (
+                        normalize_adapter_name(relative_parts[0], default=""),
+                        normalize_adapter_name(relative_parts[1], default=""),
+                    )
+                return "", ""
+
             if not search_root.exists() or not search_root.is_dir():
                 return None
 
@@ -144,19 +160,24 @@ class RouterAdapterRuntime:
                         exc_info=exc,
                     )
                     continue
-                meta_crop = normalize_adapter_name(meta.get("crop_name")) if meta.get("crop_name") else ""
-                if meta_crop and meta_crop != crop_key:
+                path_crop, path_part = _infer_path_metadata(adapter_bundle_dir)
+                meta_crop = normalize_adapter_name(meta.get("crop_name"), default="") if meta.get("crop_name") else ""
+                resolved_crop = meta_crop or path_crop
+                if not resolved_crop:
                     continue
-                meta_part = normalize_adapter_name(meta.get("part_name")) if meta.get("part_name") else ""
-                if requested_part and meta_part == requested_part:
+                if resolved_crop != crop_key:
+                    continue
+                meta_part = normalize_adapter_name(meta.get("part_name"), default="") if meta.get("part_name") else ""
+                resolved_part = meta_part or path_part
+                if requested_part and resolved_part == requested_part:
                     ranked_candidates.append((0, adapter_bundle_dir))
                 elif requested_part and not allow_cross_part:
                     continue
-                elif not requested_part and (not meta_part or meta_part == "unspecified"):
+                elif not requested_part and (not resolved_part or resolved_part == "unspecified"):
                     ranked_candidates.append((1, adapter_bundle_dir))
                 elif not requested_part:
                     ranked_candidates.append((2, adapter_bundle_dir))
-                elif meta_part in {"", "unspecified"}:
+                elif resolved_part in {"", "unspecified"}:
                     ranked_candidates.append((1, adapter_bundle_dir))
                 else:
                     ranked_candidates.append((2, adapter_bundle_dir))

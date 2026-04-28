@@ -213,9 +213,10 @@ def prepare_training_run(
     colab_cfg = dict(config.get("colab", {}).get("training", {}))
     resolved_run_id = str(run_id or f"{crop_name}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}")
     resolved_dataset = resolve_runtime_dataset(data_dir=data_dir, crop_name=crop_name)
+    loader_data_dir = resolved_dataset.crop_root.parent
 
     loaders = loader_factory(
-        data_dir=str(data_dir),
+        data_dir=str(loader_data_dir),
         crop=resolved_dataset.dataset_key,
         class_names=class_names,
         batch_size=int(training_cfg.get("batch_size", 8)),
@@ -227,7 +228,7 @@ def prepare_training_run(
         error_policy=str(error_policy or data_cfg.get("loader_error_policy", "tolerant")),
         sampler=str(sampler or data_cfg.get("sampler", "auto")),
         seed=int(training_cfg.get("seed", 42)),
-        validate_images_on_init=bool(data_cfg.get("validate_images_on_init", True)),
+        validate_images_on_init=bool(data_cfg.get("validate_images_on_init", False)),
         augmentation_policy=str(data_cfg.get("augmentation_policy", "randaugment")),
         randaugment_num_ops=int(data_cfg.get("randaugment_num_ops", 2)),
         randaugment_magnitude=int(data_cfg.get("randaugment_magnitude", 7)),
@@ -257,7 +258,7 @@ def prepare_training_run(
     allow_under_min_training = bool(data_cfg.get("allow_under_min_training", False))
     class_balance_runtime = build_class_balance_runtime(
         crop_name=crop_name,
-        data_dir=data_dir,
+        data_dir=loader_data_dir,
         detected_classes=detected_classes,
         split_class_counts=split_class_counts,
         dataset_key=resolved_dataset.dataset_key,

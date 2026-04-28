@@ -760,5 +760,49 @@ def test_predict_reload_adapter_when_adapter_meta_changes(monkeypatch, tmp_path)
     assert build_calls == ["tomato", "tomato"]
 
 
+def test_cross_part_fallback_does_not_cross_crop_when_metadata_omits_crop(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    tomato_dir = adapter_root / "tomato" / "leaf" / "continual_sd_lora_adapter"
+    tomato_dir.mkdir(parents=True, exist_ok=True)
+    (tomato_dir / "adapter_meta.json").write_text('{"part_name": "leaf"}', encoding="utf-8")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"pepper": {"parts": ["fruit"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": True,
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class PepperRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "pepper",
+                        "part": "fruit",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: PepperRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "adapter_unavailable"
+    assert result["crop"] == "pepper"
+    assert "pepper" in result["message"]
+
+
 
 
