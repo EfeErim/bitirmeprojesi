@@ -353,24 +353,25 @@ That surface reads the canonical run registry, stays inside one comparable cohor
 Notebook 2 writes to three places:
 
 - local outputs under `outputs/colab_notebook_training/`
-- repo mirrors under `runs/<RUN_ID>/`
-- Drive telemetry under `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/`
+- repo mirrors under `runs/<crop>/<part>/<RUN_ID>/`
+- repo-local telemetry runtime under `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/`
 
 The artifact roots now also include a `guided/` layer with a human-readable start file plus machine-readable overview/catalog files. This layer organizes the raw artifacts without replacing them.
 
-The repo mirror keeps notebook outputs, telemetry copies, and checkpoint manifests plus only the best checkpoint; rolling checkpoint history remains under the Drive telemetry root.
+The repo mirror keeps notebook outputs, telemetry copies, and checkpoint manifests plus only the best checkpoint; rolling checkpoint history remains under the repo-local telemetry runtime root.
 
 Current adapter export detail:
 
 - local notebook export: `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
 - workflow export: `<output_dir>/<crop>/<part>/continual_sd_lora_adapter/`
-- Drive telemetry export: `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
+- telemetry runtime export: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 Current notebook naming/detail:
 
 - Notebook 2 exposes `CROP_NAME` and `PART_NAME` at the notebook surface
 - Notebook 2 run ids are human-readable and include crop/part/date-time information
 - maintained notebooks perform an early update/access check before the main long-running cells
+- Notebook 2 no longer requests Google Drive mount access by default
 - Notebook 2 keeps `OPTIMIZATION_CAMPAIGN_MODE` disabled by default; Bayesian campaign proposals are not part of the active training path
 
 

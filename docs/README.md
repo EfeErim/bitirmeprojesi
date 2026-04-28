@@ -89,4 +89,4 @@ Path confusion reminders:
 
 - `requirements_colab.txt` at repo root is the canonical Colab dependency list.
 - `colab_notebooks/requirements_colab.txt` is a wrapper used by notebook-local bootstrap.
-- Notebook 2 Drive export path: `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
+- Notebook 2 telemetry export path: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.

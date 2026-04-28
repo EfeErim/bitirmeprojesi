@@ -463,7 +463,7 @@ These files organize the existing raw artifacts; they do not replace or delete t
 ### Repo mirror for the run
 
 ```text
-runs/<RUN_ID>/
+runs/<crop>/<part>/<RUN_ID>/
   notebooks/2_interactive_adapter_training.executed.ipynb
   outputs/colab_notebook_training/
   telemetry/
@@ -472,12 +472,12 @@ runs/<RUN_ID>/
 
 For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop, part, and date-time information.
 
-`checkpoint_state/` keeps the checkpoint manifests plus only the mirrored best checkpoint. Rolling checkpoint history stays under the Drive telemetry root.
+`checkpoint_state/` keeps the checkpoint manifests plus only the mirrored best checkpoint. Rolling checkpoint history stays under the repo-local telemetry runtime root.
 
-### Drive telemetry root
+### Repo-local telemetry runtime
 
 ```text
-<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/
+outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/
   checkpoints/
   artifacts/
     guided/
@@ -500,7 +500,8 @@ For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop,
 
 Important current detail:
 
-- Notebook 2 exports the Drive adapter bundle under `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
+- Notebook 2 exports the telemetry adapter bundle under `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
+- Notebook 2 no longer requests Google Drive mount access by default; use the repo mirror and `AUTO_PUSH_TO_GITHUB=True` when artifacts must survive Colab runtime reset.
 
 ## How Deployment Handoff Works
 
@@ -514,8 +515,8 @@ You can deploy a trained adapter by copying one of these outputs there:
 
 - workflow output: `<output_dir>/<crop>/<part>/continual_sd_lora_adapter/`
 - Notebook 2 local output: `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
-- Notebook 2 repo mirror: `runs/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
-- Notebook 2 Drive export: `<AADS_DRIVE_LOG_ROOT>/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
+- Notebook 2 repo mirror: `runs/<crop>/<part>/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
+- Notebook 2 telemetry export: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
 
 If you keep adapters somewhere else, pass `--adapter-root`.
 
@@ -561,7 +562,7 @@ Tracked source of truth:
 
 Local or generated only:
 
-- `runs/<RUN_ID>/`
+- `runs/<crop>/<part>/<RUN_ID>/`
 - `models/adapters/`
 - `outputs/`
 - `.runtime_tmp/`
