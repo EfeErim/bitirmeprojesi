@@ -284,6 +284,108 @@ def _format_metric(value: Any) -> str:
         return "n/a"
 
 
+def _format_parameter_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int) and not isinstance(value, bool):
+        return str(value)
+    try:
+        return f"{float(value):.4f}"
+    except (TypeError, ValueError):
+        return str(value or "n/a")
+
+
+def _winner_parameter_highlights(parameters: Dict[str, Any]) -> List[Tuple[str, str]]:
+    highlights: List[Tuple[str, str]] = []
+
+    label_smoothing = parameters.get("training.optimization.label_smoothing")
+    if label_smoothing not in (None, ""):
+        highlights.append(("label smoothing", _format_parameter_value(label_smoothing)))
+
+    energy_temperature_mode = str(parameters.get("training.ood.energy_temperature_mode", "") or "").strip()
+    if energy_temperature_mode:
+        energy_detail = energy_temperature_mode
+        energy_temperature = parameters.get("training.ood.energy_temperature")
+        if energy_temperature_mode == "fixed" and energy_temperature not in (None, ""):
+            energy_detail = f"{energy_temperature_mode} ({_format_parameter_value(energy_temperature)})"
+        highlights.append(("energy temperature", energy_detail))
+
+    if "training.ood.react_enabled" in parameters:
+        react_detail = "off"
+        if bool(parameters.get("training.ood.react_enabled")):
+            react_detail = "on"
+            react_percentile = parameters.get("training.ood.react_percentile")
+            if react_percentile not in (None, ""):
+                react_detail = f"{react_detail} (percentile {_format_parameter_value(react_percentile)})"
+        highlights.append(("ReAct", react_detail))
+
+    augmentation_policy = str(parameters.get("training.data.augmentation_policy", "") or "").strip()
+    if augmentation_policy:
+        augmentation_detail = augmentation_policy
+        if augmentation_policy == "randaugment":
+            randaugment_parts = []
+            if parameters.get("training.data.randaugment_num_ops") not in (None, ""):
+                randaugment_parts.append(f"ops {_format_parameter_value(parameters.get('training.data.randaugment_num_ops'))}")
+            if parameters.get("training.data.randaugment_magnitude") not in (None, ""):
+                randaugment_parts.append(
+                    f"magnitude {_format_parameter_value(parameters.get('training.data.randaugment_magnitude'))}"
+                )
+            if randaugment_parts:
+                augmentation_detail = f"{augmentation_policy} ({', '.join(randaugment_parts)})"
+        elif augmentation_policy == "augmix":
+            augmix_parts = []
+            for key, label in (
+                ("training.data.augmix_severity", "severity"),
+                ("training.data.augmix_width", "width"),
+                ("training.data.augmix_depth", "depth"),
+                ("training.data.augmix_alpha", "alpha"),
+            ):
+                value = parameters.get(key)
+                if value not in (None, ""):
+                    augmix_parts.append(f"{label} {_format_parameter_value(value)}")
+            if augmix_parts:
+                augmentation_detail = f"{augmentation_policy} ({', '.join(augmix_parts)})"
+        highlights.append(("augmentation", augmentation_detail))
+
+    if "training.classifier_rebalance.enabled" in parameters:
+        rebalance_detail = "off"
+        if bool(parameters.get("training.classifier_rebalance.enabled")):
+            rebalance_parts = []
+            objective = str(parameters.get("training.classifier_rebalance.objective", "") or "").strip()
+            sampler = str(parameters.get("training.classifier_rebalance.sampler", "") or "").strip()
+            epochs = parameters.get("training.classifier_rebalance.epochs")
+            tau = parameters.get("training.classifier_rebalance.logit_adjustment_tau")
+            if objective:
+                rebalance_parts.append(objective)
+            if sampler:
+                rebalance_parts.append(f"sampler {sampler}")
+            if epochs not in (None, ""):
+                rebalance_parts.append(f"epochs {_format_parameter_value(epochs)}")
+            if tau not in (None, ""):
+                rebalance_parts.append(f"tau {_format_parameter_value(tau)}")
+            rebalance_detail = "on"
+            if rebalance_parts:
+                rebalance_detail = f"{rebalance_detail} ({', '.join(rebalance_parts)})"
+        highlights.append(("classifier rebalance", rebalance_detail))
+
+    if "training.ood.oe_enabled" in parameters:
+        oe_detail = "off"
+        if bool(parameters.get("training.ood.oe_enabled")):
+            oe_parts = []
+            oe_target = str(parameters.get("training.ood.oe_target", "") or "").strip()
+            oe_loss_weight = parameters.get("training.ood.oe_loss_weight")
+            if oe_target:
+                oe_parts.append(oe_target)
+            if oe_loss_weight not in (None, ""):
+                oe_parts.append(f"weight {_format_parameter_value(oe_loss_weight)}")
+            oe_detail = "on"
+            if oe_parts:
+                oe_detail = f"{oe_detail} ({', '.join(oe_parts)})"
+        highlights.append(("OE", oe_detail))
+
+    return highlights
+
+
 def _render_automatic_wins_markdown(
     *,
     latest_registry: JsonDict,
@@ -357,6 +459,23 @@ def _render_automatic_wins_markdown(
                     + " |"
                 )
             lines.append("")
+            highlight_lines = []
+            for run in frontier_runs:
+                if not isinstance(run, dict):
+                    continue
+                parameters = dict(run.get("parameters", {})) if isinstance(run.get("parameters"), dict) else {}
+                highlights = _winner_parameter_highlights(parameters)
+                if not highlights:
+                    continue
+                highlight_lines.append(
+                    f"- `{str(run.get('run_id', '') or '')}`: "
+                    + "; ".join(f"{label} `{value}`" for label, value in highlights)
+                )
+            if highlight_lines:
+                lines.append("#### Winner Config Highlights")
+                lines.append("")
+                lines.extend(highlight_lines)
+                lines.append("")
         else:
             lines.append("No eligible Pareto-frontier wins were found for this cohort.")
             if excluded_runs:

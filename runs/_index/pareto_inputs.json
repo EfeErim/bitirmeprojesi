@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-04-22T20:08:42.635146+00:00",
+  "generated_at": "2026-04-28T09:26:40.292429+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "cohort_count": 4,
   "cohorts": [
@@ -56,9 +56,13 @@
             "training_cost.checkpoint_count": "minimize"
           },
           "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
             "training.ood.sure_enabled": false,
-            "training.ood.conformal_enabled": false
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\grape\\fruit\\grape_fruit_2026-04-21_20-22-20\\outputs\\colab_notebook_training\\artifacts"
         }
@@ -116,9 +120,13 @@
             "training_cost.checkpoint_count": "minimize"
           },
           "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
             "training.ood.sure_enabled": false,
-            "training.ood.conformal_enabled": false
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\grape\\leaf\\grape_leaf_2026-04-22_11-07-15\\outputs\\colab_notebook_training\\artifacts"
         }
@@ -176,9 +184,13 @@
             "training_cost.checkpoint_count": "minimize"
           },
           "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
             "training.ood.sure_enabled": false,
-            "training.ood.conformal_enabled": false
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\tomato_fruit_2026-04-21_20-07-45\\outputs\\colab_notebook_training\\artifacts"
         }
@@ -236,9 +248,13 @@
             "training_cost.checkpoint_count": "minimize"
           },
           "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
             "training.ood.sure_enabled": false,
-            "training.ood.conformal_enabled": false
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\tomato\\leaf\\tomato_leaf_2026-04-21_19-33-49\\outputs\\colab_notebook_training\\artifacts"
         }

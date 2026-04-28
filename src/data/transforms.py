@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from torchvision import transforms
 
 
-VALID_AUGMENTATION_POLICIES = {"none", "basic", "randaugment"}
+VALID_AUGMENTATION_POLICIES = {"none", "basic", "randaugment", "augmix"}
 
 
 def normalize_augmentation_policy(value: str | None) -> str:
@@ -40,6 +40,34 @@ def _normalize_randaugment_magnitude(value: int) -> int:
     return resolved
 
 
+def _normalize_augmix_severity(value: int) -> int:
+    resolved = int(value)
+    if not 1 <= resolved <= 10:
+        raise ValueError("augmix_severity must be between 1 and 10.")
+    return resolved
+
+
+def _normalize_augmix_width(value: int) -> int:
+    resolved = int(value)
+    if resolved < 1:
+        raise ValueError("augmix_width must be at least 1.")
+    return resolved
+
+
+def _normalize_augmix_depth(value: int) -> int:
+    resolved = int(value)
+    if resolved == 0 or resolved < -1:
+        raise ValueError("augmix_depth must be -1 or a positive integer.")
+    return resolved
+
+
+def _normalize_augmix_alpha(value: float) -> float:
+    resolved = float(value)
+    if resolved <= 0.0:
+        raise ValueError("augmix_alpha must be positive.")
+    return resolved
+
+
 def _normalization_steps() -> List[Any]:
     from torchvision import transforms
 
@@ -55,6 +83,10 @@ def build_image_transform(
     augmentation_policy: str = "randaugment",
     randaugment_num_ops: int = 2,
     randaugment_magnitude: int = 7,
+    augmix_severity: int = 3,
+    augmix_width: int = 3,
+    augmix_depth: int = -1,
+    augmix_alpha: float = 1.0,
 ) -> "transforms.Compose":
     from torchvision import transforms
 
@@ -81,6 +113,15 @@ def build_image_transform(
                     transforms.RandAugment(
                         num_ops=_normalize_randaugment_num_ops(randaugment_num_ops),
                         magnitude=_normalize_randaugment_magnitude(randaugment_magnitude),
+                    )
+                )
+            elif policy == "augmix":
+                steps.append(
+                    transforms.AugMix(
+                        severity=_normalize_augmix_severity(augmix_severity),
+                        mixture_width=_normalize_augmix_width(augmix_width),
+                        chain_depth=_normalize_augmix_depth(augmix_depth),
+                        alpha=_normalize_augmix_alpha(augmix_alpha),
                     )
                 )
             else:

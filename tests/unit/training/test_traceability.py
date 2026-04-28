@@ -44,6 +44,12 @@ def _run_context_payload() -> dict:
                     "ood": {
                         "threshold_factor": 3.0,
                         "primary_score_method": "ensemble",
+                        "energy_temperature_mode": "auto",
+                        "react_enabled": True,
+                        "react_percentile": 0.98,
+                        "oe_enabled": True,
+                        "oe_loss_weight": 0.5,
+                        "oe_target": "uniform",
                         "radial_l2_enabled": True,
                         "radial_beta_range": [0.5, 2.0],
                         "radial_beta_steps": 16,
@@ -64,6 +70,7 @@ def _run_context_payload() -> dict:
                     "optimization": {
                         "loss_name": "logitnorm",
                         "logitnorm_tau": 1.0,
+                        "label_smoothing": 0.1,
                         "grad_accumulation_steps": 4,
                         "mixed_precision": "auto",
                         "max_grad_norm": 1.0,
@@ -76,9 +83,17 @@ def _run_context_payload() -> dict:
                     },
                     "data": {
                         "sampler": "auto",
-                        "augmentation_policy": "randaugment",
+                        "augmentation_policy": "augmix",
                         "randaugment_num_ops": 2,
                         "randaugment_magnitude": 7,
+                        "augmix_severity": 3,
+                    },
+                    "classifier_rebalance": {
+                        "enabled": True,
+                        "epochs": 3,
+                        "learning_rate": 5e-5,
+                        "sampler": "weighted",
+                        "objective": "logit_adjusted_cross_entropy",
                     },
                 }
             }
@@ -190,6 +205,12 @@ def test_build_optimization_record_flattens_parameters_and_sets_objective_direct
     )
     assert record["parameters"]["training.learning_rate"] == 0.00015
     assert record["parameters"]["training.adapter.lora_r"] == 24
+    assert record["parameters"]["training.optimization.label_smoothing"] == 0.1
+    assert record["parameters"]["training.ood.energy_temperature_mode"] == "auto"
+    assert record["parameters"]["training.ood.react_enabled"] is True
+    assert record["parameters"]["training.ood.oe_enabled"] is True
+    assert record["parameters"]["training.data.augmentation_policy"] == "augmix"
+    assert record["parameters"]["training.classifier_rebalance.enabled"] is True
     assert record["objectives"]["classification.weighted_f1"] == 0.92
     assert record["objectives"]["ood.ood_false_positive_rate"] == 0.04
     assert record["objective_directions"]["classification.weighted_f1"] == "maximize"

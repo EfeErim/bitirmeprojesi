@@ -135,8 +135,10 @@ def build_production_readiness_context(
     selection_source: str,
     ood_benchmark: Dict[str, Any],
     ood_method_comparison: Dict[str, Any] | None = None,
+    oe_context: Dict[str, Any] | None = None,
+    classifier_rebalance: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
-    return {
+    payload = {
         "run_id": run_id,
         "crop_name": crop_name,
         "loader_sizes": loader_sizes,
@@ -152,6 +154,11 @@ def build_production_readiness_context(
         "ood_benchmark_passed": ood_benchmark.get("passed"),
         "ood_method_comparison": dict(ood_method_comparison or {}),
     }
+    if oe_context:
+        payload["oe"] = dict(oe_context)
+    if classifier_rebalance:
+        payload["classifier_rebalance"] = dict(classifier_rebalance)
+    return payload
 
 
 def build_training_summary_payload(
@@ -183,8 +190,9 @@ def build_training_summary_payload(
     loss_name: str,
     logitnorm_tau: float,
     final_metrics: Dict[str, float],
+    classifier_rebalance: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
-    return {
+    payload = {
         "run_id": run_id,
         "crop_name": crop_name,
         "part_name": str(part_name or "unspecified"),
@@ -221,3 +229,6 @@ def build_training_summary_payload(
         },
         "final_metrics": dict(final_metrics),
     }
+    if classifier_rebalance:
+        payload["classifier_rebalance"] = dict(classifier_rebalance)
+    return payload

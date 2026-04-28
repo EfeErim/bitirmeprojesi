@@ -140,6 +140,12 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
                             "ood": {
                                 "threshold_factor": 3.0,
                                 "primary_score_method": "ensemble",
+                                "energy_temperature_mode": "auto",
+                                "react_enabled": True,
+                                "react_percentile": 0.98,
+                                "oe_enabled": True,
+                                "oe_loss_weight": 0.5,
+                                "oe_target": "uniform",
                                 "radial_l2_enabled": True,
                                 "radial_beta_range": [0.5, 2.0],
                                 "radial_beta_steps": 16,
@@ -160,6 +166,7 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
                             "optimization": {
                                 "loss_name": "logitnorm",
                                 "logitnorm_tau": 1.0,
+                                "label_smoothing": 0.1,
                                 "grad_accumulation_steps": 4,
                                 "mixed_precision": "auto",
                                 "max_grad_norm": 1.0,
@@ -172,9 +179,21 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
                             },
                             "data": {
                                 "sampler": "auto",
-                                "augmentation_policy": "randaugment",
+                                "augmentation_policy": "augmix",
                                 "randaugment_num_ops": 2,
                                 "randaugment_magnitude": 7,
+                                "augmix_severity": 3,
+                                "augmix_width": 3,
+                                "augmix_alpha": 1.0,
+                            },
+                            "classifier_rebalance": {
+                                "enabled": True,
+                                "epochs": 3,
+                                "learning_rate": 5e-5,
+                                "weight_decay": 0.0,
+                                "sampler": "weighted",
+                                "objective": "logit_adjusted_cross_entropy",
+                                "logit_adjustment_tau": 1.0,
                             },
                         }
                     }
@@ -269,3 +288,13 @@ def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: P
     assert "### tomato / leaf" in automatic_wins
     assert "run_a_run" in automatic_wins
     assert "0.9300" in automatic_wins
+    assert "#### Winner Config Highlights" in automatic_wins
+    assert "label smoothing `0.1000`" in automatic_wins
+    assert "energy temperature `auto`" in automatic_wins
+    assert "ReAct `on (percentile 0.9800)`" in automatic_wins
+    assert "augmentation `augmix (severity 3, width 3, alpha 1.0000)`" in automatic_wins
+    assert (
+        "classifier rebalance `on (logit_adjusted_cross_entropy, sampler weighted, epochs 3, tau 1.0000)`"
+        in automatic_wins
+    )
+    assert "OE `on (uniform, weight 0.5000)`" in automatic_wins

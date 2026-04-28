@@ -243,10 +243,11 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
     trainer.set_eval_mode()
     with torch.inference_mode():
         features = trainer.encode(images.to(trainer.device, non_blocking=True))
-        logits = trainer.classifier(features)
+        score_features = trainer.prepare_features_for_scoring(features)
+        logits = trainer.classifier(score_features)
         probs = torch.softmax(logits, dim=1)
         confidence, indices = probs.max(dim=1)
-        ood = trainer.ood_detector.score(features=features, logits=logits, predicted_labels=indices)
+        ood = trainer.ood_detector.score(features=score_features, logits=logits, predicted_labels=indices)
 
     if trainer._class_index_cache_stale():
         trainer._refresh_class_index_cache()
@@ -309,7 +310,7 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
     if trainer.ood_detector.conformal_enabled:
         with torch.inference_mode():
             conformal_set = trainer.ood_detector.build_conformal_set(
-                features[0],
+                score_features[0],
                 logits[0],
                 trainer._idx_to_class,
             )

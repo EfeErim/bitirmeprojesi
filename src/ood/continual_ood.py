@@ -142,6 +142,10 @@ class ContinualOODDetector:
         energy_temperature_mode: str = "fixed",
         energy_temperature_range: Tuple[float, float] = (0.5, 3.0),
         energy_temperature_steps: int = 16,
+        react_enabled: bool = False,
+        react_percentile: float = 0.99,
+        react_apply_during_calibration: bool = True,
+        react_apply_during_inference: bool = True,
     ) -> None:
         self.threshold_factor = float(threshold_factor)
         self.primary_score_method = normalize_primary_score_method(primary_score_method)
@@ -175,6 +179,11 @@ class ContinualOODDetector:
             normalize_temperature(float(energy_temperature_range[1])),
         )
         self.energy_temperature_steps = int(energy_temperature_steps)
+        self.react_enabled = bool(react_enabled)
+        self.react_percentile = float(react_percentile)
+        self.react_apply_during_calibration = bool(react_apply_during_calibration)
+        self.react_apply_during_inference = bool(react_apply_during_inference)
+        self.react_threshold: Optional[float] = None
 
     @staticmethod
     def _safe_std(value: torch.Tensor) -> torch.Tensor:
@@ -201,6 +210,9 @@ class ContinualOODDetector:
         knn_chunk_size: int,
         conformal_method: str,
         energy_temperature: float,
+        react_enabled: bool,
+        react_percentile: float,
+        react_threshold: Optional[float],
     ) -> Dict[str, float | str]:
         result: Dict[str, float | str] = {
             "num_classes": float(class_count),
@@ -213,7 +225,11 @@ class ContinualOODDetector:
             "conformal_method": str(conformal_method),
             "conformal_method_description": describe_conformal_method(conformal_method),
             "energy_temperature": float(energy_temperature),
+            "react_enabled": bool(react_enabled),
+            "react_percentile": float(react_percentile),
         }
+        if react_threshold is not None:
+            result["react_threshold"] = float(react_threshold)
         if radial_beta is not None:
             result["radial_beta"] = float(radial_beta)
         if conformal_qhat is not None:
@@ -311,6 +327,28 @@ class ContinualOODDetector:
         if self.radial_l2_enabled and self.radial_beta is not None:
             return radial_l2_normalize(features, self.radial_beta)
         return features
+
+    def fit_react_threshold(self, features: torch.Tensor) -> Optional[float]:
+        if not self.react_enabled or features.numel() <= 0:
+            self.react_threshold = None
+            return None
+        clipped_percentile = min(1.0, max(_FLOAT_EPS, float(self.react_percentile)))
+        threshold = float(torch.quantile(features.detach().to(dtype=torch.float32), clipped_percentile).item())
+        self.react_threshold = threshold
+        return threshold
+
+    def _maybe_reactify(
+        self,
+        features: torch.Tensor,
+        *,
+        apply: bool,
+    ) -> torch.Tensor:
+        if not self.react_enabled or not apply or self.react_threshold is None:
+            return features
+        return torch.clamp(features, max=float(self.react_threshold))
+
+    def apply_inference_adjustments(self, features: torch.Tensor) -> torch.Tensor:
+        return self._maybe_reactify(features, apply=self.react_apply_during_inference)
 
     def _class_distances(self, features: torch.Tensor, stats: ClassCalibration) -> torch.Tensor:
         mean, var = self._stats_on_input_device(stats, features)
@@ -485,7 +523,9 @@ class ContinualOODDetector:
         if class_id not in self.class_stats:
             return self._default_score_batch(count=batch_size, device=features.device)
 
-        score_features = self._maybe_normalize(features)
+        score_features = self._maybe_normalize(
+            self._maybe_reactify(features, apply=self.react_apply_during_inference)
+        )
         stats = self.class_stats[class_id]
         distance = self._class_distances(score_features, stats).to(dtype=torch.float32)
         energy = self._energy(logits).to(dtype=torch.float32)
@@ -585,6 +625,9 @@ class ContinualOODDetector:
             labels = labels.reshape(-1)
 
         self._maybe_calibrate_energy_temperature(logits, labels)
+        if self.react_enabled:
+            self.fit_react_threshold(features)
+            features = self._maybe_reactify(features, apply=self.react_apply_during_calibration)
 
         if self.radial_l2_enabled:
             self.radial_beta = auto_tune_beta(
@@ -729,6 +772,9 @@ class ContinualOODDetector:
             knn_chunk_size=self.knn_chunk_size,
             conformal_method=self.conformal_method,
             energy_temperature=self.energy_temperature,
+            react_enabled=self.react_enabled,
+            react_percentile=self.react_percentile,
+            react_threshold=self.react_threshold,
         )
 
     def _score_class(self, class_id: int, feature: torch.Tensor, logit: torch.Tensor) -> Dict[str, Any]:
@@ -772,9 +818,13 @@ class ContinualOODDetector:
             return []
 
         if features.ndim == 1:
-            feat = self._maybe_normalize(features.unsqueeze(0)).squeeze(0)
+            feat = self._maybe_normalize(
+                self._maybe_reactify(features.unsqueeze(0), apply=self.react_apply_during_inference)
+            ).squeeze(0)
         else:
-            feat = self._maybe_normalize(features)
+            feat = self._maybe_normalize(
+                self._maybe_reactify(features, apply=self.react_apply_during_inference)
+            )
 
         return build_prediction_set(
             features=feat,

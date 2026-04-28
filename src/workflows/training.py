@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequence
 
+import torch
+
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
@@ -135,6 +137,21 @@ _FINAL_HISTORY_METRICS = (
 def _collect_final_metrics(history_payload: Dict[str, Any]) -> Dict[str, float]:
     final_metrics = {key: _last_history_value(history_payload, key) for key in _FINAL_HISTORY_METRICS}
     return {key: value for key, value in final_metrics.items() if value is not None}
+
+
+def _evaluation_metrics_summary(evaluation_payload: Any) -> Dict[str, float]:
+    report = getattr(evaluation_payload, "report", None)
+    if report is None:
+        return {}
+    return {
+        "val_loss": float(getattr(report, "val_loss", 0.0)),
+        "val_accuracy": float(getattr(report, "val_accuracy", 0.0)),
+        "macro_precision": float(getattr(report, "macro_precision", 0.0)),
+        "macro_recall": float(getattr(report, "macro_recall", 0.0)),
+        "macro_f1": float(getattr(report, "macro_f1", 0.0)),
+        "weighted_f1": float(getattr(report, "weighted_f1", 0.0)),
+        "balanced_accuracy": float(getattr(report, "balanced_accuracy", 0.0)),
+    }
 
 
 def _sha256_file(path: Path) -> str:
@@ -579,6 +596,122 @@ class TrainingWorkflow:
             trainer=getattr(session, "trainer", None),
         )
 
+    @staticmethod
+    def _configure_optional_training_pools(*, trainer: Any, loaders: Dict[str, Any]) -> None:
+        if trainer is None:
+            return
+        set_oe_loader = getattr(trainer, "set_oe_loader", None)
+        if callable(set_oe_loader):
+            set_oe_loader(loaders.get("ood_aux"))
+
+    @staticmethod
+    def _build_oe_context(*, trainer: Any, loaders: Dict[str, Any]) -> Dict[str, Any]:
+        if trainer is None:
+            return {}
+        config = getattr(trainer, "config", None)
+        if config is None:
+            return {}
+        oe_loader = loaders.get("ood_aux")
+        dataset = getattr(oe_loader, "dataset", None) if oe_loader is not None else None
+        split_root = getattr(dataset, "split_root", None)
+        return {
+            "enabled": bool(getattr(config, "oe_enabled", False)),
+            "loss_weight": float(getattr(config, "oe_loss_weight", 0.0)),
+            "target": str(getattr(config, "oe_target", "uniform")),
+            "sample_count": int(loader_size(oe_loader)) if oe_loader is not None else 0,
+            "source_root": str(split_root) if split_root is not None else str(getattr(config, "oe_root", "") or ""),
+        }
+
+    @staticmethod
+    def _build_classifier_rebalance_log_priors(trainer: Any) -> Optional[torch.Tensor]:
+        runtime = dict(getattr(trainer, "class_balance_runtime", {}) or {})
+        counts_by_class = dict(runtime.get("resolved_class_counts", {}) or {})
+        class_to_idx = dict(getattr(trainer, "class_to_idx", {}) or {})
+        if not counts_by_class or not class_to_idx:
+            return None
+        ordered_counts: List[float] = []
+        for class_name, _idx in sorted(class_to_idx.items(), key=lambda item: int(item[1])):
+            count = float(counts_by_class.get(class_name, 0) or 0)
+            if count <= 0.0:
+                return None
+            ordered_counts.append(count)
+        priors = torch.tensor(ordered_counts, dtype=torch.float32)
+        priors = priors / priors.sum().clamp_min(1e-6)
+        return torch.log(priors.clamp_min(1e-6))
+
+    def _run_classifier_rebalance(
+        self,
+        *,
+        adapter: IndependentCropAdapter,
+        trainer: Any,
+        loaders: Dict[str, Any],
+        training_cfg: Dict[str, Any],
+        colab_cfg: Dict[str, Any],
+        telemetry: Any,
+        run_id: str,
+    ) -> tuple[Any, Dict[str, Any], str, Any, Dict[str, Any], bool]:
+        rebalance_cfg = dict(training_cfg.get("classifier_rebalance", {}))
+        if trainer is None or not bool(rebalance_cfg.get("enabled", False)):
+            return trainer, {}, "", None, {}, False
+
+        train_loader = loaders.get("train")
+        if train_loader is None or loader_size(train_loader) <= 0:
+            return trainer, {}, "", None, {}, False
+
+        log_priors = self._build_classifier_rebalance_log_priors(trainer)
+        trainer.configure_classifier_rebalance_stage(log_priors=log_priors)
+        trainer.set_stage_optimizer_override(
+            learning_rate=float(rebalance_cfg.get("learning_rate", 5e-5)),
+            weight_decay=float(rebalance_cfg.get("weight_decay", 0.0)),
+        )
+        trainer.setup_stage_optimizer()
+        self._configure_optional_training_pools(trainer=trainer, loaders=loaders)
+        self._emit_telemetry(
+            telemetry,
+            "classifier_rebalance_started",
+            {
+                "run_id": run_id,
+                "epochs": int(rebalance_cfg.get("epochs", 3)),
+                "sampler": str(rebalance_cfg.get("sampler", "weighted")),
+                "objective": str(rebalance_cfg.get("objective", "logit_adjusted_cross_entropy")),
+            },
+            phase="training",
+        )
+        rebalance_session = adapter.build_training_session(
+            train_loader=train_loader,
+            num_epochs=int(rebalance_cfg.get("epochs", 3)),
+            val_loader=loaders.get("val"),
+            run_id=f"{run_id}__classifier_rebalance",
+            validation_every_n_epochs=int(colab_cfg.get("validation_every_n_epochs", 1)),
+        )
+        rebalance_history = rebalance_session.run()
+        restore_best_state = getattr(rebalance_session, "restore_best_model_state", None)
+        rebalance_best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
+        calibration_split_name, calibration_loader = select_calibration_source(loaders, build_loader_sizes(loaders))
+        rebalance_calibration = (
+            adapter.calibrate_ood(calibration_loader)
+            if calibration_loader is not None and loader_size(calibration_loader) > 0
+            else {}
+        )
+        self._emit_telemetry(
+            telemetry,
+            "classifier_rebalance_completed",
+            {
+                "run_id": run_id,
+                "best_state_restored": rebalance_best_state_restored,
+                "calibration_split_name": calibration_split_name,
+            },
+            phase="training",
+        )
+        return (
+            getattr(rebalance_session, "trainer", trainer),
+            dict(rebalance_history.to_dict()),
+            calibration_split_name,
+            calibration_loader,
+            dict(rebalance_calibration),
+            rebalance_best_state_restored,
+        )
+
     def _persist_training_artifacts(
         self,
         *,
@@ -904,6 +1037,14 @@ class TrainingWorkflow:
             validation_every_n_epochs=validation_every_n_epochs,
             artifact_dir=artifact_dir,
         )
+        trainer_for_session = getattr(session, "trainer", None)
+        self._configure_optional_training_pools(trainer=trainer_for_session, loaders=loaders)
+        oe_context = self._build_oe_context(trainer=trainer_for_session, loaders=loaders)
+        if oe_context.get("enabled") and int(oe_context.get("sample_count", 0)) <= 0:
+            raise ValueError(
+                "training.continual.ood.oe_enabled requires a separate auxiliary unknown pool under "
+                "runtime_dataset/ood_aux or an explicit training.continual.ood.oe_root."
+            )
 
         self._emit_telemetry(
             telemetry,
@@ -942,6 +1083,49 @@ class TrainingWorkflow:
             loaders=loaders,
         )
         split_evaluations = split_evaluation_stage.as_dict()
+        pre_rebalance_metrics = {
+            split_name: _evaluation_metrics_summary(payload)
+            for split_name, payload in split_evaluations.items()
+            if payload is not None
+        }
+        classifier_rebalance_cfg = dict(training_cfg.get("classifier_rebalance", {}))
+        classifier_rebalance_context: Dict[str, Any] = {
+            "enabled": bool(classifier_rebalance_cfg.get("enabled", False)),
+            "objective": str(classifier_rebalance_cfg.get("objective", "") or ""),
+            "sampler": str(classifier_rebalance_cfg.get("sampler", "") or ""),
+            "epochs": int(classifier_rebalance_cfg.get("epochs", 0) or 0),
+            "pre_rebalance_metrics": pre_rebalance_metrics,
+        }
+        if classifier_rebalance_context["enabled"]:
+            (
+                trainer_for_artifacts,
+                rebalance_history_payload,
+                calibration_split_name,
+                calibration_loader,
+                ood_calibration,
+                rebalance_best_state_restored,
+            ) = self._run_classifier_rebalance(
+                adapter=adapter,
+                trainer=trainer_for_artifacts,
+                loaders=loaders,
+                training_cfg=training_cfg,
+                colab_cfg=colab_cfg,
+                telemetry=telemetry,
+                run_id=run_id,
+            )
+            if rebalance_history_payload:
+                classifier_rebalance_context["history"] = rebalance_history_payload
+            split_evaluation_stage = self._collect_split_evaluations(
+                trainer=trainer_for_artifacts,
+                loaders=loaders,
+            )
+            split_evaluations = split_evaluation_stage.as_dict()
+            classifier_rebalance_context["post_rebalance_metrics"] = {
+                split_name: _evaluation_metrics_summary(payload)
+                for split_name, payload in split_evaluations.items()
+                if payload is not None
+            }
+            best_state_restored = bool(best_state_restored or rebalance_best_state_restored)
         real_ood_present = loader_size(loaders.get("ood")) > 0
         primary_score_stage = _PrimaryScoreSelectionStage(
             requested_method=normalize_requested_primary_score_method(
@@ -1080,6 +1264,8 @@ class TrainingWorkflow:
             selection_source=primary_score_stage.selection_source,
             ood_benchmark=ood_benchmark,
             ood_method_comparison=ood_method_comparison_context,
+            oe_context=oe_context,
+            classifier_rebalance=classifier_rebalance_context,
         )
         record_adapter_export_metadata_payload(
             adapter,
@@ -1152,6 +1338,7 @@ class TrainingWorkflow:
             loss_name=str(training_cfg.get("optimization", {}).get("loss_name", "cross_entropy")),
             logitnorm_tau=float(training_cfg.get("optimization", {}).get("logitnorm_tau", 1.0)),
             final_metrics=_collect_final_metrics(history_payload),
+            classifier_rebalance=classifier_rebalance_context,
         )
         summary_artifacts = persist_training_summary_artifact(
             artifact_root=artifact_dir,
@@ -1196,6 +1383,8 @@ class TrainingWorkflow:
                 "ood_primary_score_selection_source": selection_source,
                 "ood_evidence_source": ood_evidence_source,
                 "train_sampler": sampler_runtime,
+                "oe": oe_context,
+                "classifier_rebalance": classifier_rebalance_context,
             },
             "production_readiness_status": production_readiness.get("status"),
         }

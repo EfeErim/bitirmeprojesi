@@ -45,6 +45,7 @@ from src.training.services.persistence import (
 )
 from src.training.services.runtime import (
     autocast_context,
+    build_adamw_optimizer,
     build_grad_scaler,
     build_idx_to_class,
     compute_grad_norm,
@@ -230,11 +231,15 @@ class ContinualSDLoRAConfig:
     ber_lambda_old: float = 0.1
     ber_lambda_new: float = 0.1
     ber_warmup_steps: int = 50
-    energy_temperature_mode: str = "fixed"
+    energy_temperature_mode: str = "auto"
     energy_temperature: float = 1.0
     energy_temperature_min: float = 0.5
     energy_temperature_max: float = 3.0
     energy_temperature_steps: int = 16
+    react_enabled: bool = False
+    react_percentile: float = 0.99
+    react_apply_during_calibration: bool = True
+    react_apply_during_inference: bool = True
     # --- Radially Scaled L2 Normalization ---
     radial_l2_enabled: bool = True
     radial_beta_min: float = 0.5
@@ -252,6 +257,17 @@ class ContinualSDLoRAConfig:
     conformal_method: str = "threshold"
     conformal_raps_lambda: float = 0.0
     conformal_raps_k_reg: int = 1
+    oe_enabled: bool = False
+    oe_loss_weight: float = 0.5
+    oe_target: str = "uniform"
+    oe_root: str = ""
+    classifier_rebalance_enabled: bool = False
+    classifier_rebalance_epochs: int = 3
+    classifier_rebalance_learning_rate: float = 5e-5
+    classifier_rebalance_weight_decay: float = 0.0
+    classifier_rebalance_sampler: str = "weighted"
+    classifier_rebalance_objective: str = "logit_adjusted_cross_entropy"
+    classifier_rebalance_logit_adjustment_tau: float = 1.0
     extra: Dict[str, Any] = field(default_factory=dict)
 
     def validate(self) -> None:
@@ -308,6 +324,8 @@ class ContinualSDLoRAConfig:
             raise ValueError("energy_temperature_min must be less than or equal to energy_temperature_max.")
         if self.energy_temperature_steps < 2:
             raise ValueError("energy_temperature_steps must be at least 2.")
+        if not (0.0 < self.react_percentile <= 1.0):
+            raise ValueError("react_percentile must be in (0, 1].")
         if self.radial_beta_min <= 0.0 or self.radial_beta_max <= 0.0:
             raise ValueError("Radial beta range values must be positive.")
         if self.radial_beta_min >= self.radial_beta_max:
@@ -326,6 +344,22 @@ class ContinualSDLoRAConfig:
             raise ValueError("conformal_raps_lambda must be non-negative.")
         if self.conformal_raps_k_reg < 1:
             raise ValueError("conformal_raps_k_reg must be at least 1.")
+        if self.oe_loss_weight < 0.0:
+            raise ValueError("oe_loss_weight must be non-negative.")
+        if self.oe_target not in {"uniform"}:
+            raise ValueError("oe_target must be 'uniform'.")
+        if self.classifier_rebalance_epochs < 1:
+            raise ValueError("classifier_rebalance_epochs must be at least 1.")
+        if self.classifier_rebalance_learning_rate <= 0.0:
+            raise ValueError("classifier_rebalance_learning_rate must be positive.")
+        if self.classifier_rebalance_sampler not in {"weighted", "shuffle", "auto"}:
+            raise ValueError("classifier_rebalance_sampler must be one of: auto, shuffle, weighted.")
+        if self.classifier_rebalance_objective not in {"cross_entropy", "logit_adjusted_cross_entropy"}:
+            raise ValueError(
+                "classifier_rebalance_objective must be one of: cross_entropy, logit_adjusted_cross_entropy."
+            )
+        if self.classifier_rebalance_logit_adjustment_tau < 0.0:
+            raise ValueError("classifier_rebalance_logit_adjustment_tau must be non-negative.")
         if not (0.0 < self.sure_semantic_percentile <= 100.0):
             raise ValueError("sure_semantic_percentile must be in (0, 100].")
         if not (0.0 < self.sure_confidence_percentile <= 100.0):
@@ -358,6 +392,10 @@ class ContinualSDLoRAConfig:
                 "energy_temperature": self.energy_temperature,
                 "energy_temperature_range": [self.energy_temperature_min, self.energy_temperature_max],
                 "energy_temperature_steps": self.energy_temperature_steps,
+                "react_enabled": self.react_enabled,
+                "react_percentile": self.react_percentile,
+                "react_apply_during_calibration": self.react_apply_during_calibration,
+                "react_apply_during_inference": self.react_apply_during_inference,
                 "radial_l2_enabled": self.radial_l2_enabled,
                 "radial_beta_range": [self.radial_beta_min, self.radial_beta_max],
                 "radial_beta_steps": self.radial_beta_steps,
@@ -371,6 +409,19 @@ class ContinualSDLoRAConfig:
                 "conformal_method": self.conformal_method,
                 "conformal_raps_lambda": self.conformal_raps_lambda,
                 "conformal_raps_k_reg": self.conformal_raps_k_reg,
+                "oe_enabled": self.oe_enabled,
+                "oe_loss_weight": self.oe_loss_weight,
+                "oe_target": self.oe_target,
+                "oe_root": self.oe_root,
+            },
+            "classifier_rebalance": {
+                "enabled": self.classifier_rebalance_enabled,
+                "epochs": self.classifier_rebalance_epochs,
+                "learning_rate": self.classifier_rebalance_learning_rate,
+                "weight_decay": self.classifier_rebalance_weight_decay,
+                "sampler": self.classifier_rebalance_sampler,
+                "objective": self.classifier_rebalance_objective,
+                "logit_adjustment_tau": self.classifier_rebalance_logit_adjustment_tau,
             },
             "learning_rate": self.learning_rate,
             "weight_decay": self.weight_decay,
@@ -429,6 +480,7 @@ class ContinualSDLoRAConfig:
         scheduler = optimization.get("scheduler", {}) if isinstance(optimization, dict) else {}
         early_stopping = normalized.get("early_stopping", {})
         evaluation = normalized.get("evaluation", {})
+        classifier_rebalance = normalized.get("classifier_rebalance", {})
         radial_beta_min, radial_beta_max = _resolve_radial_beta_range(ood)
         raw_energy_temperature_range = list(ood.get("energy_temperature_range", [0.5, 3.0]))
         if len(raw_energy_temperature_range) < 2:
@@ -467,6 +519,10 @@ class ContinualSDLoRAConfig:
             energy_temperature_min=float(raw_energy_temperature_range[0]),
             energy_temperature_max=float(raw_energy_temperature_range[1]),
             energy_temperature_steps=int(ood.get("energy_temperature_steps", 16)),
+            react_enabled=bool(ood.get("react_enabled", False)),
+            react_percentile=float(ood.get("react_percentile", 0.99)),
+            react_apply_during_calibration=bool(ood.get("react_apply_during_calibration", True)),
+            react_apply_during_inference=bool(ood.get("react_apply_during_inference", True)),
             radial_l2_enabled=bool(ood.get("radial_l2_enabled", True)),
             radial_beta_min=radial_beta_min,
             radial_beta_max=radial_beta_max,
@@ -481,6 +537,21 @@ class ContinualSDLoRAConfig:
             conformal_method=str(ood.get("conformal_method", "threshold")),
             conformal_raps_lambda=float(ood.get("conformal_raps_lambda", 0.0)),
             conformal_raps_k_reg=int(ood.get("conformal_raps_k_reg", 1)),
+            oe_enabled=bool(ood.get("oe_enabled", False)),
+            oe_loss_weight=float(ood.get("oe_loss_weight", 0.5)),
+            oe_target=str(ood.get("oe_target", "uniform")),
+            oe_root=str(ood.get("oe_root", "") or ""),
+            classifier_rebalance_enabled=bool(classifier_rebalance.get("enabled", False)),
+            classifier_rebalance_epochs=int(classifier_rebalance.get("epochs", 3)),
+            classifier_rebalance_learning_rate=float(classifier_rebalance.get("learning_rate", 5e-5)),
+            classifier_rebalance_weight_decay=float(classifier_rebalance.get("weight_decay", 0.0)),
+            classifier_rebalance_sampler=str(classifier_rebalance.get("sampler", "weighted")),
+            classifier_rebalance_objective=str(
+                classifier_rebalance.get("objective", "logit_adjusted_cross_entropy")
+            ),
+            classifier_rebalance_logit_adjustment_tau=float(
+                classifier_rebalance.get("logit_adjustment_tau", 1.0)
+            ),
             seed=int(normalized.get("seed", 42)),
             deterministic=bool(normalized.get("deterministic", True)),
             grad_accumulation_steps=int(optimization.get("grad_accumulation_steps", 4)),
@@ -547,6 +618,10 @@ class ContinualSDLoRATrainer:
             energy_temperature_mode=self.config.energy_temperature_mode,
             energy_temperature_range=(self.config.energy_temperature_min, self.config.energy_temperature_max),
             energy_temperature_steps=self.config.energy_temperature_steps,
+            react_enabled=self.config.react_enabled,
+            react_percentile=self.config.react_percentile,
+            react_apply_during_calibration=self.config.react_apply_during_calibration,
+            react_apply_during_inference=self.config.react_apply_during_inference,
         )
         self.ber_loss: Optional[BERLoss] = None
         self._is_initialized = False
@@ -562,12 +637,17 @@ class ContinualSDLoRATrainer:
         self._idx_to_class: Dict[int, str] = {}
         self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
         self._ood_calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self._oe_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self._oe_loader_iter: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self._active_training_stage = "main"
+        self._optimizer_override: Optional[Dict[str, float]] = None
         self.class_balance_runtime = (
             dict(self.config.extra.get("class_balance", {}))
             if isinstance(self.config.extra.get("class_balance"), dict)
             else {}
         )
         self.class_balance_weights: Optional[torch.Tensor] = None
+        self._classifier_rebalance_log_priors: Optional[torch.Tensor] = None
         configure_runtime_reproducibility(self.config, np_module=np)
         self._refresh_class_index_cache()
 
@@ -617,6 +697,25 @@ class ContinualSDLoRATrainer:
 
     def set_preferred_ood_calibration_loader(self, loader: Iterable[Dict[str, torch.Tensor]]) -> None:
         self._ood_calibration_loader = loader
+
+    def set_oe_loader(self, loader: Optional[Iterable[Dict[str, torch.Tensor]]]) -> None:
+        self._oe_loader = loader
+        self._oe_loader_iter = None
+
+    def _next_oe_batch(self) -> Optional[Dict[str, torch.Tensor]]:
+        if not self.config.oe_enabled or self._oe_loader is None:
+            return None
+        if self._oe_loader_iter is None:
+            self._oe_loader_iter = iter(self._oe_loader)
+        try:
+            batch = next(self._oe_loader_iter)
+        except StopIteration:
+            self._oe_loader_iter = iter(self._oe_loader)
+            try:
+                batch = next(self._oe_loader_iter)
+            except StopIteration:
+                return None
+        return dict(batch)
 
     def _ensure_ood_calibrated(self, *, operation: str) -> None:
         issue = self.ood_detector.calibration_issue()
@@ -795,11 +894,38 @@ class ContinualSDLoRATrainer:
         selected = select_multiscale_features(states, self.config.fusion_layers)
         return self.fusion(selected)
 
-    def forward_logits(self, images: torch.Tensor) -> torch.Tensor:
+    def prepare_features_for_scoring(self, features: torch.Tensor) -> torch.Tensor:
+        return self.ood_detector.apply_inference_adjustments(features)
+
+    def forward_logits(self, images: torch.Tensor, *, apply_scoring_adjustments: bool = False) -> torch.Tensor:
         if self.classifier is None:
             raise RuntimeError("Classifier is not initialized.")
         features = self.encode(images)
+        if apply_scoring_adjustments:
+            features = self.prepare_features_for_scoring(features)
         return self.classifier(features)
+
+    def _logit_adjusted_logits(self, logits: torch.Tensor) -> torch.Tensor:
+        priors = self._classifier_rebalance_log_priors
+        if priors is None:
+            return logits
+        adjustment = priors.to(device=logits.device, dtype=logits.dtype) * float(
+            self.config.classifier_rebalance_logit_adjustment_tau
+        )
+        return logits + adjustment
+
+    def _compute_oe_uniform_loss(self, aux_logits: torch.Tensor) -> torch.Tensor:
+        log_probs = torch.log_softmax(aux_logits, dim=1)
+        return -log_probs.mean(dim=1).mean()
+
+    def _compute_classifier_rebalance_loss(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        objective = str(self.config.classifier_rebalance_objective)
+        adjusted_logits = (
+            self._logit_adjusted_logits(logits)
+            if objective == "logit_adjusted_cross_entropy"
+            else logits
+        )
+        return nn.functional.cross_entropy(adjusted_logits, labels)
 
     def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
         if self.optimizer is None:
@@ -807,7 +933,12 @@ class ContinualSDLoRATrainer:
         images = batch["images"].to(self.device, non_blocking=True)
         labels = batch["labels"].to(self.device, non_blocking=True)
         with autocast_context(self.device, self.config.mixed_precision):
-            logits = self.forward_logits(images)
+            try:
+                logits = self.forward_logits(images, apply_scoring_adjustments=False)
+            except TypeError:
+                logits = self.forward_logits(images)
+            if self._active_training_stage == "classifier_rebalance":
+                return self._compute_classifier_rebalance_loss(logits, labels)
             if self.ber_loss is not None:
                 total_loss, self._last_ber_components = self.ber_loss(
                     logits,
@@ -817,19 +948,27 @@ class ContinualSDLoRATrainer:
                 )
                 return total_loss
             if self.config.loss_name == "logitnorm":
-                return compute_logitnorm_loss(
+                total_loss = compute_logitnorm_loss(
                     logits,
                     labels,
                     tau=float(self.config.logitnorm_tau),
                     weight=self.class_balance_weights,
                     label_smoothing=float(self.config.label_smoothing),
                 )
-            return nn.functional.cross_entropy(
-                logits,
-                labels,
-                weight=self.class_balance_weights,
-                label_smoothing=float(self.config.label_smoothing),
-            )
+            else:
+                total_loss = nn.functional.cross_entropy(
+                    logits,
+                    labels,
+                    weight=self.class_balance_weights,
+                    label_smoothing=float(self.config.label_smoothing),
+                )
+            aux_batch = self._next_oe_batch()
+            if aux_batch is None or float(self.config.oe_loss_weight) <= 0.0:
+                return total_loss
+            aux_images = aux_batch["images"].to(self.device, non_blocking=True)
+            aux_logits = self.classifier(self.encode(aux_images))
+            oe_loss = self._compute_oe_uniform_loss(aux_logits)
+            return total_loss + (float(self.config.oe_loss_weight) * oe_loss)
 
     def set_train_mode(self) -> None:
         self._set_module_training_mode(training=True)
@@ -857,6 +996,45 @@ class ContinualSDLoRATrainer:
     def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
         self._ood_calibration_loader = loader
         return calibrate_trainer_ood(self, loader)
+
+    def configure_classifier_rebalance_stage(self, *, log_priors: Optional[torch.Tensor] = None) -> None:
+        if self.adapter_model is None or self.classifier is None or self.fusion is None:
+            raise RuntimeError("Classifier rebalance requires an initialized engine.")
+        self._active_training_stage = "classifier_rebalance"
+        for module in (self.adapter_model, self.fusion):
+            for parameter in module.parameters():
+                parameter.requires_grad = False
+        for parameter in self.classifier.parameters():
+            parameter.requires_grad = True
+        self._classifier_rebalance_log_priors = None if log_priors is None else log_priors.detach().clone()
+        self._trainable_params_cache = None
+        self.optimizer = None
+        self.scheduler = None
+        self._accumulation_counter = 0
+
+    def set_stage_optimizer_override(self, *, learning_rate: float, weight_decay: float) -> None:
+        self._optimizer_override = {
+            "learning_rate": float(learning_rate),
+            "weight_decay": float(weight_decay),
+        }
+
+    def setup_stage_optimizer(self) -> None:
+        if self.classifier is None:
+            raise RuntimeError("Classifier is not initialized.")
+        override = dict(self._optimizer_override or {})
+        lr = float(override.get("learning_rate", self.config.learning_rate))
+        weight_decay = float(override.get("weight_decay", self.config.weight_decay))
+        params = [parameter for parameter in self.classifier.parameters() if parameter.requires_grad]
+        self.optimizer = build_adamw_optimizer(
+            params,
+            lr=lr,
+            weight_decay=weight_decay,
+            device=self.device,
+        )
+        self.scheduler = None
+        self.scaler = build_grad_scaler(self.device, self.config.mixed_precision)
+        self.optimizer.zero_grad(set_to_none=True)
+        self._last_grad_norm = 0.0
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
         return predict_with_ood_result(self, images)

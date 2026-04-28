@@ -30,6 +30,9 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
     assert continual["ood"]["primary_score_method"] == "auto"
+    assert continual["ood"]["energy_temperature_mode"] == "auto"
+    assert continual["ood"]["react_enabled"] is False
+    assert continual["ood"]["oe_enabled"] is False
     assert continual["seed"] == 42
     assert continual["batch_size"] == 96
     assert continual["learning_rate"] == 0.0002
@@ -46,10 +49,15 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["data"]["augmentation_policy"] == "randaugment"
     assert continual["data"]["randaugment_num_ops"] == 2
     assert continual["data"]["randaugment_magnitude"] == 7
+    assert continual["data"]["augmix_severity"] == 3
+    assert continual["data"]["augmix_width"] == 3
+    assert continual["data"]["augmix_depth"] == -1
+    assert continual["data"]["augmix_alpha"] == 1.0
     assert continual["data"]["allow_under_min_training"] is False
     assert continual["data"]["cache_size"] == 20000
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
+    assert continual["classifier_rebalance"]["enabled"] is False
 
 
 def test_extract_continual_training_config_normalizes_root_shape():
@@ -70,6 +78,9 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["primary_score_method"] == "auto"
     assert root_normalized["ood"]["threshold_factor"] == 3.0
     assert root_normalized["ood"]["ber_enabled"] is False
+    assert root_normalized["ood"]["energy_temperature_mode"] == "auto"
+    assert root_normalized["ood"]["react_enabled"] is False
+    assert root_normalized["ood"]["oe_enabled"] is False
     assert root_normalized["ood"]["sure_semantic_percentile"] == 90.0
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
     assert root_normalized["ood"]["real_split_enabled"] is True
@@ -82,6 +93,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["data"]["validate_images_on_init"] is False
     assert root_normalized["data"]["randaugment_num_ops"] == 2
     assert root_normalized["data"]["randaugment_magnitude"] == 7
+    assert root_normalized["data"]["augmix_severity"] == 3
     assert root_normalized["data"]["allow_under_min_training"] is False
 
 
@@ -164,6 +176,44 @@ def test_extract_continual_training_config_rejects_invalid_augmentation_policy()
 
     with pytest.raises(ValueError, match="augmentation_policy"):
         extract_continual_training_config(payload)
+
+
+def test_extract_continual_training_config_normalizes_augmix_oe_and_rebalance_fields():
+    payload = {
+        "training": {
+            "continual": {
+                "ood": {
+                    "react_enabled": True,
+                    "react_percentile": "0.975",
+                    "oe_enabled": True,
+                    "oe_loss_weight": "0.7",
+                    "oe_target": "uniform",
+                },
+                "data": {
+                    "augmentation_policy": "augmix",
+                    "augmix_severity": "4",
+                },
+                "classifier_rebalance": {
+                    "enabled": True,
+                    "epochs": "2",
+                    "learning_rate": "0.00005",
+                    "sampler": "weighted",
+                    "objective": "logit_adjusted_cross_entropy",
+                },
+            }
+        }
+    }
+
+    normalized = extract_continual_training_config(payload)
+
+    assert normalized["ood"]["react_enabled"] is True
+    assert normalized["ood"]["react_percentile"] == pytest.approx(0.975)
+    assert normalized["ood"]["oe_enabled"] is True
+    assert normalized["ood"]["oe_loss_weight"] == pytest.approx(0.7)
+    assert normalized["data"]["augmentation_policy"] == "augmix"
+    assert normalized["data"]["augmix_severity"] == 4
+    assert normalized["classifier_rebalance"]["enabled"] is True
+    assert normalized["classifier_rebalance"]["epochs"] == 2
 
 
 def test_extract_continual_training_config_normalizes_allow_under_min_training():

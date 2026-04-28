@@ -288,6 +288,11 @@ def build_experiment_manifest(
     dataset_context = dict(dataset_identity["dataset_context"])
     dataset_manifest = dict(dataset_identity["dataset_manifest"])
     manifest_ood = dict(dataset_manifest.get("ood", {})) if isinstance(dataset_manifest.get("ood"), Mapping) else {}
+    manifest_ood_aux = (
+        dict(dataset_manifest.get("ood_aux", {}))
+        if isinstance(dataset_manifest.get("ood_aux"), Mapping)
+        else {}
+    )
     model_family = _resolve_model_family(run_context)
     surface = _resolve_surface(summary, explicit_surface)
     resolved_created_at = str(_value_from_candidates(created_at, summary.get("created_at"), run_context.get("created_at")) or _utc_now_iso())
@@ -325,6 +330,11 @@ def build_experiment_manifest(
                 "image_count": _coerce_int(manifest_ood.get("image_count")),
                 "image_fingerprint": manifest_ood.get("image_fingerprint"),
             },
+            "ood_aux": {
+                "source_root": str(manifest_ood_aux.get("source_root", "") or ""),
+                "image_count": _coerce_int(manifest_ood_aux.get("image_count")),
+                "image_fingerprint": manifest_ood_aux.get("image_fingerprint"),
+            },
         },
         "runtime": _resolve_runtime_context(summary_payload=summary, run_context_payload=run_context),
         "artifacts": _resolve_artifact_paths(artifact_root),
@@ -351,6 +361,7 @@ def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> J
     adapter_cfg = _nested_dict(training_cfg, "adapter")
     fusion_cfg = _nested_dict(training_cfg, "fusion")
     ood_cfg = _nested_dict(training_cfg, "ood")
+    classifier_rebalance_cfg = _nested_dict(training_cfg, "classifier_rebalance")
     optimization_cfg = _nested_dict(training_cfg, "optimization")
     scheduler_cfg = _nested_dict(optimization_cfg, "scheduler")
     data_cfg = _nested_dict(training_cfg, "data")
@@ -370,6 +381,7 @@ def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> J
         "training.fusion.gating": fusion_cfg.get("gating"),
         "training.optimization.loss_name": optimization_cfg.get("loss_name"),
         "training.optimization.logitnorm_tau": _coerce_float(optimization_cfg.get("logitnorm_tau")),
+        "training.optimization.label_smoothing": _coerce_float(optimization_cfg.get("label_smoothing")),
         "training.optimization.grad_accumulation_steps": _coerce_int(optimization_cfg.get("grad_accumulation_steps")),
         "training.optimization.mixed_precision": optimization_cfg.get("mixed_precision"),
         "training.optimization.max_grad_norm": _coerce_float(optimization_cfg.get("max_grad_norm")),
@@ -379,6 +391,13 @@ def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> J
         "training.optimization.scheduler.step_on": scheduler_cfg.get("step_on"),
         "training.ood.threshold_factor": _coerce_float(ood_cfg.get("threshold_factor")),
         "training.ood.primary_score_method": ood_cfg.get("primary_score_method"),
+        "training.ood.energy_temperature_mode": ood_cfg.get("energy_temperature_mode"),
+        "training.ood.energy_temperature": _coerce_float(ood_cfg.get("energy_temperature")),
+        "training.ood.react_enabled": bool(ood_cfg.get("react_enabled", False)),
+        "training.ood.react_percentile": _coerce_float(ood_cfg.get("react_percentile")),
+        "training.ood.oe_enabled": bool(ood_cfg.get("oe_enabled", False)),
+        "training.ood.oe_loss_weight": _coerce_float(ood_cfg.get("oe_loss_weight")),
+        "training.ood.oe_target": ood_cfg.get("oe_target"),
         "training.ood.radial_l2_enabled": bool(ood_cfg.get("radial_l2_enabled", False)),
         "training.ood.radial_beta_range": list(ood_cfg.get("radial_beta_range", [])) if isinstance(ood_cfg.get("radial_beta_range"), list) else [],
         "training.ood.radial_beta_steps": _coerce_int(ood_cfg.get("radial_beta_steps")),
@@ -399,6 +418,19 @@ def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> J
         "training.data.augmentation_policy": data_cfg.get("augmentation_policy"),
         "training.data.randaugment_num_ops": _coerce_int(data_cfg.get("randaugment_num_ops")),
         "training.data.randaugment_magnitude": _coerce_int(data_cfg.get("randaugment_magnitude")),
+        "training.data.augmix_severity": _coerce_int(data_cfg.get("augmix_severity")),
+        "training.data.augmix_width": _coerce_int(data_cfg.get("augmix_width")),
+        "training.data.augmix_depth": _coerce_int(data_cfg.get("augmix_depth")),
+        "training.data.augmix_alpha": _coerce_float(data_cfg.get("augmix_alpha")),
+        "training.classifier_rebalance.enabled": bool(classifier_rebalance_cfg.get("enabled", False)),
+        "training.classifier_rebalance.epochs": _coerce_int(classifier_rebalance_cfg.get("epochs")),
+        "training.classifier_rebalance.learning_rate": _coerce_float(classifier_rebalance_cfg.get("learning_rate")),
+        "training.classifier_rebalance.weight_decay": _coerce_float(classifier_rebalance_cfg.get("weight_decay")),
+        "training.classifier_rebalance.sampler": classifier_rebalance_cfg.get("sampler"),
+        "training.classifier_rebalance.objective": classifier_rebalance_cfg.get("objective"),
+        "training.classifier_rebalance.logit_adjustment_tau": _coerce_float(
+            classifier_rebalance_cfg.get("logit_adjustment_tau")
+        ),
     }
     return {key: value for key, value in parameters.items() if value not in (None, "", [])}
 

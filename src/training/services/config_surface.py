@@ -11,7 +11,7 @@ DEFAULT_BACKBONE_MODEL_NAME = "facebook/dinov3-vitl16-pretrain-lvd1689m"
 DEFAULT_FUSION_LAYERS = [2, 5, 8, 11]
 DEFAULT_FUSION_OUTPUT_DIM = 768
 DEFAULT_DEVICE = "cuda"
-VALID_AUGMENTATION_POLICIES = {"none", "basic", "randaugment"}
+VALID_AUGMENTATION_POLICIES = {"none", "basic", "randaugment", "augmix"}
 
 
 def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[str, Any]:
@@ -36,10 +36,14 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "ber_lambda_old": 0.1,
             "ber_lambda_new": 0.1,
             "ber_warmup_steps": 50,
-            "energy_temperature_mode": "fixed",
+            "energy_temperature_mode": "auto",
             "energy_temperature": 1.0,
             "energy_temperature_range": [0.5, 3.0],
             "energy_temperature_steps": 16,
+            "react_enabled": False,
+            "react_percentile": 0.99,
+            "react_apply_during_calibration": True,
+            "react_apply_during_inference": True,
             "radial_l2_enabled": True,
             "radial_beta_range": [0.5, 2.0],
             "radial_beta_steps": 16,
@@ -57,6 +61,19 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "conformal_method": "raps",
             "conformal_raps_lambda": 0.2,
             "conformal_raps_k_reg": 1,
+            "oe_enabled": False,
+            "oe_loss_weight": 0.5,
+            "oe_target": "uniform",
+            "oe_root": "",
+        },
+        "classifier_rebalance": {
+            "enabled": False,
+            "epochs": 3,
+            "learning_rate": 5e-5,
+            "weight_decay": 0.0,
+            "sampler": "weighted",
+            "objective": "logit_adjusted_cross_entropy",
+            "logit_adjustment_tau": 1.0,
         },
         "optimization": {
             "grad_accumulation_steps": 4,
@@ -79,6 +96,10 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "augmentation_policy": "randaugment",
             "randaugment_num_ops": 2,
             "randaugment_magnitude": 7,
+            "augmix_severity": 3,
+            "augmix_width": 3,
+            "augmix_depth": -1,
+            "augmix_alpha": 1.0,
             "allow_under_min_training": False,
             "cache_size": 1000,
             "validate_images_on_init": False,
@@ -122,6 +143,7 @@ def normalize_continual_training_config(
     adapter = normalized.setdefault("adapter", {})
     fusion = normalized.setdefault("fusion", {})
     ood = normalized.setdefault("ood", {})
+    classifier_rebalance = normalized.setdefault("classifier_rebalance", {})
     optimization = normalized.setdefault("optimization", {})
     scheduler = optimization.setdefault("scheduler", {})
     data = normalized.setdefault("data", {})
@@ -156,13 +178,19 @@ def normalize_continual_training_config(
     ood["ber_lambda_old"] = float(ood.get("ber_lambda_old", 0.1))
     ood["ber_lambda_new"] = float(ood.get("ber_lambda_new", 0.1))
     ood["ber_warmup_steps"] = int(ood.get("ber_warmup_steps", 50))
-    ood["energy_temperature_mode"] = str(ood.get("energy_temperature_mode", "fixed"))
+    ood["energy_temperature_mode"] = str(ood.get("energy_temperature_mode", "auto"))
     ood["energy_temperature"] = float(ood.get("energy_temperature", 1.0))
     raw_energy_range = list(ood.get("energy_temperature_range", [0.5, 3.0]))
     if len(raw_energy_range) < 2:
         raw_energy_range = [0.5, 3.0]
     ood["energy_temperature_range"] = [float(raw_energy_range[0]), float(raw_energy_range[1])]
     ood["energy_temperature_steps"] = int(ood.get("energy_temperature_steps", 16))
+    ood["react_enabled"] = bool(ood.get("react_enabled", False))
+    ood["react_percentile"] = float(ood.get("react_percentile", 0.99))
+    if not 0.0 < ood["react_percentile"] <= 1.0:
+        raise ValueError("training.continual.ood.react_percentile must be in (0, 1].")
+    ood["react_apply_during_calibration"] = bool(ood.get("react_apply_during_calibration", True))
+    ood["react_apply_during_inference"] = bool(ood.get("react_apply_during_inference", True))
     ood["radial_l2_enabled"] = bool(ood.get("radial_l2_enabled", True))
     raw_beta_range = list(ood.get("radial_beta_range", [0.5, 2.0]))
     if len(raw_beta_range) < 2:
@@ -185,6 +213,41 @@ def normalize_continual_training_config(
     ood["conformal_method"] = str(ood.get("conformal_method", "raps"))
     ood["conformal_raps_lambda"] = float(ood.get("conformal_raps_lambda", 0.2))
     ood["conformal_raps_k_reg"] = int(ood.get("conformal_raps_k_reg", 1))
+    ood["oe_enabled"] = bool(ood.get("oe_enabled", False))
+    ood["oe_loss_weight"] = float(ood.get("oe_loss_weight", 0.5))
+    if ood["oe_loss_weight"] < 0.0:
+        raise ValueError("training.continual.ood.oe_loss_weight must be non-negative.")
+    ood["oe_target"] = str(ood.get("oe_target", "uniform")).strip().lower()
+    if ood["oe_target"] not in {"uniform"}:
+        raise ValueError("training.continual.ood.oe_target must be 'uniform'.")
+    ood["oe_root"] = str(ood.get("oe_root", "") or "")
+
+    classifier_rebalance["enabled"] = bool(classifier_rebalance.get("enabled", False))
+    classifier_rebalance["epochs"] = int(classifier_rebalance.get("epochs", 3))
+    if classifier_rebalance["epochs"] < 1:
+        raise ValueError("training.continual.classifier_rebalance.epochs must be at least 1.")
+    classifier_rebalance["learning_rate"] = float(classifier_rebalance.get("learning_rate", 5e-5))
+    if classifier_rebalance["learning_rate"] <= 0.0:
+        raise ValueError("training.continual.classifier_rebalance.learning_rate must be positive.")
+    classifier_rebalance["weight_decay"] = float(classifier_rebalance.get("weight_decay", 0.0))
+    classifier_rebalance["sampler"] = str(classifier_rebalance.get("sampler", "weighted")).strip().lower()
+    if classifier_rebalance["sampler"] not in {"weighted", "shuffle", "auto"}:
+        raise ValueError(
+            "training.continual.classifier_rebalance.sampler must be one of: auto, shuffle, weighted."
+        )
+    classifier_rebalance["objective"] = str(
+        classifier_rebalance.get("objective", "logit_adjusted_cross_entropy")
+    ).strip().lower()
+    if classifier_rebalance["objective"] not in {"cross_entropy", "logit_adjusted_cross_entropy"}:
+        raise ValueError(
+            "training.continual.classifier_rebalance.objective must be one of: "
+            "cross_entropy, logit_adjusted_cross_entropy."
+        )
+    classifier_rebalance["logit_adjustment_tau"] = float(
+        classifier_rebalance.get("logit_adjustment_tau", 1.0)
+    )
+    if classifier_rebalance["logit_adjustment_tau"] < 0.0:
+        raise ValueError("training.continual.classifier_rebalance.logit_adjustment_tau must be non-negative.")
 
     optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 4))
     optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))
@@ -212,6 +275,18 @@ def normalize_continual_training_config(
     data["randaugment_magnitude"] = int(data.get("randaugment_magnitude", 7))
     if not 0 <= data["randaugment_magnitude"] <= 30:
         raise ValueError("training.continual.data.randaugment_magnitude must be between 0 and 30.")
+    data["augmix_severity"] = int(data.get("augmix_severity", 3))
+    if not 1 <= data["augmix_severity"] <= 10:
+        raise ValueError("training.continual.data.augmix_severity must be between 1 and 10.")
+    data["augmix_width"] = int(data.get("augmix_width", 3))
+    if data["augmix_width"] < 1:
+        raise ValueError("training.continual.data.augmix_width must be at least 1.")
+    data["augmix_depth"] = int(data.get("augmix_depth", -1))
+    if data["augmix_depth"] == 0 or data["augmix_depth"] < -1:
+        raise ValueError("training.continual.data.augmix_depth must be -1 or a positive integer.")
+    data["augmix_alpha"] = float(data.get("augmix_alpha", 1.0))
+    if data["augmix_alpha"] <= 0.0:
+        raise ValueError("training.continual.data.augmix_alpha must be positive.")
     data["allow_under_min_training"] = bool(data.get("allow_under_min_training", False))
     data["cache_size"] = int(data.get("cache_size", 1000))
     data["validate_images_on_init"] = bool(data.get("validate_images_on_init", False))

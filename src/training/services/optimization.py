@@ -94,9 +94,21 @@ def _build_default_search_space_payload() -> JsonDict:
             {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
             {"name": "training.fusion.dropout", "type": "float", "low": 0.0, "high": 0.25},
             {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
+            {"name": "training.ood.react_enabled", "type": "categorical", "values": [False, True]},
+            {"name": "training.ood.react_percentile", "type": "float", "low": 0.95, "high": 0.999},
             {"name": "training.optimization.logitnorm_tau", "type": "float", "low": 0.5, "high": 2.0},
+            {"name": "training.optimization.label_smoothing", "type": "float", "low": 0.0, "high": 0.2},
+            {"name": "training.data.augmentation_policy", "type": "categorical", "values": ["randaugment", "augmix"]},
             {"name": "training.data.randaugment_num_ops", "type": "int", "low": 1, "high": 4, "step": 1},
             {"name": "training.data.randaugment_magnitude", "type": "int", "low": 3, "high": 12, "step": 1},
+            {"name": "training.data.augmix_severity", "type": "int", "low": 1, "high": 5, "step": 1},
+            {"name": "training.classifier_rebalance.enabled", "type": "categorical", "values": [False, True]},
+            {
+                "name": "training.classifier_rebalance.logit_adjustment_tau",
+                "type": "float",
+                "low": 0.5,
+                "high": 2.0,
+            },
         ],
     }
 

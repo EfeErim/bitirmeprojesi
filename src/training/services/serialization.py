@@ -120,4 +120,13 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
         "energy_temperature_mode": str(getattr(ood_detector, "energy_temperature_mode", "fixed") or "fixed"),
         "energy_temperature_range": list(getattr(ood_detector, "energy_temperature_range", (0.5, 3.0))),
         "energy_temperature_steps": int(getattr(ood_detector, "energy_temperature_steps", 16)),
+        "react_enabled": bool(getattr(ood_detector, "react_enabled", False)),
+        "react_percentile": _float_field(getattr(ood_detector, "react_percentile", 0.99), default=0.99),
+        "react_apply_during_calibration": bool(getattr(ood_detector, "react_apply_during_calibration", True)),
+        "react_apply_during_inference": bool(getattr(ood_detector, "react_apply_during_inference", True)),
+        "react_threshold": (
+            None
+            if getattr(ood_detector, "react_threshold", None) is None
+            else _float_field(getattr(ood_detector, "react_threshold"), default=0.0)
+        ),
     }

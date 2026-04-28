@@ -49,9 +49,15 @@ _NOTEBOOK_OPTIMIZATION_SEARCH_SPACE = {
         {"name": "training.adapter.lora_alpha", "type": "categorical", "values": [8, 16, 24, 32]},
         {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
         {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
+        {"name": "training.ood.react_enabled", "type": "categorical", "values": [False, True]},
+        {"name": "training.ood.react_percentile", "type": "float", "low": 0.95, "high": 0.999},
         {"name": "training.optimization.logitnorm_tau", "type": "float", "low": 0.5, "high": 2.0},
+        {"name": "training.optimization.label_smoothing", "type": "float", "low": 0.0, "high": 0.2},
+        {"name": "training.data.augmentation_policy", "type": "categorical", "values": ["randaugment", "augmix"]},
         {"name": "training.data.randaugment_num_ops", "type": "int", "low": 1, "high": 4, "step": 1},
         {"name": "training.data.randaugment_magnitude", "type": "int", "low": 3, "high": 12, "step": 1},
+        {"name": "training.data.augmix_severity", "type": "int", "low": 1, "high": 5, "step": 1},
+        {"name": "training.classifier_rebalance.enabled", "type": "categorical", "values": [False, True]},
     ],
 }
 _NOTEBOOK_PARAM_MAP = {
@@ -64,8 +70,10 @@ _NOTEBOOK_PARAM_MAP = {
     "training.adapter.lora_dropout": "LORA_DROPOUT",
     "training.ood.threshold_factor": "OOD_FACTOR",
     "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
+    "training.optimization.label_smoothing": "LABEL_SMOOTHING",
     "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
     "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
+    "training.data.augmix_severity": "AUGMIX_SEVERITY",
 }
 _DEFAULT_PARETO_OBJECTIVES = (
     "classification.macro_f1",
@@ -234,6 +242,7 @@ def prepare_notebook_access_and_dataset(
     dataset_name: str,
     runtime_dataset_root: str | Path,
     ood_root: str | Path = "",
+    oe_root: str | Path = "",
     ask_for_ood_root: bool = False,
     optimization_campaign_mode: str = "disabled",
     telemetry: Any = None,
@@ -341,7 +350,9 @@ def prepare_notebook_access_and_dataset(
 
     runtime_root = selected_dataset_root.parent
     default_ood_root = selected_dataset_root / "ood"
+    default_oe_root = selected_dataset_root / "ood_aux"
     requested_ood_root = str(ood_root or "").strip()
+    requested_oe_root = str(oe_root or "").strip()
     if ask_for_ood_root and not requested_ood_root:
         default_hint = str(default_ood_root) if default_ood_root.is_dir() else ""
         prompt = "OOD klasoru yolunu girin"
@@ -365,6 +376,19 @@ def prepare_notebook_access_and_dataset(
     else:
         emit("[OOD] Gercek OOD split secilmedi; fallback held-out benchmark kullanilabilir.")
         resolved_ood_root_value = ""
+    if requested_oe_root:
+        resolved_oe_root = Path(requested_oe_root).expanduser()
+        if not resolved_oe_root.is_absolute():
+            resolved_oe_root = (root / resolved_oe_root).resolve()
+        if not resolved_oe_root.is_dir():
+            raise RuntimeError(f"OE klasoru bulunamadi veya klasor degil: {resolved_oe_root}")
+        emit(f"[OE] explicit oe root={resolved_oe_root}")
+        resolved_oe_root_value = str(resolved_oe_root)
+    elif default_oe_root.is_dir():
+        emit(f"[OE] runtime oe root={default_oe_root}")
+        resolved_oe_root_value = str(default_oe_root)
+    else:
+        resolved_oe_root_value = ""
     emit(f"[DATASET] runtime root={selected_dataset_root} classes={len(class_names)}: {class_names}")
 
     _call_if_present(
@@ -377,6 +401,7 @@ def prepare_notebook_access_and_dataset(
             "runtime_dataset_key": selected_dataset_name,
             "selected_dataset_name": selected_dataset_name,
             "resolved_ood_root": resolved_ood_root_value,
+            "resolved_oe_root": resolved_oe_root_value,
             "class_count": len(class_names),
         },
     )
@@ -395,6 +420,7 @@ def prepare_notebook_access_and_dataset(
         "selected_dataset_name": selected_dataset_name,
         "selected_dataset_root": selected_dataset_root,
         "resolved_ood_root": resolved_ood_root_value,
+        "resolved_oe_root": resolved_oe_root_value,
     }
 
 
@@ -827,6 +853,12 @@ def _build_notebook_continual_config(
         notebook_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])
     )
     data_cfg["randaugment_magnitude"] = int(notebook_parameters["RANDAUGMENT_MAGNITUDE"])
+    data_cfg["augmix_severity"] = int(
+        notebook_parameters.get("AUGMIX_SEVERITY", data_settings.get("AUGMIX_SEVERITY", 3))
+    )
+    data_cfg["augmix_width"] = int(data_settings.get("AUGMIX_WIDTH", 3))
+    data_cfg["augmix_depth"] = int(data_settings.get("AUGMIX_DEPTH", -1))
+    data_cfg["augmix_alpha"] = float(data_settings.get("AUGMIX_ALPHA", 1.0))
     data_cfg["allow_under_min_training"] = bool(data_settings["ALLOW_UNDER_MIN_TRAINING"])
 
     ood_cfg = continual_cfg.setdefault("ood", {})
@@ -842,7 +874,9 @@ def _build_notebook_continual_config(
     optimization_cfg["grad_accumulation_steps"] = int(optimization_cfg["grad_accumulation_steps"])
     optimization_cfg["max_grad_norm"] = float(optimization_cfg["max_grad_norm"])
     optimization_cfg["mixed_precision"] = str(optimization_cfg["mixed_precision"])
-    optimization_cfg["label_smoothing"] = float(optimization_cfg["label_smoothing"])
+    optimization_cfg["label_smoothing"] = float(
+        notebook_parameters.get("LABEL_SMOOTHING", optimization_cfg["label_smoothing"])
+    )
     optimization_cfg["loss_name"] = str(optimization_cfg["loss_name"]).strip().lower()
     optimization_cfg["logitnorm_tau"] = float(notebook_parameters["LOGITNORM_TAU"])
     scheduler_cfg = optimization_cfg.setdefault("scheduler", {})
@@ -905,8 +939,11 @@ def initialize_notebook_training_engine(
         }
     )
     resolved_ood_root = str(state.get("resolved_ood_root") or "").strip()
+    resolved_oe_root = str(state.get("resolved_oe_root") or "").strip()
     if resolved_ood_root:
         emit(f"[OOD] selected ood root={resolved_ood_root}")
+    if resolved_oe_root:
+        emit(f"[OE] selected oe root={resolved_oe_root}")
 
     class_resolution = resolve_notebook_training_classes(
         available_classes=available,
@@ -1001,7 +1038,12 @@ def initialize_notebook_training_engine(
         augmentation_policy=str(data_settings["AUGMENTATION_POLICY"]),
         randaugment_num_ops=int(resolved_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])),
         randaugment_magnitude=int(resolved_parameters["RANDAUGMENT_MAGNITUDE"]),
+        augmix_severity=int(resolved_parameters.get("AUGMIX_SEVERITY", data_settings.get("AUGMIX_SEVERITY", 3))),
+        augmix_width=int(data_settings.get("AUGMIX_WIDTH", 3)),
+        augmix_depth=int(data_settings.get("AUGMIX_DEPTH", -1)),
+        augmix_alpha=float(data_settings.get("AUGMIX_ALPHA", 1.0)),
         ood_root=resolved_ood_root or None,
+        ood_aux_root=resolved_oe_root or None,
         pin_memory=bool(loader_settings["PIN_MEMORY"]),
         **loader_kwargs,
     )
@@ -1049,6 +1091,7 @@ def initialize_notebook_training_engine(
             "runtime_dataset_key": dataset_key,
             "selected_dataset_name": str(state.get("selected_dataset_name") or ""),
             "resolved_ood_root": str(state.get("resolved_ood_root") or ""),
+            "resolved_oe_root": str(state.get("resolved_oe_root") or ""),
         },
     )
     return {

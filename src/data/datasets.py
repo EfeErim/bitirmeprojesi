@@ -70,6 +70,10 @@ class CropDataset(Dataset):
         augmentation_policy: str = "randaugment",
         randaugment_num_ops: int = 2,
         randaugment_magnitude: int = 7,
+        augmix_severity: int = 3,
+        augmix_width: int = 3,
+        augmix_depth: int = -1,
+        augmix_alpha: float = 1.0,
         split_root: str | Path | None = None,
     ) -> None:
         self.data_dir = Path(data_dir)
@@ -80,6 +84,10 @@ class CropDataset(Dataset):
         self.augmentation_policy = str(augmentation_policy)
         self.randaugment_num_ops = int(randaugment_num_ops)
         self.randaugment_magnitude = int(randaugment_magnitude)
+        self.augmix_severity = int(augmix_severity)
+        self.augmix_width = int(augmix_width)
+        self.augmix_depth = int(augmix_depth)
+        self.augmix_alpha = float(augmix_alpha)
         self.use_cache = bool(use_cache)
         self.cache = LRUCache(cache_size) if self.use_cache else None
         self.cache_train_split = bool(cache_train_split)
@@ -108,6 +116,10 @@ class CropDataset(Dataset):
             augmentation_policy=self.augmentation_policy,
             randaugment_num_ops=self.randaugment_num_ops,
             randaugment_magnitude=self.randaugment_magnitude,
+            augmix_severity=self.augmix_severity,
+            augmix_width=self.augmix_width,
+            augmix_depth=self.augmix_depth,
+            augmix_alpha=self.augmix_alpha,
         )
 
     def _load_data(self) -> Tuple[List[Path], List[int]]:
@@ -241,6 +253,10 @@ class CropDataset(Dataset):
             "augmentation_policy": self.augmentation_policy,
             "randaugment_num_ops": int(self.randaugment_num_ops),
             "randaugment_magnitude": int(self.randaugment_magnitude),
+            "augmix_severity": int(self.augmix_severity),
+            "augmix_width": int(self.augmix_width),
+            "augmix_depth": int(self.augmix_depth),
+            "augmix_alpha": float(self.augmix_alpha),
             "load_error_count": len(self.load_errors),
             "skipped_files": list(self.skipped_files),
         }

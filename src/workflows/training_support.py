@@ -232,6 +232,15 @@ def prepare_training_run(
         augmentation_policy=str(data_cfg.get("augmentation_policy", "randaugment")),
         randaugment_num_ops=int(data_cfg.get("randaugment_num_ops", 2)),
         randaugment_magnitude=int(data_cfg.get("randaugment_magnitude", 7)),
+        augmix_severity=int(data_cfg.get("augmix_severity", 3)),
+        augmix_width=int(data_cfg.get("augmix_width", 3)),
+        augmix_depth=int(data_cfg.get("augmix_depth", -1)),
+        augmix_alpha=float(data_cfg.get("augmix_alpha", 1.0)),
+        ood_root=(str(ood_cfg.get("ood_root", "") or "") or None),
+        ood_aux_root=(
+            str(ood_cfg.get("oe_root", "") or "").strip()
+            or None
+        ),
         real_ood_split_enabled=bool(ood_cfg.get("real_split_enabled", True)),
         real_ood_split_dev_fraction=float(ood_cfg.get("real_split_dev_fraction", 0.4)),
         real_ood_split_min_per_slice=int(ood_cfg.get("real_split_min_per_slice", 2)),

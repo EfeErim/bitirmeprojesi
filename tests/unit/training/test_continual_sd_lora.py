@@ -38,8 +38,17 @@ def test_config_from_training_config_accepts_v6_contract():
                 "ber_lambda_new": 0.2,
                 "energy_temperature_mode": "auto",
                 "energy_temperature": 1.2,
+                "react_enabled": True,
+                "react_percentile": 0.975,
+                "oe_enabled": True,
+                "oe_loss_weight": 0.7,
                 "knn_backend": "chunked",
                 "conformal_method": "aps",
+            },
+            "classifier_rebalance": {
+                "enabled": True,
+                "epochs": 2,
+                "learning_rate": 5e-5,
             },
             "optimization": {
                 "grad_accumulation_steps": 2,
@@ -57,8 +66,14 @@ def test_config_from_training_config_accepts_v6_contract():
     assert cfg.ber_lambda_new == pytest.approx(0.2)
     assert cfg.energy_temperature_mode == "auto"
     assert cfg.energy_temperature == pytest.approx(1.2)
+    assert cfg.react_enabled is True
+    assert cfg.react_percentile == pytest.approx(0.975)
+    assert cfg.oe_enabled is True
+    assert cfg.oe_loss_weight == pytest.approx(0.7)
     assert cfg.knn_backend == "chunked"
     assert cfg.conformal_method == "aps"
+    assert cfg.classifier_rebalance_enabled is True
+    assert cfg.classifier_rebalance_epochs == 2
     assert cfg.grad_accumulation_steps == 2
     assert cfg.loss_name == "cross_entropy"
     assert cfg.logitnorm_tau == pytest.approx(1.0)
@@ -83,10 +98,16 @@ def test_as_contract_dict_emits_normalized_training_surface():
         loss_name="cross_entropy",
         energy_temperature_mode="auto",
         energy_temperature=1.1,
+        react_enabled=True,
+        react_percentile=0.98,
+        oe_enabled=True,
+        oe_loss_weight=0.6,
         knn_backend="chunked",
         conformal_method="raps",
         conformal_raps_lambda=0.02,
         conformal_raps_k_reg=2,
+        classifier_rebalance_enabled=True,
+        classifier_rebalance_epochs=2,
     )
 
     payload = cfg.as_contract_dict()
@@ -97,6 +118,10 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["ood"]["ber_lambda_new"] == pytest.approx(0.2)
     assert payload["ood"]["energy_temperature_mode"] == "auto"
     assert payload["ood"]["energy_temperature"] == pytest.approx(1.1)
+    assert payload["ood"]["react_enabled"] is True
+    assert payload["ood"]["react_percentile"] == pytest.approx(0.98)
+    assert payload["ood"]["oe_enabled"] is True
+    assert payload["ood"]["oe_loss_weight"] == pytest.approx(0.6)
     assert payload["ood"]["knn_backend"] == "chunked"
     assert payload["ood"]["conformal_method"] == "raps"
     assert payload["ood"]["conformal_raps_lambda"] == pytest.approx(0.02)
@@ -107,6 +132,8 @@ def test_as_contract_dict_emits_normalized_training_surface():
     assert payload["optimization"]["logitnorm_tau"] == pytest.approx(1.0)
     assert payload["optimization"]["scheduler"]["name"] == "linear"
     assert payload["evaluation"]["best_metric"] == "macro_f1"
+    assert payload["classifier_rebalance"]["enabled"] is True
+    assert payload["classifier_rebalance"]["epochs"] == 2
 
 
 def test_set_ood_primary_score_method_updates_runtime_and_contract():
@@ -177,6 +204,8 @@ def test_add_classes_expands_classifier_shape():
         fusion_layers=[2],
         fusion_output_dim=8,
         device="cpu",
+        react_enabled=True,
+        react_percentile=0.98,
     )
     trainer = ContinualSDLoRATrainer(cfg)
     trainer.classifier = nn.Linear(8, 1)
@@ -351,6 +380,8 @@ def test_raises_when_peft_is_missing(monkeypatch):
         fusion_layers=[2],
         fusion_output_dim=8,
         device="cpu",
+        react_enabled=True,
+        react_percentile=0.98,
     )
     trainer = ContinualSDLoRATrainer(cfg)
 
@@ -379,6 +410,8 @@ def test_apply_lora_avoids_low_cpu_mem_usage_meta_tensors(monkeypatch):
         fusion_layers=[2],
         fusion_output_dim=8,
         device="cpu",
+        react_enabled=True,
+        react_percentile=0.98,
     )
     trainer = ContinualSDLoRATrainer(cfg)
 
@@ -410,6 +443,8 @@ def test_apply_lora_without_low_cpu_mem_usage_kwarg_support(monkeypatch):
         fusion_layers=[2],
         fusion_output_dim=8,
         device="cpu",
+        react_enabled=True,
+        react_percentile=0.98,
     )
     trainer = ContinualSDLoRATrainer(cfg)
 
@@ -575,6 +610,63 @@ def test_training_step_uses_logitnorm_loss_when_configured(monkeypatch):
     assert recorded["tau"] == pytest.approx(0.7)
     assert recorded["label_smoothing"] == pytest.approx(0.05)
     assert torch.allclose(recorded["weight"], torch.tensor([0.8, 1.2]))
+
+
+def test_training_step_adds_oe_uniform_loss_when_enabled(monkeypatch):
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        loss_name="cross_entropy",
+        oe_enabled=True,
+        oe_loss_weight=0.5,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.optimizer = object()
+    trainer.classifier = nn.Identity()
+    trainer.encode = lambda images: images.float()  # type: ignore[assignment]
+    trainer.set_oe_loader(
+        [{"images": torch.tensor([[1.0, 0.0], [0.0, 1.0]]), "labels": torch.tensor([-1, -1], dtype=torch.long)}]
+    )
+
+    def fake_cross_entropy(logits, labels, weight=None, label_smoothing=0.0):
+        del logits, labels, weight, label_smoothing
+        return torch.tensor(2.0, requires_grad=True)
+
+    monkeypatch.setattr("src.training.continual_sd_lora.nn.functional.cross_entropy", fake_cross_entropy)
+
+    loss = trainer.training_step(
+        {"images": torch.tensor([[2.0, 0.0], [0.0, 2.0]]), "labels": torch.tensor([0, 1], dtype=torch.long)}
+    )
+
+    expected_oe = -torch.log_softmax(torch.tensor([[1.0, 0.0], [0.0, 1.0]]), dim=1).mean(dim=1).mean()
+    assert loss.item() == pytest.approx(2.0 + (0.5 * float(expected_oe.item())))
+
+
+def test_configure_classifier_rebalance_stage_freezes_non_classifier_params():
+    cfg = ContinualSDLoRAConfig(
+        backbone_model_name="facebook/dinov3-vitl16-pretrain-lvd1689m",
+        target_modules_strategy="all_linear_transformer",
+        fusion_layers=[2],
+        fusion_output_dim=4,
+        device="cpu",
+        classifier_rebalance_enabled=True,
+    )
+    trainer = ContinualSDLoRATrainer(cfg)
+    trainer.adapter_model = nn.Linear(4, 4)
+    trainer.fusion = nn.Linear(4, 4)
+    trainer.classifier = nn.Linear(4, 2)
+
+    trainer.configure_classifier_rebalance_stage(
+        log_priors=torch.log(torch.tensor([0.6, 0.4], dtype=torch.float32))
+    )
+
+    assert all(not parameter.requires_grad for parameter in trainer.adapter_model.parameters())
+    assert all(not parameter.requires_grad for parameter in trainer.fusion.parameters())
+    assert all(parameter.requires_grad for parameter in trainer.classifier.parameters())
+    assert trainer._active_training_stage == "classifier_rebalance"
 
 
 def test_config_rejects_logitnorm_when_ber_is_enabled():
@@ -911,6 +1003,8 @@ def test_save_and_load_adapter_roundtrip_restores_ood_state(monkeypatch, tmp_pat
         fusion_layers=[2],
         fusion_output_dim=8,
         device="cpu",
+        react_enabled=True,
+        react_percentile=0.98,
     )
     trainer = ContinualSDLoRATrainer(cfg)
     trainer.initialize_engine(class_to_idx={"healthy": 0, "disease_a": 1})
@@ -930,6 +1024,8 @@ def test_save_and_load_adapter_roundtrip_restores_ood_state(monkeypatch, tmp_pat
 
     assert int(reloaded.ood_detector.calibration_version) == int(trainer.ood_detector.calibration_version)
     assert set(reloaded.ood_detector.class_stats.keys()) == {0, 1}
+    assert reloaded.ood_detector.react_enabled is True
+    assert reloaded.ood_detector.react_threshold is not None
 
 
 def test_save_adapter_auto_calibrates_from_session_loader(monkeypatch, tmp_path):

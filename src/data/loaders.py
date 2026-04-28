@@ -124,7 +124,12 @@ def create_training_loaders(
     augmentation_policy: str = "randaugment",
     randaugment_num_ops: int = 2,
     randaugment_magnitude: int = 7,
+    augmix_severity: int = 3,
+    augmix_width: int = 3,
+    augmix_depth: int = -1,
+    augmix_alpha: float = 1.0,
     ood_root: str | Path | None = None,
+    ood_aux_root: str | Path | None = None,
     real_ood_split_enabled: bool = True,
     real_ood_split_dev_fraction: float = 0.4,
     real_ood_split_min_per_slice: int = 2,
@@ -177,6 +182,10 @@ def create_training_loaders(
             augmentation_policy=augmentation_policy,
             randaugment_num_ops=randaugment_num_ops,
             randaugment_magnitude=randaugment_magnitude,
+            augmix_severity=augmix_severity,
+            augmix_width=augmix_width,
+            augmix_depth=augmix_depth,
+            augmix_alpha=augmix_alpha,
         )
         loader_generator = torch.Generator()
         loader_generator.manual_seed(int(seed) + split_seed_offset)
@@ -238,6 +247,7 @@ def create_training_loaders(
 
     def _build_ood_loader(
         *,
+        source_root: Path,
         split_paths: List[Path] | None = None,
         split_name: str = "ood",
         seed_offset: int = 30,
@@ -246,7 +256,7 @@ def create_training_loaders(
             data_dir=data_dir,
             crop=crop,
             split="ood",
-            split_root=resolved_ood_root,
+            split_root=source_root,
             class_names=resolved_classes,
             transform=False,
             target_size=target_size,
@@ -258,6 +268,10 @@ def create_training_loaders(
             augmentation_policy=augmentation_policy,
             randaugment_num_ops=randaugment_num_ops,
             randaugment_magnitude=randaugment_magnitude,
+            augmix_severity=augmix_severity,
+            augmix_width=augmix_width,
+            augmix_depth=augmix_depth,
+            augmix_alpha=augmix_alpha,
         )
         if split_paths is not None:
             allowed = {str(path.resolve(strict=False)) for path in split_paths}
@@ -304,6 +318,11 @@ def create_training_loaders(
         return loader
 
     resolved_ood_root = Path(ood_root).expanduser() if ood_root is not None and str(ood_root).strip() else Path(data_dir) / crop / "ood"
+    resolved_ood_aux_root = (
+        Path(ood_aux_root).expanduser()
+        if ood_aux_root is not None and str(ood_aux_root).strip()
+        else Path(data_dir) / crop / "ood_aux"
+    )
     if resolved_ood_root.exists():
         if not resolved_ood_root.is_dir():
             raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
@@ -324,8 +343,18 @@ def create_training_loaders(
             test_paths = select_manifest_paths(resolved_ood_root, manifest, "test")
             if dev_paths and test_paths:
                 slice_map = manifest_slice_map(resolved_ood_root, manifest)
-                loaders["ood_dev"] = _build_ood_loader(split_paths=dev_paths, split_name="ood_dev", seed_offset=31)
-                loaders["ood"] = _build_ood_loader(split_paths=test_paths, split_name="ood_test", seed_offset=30)
+                loaders["ood_dev"] = _build_ood_loader(
+                    source_root=resolved_ood_root,
+                    split_paths=dev_paths,
+                    split_name="ood_dev",
+                    seed_offset=31,
+                )
+                loaders["ood"] = _build_ood_loader(
+                    source_root=resolved_ood_root,
+                    split_paths=test_paths,
+                    split_name="ood_test",
+                    seed_offset=30,
+                )
                 for loader in (loaders["ood_dev"], loaders["ood"]):
                     dataset = getattr(loader, "dataset", None)
                     if dataset is not None:
@@ -339,7 +368,17 @@ def create_training_loaders(
                         "_ood_split_manifest_path",
                         str(resolved_ood_root / str(real_ood_split_manifest_name or "ood_split_manifest.json")),
                     )
-                return loaders
-
-        loaders["ood"] = _build_ood_loader(split_name="ood", seed_offset=30)
+            else:
+                loaders["ood"] = _build_ood_loader(source_root=resolved_ood_root, split_name="ood", seed_offset=30)
+        else:
+            loaders["ood"] = _build_ood_loader(source_root=resolved_ood_root, split_name="ood", seed_offset=30)
+    if resolved_ood_aux_root.exists():
+        if not resolved_ood_aux_root.is_dir():
+            raise NotADirectoryError(f"OOD auxiliary root is not a directory: {resolved_ood_aux_root}")
+        loaders["ood_aux"] = _build_ood_loader(
+            source_root=resolved_ood_aux_root,
+            split_name="ood_aux",
+            seed_offset=32,
+        )
+        setattr(loaders["ood_aux"], "_ood_split_name", "ood_aux")
     return loaders

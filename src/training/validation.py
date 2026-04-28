@@ -388,9 +388,14 @@ def _update_detector_artifact_state(
             images = batch["images"].to(trainer.device, non_blocking=True)
             labels = batch["labels"].to(trainer.device, non_blocking=True)
             features = trainer.encode(images)
-            logits = trainer.classifier(features)
+            score_features = (
+                trainer.prepare_features_for_scoring(features)
+                if hasattr(trainer, "prepare_features_for_scoring")
+                else features
+            )
+            logits = trainer.classifier(score_features)
             predictions = torch.argmax(logits, dim=1)
-            ood_payload = detector.score(features, logits, predicted_labels=predictions)
+            ood_payload = detector.score(score_features, logits, predicted_labels=predictions)
             batch_size = int(labels.shape[0])
             batch_sample_types = None
             if sample_types is not None:
@@ -399,7 +404,7 @@ def _update_detector_artifact_state(
                 state,
                 detector=detector,
                 idx_to_class=idx_to_class,
-                features=features,
+                features=score_features,
                 logits=logits,
                 labels=labels,
                 predictions=predictions,
@@ -494,10 +499,19 @@ def _evaluate_model_core(
 
             if artifact_state is not None and detector is not None:
                 features = trainer.encode(images)
-                logits = trainer.classifier(features)
+                score_features = (
+                    trainer.prepare_features_for_scoring(features)
+                    if hasattr(trainer, "prepare_features_for_scoring")
+                    else features
+                )
+                logits = trainer.classifier(score_features)
             else:
                 features = None
-                logits = trainer.forward_logits(images)
+                score_features = None
+                try:
+                    logits = trainer.forward_logits(images, apply_scoring_adjustments=True)
+                except TypeError:
+                    logits = trainer.forward_logits(images)
 
             loss = torch.nn.functional.cross_entropy(logits, labels, label_smoothing=0.0)
 
@@ -512,12 +526,12 @@ def _evaluate_model_core(
 
             ood_payload = None
             if artifact_state is not None and detector is not None and features is not None:
-                ood_payload = detector.score(features, logits, predicted_labels=predictions)
+                ood_payload = detector.score(score_features, logits, predicted_labels=predictions)
                 _update_detector_artifact_state_for_batch(
                     artifact_state,
                     detector=detector,
                     idx_to_class=idx_to_class or {},
-                    features=features,
+                    features=score_features,
                     logits=logits,
                     labels=labels,
                     predictions=predictions,

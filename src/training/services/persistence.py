@@ -167,6 +167,10 @@ def restore_ood_state(
             float(energy_temperature_range_raw[1]),
         ),
         energy_temperature_steps=int(payload.get("energy_temperature_steps", 16)),
+        react_enabled=bool(payload.get("react_enabled", False)),
+        react_percentile=float(payload.get("react_percentile", 0.99)),
+        react_apply_during_calibration=bool(payload.get("react_apply_during_calibration", True)),
+        react_apply_during_inference=bool(payload.get("react_apply_during_inference", True)),
     )
     detector.calibration_version = int(payload.get("calibration_version", 0))
 
@@ -175,6 +179,8 @@ def restore_ood_state(
     detector.radial_beta = float(radial_beta) if radial_beta is not None else None
     conformal_qhat = payload.get("conformal_qhat")
     detector.conformal_qhat = float(conformal_qhat) if conformal_qhat is not None else None
+    react_threshold = payload.get("react_threshold")
+    detector.react_threshold = float(react_threshold) if react_threshold is not None else None
 
     class_stats = payload.get("class_stats", {})
     if not isinstance(class_stats, dict):

@@ -36,6 +36,22 @@ def test_build_image_transform_basic_training_policy_preserves_legacy_augments()
     ]
 
 
+def test_build_image_transform_augmix_training_policy_uses_augmix():
+    transform = build_image_transform(target_size=224, training=True, augmentation_policy="augmix")
+    names = [step.__class__.__name__ for step in transform.transforms]
+
+    assert names == [
+        "RandomResizedCrop",
+        "RandomHorizontalFlip",
+        "RandomVerticalFlip",
+        "RandomRotation",
+        "AugMix",
+        "RandomApply",
+        "ToTensor",
+        "Normalize",
+    ]
+
+
 def test_build_image_transform_none_training_policy_is_deterministic_resize():
     transform = build_image_transform(target_size=224, training=True, augmentation_policy="none")
     names = [step.__class__.__name__ for step in transform.transforms]

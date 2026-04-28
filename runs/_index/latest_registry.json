@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-04-22T20:08:42.635146+00:00",
+  "generated_at": "2026-04-28T09:26:40.292429+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": false,
   "trial_count": 4,
@@ -10,7 +10,8 @@
   "paths": {
     "trials_jsonl": "D:\\bitirme projesi\\runs\\_index\\trials.jsonl",
     "pareto_inputs_json": "D:\\bitirme projesi\\runs\\_index\\pareto_inputs.json",
-    "pareto_frontiers_json": "D:\\bitirme projesi\\runs\\_index\\pareto_frontiers.json"
+    "pareto_frontiers_json": "D:\\bitirme projesi\\runs\\_index\\pareto_frontiers.json",
+    "automatic_wins_markdown": "D:\\bitirme projesi\\runs\\_index\\automatic_wins.md"
   },
   "cohorts": [
     {
