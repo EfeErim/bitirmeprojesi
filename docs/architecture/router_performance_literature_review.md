@@ -95,7 +95,15 @@ This phase should also persist raw router evidence needed for analysis: top-k cr
 
 ### Phase 2: Calibrate Existing Gates Before Adding Models
 
-Use the new eval surface to sweep:
+Use `scripts/calibrate_router_surface.py` on the eval surface to sweep multiple parameters against the same dataset while reusing one loaded SAM3/BioCLIP router instance:
+
+```powershell
+.\scripts\python.cmd scripts/calibrate_router_surface.py --root data/router_eval --config-env colab --preset quick --output .runtime_tmp/router_calibration.json
+```
+
+The script supports built-in `handoff`, `quick`, and `docs` presets plus explicit `--sweep PARAM=v1,v2` overrides. It ranks variants by negative false-accept rate, unsupported part emissions, wrong-part rejection, crop accuracy, part precision/recall, abstention, and latency while enforcing configurable accuracy and precision drop guardrails.
+
+The sweepable config paths include:
 
 - `inference.router_min_confidence`
 - `inference.router_min_margin`
@@ -151,7 +159,7 @@ The best next implementation path is not a new model. It is a router benchmark a
 
 1. Use `scripts/evaluate_router_surface.py` to evaluate the full `data/router_eval/` handoff surface.
 2. Persist raw crop and part evidence per sample.
-3. Sweep thresholds and evidence weights.
+3. Use `scripts/calibrate_router_surface.py` to sweep thresholds and evidence weights.
 4. Update router defaults only when the sweep improves crop risk-coverage, part precision/recall, and negative false-accept behavior on the same eval set.
 
 This fits the current repo architecture, is supported by the literature above, and avoids replacing a reasonable SAM3 + BioCLIP-2.5 design before measuring where it actually fails.

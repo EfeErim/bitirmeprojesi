@@ -128,6 +128,32 @@ def _supported_crops(config: Dict[str, Any]) -> set[str]:
     return {str(crop).strip().lower() for crop in crop_mapping.keys()}
 
 
+def _routing_score(detection_payload: Dict[str, Any]) -> float:
+    quality_score = detection_payload.get("quality_score")
+    if quality_score is not None:
+        return _coerce_float(quality_score, 0.0)
+    return _coerce_float(detection_payload.get("crop_confidence"), 0.0)
+
+
+def _routing_runner_up(
+    analysis: RouterAnalysisResult,
+    *,
+    primary_crop: str,
+) -> tuple[str, float | None]:
+    runner_up_crop = ""
+    runner_up_score: float | None = None
+    for detection in list(analysis.detections or []):
+        detection_payload = detection.to_dict()
+        candidate_crop = str(detection_payload.get("crop", "") or "").strip().lower()
+        if not candidate_crop or candidate_crop == primary_crop:
+            continue
+        candidate_score = _routing_score(detection_payload)
+        if runner_up_score is None or candidate_score > runner_up_score:
+            runner_up_crop = candidate_crop
+            runner_up_score = candidate_score
+    return runner_up_crop, runner_up_score
+
+
 def _compatible_parts(config: Dict[str, Any], crop_name: str) -> set[str]:
     router_cfg = config.get("router", {}) if isinstance(config.get("router"), dict) else {}
     crop_mapping = router_cfg.get("crop_mapping", {}) if isinstance(router_cfg.get("crop_mapping"), dict) else {}
@@ -153,7 +179,19 @@ def sample_from_analysis(
     confidence = _coerce_float(detection_payload.get("crop_confidence"), 0.0)
     status = str(analysis.status or "ok").strip().lower()
     supported_crops = _supported_crops(config)
-    handoff_crop = predicted_crop in supported_crops and predicted_crop != "unknown" and status not in ABSTAIN_STATUSES
+    raw_handoff_crop = predicted_crop in supported_crops and predicted_crop != "unknown" and status not in ABSTAIN_STATUSES
+    inference_cfg = config.get("inference", {}) if isinstance(config.get("inference"), dict) else {}
+    min_confidence = _coerce_float(inference_cfg.get("router_min_confidence"), 0.0)
+    min_margin = _coerce_float(inference_cfg.get("router_min_margin"), 0.0)
+    primary_score = _routing_score(detection_payload)
+    runner_up_crop, runner_up_score = _routing_runner_up(analysis, primary_crop=predicted_crop)
+    routing_margin = None if runner_up_score is None else primary_score - runner_up_score
+    gate_reasons: List[str] = []
+    if raw_handoff_crop and min_confidence > 0.0 and confidence < min_confidence:
+        gate_reasons.append("router_min_confidence")
+    if raw_handoff_crop and min_margin > 0.0 and routing_margin is not None and routing_margin < min_margin:
+        gate_reasons.append("router_min_margin")
+    handoff_crop = raw_handoff_crop and not gate_reasons
     compatible_parts = _compatible_parts(config, predicted_crop)
     unsupported_part_emitted = bool(
         predicted_part not in {"", "unknown"}
@@ -175,6 +213,13 @@ def sample_from_analysis(
         "router_status": status,
         "router_message": str(analysis.message or ""),
         "crop_confidence": confidence,
+        "routing_score": primary_score,
+        "runner_up_crop": runner_up_crop,
+        "runner_up_score": runner_up_score,
+        "routing_margin": routing_margin,
+        "router_handoff_crop": bool(raw_handoff_crop),
+        "runtime_gate_rejected": bool(gate_reasons),
+        "runtime_gate_reasons": gate_reasons,
         "processing_time_ms": float(analysis.processing_time_ms or latency_ms),
         "latency_ms": float(latency_ms),
         "handoff_crop": bool(handoff_crop),
@@ -261,7 +306,9 @@ def threshold_sweep(samples: List[Dict[str, Any]], *, thresholds: List[float]) -
         thresholded = []
         for sample in samples:
             row = dict(sample)
-            if float(row.get("crop_confidence", 0.0)) < float(threshold):
+            raw_handoff = bool(row.get("router_handoff_crop", row.get("handoff_crop", False)))
+            row["handoff_crop"] = raw_handoff
+            if not raw_handoff or float(row.get("crop_confidence", 0.0)) < float(threshold):
                 row["handoff_crop"] = False
                 row["predicted_part"] = "unknown"
                 row["part_abstained"] = True
