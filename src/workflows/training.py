@@ -689,7 +689,8 @@ class TrainingWorkflow:
         rebalance_history = rebalance_session.run()
         restore_best_state = getattr(rebalance_session, "restore_best_model_state", None)
         rebalance_best_state_restored = bool(restore_best_state()) if callable(restore_best_state) else False
-        calibration_split_name, calibration_loader = select_calibration_source(loaders, build_loader_sizes(loaders))
+        rebalance_loader_sizes = {str(name): loader_size(loader) for name, loader in loaders.items()}
+        calibration_split_name, calibration_loader = select_calibration_source(loaders, rebalance_loader_sizes)
         rebalance_calibration = (
             adapter.calibrate_ood(calibration_loader)
             if calibration_loader is not None and loader_size(calibration_loader) > 0

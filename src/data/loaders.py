@@ -356,11 +356,11 @@ def create_training_loaders(
                     seed_offset=30,
                 )
                 for loader in (loaders["ood_dev"], loaders["ood"]):
-                    dataset = getattr(loader, "dataset", None)
-                    if dataset is not None:
-                        dataset.ood_sample_types = [
+                    ood_split_dataset: Any = getattr(loader, "dataset", None)
+                    if ood_split_dataset is not None:
+                        ood_split_dataset.ood_sample_types = [
                             slice_map.get(str(Path(path).resolve(strict=False)), "unlabeled")
-                            for path in list(getattr(dataset, "image_paths", []))
+                            for path in list(getattr(ood_split_dataset, "image_paths", []))
                         ]
                     setattr(loader, "_ood_split_manifest", manifest)
                     setattr(

@@ -13,12 +13,6 @@ from PIL import Image
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
-from src.shared.adapter_paths import (
-    ADAPTER_BUNDLE_DIR_NAME,
-    normalize_adapter_name,
-    resolve_adapter_bundle_dir,
-)
-from src.shared.json_utils import read_json_dict
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
     build_router_skipped_analysis,
@@ -28,7 +22,13 @@ from src.pipeline.inference_payloads import (
     build_unknown_crop_result,
     normalize_router_analysis,
 )
+from src.shared.adapter_paths import (
+    ADAPTER_BUNDLE_DIR_NAME,
+    normalize_adapter_name,
+    resolve_adapter_bundle_dir,
+)
 from src.shared.contracts import InferenceResult, RouterAnalysisResult
+from src.shared.json_utils import read_json_dict
 from src.training.services.runtime import resolve_runtime_device
 
 logger = logging.getLogger(__name__)
@@ -379,11 +379,12 @@ class RouterAdapterRuntime:
         router_analysis: RouterAnalysisResult
 
         if trusted_hint_skip:
+            trusted_crop_name = str(crop_name or "").strip().lower()
             self._emit_status(
-                f"[ROUTER] Trusted hint; skipped router crop={crop_name} part={part_name or 'unknown'}"
+                f"[ROUTER] Trusted hint; skipped router crop={trusted_crop_name} part={part_name or 'unknown'}"
             )
             router_analysis = build_router_skipped_analysis(
-                crop_name=crop_name,
+                crop_name=trusted_crop_name,
                 part_name=part_name,
                 router_confidence=router_confidence,
                 status="trusted_hint_skipped",

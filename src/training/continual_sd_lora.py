@@ -7,7 +7,7 @@ import inspect
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence, cast
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, cast
 
 import torch
 import torch.nn as nn
@@ -658,7 +658,7 @@ class ContinualSDLoRATrainer:
         self._trainable_params_cache: Optional[List[torch.nn.Parameter]] = None
         self._ood_calibration_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
         self._oe_loader: Optional[Iterable[Dict[str, torch.Tensor]]] = None
-        self._oe_loader_iter: Optional[Iterable[Dict[str, torch.Tensor]]] = None
+        self._oe_loader_iter: Optional[Iterator[Dict[str, torch.Tensor]]] = None
         self._active_training_stage = "main"
         self._optimizer_override: Optional[Dict[str, float]] = None
         self.class_balance_runtime = (
@@ -985,6 +985,8 @@ class ContinualSDLoRATrainer:
             aux_batch = self._next_oe_batch()
             if aux_batch is None or float(self.config.oe_loss_weight) <= 0.0:
                 return total_loss
+            if self.classifier is None:
+                raise RuntimeError("Classifier is not initialized.")
             aux_images = aux_batch["images"].to(self.device, non_blocking=True)
             aux_logits = self.classifier(self.encode(aux_images))
             oe_loss = self._compute_oe_uniform_loss(aux_logits)

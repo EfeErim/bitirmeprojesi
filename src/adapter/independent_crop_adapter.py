@@ -20,8 +20,8 @@ from src.adapter.checkpointing import (
 from src.adapter.checkpointing import (
     save_training_checkpoint as save_adapter_training_checkpoint,
 )
-from src.shared.contracts import AdapterMetadata
 from src.shared.adapter_paths import normalize_adapter_name, resolve_adapter_bundle_dir
+from src.shared.contracts import AdapterMetadata
 from src.shared.json_utils import deep_merge, read_json_dict, write_json
 from src.training.services.config_surface import extract_continual_training_config
 from src.training.services.runtime import resolve_runtime_device, resolve_session_num_epochs
