@@ -35,16 +35,17 @@ If you are completely new, read in this order:
 
 This repository is intentionally narrow. The maintained user surfaces are:
 
-- Notebook 0 grouped dataset preparation: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
-- Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
-- Notebook 1 router-only crop and part identification: `colab_notebooks/1_router_adapter_inference.ipynb`
-- Notebook 3 direct adapter smoke test: `colab_notebooks/3_adapter_smoke_test.ipynb`
+- Notebook 0 prepare grouped dataset for training: `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
+- Notebook 1 identify crop and part with router: `colab_notebooks/1_identify_crop_part_with_router.ipynb`
+- Notebook 2 train continual SD-LoRA adapter: `colab_notebooks/2_train_continual_sd_lora_adapter.ipynb`
+- Notebook 3 validate exported adapter directly: `colab_notebooks/3_validate_exported_adapter_directly.ipynb`
+- Notebook 5 calibrate router handoff thresholds: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
 - CLI training: `.\scripts\python.cmd -m src.app.cli training ...`
 - CLI inference: `.\scripts\python.cmd -m src.app.cli inference ...`
 
 There is also one tracked convenience notebook:
 
-- Notebook 4 minimal direct adapter smoke UI: `colab_notebooks/4_simple_adapter_smoke_test.ipynb`
+- Notebook 4 simple direct adapter test UI: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
 
 Notebook 4 is a thin convenience wrapper over the same direct-adapter smoke-test helpers used by Notebook 3. It is tracked in the repo, but it is not a separate canonical workflow surface.
 
@@ -108,6 +109,12 @@ Notebook 3 is different:
 - It skips the router.
 - It loads one adapter directly.
 - It is used to confirm that an exported adapter still works.
+
+Notebook 5 is different:
+
+- It calibrates router handoff thresholds from an offline `data/router_eval/` surface.
+- It runs the maintained router evaluation and calibration scripts.
+- It reports recommended config overrides, but it does not edit config files automatically.
 
 ## Key Technical Facts
 
@@ -473,7 +480,7 @@ These files organize the existing raw artifacts; they do not replace or delete t
 
 ```text
 runs/<crop>/<part>/<RUN_ID>/
-  notebooks/2_interactive_adapter_training.executed.ipynb
+  notebooks/2_train_continual_sd_lora_adapter.executed.ipynb
   outputs/colab_notebook_training/
   telemetry/
   checkpoint_state/
@@ -583,7 +590,7 @@ Do not treat generated outputs as tracked implementation files unless you explic
 ## Where To Read Next
 
 - [docs/README.md](docs/README.md): documentation map and reading paths
-- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, and Notebook 4 guide
+- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, Notebook 4, and Notebook 5 guide
 - [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md): how deployment readiness is decided
 - [docs/architecture/overview.md](docs/architecture/overview.md): code and data flow map
 

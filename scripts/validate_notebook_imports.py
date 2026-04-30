@@ -298,7 +298,7 @@ def test_adapter_smoke_notebook_surface() -> None:
 
 
 def test_adapter_smoke_notebook_bootstrap_contract() -> None:
-    sources = _load_notebook_sources("3_adapter_smoke_test.ipynb")
+    sources = _load_notebook_sources("3_validate_exported_adapter_directly.ipynb")
 
     _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 3")
 
@@ -307,7 +307,7 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
 
 
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
-    sources = _load_notebook_sources("4_simple_adapter_smoke_test.ipynb")
+    sources = _load_notebook_sources("4_simple_direct_adapter_test_ui.ipynb")
 
     _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 4")
 
@@ -358,7 +358,7 @@ def test_colab_helpers() -> None:
 
 
 def test_data_prep_notebook_contract() -> None:
-    sources = _load_notebook_sources("0_grouped_dataset_preparation.ipynb")
+    sources = _load_notebook_sources("0_prepare_grouped_dataset_for_training.ipynb")
     bootstrap_source = _find_code_cell_source(
         sources,
         "from scripts.colab_live_telemetry import ColabLiveTelemetry",
@@ -465,7 +465,7 @@ def test_repo_dataset_scaffold() -> None:
 
 
 def test_training_notebook_dataset_contract_detection() -> None:
-    sources = _load_notebook_sources("2_interactive_adapter_training.ipynb")
+    sources = _load_notebook_sources("2_train_continual_sd_lora_adapter.ipynb")
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in sources.full_source
     assert "Notebook 0'un yazdigi <dataset_key>/continual|val|test|ood yapisini tutan repo-ici root." in sources.full_source
     assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in sources.full_source
@@ -494,7 +494,7 @@ def test_training_notebook_dataset_contract_detection() -> None:
 
 
 def test_training_notebook_bootstrap_contract() -> None:
-    sources = _load_notebook_sources("2_interactive_adapter_training.ipynb")
+    sources = _load_notebook_sources("2_train_continual_sd_lora_adapter.ipynb")
     bootstrap_source = _find_code_cell_source(
         sources,
         "from scripts.colab_live_telemetry import ColabLiveTelemetry",
@@ -638,6 +638,22 @@ def test_training_notebook_bootstrap_contract() -> None:
         )
 
 
+def test_router_calibration_notebook_contract() -> None:
+    sources = _load_notebook_sources("5_calibrate_router_handoff_thresholds.ipynb")
+
+    _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 5")
+
+    assert "from scripts.evaluate_router_surface import discover_eval_samples, evaluate_router_surface" in sources.full_source
+    assert "from scripts.calibrate_router_surface import calibrate_router_surface" in sources.full_source
+    assert "ROUTER_EVAL_ROOT = 'data/router_eval'" in sources.full_source
+    assert "RUN_BASELINE_EVAL = True" in sources.full_source
+    assert "RUN_CALIBRATION = True" in sources.full_source
+    assert "CALIBRATION_PRESET = 'quick'" in sources.full_source
+    assert "target_negative_false_accept_rate=TARGET_NEGATIVE_FALSE_ACCEPT_RATE" in sources.full_source
+    assert "max_crop_accuracy_drop=MAX_CROP_ACCURACY_DROP" in sources.full_source
+    assert "max_part_precision_drop=MAX_PART_PRECISION_DROP" in sources.full_source
+
+
 CHECKS = (
     ValidationCheck(
         result_name="Runtime Dependencies",
@@ -711,6 +727,15 @@ CHECKS = (
         success_message="Notebook 4 bootstrap uses GitHub/local repo discovery and launches the minimal smoke UI",
         failure_prefix="Notebook 4 bootstrap contract failed",
         callback=test_simple_adapter_smoke_notebook_bootstrap_contract,
+    ),
+    ValidationCheck(
+        result_name="Notebook 5 Router Calibration",
+        step_id="NB5_ROUTER_CAL",
+        description="Notebook 5 router calibration contract",
+        success_message="Notebook 5 wraps maintained router evaluation and calibration scripts",
+        failure_prefix="Notebook 5 router calibration contract failed",
+        callback=test_router_calibration_notebook_contract,
+        requires_runtime_dependencies=False,
     ),
     ValidationCheck(
         result_name="Colab Helpers",

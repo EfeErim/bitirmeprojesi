@@ -196,6 +196,7 @@ These are intentionally separate surfaces:
 
 - router-driven inference uses the router first, then the crop adapter
 - Notebook 1 and `scripts/colab_router_adapter_inference.py` are router-only diagnostic surfaces that stop after crop/part identification and may return `part=unknown` when organ evidence is ambiguous
+- Notebook 5 is the router calibration notebook surface over `scripts/evaluate_router_surface.py` and `scripts/calibrate_router_surface.py`
 - direct adapter smoke testing loads one adapter directly and bypasses the router
 
 Notebook 3, Notebook 4, and `scripts/colab_adapter_smoke_test.py` are for the second case. Notebook 4 is a smaller widget wrapper over the same direct-adapter helper path.

@@ -132,7 +132,9 @@ def _resolve_surface(summary_payload: Mapping[str, Any] | None, explicit_surface
     if surface:
         return surface
     notebook_surface = str(summary.get("notebook_surface", "") or "").strip()
-    if notebook_surface.endswith("2_interactive_adapter_training.ipynb"):
+    if notebook_surface.endswith(
+        ("2_train_continual_sd_lora_adapter.ipynb", "2_interactive_adapter_training.ipynb")
+    ):
         return "notebook_2"
     return "workflow"
 

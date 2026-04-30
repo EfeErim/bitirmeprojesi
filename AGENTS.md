@@ -23,13 +23,14 @@ Read these before making repo-wide assumptions:
 
 ## Maintained Entrypoints
 
-- Grouped dataset preparation: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
+- Grouped dataset preparation: `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
 - Training: `src/workflows/training.py` via `TrainingWorkflow.run(...)`
 - Inference: `src/workflows/inference.py` via `InferenceWorkflow.predict(...)`
-- Notebook training surface: `colab_notebooks/2_interactive_adapter_training.ipynb`
-- Notebook inference surface: `colab_notebooks/1_router_adapter_inference.ipynb`
-- Direct adapter validation: `colab_notebooks/3_adapter_smoke_test.ipynb` and `scripts/colab_adapter_smoke_test.py`
-- Auxiliary direct adapter UI: `colab_notebooks/4_simple_adapter_smoke_test.ipynb` and `scripts/colab_simple_adapter_smoke_ui.py`
+- Notebook training surface: `colab_notebooks/2_train_continual_sd_lora_adapter.ipynb`
+- Notebook inference surface: `colab_notebooks/1_identify_crop_part_with_router.ipynb`
+- Router calibration surface: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
+- Direct adapter validation: `colab_notebooks/3_validate_exported_adapter_directly.ipynb` and `scripts/colab_adapter_smoke_test.py`
+- Auxiliary direct adapter UI: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb` and `scripts/colab_simple_adapter_smoke_ui.py`
 - Repo validation and automation: `.github/workflows/ci.yml`, `scripts/validate_notebook_imports.py`, `scripts/validate_config_schema.py`, `scripts/benchmark_surfaces.py`
 
 ## Tracked Vs Local-Generated

@@ -4,17 +4,18 @@ This guide is written for someone who may be opening the AADS notebooks for the 
 
 It covers the maintained Colab surfaces:
 
-- Notebook 0: `colab_notebooks/0_grouped_dataset_preparation.ipynb`
-- Notebook 2: `colab_notebooks/2_interactive_adapter_training.ipynb`
-- Notebook 3: `colab_notebooks/3_adapter_smoke_test.ipynb`
+- Notebook 0: `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
+- Notebook 2: `colab_notebooks/2_train_continual_sd_lora_adapter.ipynb`
+- Notebook 3: `colab_notebooks/3_validate_exported_adapter_directly.ipynb`
 
 Notebook 0 is the audit-first data-preparation surface. Notebook 2 is the training surface and consumes the prepared runtime dataset produced by Notebook 0. Notebook 3 checks an already exported adapter directly.
 
 The repo also tracks one auxiliary notebook:
 
-- Notebook 4: `colab_notebooks/4_simple_adapter_smoke_test.ipynb`
+- Notebook 4: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
+- Notebook 5: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
 
-Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. It is useful for quick manual checks, but it is not a separate canonical workflow contract.
+Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts.
 
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
@@ -38,6 +39,10 @@ Notebook 3 loads one saved adapter directly so you can inspect it and run a quic
 ### Notebook 4
 
 Notebook 4 exposes the same direct adapter validation path behind a smaller widget-based UI for quick manual smoke tests.
+
+### Notebook 5
+
+Notebook 5 calibrates router crop/part handoff thresholds from a prepared `data/router_eval/` surface and writes JSON summaries under `.runtime_tmp/`.
 
 ## Important Terms
 
@@ -668,7 +673,7 @@ Notebook 2 mirrors non-checkpoint outputs into:
 
 ```text
 runs/<crop>/<part>/<RUN_ID>/
-  notebooks/2_interactive_adapter_training.executed.ipynb
+  notebooks/2_train_continual_sd_lora_adapter.executed.ipynb
   outputs/colab_notebook_training/
   telemetry/
   checkpoint_state/
@@ -862,6 +867,29 @@ Use Notebook 3 when you want:
 - the fuller documented direct-adapter workflow
 - more explicit path handling
 - a surface that mirrors the maintained smoke-test helper flow step by step
+
+## Notebook 5 Router Calibration
+
+Notebook 5 runs the maintained router evaluation and calibration scripts from a notebook surface.
+
+Use Notebook 5 when you want to:
+
+- evaluate crop accuracy, negative false accepts, abstention, part precision/recall, wrong-part rejection, and latency
+- sweep router confidence, margin, part-abstention, prompt, and evidence-weight settings
+- write `router_eval.json` and `router_calibration.json` summaries under `.runtime_tmp/`
+
+Notebook 5 expects:
+
+```text
+data/router_eval/
+  id/<crop>/<part>/*
+  negatives/off_crop/<label>/*
+  negatives/non_plant/<label>/*
+  ambiguous/<label>/*
+  wrong_part/<crop>/<unsupported_part>/*
+```
+
+The notebook reports recommended dotted-path config overrides. Review those results before editing `config/base.json` or environment-specific config files.
 
 ## Deployment Handoff
 

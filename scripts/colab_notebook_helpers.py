@@ -1575,7 +1575,7 @@ def complete_notebook_training_run(
             "run_label": run_id,
             "crop_name": crop_name,
             "part_name": part_name,
-            "notebook_surface": "2_interactive_adapter_training.ipynb",
+            "notebook_surface": "2_train_continual_sd_lora_adapter.ipynb",
             "dataset_roots": {
                 "runtime_dataset_root": runtime_dataset_root,
                 "runtime_dataset_key": str(state.get("runtime_dataset_key") or ""),
@@ -1747,7 +1747,9 @@ def merge_training_summary_fields(
 
 def _resolve_traceability_surface(summary_payload: Dict[str, Any]) -> str:
     notebook_surface = str(summary_payload.get("notebook_surface", "") or "")
-    if notebook_surface.endswith("2_interactive_adapter_training.ipynb"):
+    if notebook_surface.endswith(
+        ("2_train_continual_sd_lora_adapter.ipynb", "2_interactive_adapter_training.ipynb")
+    ):
         return "notebook_2"
     return str(summary_payload.get("surface", "") or "workflow")
 

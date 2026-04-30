@@ -680,7 +680,7 @@ def test_merge_training_summary_fields_updates_summary_and_guided_outputs(tmp_pa
             "part_name": "leaf",
             "dataset_key": "tomato__leaf",
             "created_at": "2026-03-23T10:11:12+00:00",
-            "notebook_surface": "2_interactive_adapter_training.ipynb",
+            "notebook_surface": "2_train_continual_sd_lora_adapter.ipynb",
             "dataset_roots": {
                 "runtime_dataset_key": "tomato__leaf",
                 "runtime_dataset_root": "data/prepared_runtime_datasets/tomato__leaf",

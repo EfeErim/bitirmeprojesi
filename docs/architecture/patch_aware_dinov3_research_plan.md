@@ -25,7 +25,7 @@ Current repo boundary:
 
 ### 1. Patch-aware Notebook 0 audit
 
-Implement a research-only audit mode in `scripts.prepare_grouped_runtime_dataset.py` and expose it from `colab_notebooks/0_grouped_dataset_preparation.ipynb`.
+Implement a research-only audit mode in `scripts.prepare_grouped_runtime_dataset.py` and expose it from `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`.
 
 Research-mode behavior:
 

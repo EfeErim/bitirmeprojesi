@@ -2348,7 +2348,7 @@ def build_label_review_summary(
     review_preview = [dict(item) for item in list(label_review_candidates)[: max(0, int(max_preview_items))]]
     return {
         "schema_version": "v1_label_review_summary",
-        "surface": "notebook_0_grouped_dataset_preparation",
+        "surface": "notebook_0_prepare_grouped_dataset_for_training",
         "runtime_ready": bool(summary.get("runtime_ready")),
         "crop_name": str(summary.get("crop_name", "") or ""),
         "part_name": str(summary.get("part_name", "") or ""),

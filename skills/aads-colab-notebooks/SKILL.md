@@ -1,6 +1,6 @@
 ---
 name: aads-colab-notebooks
-description: Use when changing AADS v6 Colab Notebook 0, 1, 2, 3, or 4 flows, grouped dataset preparation, dataset materialization, Hugging Face token handling, Drive telemetry, or notebook-specific troubleshooting.
+description: Use when changing AADS v6 Colab Notebook 0, 1, 2, 3, 4, or 5 flows, grouped dataset preparation, router calibration, dataset materialization, Hugging Face token handling, Drive telemetry, or notebook-specific troubleshooting.
 ---
 
 # AADS Colab Notebooks
@@ -12,18 +12,19 @@ Use this skill for notebook wrapper behavior, Colab-only bootstrap logic, and no
 - `README.md`
 - `docs/user_guide/colab_training_manual.md`
 - `docs/architecture/overview.md`
-- `colab_notebooks/0_grouped_dataset_preparation.ipynb`
-- `colab_notebooks/1_router_adapter_inference.ipynb`
-- `colab_notebooks/2_interactive_adapter_training.ipynb`
-- `colab_notebooks/3_adapter_smoke_test.ipynb`
-- `colab_notebooks/4_simple_adapter_smoke_test.ipynb`
+- `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
+- `colab_notebooks/1_identify_crop_part_with_router.ipynb`
+- `colab_notebooks/2_train_continual_sd_lora_adapter.ipynb`
+- `colab_notebooks/3_validate_exported_adapter_directly.ipynb`
+- `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
+- `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
 - `scripts/colab_repo_bootstrap.py`
 - `scripts/colab_notebook_helpers.py`
 - `scripts/colab_dataset_layout.py`
 - `scripts/colab_live_telemetry.py`
 - `scripts/evaluate_dataset_layout.py`
 
-Load `skills/aads-training-ood/SKILL.md` for Notebook 0 or Notebook 2 training, readiness, or dataset-contract behavior. Load `skills/aads-inference-runtime/SKILL.md` for Notebook 1, Notebook 3, or Notebook 4 inference-side issues.
+Load `skills/aads-training-ood/SKILL.md` for Notebook 0 or Notebook 2 training, readiness, or dataset-contract behavior. Load `skills/aads-inference-runtime/SKILL.md` for Notebook 1, Notebook 3, Notebook 4, or Notebook 5 inference-side issues.
 
 ## Workflow
 
@@ -32,7 +33,8 @@ Load `skills/aads-training-ood/SKILL.md` for Notebook 0 or Notebook 2 training, 
 3. Notebook 2 accepts either a flat class-root dataset or an already prepared runtime dataset root. Workflow and CLI training still expect the runtime dataset contract. Do not blur those two contracts.
 4. Notebook 2 writes local outputs under `outputs/colab_notebook_training/`, uses repo-local telemetry/checkpoint storage by default, and mirrors non-checkpoint exports into `runs/<RUN_ID>/`.
 5. Notebook 3 is the fuller direct adapter validation surface, and Notebook 4 is its smaller widget wrapper. Both are separate from router-driven inference and should stay usable without the router.
-6. Keep Hugging Face token resolution aligned with the maintained sources documented in the Colab manual.
+6. Notebook 5 is the router calibration wrapper over `scripts/evaluate_router_surface.py` and `scripts/calibrate_router_surface.py`; keep calibration logic in those scripts.
+7. Keep Hugging Face token resolution aligned with the maintained sources documented in the Colab manual.
 7. When notebook prose, defaults, or exposed controls imply methodological claims about training, OOD handling, inference behavior, or data-prep policy, align them with the canonical workflow docs and literature-backed rationale where available. Avoid notebook-only scientific claims.
 
 ## Boundaries
