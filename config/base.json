@@ -1,5 +1,5 @@
 {
-  "config_schema_version": 1,
+  "config_schema_version": 2,
   "training": {
     "continual": {
       "backbone": {
@@ -39,6 +39,8 @@
         "real_split_dev_fraction": 0.4,
         "real_split_min_per_slice": 2,
         "real_split_manifest_name": "ood_split_manifest.json",
+        "real_dev_selection_enabled": true,
+        "real_dev_target_fpr": 0.05,
         "knn_backend": "auto",
         "knn_chunk_size": 2048,
         "sure_enabled": true,
@@ -62,6 +64,9 @@
         "sampler": "weighted",
         "objective": "logit_adjusted_cross_entropy",
         "logit_adjustment_tau": 1.0
+      },
+      "class_balance": {
+        "allow_sampler_and_loss_rebalance": false
       },
       "learning_rate": 0.00015,
       "weight_decay": 0.01,
@@ -111,7 +116,11 @@
         "best_metric": "val_loss",
         "emit_ood_gate": true,
         "require_ood_for_gate": true,
-        "ood_benchmark_min_classes": 3
+        "ood_benchmark_min_classes": 3,
+        "min_in_distribution_samples": 30,
+        "min_ood_samples": 30,
+        "min_ood_samples_per_type": 5,
+        "gate_auxiliary_ood_diagnostics": false
       }
     }
   },

@@ -36,12 +36,14 @@ class InferenceWorkflow:
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
+        trust_crop_hint: bool = False,
     ) -> InferenceResult:
         return self.runtime.predict_result(
             image,
             crop_hint=crop_hint,
             part_hint=part_hint,
             return_ood=return_ood,
+            trust_crop_hint=trust_crop_hint,
         )
 
     def predict(
@@ -51,10 +53,12 @@ class InferenceWorkflow:
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
+        trust_crop_hint: bool = False,
     ) -> Dict[str, Any]:
         return self.predict_result(
             image,
             crop_hint=crop_hint,
             part_hint=part_hint,
             return_ood=return_ood,
+            trust_crop_hint=trust_crop_hint,
         ).to_dict(include_ood=return_ood)

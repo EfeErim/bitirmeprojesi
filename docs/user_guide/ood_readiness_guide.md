@@ -159,7 +159,7 @@ Use these rules when building the pool:
 
 Important current repo behavior:
 
-- the repo does not require a fixed class-balance ratio, but the readiness gate now requires at least 5 in-distribution and 5 OOD evaluation examples before OOD metrics can satisfy the final target
+- the repo does not require a fixed class-balance ratio, but the readiness gate now requires at least 30 in-distribution examples, 30 OOD examples, and 5 examples per typed real-OOD slice before OOD metrics can satisfy the final target
 - a small clean `ood/` pool is better than a large noisy one
 - plant-like unknowns are usually more valuable than only easy random objects
 
@@ -192,7 +192,7 @@ Automatic real-OOD dev/test splitting:
 - each slice with at least `real_split_min_per_slice` images contributes at least one image to `ood_dev` and one image to the held-out final OOD test assignment
 - slices below that minimum are kept in the final test assignment and marked as too small for dev splitting in the manifest
 - if the manifest cannot produce both non-empty dev and test assignments, the repo falls back to the legacy pooled `ood/` loader
-- `ood_dev` is for future score-selection or optimization surfaces; `production_readiness.json` uses the final held-out real-OOD test assignment exposed as the normal `ood` loader
+- `ood_dev` is used for primary-score method and threshold selection when `training.continual.ood.real_dev_selection_enabled=true`; `production_readiness.json` uses the final held-out real-OOD test assignment exposed as the normal `ood` loader
 
 ## What Happens When Real OOD Data Exists
 
@@ -202,8 +202,9 @@ The workflow:
 
 1. trains the final model on the known classes
 2. calibrates OOD
-3. evaluates the model on a known-class split plus the held-out real-OOD test assignment when automatic splitting is viable, otherwise the real `ood/` pool
-4. uses those results in the final readiness decision
+3. when `ood_dev` exists and the OOD primary score is `"auto"`, selects the primary score method and threshold on `ood_dev`
+4. evaluates the model on a known-class split plus the held-out real-OOD test assignment when automatic splitting is viable, otherwise the real `ood/` pool
+5. uses those final held-out results in the readiness decision
 
 When this path is available, the readiness artifact records the OOD evidence source as:
 
@@ -211,9 +212,11 @@ When this path is available, the readiness artifact records the OOD evidence sou
 
 Primary-score selection guardrail:
 
-- if `training.continual.ood.primary_score_method` is set to `"auto"` and the repo only has one shared real `ood/` pool, the workflow keeps the concrete runtime detector path on `"ensemble"` instead of auto-tuning on that same pool
+- if `training.continual.ood.primary_score_method` is set to `"auto"` and a split-local `ood_dev` loader exists, the workflow can select the concrete primary score method and runtime threshold on `ood_dev`
+- the held-out final `ood` assignment is never used for score selection; it remains final readiness evidence
+- if the repo only has one shared real `ood/` pool and no `ood_dev`, the workflow keeps the concrete runtime detector path on `"ensemble"` and records `selection_source="real_ood_guardrail_no_dev"` instead of auto-tuning on that same pool
 - this is a repo-level engineering guardrail motivated by OOD-evaluation literature: method rankings can move when the benchmark construction changes, and reusing final deployment evidence for score-method selection would make the readiness claim more optimistic than the evidence supports; see [In or Out? Fixing ImageNet Out-of-Distribution Detection Evaluation](https://proceedings.mlr.press/v202/bitterwolf23a.html)
-- if you want to compare `ensemble`, `energy`, and `knn` on real OOD evidence, treat the split-local method-comparison artifacts as analysis only, then rerun with an explicit method or maintain a separate dev OOD pool outside the current shipped contract
+- if you want to compare `ensemble`, `energy`, and `knn` on final real OOD evidence, treat the split-local method-comparison artifacts as analysis only; use `ood_dev` or an explicit method for selection
 
 ## What Happens When Real OOD Data Is Missing
 
@@ -336,6 +339,9 @@ The current payload shape is conceptually:
   },
   "missing_requirements": [],
   "missing_deployment_requirements": [],
+  "readiness_tier": "ready | provisional | failed",
+  "auxiliary_checks": {},
+  "ood_type_sample_checks": {},
   "targets": {},
   "context": {}
 }
@@ -350,6 +356,8 @@ The current payload shape is conceptually:
 - `missing_deployment_requirements`: what still blocks deployment after the metrics pass, for example missing real OOD evidence
 - `classification_evidence.split_name`: which in-distribution split was used
 - `ood_evidence.source`: where OOD evidence came from
+- `auxiliary_checks`: non-blocking SURE and conformal diagnostics unless auxiliary gating is explicitly enabled
+- `ood_type_sample_checks`: per-real-OOD-slice evidence-sufficiency checks
 - `targets`: the thresholds the run was judged against
 
 ## How To Read `metric_gate.json`
@@ -375,8 +383,12 @@ The current default targets come from `DEFAULT_PLAN_TARGETS` in `src/training/se
 - `macro_f1 >= 0.90`
 - `ood_auroc >= 0.92`
 - `ood_false_positive_rate <= 0.05`
-- `ood_samples >= 5`
-- `in_distribution_samples >= 5`
+- `ood_samples >= 30`
+- `in_distribution_samples >= 30`
+- `ood_samples_per_type >= 5` when typed real-OOD slices are available
+
+The following diagnostics are reported under `auxiliary_checks` and do not block `ready` unless `training.continual.evaluation.gate_auxiliary_ood_diagnostics=true`:
+
 - `sure_ds_f1 >= 0.90`
 - `conformal_empirical_coverage >= 0.95`
 - `conformal_avg_set_size <= 2.0`
@@ -433,16 +445,25 @@ Important keys:
 - `emit_ood_gate`
 - `require_ood_for_gate`
 - `ood_benchmark_min_classes`
+- `min_in_distribution_samples`
+- `min_ood_samples`
+- `min_ood_samples_per_type`
+- `gate_auxiliary_ood_diagnostics`
 
 Current shipped defaults include:
 
 - `require_ood_for_gate: true`
 - `ood_benchmark_min_classes: 3`
+- `min_in_distribution_samples: 30`
+- `min_ood_samples: 30`
+- `min_ood_samples_per_type: 5`
+- `gate_auxiliary_ood_diagnostics: false`
 
 Practical meaning:
 
 - if OOD evidence is required and missing, the final readiness artifact fails
 - if no real `ood/` split exists and the fallback is possible, the workflow runs the held-out benchmark automatically
+- SURE and conformal diagnostics are still reported, but they are auxiliary by default
 
 ## Typical Readiness Outcomes
 
@@ -475,8 +496,9 @@ Common reasons:
 - AUROC too low
 - false positive rate too high
 - too few in-distribution or OOD evaluation samples to treat the OOD metrics as sufficient evidence
-- SURE or conformal coverage below threshold
-- conformal prediction sets are too large on average to be useful
+- too few examples in an individual real-OOD slice
+- SURE or conformal coverage below threshold when auxiliary diagnostics are explicitly gated
+- conformal prediction sets are too large on average to be useful when auxiliary diagnostics are explicitly gated
 - one completed held-out benchmark fold fell below the required OOD target even if the fold mean looked acceptable
 
 ## Method Naming Note

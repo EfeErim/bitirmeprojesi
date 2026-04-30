@@ -131,6 +131,53 @@ def test_build_class_balance_runtime_activates_and_normalizes_weights(tmp_path: 
     assert runtime["weights_by_class"]["disease_a"] > runtime["weights_by_class"]["healthy"]
 
 
+def test_build_class_balance_runtime_disables_loss_weights_when_sampler_is_weighted(tmp_path: Path):
+    crop_root = tmp_path / "tomato"
+    _write_manifest(
+        crop_root,
+        [
+            {"class_name": "healthy", "image_count": 260},
+            {"class_name": "disease_a", "image_count": 120},
+        ],
+    )
+
+    runtime = build_class_balance_runtime(
+        crop_name="tomato",
+        data_dir=tmp_path,
+        detected_classes=["healthy", "disease_a"],
+        split_class_counts={"train": {"healthy": 200, "disease_a": 90}},
+        resolved_train_sampler="weighted",
+    )
+
+    assert runtime["active"] is False
+    assert runtime["loss_weighting_disabled_reason"] == "weighted_sampler_active"
+    assert runtime["weights_by_class"] == {}
+
+
+def test_build_class_balance_runtime_allows_explicit_sampler_and_loss_rebalance(tmp_path: Path):
+    crop_root = tmp_path / "tomato"
+    _write_manifest(
+        crop_root,
+        [
+            {"class_name": "healthy", "image_count": 260},
+            {"class_name": "disease_a", "image_count": 120},
+        ],
+    )
+
+    runtime = build_class_balance_runtime(
+        crop_name="tomato",
+        data_dir=tmp_path,
+        detected_classes=["healthy", "disease_a"],
+        split_class_counts={"train": {"healthy": 200, "disease_a": 90}},
+        resolved_train_sampler="weighted",
+        allow_sampler_and_loss_rebalance=True,
+    )
+
+    assert runtime["active"] is True
+    assert runtime["loss_weighting_disabled_reason"] == ""
+    assert set(runtime["weights_by_class"].keys()) == {"healthy", "disease_a"}
+
+
 def test_build_class_balance_runtime_reports_under_min_classes(tmp_path: Path):
     crop_root = tmp_path / "tomato"
     _write_manifest(

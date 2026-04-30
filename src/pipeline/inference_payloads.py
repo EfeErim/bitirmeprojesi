@@ -47,10 +47,12 @@ def build_router_skipped_analysis(
     crop_name: str,
     part_name: str | None,
     router_confidence: float,
+    status: str = "skipped",
+    message: str = "Router skipped because crop_hint was provided.",
 ) -> RouterAnalysisResult:
     return RouterAnalysisResult(
-        status="skipped",
-        message="Router skipped because crop_hint was provided.",
+        status=str(status or "skipped"),
+        message=str(message or "Router skipped because crop_hint was provided."),
         primary_detection=RouterDetection(
             crop=str(crop_name or "unknown"),
             part=str(part_name or "unknown"),

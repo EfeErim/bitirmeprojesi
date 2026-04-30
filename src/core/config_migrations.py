@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, Dict, Mapping
 
 CONFIG_SCHEMA_VERSION_KEY = "config_schema_version"
-CURRENT_CONFIG_SCHEMA_VERSION = 1
+CURRENT_CONFIG_SCHEMA_VERSION = 2
 
 _CONFIG_SURFACE_KEYS = frozenset({"training", "router", "ood", "inference", "colab"})
 _UNSUPPORTED_TOP_LEVEL_KEYS = frozenset({"ood"})

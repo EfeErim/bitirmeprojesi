@@ -18,6 +18,7 @@ def _build_parser() -> argparse.ArgumentParser:
     inference.add_argument("--config-env", default="colab")
     inference.add_argument("--crop", dest="crop_hint")
     inference.add_argument("--part", dest="part_hint")
+    inference.add_argument("--trust-crop-hint", action="store_true")
     inference.add_argument("--adapter-root", type=Path)
     inference.add_argument("--device", default="cuda")
 
@@ -53,6 +54,7 @@ def main() -> int:
             crop_hint=args.crop_hint,
             part_hint=args.part_hint,
             return_ood=True,
+            trust_crop_hint=bool(args.trust_crop_hint),
         )
         print(json.dumps(result, indent=2))
         return 0

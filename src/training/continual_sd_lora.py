@@ -226,6 +226,10 @@ class ContinualSDLoRAConfig:
     evaluation_emit_ood_gate: bool = True
     evaluation_require_ood_for_gate: bool = True
     evaluation_ood_benchmark_min_classes: int = 3
+    evaluation_min_in_distribution_samples: int = 30
+    evaluation_min_ood_samples: int = 30
+    evaluation_min_ood_samples_per_type: int = 5
+    evaluation_gate_auxiliary_ood_diagnostics: bool = False
     # --- Bi-directional Energy Regularization (BER) ---
     ber_enabled: bool = False
     ber_lambda_old: float = 0.1
@@ -301,6 +305,12 @@ class ContinualSDLoRAConfig:
             raise ValueError("early_stopping.min_delta must be non-negative.")
         if self.evaluation_ood_benchmark_min_classes < 1:
             raise ValueError("evaluation_ood_benchmark_min_classes must be at least 1.")
+        if self.evaluation_min_in_distribution_samples < 0:
+            raise ValueError("evaluation_min_in_distribution_samples must be non-negative.")
+        if self.evaluation_min_ood_samples < 0:
+            raise ValueError("evaluation_min_ood_samples must be non-negative.")
+        if self.evaluation_min_ood_samples_per_type < 0:
+            raise ValueError("evaluation_min_ood_samples_per_type must be non-negative.")
         if self.ood_primary_score_method not in SUPPORTED_REQUESTED_OOD_SCORE_METHODS:
             raise ValueError(
                 "ood.primary_score_method must be one of: " + ", ".join(SUPPORTED_REQUESTED_OOD_SCORE_METHODS) + "."
@@ -457,6 +467,10 @@ class ContinualSDLoRAConfig:
                 "emit_ood_gate": self.evaluation_emit_ood_gate,
                 "require_ood_for_gate": self.evaluation_require_ood_for_gate,
                 "ood_benchmark_min_classes": self.evaluation_ood_benchmark_min_classes,
+                "min_in_distribution_samples": self.evaluation_min_in_distribution_samples,
+                "min_ood_samples": self.evaluation_min_ood_samples,
+                "min_ood_samples_per_type": self.evaluation_min_ood_samples_per_type,
+                "gate_auxiliary_ood_diagnostics": self.evaluation_gate_auxiliary_ood_diagnostics,
             },
         }
         if self.extra:
@@ -573,6 +587,12 @@ class ContinualSDLoRAConfig:
             evaluation_emit_ood_gate=bool(evaluation.get("emit_ood_gate", True)),
             evaluation_require_ood_for_gate=bool(evaluation.get("require_ood_for_gate", True)),
             evaluation_ood_benchmark_min_classes=int(evaluation.get("ood_benchmark_min_classes", 3)),
+            evaluation_min_in_distribution_samples=int(evaluation.get("min_in_distribution_samples", 30)),
+            evaluation_min_ood_samples=int(evaluation.get("min_ood_samples", 30)),
+            evaluation_min_ood_samples_per_type=int(evaluation.get("min_ood_samples_per_type", 5)),
+            evaluation_gate_auxiliary_ood_diagnostics=bool(
+                evaluation.get("gate_auxiliary_ood_diagnostics", False)
+            ),
             extra=_collect_extra_training_fields(normalized),
         )
         config.validate()

@@ -949,6 +949,7 @@ def persist_validation_artifacts(
     telemetry_subdir: str | None = None,
     gate_targets: Dict[str, float] | None = None,
     require_ood: bool = False,
+    gate_auxiliary_ood_diagnostics: bool = False,
     emit_metric_gate: bool = True,
     ood_labels: Sequence[int] | None = None,
     ood_scores: Sequence[float] | None = None,
@@ -1068,6 +1069,7 @@ def persist_validation_artifacts(
         metrics=metrics,
         targets=gate_targets,
         require_ood=require_ood,
+        gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
         context=metric_context,
     )
     metric_gate_json = validation_dir / "metric_gate.json"

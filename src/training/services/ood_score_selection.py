@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any, Dict, Mapping, Optional
+import math
+from typing import Any, Dict, Mapping, Optional, Sequence
 
 from src.training.services.metrics import compute_plan_metrics, load_plan_targets, validate_ood_metrics
 from src.training.types import EvaluationArtifactsPayload
@@ -56,6 +57,70 @@ def compute_method_metrics_from_evaluation(
             conformal_avg_set_size=evaluation.conformal_avg_set_size,
         )
     return method_metrics
+
+
+def select_threshold_at_target_fpr(
+    *,
+    ood_labels: Sequence[int],
+    ood_scores: Sequence[float],
+    target_fpr: float,
+) -> Dict[str, Any]:
+    labels = [int(label) for label in list(ood_labels)]
+    scores = [float(score) for score in list(ood_scores)]
+    if len(labels) != len(scores):
+        raise ValueError("ood_labels and ood_scores must have same length")
+    id_scores = sorted(score for label, score in zip(labels, scores) if int(label) == 0)
+    ood_only_scores = [score for label, score in zip(labels, scores) if int(label) == 1]
+    if not id_scores or not ood_only_scores:
+        return {
+            "threshold": None,
+            "target_fpr": float(target_fpr),
+            "false_positive_rate": None,
+            "true_positive_rate": None,
+            "in_distribution_samples": len(id_scores),
+            "ood_samples": len(ood_only_scores),
+        }
+    clipped_target = max(0.0, min(1.0, float(target_fpr)))
+    rank = int(math.ceil((1.0 - clipped_target) * len(id_scores)) - 1)
+    rank = max(0, min(len(id_scores) - 1, rank))
+    threshold = float(id_scores[rank])
+    false_positive_count = sum(1 for score in id_scores if score > threshold)
+    true_positive_count = sum(1 for score in ood_only_scores if score > threshold)
+    return {
+        "threshold": threshold,
+        "target_fpr": clipped_target,
+        "false_positive_rate": float(false_positive_count) / float(len(id_scores)),
+        "true_positive_rate": float(true_positive_count) / float(len(ood_only_scores)),
+        "in_distribution_samples": len(id_scores),
+        "ood_samples": len(ood_only_scores),
+    }
+
+
+def build_real_ood_dev_selection(
+    evaluation: Optional[EvaluationArtifactsPayload],
+    *,
+    fallback: str = "ensemble",
+    target_fpr: float = 0.05,
+) -> Dict[str, Any]:
+    if evaluation is None or not evaluation.ood_labels or not evaluation.ood_scores_by_method:
+        return {}
+    method_metrics = compute_method_metrics_from_evaluation(evaluation)
+    selected_method = select_best_ood_score_method(method_metrics, fallback=fallback)
+    method_scores = list(dict(evaluation.ood_scores_by_method or {}).get(selected_method, []) or [])
+    threshold_payload = select_threshold_at_target_fpr(
+        ood_labels=evaluation.ood_labels,
+        ood_scores=method_scores,
+        target_fpr=float(target_fpr),
+    )
+    return {
+        "selection_source": "real_ood_dev",
+        "selected_primary_score_method": selected_method,
+        "selected_threshold": threshold_payload.get("threshold"),
+        "target_fpr": float(threshold_payload.get("target_fpr", target_fpr)),
+        "dev_metrics": dict(method_metrics.get(selected_method, {})),
+        "threshold_selection": threshold_payload,
+        "method_metrics": method_metrics,
+    }
 
 
 def _coerce_metric_mapping(value: Any) -> Dict[str, Any]:

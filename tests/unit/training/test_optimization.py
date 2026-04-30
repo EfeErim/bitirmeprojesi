@@ -35,9 +35,16 @@ def _trial(
         "training.adapter.lora_dropout": lora_dropout,
         "training.fusion.dropout": fusion_dropout,
         "training.ood.threshold_factor": threshold_factor,
+        "training.ood.react_enabled": False,
+        "training.ood.react_percentile": 0.99,
         "training.optimization.logitnorm_tau": logitnorm_tau,
+        "training.optimization.label_smoothing": 0.0,
+        "training.data.augmentation_policy": "randaugment",
         "training.data.randaugment_num_ops": randaugment_num_ops,
         "training.data.randaugment_magnitude": randaugment_magnitude,
+        "training.data.augmix_severity": 3,
+        "training.classifier_rebalance.enabled": False,
+        "training.classifier_rebalance.logit_adjustment_tau": 1.0,
     }
     return {
         "run_id": run_id,

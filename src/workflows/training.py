@@ -22,6 +22,7 @@ from src.shared.json_utils import read_json
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.ood_score_selection import (
     apply_primary_score_method_to_evaluation,
+    build_real_ood_dev_selection,
     is_auto_primary_score_method,
     normalize_requested_primary_score_method,
     resolve_runtime_primary_score_method,
@@ -402,6 +403,7 @@ class _PrimaryScoreSelectionStage:
     requested_method: str
     selected_method: str
     selection_source: str
+    selection_metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -759,6 +761,8 @@ class TrainingWorkflow:
         requested_primary_score_method: str = "ensemble",
         selected_primary_score_method: str = "ensemble",
         selection_source: str = "",
+        gate_targets: Optional[Dict[str, float]] = None,
+        gate_auxiliary_ood_diagnostics: bool = False,
     ) -> Dict[str, Any]:
         if trainer is None or loader_size(loader) <= 0:
             return {}
@@ -794,7 +798,9 @@ class TrainingWorkflow:
             telemetry=telemetry,
             artifact_subdir=artifact_subdir,
             telemetry_subdir=telemetry_subdir,
+            gate_targets=gate_targets,
             require_ood=require_ood,
+            gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
             emit_metric_gate=emit_metric_gate,
             ood_labels=evaluation_result.ood_labels,
             ood_scores=evaluation_result.ood_scores,
@@ -845,6 +851,8 @@ class TrainingWorkflow:
         requested_primary_score_method: str,
         selected_primary_score_method: str,
         selection_source: str,
+        gate_targets: Optional[Dict[str, float]] = None,
+        gate_auxiliary_ood_diagnostics: bool = False,
     ) -> Dict[str, Dict[str, Any]]:
         split_specs = (
             ("val", loaders.get("val"), "validation"),
@@ -867,6 +875,8 @@ class TrainingWorkflow:
                 requested_primary_score_method=requested_primary_score_method,
                 selected_primary_score_method=selected_primary_score_method,
                 selection_source=selection_source,
+                gate_targets=gate_targets,
+                gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
             )
             for split_name, loader, artifact_subdir in split_specs
         }
@@ -886,6 +896,78 @@ class TrainingWorkflow:
         if detector is not None and hasattr(detector, "primary_score_method"):
             setattr(detector, "primary_score_method", resolved)
         return resolved
+
+    @staticmethod
+    def _apply_score_threshold_override_to_trainer(
+        trainer: Any,
+        *,
+        primary_score_method: str,
+        selected_threshold: Any,
+    ) -> None:
+        if selected_threshold is None or trainer is None:
+            return
+        detector = getattr(trainer, "ood_detector", None)
+        setter = getattr(detector, "set_score_threshold_override", None)
+        if callable(setter):
+            setter(primary_score_method, float(selected_threshold))
+
+    @staticmethod
+    def _build_evaluation_gate_targets(evaluation_cfg: Dict[str, Any]) -> Dict[str, float]:
+        targets: Dict[str, float] = {}
+        for config_key, target_key in (
+            ("min_in_distribution_samples", "in_distribution_samples"),
+            ("min_ood_samples", "ood_samples"),
+            ("min_ood_samples_per_type", "ood_samples_per_type"),
+        ):
+            if config_key in evaluation_cfg:
+                targets[target_key] = float(evaluation_cfg[config_key])
+        return targets
+
+    def _select_from_real_ood_dev(
+        self,
+        *,
+        trainer: Any,
+        loaders: Dict[str, Any],
+        requested_method: str,
+        fallback_method: str,
+        target_fpr: float,
+    ) -> Optional[_PrimaryScoreSelectionStage]:
+        if trainer is None or not is_auto_primary_score_method(requested_method):
+            return None
+        ood_dev_loader = loaders.get("ood_dev")
+        if loader_size(ood_dev_loader) <= 0:
+            return None
+        id_dev_loader = loaders.get("val") if loader_size(loaders.get("val")) > 0 else loaders.get("train")
+        if loader_size(id_dev_loader) <= 0:
+            return None
+        dev_evaluation = evaluate_model_with_artifact_metrics(
+            trainer,
+            id_dev_loader,
+            ood_loader=ood_dev_loader,
+        )
+        selection = build_real_ood_dev_selection(
+            dev_evaluation,
+            fallback=fallback_method,
+            target_fpr=float(target_fpr),
+        )
+        if not selection:
+            return None
+        selected_method = self._apply_primary_score_method_to_trainer(
+            trainer,
+            str(selection.get("selected_primary_score_method", fallback_method) or fallback_method),
+        )
+        selection["selected_primary_score_method"] = selected_method
+        self._apply_score_threshold_override_to_trainer(
+            trainer,
+            primary_score_method=selected_method,
+            selected_threshold=selection.get("selected_threshold"),
+        )
+        return _PrimaryScoreSelectionStage(
+            requested_method=requested_method,
+            selected_method=selected_method,
+            selection_source="real_ood_dev",
+            selection_metadata=dict(selection),
+        )
 
     def _resolve_ood_evidence(
         self,
@@ -1127,12 +1209,18 @@ class TrainingWorkflow:
             }
             best_state_restored = bool(best_state_restored or rebalance_best_state_restored)
         real_ood_present = loader_size(loaders.get("ood")) > 0
+        ood_cfg = dict(training_cfg.get("ood", {}))
+        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
+        gate_targets = self._build_evaluation_gate_targets(evaluation_cfg)
+        gate_auxiliary_ood_diagnostics = bool(
+            evaluation_cfg.get("gate_auxiliary_ood_diagnostics", False)
+        )
         primary_score_stage = _PrimaryScoreSelectionStage(
             requested_method=normalize_requested_primary_score_method(
-                training_cfg.get("ood", {}).get("primary_score_method", "auto")
+                ood_cfg.get("primary_score_method", "auto")
             ),
             selected_method=resolve_runtime_primary_score_method(
-                training_cfg.get("ood", {}).get("primary_score_method", "auto")
+                ood_cfg.get("primary_score_method", "auto")
             ),
             selection_source="configured",
         )
@@ -1144,14 +1232,32 @@ class TrainingWorkflow:
             requested_method=primary_score_stage.requested_method,
             selected_method=selected_primary_score_method,
             selection_source=primary_score_stage.selection_source,
+            selection_metadata=dict(primary_score_stage.selection_metadata),
         )
-        evaluation_cfg = dict(training_cfg.get("evaluation", {}))
         if real_ood_present and is_auto_primary_score_method(primary_score_stage.requested_method):
-            primary_score_stage = _PrimaryScoreSelectionStage(
-                requested_method=primary_score_stage.requested_method,
-                selected_method=primary_score_stage.selected_method,
-                selection_source="real_ood_guardrail",
-            )
+            real_dev_stage = None
+            if bool(ood_cfg.get("real_dev_selection_enabled", True)):
+                real_dev_stage = self._select_from_real_ood_dev(
+                    trainer=trainer_for_artifacts,
+                    loaders=loaders,
+                    requested_method=primary_score_stage.requested_method,
+                    fallback_method=primary_score_stage.selected_method,
+                    target_fpr=float(ood_cfg.get("real_dev_target_fpr", gate_targets.get("ood_false_positive_rate", 0.05))),
+                )
+            if real_dev_stage is not None:
+                primary_score_stage = real_dev_stage
+                split_evaluation_stage = self._collect_split_evaluations(
+                    trainer=trainer_for_artifacts,
+                    loaders=loaders,
+                )
+                split_evaluations = split_evaluation_stage.as_dict()
+            else:
+                primary_score_stage = _PrimaryScoreSelectionStage(
+                    requested_method=primary_score_stage.requested_method,
+                    selected_method=primary_score_stage.selected_method,
+                    selection_source="real_ood_guardrail_no_dev",
+                    selection_metadata=dict(primary_score_stage.selection_metadata),
+                )
 
         ood_stage = _OODEvidenceStage(source="", metrics={}, benchmark={})
         if not real_ood_present:
@@ -1189,6 +1295,7 @@ class TrainingWorkflow:
                         requested_method=primary_score_stage.requested_method,
                         selected_method=selected_primary_score_method,
                         selection_source="held_out_benchmark",
+                        selection_metadata=dict(primary_score_stage.selection_metadata),
                     )
 
         requested_primary_score_method = primary_score_stage.requested_method
@@ -1198,6 +1305,7 @@ class TrainingWorkflow:
             requested_primary_score_method=primary_score_stage.requested_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             selection_source=primary_score_stage.selection_source,
+            selection_metadata=dict(primary_score_stage.selection_metadata),
         )
         split_artifacts = self._persist_split_artifacts(
             artifact_dir=artifact_dir,
@@ -1212,6 +1320,8 @@ class TrainingWorkflow:
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             selection_source=primary_score_stage.selection_source,
+            gate_targets=gate_targets,
+            gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
         )
         validation_artifacts = split_artifacts["val"]
         test_artifacts = split_artifacts["test"]
@@ -1262,11 +1372,13 @@ class TrainingWorkflow:
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             selection_source=primary_score_stage.selection_source,
+            selection_metadata=dict(primary_score_stage.selection_metadata),
             ood_benchmark=ood_benchmark,
             ood_method_comparison=ood_method_comparison_context,
             oe_context=oe_context,
             classifier_rebalance=classifier_rebalance_context,
         )
+        readiness_context["gate_auxiliary_ood_diagnostics"] = gate_auxiliary_ood_diagnostics
         record_adapter_export_metadata_payload(
             adapter,
             ood_calibration=ood_calibration,
@@ -1280,6 +1392,7 @@ class TrainingWorkflow:
             selected_primary_score_method=primary_score_stage.selected_method,
             selection_source=primary_score_stage.selection_source,
             best_state_restored=best_state_restored,
+            selection_metadata=dict(primary_score_stage.selection_metadata),
         )
         adapter_dir = adapter.save_adapter(str(run_output_dir))
         readiness_artifacts = persist_production_readiness_artifact(
@@ -1292,6 +1405,7 @@ class TrainingWorkflow:
             classification_split=authoritative_split,
             ood_evidence_source=ood_evidence_source,
             ood_metrics=ood_evidence_metrics,
+            targets=gate_targets,
             context=readiness_context,
             require_ood=bool(evaluation_cfg.get("require_ood_for_gate", True)),
             telemetry=telemetry,
@@ -1335,6 +1449,7 @@ class TrainingWorkflow:
             requested_primary_score_method=requested_primary_score_method,
             selected_primary_score_method=primary_score_stage.selected_method,
             primary_score_selection_source=selection_source,
+            primary_score_selection=dict(primary_score_stage.selection_metadata),
             loss_name=str(training_cfg.get("optimization", {}).get("loss_name", "cross_entropy")),
             logitnorm_tau=float(training_cfg.get("optimization", {}).get("logitnorm_tau", 1.0)),
             final_metrics=_collect_final_metrics(history_payload),
@@ -1381,6 +1496,7 @@ class TrainingWorkflow:
                 "ood_requested_primary_score_method": requested_primary_score_method,
                 "ood_primary_score_method": primary_score_stage.selected_method,
                 "ood_primary_score_selection_source": selection_source,
+                "ood_primary_score_selection": dict(primary_score_stage.selection_metadata),
                 "ood_evidence_source": ood_evidence_source,
                 "train_sampler": sampler_runtime,
                 "oe": oe_context,

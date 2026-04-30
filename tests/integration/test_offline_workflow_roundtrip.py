@@ -293,26 +293,28 @@ def _evaluate_with_artifacts(_trainer, loader, *, ood_loader=None) -> Evaluation
     ood_scores_by_method: dict[str, list[float]] = {}
     ood_type_breakdown: dict[str, object] = {}
     if include_ood:
-        ood_labels = ([0] * 5) + ([1] * 5)
-        ood_scores = [0.10, 0.12, 0.14, 0.16, 0.18, 0.82, 0.84, 0.86, 0.88, 0.90]
+        ood_labels = ([0] * 30) + ([1] * 30)
+        ood_scores = [0.10 + (index % 5) * 0.01 for index in range(30)] + [
+            0.82 + (index % 5) * 0.02 for index in range(30)
+        ]
         ood_scores_by_method = {
             "ensemble": list(ood_scores),
         }
         ood_type_breakdown = {
             "field": {
-                "sample_count": 5,
+                "sample_count": 30,
                 "metrics": {
                     "ood_auroc": 1.0,
                     "ood_false_positive_rate": 0.0,
-                    "ood_samples": 5,
-                    "in_distribution_samples": 5,
+                    "ood_samples": 30,
+                    "in_distribution_samples": 30,
                 },
                 "method_metrics": {
                     "ensemble": {
                         "ood_auroc": 1.0,
                         "ood_false_positive_rate": 0.0,
-                        "ood_samples": 5,
-                        "in_distribution_samples": 5,
+                        "ood_samples": 30,
+                        "in_distribution_samples": 30,
                     }
                 },
             }
@@ -335,7 +337,7 @@ def _evaluate_with_artifacts(_trainer, loader, *, ood_loader=None) -> Evaluation
             "split_name": split_name,
             "ood_requested_primary_score_method": "auto",
             "ood_primary_score_method": "ensemble",
-            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_primary_score_selection_source": "real_ood_guardrail_no_dev",
             "ood_score_methods": ["ensemble"] if include_ood else [],
         },
     )
@@ -480,6 +482,7 @@ def offline_roundtrip(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict:
         Image.new("RGB", (8, 8), color=(0, 160, 0)),
         crop_hint="tomato",
         part_hint="leaf",
+        trust_crop_hint=True,
     )
 
     adapter_meta = json.loads((deployment_root / "adapter_meta.json").read_text(encoding="utf-8"))

@@ -30,6 +30,8 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["ber_lambda_new"] == 0.1
     assert continual["ood"]["ber_warmup_steps"] == 50
     assert continual["ood"]["primary_score_method"] == "auto"
+    assert continual["ood"]["real_dev_selection_enabled"] is True
+    assert continual["ood"]["real_dev_target_fpr"] == 0.05
     assert continual["ood"]["energy_temperature_mode"] == "auto"
     assert continual["ood"]["react_enabled"] is False
     assert continual["ood"]["oe_enabled"] is False
@@ -44,6 +46,10 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["evaluation"]["best_metric"] == "val_loss"
     assert continual["evaluation"]["require_ood_for_gate"] is True
     assert continual["evaluation"]["ood_benchmark_min_classes"] == 3
+    assert continual["evaluation"]["min_in_distribution_samples"] == 30
+    assert continual["evaluation"]["min_ood_samples"] == 30
+    assert continual["evaluation"]["min_ood_samples_per_type"] == 5
+    assert continual["evaluation"]["gate_auxiliary_ood_diagnostics"] is False
     assert continual["data"]["sampler"] == "auto"
     assert continual["data"]["loader_error_policy"] == "tolerant"
     assert continual["data"]["augmentation_policy"] == "randaugment"
@@ -58,6 +64,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["data"]["cache_train_split"] is True
     assert continual["data"]["validate_images_on_init"] is False
     assert continual["classifier_rebalance"]["enabled"] is False
+    assert continual["class_balance"]["allow_sampler_and_loss_rebalance"] is False
 
 
 def test_extract_continual_training_config_normalizes_root_shape():
@@ -87,6 +94,8 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["real_split_dev_fraction"] == 0.4
     assert root_normalized["ood"]["real_split_min_per_slice"] == 2
     assert root_normalized["ood"]["real_split_manifest_name"] == "ood_split_manifest.json"
+    assert root_normalized["ood"]["real_dev_selection_enabled"] is True
+    assert root_normalized["ood"]["real_dev_target_fpr"] == 0.05
     assert root_normalized["ood"]["conformal_method"] == "raps"
     assert root_normalized["ood"]["conformal_raps_lambda"] == 0.2
     assert root_normalized["data"]["augmentation_policy"] == "randaugment"
@@ -95,6 +104,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["data"]["randaugment_magnitude"] == 7
     assert root_normalized["data"]["augmix_severity"] == 3
     assert root_normalized["data"]["allow_under_min_training"] is False
+    assert root_normalized["class_balance"]["allow_sampler_and_loss_rebalance"] is False
 
 
 def test_extract_continual_training_config_rejects_flat_noncanonical_shape():

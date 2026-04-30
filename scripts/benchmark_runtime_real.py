@@ -150,6 +150,7 @@ def collect_real_benchmarks(args: argparse.Namespace) -> Dict[str, Any]:
                 crop_hint=args.crop_hint,
                 part_hint=args.part_hint,
                 return_ood=not args.disable_ood,
+                trust_crop_hint=bool(args.trust_crop_hint),
             ),
             repeat=args.repeat,
             warmup=args.warmup,
@@ -163,8 +164,9 @@ def main() -> int:
     parser.add_argument("--device", default="cuda", help="Runtime device passed to InferenceWorkflow.")
     parser.add_argument("--environment", default=None, help="Optional config environment.")
     parser.add_argument("--adapter-root", type=Path, default=None, help="Optional adapter root override.")
-    parser.add_argument("--crop-hint", default=None, help="Optional crop hint for adapter-only timing.")
+    parser.add_argument("--crop-hint", default=None, help="Optional crop hint for inference timing.")
     parser.add_argument("--part-hint", default=None, help="Optional part hint paired with --crop-hint.")
+    parser.add_argument("--trust-crop-hint", action="store_true", help="Trust --crop-hint and skip router timing.")
     parser.add_argument("--repeat", type=int, default=5, help="Measured iterations per benchmark.")
     parser.add_argument("--warmup", type=int, default=1, help="Warmup iterations before timing.")
     parser.add_argument("--disable-ood", action="store_true", help="Disable OOD fields in inference payloads.")

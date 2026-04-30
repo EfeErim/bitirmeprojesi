@@ -51,6 +51,8 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "real_split_dev_fraction": 0.4,
             "real_split_min_per_slice": 2,
             "real_split_manifest_name": "ood_split_manifest.json",
+            "real_dev_selection_enabled": True,
+            "real_dev_target_fpr": 0.05,
             "knn_backend": "auto",
             "knn_chunk_size": 2048,
             "sure_enabled": True,
@@ -74,6 +76,9 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "sampler": "weighted",
             "objective": "logit_adjusted_cross_entropy",
             "logit_adjustment_tau": 1.0,
+        },
+        "class_balance": {
+            "allow_sampler_and_loss_rebalance": False,
         },
         "optimization": {
             "grad_accumulation_steps": 4,
@@ -116,6 +121,10 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "emit_ood_gate": True,
             "require_ood_for_gate": True,
             "ood_benchmark_min_classes": 3,
+            "min_in_distribution_samples": 30,
+            "min_ood_samples": 30,
+            "min_ood_samples_per_type": 5,
+            "gate_auxiliary_ood_diagnostics": False,
         },
         "learning_rate": 1e-4,
         "weight_decay": 0.01,
@@ -144,6 +153,7 @@ def normalize_continual_training_config(
     fusion = normalized.setdefault("fusion", {})
     ood = normalized.setdefault("ood", {})
     classifier_rebalance = normalized.setdefault("classifier_rebalance", {})
+    class_balance = normalized.setdefault("class_balance", {})
     optimization = normalized.setdefault("optimization", {})
     scheduler = optimization.setdefault("scheduler", {})
     data = normalized.setdefault("data", {})
@@ -203,6 +213,8 @@ def normalize_continual_training_config(
     ood["real_split_manifest_name"] = str(
         ood.get("real_split_manifest_name", "ood_split_manifest.json") or "ood_split_manifest.json"
     )
+    ood["real_dev_selection_enabled"] = bool(ood.get("real_dev_selection_enabled", True))
+    ood["real_dev_target_fpr"] = max(0.0, min(1.0, float(ood.get("real_dev_target_fpr", 0.05))))
     ood["knn_backend"] = str(ood.get("knn_backend", "auto"))
     ood["knn_chunk_size"] = int(ood.get("knn_chunk_size", 2048))
     ood["sure_enabled"] = bool(ood.get("sure_enabled", True))
@@ -248,6 +260,10 @@ def normalize_continual_training_config(
     )
     if classifier_rebalance["logit_adjustment_tau"] < 0.0:
         raise ValueError("training.continual.classifier_rebalance.logit_adjustment_tau must be non-negative.")
+
+    class_balance["allow_sampler_and_loss_rebalance"] = bool(
+        class_balance.get("allow_sampler_and_loss_rebalance", False)
+    )
 
     optimization["grad_accumulation_steps"] = int(optimization.get("grad_accumulation_steps", 4))
     optimization["max_grad_norm"] = float(optimization.get("max_grad_norm", 1.0))
@@ -296,6 +312,12 @@ def normalize_continual_training_config(
     evaluation["emit_ood_gate"] = bool(evaluation.get("emit_ood_gate", True))
     evaluation["require_ood_for_gate"] = bool(evaluation.get("require_ood_for_gate", True))
     evaluation["ood_benchmark_min_classes"] = int(evaluation.get("ood_benchmark_min_classes", 3))
+    evaluation["min_in_distribution_samples"] = int(evaluation.get("min_in_distribution_samples", 30))
+    evaluation["min_ood_samples"] = int(evaluation.get("min_ood_samples", 30))
+    evaluation["min_ood_samples_per_type"] = int(evaluation.get("min_ood_samples_per_type", 5))
+    evaluation["gate_auxiliary_ood_diagnostics"] = bool(
+        evaluation.get("gate_auxiliary_ood_diagnostics", False)
+    )
     evaluation.pop("ood_fallback_strategy", None)
     evaluation.pop("ood_benchmark_auto_run", None)
 

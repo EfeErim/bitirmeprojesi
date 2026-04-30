@@ -16,6 +16,6 @@
   "context": {
     "calibration_split_name": "val",
     "ood_primary_score_method": "ensemble",
-    "ood_primary_score_selection_source": "real_ood_guardrail"
+    "ood_primary_score_selection_source": "real_ood_dev"
   }
 }

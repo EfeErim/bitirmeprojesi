@@ -73,6 +73,8 @@ When docs, notes, and generated artifacts disagree, prefer:
 
 Supporting references:
 
+- [architecture/production_hardening_plan.md](architecture/production_hardening_plan.md)
+- [architecture/router_performance_literature_review.md](architecture/router_performance_literature_review.md)
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)
 

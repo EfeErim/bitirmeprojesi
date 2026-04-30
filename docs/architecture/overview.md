@@ -37,7 +37,7 @@ The configuration path is intentionally simple.
 2. If an environment is requested, such as `colab`, it deep-merges `config/colab.json` on top.
 3. `src/core/config_migrations.py` upgrades each config file through the declared `config_schema_version`.
 4. `src/training/services/config_surface.py` normalizes the public training surface under `training.continual`.
-5. Config files must declare `config_schema_version: 1` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface.
+5. Config files must declare `config_schema_version: 2` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface.
 6. `src/training/quantization.py` rejects prohibited 4-bit flags before the merged config is used.
 
 Why this matters:
@@ -66,7 +66,7 @@ src/workflows/training.py -> TrainingWorkflow.run(...)
    - early rejection when a supported class resolves below `100` images unless explicit few-shot research mode is enabled
    - runtime-only class-balance metadata injection before adapter initialization
 3. `src/data/loaders.py` creates the training loaders from the runtime dataset. The shipped `training.continual.data.sampler` default is `"auto"`, which keeps shuffle for roughly balanced continual splits and promotes the train loader to weighted sampling when the largest class is at least 1.5x the smallest non-zero class.
-4. `src/training/services/class_balance.py` computes the training-side class-support policy and effective-number class-balanced weights. When all supported classes resolve to at least `100` images and at least one class is in the `100-200` band, the trainer applies Cui et al.-style effective-number weighting to the training classifier loss across all supported classes while leaving validation/test loss unweighted for artifact comparability. Few-shot research mode can lower the hard floor for ablation runs while recording the production guardrail bypass in artifacts.
+4. `src/training/services/class_balance.py` computes the training-side class-support policy and effective-number class-balanced weights. When all supported classes resolve to at least `100` images and at least one class is in the `100-200` band, the trainer applies Cui et al.-style effective-number weighting to the training classifier loss across all supported classes while leaving validation/test loss unweighted for artifact comparability. If the train loader already resolved to weighted sampling, effective-number loss weighting is disabled by default unless `training.continual.class_balance.allow_sampler_and_loss_rebalance=true`. Few-shot research mode can lower the hard floor for ablation runs while recording the production guardrail bypass in artifacts.
 5. `src/adapter/independent_crop_adapter.py` exposes the public adapter lifecycle.
 5. `src/training/continual_sd_lora.py` owns the actual training engine:
    - backbone loading
@@ -144,7 +144,7 @@ Important detail:
 
 - the workflow uses the runtime folder name `continual`
 - workflow loading maps the logical training split onto that folder
-- real `ood/` pools stay in one input tree, but loader construction can write or reuse `ood/ood_split_manifest.json` and expose a manifest-only `ood_dev` assignment plus a held-out final OOD test assignment; the final assignment is loaded as the normal `ood` loader used by readiness
+- real `ood/` pools stay in one input tree, but loader construction can write or reuse `ood/ood_split_manifest.json` and expose a manifest-only `ood_dev` assignment plus a held-out final OOD test assignment; `ood_dev` can select the primary OOD score and threshold, while the final assignment is loaded as the normal `ood` loader used by readiness
 
 ## Inference Architecture
 
@@ -158,16 +158,17 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 
 1. `InferenceWorkflow` builds `src/pipeline/router_adapter_runtime.py`.
 2. The runtime loads config and resolves the adapter root.
-3. If the caller did not supply `crop_hint`, the runtime loads the canonical router surface `src/router/router_pipeline.py`.
+3. Unless `trust_crop_hint=True` is supplied with a crop hint, the runtime loads the canonical router surface `src/router/router_pipeline.py`.
 4. The router analyzes the image and produces a typed router result with normalized detections.
-5. The router keeps one canonical primary detection using router quality ranking when available, otherwise preserving router order.
-6. Before resolving any adapter, the runtime applies a conservative uncertainty gate on that primary detection using the configured router confidence and router margin thresholds.
-7. If the primary crop signal is too weak or too ambiguous, the payload status is `router_uncertain` and no adapter runs.
-8. Otherwise the runtime resolves the crop adapter directory from that primary detection.
-9. The runtime loads that adapter through `IndependentCropAdapter`.
-10. The image is preprocessed to the configured target size.
-11. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
-12. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
+5. A plain `crop_hint` is treated as untrusted; the router must identify the same crop before the adapter can load.
+6. The router keeps one canonical primary detection using router quality ranking when available, otherwise preserving router order.
+7. Before resolving any adapter, the runtime applies a conservative uncertainty gate on that primary detection using the configured router confidence and router margin thresholds.
+8. If the primary crop signal is too weak, ambiguous, or inconsistent with an untrusted crop hint, the payload status is `router_uncertain` and no adapter runs.
+9. Otherwise the runtime resolves the crop adapter directory from that primary detection or from the explicitly trusted crop hint.
+10. The runtime loads that adapter through `IndependentCropAdapter`.
+11. The image is preprocessed to the configured target size.
+12. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
+13. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
 
 If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
 If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
@@ -184,8 +185,8 @@ models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 
 If no part-specific bundle exists yet, the runtime still falls back to the legacy crop-only layout for older exports.
 
-If `crop_hint` is provided, the router step is skipped.
-In that case the payload still includes a `router` summary block with status `skipped` so callers can migrate to the structured router view without losing mirrored crop fields.
+If `crop_hint` is provided without `trust_crop_hint=True`, the router still runs and must agree before the adapter loads.
+If `trust_crop_hint=True` is provided with a crop hint, the router step is skipped. In that case the payload still includes a `router` summary block with status `trusted_hint_skipped` so callers can migrate to the structured router view without losing mirrored crop fields.
 
 `part_hint` is metadata only. It is not a separate adapter selector.
 
@@ -218,6 +219,19 @@ data/router_part_eval/<crop>/<part>/*
 ```
 
 The repo evaluates that surface with `scripts/evaluate_router_part_surface.py`.
+
+For full crop/part handoff calibration, the maintained eval-only dataset contract is:
+
+```text
+data/router_eval/
+  id/<crop>/<part>/*
+  negatives/off_crop/<label>/*
+  negatives/non_plant/<label>/*
+  ambiguous/<label>/*
+  wrong_part/<crop>/<unsupported_part>/*
+```
+
+The repo evaluates that surface with `scripts/evaluate_router_surface.py`, which reports crop accuracy, false accepts on negatives, abstention, part precision/recall, unsupported-part emissions, latency, risk-coverage, and threshold-sweep recommendations.
 
 ## OOD And Readiness Architecture
 
@@ -440,6 +454,7 @@ The repo validates the maintained surface through:
 - [../../README.md](../../README.md)
 - [../user_guide/colab_training_manual.md](../user_guide/colab_training_manual.md)
 - [../user_guide/ood_readiness_guide.md](../user_guide/ood_readiness_guide.md)
+- [router_performance_literature_review.md](router_performance_literature_review.md)
 - [ood_recommendation.md](ood_recommendation.md)
 - [unknown_disease_rejection.md](unknown_disease_rejection.md)
 - [../archive/experimental_leave_one_class_out_ood.md](../archive/experimental_leave_one_class_out_ood.md)

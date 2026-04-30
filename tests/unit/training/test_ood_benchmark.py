@@ -163,7 +163,7 @@ def test_run_leave_one_class_out_benchmark_writes_aggregate_artifacts(monkeypatc
     summary = run_leave_one_class_out_benchmark(
         crop_name="tomato",
         class_names=["healthy", "disease_a", "disease_b"],
-        loaders=_build_loaders(["healthy", "disease_a", "disease_b"]),
+        loaders=_build_loaders(["healthy", "disease_a", "disease_b"], eval_items=30),
         config={"training": {"continual": {"backbone": {"model_name": "fake"}}}},
         device="cpu",
         artifact_root=tmp_path / "training_metrics",

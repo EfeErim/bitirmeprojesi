@@ -346,27 +346,48 @@ class RouterAdapterRuntime:
             return ""
         return f"Router uncertainty gate rejected crop='{primary.crop}': " + "; ".join(reasons)
 
+    @staticmethod
+    def _crop_hint_agreement_message(*, crop_hint: str, router_crop: Optional[str]) -> str:
+        resolved_hint = str(crop_hint or "").strip().lower()
+        resolved_router_crop = str(router_crop or "").strip().lower()
+        if not resolved_router_crop or resolved_router_crop == "unknown":
+            return (
+                "Router could not confirm untrusted crop_hint="
+                f"'{resolved_hint}'. Adapter loading was skipped."
+            )
+        if resolved_hint != resolved_router_crop:
+            return (
+                "Router rejected untrusted crop_hint="
+                f"'{resolved_hint}' because it detected crop='{resolved_router_crop}'."
+            )
+        return ""
+
     def predict_result(
         self,
         image: ImageInput,
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
+        trust_crop_hint: bool = False,
     ) -> InferenceResult:
         prepared_image = self._coerce_image(image)
-        crop_name = str(crop_hint).strip().lower() if crop_hint else None
+        hint_crop_name = str(crop_hint).strip().lower() if crop_hint else None
         part_name = str(part_hint).strip().lower() if part_hint else None
+        crop_name = hint_crop_name if hint_crop_name and trust_crop_hint else None
+        trusted_hint_skip = bool(crop_name and trust_crop_hint)
         router_confidence = 1.0 if crop_name else 0.0
         router_analysis: RouterAnalysisResult
 
-        if crop_name:
+        if trusted_hint_skip:
             self._emit_status(
-                f"[ROUTER] Skipped; using crop hint crop={crop_name} part={part_name or 'unknown'}"
+                f"[ROUTER] Trusted hint; skipped router crop={crop_name} part={part_name or 'unknown'}"
             )
             router_analysis = build_router_skipped_analysis(
                 crop_name=crop_name,
                 part_name=part_name,
                 router_confidence=router_confidence,
+                status="trusted_hint_skipped",
+                message="Router skipped because trust_crop_hint=True.",
             )
         else:
             try:
@@ -383,6 +404,26 @@ class RouterAdapterRuntime:
             crop_name = str(detection.get("crop", "")).strip().lower() or None
             part_name = str(detection.get("part", "")).strip().lower() or None
             router_confidence = float(detection.get("crop_confidence", 0.0))
+            if hint_crop_name:
+                hint_message = self._crop_hint_agreement_message(
+                    crop_hint=hint_crop_name,
+                    router_crop=crop_name,
+                )
+                if hint_message:
+                    result = build_router_uncertain_result(
+                        crop_name=crop_name,
+                        part_name=part_name,
+                        router_confidence=router_confidence,
+                        message=hint_message,
+                        include_ood=return_ood,
+                        router_analysis=router_analysis,
+                    )
+                    self._emit_status(
+                        f"[RESULT] status={result.status} "
+                        f"router_confidence={result.router_confidence:.3f} "
+                        f"message={result.message}"
+                    )
+                    return result
             status_message = (
                 f"[ROUTER] crop={crop_name or 'unknown'} "
                 f"part={part_name or 'unknown'} "
@@ -406,7 +447,7 @@ class RouterAdapterRuntime:
             )
             return result
 
-        if not crop_hint:
+        if not trusted_hint_skip:
             uncertainty_message = self._router_uncertainty_message(router_analysis)
             if uncertainty_message:
                 result = build_router_uncertain_result(
@@ -466,11 +507,13 @@ class RouterAdapterRuntime:
         crop_hint: Optional[str] = None,
         part_hint: Optional[str] = None,
         return_ood: bool = True,
+        trust_crop_hint: bool = False,
     ) -> Dict[str, Any]:
         return self.predict_result(
             image,
             crop_hint=crop_hint,
             part_hint=part_hint,
             return_ood=return_ood,
+            trust_crop_hint=trust_crop_hint,
         ).to_dict(include_ood=return_ood)
 

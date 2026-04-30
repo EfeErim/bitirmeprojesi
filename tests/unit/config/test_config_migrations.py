@@ -32,7 +32,7 @@ def test_manager_rejects_unversioned_surface_payload(tmp_path):
     payload.pop("config_schema_version", None)
     _write_json(config_dir / "base.json", payload)
 
-    with pytest.raises(ValueError, match="must declare config_schema_version=1"):
+    with pytest.raises(ValueError, match=f"must declare config_schema_version={CURRENT_CONFIG_SCHEMA_VERSION}"):
         ConfigurationManager(config_dir=str(config_dir)).load_all_configs()
 
 
@@ -106,7 +106,7 @@ def test_load_config_file_requires_versioned_surface(tmp_path):
     payload.pop("config_schema_version", None)
     _write_json(config_dir / "env_alias.json", payload)
 
-    with pytest.raises(ValueError, match="must declare config_schema_version=1"):
+    with pytest.raises(ValueError, match=f"must declare config_schema_version={CURRENT_CONFIG_SCHEMA_VERSION}"):
         ConfigurationManager(config_dir=str(config_dir)).load_config_file("env_alias.json")
 
 

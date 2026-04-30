@@ -1,7 +1,9 @@
 from src.training.services.ood_score_selection import (
     apply_primary_score_method_to_evaluation,
+    build_real_ood_dev_selection,
     normalize_requested_primary_score_method,
     select_best_ood_score_method,
+    select_threshold_at_target_fpr,
 )
 from src.training.types import EvaluationArtifactsPayload, ValidationReport
 
@@ -103,3 +105,29 @@ def test_apply_primary_score_method_to_evaluation_rewrites_selected_scores():
     assert rewritten.ood_scores == [0.1, 0.9]
     assert rewritten.context["ood_requested_primary_score_method"] == "auto"
     assert rewritten.context["ood_primary_score_selection_source"] == "real_ood_split"
+
+
+def test_select_threshold_at_target_fpr_uses_id_score_quantile():
+    selected = select_threshold_at_target_fpr(
+        ood_labels=[0, 0, 0, 0, 1, 1],
+        ood_scores=[0.1, 0.2, 0.3, 0.4, 0.35, 0.9],
+        target_fpr=0.25,
+    )
+
+    assert selected["threshold"] == 0.3
+    assert selected["false_positive_rate"] == 0.25
+    assert selected["true_positive_rate"] == 1.0
+
+
+def test_build_real_ood_dev_selection_returns_method_and_threshold():
+    selection = build_real_ood_dev_selection(
+        _evaluation_payload(),
+        fallback="ensemble",
+        target_fpr=0.0,
+    )
+
+    assert selection["selection_source"] == "real_ood_dev"
+    assert selection["selected_primary_score_method"] == "ensemble"
+    assert selection["selected_threshold"] == 0.4
+    assert selection["target_fpr"] == 0.0
+    assert "energy" in selection["method_metrics"]

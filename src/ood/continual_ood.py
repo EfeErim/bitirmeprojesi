@@ -146,6 +146,7 @@ class ContinualOODDetector:
         react_percentile: float = 0.99,
         react_apply_during_calibration: bool = True,
         react_apply_during_inference: bool = True,
+        score_threshold_overrides: Optional[Dict[str, float]] = None,
     ) -> None:
         self.threshold_factor = float(threshold_factor)
         self.primary_score_method = normalize_primary_score_method(primary_score_method)
@@ -184,6 +185,13 @@ class ContinualOODDetector:
         self.react_apply_during_calibration = bool(react_apply_during_calibration)
         self.react_apply_during_inference = bool(react_apply_during_inference)
         self.react_threshold: Optional[float] = None
+        self.score_threshold_overrides: Dict[str, float] = {}
+        for method_name, threshold in dict(score_threshold_overrides or {}).items():
+            self.set_score_threshold_override(method_name, threshold)
+
+    def set_score_threshold_override(self, method_name: Any, threshold: Any) -> None:
+        resolved_method = normalize_primary_score_method(method_name)
+        self.score_threshold_overrides[resolved_method] = float(threshold)
 
     @staticmethod
     def _safe_std(value: torch.Tensor) -> torch.Tensor:
@@ -549,6 +557,14 @@ class ContinualOODDetector:
             ),
             "knn": torch.full((batch_size,), float(stats.knn_threshold), dtype=torch.float32, device=features.device),
         }
+        for method_name, threshold in self.score_threshold_overrides.items():
+            if method_name in candidate_thresholds:
+                candidate_thresholds[method_name] = torch.full(
+                    (batch_size,),
+                    float(threshold),
+                    dtype=torch.float32,
+                    device=features.device,
+                )
         primary_score = candidate_scores[self.primary_score_method]
         decision_threshold = candidate_thresholds[self.primary_score_method]
         is_ood = primary_score > decision_threshold

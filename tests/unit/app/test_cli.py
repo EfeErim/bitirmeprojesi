@@ -28,12 +28,13 @@ def test_cli_inference_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
                 "adapter_root": adapter_root,
             }
 
-        def predict(self, image, *, crop_hint=None, part_hint=None, return_ood=True):
+        def predict(self, image, *, crop_hint=None, part_hint=None, return_ood=True, trust_crop_hint=False):
             calls["predict"] = {
                 "image": image,
                 "crop_hint": crop_hint,
                 "part_hint": part_hint,
                 "return_ood": return_ood,
+                "trust_crop_hint": trust_crop_hint,
             }
             return {
                 "status": "success",
@@ -93,6 +94,7 @@ def test_cli_inference_dispatches_workflow(monkeypatch, capsys, tmp_path: Path):
         "crop_hint": "tomato",
         "part_hint": "leaf",
         "return_ood": True,
+        "trust_crop_hint": False,
     }
     assert json.loads(capsys.readouterr().out) == {
         "status": "success",

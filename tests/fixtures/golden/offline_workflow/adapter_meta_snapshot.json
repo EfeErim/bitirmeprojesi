@@ -13,7 +13,7 @@
     "authoritative_classification_split": "test",
     "ood_evidence_source": "real_ood_split",
     "primary_score_method": "ensemble",
-    "selection_source": "real_ood_guardrail"
+    "selection_source": "real_ood_dev"
   },
   "adapter_runtime": {
     "best_state_restored": true

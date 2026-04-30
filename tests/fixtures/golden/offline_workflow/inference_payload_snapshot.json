@@ -8,8 +8,8 @@
     "healthy"
   ],
   "router": {
-    "status": "skipped",
-    "message": "Router skipped because crop_hint was provided.",
+    "status": "trusted_hint_skipped",
+    "message": "Router skipped because trust_crop_hint=True.",
     "detections_count": 1,
     "primary_detection": {
       "crop": "tomato",

@@ -120,6 +120,30 @@ class FakeEmptyLoader(list):
 
 
 def _fake_evaluation_result(include_ood: bool) -> EvaluationArtifactsPayload:
+    ood_labels = [0] * 30 + [1] * 30 if include_ood else None
+    ood_scores = (
+        [0.10 + (index % 5) * 0.01 for index in range(30)]
+        + [0.80 + (index % 5) * 0.02 for index in range(30)]
+        if include_ood
+        else None
+    )
+    ood_type_breakdown = (
+        {
+            "field": {
+                "sample_count": 30,
+                "method_metrics": {
+                    "ensemble": {
+                        "ood_auroc": 1.0,
+                        "ood_false_positive_rate": 0.0,
+                        "in_distribution_samples": 30,
+                        "ood_samples": 30,
+                    }
+                },
+            }
+        }
+        if include_ood
+        else {}
+    )
     report = ValidationReport(
         val_loss=0.05,
         val_accuracy=1.0,
@@ -136,8 +160,9 @@ def _fake_evaluation_result(include_ood: bool) -> EvaluationArtifactsPayload:
         report=report,
         y_true=[0, 1, 0, 1],
         y_pred=[0, 1, 0, 1],
-        ood_labels=[0, 0, 0, 0, 0, 1, 1, 1, 1, 1] if include_ood else None,
-        ood_scores=[0.1, 0.2, 0.15, 0.18, 0.22, 0.8, 0.9, 0.82, 0.87, 0.92] if include_ood else None,
+        ood_labels=ood_labels,
+        ood_scores=ood_scores,
+        ood_type_breakdown=ood_type_breakdown,
         sure_ds_f1=0.95,
         conformal_empirical_coverage=0.97,
         conformal_avg_set_size=1.0,
@@ -718,7 +743,7 @@ def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mod
 
     assert result.production_readiness["context"]["ood_requested_primary_score_method"] == "auto"
     assert result.production_readiness["context"]["ood_primary_score_method"] == "ensemble"
-    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_guardrail"
+    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_guardrail_no_dev"
     assert saved_methods == [{"config": "ensemble", "detector": "ensemble"}]
 
 
@@ -800,8 +825,8 @@ def test_training_workflow_uses_held_out_benchmark_when_real_ood_is_missing(monk
                 "metrics": {
                     "ood_auroc": 0.96,
                     "ood_false_positive_rate": 0.03,
-                    "ood_samples": 5,
-                    "in_distribution_samples": 5,
+                    "ood_samples": 30,
+                    "in_distribution_samples": 30,
                     "sure_ds_f1": 0.94,
                     "conformal_empirical_coverage": 0.97,
                     "conformal_avg_set_size": 1.0,
@@ -933,8 +958,8 @@ def test_training_workflow_passes_benchmark_min_class_threshold(monkeypatch, tmp
                 "metrics": {
                     "ood_auroc": 0.96,
                     "ood_false_positive_rate": 0.03,
-                    "ood_samples": 5,
-                    "in_distribution_samples": 5,
+                    "ood_samples": 30,
+                    "in_distribution_samples": 30,
                     "sure_ds_f1": 0.94,
                     "conformal_empirical_coverage": 0.97,
                     "conformal_avg_set_size": 1.0,

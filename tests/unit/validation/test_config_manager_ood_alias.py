@@ -3,11 +3,12 @@ import json
 import pytest
 
 from src.core.config_manager import ConfigurationManager
+from src.core.config_migrations import CURRENT_CONFIG_SCHEMA_VERSION
 
 
 def _write_base_config(path, *, training_ood=None, top_level_ood=None):
     payload = {
-        "config_schema_version": 1,
+        "config_schema_version": CURRENT_CONFIG_SCHEMA_VERSION,
         "router": {"enabled": True, "type": "enhanced"},
         "training": {
             "continual": {

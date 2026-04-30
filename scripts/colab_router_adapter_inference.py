@@ -181,6 +181,7 @@ def run_inference(
     config_env: Optional[str] = "colab",
     crop_hint: Optional[str] = None,
     part_hint: Optional[str] = None,
+    trust_crop_hint: bool = False,
     device: str = "cuda",
     status_printer: Optional[StatusPrinter] = None,
     reuse_router: bool = True,
@@ -192,17 +193,19 @@ def run_inference(
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
     image = Image.open(image_path).convert("RGB")
 
-    if crop_hint:
+    if crop_hint and trust_crop_hint:
         crop_name = str(crop_hint).strip().lower()
         part_name = str(part_hint).strip().lower() if part_hint else None
         _emit_status(
             status_printer,
-            f"[ROUTER] Skipped; using crop hint crop={crop_name} part={part_name or 'unknown'}",
+            f"[ROUTER] Trusted hint; skipped router crop={crop_name} part={part_name or 'unknown'}",
         )
         analysis = build_router_skipped_analysis(
             crop_name=crop_name,
             part_name=part_name,
             router_confidence=1.0,
+            status="trusted_hint_skipped",
+            message="Router skipped because trust_crop_hint=True.",
         )
         payload = _build_router_payload(analysis)
         payload["runtime_profile"] = str(runtime_profile or "")
@@ -230,6 +233,19 @@ def run_inference(
 
     analysis = router.analyze_image_result(image)
     payload = _build_router_payload(analysis)
+    if crop_hint:
+        hinted_crop = str(crop_hint or "").strip().lower()
+        detected_crop = str(payload.get("crop") or "").strip().lower()
+        if not detected_crop or detected_crop == "unknown":
+            payload["status"] = "router_uncertain"
+            payload["message"] = (
+                f"Router could not confirm untrusted crop_hint='{hinted_crop}'."
+            )
+        elif detected_crop != hinted_crop:
+            payload["status"] = "router_uncertain"
+            payload["message"] = (
+                f"Router rejected untrusted crop_hint='{hinted_crop}' because it detected crop='{detected_crop}'."
+            )
     payload["runtime_profile"] = str(getattr(router, "active_profile", runtime_profile or "") or "")
     router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
     payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=router_config)
@@ -257,8 +273,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run router-only crop and part identification for a single image.")
     parser.add_argument("image", type=Path, help="Image path")
     parser.add_argument("--config-env", default="colab", help="Config environment override (default: colab)")
-    parser.add_argument("--crop", dest="crop_hint", help="Optional crop hint to bypass the router")
+    parser.add_argument("--crop", dest="crop_hint", help="Optional untrusted crop hint")
     parser.add_argument("--part", dest="part_hint", help="Optional part hint")
+    parser.add_argument("--trust-crop-hint", action="store_true", help="Trust --crop and skip router execution")
     parser.add_argument("--device", default="cuda", help="Torch device preference")
     parser.add_argument(
         "--runtime-profile",
@@ -282,6 +299,7 @@ def main() -> int:
         config_env=args.config_env,
         crop_hint=args.crop_hint,
         part_hint=args.part_hint,
+        trust_crop_hint=bool(args.trust_crop_hint),
         device=args.device,
         include_diagnostics=bool(args.diagnostics),
         top_candidates=int(args.top_candidates),

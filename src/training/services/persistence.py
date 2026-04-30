@@ -171,6 +171,11 @@ def restore_ood_state(
         react_percentile=float(payload.get("react_percentile", 0.99)),
         react_apply_during_calibration=bool(payload.get("react_apply_during_calibration", True)),
         react_apply_during_inference=bool(payload.get("react_apply_during_inference", True)),
+        score_threshold_overrides=(
+            dict(payload.get("score_threshold_overrides", {}))
+            if isinstance(payload.get("score_threshold_overrides"), dict)
+            else {}
+        ),
     )
     detector.calibration_version = int(payload.get("calibration_version", 0))
 

@@ -95,7 +95,7 @@ def test_persist_validation_artifacts_forwards_extended_ood_artifacts(tmp_path: 
             "split_name": "test",
             "ood_requested_primary_score_method": "auto",
             "ood_primary_score_method": "ensemble",
-            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_primary_score_selection_source": "real_ood_guardrail_no_dev",
         },
     )
 

@@ -79,6 +79,10 @@ def test_streamed_calibration_matches_materialized_reference_within_tolerance():
     cfg = trainer.config
     reference = ContinualOODDetector(
         threshold_factor=cfg.ood_threshold_factor,
+        energy_temperature=cfg.energy_temperature,
+        energy_temperature_mode=cfg.energy_temperature_mode,
+        energy_temperature_range=(cfg.energy_temperature_min, cfg.energy_temperature_max),
+        energy_temperature_steps=cfg.energy_temperature_steps,
         radial_l2_enabled=cfg.radial_l2_enabled,
         radial_beta_range=(cfg.radial_beta_min, cfg.radial_beta_max),
         radial_beta_steps=cfg.radial_beta_steps,

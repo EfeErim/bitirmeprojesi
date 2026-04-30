@@ -133,7 +133,7 @@ def test_run_inference_runs_router_only_pipeline(monkeypatch, tmp_path: Path):
     assert calls["analyze_image_result"] is fake_image
 
 
-def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
+def test_run_inference_trusted_crop_hint_skips_router(monkeypatch, tmp_path: Path):
     fake_image = _FakeImage()
     status_messages: list[str] = []
 
@@ -153,19 +153,20 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
         config_env="colab",
         crop_hint="tomato",
         part_hint="leaf",
+        trust_crop_hint=True,
         device="cpu",
         status_printer=status_messages.append,
     )
 
     assert result == {
-        "status": "skipped",
+        "status": "trusted_hint_skipped",
         "crop": "tomato",
         "part": "leaf",
         "router_confidence": 1.0,
-        "message": "Router skipped because crop_hint was provided.",
+        "message": "Router skipped because trust_crop_hint=True.",
         "router": {
-            "status": "skipped",
-            "message": "Router skipped because crop_hint was provided.",
+            "status": "trusted_hint_skipped",
+            "message": "Router skipped because trust_crop_hint=True.",
             "detections_count": 1,
             "primary_detection": {
                 "crop": "tomato",
@@ -175,8 +176,8 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
             },
         },
         "router_details": {
-            "status": "skipped",
-            "message": "Router skipped because crop_hint was provided.",
+            "status": "trusted_hint_skipped",
+            "message": "Router skipped because trust_crop_hint=True.",
             "detections": [],
             "detections_count": 1,
             "processing_time_ms": 0.0,
@@ -197,8 +198,8 @@ def test_run_inference_crop_hint_skips_router(monkeypatch, tmp_path: Path):
     }
     assert status_messages == [
         "[INFER] image=leaf.png device=cpu",
-        "[ROUTER] Skipped; using crop hint crop=tomato part=leaf",
-        "[RESULT] status=skipped crop=tomato part=leaf router_confidence=1.000",
+        "[ROUTER] Trusted hint; skipped router crop=tomato part=leaf",
+        "[RESULT] status=trusted_hint_skipped crop=tomato part=leaf router_confidence=1.000",
     ]
 
 
@@ -358,6 +359,7 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         config_env="colab",
         crop_hint=None,
         part_hint=None,
+        trust_crop_hint=False,
         device="cuda",
         status_printer=None,
         include_diagnostics=False,
@@ -369,6 +371,7 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "config_env": config_env,
             "crop_hint": crop_hint,
             "part_hint": part_hint,
+            "trust_crop_hint": trust_crop_hint,
             "device": device,
             "status_printer": status_printer,
             "include_diagnostics": include_diagnostics,
@@ -412,6 +415,7 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
         "config_env": "colab",
         "crop_hint": "tomato",
         "part_hint": "leaf",
+        "trust_crop_hint": False,
         "device": "cpu",
         "status_printer": None,
         "include_diagnostics": False,
@@ -428,8 +432,6 @@ def test_main_prints_json_payload(monkeypatch, capsys, tmp_path: Path):
             "primary_detection": {"crop": "tomato", "part": "leaf", "crop_confidence": 0.95},
         },
     }
-
-
 
 
 

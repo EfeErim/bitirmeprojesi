@@ -66,6 +66,7 @@ def record_primary_score_selection(
     requested_primary_score_method: str,
     selected_primary_score_method: str,
     selection_source: str,
+    selection_metadata: Dict[str, Any] | None = None,
 ) -> None:
     calibration = ood_calibration.get("ood_calibration")
     if not isinstance(calibration, dict):
@@ -73,6 +74,12 @@ def record_primary_score_selection(
     calibration["requested_primary_score_method"] = requested_primary_score_method
     calibration["primary_score_method"] = selected_primary_score_method
     calibration["selection_source"] = selection_source
+    if selection_metadata:
+        calibration["selection_metadata"] = dict(selection_metadata)
+        if selection_metadata.get("selected_threshold") is not None:
+            calibration["selected_threshold"] = float(selection_metadata["selected_threshold"])
+        if selection_metadata.get("target_fpr") is not None:
+            calibration["target_fpr"] = float(selection_metadata["target_fpr"])
 
 
 def record_adapter_export_metadata(
@@ -89,6 +96,7 @@ def record_adapter_export_metadata(
     selected_primary_score_method: str,
     selection_source: str,
     best_state_restored: bool,
+    selection_metadata: Dict[str, Any] | None = None,
 ) -> None:
     setter = getattr(adapter, "set_export_metadata", None)
     if not callable(setter):
@@ -110,6 +118,12 @@ def record_adapter_export_metadata(
             "selection_source": str(selection_source),
         }
     )
+    if selection_metadata:
+        calibration_metadata["selection_metadata"] = dict(selection_metadata)
+        if selection_metadata.get("selected_threshold") is not None:
+            calibration_metadata["selected_threshold"] = float(selection_metadata["selected_threshold"])
+        if selection_metadata.get("target_fpr") is not None:
+            calibration_metadata["target_fpr"] = float(selection_metadata["target_fpr"])
     setter(
         ood_calibration=calibration_metadata,
         adapter_runtime={
@@ -134,6 +148,7 @@ def build_production_readiness_context(
     selected_primary_score_method: str,
     selection_source: str,
     ood_benchmark: Dict[str, Any],
+    selection_metadata: Dict[str, Any] | None = None,
     ood_method_comparison: Dict[str, Any] | None = None,
     oe_context: Dict[str, Any] | None = None,
     classifier_rebalance: Dict[str, Any] | None = None,
@@ -150,6 +165,7 @@ def build_production_readiness_context(
         "ood_requested_primary_score_method": requested_primary_score_method,
         "ood_primary_score_method": selected_primary_score_method,
         "ood_primary_score_selection_source": selection_source,
+        "ood_primary_score_selection": dict(selection_metadata or {}),
         "ood_benchmark_status": ood_benchmark.get("status"),
         "ood_benchmark_passed": ood_benchmark.get("passed"),
         "ood_method_comparison": dict(ood_method_comparison or {}),
@@ -190,6 +206,7 @@ def build_training_summary_payload(
     loss_name: str,
     logitnorm_tau: float,
     final_metrics: Dict[str, float],
+    primary_score_selection: Dict[str, Any] | None = None,
     classifier_rebalance: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
     payload = {
@@ -220,6 +237,7 @@ def build_training_summary_payload(
         "ood_requested_primary_score_method": str(requested_primary_score_method),
         "ood_primary_score_method": str(selected_primary_score_method),
         "ood_primary_score_selection_source": str(primary_score_selection_source),
+        "ood_primary_score_selection": dict(primary_score_selection or {}),
         "ood_evidence_source": str(ood_evidence_source or ""),
         "ood_benchmark": dict(ood_benchmark),
         "production_readiness": dict(production_readiness),

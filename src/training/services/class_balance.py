@@ -164,6 +164,8 @@ def build_class_balance_runtime(
     eligible_max_samples: int = CLASS_BALANCE_ELIGIBLE_MAX_SAMPLES,
     production_min_supported_samples: int = MIN_SUPPORTED_CLASS_SAMPLES,
     allow_under_min_training: bool = False,
+    resolved_train_sampler: str = "",
+    allow_sampler_and_loss_rebalance: bool = False,
 ) -> Dict[str, Any]:
     resolved = resolve_reference_class_counts(
         crop_name=crop_name,
@@ -202,6 +204,13 @@ def build_class_balance_runtime(
             str(class_name): float(weight)
             for class_name, weight in zip(detected_classes, normalized_weights)
         }
+    loss_weighting_disabled_reason = ""
+    if active and str(resolved_train_sampler or "").strip().lower() == "weighted" and not bool(
+        allow_sampler_and_loss_rebalance
+    ):
+        active = False
+        weights_by_class = {}
+        loss_weighting_disabled_reason = "weighted_sampler_active"
 
     return {
         "count_source": str(resolved.get("count_source", "unavailable")),
@@ -212,6 +221,8 @@ def build_class_balance_runtime(
         "min_supported_samples": int(min_supported_samples),
         "production_min_supported_samples": int(production_min_supported_samples),
         "allow_under_min_training": bool(allow_under_min_training),
+        "resolved_train_sampler": str(resolved_train_sampler or ""),
+        "allow_sampler_and_loss_rebalance": bool(allow_sampler_and_loss_rebalance),
         "eligible_range": [int(min_supported_samples), int(eligible_max_samples)],
         "beta": float(beta),
         "eligible_classes": eligible_classes,
@@ -220,6 +231,7 @@ def build_class_balance_runtime(
         "production_guardrail_bypassed": bool(allow_under_min_training and production_under_min_classes),
         "all_classes_resolved": bool(all_classes_resolved),
         "active": bool(active),
+        "loss_weighting_disabled_reason": loss_weighting_disabled_reason,
         "weights_by_class": weights_by_class,
     }
 

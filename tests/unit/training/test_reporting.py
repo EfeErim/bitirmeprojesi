@@ -233,7 +233,7 @@ def test_reporting_writes_ood_method_comparison_artifact(tmp_path: Path):
         context={
             "ood_requested_primary_score_method": "auto",
             "ood_primary_score_method": "ensemble",
-            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_primary_score_selection_source": "real_ood_guardrail_no_dev",
             "ood_score_methods": ["ensemble", "energy", "knn"],
         },
     )
@@ -243,7 +243,7 @@ def test_reporting_writes_ood_method_comparison_artifact(tmp_path: Path):
     assert comparison_path.exists()
     comparison = json.loads(comparison_path.read_text(encoding="utf-8"))
     assert comparison["selected_primary_score_method"] == "ensemble"
-    assert comparison["selection_source"] == "real_ood_guardrail"
+    assert comparison["selection_source"] == "real_ood_guardrail_no_dev"
     assert comparison["methods"]["energy"]["worst_slice"]["slice_name"] == "blur"
 
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
@@ -284,7 +284,7 @@ def test_reporting_prefers_real_fpr_when_building_worst_slice_summary(tmp_path: 
         context={
             "ood_requested_primary_score_method": "auto",
             "ood_primary_score_method": "ensemble",
-            "ood_primary_score_selection_source": "real_ood_guardrail",
+            "ood_primary_score_selection_source": "real_ood_guardrail_no_dev",
             "ood_score_methods": ["ensemble", "energy"],
         },
     )

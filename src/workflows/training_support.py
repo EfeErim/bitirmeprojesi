@@ -265,6 +265,7 @@ def prepare_training_run(
 
     sampler_runtime = _resolve_loader_sampler_runtime(loaders.get("train"))
     allow_under_min_training = bool(data_cfg.get("allow_under_min_training", False))
+    class_balance_cfg = dict(training_cfg.get("class_balance", {}))
     class_balance_runtime = build_class_balance_runtime(
         crop_name=crop_name,
         data_dir=loader_data_dir,
@@ -273,6 +274,10 @@ def prepare_training_run(
         dataset_key=resolved_dataset.dataset_key,
         production_min_supported_samples=MIN_SUPPORTED_CLASS_SAMPLES,
         allow_under_min_training=allow_under_min_training,
+        resolved_train_sampler=str(sampler_runtime.get("resolved_sampler", "")),
+        allow_sampler_and_loss_rebalance=bool(
+            class_balance_cfg.get("allow_sampler_and_loss_rebalance", False)
+        ),
     )
     if class_balance_runtime.get("under_min_classes") and not allow_under_min_training:
         raise ValueError(format_under_min_class_error(class_balance_runtime))

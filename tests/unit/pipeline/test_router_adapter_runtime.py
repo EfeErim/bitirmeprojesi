@@ -127,7 +127,7 @@ def test_predict_returns_adapter_unavailable_when_assets_missing(monkeypatch, tm
 
 
 
-def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
+def test_trusted_crop_hint_bypasses_router(monkeypatch, tmp_path):
     adapter_root = tmp_path / "models"
     _write_adapter_meta(adapter_root, "tomato", "leaf")
 
@@ -152,13 +152,18 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
     monkeypatch.setattr(runtime, "_build_router", _fail_router)
     monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
 
-    result = runtime.predict(Image.new("RGB", (32, 32), color="green"), crop_hint="tomato", part_hint="leaf")
+    result = runtime.predict(
+        Image.new("RGB", (32, 32), color="green"),
+        crop_hint="tomato",
+        part_hint="leaf",
+        trust_crop_hint=True,
+    )
 
     assert result["status"] == "success"
     assert result["router_confidence"] == 1.0
     assert result["router"] == {
-        "status": "skipped",
-        "message": "Router skipped because crop_hint was provided.",
+        "status": "trusted_hint_skipped",
+        "message": "Router skipped because trust_crop_hint=True.",
         "detections_count": 1,
         "primary_detection": {
             "crop": "tomato",
@@ -167,6 +172,45 @@ def test_crop_hint_bypasses_router(monkeypatch, tmp_path):
             "part_confidence": 1.0,
         },
     }
+
+
+def test_untrusted_crop_hint_must_agree_with_router(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {"adapter_root": str(adapter_root), "target_size": 224},
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    class PotatoRouter(FakeRouter):
+        def analyze_image(self, image):
+            del image
+            return {
+                "detections": [
+                    {
+                        "crop": "potato",
+                        "part": "leaf",
+                        "crop_confidence": 0.94,
+                    }
+                ]
+            }
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: PotatoRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"), crop_hint="tomato", part_hint="leaf")
+
+    assert result["status"] == "router_uncertain"
+    assert result["crop"] == "potato"
+    assert "rejected untrusted crop_hint='tomato'" in result["message"]
+    assert result["router"]["primary_detection"]["crop"] == "potato"
 
 
 

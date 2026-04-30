@@ -287,7 +287,7 @@ Recommended usage:
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for future tuning/optimization surfaces, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for primary-score and threshold selection, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 ## Training, Step By Step
 
@@ -314,7 +314,7 @@ The canonical inference entrypoint is `InferenceWorkflow.predict(...)` in `src/w
 In practice, the runtime does this:
 
 1. Load config and locate the adapter root.
-2. Run the router unless you pass `crop_hint`.
+2. Run the router. A plain `crop_hint` is treated as untrusted and must agree with the router before adapter loading.
 3. Normalize router detections once and keep one canonical primary detection.
 4. Resolve the crop adapter directory.
 5. Load the adapter for that crop.
@@ -325,8 +325,9 @@ In practice, the runtime does this:
 If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
 If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
 When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
-`unknown_crop`, `router_unavailable`, and `adapter_unavailable` do not fabricate adapter-side `ood_analysis` payloads.
+`unknown_crop`, `router_unavailable`, `router_uncertain`, and `adapter_unavailable` do not fabricate adapter-side `ood_analysis` payloads.
 If the crop is known but the organ evidence is ambiguous, the router keeps the crop and may return `part=unknown` plus a short guardrail message instead of inventing a confident part label. A compatible part is only retained when the generic and crop-conditioned organ surfaces independently agree on it.
+Only `trust_crop_hint=True` or the CLI flag `--trust-crop-hint` preserves the old explicit bypass behavior, and that payload records router status `trusted_hint_skipped`.
 
 ## Common Commands
 
@@ -362,13 +363,21 @@ data/router_part_eval/<crop>/<part>/*
 
 The script reports per-crop part confusion, abstention rate, unsupported-part emissions, and an offline threshold sweep based on the raw router part evidence.
 
-### Bypass the router with a known crop
+### Evaluate the full router handoff surface
+
+```powershell
+.\scripts\python.cmd scripts/evaluate_router_surface.py --root data\router_eval --config-env colab --output .runtime_tmp\router_eval.json
+```
+
+This eval-only dataset uses `id/`, `negatives/off_crop/`, `negatives/non_plant/`, `ambiguous/`, and `wrong_part/` groups. The script reports crop accuracy, negative false accepts, abstention, part precision/recall, unsupported-part emissions, latency, risk-coverage, and threshold-sweep recommendations.
+
+### Provide a known crop hint
 
 ```powershell
 .\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab --crop tomato
 ```
 
-Passing `--crop` means you are asserting that crop selection is already handled upstream. That narrows the most relevant OOD cases toward unsupported tomato inputs and tomato-image failure cases, but it does not turn off the repo's OOD-readiness expectations.
+Passing `--crop` alone gives the router an untrusted crop hint. The router still runs and must agree before the adapter loads. Add `--trust-crop-hint` only when upstream crop selection is already trusted and you intentionally want to skip router crop selection. That narrows the most relevant OOD cases toward unsupported tomato inputs and tomato-image failure cases, but it does not turn off the repo's OOD-readiness expectations.
 
 ## Configuration Overview
 
@@ -378,7 +387,7 @@ The config flow is:
 2. `config/<environment>.json` is merged on top when requested.
 3. `ConfigurationManager` applies the versioned migration step declared by `config_schema_version`.
 4. `ConfigurationManager` normalizes the training surface.
-5. Config files must declare `config_schema_version: 1` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface. Only the canonical surface is accepted; old aliases now fail fast.
+5. Config files must declare `config_schema_version: 2` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface. Only the canonical surface is accepted; old aliases now fail fast.
 6. Prohibited 4-bit flags are rejected before use.
 
 The most important config areas are:

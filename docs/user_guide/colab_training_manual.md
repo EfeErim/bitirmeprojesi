@@ -489,6 +489,7 @@ Current class-imbalance behavior layered on top of the sampler:
 - any supported class below `100` resolved images hard-fails the run before adapter initialization unless `training.continual.data.allow_under_min_training` is set to `true`
 - when all supported classes pass that floor and at least one supported class is in the `100-200` range, the training loss automatically receives class-balanced weighting based on the effective-number method from Cui et al.
 - once class-balanced mode activates, weights are computed for all supported classes from the same resolved counts rather than only the `100-200` subset
+- when the train loader already resolves to weighted sampling, class-balanced loss weighting is disabled by default unless `training.continual.class_balance.allow_sampler_and_loss_rebalance=true`
 - the weighted loss applies only to the training classifier loss; validation and test loss remain plain CE so early stopping and readiness artifacts stay comparable to historical runs
 - the workflow records the resolved counts, activation decision, and normalized per-class weights in the training run context and summary artifacts
 - the `100` floor and `100-200` trigger are repo policy for this adapter workflow; the effective-number weighting itself is literature-backed, but these exact thresholds are engineering policy rather than paper-defined universal constants
@@ -534,10 +535,11 @@ Current shipped default:
 
 - the raw config surface ships `training.continual.ood.primary_score_method: "auto"`
 - the trainer starts with the concrete detector path on `"ensemble"`
-- when the repo only has one shared real `ood/` pool, the workflow keeps that concrete runtime method instead of auto-tuning on the same pool later used for the final readiness verdict
+- when real-OOD splitting exposes `ood_dev`, the workflow can select the primary OOD score method and runtime threshold on `ood_dev`
+- when the repo only has one shared real `ood/` pool and no `ood_dev`, the workflow keeps that concrete runtime method instead of auto-tuning on the same pool later used for the final readiness verdict
 - the held-out fallback benchmark can still auto-select a concrete winner because it is separate proxy evidence rather than the final real-OOD deployment verdict
 - fallback-only readiness can now be `provisional`, but not fully deployable
-- if you want to promote `energy` or `knn` using real OOD evidence, inspect the split-local comparison artifacts and rerun with an explicit `training.continual.ood.primary_score_method`, or keep a separate dev OOD pool outside the shipped contract
+- if you want to promote `energy` or `knn` using final real OOD evidence, inspect the split-local comparison artifacts as analysis only and rerun with an explicit `training.continual.ood.primary_score_method`, or rely on the split-local `ood_dev` selection path
 - energy scoring can optionally keep a fixed temperature or auto-calibrate one from the calibration split
 - kNN scoring can use `cdist`, chunked search, or optional FAISS when available
 - conformal mode can be threshold conformalization, APS, or RAPS depending on whether you want rejection calibration or set-valued classification
@@ -550,11 +552,17 @@ These control how strict the final deployment verdict is:
 - `training.continual.evaluation.emit_ood_gate`
 - `training.continual.evaluation.require_ood_for_gate`
 - `training.continual.evaluation.ood_benchmark_min_classes`
+- `training.continual.evaluation.min_in_distribution_samples`
+- `training.continual.evaluation.min_ood_samples`
+- `training.continual.evaluation.min_ood_samples_per_type`
+- `training.continual.evaluation.gate_auxiliary_ood_diagnostics`
 
 Practical interpretation:
 
 - `emit_ood_gate` controls whether split-local `metric_gate.json` files are written to disk
 - `require_ood_for_gate` controls whether the metric policy fails when OOD evidence is missing or insufficient
+- the shipped readiness floor is 30 in-distribution examples, 30 OOD examples, and 5 examples per typed real-OOD slice
+- SURE and conformal checks are reported as auxiliary diagnostics unless `gate_auxiliary_ood_diagnostics=true`
 - even when the metric policy passes, the final status remains `provisional` until a real runtime `ood/` pool is part of the evidence
 
 ### Colab runtime controls

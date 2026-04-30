@@ -5,11 +5,12 @@ from src.workflows.inference import InferenceWorkflow
 
 
 class FakeRuntime:
-    def predict_result(self, image, *, crop_hint=None, part_hint=None, return_ood=True):
+    def predict_result(self, image, *, crop_hint=None, part_hint=None, return_ood=True, trust_crop_hint=False):
         assert isinstance(image, Image.Image)
         assert crop_hint == "tomato"
         assert part_hint == "leaf"
         assert return_ood is True
+        assert trust_crop_hint is True
         return InferenceResult(
             status="success",
             crop="tomato",
@@ -27,8 +28,8 @@ class FakeRuntime:
                 conformal_set=["healthy"],
             ),
             router=RouterAnalysisResult(
-                status="skipped",
-                message="Router skipped because crop_hint was provided.",
+                status="trusted_hint_skipped",
+                message="Router skipped because trust_crop_hint=True.",
                 primary_detection=RouterDetection(
                     crop="tomato",
                     part="leaf",
@@ -44,14 +45,24 @@ def test_inference_workflow_wraps_runtime_result():
     workflow = InferenceWorkflow(config={}, device="cpu")
     workflow.runtime = FakeRuntime()  # type: ignore[assignment]
 
-    result = workflow.predict_result(Image.new("RGB", (8, 8)), crop_hint="tomato", part_hint="leaf")
+    result = workflow.predict_result(
+        Image.new("RGB", (8, 8)),
+        crop_hint="tomato",
+        part_hint="leaf",
+        trust_crop_hint=True,
+    )
 
     assert isinstance(result, InferenceResult)
     assert result.crop == "tomato"
 
-    payload = workflow.predict(Image.new("RGB", (8, 8)), crop_hint="tomato", part_hint="leaf")
+    payload = workflow.predict(
+        Image.new("RGB", (8, 8)),
+        crop_hint="tomato",
+        part_hint="leaf",
+        trust_crop_hint=True,
+    )
     assert payload["diagnosis"] == "healthy"
     assert payload["ood_analysis"]["calibration_version"] == 2
     assert payload["conformal_set"] == ["healthy"]
-    assert payload["router"]["status"] == "skipped"
+    assert payload["router"]["status"] == "trusted_hint_skipped"
     assert payload["router"]["primary_detection"]["crop"] == "tomato"

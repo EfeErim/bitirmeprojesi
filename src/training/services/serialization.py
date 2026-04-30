@@ -83,6 +83,10 @@ def serialize_ood_state(ood_detector: Any, *, strict: bool = True) -> Dict[str, 
     return {
         "threshold_factor": _float_field(getattr(ood_detector, "threshold_factor", 2.0), default=2.0),
         "primary_score_method": str(getattr(ood_detector, "primary_score_method", "ensemble") or "ensemble"),
+        "score_threshold_overrides": {
+            str(method_name): _float_field(threshold, default=0.0)
+            for method_name, threshold in dict(getattr(ood_detector, "score_threshold_overrides", {}) or {}).items()
+        },
         "calibration_version": int(getattr(ood_detector, "calibration_version", 0)),
         "class_stats": class_stats_payload,
         "knn_k": int(getattr(ood_detector, "knn_k", 10)),

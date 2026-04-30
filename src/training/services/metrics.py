@@ -19,21 +19,30 @@ DEFAULT_PLAN_TARGETS = {
     "macro_f1": 0.90,
     "ood_auroc": 0.92,
     "ood_false_positive_rate": 0.05,
-    "ood_samples": 5.0,
-    "in_distribution_samples": 5.0,
+    "ood_samples": 30.0,
+    "in_distribution_samples": 30.0,
+    "ood_samples_per_type": 5.0,
     "sure_ds_f1": 0.90,
     "conformal_empirical_coverage": 0.95,
     "conformal_avg_set_size": 2.0,
 }
 
-OOD_METRIC_NAMES = (
+HARD_OOD_METRIC_NAMES = (
     "ood_auroc",
     "ood_false_positive_rate",
     "ood_samples",
     "in_distribution_samples",
+)
+
+AUXILIARY_OOD_METRIC_NAMES = (
     "sure_ds_f1",
     "conformal_empirical_coverage",
     "conformal_avg_set_size",
+)
+
+OOD_METRIC_NAMES = (
+    *HARD_OOD_METRIC_NAMES,
+    *AUXILIARY_OOD_METRIC_NAMES,
 )
 
 _TARGET_FALLBACK_KEYS = {
@@ -43,6 +52,7 @@ _TARGET_FALLBACK_KEYS = {
     "ood_auroc": ("ood_auroc",),
     "ood_false_positive_rate": ("ood_false_positive_rate",),
     "ood_samples": ("ood_samples", "ood_min_samples", "min_ood_samples"),
+    "ood_samples_per_type": ("ood_samples_per_type", "min_ood_samples_per_type"),
     "in_distribution_samples": (
         "in_distribution_samples",
         "in_distribution_min_samples",
@@ -108,6 +118,7 @@ def _resolve_ood_metric_payload(ood_metrics: Optional[Dict[str, Optional[float]]
 def _collect_missing_requirements(
     classification_checks: Dict[str, Dict[str, Any]],
     ood_checks: Dict[str, Dict[str, Any]],
+    ood_type_sample_checks: Optional[Dict[str, Dict[str, Any]]] = None,
     *,
     require_ood: bool,
 ) -> list[str]:
@@ -124,7 +135,46 @@ def _collect_missing_requirements(
             continue
         if asserted and not passed:
             missing_requirements.append(metric_name)
+    for ood_type, detail in dict(ood_type_sample_checks or {}).items():
+        asserted = bool(detail.get("asserted", False))
+        passed = bool(detail.get("passed", False))
+        if require_ood:
+            if not asserted or not passed:
+                missing_requirements.append(f"ood_samples_per_type:{ood_type}")
+            continue
+        if asserted and not passed:
+            missing_requirements.append(f"ood_samples_per_type:{ood_type}")
     return missing_requirements
+
+
+def _coerce_ood_type_breakdown(context: Dict[str, Any]) -> Dict[str, Any]:
+    direct = context.get("ood_type_breakdown")
+    if isinstance(direct, dict):
+        return dict(direct)
+    comparison = context.get("ood_method_comparison")
+    if isinstance(comparison, dict) and isinstance(comparison.get("ood_type_breakdown"), dict):
+        return dict(comparison.get("ood_type_breakdown", {}))
+    return {}
+
+
+def _build_ood_type_sample_checks(
+    *,
+    ood_type_breakdown: Dict[str, Any],
+    target: float,
+    require_real_ood_types: bool,
+) -> Dict[str, Dict[str, Any]]:
+    checks: Dict[str, Dict[str, Any]] = {}
+    for ood_type, payload in sorted(dict(ood_type_breakdown or {}).items()):
+        row = dict(payload or {}) if isinstance(payload, dict) else {}
+        sample_count = row.get("sample_count", row.get("ood_samples"))
+        try:
+            value = None if sample_count is None else float(sample_count)
+        except (TypeError, ValueError):
+            value = None
+        checks[str(ood_type)] = _build_check(value, float(target), operator=">=")
+    if not checks and require_real_ood_types:
+        checks["untyped"] = _build_check(None, float(target), operator=">=")
+    return checks
 
 
 def compute_ood_detection_metrics(
@@ -270,9 +320,10 @@ def validate_ood_metrics(
     targets: Optional[Dict[str, float]] = None,
     *,
     require_ood: bool = False,
+    gate_auxiliary_ood_diagnostics: bool = False,
 ) -> Dict[str, Any]:
     target_values = _resolve_target_values(targets)
-    checks = _build_threshold_checks(
+    hard_checks = _build_threshold_checks(
         metrics,
         target_values,
         (
@@ -280,17 +331,28 @@ def validate_ood_metrics(
             ("ood_false_positive_rate", "<="),
             ("ood_samples", ">="),
             ("in_distribution_samples", ">="),
+        ),
+    )
+    auxiliary_checks = _build_threshold_checks(
+        metrics,
+        target_values,
+        (
             ("sure_ds_f1", ">="),
             ("conformal_empirical_coverage", ">="),
             ("conformal_avg_set_size", "<="),
         ),
     )
-    finalized = _finalize_validation(checks, require_metrics=require_ood)
+    checks = {**hard_checks, **auxiliary_checks}
+    gating_checks = checks if bool(gate_auxiliary_ood_diagnostics) else hard_checks
+    finalized = _finalize_validation(gating_checks, require_metrics=require_ood)
     return {
         "passed": finalized["passed"],
         "require_ood": bool(require_ood),
+        "gate_auxiliary_ood_diagnostics": bool(gate_auxiliary_ood_diagnostics),
         "targets": target_values,
         "checks": checks,
+        "hard_checks": hard_checks,
+        "auxiliary_checks": auxiliary_checks,
         "gating": finalized["gating"],
     }
 
@@ -300,6 +362,7 @@ def validate_plan_metrics(
     targets: Optional[Dict[str, float]] = None,
     *,
     require_ood: bool = False,
+    gate_auxiliary_ood_diagnostics: bool = False,
 ) -> Dict[str, Any]:
     target_values = _resolve_target_values(targets)
     checks: Dict[str, Dict[str, Any]] = _build_threshold_checks(
@@ -311,9 +374,22 @@ def validate_plan_metrics(
             ("macro_f1", ">="),
         ),
     )
-    ood_validation = validate_ood_metrics(metrics, target_values, require_ood=require_ood)
+    ood_validation = validate_ood_metrics(
+        metrics,
+        target_values,
+        require_ood=require_ood,
+        gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
+    )
     checks.update(ood_validation["checks"])
-    finalized = _finalize_validation(checks, require_metrics=require_ood)
+    gating_checks = {
+        key: value
+        for key, value in checks.items()
+        if key in {"accuracy", "balanced_accuracy", "macro_f1"}
+    }
+    gating_checks.update(ood_validation["hard_checks"])
+    if bool(gate_auxiliary_ood_diagnostics):
+        gating_checks.update(ood_validation["auxiliary_checks"])
+    finalized = _finalize_validation(gating_checks, require_metrics=require_ood)
     return {
         "passed": finalized["passed"],
         "require_ood": bool(require_ood),
@@ -335,6 +411,12 @@ def build_production_readiness(
 ) -> Dict[str, Any]:
     target_values = _resolve_target_values(targets)
     classification_gate = dict(classification_metric_gate or {})
+    metric_gate_context = (
+        dict(classification_gate.get("context", {}))
+        if isinstance(classification_gate.get("context"), dict)
+        else {}
+    )
+    readiness_context = {**metric_gate_context, **dict(context or {})}
     classification_metrics = dict(classification_gate.get("metrics", {}))
     classification_eval = dict(classification_gate.get("evaluation", {}))
     classification_checks = dict(classification_eval.get("checks", {}))
@@ -358,11 +440,32 @@ def build_production_readiness(
     }
 
     resolved_ood_metrics = _resolve_ood_metric_payload(ood_metrics)
-    ood_validation = validate_ood_metrics(resolved_ood_metrics, target_values, require_ood=require_ood)
+    gate_auxiliary = bool(
+        readiness_context.get(
+            "gate_auxiliary_ood_diagnostics",
+            target_values.get("gate_auxiliary_ood_diagnostics", False),
+        )
+    )
+    ood_validation = validate_ood_metrics(
+        resolved_ood_metrics,
+        target_values,
+        require_ood=require_ood,
+        gate_auxiliary_ood_diagnostics=gate_auxiliary,
+    )
+    ood_type_breakdown = _coerce_ood_type_breakdown(readiness_context)
+    ood_type_sample_checks = _build_ood_type_sample_checks(
+        ood_type_breakdown=ood_type_breakdown,
+        target=target_values["ood_samples_per_type"],
+        require_real_ood_types=bool(require_ood and str(ood_evidence_source or "") == "real_ood_split"),
+    )
 
     missing_requirements = _collect_missing_requirements(
         resolved_classification_checks,
-        ood_validation["checks"],
+        {
+            **ood_validation["hard_checks"],
+            **(ood_validation["auxiliary_checks"] if gate_auxiliary else {}),
+        },
+        ood_type_sample_checks,
         require_ood=require_ood,
     )
     policy_passed = not missing_requirements
@@ -379,6 +482,7 @@ def build_production_readiness(
         status = "failed"
     return {
         "status": status,
+        "readiness_tier": status,
         "passed": bool(deployable),
         "policy_passed": bool(policy_passed),
         "deployable": bool(deployable),
@@ -395,10 +499,12 @@ def build_production_readiness(
             "metrics": resolved_ood_metrics,
             "evaluation": ood_validation,
         },
+        "auxiliary_checks": ood_validation["auxiliary_checks"],
+        "ood_type_sample_checks": ood_type_sample_checks,
         "missing_requirements": missing_requirements,
         "missing_deployment_requirements": missing_deployment_requirements,
         "targets": target_values,
-        "context": dict(context or {}),
+        "context": readiness_context,
     }
 
 
@@ -408,12 +514,18 @@ def write_plan_metric_artifact(
     metrics: Dict[str, Optional[float]],
     targets: Optional[Dict[str, float]] = None,
     require_ood: bool = False,
+    gate_auxiliary_ood_diagnostics: bool = False,
     context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     artifact = {
         "schema_version": "v6_plan_metric_gate",
         "metrics": metrics,
-        "evaluation": validate_plan_metrics(metrics, targets, require_ood=require_ood),
+        "evaluation": validate_plan_metrics(
+            metrics,
+            targets,
+            require_ood=require_ood,
+            gate_auxiliary_ood_diagnostics=gate_auxiliary_ood_diagnostics,
+        ),
         "context": dict(context or {}),
     }
     write_json(output_path, artifact)
