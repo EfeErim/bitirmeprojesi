@@ -22,8 +22,28 @@ ROOT = BOOTSTRAP["ROOT"]
 # Setup adapter search and access check
 SEARCH_ROOTS = [str(ROOT / "models/adapters")]
 
-from scripts.colab_repo_bootstrap import collect_notebook_access_report, print_notebook_access_report
+from scripts.colab_repo_bootstrap import (
+    collect_notebook_access_report,
+    login_and_check_hf_token,
+    print_notebook_access_report,
+    resolve_hf_token,
+)
 from src.core.config_manager import get_config
 
-ACCESS_REPORT = collect_notebook_access_report(repo_root=ROOT, hf_model_ids=[])
+CONFIG_FOR_ACCESS = get_config(environment="colab")
+BACKBONE_MODEL_NAME = str(
+    dict(dict(CONFIG_FOR_ACCESS.get("training", {})).get("continual", {}))
+    .get("backbone", {})
+    .get("model_name", "")
+).strip()
+ACCESS_REPORT = collect_notebook_access_report(
+    repo_root=ROOT,
+    hf_model_ids=[BACKBONE_MODEL_NAME] if BACKBONE_MODEL_NAME else [],
+)
 print_notebook_access_report(ACCESS_REPORT, print_fn=print)
+if BACKBONE_MODEL_NAME:
+    print(f"[KONTROL] Adapter backbone modeli: {BACKBONE_MODEL_NAME}")
+if resolve_hf_token():
+    login_and_check_hf_token(print_fn=print)
+else:
+    print("[HF] Token bulunamadi. Gated backbone icin Colab secret olarak HF_TOKEN ekleyin ve runtime'i yeniden baslatin.")

@@ -394,6 +394,23 @@ def test_build_result_html_explains_robustness_warning_codes():
     assert "robust gorunumler stabil degil" in html
 
 
+def test_detects_huggingface_gated_access_errors():
+    error = OSError(
+        "You are trying to access a gated repo. 401 Client Error. "
+        "Access to model facebook/dinov3-vitl16-pretrain-lvd1689m is restricted."
+    )
+
+    assert ui._is_huggingface_gated_access_error(error) is True
+
+
+def test_hf_access_error_html_guides_colab_secret_setup():
+    html = ui._hf_access_error_html(OSError("Cannot access gated repo"))
+
+    assert "HF_TOKEN" in html
+    assert "Runtime'i yeniden baslatin" in html
+    assert "Cannot access gated repo" in html
+
+
 def test_persist_upload_value_writes_uploaded_bytes(tmp_path: Path):
     persisted = ui._persist_upload_value(
         (

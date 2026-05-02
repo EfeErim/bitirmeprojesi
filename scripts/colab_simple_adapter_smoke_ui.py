@@ -188,6 +188,35 @@ def _warning_details_html(view_consistency: dict[str, Any], uncertainty: dict[st
     return f"<ul style=\"margin:6px 0 0 18px;padding:0;color:#374151;\">{rows}</ul>"
 
 
+def _is_huggingface_gated_access_error(exc: BaseException) -> bool:
+    text = f"{type(exc).__name__}: {exc}"
+    lowered = text.lower()
+    return (
+        "gated repo" in lowered
+        or "401 unauthorized" in lowered
+        or "access to model" in lowered and "restricted" in lowered
+        or "you must have access to it and be authenticated" in lowered
+    )
+
+
+def _hf_access_error_html(exc: BaseException) -> str:
+    return f"""
+    <div style="border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px;background:#fff7f7;color:#111827;">
+      <div style="font-size:17px;font-weight:700;color:#991b1b;margin-bottom:8px;">Hugging Face model erisimi gerekli</div>
+      <div>Secilen adapter gated backbone kullanıyor. Tahmin icin Colab secret olarak <b>HF_TOKEN</b> ekleyin.</div>
+      <ol style="margin:8px 0 0 20px;padding:0;">
+        <li>Hugging Face hesabinizda model erisimini onaylayin.</li>
+        <li>Colab sol panel Secrets bolumune <b>HF_TOKEN</b> ekleyin.</li>
+        <li>Runtime'i yeniden baslatin ve notebook bootstrap hucresini tekrar calistirin.</li>
+      </ol>
+      <details style="margin-top:10px;">
+        <summary style="cursor:pointer;color:#111827;font-weight:600;">Teknik hata</summary>
+        <pre style="white-space:pre-wrap;word-break:break-word;color:#7f1d1d;">{escape(str(exc))}</pre>
+      </details>
+    </div>
+    """
+
+
 def _upload_via_colab_files(upload_dir: Path) -> Optional[Path]:
     try:
         from google.colab import files
@@ -461,42 +490,55 @@ def launch_simple_adapter_smoke_ui(
     def run_prediction(_button: Any = None) -> None:
         with result_output:
             clear_output(wait=True)
-            image_path = resolve_image_path()
-            if not image_path.exists():
-                raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
-            candidate = selected_candidate()
-            summary = load_adapter_summary(
-                candidate.get("crop_name"),
-                adapter_dir=candidate.get("adapter_dir"),
-                config_env=config_env,
-                device=device,
-            )
-            with Image.open(image_path) as preview:
-                display(preview.copy())
-            result = predict_single_image(
-                image_path,
-                summary["crop_name"],
-                adapter_dir=summary["resolved_adapter_dir"],
-                config_env=config_env,
-                device=device,
-                enable_robust_smoke=True,
-                explain_prediction=bool(visualization_checkbox.value),
-                explanation_grid_size=int(explanation_grid_size),
-                explanation_method=str(explanation_method_dropdown.value),
-            )
-            visualization_images = build_prediction_visualization_images(image_path, result)
-            if visualization_images:
-                display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
-                display(visualization_images["model_view"])
-                display(visualization_images["heatmap_overlay"])
-            render_result(summary, result, image_path)
-            display(
-                HTML(
-                    "<details><summary>Ham JSON</summary><pre>"
-                    + json.dumps(result, indent=2)
-                    + "</pre></details>"
+            try:
+                image_path = resolve_image_path()
+                if not image_path.exists():
+                    raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
+                candidate = selected_candidate()
+                summary = load_adapter_summary(
+                    candidate.get("crop_name"),
+                    adapter_dir=candidate.get("adapter_dir"),
+                    config_env=config_env,
+                    device=device,
                 )
-            )
+                with Image.open(image_path) as preview:
+                    display(preview.copy())
+                result = predict_single_image(
+                    image_path,
+                    summary["crop_name"],
+                    adapter_dir=summary["resolved_adapter_dir"],
+                    config_env=config_env,
+                    device=device,
+                    enable_robust_smoke=True,
+                    explain_prediction=bool(visualization_checkbox.value),
+                    explanation_grid_size=int(explanation_grid_size),
+                    explanation_method=str(explanation_method_dropdown.value),
+                )
+                visualization_images = build_prediction_visualization_images(image_path, result)
+                if visualization_images:
+                    display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
+                    display(visualization_images["model_view"])
+                    display(visualization_images["heatmap_overlay"])
+                render_result(summary, result, image_path)
+                display(
+                    HTML(
+                        "<details><summary>Ham JSON</summary><pre>"
+                        + json.dumps(result, indent=2)
+                        + "</pre></details>"
+                    )
+                )
+            except Exception as exc:
+                if _is_huggingface_gated_access_error(exc):
+                    display(HTML(_hf_access_error_html(exc)))
+                    return
+                display(
+                    HTML(
+                        "<div style=\"border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px;background:#fff7f7;color:#991b1b;\">"
+                        "<b>Tahmin hatasi:</b><pre style=\"white-space:pre-wrap;word-break:break-word;\">"
+                        + escape(str(exc))
+                        + "</pre></div>"
+                    )
+                )
 
     refresh_button.on_click(refresh)
     clear_image_button.on_click(clear_image)
@@ -529,4 +571,6 @@ __all__ = [
     "_build_result_html",
     "_persist_upload_value",
     "_upload_via_colab_files",
+    "_is_huggingface_gated_access_error",
+    "_hf_access_error_html",
 ]
