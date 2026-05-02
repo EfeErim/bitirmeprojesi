@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import builtins
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,8 +76,18 @@ class NotebookSources:
 
 def _load_notebook_sources_from_path(notebook_path: Path) -> NotebookSources:
     payload = json.loads(notebook_path.read_text(encoding="utf-8"))
+    cell_runner_pattern = re.compile(r"run_cell_script\((['\"])(?P<name>[^'\"]+)\1,\s*globals\(\)\)")
+
+    def _expand_cell_source(source: str) -> str:
+        match = cell_runner_pattern.search(source)
+        if not match:
+            return source
+        script_path = ROOT / "scripts" / "notebook_cells" / match.group("name")
+        assert script_path.is_file(), f"Notebook cell script was not found: {script_path}"
+        return script_path.read_text(encoding="utf-8")
+
     code_cells = tuple(
-        "".join(cell.get("source", []))
+        _expand_cell_source("".join(cell.get("source", [])))
         for cell in payload.get("cells", [])
         if cell.get("cell_type") == "code"
     )
