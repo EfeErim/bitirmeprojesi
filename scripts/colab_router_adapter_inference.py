@@ -24,7 +24,10 @@ _ROUTER_SESSION_CACHE: dict[RouterCacheKey, RouterPipeline] = {}
 def _coerce_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return float(default)
 
 

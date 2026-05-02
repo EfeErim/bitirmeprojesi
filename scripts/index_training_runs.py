@@ -38,7 +38,10 @@ def _is_under(path: Path, root: Path) -> bool:
     try:
         path.resolve().relative_to(root.resolve())
         return True
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return False
 
 

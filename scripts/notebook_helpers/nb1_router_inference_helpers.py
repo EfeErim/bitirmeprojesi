@@ -11,7 +11,10 @@ def run_bootstrap_notebook_nb1(notebook_name: str = "Notebook 1: Router Adapter 
     try:
         from scripts.colab_repo_bootstrap import _ensure_repo_root_for_update_check
         repo_root_for_update_check = _ensure_repo_root_for_update_check()
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         repo_root_for_update_check = None
     
     # [KONTROL] Ilk hucre: Bootstrap kontrati kontrol edildi

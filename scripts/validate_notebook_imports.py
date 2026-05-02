@@ -203,7 +203,10 @@ def _check_runtime_dependencies() -> None:
     for module_name in required:
         try:
             __import__(module_name)
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             missing.append(module_name)
 
     if missing:

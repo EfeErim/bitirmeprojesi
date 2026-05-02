@@ -676,11 +676,17 @@ def scan_class_root_dataset(
                     blur_score, brightness_mean = _compute_blur_and_brightness(image)
                     phash_hex = _compute_phash_hex(image)
                     readable = True
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 excluded_reason = "unreadable"
             try:
                 exact_hash = _compute_exact_hash(image_path)
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 exact_hash = ""
                 if not excluded_reason:
                     excluded_reason = "unhashable"
@@ -735,7 +741,10 @@ def _refresh_record_availability(records: Sequence[ImageRecord]) -> Dict[str, in
         try:
             with Image.open(image_path) as raw:
                 _ = ImageOps.exif_transpose(raw.convert("RGB"))
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             record.readable = False
             record.excluded_reason = "unreadable_after_scan"
             excluded_counts["unreadable_after_scan"] += 1
@@ -758,7 +767,10 @@ def _resolve_embedding_device(device: str) -> str:
 
         try:
             cuda_available = bool(torch.cuda.is_available())
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             cuda_available = False
         if not cuda_available:
             return "cpu"
@@ -2518,7 +2530,10 @@ def materialize_grouped_runtime_dataset(
         source_path = Path(class_root) / relative_path
         try:
             destination_relative = relative_path.relative_to(raw_class_name)
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             destination_relative = Path(relative_path.name)
         destination_path = crop_root / split_name / class_name / destination_relative
         destination_path.parent.mkdir(parents=True, exist_ok=True)

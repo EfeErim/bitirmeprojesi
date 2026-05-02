@@ -50,7 +50,10 @@ def _requires_google_drive_mount(path: Path) -> bool:
     drive_mount = Path("/content/drive")
     try:
         resolved = Path(path).expanduser().resolve()
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         resolved = Path(path).expanduser()
     try:
         resolved.relative_to(drive_mount)
@@ -123,7 +126,10 @@ class _SyncState:
                 logs_synced_bytes=int(payload.get("logs_synced_bytes", 0)),
                 last_sync_ts=str(payload.get("last_sync_ts", "")),
             )
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             return cls()
 
 
@@ -335,7 +341,10 @@ class ColabLiveTelemetry:
             payload = read_json(self.local_artifact_index_path, default=[], expect_type=list)
             if isinstance(payload, list):
                 return [dict(item) for item in payload if isinstance(item, dict)]
-        except Exception:
+        except Exception as exc:
+            import logging
+            logging.exception('Unhandled exception')
+            raise
             pass
         return []
 

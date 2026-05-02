@@ -1131,7 +1131,10 @@ def verify_notebook_ood_config(
         if isinstance(expected, float):
             try:
                 actual_float = float(actual)
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 mismatches.append(f"{key}: expected={expected} actual={actual}")
                 continue
             if abs(actual_float - expected) > 1e-12:
@@ -1208,7 +1211,10 @@ def calibrate_and_save_notebook_adapter(
             _call_if_present(telemetry, "copy_artifact_file", path_in_adapter, f"adapter_export/{relative_path}")
             try:
                 emit(f" - {path_in_adapter.relative_to(Path(root))}")
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 emit(f" - {path_in_adapter}")
 
     emit(f"Telemetry adapter klasoru: {telemetry_adapter_root}")
@@ -1848,7 +1854,10 @@ def _call_if_present(target: Any, method_name: str, *args, **kwargs) -> None:
         return
     try:
         method(*args, **kwargs)
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         pass
 
 
@@ -2317,7 +2326,10 @@ def run_notebook_training_session(
                         "elapsed_sec": time.time() - start_time,
                     },
                 )
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 pass
         raise
 
@@ -2416,7 +2428,10 @@ def persist_production_readiness_artifact(
 def _resolve_colab_runtime_api() -> Any:
     try:
         from google.colab import runtime
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return None
     return runtime
 

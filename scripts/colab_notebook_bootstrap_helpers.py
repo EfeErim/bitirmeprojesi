@@ -22,7 +22,10 @@ def _running_in_colab() -> bool:
     try:
         import google.colab  # noqa: F401
         return True
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return False
 
 
@@ -33,7 +36,10 @@ def _resolve_colab_secret(secret_name: str) -> str:
     try:
         from google.colab import userdata
         return str(userdata.get(secret_name) or "").strip()
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return ""
 
 

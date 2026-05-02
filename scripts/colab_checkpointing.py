@@ -152,7 +152,10 @@ class TrainingCheckpointManager:
             try:
                 if row_path.exists():
                     shutil.rmtree(row_path, ignore_errors=True)
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.exception('Unhandled exception')
+                raise
                 logger.warning("Failed to prune checkpoint path: %s", row_path)
         self._store_index(kept)
 

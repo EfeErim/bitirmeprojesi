@@ -42,7 +42,10 @@ def discover_eval_samples(root: Path) -> List[Dict[str, Any]]:
 def _coerce_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
-    except Exception:
+    except Exception as exc:
+        import logging
+        logging.exception('Unhandled exception')
+        raise
         return float(default)
 
 
