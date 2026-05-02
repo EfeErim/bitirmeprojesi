@@ -45,6 +45,8 @@ data/class_root_dataset/*
 !data/class_root_dataset/grape_fruit/**
 !data/class_root_dataset/grape_leaf/
 !data/class_root_dataset/grape_leaf/**
+!data/class_root_dataset/domates_meyve/
+!data/class_root_dataset/domates_meyve/**
 !data/class_root_dataset/tomato_fruit/
 !data/class_root_dataset/tomato_fruit/**
 !data/class_root_dataset/tomato_leaf/
@@ -63,6 +65,8 @@ data/ood_dataset/*
 !data/ood_dataset/tomato_leaf_ood_best/**
 !data/ood_dataset/tomato_fruit_ood_best/
 !data/ood_dataset/tomato_fruit_ood_best/**
+!data/ood_dataset/domates_meyve_ood_best/
+!data/ood_dataset/domates_meyve_ood_best/**
 data/ood_dataset/**/Desktop.ini
 data/ood_dataset/**/desktop.ini
 data/prepared_class_root_datasets/*

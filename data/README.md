@@ -37,10 +37,12 @@ This repo keeps the maintained notebook dataset paths under `data/`. Most datase
 
 - `data/class_root_dataset/grape_fruit/`
 - `data/class_root_dataset/grape_leaf/`
+- `data/class_root_dataset/domates_meyve/`
 - `data/class_root_dataset/tomato_fruit/`
 - `data/class_root_dataset/tomato_leaf/`
 - `data/ood_dataset/grape_fruit_ood_best/`
 - `data/ood_dataset/grape_leaf_ood_best/`
+- `data/ood_dataset/domates_meyve_ood_best/`
 - `data/ood_dataset/tomato_fruit_ood_best/`
 - `data/ood_dataset/tomato_leaf_ood_best/`
 
