@@ -59,9 +59,9 @@ This keeps the public `TrainingWorkflow.run(...)` contract intact, avoids contam
   - `oe_target: uniform`
   - `oe_root: ""`
 - Define auxiliary OE data as a separate unknown pool, not the final readiness `ood/` pool:
-  - runtime contract: optional `ood_aux/` tree under the crop runtime root, or explicit `oe_root`
+  - runtime contract: optional `oe/` tree under the crop runtime root, or explicit `oe_root`
   - Notebook/data-prep support: optional reusable repo-local auxiliary pool mirroring the existing reusable OOD staging pattern
-- Use OE only during training loss computation; never use `ood_aux/` as final readiness evidence.
+- Use OE only during training loss computation; never use `oe/` as final readiness evidence.
 - When OE is enabled, report auxiliary-OE sample counts and source path in traceability and readiness context.
 
 ### 4. Notebook 0 label-quality surfacing
@@ -88,7 +88,7 @@ This keeps the public `TrainingWorkflow.run(...)` contract intact, avoids contam
   - architecture overview / unknown-disease rejection note
 - Document the new separation between:
   - final real `ood/` evidence
-  - auxiliary `ood_aux/` OE training data
+  - auxiliary `oe/` training data
   - Notebook 0 audit-time label-review artifacts
 - Expose new knobs in Notebook 2 only where they are part of the maintained workflow surface; keep defaults conservative and notebook wrappers thin.
 - Extend benchmark and traceability outputs so the new dimensions are visible in run comparison:
@@ -114,7 +114,7 @@ This keeps the public `TrainingWorkflow.run(...)` contract intact, avoids contam
 - Config normalization and schema tests for all new keys and enum values.
 - Unit tests for ReAct feature clipping, persistence, and score/report propagation.
 - Unit tests for AugMix transform construction and validation.
-- Loader/workflow tests proving `ood_aux/` is isolated from final readiness `ood/`.
+- Loader/workflow tests proving `oe/` is isolated from final readiness `ood/`.
 - Training tests for classifier-rebalance stage:
   - only classifier params are trainable in stage 2
   - OOD recalibration happens after stage 2

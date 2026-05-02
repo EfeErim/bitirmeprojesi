@@ -99,6 +99,7 @@ data/<crop>/
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 The `ood/` folder may also contain nested folders:
@@ -118,6 +119,7 @@ Current behavior:
 - for repo-local notebook workflows, a reusable OOD pool can be staged under `data/ood_dataset/<dataset_name>/` and then materialized into `data/prepared_runtime_datasets/<dataset_key>/ood/`
 - when real `ood/` data is evaluated, the top-level folder under `ood/` is emitted as `ood_type` in validation and test artifacts so you can inspect near/far/non-plant/blur-style slices without turning them into supported labels
 - when real-OOD splitting is enabled and the pool has enough images, training writes or reuses `ood/ood_split_manifest.json`, creates a slice-aware `ood_dev` assignment plus a held-out `ood_test` assignment, and uses the held-out test assignment for final readiness OOD evidence
+- optional `oe/` is the separate Outlier Exposure training pool; it is not final OOD/readiness evidence
 
 ## How To Build A Real `ood/` Pool
 
@@ -143,6 +145,7 @@ Do not put these into `ood/`:
 - another copy of the normal validation or test split
 - images you intend the adapter to support for this run
 - an `ood` class label inside the known-class train or notebook input layout
+- the exact same images already used in `oe/` for Outlier Exposure training
 
 If a category should become a supported class in the next experiment, move it into the normal known-class split layout for that run instead of keeping it in `ood/`.
 

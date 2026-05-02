@@ -290,11 +290,7 @@ def build_experiment_manifest(
     dataset_context = dict(dataset_identity["dataset_context"])
     dataset_manifest = dict(dataset_identity["dataset_manifest"])
     manifest_ood = dict(dataset_manifest.get("ood", {})) if isinstance(dataset_manifest.get("ood"), Mapping) else {}
-    manifest_ood_aux = (
-        dict(dataset_manifest.get("ood_aux", {}))
-        if isinstance(dataset_manifest.get("ood_aux"), Mapping)
-        else {}
-    )
+    manifest_oe = dict(dataset_manifest.get("oe", {})) if isinstance(dataset_manifest.get("oe"), Mapping) else {}
     model_family = _resolve_model_family(run_context)
     surface = _resolve_surface(summary, explicit_surface)
     resolved_created_at = str(_value_from_candidates(created_at, summary.get("created_at"), run_context.get("created_at")) or _utc_now_iso())
@@ -332,10 +328,10 @@ def build_experiment_manifest(
                 "image_count": _coerce_int(manifest_ood.get("image_count")),
                 "image_fingerprint": manifest_ood.get("image_fingerprint"),
             },
-            "ood_aux": {
-                "source_root": str(manifest_ood_aux.get("source_root", "") or ""),
-                "image_count": _coerce_int(manifest_ood_aux.get("image_count")),
-                "image_fingerprint": manifest_ood_aux.get("image_fingerprint"),
+            "oe": {
+                "source_root": str(manifest_oe.get("source_root", "") or ""),
+                "image_count": _coerce_int(manifest_oe.get("image_count")),
+                "image_fingerprint": manifest_oe.get("image_fingerprint"),
             },
         },
         "runtime": _resolve_runtime_context(summary_payload=summary, run_context_payload=run_context),

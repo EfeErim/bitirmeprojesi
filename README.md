@@ -254,6 +254,7 @@ Notebook 2 and the workflow code train only from the runtime split layout:
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 Notebook 0 materializes that layout under:
@@ -294,7 +295,7 @@ Recommended usage:
 
 The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
 
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for primary-score and threshold selection, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
+`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for primary-score and threshold selection, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. Optional `oe/` is a separate Outlier Exposure training pool and is never counted as final readiness evidence. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
 
 ## Training, Step By Step
 

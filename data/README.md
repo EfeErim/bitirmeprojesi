@@ -24,7 +24,7 @@ Class root = your raw folder-by-class images.
 Runtime = the training-ready dataset after preparation.
 
 - Think: "the final package the training code expects"
-- Shape: split folders plus OOD folder (`continual/`, `val/`, `test/`, `ood/`)
+- Shape: split folders plus optional unknown pools (`continual/`, `val/`, `test/`, `ood/`, optional `oe/`)
 
 Quick mapping:
 
@@ -81,6 +81,7 @@ data/prepared_runtime_datasets/<dataset_key>/
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 Expected repo-local OOD pool shape:

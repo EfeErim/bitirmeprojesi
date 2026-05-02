@@ -33,6 +33,9 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     resolved_ood_root = str(STATE.get("resolved_ood_root") or "").strip()
     if resolved_ood_root:
         print(f"[OOD] selected ood root={resolved_ood_root}")
+    resolved_oe_root = str(STATE.get("resolved_oe_root") or "").strip()
+    if resolved_oe_root:
+        print(f"[OE] selected oe root={resolved_oe_root}")
 
     class_resolution = resolve_notebook_training_classes(
         available_classes=available,
@@ -136,6 +139,7 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
         randaugment_num_ops=int(effective_params["RANDAUGMENT_NUM_OPS"]),
         randaugment_magnitude=int(effective_params["RANDAUGMENT_MAGNITUDE"]),
         ood_root=resolved_ood_root or None,
+        oe_root=resolved_oe_root or None,
         pin_memory=bool(effective_params["PIN_MEMORY"]),
         **loader_kwargs,
     )
@@ -156,6 +160,7 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
             "runtime_dataset_key": dataset_key,
             "selected_dataset_name": str(STATE.get("selected_dataset_name") or ""),
             "resolved_ood_root": str(STATE.get("resolved_ood_root") or ""),
+            "resolved_oe_root": str(STATE.get("resolved_oe_root") or ""),
             "effective_batch_size": int(effective_params["BATCH_SIZE"]) * int(effective_params["GRAD_ACCUM_STEPS"]),
         }
     )

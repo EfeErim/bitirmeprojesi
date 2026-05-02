@@ -2464,7 +2464,7 @@ def materialize_grouped_runtime_dataset(
     artifact_root: Path,
     runtime_root: Path = DEFAULT_RUNTIME_ROOT,
     ood_root: Optional[Path] = None,
-    ood_aux_root: Optional[Path] = None,
+    oe_root: Optional[Path] = None,
     materialization_strategy: str = "auto",
 ) -> Path:
     manifest = read_json(artifact_root / "proposed_split_manifest.json", default={}, expect_type=dict)
@@ -2475,11 +2475,11 @@ def materialize_grouped_runtime_dataset(
     dataset_key = build_prepared_dataset_key(crop_name, part_name)
     crop_root = Path(runtime_root) / dataset_key
     resolved_ood_root = Path(ood_root) if ood_root is not None else None
-    resolved_ood_aux_root = Path(ood_aux_root) if ood_aux_root is not None else None
+    resolved_oe_root = Path(oe_root) if oe_root is not None else None
     ood_manifest: Optional[Dict[str, Any]] = None
-    ood_aux_manifest: Optional[Dict[str, Any]] = None
+    oe_manifest: Optional[Dict[str, Any]] = None
     ood_images: List[Path] = []
-    ood_aux_images: List[Path] = []
+    oe_images: List[Path] = []
     if resolved_ood_root is not None:
         if not resolved_ood_root.exists():
             raise FileNotFoundError(f"OOD root not found: {resolved_ood_root}")
@@ -2498,23 +2498,23 @@ def materialize_grouped_runtime_dataset(
             "image_count": len(ood_images),
             "image_fingerprint": _fingerprint_paths(ood_images, root=resolved_ood_root),
         }
-    if resolved_ood_aux_root is not None:
-        if not resolved_ood_aux_root.exists():
-            raise FileNotFoundError(f"OOD auxiliary root not found: {resolved_ood_aux_root}")
-        if not resolved_ood_aux_root.is_dir():
-            raise NotADirectoryError(f"OOD auxiliary root is not a directory: {resolved_ood_aux_root}")
-        ood_aux_images = sorted(
+    if resolved_oe_root is not None:
+        if not resolved_oe_root.exists():
+            raise FileNotFoundError(f"OE root not found: {resolved_oe_root}")
+        if not resolved_oe_root.is_dir():
+            raise NotADirectoryError(f"OE root is not a directory: {resolved_oe_root}")
+        oe_images = sorted(
             [
                 path
-                for path in resolved_ood_aux_root.rglob("*")
+                for path in resolved_oe_root.rglob("*")
                 if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
             ],
             key=lambda path: str(path).lower(),
         )
-        ood_aux_manifest = {
-            "source_root": str(resolved_ood_aux_root.resolve()),
-            "image_count": len(ood_aux_images),
-            "image_fingerprint": _fingerprint_paths(ood_aux_images, root=resolved_ood_aux_root),
+        oe_manifest = {
+            "source_root": str(resolved_oe_root.resolve()),
+            "image_count": len(oe_images),
+            "image_fingerprint": _fingerprint_paths(oe_images, root=resolved_oe_root),
         }
     if crop_root.exists():
         shutil.rmtree(crop_root)
@@ -2547,11 +2547,11 @@ def materialize_grouped_runtime_dataset(
             destination_path = ood_dir / source_path.relative_to(resolved_ood_root)
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             materialize_image(source_path, destination_path, materialization_strategy)
-    if resolved_ood_aux_root is not None:
-        ood_aux_dir = crop_root / "ood_aux"
-        ood_aux_dir.mkdir(parents=True, exist_ok=True)
-        for source_path in ood_aux_images:
-            destination_path = ood_aux_dir / source_path.relative_to(resolved_ood_aux_root)
+    if resolved_oe_root is not None:
+        oe_dir = crop_root / "oe"
+        oe_dir.mkdir(parents=True, exist_ok=True)
+        for source_path in oe_images:
+            destination_path = oe_dir / source_path.relative_to(resolved_oe_root)
             destination_path.parent.mkdir(parents=True, exist_ok=True)
             materialize_image(source_path, destination_path, materialization_strategy)
     split_manifest_path = write_json(
@@ -2565,7 +2565,7 @@ def materialize_grouped_runtime_dataset(
             "artifact_root": str(artifact_root.resolve()),
             "split_policy": GROUPED_SPLIT_POLICY,
             "ood": ood_manifest,
-            "ood_aux": ood_aux_manifest,
+            "oe": oe_manifest,
             "rows": rows,
         },
         ensure_ascii=False,
@@ -2653,10 +2653,10 @@ def main() -> int:
         help="Optional repo-local or explicit OOD tree to materialize into runtime_dataset/<dataset_key>/ood.",
     )
     parser.add_argument(
-        "--ood-aux-root",
+        "--oe-root",
         type=Path,
         default=None,
-        help="Optional auxiliary OE tree to materialize into runtime_dataset/<dataset_key>/ood_aux.",
+        help="Optional OE tree to materialize into runtime_dataset/<dataset_key>/oe.",
     )
     args = parser.parse_args()
 
@@ -2680,7 +2680,7 @@ def main() -> int:
             artifact_root=args.artifact_root,
             runtime_root=args.runtime_root,
             ood_root=args.ood_root,
-            ood_aux_root=args.ood_aux_root,
+            oe_root=args.oe_root,
         )
     return 0
 

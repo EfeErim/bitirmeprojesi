@@ -237,7 +237,7 @@ def prepare_training_run(
         augmix_depth=int(data_cfg.get("augmix_depth", -1)),
         augmix_alpha=float(data_cfg.get("augmix_alpha", 1.0)),
         ood_root=(str(ood_cfg.get("ood_root", "") or "") or None),
-        ood_aux_root=(
+        oe_root=(
             str(ood_cfg.get("oe_root", "") or "").strip()
             or None
         ),

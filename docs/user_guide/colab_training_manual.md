@@ -97,7 +97,7 @@ This is the current Notebook 2 training flow from start to finish:
 12. restore the best model state
 13. calibrate OOD
 14. write validation and test artifacts
-15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, otherwise run the held-out fallback benchmark automatically
+15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, detect an optional `oe/` pool for Outlier Exposure, otherwise run the held-out fallback benchmark automatically
 16. write `production_readiness.json`
 17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
 18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
@@ -152,6 +152,7 @@ data/prepared_runtime_datasets/<dataset_key>/
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 Important distinction:
@@ -159,6 +160,7 @@ Important distinction:
 - Notebook 0 owns flat class-root audit and split materialization
 - Notebook 2 trains only from the already prepared runtime dataset
 - the real `ood/` pool is separate unknown-input evidence, not another class
+- the optional `oe/` pool is separate Outlier Exposure training data, not final readiness evidence
 - if you maintain a real OOD pool, the preferred durable location is `data/prepared_runtime_datasets/<dataset_key>/ood/`; Notebook 0 is the maintained surface that writes it there
 - Notebook 2 also asks for an explicit OOD folder path. Use that prompt when the OOD pool already exists elsewhere in the Colab workspace and you do not want to rematerialize the runtime dataset.
 
@@ -318,7 +320,8 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
      val/<class>/*
      test/<class>/*
      ood/*
-   ```
+     oe/*
+```
 
    Then train through the canonical workflow or CLI:
 
@@ -328,7 +331,7 @@ This is consistent with duplicate-aware image-benchmark guidance such as ciFAIR 
 
 6. Keep OOD separate from classification splitting.
 
-   Do not mix unknown images into the supported class-root dataset. Keep `ood/` as a separate pool under the runtime dataset and match it to the real deployment contract.
+   Do not mix unknown images into the supported class-root dataset. Keep `ood/` as a separate final-evidence pool under the runtime dataset, and use `oe/` only for Outlier Exposure training examples.
 
 ### Practical rules for merged public tomato-leaf datasets
 
@@ -364,7 +367,7 @@ When you need materialized offline variants after a clean runtime split, use the
 .\scripts\python.cmd scripts/augment_runtime_train_split.py --source-root data\prepared_runtime_datasets\grape__fruit_curated --output-root data\prepared_runtime_datasets\grape__fruit_curated_train_aug --variants-per-image 2
 ```
 
-The helper copies the selected runtime dataset, generates deterministic PIL variants only from `continual/` images, leaves `val/`, `test/`, and `ood/` unchanged, and writes `reference_image_count` into `split_manifest.json`. Training and Notebook 2 use that reference count for the production minimum, so generated variants can improve optimization exposure without being counted as independent real-image support.
+The helper copies the selected runtime dataset, generates deterministic PIL variants only from `continual/` images, leaves `val/`, `test/`, `ood/`, and `oe/` unchanged, and writes `reference_image_count` into `split_manifest.json`. Training and Notebook 2 use that reference count for the production minimum, so generated variants can improve optimization exposure without being counted as independent real-image support.
 
 ### When source separation is uncertain
 

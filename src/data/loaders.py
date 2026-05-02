@@ -129,7 +129,7 @@ def create_training_loaders(
     augmix_depth: int = -1,
     augmix_alpha: float = 1.0,
     ood_root: str | Path | None = None,
-    ood_aux_root: str | Path | None = None,
+    oe_root: str | Path | None = None,
     real_ood_split_enabled: bool = True,
     real_ood_split_dev_fraction: float = 0.4,
     real_ood_split_min_per_slice: int = 2,
@@ -318,10 +318,10 @@ def create_training_loaders(
         return loader
 
     resolved_ood_root = Path(ood_root).expanduser() if ood_root is not None and str(ood_root).strip() else Path(data_dir) / crop / "ood"
-    resolved_ood_aux_root = (
-        Path(ood_aux_root).expanduser()
-        if ood_aux_root is not None and str(ood_aux_root).strip()
-        else Path(data_dir) / crop / "ood_aux"
+    resolved_oe_root = (
+        Path(oe_root).expanduser()
+        if oe_root is not None and str(oe_root).strip()
+        else Path(data_dir) / crop / "oe"
     )
     if resolved_ood_root.exists():
         if not resolved_ood_root.is_dir():
@@ -372,13 +372,13 @@ def create_training_loaders(
                 loaders["ood"] = _build_ood_loader(source_root=resolved_ood_root, split_name="ood", seed_offset=30)
         else:
             loaders["ood"] = _build_ood_loader(source_root=resolved_ood_root, split_name="ood", seed_offset=30)
-    if resolved_ood_aux_root.exists():
-        if not resolved_ood_aux_root.is_dir():
-            raise NotADirectoryError(f"OOD auxiliary root is not a directory: {resolved_ood_aux_root}")
-        loaders["ood_aux"] = _build_ood_loader(
-            source_root=resolved_ood_aux_root,
-            split_name="ood_aux",
+    if resolved_oe_root.exists():
+        if not resolved_oe_root.is_dir():
+            raise NotADirectoryError(f"OE root is not a directory: {resolved_oe_root}")
+        loaders["oe"] = _build_ood_loader(
+            source_root=resolved_oe_root,
+            split_name="oe",
             seed_offset=32,
         )
-        setattr(loaders["ood_aux"], "_ood_split_name", "ood_aux")
+        setattr(loaders["oe"], "_ood_split_name", "oe")
     return loaders

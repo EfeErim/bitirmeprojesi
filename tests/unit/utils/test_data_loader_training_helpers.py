@@ -176,7 +176,7 @@ def test_create_training_loaders_accepts_explicit_ood_root(tmp_path: Path):
     assert loaders["ood"].dataset.image_paths[0] == external_ood_root / "unknown" / "ood.jpg"
 
 
-def test_create_training_loaders_keeps_ood_aux_separate_from_real_ood(tmp_path: Path):
+def test_create_training_loaders_keeps_oe_separate_from_real_ood(tmp_path: Path):
     runtime_root = tmp_path / "runtime"
     external_oe_root = tmp_path / "external_oe"
     _write_image(runtime_root / "tomato" / "continual" / "healthy" / "train.jpg")
@@ -191,15 +191,15 @@ def test_create_training_loaders_keeps_ood_aux_separate_from_real_ood(tmp_path: 
         batch_size=2,
         num_workers=0,
         seed=7,
-        ood_aux_root=external_oe_root,
+        oe_root=external_oe_root,
     )
 
     assert "ood" in loaders
-    assert "ood_aux" in loaders
+    assert "oe" in loaders
     assert len(loaders["ood"].dataset) == 1
-    assert len(loaders["ood_aux"].dataset) == 1
+    assert len(loaders["oe"].dataset) == 1
     assert loaders["ood"].dataset.image_paths[0] == runtime_root / "tomato" / "ood" / "unknown" / "ood.jpg"
-    assert loaders["ood_aux"].dataset.image_paths[0] == external_oe_root / "unknown_pool" / "oe.jpg"
+    assert loaders["oe"].dataset.image_paths[0] == external_oe_root / "unknown_pool" / "oe.jpg"
 
 
 def test_create_training_loaders_auto_splits_real_ood_by_slice(tmp_path: Path):

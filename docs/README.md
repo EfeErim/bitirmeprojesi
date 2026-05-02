@@ -45,6 +45,7 @@ data/prepared_runtime_datasets/<dataset_key>/
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 Workflow and CLI runtime split layout:
@@ -55,6 +56,7 @@ Workflow and CLI runtime split layout:
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 ## Source Of Truth Order

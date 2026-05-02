@@ -350,7 +350,7 @@ def prepare_notebook_access_and_dataset(
 
     runtime_root = selected_dataset_root.parent
     default_ood_root = selected_dataset_root / "ood"
-    default_oe_root = selected_dataset_root / "ood_aux"
+    default_oe_root = selected_dataset_root / "oe"
     requested_ood_root = str(ood_root or "").strip()
     requested_oe_root = str(oe_root or "").strip()
     if ask_for_ood_root and not requested_ood_root:
@@ -1043,7 +1043,7 @@ def initialize_notebook_training_engine(
         augmix_depth=int(data_settings.get("AUGMIX_DEPTH", -1)),
         augmix_alpha=float(data_settings.get("AUGMIX_ALPHA", 1.0)),
         ood_root=resolved_ood_root or None,
-        ood_aux_root=resolved_oe_root or None,
+        oe_root=resolved_oe_root or None,
         pin_memory=bool(loader_settings["PIN_MEMORY"]),
         **loader_kwargs,
     )

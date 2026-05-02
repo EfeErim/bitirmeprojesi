@@ -115,6 +115,7 @@ Notebook 2, workflow training, and CLI training use a runtime split layout:
   val/<class>/*
   test/<class>/*
   ood/*
+  oe/*
 ```
 
 This layout is what the code actually trains from.
@@ -145,6 +146,7 @@ Important detail:
 - the workflow uses the runtime folder name `continual`
 - workflow loading maps the logical training split onto that folder
 - real `ood/` pools stay in one input tree, but loader construction can write or reuse `ood/ood_split_manifest.json` and expose a manifest-only `ood_dev` assignment plus a held-out final OOD test assignment; `ood_dev` can select the primary OOD score and threshold, while the final assignment is loaded as the normal `ood` loader used by readiness
+- optional `oe/` is a separate Outlier Exposure training pool and is not used as final readiness evidence
 
 ## Inference Architecture
 

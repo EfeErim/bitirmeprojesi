@@ -604,7 +604,7 @@ class TrainingWorkflow:
             return
         set_oe_loader = getattr(trainer, "set_oe_loader", None)
         if callable(set_oe_loader):
-            set_oe_loader(loaders.get("ood_aux"))
+            set_oe_loader(loaders.get("oe"))
 
     @staticmethod
     def _build_oe_context(*, trainer: Any, loaders: Dict[str, Any]) -> Dict[str, Any]:
@@ -613,7 +613,7 @@ class TrainingWorkflow:
         config = getattr(trainer, "config", None)
         if config is None:
             return {}
-        oe_loader = loaders.get("ood_aux")
+        oe_loader = loaders.get("oe")
         dataset = getattr(oe_loader, "dataset", None) if oe_loader is not None else None
         split_root = getattr(dataset, "split_root", None)
         return {
@@ -1125,8 +1125,8 @@ class TrainingWorkflow:
         oe_context = self._build_oe_context(trainer=trainer_for_session, loaders=loaders)
         if oe_context.get("enabled") and int(oe_context.get("sample_count", 0)) <= 0:
             raise ValueError(
-                "training.continual.ood.oe_enabled requires a separate auxiliary unknown pool under "
-                "runtime_dataset/ood_aux or an explicit training.continual.ood.oe_root."
+                "training.continual.ood.oe_enabled requires a separate OE pool under "
+                "runtime_dataset/oe or an explicit training.continual.ood.oe_root."
             )
 
         self._emit_telemetry(
