@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_pareto_frontiers",
-  "generated_at": "2026-05-02T17:34:32.757799+00:00",
+  "generated_at": "2026-05-02T17:34:53.453914+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "objective_names": [
     "classification.macro_f1",
