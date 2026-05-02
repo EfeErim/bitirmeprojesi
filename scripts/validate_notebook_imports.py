@@ -112,6 +112,14 @@ def _find_code_cell_source(sources: NotebookSources, marker: str, missing_messag
 
 
 def _assert_repo_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
+    _assert_contains(
+        first_code_source,
+        "def _ensure_aads_repo_on_path():",
+        f"{notebook_label} first code cell should make repo scripts importable before runner import: {{snippet}}",
+    )
+    assert first_code_source.index("def _ensure_aads_repo_on_path():") < first_code_source.index(
+        "from scripts.notebook_helpers.cell_script_runner import run_cell_script"
+    ), f"{notebook_label} first code cell imports the cell runner before repo path bootstrap"
     _assert_contains_all(
         first_code_source,
         REPO_BOOTSTRAP_REQUIRED,
@@ -130,6 +138,14 @@ def _assert_update_check_contract(
     *,
     forbid_drive_bootstrap: bool,
 ) -> None:
+    _assert_contains(
+        first_code_source,
+        "def _ensure_aads_repo_on_path():",
+        f"{notebook_label} first code cell should make repo scripts importable before runner import: {{snippet}}",
+    )
+    assert first_code_source.index("def _ensure_aads_repo_on_path():") < first_code_source.index(
+        "from scripts.notebook_helpers.cell_script_runner import run_cell_script"
+    ), f"{notebook_label} first code cell imports the cell runner before repo path bootstrap"
     _assert_contains_all(
         first_code_source,
         UPDATE_CHECK_REQUIRED,
