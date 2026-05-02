@@ -127,6 +127,7 @@ Implication for this repo:
 - a small curated auxiliary unknown set is worth testing
 - it does not need to be exhaustive to be useful
 - this is a better next experiment than trying to construct a perfect universal unknown dataset
+- the auxiliary OE pool is training data, not final OOD evidence; final unknown-disease claims still need disjoint held-out `ood/` evidence
 
 ### 5. Calibration and abstention are product-relevant
 

@@ -89,6 +89,9 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     continual_cfg["ood"]["ber_lambda_old"] = float(effective_params["BER_LAMBDA_OLD"])
     continual_cfg["ood"]["ber_lambda_new"] = float(effective_params["BER_LAMBDA_NEW"])
     continual_cfg["ood"]["ber_warmup_steps"] = int(effective_params["BER_WARMUP_STEPS"])
+    continual_cfg["ood"]["oe_enabled"] = bool(OE_ENABLED)
+    continual_cfg["ood"]["oe_loss_weight"] = float(OE_LOSS_WEIGHT)
+    continual_cfg["ood"]["oe_root"] = resolved_oe_root
     print(f"[ENGINE][OOD_CFG] {json.dumps(continual_cfg['ood'], sort_keys=True)}")
 
     optimization_cfg = continual_cfg.setdefault("optimization", {})

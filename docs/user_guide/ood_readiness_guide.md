@@ -121,6 +121,19 @@ Current behavior:
 - when real-OOD splitting is enabled and the pool has enough images, training writes or reuses `ood/ood_split_manifest.json`, creates a slice-aware `ood_dev` assignment plus a held-out `ood_test` assignment, and uses the held-out test assignment for final readiness OOD evidence
 - optional `oe/` is the separate Outlier Exposure training pool; it is not final OOD/readiness evidence
 
+## OOD Evidence Vs Outlier Exposure
+
+The repo keeps these concepts separate:
+
+- `OOD` is the deployment and evaluation problem: can the adapter reject inputs outside the supported class set?
+- `ood/` is held-out evidence for that problem. It is used for OOD score selection only through a separate `ood_dev` split when that split exists, and the final held-out `ood` assignment remains readiness evidence.
+- `Outlier Exposure` is a training method. In this repo, `oe/` images are optional auxiliary training inputs that add a uniform-logit loss when `training.continual.ood.oe_enabled=true`.
+- `oe/` is never counted as final readiness evidence.
+
+The practical rule is strict: exact images used for OE training must not also be used as final `ood/` evidence. They may come from the same broad source or curation theme, such as unsupported tomato disease images, but the image files used for training and the image files used for final readiness must be disjoint.
+
+If you only have one small clean unknown-image pool, prefer reserving it for `ood/` final evidence and leave OE disabled until you can create a separate auxiliary pool. This matches the Outlier Exposure literature, where auxiliary outliers are used to help the detector generalize to unseen anomalies, and the OOD-evaluation literature, which warns that contaminated or reused evidence can make detector results look stronger than they are. See [Deep Anomaly Detection with Outlier Exposure](https://openreview.net/forum?id=HyxCxhRcY7), [Exposing Outlier Exposure](https://openreview.net/forum?id=3v78awEzyB), and [In or Out? Fixing ImageNet Out-of-Distribution Detection Evaluation](https://proceedings.mlr.press/v202/bitterwolf23a.html).
+
 ## How To Build A Real `ood/` Pool
 
 Treat `data/<crop>/ood/` as one shared pool of unsupported inputs for that crop adapter.

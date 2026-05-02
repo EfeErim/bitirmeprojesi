@@ -51,7 +51,8 @@ Source: [Liznerski et al., 2022, OpenReview](https://openreview.net/forum?id=3v7
 Inference for this repo:
 
 - you do not need a full catalog of every unseen tomato disease
-- a small shared OOD pool can already improve both evaluation quality and, later, OE-style training if desired
+- a small clean unknown-image curation effort can improve evaluation quality now and support OE-style training later, but the final `ood/` evidence images and the auxiliary `oe/` training images must be disjoint
+- if the repo has only one small clean unknown-image pool, reserve it for final `ood/` readiness evidence first and leave OE disabled until a separate auxiliary pool exists
 
 ### 3. Better OOD scores are available with manageable implementation cost
 
@@ -161,7 +162,7 @@ Why this phase is third:
 Recommendation:
 
 - if Phase 1 and Phase 2 are still not strong enough, add OE-style auxiliary outlier exposure
-- start with the same small shared `ood/` pool
+- start from the same curation theme as the real `ood/` pool, but split it into separate image-level pools: final `ood/` evidence and auxiliary `oe/` training data
 - if real negatives are scarce, consider synthetic outliers as a supplement rather than a replacement
 
 Relevant source for synthetic/constructed calibration data:
@@ -172,6 +173,7 @@ Why this phase is later:
 
 - OE is powerful, but it changes training behavior, not just evaluation
 - the repo should first establish a clean real-OOD evaluation surface
+- using the same images for OE training and final readiness evidence would be evaluation leakage, not a valid OE claim
 
 ### Phase 5: Consider a learned reject option
 

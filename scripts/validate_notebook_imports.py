@@ -511,14 +511,18 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert "No prepared runtime datasets were found under RUNTIME_DATASET_ROOT. Notebook 0'u once calistirin." in sources.full_source
     assert "Prepared runtime dataset is missing split folder(s)" in sources.full_source
     assert 'STATE["resolved_ood_root"] = resolved_ood_root_value' in sources.full_source
+    assert 'STATE["resolved_oe_root"] = resolved_oe_root_value' in sources.full_source
     assert 'STATE["dataset_inspection"] = dataset_inspection' in sources.full_source
     assert 'STATE["hardware_inspection"] = hardware_inspection' in sources.full_source
     assert 'STATE["recommendation_report"] = recommendation_report' in sources.full_source
     assert 'STATE["recommendation_decision"] = recommendation_decision' in sources.full_source
     assert 'STATE["effective_params"] = effective_params' in sources.full_source
     assert "ASK_FOR_OOD_ROOT = True" in sources.full_source
+    assert "ASK_FOR_OE_ROOT = True" in sources.full_source
     assert "OOD klasoru yolunu girin" in sources.full_source
+    assert "OE klasoru yolunu girin" in sources.full_source
     assert "ood_root=resolved_ood_root or None" in sources.full_source
+    assert "oe_root=resolved_oe_root or None" in sources.full_source
     assert "build_grouped_dataset_plan" not in sources.full_source
     assert "materialize_grouped_runtime_dataset" not in sources.full_source
 
@@ -587,6 +591,10 @@ def test_training_notebook_bootstrap_contract() -> None:
         'DATASET_NAME = ""',
         'OOD_ROOT = ""',
         'ASK_FOR_OOD_ROOT = True',
+        'OE_ROOT = ""',
+        'ASK_FOR_OE_ROOT = True',
+        'OE_ENABLED = False',
+        'OE_LOSS_WEIGHT = 0.5',
         'MANUAL_PARAM_OVERRIDES = {}',
         'EPOCHS = ',
         'BATCH_SIZE = ',
@@ -620,6 +628,9 @@ def test_training_notebook_bootstrap_contract() -> None:
         'data_cfg["allow_under_min_training"] = bool(effective_params["ALLOW_UNDER_MIN_TRAINING"])',
         'augmentation_policy=AUGMENTATION_POLICY',
         'STATE["resolved_ood_root"] = resolved_ood_root_value',
+        'STATE["resolved_oe_root"] = resolved_oe_root_value',
+        'continual_cfg["ood"]["oe_enabled"] = bool(OE_ENABLED)',
+        'continual_cfg["ood"]["oe_root"] = resolved_oe_root',
         'list_repo_dataset_directories',
         'resolve_direct_repo_dataset_root',
         'resolve_repo_relative_root',

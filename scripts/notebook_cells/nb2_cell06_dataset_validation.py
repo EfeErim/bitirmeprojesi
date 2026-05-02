@@ -82,7 +82,10 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
         raise RuntimeError(f"No class subdirectories in prepared runtime split: {selected_dataset_root / 'continual'}")
     runtime_root = selected_dataset_root.parent
     default_ood_root = selected_dataset_root / "ood"
+    default_oe_root = selected_dataset_root / "oe"
     requested_ood_root = str(OOD_ROOT or "").strip()
+    requested_oe_root = str(OE_ROOT or "").strip()
+    oe_enabled = bool(OE_ENABLED)
     if bool(ASK_FOR_OOD_ROOT) and not requested_ood_root:
         default_hint = str(default_ood_root) if default_ood_root.is_dir() else ""
         prompt = "OOD klasoru yolunu girin"
@@ -91,6 +94,14 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
         requested_ood_root = str(input(prompt + ": ")).strip()
         if not requested_ood_root and default_hint:
             requested_ood_root = default_hint
+    if oe_enabled and bool(ASK_FOR_OE_ROOT) and not requested_oe_root:
+        default_hint = str(default_oe_root) if default_oe_root.is_dir() else ""
+        prompt = "OE klasoru yolunu girin"
+        if default_hint:
+            prompt += f" [Enter={default_hint}]"
+        requested_oe_root = str(input(prompt + ": ")).strip()
+        if not requested_oe_root and default_hint:
+            requested_oe_root = default_hint
 
     if requested_ood_root:
         resolved_ood_root = Path(requested_ood_root).expanduser()
@@ -106,6 +117,26 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     else:
         print("[OOD] Gercek OOD split secilmedi; fallback held-out benchmark kullanilabilir.")
         resolved_ood_root_value = ""
+    if not oe_enabled:
+        if requested_oe_root:
+            print("[OE] OE_ENABLED=False; OE_ROOT yok sayildi.")
+        resolved_oe_root_value = ""
+    elif requested_oe_root:
+        resolved_oe_root = Path(requested_oe_root).expanduser()
+        if not resolved_oe_root.is_absolute():
+            resolved_oe_root = (ROOT / resolved_oe_root).resolve()
+        if not resolved_oe_root.is_dir():
+            raise RuntimeError(f"OE klasoru bulunamadi veya klasor degil: {resolved_oe_root}")
+        print(f"[OE] explicit oe root={resolved_oe_root}")
+        resolved_oe_root_value = str(resolved_oe_root)
+    elif default_oe_root.is_dir():
+        print(f"[OE] runtime oe root={default_oe_root}")
+        resolved_oe_root_value = str(default_oe_root)
+    else:
+        raise RuntimeError(
+            "OE_ENABLED=True ama OE klasoru cozulmedi. OE_ROOT girin, runtime dataset altina oe/ ekleyin, "
+            "veya OE_ENABLED=False yapin."
+        )
     print(f"[DATASET] runtime root={selected_dataset_root} classes={len(class_names)}: {class_names}")
 
     base_params = _collect_notebook_base_params()
@@ -175,6 +206,7 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     STATE["selected_dataset_name"] = selected_dataset_name
     STATE["selected_dataset_root"] = selected_dataset_root
     STATE["resolved_ood_root"] = resolved_ood_root_value
+    STATE["resolved_oe_root"] = resolved_oe_root_value
     STATE["dataset_inspection"] = dataset_inspection
     STATE["hardware_inspection"] = hardware_inspection
     STATE["recommendation_report"] = recommendation_report
@@ -188,6 +220,7 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
             "runtime_dataset_key": selected_dataset_name,
             "selected_dataset_name": selected_dataset_name,
             "resolved_ood_root": resolved_ood_root_value,
+            "resolved_oe_root": resolved_oe_root_value,
             "class_count": len(class_names),
             "recommendation_decision": recommendation_decision,
             "recommendation_change_count": int(recommendation_report.get('change_count', 0)),

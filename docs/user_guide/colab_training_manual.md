@@ -97,7 +97,7 @@ This is the current Notebook 2 training flow from start to finish:
 12. restore the best model state
 13. calibrate OOD
 14. write validation and test artifacts
-15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, detect an optional `oe/` pool for Outlier Exposure, otherwise run the held-out fallback benchmark automatically
+15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, ask for or detect a separate optional `oe/` pool for Outlier Exposure, otherwise run the held-out fallback benchmark automatically
 16. write `production_readiness.json`
 17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
 18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`

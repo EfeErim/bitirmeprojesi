@@ -149,6 +149,7 @@ STATE = {
     "selected_dataset_name": None,
     "selected_dataset_root": None,
     "resolved_ood_root": None,
+    "resolved_oe_root": None,
     "dataset_inspection": {},
     "hardware_inspection": {},
     "recommendation_report": {},
@@ -216,6 +217,10 @@ print(
     f"[OOD] ood_root={OOD_ROOT or '<ask>'} ask_for_ood_root={ASK_FOR_OOD_ROOT}"
 )
 print(
+    f"[OE] oe_root={OE_ROOT or '<ask>'} ask_for_oe_root={ASK_FOR_OE_ROOT} "
+    f"enabled={OE_ENABLED} loss_weight={OE_LOSS_WEIGHT}"
+)
+print(
     f"[RUNTIME] defaults=notebook_cell mp={MIXED_PRECISION} workers={NUM_WORKERS} prefetch={PREFETCH} "
     f"sched={SCHEDULER_NAME} wd={WEIGHT_DECAY} accum={GRAD_ACCUM_STEPS} grad_clip={MAX_GRAD_NORM} "
     f"label_smooth={LABEL_SMOOTHING} warmup={SCHEDULER_WARMUP_RATIO} "
@@ -238,6 +243,10 @@ TELEMETRY.update_latest(
         "dataset_name": DATASET_NAME,
         "ood_root": OOD_ROOT,
         "ask_for_ood_root": ASK_FOR_OOD_ROOT,
+        "oe_root": OE_ROOT,
+        "ask_for_oe_root": ASK_FOR_OE_ROOT,
+        "oe_enabled": OE_ENABLED,
+        "oe_loss_weight": OE_LOSS_WEIGHT,
         "loss_name": LOSS_NAME,
         "logitnorm_tau": LOGITNORM_TAU,
         "mixed_precision": MIXED_PRECISION,
