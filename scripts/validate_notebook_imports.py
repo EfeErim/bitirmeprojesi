@@ -84,7 +84,7 @@ def _load_notebook_sources_from_path(notebook_path: Path) -> NotebookSources:
             return source
         script_path = ROOT / "scripts" / "notebook_cells" / match.group("name")
         assert script_path.is_file(), f"Notebook cell script was not found: {script_path}"
-        return script_path.read_text(encoding="utf-8")
+        return source + "\n" + script_path.read_text(encoding="utf-8")
 
     code_cells = tuple(
         _expand_cell_source("".join(cell.get("source", [])))
