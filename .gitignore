@@ -38,9 +38,7 @@ data/archive.zip
 data/*.xlsx
 data/*.csv
 data/*.json
-data/oe_dataset/
-data/ood_source_archives/
-data/unsupported_media/
+data/auxiliary/
 data/class_root_dataset/*
 !data/class_root_dataset/.gitkeep
 !data/class_root_dataset/grape_fruit/

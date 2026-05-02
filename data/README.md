@@ -11,6 +11,7 @@ You can ignore the other folders unless you have a specific need:
 
 - `data/ood_dataset/`: optional reusable unknown/OOD image pools
 - `data/prepared_class_root_datasets/`: optional cleaned intermediate copy from Notebook 0
+- `data/auxiliary/`: ignored auxiliary workspace for optional OE pools and other non-training extras
 
 In short: start from `class_root_dataset`, end at `prepared_runtime_datasets`.
 
@@ -49,6 +50,7 @@ Use these paths:
 - `data/ood_dataset/`: repo-local OOD pools that Notebook 0 can materialize into runtime `ood/`
 - `data/prepared_class_root_datasets/`: Notebook 0 cleaned working copies created from audit reports
 - `data/prepared_runtime_datasets/`: prepared runtime datasets used by Notebook 0 materialization and Notebook 2 `runtime` mode
+- `data/auxiliary/`: ignored extras that should not be treated as selectable Notebook 0 datasets
 
 Practical flow:
 
@@ -61,6 +63,7 @@ Rules:
 
 - Keep `data/ood_dataset/` for reusable OOD pools only. Nested folders are for organization, not class labels.
 - Keep `data/prepared_class_root_datasets/` as a local-only working area.
+- Keep optional explicit OE roots and other non-training extras under `data/auxiliary/`.
 - `data/prepared_runtime_datasets/` is still ignored by default, but Notebook 0 can force-add and push a ready runtime dataset when `SAVE_RUNTIME_DATASET_TO_GITHUB=True`.
 - Do not commit other runtime splits, manifests, or notebook-generated artifacts under `data/` unless the notebook is explicitly pushing the prepared runtime dataset for reuse.
 - If you need a different local dataset location, override the notebook parameter instead of changing the tracked scaffold.
