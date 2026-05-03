@@ -8,10 +8,7 @@ def run_bootstrap_notebook_nb3(notebook_name: str = "Notebook 3: Adapter Smoke T
     try:
         from scripts.colab_repo_bootstrap import _ensure_repo_root_for_update_check
         repo_root_for_update_check = _ensure_repo_root_for_update_check()
-    except Exception as exc:
-        import logging
-        logging.exception('Unhandled exception')
-        raise
+    except Exception:
         repo_root_for_update_check = None
     
     # [KONTROL] Ilk hucre: Bootstrap kontrati

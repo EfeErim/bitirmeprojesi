@@ -57,6 +57,20 @@ def test_resolve_github_token_reads_colab_secret(monkeypatch):
     assert os.environ["GH_TOKEN"] == "gh-secret"
 
 
+def test_ensure_repo_root_for_update_check_adds_repo_to_import_path(tmp_path: Path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    for dirname in ("src", "config", "scripts"):
+        (repo_root / dirname).mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(bootstrap, "resolve_repo_root", lambda: repo_root)
+    original_path = list(sys.path)
+    monkeypatch.setattr(sys, "path", [entry for entry in original_path if entry != str(repo_root)])
+
+    resolved = bootstrap._ensure_repo_root_for_update_check()
+
+    assert resolved == repo_root
+    assert sys.path[0] == str(repo_root)
+
+
 def test_maybe_clone_repo_uses_github_token_for_https_clone(tmp_path: Path, monkeypatch):
     clone_target = tmp_path / "bitirmeprojesi"
     monkeypatch.delenv("AADS_DISABLE_AUTO_CLONE", raising=False)

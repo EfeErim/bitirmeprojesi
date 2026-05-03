@@ -168,6 +168,15 @@ def resolve_repo_root() -> Path:
     )
 
 
+def _ensure_repo_root_for_update_check() -> Path:
+    """Resolve the repo root and make it importable before notebook freshness checks."""
+    repo_root = resolve_repo_root()
+    repo_root_text = str(repo_root)
+    if repo_root_text not in sys.path:
+        sys.path.insert(0, repo_root_text)
+    return repo_root
+
+
 def running_in_colab() -> bool:
     try:
         import google.colab  # noqa: F401

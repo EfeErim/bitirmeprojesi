@@ -51,6 +51,8 @@ data/class_root_dataset/*
 !data/class_root_dataset/tomato_fruit/**
 !data/class_root_dataset/tomato_leaf/
 !data/class_root_dataset/tomato_leaf/**
+!data/class_root_dataset/tomato_leaf_20260503/
+!data/class_root_dataset/tomato_leaf_20260503/**
 data/class_root_dataset/**/Desktop.ini
 data/class_root_dataset/**/desktop.ini
 data/ood_dataset/*
