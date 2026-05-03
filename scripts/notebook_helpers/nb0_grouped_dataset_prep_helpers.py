@@ -431,7 +431,7 @@ def run_materialize_runtime_dataset(ROOT: Path, STATE: dict, TELEMETRY: ColabLiv
             artifact_root=STATE["artifact_root"],
             runtime_root=runtime_root,
             ood_root=ood_root,
-            materialization_strategy="auto",
+            materialization_strategy="copy",
         )
         
         STATE["runtime_dataset_root"] = runtime_dataset_root
