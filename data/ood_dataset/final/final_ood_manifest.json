@@ -1,0 +1,139 @@
+﻿{
+  "grape__fruit_ood_final": {
+    "total": 249,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "off_crop_or_root_disease": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_or_root_disease",
+        "copied": 148,
+        "duplicates_skipped": 0
+      },
+      "off_crop_secondary": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_secondary",
+        "copied": 55,
+        "duplicates_skipped": 0
+      },
+      "scene_context_leak_check": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/scene_context_leak_check",
+        "copied": 46,
+        "duplicates_skipped": 0
+      }
+    }
+  },
+  "grape__leaf_ood_final": {
+    "total": 249,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "off_crop_or_root_disease": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_or_root_disease",
+        "copied": 148,
+        "duplicates_skipped": 0
+      },
+      "off_crop_secondary": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_secondary",
+        "copied": 55,
+        "duplicates_skipped": 0
+      },
+      "scene_context_leak_check": {
+        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/scene_context_leak_check",
+        "copied": 46,
+        "duplicates_skipped": 0
+      }
+    }
+  },
+  "strawberry__fruit_ood_final": {
+    "total": 292,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "non_plant_misc": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/non_plant_misc",
+        "copied": 27,
+        "duplicates_skipped": 0
+      },
+      "off_crop_secondary": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/off_crop_secondary",
+        "copied": 159,
+        "duplicates_skipped": 0
+      },
+      "other_crop_disease": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/other_crop_disease",
+        "copied": 106,
+        "duplicates_skipped": 0
+      }
+    }
+  },
+  "strawberry__leaf_ood_final": {
+    "total": 292,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "non_plant_misc": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/non_plant_misc",
+        "copied": 27,
+        "duplicates_skipped": 0
+      },
+      "off_crop_secondary": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/off_crop_secondary",
+        "copied": 159,
+        "duplicates_skipped": 0
+      },
+      "other_crop_disease": {
+        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/other_crop_disease",
+        "copied": 106,
+        "duplicates_skipped": 0
+      }
+    }
+  },
+  "tomato__fruit_ood_final": {
+    "total": 1297,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "unsupported_same_crop": {
+        "source": "data/ood_dataset/_archive/tomato_fruit_ood_optimized/unsupported_same_crop",
+        "copied": 1273,
+        "duplicates_skipped": 0
+      },
+      "blur_or_occlusion": {
+        "source": "data/ood_dataset/_archive/tomato_fruit_ood_optimized/blur_or_occlusion",
+        "copied": 24,
+        "duplicates_skipped": 0
+      }
+    }
+  },
+  "tomato__leaf_ood_final": {
+    "total": 62,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "unsupported_tomato_unknowns": {
+        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/unsupported_tomato_unknowns",
+        "copied": 13,
+        "duplicates_skipped": 0
+      },
+      "tomato_failure_cases": {
+        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/tomato_failure_cases",
+        "copied": 6,
+        "duplicates_skipped": 0
+      },
+      "tomato_off_coverage_secondary": {
+        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/tomato_off_coverage_secondary",
+        "copied": 17,
+        "duplicates_skipped": 0
+      },
+      "off_crop_secondary": {
+        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/off_crop_secondary",
+        "copied": 13,
+        "duplicates_skipped": 0
+      },
+      "scene_context_leak_check": {
+        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/scene_context_leak_check",
+        "copied": 13,
+        "duplicates_skipped": 0
+      }
+    }
+  }
+}

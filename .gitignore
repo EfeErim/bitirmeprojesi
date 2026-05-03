@@ -57,6 +57,8 @@ data/class_root_dataset/**/Desktop.ini
 data/class_root_dataset/**/desktop.ini
 data/ood_dataset/*
 !data/ood_dataset/.gitkeep
+!data/ood_dataset/final/
+!data/ood_dataset/final/**
 !data/ood_dataset/grape_fruit_ood_trial/
 !data/ood_dataset/grape_fruit_ood_trial/**
 !data/ood_dataset/grape_fruit_ood_best/
