@@ -1,0 +1,38 @@
+﻿{
+    "tomato_leaf_oe_from_fruit":  {
+                                      "images":  437,
+                                      "slices":  {
+                                                     "same_crop_fruit_negatives":  437
+                                                 }
+                                  },
+    "grape_leaf_oe_unsupported_leaf_candidates":  {
+                                                      "images":  619,
+                                                      "slices":  {
+                                                                     "unsupported_leaf_disease_candidates":  619
+                                                                 }
+                                                  },
+    "strawberry_leaf_oe_from_blossom_candidates":  {
+                                                       "images":  137,
+                                                       "slices":  {
+                                                                      "same_crop_blossom_negatives":  137
+                                                                  }
+                                                   },
+    "tomato_fruit_oe_from_leaf":  {
+                                      "images":  745,
+                                      "slices":  {
+                                                     "same_crop_leaf_or_plant_negatives":  745
+                                                 }
+                                  },
+    "strawberry_fruit_oe_candidates":  {
+                                           "images":  1242,
+                                           "slices":  {
+                                                          "unsupported_same_crop_non_fruit_or_unknown":  1242
+                                                      }
+                                       },
+    "grape_fruit_oe_from_leaf":  {
+                                     "images":  619,
+                                     "slices":  {
+                                                    "same_crop_leaf_negatives":  619
+                                                }
+                                 }
+}
