@@ -48,6 +48,12 @@ data/prepared_runtime_datasets/<dataset_key>/
   oe/*
 ```
 
+Runtime split-leakage check:
+
+```powershell
+.\scripts\python.cmd scripts/validate_dataset_layout.py --root data/prepared_runtime_datasets/<dataset_key> --check-leakage
+```
+
 Workflow and CLI runtime split layout:
 
 ```text
@@ -76,6 +82,9 @@ When docs, notes, and generated artifacts disagree, prefer:
 Supporting references:
 
 - [architecture/production_hardening_plan.md](architecture/production_hardening_plan.md)
+- [architecture/data_augmentation_leakage_prevention.md](architecture/data_augmentation_leakage_prevention.md)
+- [architecture/agricultural_augmentation_domain_guide.md](architecture/agricultural_augmentation_domain_guide.md)
+- [architecture/augmentation_implementation_guide.md](architecture/augmentation_implementation_guide.md)
 - [architecture/router_performance_literature_review.md](architecture/router_performance_literature_review.md)
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)

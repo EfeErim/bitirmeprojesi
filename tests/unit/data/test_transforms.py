@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from PIL import Image
 
 from src.data.transforms import build_image_transform, get_inference_image_transform, preprocess_image
@@ -34,6 +35,11 @@ def test_build_image_transform_basic_training_policy_preserves_legacy_augments()
         "ToTensor",
         "Normalize",
     ]
+    color_jitter = transform.transforms[4]
+    assert color_jitter.brightness == pytest.approx((0.86, 1.14))
+    assert color_jitter.contrast == pytest.approx((0.82, 1.18))
+    assert color_jitter.saturation == pytest.approx((0.84, 1.16))
+    assert color_jitter.hue == pytest.approx((-0.05, 0.05))
 
 
 def test_build_image_transform_augmix_training_policy_uses_augmix():

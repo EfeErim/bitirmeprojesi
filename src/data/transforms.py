@@ -127,9 +127,9 @@ def build_image_transform(
             else:
                 steps.append(
                     transforms.ColorJitter(
-                        brightness=0.2,
-                        contrast=0.2,
-                        saturation=0.2,
+                        brightness=0.14,
+                        contrast=0.18,
+                        saturation=0.16,
                         hue=0.05,
                     )
                 )
