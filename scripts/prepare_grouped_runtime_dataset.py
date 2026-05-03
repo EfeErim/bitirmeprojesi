@@ -839,10 +839,12 @@ def _encode_dinov3_with_components(
     batch_size: int,
     device: str,
     amp_dtype: Any = None,
+    progress_fn: Optional[Callable[[int, int], None]] = None,
 ) -> np.ndarray:
     import torch
 
     embeddings: List[np.ndarray] = []
+    total = len(paths)
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         images = []
@@ -860,6 +862,8 @@ def _encode_dinov3_with_components(
                     batch = outputs.last_hidden_state[:, 0]
         batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
+        if callable(progress_fn):
+            progress_fn(min(start + len(batch_paths), total), total)
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
 
 
@@ -883,10 +887,12 @@ def _encode_bioclip_with_components(
     batch_size: int,
     device: str,
     amp_dtype: Any = None,
+    progress_fn: Optional[Callable[[int, int], None]] = None,
 ) -> np.ndarray:
     import torch
 
     embeddings: List[np.ndarray] = []
+    total = len(paths)
     for start in range(0, len(paths), batch_size):
         batch_paths = paths[start : start + batch_size]
         tensors = []
@@ -900,6 +906,8 @@ def _encode_bioclip_with_components(
                 batch = model.encode_image(image_tensor)
         batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
+        if callable(progress_fn):
+            progress_fn(min(start + len(batch_paths), total), total)
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
 
 
@@ -1428,6 +1436,10 @@ def build_grouped_dataset_plan(
         )
     amp_dtype = _resolve_amp_dtype(device)
     effective_batch_size = max(1, int(batch_size))
+    _progress(
+        progress_fn,
+        f"Embedding device={device} requested_device={requested_device} batch_size={effective_batch_size}.",
+    )
     normalized_under_min_eval_policy = str(under_min_eval_policy or "block").strip().lower()
     if normalized_under_min_eval_policy not in {"block", "skip"}:
         raise ValueError("under_min_eval_policy must be either 'block' or 'skip'.")
@@ -1510,6 +1522,10 @@ def build_grouped_dataset_plan(
             batch_size=effective_batch_size,
             device=device,
             amp_dtype=amp_dtype,
+            progress_fn=lambda done, total, class_name=normalized_class_name: _progress(
+                progress_fn,
+                f"DINOv3 class '{class_name}' encoded {done}/{total} images.",
+            ),
         )
         class_dino_pairs = _compute_neighbor_pairs(
             dino_embeddings,
@@ -1574,6 +1590,10 @@ def build_grouped_dataset_plan(
                 batch_size=effective_batch_size,
                 device=device,
                 amp_dtype=amp_dtype,
+                progress_fn=lambda done, total, class_name=normalized_class_name: _progress(
+                    progress_fn,
+                    f"BioCLIP class '{class_name}' encoded {done}/{total} images.",
+                ),
             )
             bioclip_scores.update(
                 _compute_pair_similarity(
