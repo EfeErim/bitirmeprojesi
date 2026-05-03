@@ -90,20 +90,19 @@ This is the current Notebook 2 training flow from start to finish:
 5. run the access/update check cell and confirm token needs before a long run
 6. resolve a Hugging Face token from environment variables or Colab secrets
 7. select and validate a prepared runtime dataset under `data/prepared_runtime_datasets/<dataset_key>/`
-8. inspect the selected runtime dataset and the current runtime hardware
-9. preview recommended training parameters, review warnings or blockers, and optionally accept them with one yes/no prompt
-10. apply any `MANUAL_PARAM_OVERRIDES` on top of the accepted or rejected recommendation result
-11. train the continual SD-LoRA adapter
-12. restore the best model state
-13. calibrate OOD
-14. write validation and test artifacts
-15. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, ask for or detect a separate optional `oe/` pool for Outlier Exposure, otherwise run the held-out fallback benchmark automatically
-16. write `production_readiness.json`
-17. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
-18. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
-19. mirror outputs into `runs/<crop>/<part>/<RUN_ID>/`
-20. optionally auto-push the mirrored run record to GitHub
-21. optionally auto-disconnect the Colab runtime after final exports succeed
+8. inspect the selected runtime dataset for split, manifest, and OOD-readiness warnings
+9. use the visible parameter-cell values, with any explicit `MANUAL_PARAM_OVERRIDES` applied
+10. train the continual SD-LoRA adapter
+11. restore the best model state
+12. calibrate OOD
+13. write validation and test artifacts
+14. ask for an OOD folder path, use that real OOD data when provided, fall back to the selected runtime dataset's `ood/` folder when you press Enter and it exists, ask for or detect a separate optional `oe/` pool for Outlier Exposure, otherwise run the held-out fallback benchmark automatically
+15. write `production_readiness.json`
+16. write guided navigation files such as `guided/00_start_here.md`, `guided/01_run_overview.json`, and `guided/02_file_catalog.json` without deleting raw artifacts
+17. write canonical training traceability files `training/experiment_manifest.json` and `training/optimization_record.json`
+18. mirror outputs into `runs/<crop>/<part>/<RUN_ID>/`
+19. optionally auto-push the mirrored run record to GitHub
+20. optionally auto-disconnect the Colab runtime after final exports succeed
 
 Important recommendation:
 
@@ -168,12 +167,7 @@ The generated runtime dataset includes:
 
 - `split_manifest.json`
 
-Notebook 2 now also inspects that runtime dataset before engine initialization. It uses repo-visible signals such as split sizes, manifest class counts, grouped-prep risk hints, real `ood/` availability, and current hardware capacity to recommend a bounded set of training and runtime parameters. The notebook does not silently apply a hidden profile:
-
-- it prints the current-vs-recommended parameter diff
-- it asks once whether to apply the recommended values
-- `MANUAL_PARAM_OVERRIDES = {}` always wins over both the raw parameter cell and the accepted recommendation result
-
+Notebook 2 also inspects that runtime dataset before engine initialization. It reports repo-visible split sizes, manifest class counts, grouped-prep risk hints, and real `ood/` availability as dataset validation context. It no longer prints or applies dataset/hardware-based parameter recommendations; use the visible parameter cell for training values, with `MANUAL_PARAM_OVERRIDES = {}` reserved for explicit overrides.
 
 Contract reminder:
 

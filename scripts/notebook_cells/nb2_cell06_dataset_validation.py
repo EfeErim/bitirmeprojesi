@@ -3,12 +3,7 @@
 
 with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root
-    from scripts.colab_training_recommendations import (
-        inspect_runtime_dataset,
-        inspect_runtime_hardware,
-        recommend_notebook_training_params,
-        resolve_effective_notebook_params,
-    )
+    from scripts.colab_training_recommendations import inspect_runtime_dataset
 
     crop_key = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(CROP_NAME).strip())
     while "__" in crop_key:
@@ -139,61 +134,27 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
         )
     print(f"[DATASET] runtime root={selected_dataset_root} classes={len(class_names)}: {class_names}")
 
-    base_params = _collect_notebook_base_params()
     dataset_inspection = inspect_runtime_dataset(selected_dataset_root, ood_root=resolved_ood_root_value or None)
-    hardware_inspection = inspect_runtime_hardware(DEVICE)
-    recommendation_report = recommend_notebook_training_params(base_params, dataset_inspection, hardware_inspection)
+    effective_params = dict(STATE.get("effective_params") or _collect_notebook_base_params())
 
     split_totals = dict(dataset_inspection.get("split_totals", {}))
     print(
-        f"[RECOMMEND][DATASET] scale={dataset_inspection.get('dataset_scale_bucket', 'unknown')} "
+        f"[DATASET][CHECK] scale={dataset_inspection.get('dataset_scale_bucket', 'unknown')} "
         f"continual={split_totals.get('continual', 0)} val={split_totals.get('val', 0)} "
         f"test={split_totals.get('test', 0)} ood={split_totals.get('ood', 0)} "
         f"classes={dataset_inspection.get('class_count', 0)}"
     )
-    print(
-        f"[RECOMMEND][HW] device={hardware_inspection.get('effective_device', 'cpu')} "
-        f"gpu={hardware_inspection.get('gpu_name') or 'none'} "
-        f"vram_gb={hardware_inspection.get('total_vram_gb')} cpu_count={hardware_inspection.get('cpu_count', 0)}"
-    )
 
-    blockers = list(recommendation_report.get("blockers", []))
-    warnings = list(recommendation_report.get("warnings", []))
+    blockers = list(dataset_inspection.get("blockers", []))
+    warnings = list(dataset_inspection.get("warnings", []))
     for item in warnings:
-        print(f"[RECOMMEND][WARN] {item}")
+        print(f"[DATASET][WARN] {item}")
     for item in blockers:
-        print(f"[RECOMMEND][BLOCK] {item}")
-
-    accepted_recommendations = False
-    recommendation_decision = "no_changes"
-    if recommendation_report.get("has_changes"):
-        print("[RECOMMEND] Onerilen degisiklikler:")
-        for key in sorted(recommendation_report.get("changes", {})):
-            change = recommendation_report["changes"][key]
-            print(f"  - {key}: {change['current']} -> {change['recommended']} | {change['reason']}")
-        if blockers:
-            recommendation_decision = "blocked"
-            print("[RECOMMEND] Blocker oldugu icin otomatik uygulama sorusu atlandi. Gerekirse MANUAL_PARAM_OVERRIDES ile acik override girin.")
-        else:
-            raw_confirm = str(input("Apply recommended parameters? [y/N]: ")).strip().lower()
-            accepted_recommendations = raw_confirm in {"y", "yes"}
-            recommendation_decision = "accepted" if accepted_recommendations else "rejected"
-    elif blockers:
-        recommendation_decision = "blocked"
-        print("[RECOMMEND] Blocker var; notebook ham parametrelerle devam eder. Gerekirse MANUAL_PARAM_OVERRIDES guncellenmeli.")
-    else:
-        print("[RECOMMEND] Mevcut notebook parametreleri onerilen degerlerle zaten uyumlu.")
-
-    effective_params = resolve_effective_notebook_params(
-        base_params,
-        recommendation_report,
-        MANUAL_PARAM_OVERRIDES,
-        accepted=accepted_recommendations,
-    )
+        print(f"[DATASET][BLOCK] {item}")
     if MANUAL_PARAM_OVERRIDES:
-        print(f"[RECOMMEND] Manual overrides uygulandi: {MANUAL_PARAM_OVERRIDES}")
+        print(f"[PARAMS] Manual overrides uygulandi: {MANUAL_PARAM_OVERRIDES}")
     print(
-        f"[RECOMMEND][FINAL] epochs={effective_params['EPOCHS']} bs={effective_params['BATCH_SIZE']} "
+        f"[PARAMS][FINAL] epochs={effective_params['EPOCHS']} bs={effective_params['BATCH_SIZE']} "
         f"lr={effective_params['LEARNING_RATE']} lora={effective_params['LORA_R']}/{effective_params['LORA_ALPHA']} "
         f"dropout={effective_params['LORA_DROPOUT']} accum={effective_params['GRAD_ACCUM_STEPS']} "
         f"workers={effective_params['NUM_WORKERS']} prefetch={effective_params['PREFETCH']}"
@@ -208,9 +169,9 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     STATE["resolved_ood_root"] = resolved_ood_root_value
     STATE["resolved_oe_root"] = resolved_oe_root_value
     STATE["dataset_inspection"] = dataset_inspection
-    STATE["hardware_inspection"] = hardware_inspection
-    STATE["recommendation_report"] = recommendation_report
-    STATE["recommendation_decision"] = recommendation_decision
+    STATE["hardware_inspection"] = {}
+    STATE["recommendation_report"] = {}
+    STATE["recommendation_decision"] = "disabled"
     STATE["effective_params"] = effective_params
     TELEMETRY.update_latest(
         {
@@ -222,7 +183,7 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
             "resolved_ood_root": resolved_ood_root_value,
             "resolved_oe_root": resolved_oe_root_value,
             "class_count": len(class_names),
-            "recommendation_decision": recommendation_decision,
-            "recommendation_change_count": int(recommendation_report.get('change_count', 0)),
+            "recommendation_decision": "disabled",
+            "recommendation_change_count": 0,
         }
     )

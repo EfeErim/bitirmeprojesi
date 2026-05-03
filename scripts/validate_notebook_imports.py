@@ -499,11 +499,9 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"' in sources.full_source
     assert "Notebook 0'un yazdigi <dataset_key>/continual|val|test|ood yapisini tutan repo-ici root." in sources.full_source
     assert "from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root" in sources.full_source
-    assert "from scripts.colab_training_recommendations import (" in sources.full_source
+    assert "from scripts.colab_training_recommendations import inspect_runtime_dataset" in sources.full_source
     assert "inspect_runtime_dataset" in sources.full_source
-    assert "inspect_runtime_hardware" in sources.full_source
-    assert "recommend_notebook_training_params" in sources.full_source
-    assert "resolve_effective_notebook_params" in sources.full_source
+    assert "resolve_notebook_params" in sources.full_source
     assert 'direct_runtime_dataset = resolve_direct_repo_dataset_root(' in sources.full_source
     assert 'STATE["runtime_dataset_key"] = selected_dataset_name' in sources.full_source
     assert "from src.data.loaders import create_training_loaders" in sources.full_source
@@ -513,9 +511,9 @@ def test_training_notebook_dataset_contract_detection() -> None:
     assert 'STATE["resolved_ood_root"] = resolved_ood_root_value' in sources.full_source
     assert 'STATE["resolved_oe_root"] = resolved_oe_root_value' in sources.full_source
     assert 'STATE["dataset_inspection"] = dataset_inspection' in sources.full_source
-    assert 'STATE["hardware_inspection"] = hardware_inspection' in sources.full_source
-    assert 'STATE["recommendation_report"] = recommendation_report' in sources.full_source
-    assert 'STATE["recommendation_decision"] = recommendation_decision' in sources.full_source
+    assert 'STATE["hardware_inspection"] = {}' in sources.full_source
+    assert 'STATE["recommendation_report"] = {}' in sources.full_source
+    assert 'STATE["recommendation_decision"] = "disabled"' in sources.full_source
     assert 'STATE["effective_params"] = effective_params' in sources.full_source
     assert "ASK_FOR_OOD_ROOT = True" in sources.full_source
     assert "ASK_FOR_OE_ROOT = True" in sources.full_source
@@ -635,11 +633,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         'resolve_direct_repo_dataset_root',
         'resolve_repo_relative_root',
         'inspect_runtime_dataset',
-        'inspect_runtime_hardware',
-        'recommend_notebook_training_params',
-        'resolve_effective_notebook_params',
-        'Apply recommended parameters? [y/N]:',
-        'STATE["recommendation_decision"] = recommendation_decision',
+        'resolve_notebook_params',
+        'STATE["recommendation_decision"] = "disabled"',
         'STATE["effective_params"] = effective_params',
         'effective_params = dict(STATE.get("effective_params") or {})',
         'STATE["runtime_dataset_key"] = selected_dataset_name',
@@ -667,6 +662,12 @@ def test_training_notebook_bootstrap_contract() -> None:
         'DATASET_ROOT = "data/class_root_dataset"',
         'OOD_DATASET_ROOT = "data/ood_dataset"',
         'OOD_DATASET_NAME = ""',
+        'inspect_runtime_hardware',
+        'recommend_notebook_training_params',
+        'resolve_effective_notebook_params',
+        'Apply recommended parameters? [y/N]:',
+        'accepted_recommendations',
+        'recommendation_report = recommend_notebook_training_params',
     )
     for snippet in forbidden_parameter_snippets:
         _assert_not_contains(

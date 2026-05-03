@@ -19,7 +19,7 @@ LOADER_ERROR_POLICY = str(CONTINUAL_DATA_CFG.get("loader_error_policy", "toleran
 CACHE_SIZE = int(CONTINUAL_DATA_CFG.get("cache_size", 1000))
 VALIDATE_IMAGES_ON_INIT = bool(CONTINUAL_DATA_CFG.get("validate_images_on_init", True))
 
-from scripts.colab_training_recommendations import resolve_effective_notebook_params
+from scripts.colab_training_recommendations import resolve_notebook_params
 
 def _collect_notebook_base_params():
     return {
@@ -134,11 +134,9 @@ bayesian_overrides = _collect_bayesian_notebook_overrides()
 resolved_manual_overrides = dict(bayesian_overrides)
 resolved_manual_overrides.update(dict(MANUAL_PARAM_OVERRIDES or {}))
 
-INITIAL_EFFECTIVE_PARAMS = resolve_effective_notebook_params(
+INITIAL_EFFECTIVE_PARAMS = resolve_notebook_params(
     _collect_notebook_base_params(),
-    {"recommended_params": _collect_notebook_base_params()},
     resolved_manual_overrides,
-    accepted=False,
 )
 
 STATE = {
@@ -153,7 +151,7 @@ STATE = {
     "dataset_inspection": {},
     "hardware_inspection": {},
     "recommendation_report": {},
-    "recommendation_decision": "pending",
+    "recommendation_decision": "disabled",
     "effective_params": dict(INITIAL_EFFECTIVE_PARAMS),
     "adapter": None,
     "loaders": None,
