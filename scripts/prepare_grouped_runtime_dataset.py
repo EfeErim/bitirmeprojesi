@@ -2526,15 +2526,10 @@ def materialize_grouped_runtime_dataset(
             continue
         relative_path = Path(str(row.get("relative_path", "")))
         class_name = str(row.get("normalized_class_name", "")).strip()
-        raw_class_name = str(row.get("raw_class_name", "")).strip()
+        # Keep raw class token exactly as recorded in the manifest for path slicing.
+        raw_class_name = str(row.get("raw_class_name", ""))
         source_path = Path(class_root) / relative_path
-        try:
-            destination_relative = relative_path.relative_to(raw_class_name)
-        except Exception as exc:
-            import logging
-            logging.exception('Unhandled exception')
-            raise
-            destination_relative = Path(relative_path.name)
+        destination_relative = relative_path.relative_to(raw_class_name)
         destination_path = crop_root / split_name / class_name / destination_relative
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         materialize_image(source_path, destination_path, materialization_strategy)
