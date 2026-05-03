@@ -1,0 +1,108 @@
+﻿[
+    {
+        "source":  "domates_meyve_ood_best",
+        "destination":  "domates_meyve_ood_optimized",
+        "source_images":  1349,
+        "unique_images":  1297,
+        "copied_images":  1297,
+        "duplicate_files_removed":  52,
+        "excluded_underfilled_slices":  [
+
+                                        ],
+        "source_slices_after_dedup":  {
+                                          "blur_or_occlusion":  24,
+                                          "unsupported_same_crop":  1273
+                                      },
+        "copied_slices":  {
+                              "blur_or_occlusion":  24,
+                              "unsupported_same_crop":  1273
+                          }
+    },
+    {
+        "source":  "grape_leaf_ood_best",
+        "destination":  "grape_leaf_ood_optimized",
+        "source_images":  250,
+        "unique_images":  249,
+        "copied_images":  249,
+        "duplicate_files_removed":  1,
+        "excluded_underfilled_slices":  [
+
+                                        ],
+        "source_slices_after_dedup":  {
+                                          "scene_context_leak_check":  46,
+                                          "off_crop_or_root_disease":  148,
+                                          "off_crop_secondary":  55
+                                      },
+        "copied_slices":  {
+                              "scene_context_leak_check":  46,
+                              "off_crop_or_root_disease":  148,
+                              "off_crop_secondary":  55
+                          }
+    },
+    {
+        "source":  "strawberry_ood_best",
+        "destination":  "strawberry_ood_optimized",
+        "source_images":  292,
+        "unique_images":  292,
+        "copied_images":  292,
+        "duplicate_files_removed":  0,
+        "excluded_underfilled_slices":  [
+
+                                        ],
+        "source_slices_after_dedup":  {
+                                          "non_plant_misc":  27,
+                                          "other_crop_disease":  106,
+                                          "off_crop_secondary":  159
+                                      },
+        "copied_slices":  {
+                              "non_plant_misc":  27,
+                              "other_crop_disease":  106,
+                              "off_crop_secondary":  159
+                          }
+    },
+    {
+        "source":  "tomato_fruit_ood_best",
+        "destination":  "tomato_fruit_ood_optimized",
+        "source_images":  1349,
+        "unique_images":  1297,
+        "copied_images":  1297,
+        "duplicate_files_removed":  52,
+        "excluded_underfilled_slices":  [
+
+                                        ],
+        "source_slices_after_dedup":  {
+                                          "blur_or_occlusion":  24,
+                                          "unsupported_same_crop":  1273
+                                      },
+        "copied_slices":  {
+                              "blur_or_occlusion":  24,
+                              "unsupported_same_crop":  1273
+                          }
+    },
+    {
+        "source":  "tomato_leaf_ood_best",
+        "destination":  "tomato_leaf_ood_optimized",
+        "source_images":  65,
+        "unique_images":  65,
+        "copied_images":  62,
+        "duplicate_files_removed":  0,
+        "excluded_underfilled_slices":  [
+                                            "non_plant_tiny"
+                                        ],
+        "source_slices_after_dedup":  {
+                                          "tomato_off_coverage_secondary":  17,
+                                          "tomato_failure_cases":  6,
+                                          "non_plant_tiny":  3,
+                                          "scene_context_leak_check":  13,
+                                          "unsupported_tomato_unknowns":  13,
+                                          "off_crop_secondary":  13
+                                      },
+        "copied_slices":  {
+                              "tomato_off_coverage_secondary":  17,
+                              "tomato_failure_cases":  6,
+                              "scene_context_leak_check":  13,
+                              "unsupported_tomato_unknowns":  13,
+                              "off_crop_secondary":  13
+                          }
+    }
+]
