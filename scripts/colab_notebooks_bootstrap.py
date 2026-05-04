@@ -8,10 +8,41 @@ access checks, imports, config loading) so notebooks remain minimalist.
 import os
 import sys
 import json
+import shutil
 import subprocess
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
-from typing import Optional
+from typing import Optional, Sequence
+
+
+NOTEBOOK2_SPARSE_PATHS = (
+    "README.md",
+    "docs",
+    "src",
+    "scripts",
+    "config",
+    "colab_notebooks",
+    "requirements.txt",
+    "pyproject.toml",
+    "data/prepared_runtime_datasets/grape__fruit",
+    "data/prepared_runtime_datasets/grape__leaf",
+    "data/prepared_runtime_datasets/strawberry__fruit",
+    "data/prepared_runtime_datasets/strawberry__leaf",
+    "data/prepared_runtime_datasets/tomato__fruit",
+    "data/prepared_runtime_datasets/tomato__leaf",
+    "data/ood_dataset/final/grape__fruit_ood_final",
+    "data/ood_dataset/final/grape__leaf_ood_final",
+    "data/ood_dataset/final/strawberry__fruit_ood_final",
+    "data/ood_dataset/final/strawberry__leaf_ood_final",
+    "data/ood_dataset/final/tomato__fruit_ood_final",
+    "data/ood_dataset/final/tomato__leaf_ood_final",
+    "data/oe_dataset/grape_fruit_oe_from_leaf",
+    "data/oe_dataset/grape_leaf_oe_unsupported_leaf_candidates",
+    "data/oe_dataset/strawberry_fruit_oe_candidates",
+    "data/oe_dataset/strawberry_leaf_oe_from_blossom_candidates",
+    "data/oe_dataset/tomato_fruit_oe_from_leaf",
+    "data/oe_dataset/tomato_leaf_oe_from_fruit",
+)
 
 
 # ============================================================================
@@ -67,10 +98,7 @@ def _running_in_colab() -> bool:
     try:
         import google.colab  # noqa: F401
         return True
-    except Exception as exc:
-        import logging
-        logging.exception('Unhandled exception')
-        raise
+    except Exception:
         return False
 
 
@@ -160,6 +188,7 @@ def ensure_repo_root(
     clone_target: Optional[Path] = None,
     repo_url: Optional[str] = None,
     github_token: Optional[str] = None,
+    sparse_paths: Optional[Sequence[str]] = None,
 ) -> Path:
     """
     Ensure repo root is available (find or clone).
@@ -169,6 +198,7 @@ def ensure_repo_root(
         clone_target: Target path for cloning (default: /content/bitirmeprojesi)
         repo_url: Repository URL (default: GitHub URL)
         github_token: GitHub token for private repos
+        sparse_paths: Optional sparse checkout paths to select after clone
     
     Returns:
         Path to repo root
@@ -197,27 +227,62 @@ def ensure_repo_root(
     if github_token is None:
         github_token = os.environ.get("GH_TOKEN", "")
     
-    # Clone repo
+    if clone_target.exists() and not _is_repo_root(clone_target):
+        shutil.rmtree(clone_target)
+
     clone_url = _build_repo_access_url(repo_url, github_token)
     clone_target.parent.mkdir(parents=True, exist_ok=True)
-    
+    clone_args = ["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", clone_url, str(clone_target)]
+    print(f"[BOOTSTRAP] Sparse cloning repo to {clone_target}...")
     completed = subprocess.run(
-        ["git", "clone", "--depth", "1", clone_url, str(clone_target)],
+        clone_args,
         check=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
     )
-    
-    if completed.stdout:
-        print(completed.stdout)
-    
-    if completed.returncode != 0:
+
+    if completed.returncode == 0:
+        selected_paths = tuple(sparse_paths or (
+            "README.md",
+            "docs",
+            "src",
+            "scripts",
+            "config",
+            "colab_notebooks",
+            "requirements.txt",
+            "pyproject.toml",
+        ))
+        if sparse_paths:
+            print("[BOOTSTRAP] Selecting Notebook 2 training datasets...")
+        else:
+            print("[BOOTSTRAP] Selecting source checkout paths...")
+        completed = subprocess.run(
+            ["git", "sparse-checkout", "set", *selected_paths],
+            cwd=str(clone_target),
+            check=False,
+        )
+
+    if completed.returncode != 0 and clone_target.exists():
+        print("[BOOTSTRAP] Sparse checkout failed; falling back to source-only checkout.")
+        fallback_paths = [
+            "README.md",
+            "docs",
+            "src",
+            "scripts",
+            "config",
+            "colab_notebooks",
+            "requirements.txt",
+            "pyproject.toml",
+        ]
+        subprocess.run(
+            ["git", "sparse-checkout", "set", *fallback_paths],
+            cwd=str(clone_target),
+            check=False,
+        )
+    elif completed.returncode != 0:
         raise RuntimeError(
             f"Repo clone failed with code {completed.returncode}. "
             "Set AADS_REPO_ROOT or provide valid GH_TOKEN for private repos."
         )
-    
+
     # Verify clone
     repo_root = _find_repo_root()
     if repo_root is None:
@@ -225,7 +290,7 @@ def ensure_repo_root(
             f"Clone succeeded but repo root not found at {clone_target}. "
             "Check clone output above."
         )
-    
+
     return repo_root
 
 
@@ -285,9 +350,15 @@ def bootstrap_notebook(
             print("[BOOTSTRAP] HuggingFace token not found (public models only).")
         
         # Ensure repo root
+        notebook2_sparse_paths = (
+            NOTEBOOK2_SPARSE_PATHS
+            if "Notebook 2" in notebook_name or "Continual Adapter Training" in notebook_name
+            else None
+        )
         ROOT = ensure_repo_root(
             auto_clone=auto_clone_repo,
             github_token=result["GH_TOKEN"],
+            sparse_paths=notebook2_sparse_paths,
         )
         result["ROOT"] = ROOT
         os.chdir(ROOT)
