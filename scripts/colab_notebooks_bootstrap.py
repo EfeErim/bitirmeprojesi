@@ -169,6 +169,21 @@ def _find_repo_root() -> Optional[Path]:
     return None
 
 
+def _ensure_sparse_checkout_paths(repo_root: Path, paths: tuple[str, ...]) -> None:
+    """Add missing sparse-checkout paths for an already cloned Colab repo."""
+    if not (repo_root / ".git").exists():
+        return
+    missing = [path for path in paths if not (repo_root / path).exists()]
+    if not missing:
+        return
+    print(f"[BOOTSTRAP] Adding missing sparse checkout paths: {missing}")
+    subprocess.run(
+        ["git", "sparse-checkout", "add", *missing],
+        cwd=str(repo_root),
+        check=True,
+    )
+
+
 def _build_repo_access_url(repo_url: str, token: Optional[str]) -> str:
     """Add authentication token to repo URL if provided."""
     if not token:
@@ -210,6 +225,7 @@ def ensure_repo_root(
     # Try to find existing repo
     repo_root = _find_repo_root()
     if repo_root is not None:
+        _ensure_sparse_checkout_paths(repo_root, ("requirements_colab.txt",))
         return repo_root
     
     if not auto_clone:
