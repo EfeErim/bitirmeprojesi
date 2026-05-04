@@ -148,6 +148,8 @@ with TELEMETRY.capture_cell_output("Cell 9: Final Evaluation"):
     STATE["evaluation_artifacts"] = results
     STATE["ood_benchmark"] = benchmark_summary
     STATE["production_readiness"] = readiness["payload"]
+    # Ensure matplotlib is lazily loaded before using plt
+    _ensure_matplotlib()
     plt.close("all")
     print(
         f"[OOD] kanit={readiness['payload'].get('ood_evidence_source', 'unavailable')} "
