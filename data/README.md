@@ -50,6 +50,7 @@ Use these paths:
 
 - `data/class_root_dataset/`: flat class-root datasets for Notebook 0 audit
 - `data/ood_dataset/`: repo-local OOD pools that Notebook 0 can materialize into runtime `ood/`
+- Large OOD source bundles can also live in `data/ood_dataset/*.zip`. The dataset selectors will unpack those archives on demand into `.runtime_tmp/dataset_cache/` and then use the extracted dataset roots.
 - `data/prepared_class_root_datasets/`: Notebook 0 cleaned working copies created from audit reports
 - `data/prepared_runtime_datasets/`: prepared runtime datasets used by Notebook 0 materialization and Notebook 2 `runtime` mode
 - `data/auxiliary/`: ignored extras that should not be treated as selectable Notebook 0 datasets
