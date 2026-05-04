@@ -108,6 +108,8 @@ with TELEMETRY.capture_cell_output("Cell 6: Training"):
 
     def session_observer(record):
         global last_checkpoint_step, best_val_loss
+        # Ensure matplotlib is lazily loaded before using plt
+        _ensure_matplotlib()
         event_type = record.get("event_type", "")
         event = record.get("payload", {})
 
