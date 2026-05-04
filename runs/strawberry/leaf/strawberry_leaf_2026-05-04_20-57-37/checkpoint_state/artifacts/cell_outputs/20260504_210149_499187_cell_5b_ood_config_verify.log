@@ -1,0 +1,9 @@
+[CELL_CAPTURE] cell=Cell 5b: OOD Config Verify
+run_id=strawberry_leaf_2026-05-04_20-57-37
+started_at=2026-05-04T21:01:49.499231+00:00
+finished_at=2026-05-04T21:01:49.499593+00:00
+duration_sec=0.000
+
+[VERIFY][OOD][expected] {"conformal_alpha": 0.05, "conformal_method": "raps", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.2, "sure_confidence_percentile": 97.0, "sure_semantic_percentile": 90.0, "threshold_factor": 3.0}
+[VERIFY][OOD][resolved] {"conformal_alpha": 0.05, "conformal_method": "raps", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.2, "sure_confidence_percentile": 97.0, "sure_semantic_percentile": 90.0, "threshold_factor": 3.0}
+[VERIFY][OOD] OK: cozulmus OOD ayari istenen parametrelerle eslesiyor.

@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=strawberry_leaf_2026-05-04_20-57-37
+started_at=2026-05-04T21:03:51.328592+00:00
+finished_at=2026-05-04T21:04:06.407877+00:00
+duration_sec=15.079
+
+[DOGRULAMA (referans)] ornek=491 sinif=4 accuracy=0.9939 ood_auroc=0.9334 sure_ds_f1=0.7305 conformal_cov=0.9939
+[TEST (ayrilmis)] ornek=491 sinif=4 accuracy=0.9919 ood_auroc=0.9216 sure_ds_f1=0.7317 conformal_cov=0.9919
+[OOD] kanit=real_ood_split durum=failed gecti=False
+[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.

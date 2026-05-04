@@ -1,0 +1,5 @@
+class,precision,recall,f1-score,support
+healthy,1.0,1.0,1.0,82.0
+strawberry_leaf_scorch_leaf,0.9903381642512077,1.0,0.9951456310679612,205.0
+strawberry_leaf_spot_leaf,1.0,0.9636363636363636,0.9814814814814815,110.0
+strawberry_powdery_mildew_leaf,0.9791666666666666,1.0,0.9894736842105263,94.0
