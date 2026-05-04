@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import os
 import random
 import shutil
+import zipfile
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
@@ -24,6 +26,7 @@ REPO_LOCAL_DATASET_PARENT_NAMES = {
     "prepared_runtime_datasets",
     "runtime_notebook_datasets",
 }
+REPO_DATASET_ARCHIVE_SUFFIXES = {".zip"}
 _CLASS_ALIAS_GROUPS = (
     {"healthy", "healthy_leaf"},
     {"gray_mold", "botrytis_gray_mold"},
@@ -39,6 +42,123 @@ def normalize_class_name(name: str) -> str:
     while "__" in normalized:
         normalized = normalized.replace("__", "_")
     return normalized.strip("_")
+
+
+def _dataset_display_name(path: Path) -> str:
+    if path.suffix.lower() in REPO_DATASET_ARCHIVE_SUFFIXES:
+        return path.stem
+    return path.name
+
+
+def _repo_dataset_cache_root(*, repo_root: str | Path, repo_relative_root: str | Path) -> Path:
+    resolved_repo_root = Path(repo_root).expanduser().resolve()
+    raw_relative = str(repo_relative_root or "").strip()
+    if not raw_relative:
+        raise RuntimeError("Repo dataset root cannot be empty.")
+    relative_path = Path(raw_relative).expanduser()
+    if relative_path.is_absolute():
+        raise RuntimeError("Repo dataset root must stay repo-relative.")
+    cache_root = (resolved_repo_root / ".runtime_tmp" / "dataset_cache" / relative_path).resolve()
+    try:
+        cache_root.relative_to(resolved_repo_root)
+    except ValueError as exc:
+        raise RuntimeError(f"Repo dataset cache escapes the repo: {raw_relative}") from exc
+    return cache_root
+
+
+def _archive_signature(archive_path: Path) -> Dict[str, Any]:
+    stat_result = archive_path.stat()
+    return {
+        "source_path": str(archive_path.resolve()),
+        "size": stat_result.st_size,
+        "mtime_ns": stat_result.st_mtime_ns,
+    }
+
+
+def _archive_metadata_path(target_root: Path) -> Path:
+    return target_root / ".archive_source.json"
+
+
+def _archive_cache_is_current(target_root: Path, archive_path: Path) -> bool:
+    metadata_path = _archive_metadata_path(target_root)
+    if not target_root.is_dir() or not metadata_path.is_file():
+        return False
+    try:
+        payload = read_json(metadata_path, default={}, expect_type=dict)
+    except Exception:
+        return False
+    expected = _archive_signature(archive_path)
+    return (
+        isinstance(payload, dict)
+        and payload.get("source_path") == expected["source_path"]
+        and int(payload.get("size", -1)) == int(expected["size"])
+        and int(payload.get("mtime_ns", -1)) == int(expected["mtime_ns"])
+    )
+
+
+def _safe_extract_zip_archive(*, archive_path: Path, target_root: Path) -> None:
+    target_root.mkdir(parents=True, exist_ok=True)
+    target_root_resolved = target_root.resolve()
+    with zipfile.ZipFile(archive_path) as archive:
+        for member in archive.infolist():
+            member_name = str(member.filename or "").strip()
+            if not member_name:
+                continue
+            destination = (target_root / member_name).resolve()
+            try:
+                destination.relative_to(target_root_resolved)
+            except ValueError as exc:
+                raise RuntimeError(f"Zip archive contains an unsafe path: {member_name}") from exc
+        archive.extractall(target_root)
+
+
+def _materialize_repo_dataset_archive(*, archive_path: Path, cache_root: Path) -> Path:
+    target_root = cache_root / archive_path.stem
+    if _archive_cache_is_current(target_root, archive_path):
+        return target_root
+
+    if target_root.exists():
+        shutil.rmtree(target_root)
+
+    _safe_extract_zip_archive(archive_path=archive_path, target_root=target_root)
+    _archive_metadata_path(target_root).write_text(
+        json.dumps(_archive_signature(archive_path), ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return target_root
+
+
+def _repo_dataset_root_candidates(*, repo_root: str | Path, repo_relative_root: str | Path) -> list[Path]:
+    base_root = resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)
+    if not base_root.is_dir():
+        raise RuntimeError(f"Repo dataset parent not found: {base_root}")
+
+    candidates = [path for path in base_root.iterdir() if path.is_dir()]
+    cache_root = _repo_dataset_cache_root(repo_root=repo_root, repo_relative_root=repo_relative_root)
+    cache_root.mkdir(parents=True, exist_ok=True)
+
+    for archive_path in sorted(base_root.iterdir(), key=lambda path: path.name.lower()):
+        if not archive_path.is_file() or archive_path.suffix.lower() not in REPO_DATASET_ARCHIVE_SUFFIXES:
+            continue
+
+        extracted_root = _materialize_repo_dataset_archive(archive_path=archive_path, cache_root=cache_root)
+        try:
+            child_dirs = [path for path in extracted_root.iterdir() if path.is_dir() and not path.name.startswith(".")]
+        except OSError:
+            child_dirs = []
+
+        child_candidates = [child for child in child_dirs if looks_like_class_root_dataset(child)]
+        if child_candidates:
+            candidates.extend(child_candidates)
+            continue
+
+        if looks_like_class_root_dataset(extracted_root):
+            candidates.append(extracted_root)
+
+    unique_candidates: dict[str, Path] = {}
+    for path in candidates:
+        unique_candidates.setdefault(str(path.resolve()), path)
+    return sorted(unique_candidates.values(), key=lambda path: _dataset_display_name(path).lower())
 
 
 def resolve_repo_relative_root(*, repo_root: str | Path, repo_relative_root: str | Path) -> Path:
@@ -62,13 +182,7 @@ def list_repo_dataset_directories(
     repo_root: str | Path,
     repo_relative_root: str | Path,
 ) -> list[Path]:
-    base_root = resolve_repo_relative_root(repo_root=repo_root, repo_relative_root=repo_relative_root)
-    if not base_root.is_dir():
-        raise RuntimeError(f"Repo dataset parent not found: {base_root}")
-    return sorted(
-        [path for path in base_root.iterdir() if path.is_dir()],
-        key=lambda path: path.name.lower(),
-    )
+    return _repo_dataset_root_candidates(repo_root=repo_root, repo_relative_root=repo_relative_root)
 
 
 def _has_image_file(directory: Path) -> bool:
@@ -211,7 +325,7 @@ def resolve_repo_dataset_directory(
         repo_root=repo_root,
         repo_relative_root=repo_relative_root,
     )
-    dataset_names = [path.name for path in dataset_dirs]
+    dataset_names = [_dataset_display_name(path) for path in dataset_dirs]
     if not dataset_names:
         raise RuntimeError(
             "No dataset directories were found under "
@@ -262,7 +376,7 @@ def resolve_repo_dataset_directory(
             print_fn=print_fn,
         )
 
-    selected_path = next(path for path in dataset_dirs if path.name == selected_name)
+    selected_path = next(path for path in dataset_dirs if _dataset_display_name(path) == selected_name)
     return selected_name, selected_path, dataset_names
 
 
@@ -403,264 +517,3 @@ def _fingerprint_paths(paths: Iterable[Path], *, root: Path) -> str:
         digest.update(path.relative_to(root).as_posix().encode("utf-8"))
         digest.update(b"\0")
     return digest.hexdigest()
-
-
-def _public_manifest(manifest: Dict[str, Any]) -> Dict[str, Any]:
-    classes: List[Dict[str, Any]] = []
-    for entry in manifest.get("classes", []):
-        classes.append({key: value for key, value in entry.items() if not str(key).startswith("_")})
-
-    public_manifest = dict(manifest)
-    public_manifest["classes"] = classes
-    return public_manifest
-
-
-def _runtime_layout_matches_manifest(crop_root: Path, manifest: Dict[str, Any]) -> bool:
-    required_splits = ("continual", "val", "test")
-    classes = manifest.get("classes", [])
-    if not isinstance(classes, list):
-        return False
-
-    for split_name in required_splits:
-        if not (crop_root / split_name).is_dir():
-            return False
-
-    for entry in classes:
-        if not isinstance(entry, dict):
-            return False
-        class_name = str(entry.get("class_name", "")).strip()
-        split_counts = entry.get("split_counts", {})
-        if not class_name or not isinstance(split_counts, dict):
-            return False
-        for split_name in required_splits:
-            expected_count = int(split_counts.get(split_name, 0))
-            class_dir = crop_root / split_name / class_name
-            actual_count = sum(
-                1
-                for path in class_dir.rglob("*")
-                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
-            )
-            if actual_count != expected_count:
-                return False
-
-    ood_manifest = manifest.get("ood")
-    ood_dir = crop_root / "ood"
-    if ood_manifest is None:
-        return not ood_dir.exists()
-    expected_ood_count = int(dict(ood_manifest).get("image_count", 0))
-    actual_ood_count = (
-        sum(1 for path in ood_dir.rglob("*") if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS)
-        if ood_dir.is_dir()
-        else 0
-    )
-    return actual_ood_count == expected_ood_count
-
-
-def _resolve_materialization_attempts(strategy: str) -> List[str]:
-    normalized = str(strategy or "auto").strip().lower()
-    if normalized not in MATERIALIZATION_STRATEGIES:
-        raise ValueError(f"Unsupported materialization strategy: {strategy}")
-
-    if normalized == "auto":
-        if os.name != "nt":
-            return ["symlink", "hardlink", "copy"]
-        return ["copy"]
-    return [normalized]
-
-
-def materialize_image(source_path: Path, dest_path: Path, strategy: str) -> str:
-    attempts = _resolve_materialization_attempts(strategy)
-    last_error: Optional[Exception] = None
-
-    for attempt in attempts:
-        try:
-            if dest_path.exists() or dest_path.is_symlink():
-                dest_path.unlink()
-
-            if attempt == "copy":
-                shutil.copy2(source_path, dest_path)
-            elif attempt == "symlink":
-                dest_path.symlink_to(source_path.resolve())
-            elif attempt == "hardlink":
-                os.link(source_path, dest_path)
-            else:
-                raise ValueError(f"Unsupported materialization strategy: {attempt}")
-            return attempt
-        except OSError as exc:
-            last_error = exc
-            if dest_path.exists() or dest_path.is_symlink():
-                dest_path.unlink()
-
-    if last_error is not None:
-        raise last_error
-    raise RuntimeError("Failed to materialize dataset image.")
-
-
-def build_runtime_split_manifest(
-    *,
-    class_root: Path,
-    crop_name: str,
-    seed: int,
-    allowed: Optional[Iterable[str]] = None,
-) -> Dict[str, Any]:
-    class_dirs = sorted([path for path in class_root.iterdir() if path.is_dir()], key=lambda path: path.name.lower())
-    allowed_set = {normalize_class_name(item) for item in list(allowed or []) if normalize_class_name(item)}
-    classes: List[Dict[str, Any]] = []
-    total_images = 0
-
-    for class_dir in class_dirs:
-        normalized = normalize_class_name(class_dir.name)
-        if not normalized or (allowed_set and normalized not in allowed_set):
-            continue
-        images = sorted(
-            [path for path in class_dir.rglob("*") if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS],
-            key=lambda path: str(path).lower(),
-        )
-        train_count, val_count, test_count = estimate_split_counts(len(images))
-        classes.append(
-            {
-                "source_class_name": class_dir.name,
-                "class_name": normalized,
-                "image_count": len(images),
-                "image_fingerprint": _fingerprint_paths(images, root=class_root),
-                "estimated_continual": train_count,
-                "estimated_val": val_count,
-                "estimated_test": test_count,
-                "split_counts": {
-                    "continual": train_count,
-                    "val": val_count,
-                    "test": test_count,
-                },
-                "_relative_image_paths": [path.relative_to(class_root).as_posix() for path in images],
-            }
-        )
-        total_images += len(images)
-
-    return {
-        "schema_version": "v1_runtime_split_manifest",
-        "source_root": str(class_root.resolve()),
-        "crop": str(crop_name),
-        "seed": int(seed),
-        "allowed_classes": sorted(allowed_set),
-        "split_policy": "80/10/10",
-        "summary": {
-            "num_classes": len(classes),
-            "total_images": int(total_images),
-        },
-        "classes": classes,
-    }
-
-
-def prepare_runtime_dataset_layout(
-    class_root: Path,
-    crop_name: str,
-    *,
-    seed: int = 42,
-    allowed: Optional[Iterable[str]] = None,
-    ood_root: Optional[Path] = None,
-    runtime_root: Optional[Path] = None,
-    materialization_strategy: str = "auto",
-) -> Path:
-    """Split class-root data into runtime layout and optionally materialize `ood/`."""
-    runtime_dataset_root = runtime_root or (Path(__file__).resolve().parents[1] / "data" / "prepared_runtime_datasets")
-    crop_root = runtime_dataset_root / str(crop_name)
-    split_manifest_path = crop_root / "split_manifest.json"
-    resolved_ood_root = Path(ood_root) if ood_root is not None else None
-
-    source_manifest = build_runtime_split_manifest(
-        class_root=Path(class_root),
-        crop_name=str(crop_name),
-        seed=int(seed),
-        allowed=allowed,
-    )
-    comparison_manifest = _public_manifest(source_manifest)
-    comparison_manifest["ood"] = None
-    ood_images: List[Path] = []
-    if resolved_ood_root is not None:
-        if not resolved_ood_root.exists():
-            raise FileNotFoundError(f"OOD root not found: {resolved_ood_root}")
-        if not resolved_ood_root.is_dir():
-            raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
-        ood_images = sorted(
-            [
-                path
-                for path in resolved_ood_root.rglob("*")
-                if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
-            ],
-            key=lambda path: str(path).lower(),
-        )
-        comparison_manifest["ood"] = {
-            "source_root": str(resolved_ood_root.resolve()),
-            "image_count": len(ood_images),
-            "image_fingerprint": _fingerprint_paths(ood_images, root=resolved_ood_root),
-        }
-
-    if crop_root.exists() and split_manifest_path.exists():
-        try:
-            existing_manifest = read_json(split_manifest_path, default={})
-            if (
-                existing_manifest == comparison_manifest
-                and _runtime_layout_matches_manifest(crop_root, comparison_manifest)
-            ):
-                return runtime_dataset_root
-        except Exception as exc:
-            raise RuntimeError(
-                f"Existing runtime dataset manifest could not be validated at {split_manifest_path}; "
-                f"refusing to delete {crop_root}."
-            ) from exc
-
-    if crop_root.exists():
-        shutil.rmtree(crop_root)
-    crop_root.mkdir(parents=True, exist_ok=True)
-
-    rng = random.Random(int(seed))
-    for class_entry in source_manifest.get("classes", []):
-        class_name = str(class_entry.get("class_name", ""))
-        source_class_name = str(class_entry.get("source_class_name", ""))
-        if not class_name:
-            continue
-        relative_image_paths = [Path(item) for item in class_entry.get("_relative_image_paths", [])]
-        images: List[tuple[Path, Path]] = []
-        for rel_path in relative_image_paths:
-            source_path = Path(class_root) / rel_path
-            try:
-                destination_relative_path = rel_path.relative_to(source_class_name)
-            except Exception as exc:
-                logger.debug(
-                    f"Could not resolve relative path {rel_path} from source class {source_class_name}; using filename only",
-                    exc_info=exc,
-                )
-                destination_relative_path = Path(rel_path.name)
-            images.append((source_path, destination_relative_path))
-        rng.shuffle(images)
-
-        continual_count, val_count, _ = estimate_split_counts(len(images))
-        splits = {
-            "continual": images[:continual_count],
-            "val": images[continual_count:continual_count + val_count],
-            "test": images[continual_count + val_count:],
-        }
-        for split_name, files in splits.items():
-            dst_dir = crop_root / split_name / class_name
-            dst_dir.mkdir(parents=True, exist_ok=True)
-            for source_path, destination_relative_path in files:
-                destination_path = dst_dir / destination_relative_path
-                destination_path.parent.mkdir(parents=True, exist_ok=True)
-                materialize_image(source_path, destination_path, materialization_strategy)
-
-    public_manifest = _public_manifest(source_manifest)
-    public_manifest["ood"] = comparison_manifest["ood"]
-    if resolved_ood_root is not None:
-        ood_dir = crop_root / "ood"
-        ood_dir.mkdir(parents=True, exist_ok=True)
-        for source_path in ood_images:
-            destination_relative_path = source_path.relative_to(resolved_ood_root)
-            destination_path = ood_dir / destination_relative_path
-            destination_path.parent.mkdir(parents=True, exist_ok=True)
-            materialize_image(source_path, destination_path, materialization_strategy)
-    write_json(split_manifest_path, public_manifest, ensure_ascii=False)
-    return runtime_dataset_root
-
-
-
-
