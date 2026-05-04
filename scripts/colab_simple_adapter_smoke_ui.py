@@ -11,17 +11,32 @@ from typing import Any, Optional
 from IPython.display import HTML, clear_output, display
 from PIL import Image
 
-from src.pipeline.adapter_smoke import (
-    build_prediction_visualization_images,
-    discover_adapter_candidates,
-    load_adapter_summary,
-    predict_single_image,
-)
-
+# Defer heavy imports until actually needed (when UI is launched and user interacts)
 try:
     import ipywidgets as widgets
 except Exception:  # pragma: no cover - notebook runtime fallback
     widgets = None
+
+# Lazy import placeholders - will be populated on-demand
+_build_prediction_visualization_images = None
+_discover_adapter_candidates = None
+_load_adapter_summary = None
+_predict_single_image = None
+
+def _ensure_adapter_smoke_imports():
+    """Lazy import adapter smoke functions when needed."""
+    global _build_prediction_visualization_images, _discover_adapter_candidates, _load_adapter_summary, _predict_single_image
+    if _build_prediction_visualization_images is None:
+        from src.pipeline.adapter_smoke import (
+            build_prediction_visualization_images as _bpvi,
+            discover_adapter_candidates as _dac,
+            load_adapter_summary as _las,
+            predict_single_image as _psi,
+        )
+        _build_prediction_visualization_images = _bpvi
+        _discover_adapter_candidates = _dac
+        _load_adapter_summary = _las
+        _predict_single_image = _psi
 
 
 def _running_in_colab() -> bool:
@@ -354,7 +369,8 @@ def launch_simple_adapter_smoke_ui(
     upload_dir = root_path / ".runtime_tmp" / upload_dir_name
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    adapter_candidates = discover_adapter_candidates(
+    _ensure_adapter_smoke_imports()
+    adapter_candidates = _discover_adapter_candidates(
         resolved_search_roots,
         crop_name=None,
         collapse_run_mirrors=not show_mirror_adapters,
@@ -470,7 +486,8 @@ def launch_simple_adapter_smoke_ui(
         with status_output:
             clear_output(wait=True)
             print("Adapter listesi yenileniyor...")
-        adapter_candidates = discover_adapter_candidates(
+        _ensure_adapter_smoke_imports()
+        adapter_candidates = _discover_adapter_candidates(
             resolved_search_roots,
             crop_name=None,
             collapse_run_mirrors=not show_mirror_adapters,
@@ -495,7 +512,8 @@ def launch_simple_adapter_smoke_ui(
                 if not image_path.exists():
                     raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
                 candidate = selected_candidate()
-                summary = load_adapter_summary(
+                _ensure_adapter_smoke_imports()
+                summary = _load_adapter_summary(
                     candidate.get("crop_name"),
                     adapter_dir=candidate.get("adapter_dir"),
                     config_env=config_env,
@@ -503,7 +521,8 @@ def launch_simple_adapter_smoke_ui(
                 )
                 with Image.open(image_path) as preview:
                     display(preview.copy())
-                result = predict_single_image(
+                _ensure_adapter_smoke_imports()
+                result = _predict_single_image(
                     image_path,
                     summary["crop_name"],
                     adapter_dir=summary["resolved_adapter_dir"],
@@ -514,7 +533,8 @@ def launch_simple_adapter_smoke_ui(
                     explanation_grid_size=int(explanation_grid_size),
                     explanation_method=str(explanation_method_dropdown.value),
                 )
-                visualization_images = build_prediction_visualization_images(image_path, result)
+                _ensure_adapter_smoke_imports()
+                visualization_images = _build_prediction_visualization_images(image_path, result)
                 if visualization_images:
                     display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
                     display(visualization_images["model_view"])

@@ -350,7 +350,6 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
 
 def test_colab_helpers() -> None:
     from scripts.colab_checkpointing import TrainingCheckpointManager
-    from scripts.colab_dataset_layout import prepare_runtime_dataset_layout
     from scripts.colab_live_telemetry import ColabLiveTelemetry
     from scripts.colab_repo_bootstrap import (
         export_current_colab_notebook,
@@ -378,7 +377,6 @@ def test_colab_helpers() -> None:
     assert callable(prepare_class_root_for_materialization)
     _ = (
         TrainingCheckpointManager,
-        prepare_runtime_dataset_layout,
         ColabLiveTelemetry,
         evaluate_layout,
         build_grouped_dataset_plan,

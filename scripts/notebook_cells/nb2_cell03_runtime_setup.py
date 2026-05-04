@@ -14,10 +14,29 @@ from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlsplit, urlunsplit
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import torch
+# Defer heavy imports until actually needed (train/visualization cells)
+matplotlib = None
+plt = None
+torch = None
+
+def _ensure_torch():
+    """Lazy import torch when needed."""
+    global torch
+    if torch is None:
+        import torch as _torch
+        torch = _torch
+    return torch
+
+def _ensure_matplotlib():
+    """Lazy import and configure matplotlib when needed."""
+    global matplotlib, plt
+    if matplotlib is None:
+        import matplotlib as _matplotlib
+        _matplotlib.use("Agg")
+        import matplotlib.pyplot as _plt
+        matplotlib = _matplotlib
+        plt = _plt
+    return matplotlib, plt
 
 # Imports for training notebook setup
 from scripts.colab_repo_bootstrap import (

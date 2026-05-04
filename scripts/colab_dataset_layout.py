@@ -8,7 +8,6 @@ IMAGE_EXTENSIONS = _impl.IMAGE_EXTENSIONS
 MATERIALIZATION_STRATEGIES = _impl.MATERIALIZATION_STRATEGIES
 read_json = _impl.read_json
 class_name_aliases = _impl.class_name_aliases
-materialize_image = _impl.materialize_image
 estimate_split_counts = _impl.estimate_split_counts
 list_repo_dataset_directories = _impl.list_repo_dataset_directories
 list_dataset_directories_from_parent = _impl.list_dataset_directories_from_parent
@@ -50,7 +49,6 @@ __all__ = [
     "list_repo_dataset_directories",
     "looks_like_class_root_dataset",
     "main",
-    "materialize_image",
     "normalize_class_name",
     "prepare_runtime_dataset_layout",
     "read_json",

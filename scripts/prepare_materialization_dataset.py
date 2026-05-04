@@ -9,7 +9,7 @@ import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
-from src.data.dataset_layout import IMAGE_EXTENSIONS, materialize_image
+from src.data.dataset_layout import IMAGE_EXTENSIONS
 from scripts.prepare_grouped_runtime_dataset import (
     DEFAULT_BIOCLIP_MODEL_ID,
     DEFAULT_DINOV3_MODEL_ID,
@@ -65,7 +65,7 @@ def _mirror_class_root_dataset(
             continue
         destination_path = destination_root / source_path.relative_to(source_root)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
-        materialize_image(source_path, destination_path, materialization_strategy)
+        shutil.copy2(str(source_path), str(destination_path))
         mirrored_files += 1
 
     _progress(

@@ -24,7 +24,6 @@ from sklearn.neighbors import NearestNeighbors
 from src.data.dataset_layout import (
     IMAGE_EXTENSIONS,
     class_name_aliases,
-    materialize_image,
     normalize_class_name,
 )
 from src.guided_artifacts import refresh_prep_guided_artifacts
@@ -2552,7 +2551,7 @@ def materialize_grouped_runtime_dataset(
         destination_relative = relative_path.relative_to(raw_class_name)
         destination_path = crop_root / split_name / class_name / destination_relative
         destination_path.parent.mkdir(parents=True, exist_ok=True)
-        materialize_image(source_path, destination_path, materialization_strategy)
+        shutil.copy2(str(source_path), str(destination_path))
         row["runtime_relative_path"] = destination_path.relative_to(crop_root).as_posix()
 
     if resolved_ood_root is not None:
@@ -2561,14 +2560,14 @@ def materialize_grouped_runtime_dataset(
         for source_path in ood_images:
             destination_path = ood_dir / source_path.relative_to(resolved_ood_root)
             destination_path.parent.mkdir(parents=True, exist_ok=True)
-            materialize_image(source_path, destination_path, materialization_strategy)
+            shutil.copy2(str(source_path), str(destination_path))
     if resolved_oe_root is not None:
         oe_dir = crop_root / "oe"
         oe_dir.mkdir(parents=True, exist_ok=True)
         for source_path in oe_images:
             destination_path = oe_dir / source_path.relative_to(resolved_oe_root)
             destination_path.parent.mkdir(parents=True, exist_ok=True)
-            materialize_image(source_path, destination_path, materialization_strategy)
+            shutil.copy2(str(source_path), str(destination_path))
     split_manifest_path = write_json(
         crop_root / "split_manifest.json",
         {
