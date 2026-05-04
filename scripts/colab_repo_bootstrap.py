@@ -707,7 +707,7 @@ def push_repo_run_to_github(
 
     if tracked_files:
         for chunk in _chunked(tracked_files):
-            _run_git(["add", "-f", "--", *chunk], cwd=repo)
+            _run_git(["add", "--sparse", "-f", "--", *chunk], cwd=repo)
     if skipped_files:
         for chunk in _chunked(skipped_files):
             _run_git(["rm", "--cached", "-r", "--ignore-unmatch", "--", *chunk], cwd=repo, check=False)

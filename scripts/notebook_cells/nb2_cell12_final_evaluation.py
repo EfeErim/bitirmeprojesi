@@ -356,7 +356,7 @@ if bool(effective_params.get("AUTO_PUSH_TO_GITHUB", AUTO_PUSH_TO_GITHUB)):
             branch=effective_params.get("AUTO_PUSH_BRANCH", AUTO_PUSH_BRANCH),
             print_fn=print,
         )
-    except RuntimeError as exc:
+    except (RuntimeError, subprocess.CalledProcessError) as exc:
         print(f"[GIT] Auto-push skipped: {exc}")
         git_push_report = {"enabled": True, "pushed": False, "run_dir": str(REPO_RUN_DIR), "error": str(exc)}
 else:
