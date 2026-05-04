@@ -1,0 +1,11 @@
+                               precision    recall  f1-score   support
+
+       u_zu_m_antraknoz_meyve       0.68      0.91      0.78        23
+u_zu_m_botrytis_cinerea_meyve       1.00      0.51      0.68        49
+        u_zu_m_ku_lleme_meyve       0.45      0.56      0.50         9
+         u_zu_m_mildiyo_meyve       0.67      0.64      0.65        25
+       u_zu_m_sag_lıklı_meyve       0.80      0.97      0.87        68
+
+                     accuracy                           0.76       174
+                    macro avg       0.72      0.72      0.70       174
+                 weighted avg       0.80      0.76      0.75       174
