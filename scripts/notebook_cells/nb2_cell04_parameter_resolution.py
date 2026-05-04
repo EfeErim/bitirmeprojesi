@@ -5,6 +5,9 @@
 BASE_CONFIG = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()
 CONTINUAL_DATA_CFG = BASE_CONFIG.get("training", {}).get("continual", {}).get("data", {})
 
+# Ensure torch is imported (lazy-loaded from runtime_setup)
+_ensure_torch()
+
 if hasattr(torch, "set_float32_matmul_precision"):
     torch.set_float32_matmul_precision("high")
 torch.backends.cuda.matmul.allow_tf32 = bool(TF32_ENABLED)
