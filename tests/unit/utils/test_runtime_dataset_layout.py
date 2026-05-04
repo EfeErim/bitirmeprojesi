@@ -1,3 +1,4 @@
+import zipfile
 import shutil
 from pathlib import Path
 
@@ -21,6 +22,16 @@ def _write_images(root: Path, class_name: str, count: int) -> None:
     class_dir.mkdir(parents=True, exist_ok=True)
     for idx in range(count):
         Image.new("RGB", (8, 8), color=(255, 0, 0)).save(class_dir / f"image_{idx}.jpg")
+
+
+def _write_zip_dataset(archive_path: Path, dataset_name: str, class_name: str, count: int) -> None:
+    source_root = archive_path.parent.parent / f"{archive_path.stem}_source"
+    _write_images(source_root / dataset_name, class_name, count)
+    archive_path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        for file_path in source_root.rglob("*"):
+            if file_path.is_file():
+                archive.write(file_path, file_path.relative_to(source_root).as_posix())
 
 
 def test_build_runtime_split_manifest_contains_counts(tmp_path: Path):
@@ -168,6 +179,43 @@ def test_list_repo_dataset_directories_returns_sorted_child_dirs(tmp_path: Path)
     )
 
     assert [path.name for path in result] == ["grape_fruit", "grape_leaf"]
+
+
+def test_list_repo_dataset_directories_includes_dataset_roots_from_zip_archive(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_parent = repo_root / "data" / "ood_dataset"
+    archive_path = dataset_parent / "ood_archive_sources.zip"
+    _write_zip_dataset(archive_path, "tomato_leaf_ood_best", "unsupported_tomato_unknowns", 1)
+
+    result = list_repo_dataset_directories(
+        repo_root=repo_root,
+        repo_relative_root="data/ood_dataset",
+    )
+
+    selected_paths = [path for path in result if path.name == "tomato_leaf_ood_best"]
+    assert len(selected_paths) == 1
+    assert selected_paths[0].is_dir()
+    assert ".runtime_tmp" in selected_paths[0].as_posix()
+
+
+def test_resolve_repo_dataset_directory_materializes_zip_archive_on_demand(tmp_path: Path):
+    repo_root = tmp_path / "repo"
+    dataset_parent = repo_root / "data" / "ood_dataset"
+    archive_path = dataset_parent / "ood_archive_sources.zip"
+    _write_zip_dataset(archive_path, "tomato_leaf_ood_best", "unsupported_tomato_unknowns", 1)
+
+    selected_name, selected_path, dataset_names = resolve_repo_dataset_directory(
+        repo_root=repo_root,
+        repo_relative_root="data/ood_dataset",
+        requested_name="tomato_leaf_ood_best",
+        prompt_label="OOD dataset",
+    )
+
+    assert selected_name == "tomato_leaf_ood_best"
+    assert selected_path.is_dir()
+    assert selected_path.name == "tomato_leaf_ood_best"
+    assert dataset_names == ["tomato_leaf_ood_best"]
+    assert (selected_path / "unsupported_tomato_unknowns" / "image_0.jpg").exists()
 
 
 def test_resolve_dataset_directory_from_parent_prompts_for_drive_style_parent(tmp_path: Path):
@@ -323,7 +371,3 @@ def test_prepare_runtime_dataset_layout_refuses_to_delete_existing_runtime_tree_
         assert "refusing to delete" in str(exc)
 
     assert marker_path.exists()
-
-
-
-
