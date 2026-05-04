@@ -23,6 +23,7 @@ NOTEBOOK2_SPARSE_PATHS = (
     "config",
     "colab_notebooks",
     "requirements.txt",
+    "requirements_colab.txt",
     "pyproject.toml",
     "data/prepared_runtime_datasets/grape__fruit",
     "data/prepared_runtime_datasets/grape__leaf",
@@ -248,6 +249,7 @@ def ensure_repo_root(
             "config",
             "colab_notebooks",
             "requirements.txt",
+            "requirements_colab.txt",
             "pyproject.toml",
         ))
         if sparse_paths:
@@ -270,6 +272,7 @@ def ensure_repo_root(
             "config",
             "colab_notebooks",
             "requirements.txt",
+            "requirements_colab.txt",
             "pyproject.toml",
         ]
         subprocess.run(
