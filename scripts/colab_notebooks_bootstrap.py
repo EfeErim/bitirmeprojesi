@@ -25,24 +25,6 @@ NOTEBOOK2_SPARSE_PATHS = (
     "requirements.txt",
     "requirements_colab.txt",
     "pyproject.toml",
-    "data/prepared_runtime_datasets/grape__fruit",
-    "data/prepared_runtime_datasets/grape__leaf",
-    "data/prepared_runtime_datasets/strawberry__fruit",
-    "data/prepared_runtime_datasets/strawberry__leaf",
-    "data/prepared_runtime_datasets/tomato__fruit",
-    "data/prepared_runtime_datasets/tomato__leaf",
-    "data/ood_dataset/final/grape__fruit_ood_final",
-    "data/ood_dataset/final/grape__leaf_ood_final",
-    "data/ood_dataset/final/strawberry__fruit_ood_final",
-    "data/ood_dataset/final/strawberry__leaf_ood_final",
-    "data/ood_dataset/final/tomato__fruit_ood_final",
-    "data/ood_dataset/final/tomato__leaf_ood_final",
-    "data/oe_dataset/grape_fruit_oe_from_leaf",
-    "data/oe_dataset/grape_leaf_oe_unsupported_leaf_candidates",
-    "data/oe_dataset/strawberry_fruit_oe_candidates",
-    "data/oe_dataset/strawberry_leaf_oe_from_blossom_candidates",
-    "data/oe_dataset/tomato_fruit_oe_from_leaf",
-    "data/oe_dataset/tomato_leaf_oe_from_fruit",
 )
 
 
@@ -268,10 +250,7 @@ def ensure_repo_root(
             "requirements_colab.txt",
             "pyproject.toml",
         ))
-        if sparse_paths:
-            print("[BOOTSTRAP] Selecting Notebook 2 training datasets...")
-        else:
-            print("[BOOTSTRAP] Selecting source checkout paths...")
+        print("[BOOTSTRAP] Selecting source checkout paths...")
         completed = subprocess.run(
             ["git", "sparse-checkout", "set", *selected_paths],
             cwd=str(clone_target),

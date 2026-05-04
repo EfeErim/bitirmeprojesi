@@ -4,6 +4,7 @@
 with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     from scripts.colab_dataset_layout import list_repo_dataset_directories, resolve_direct_repo_dataset_root, resolve_repo_relative_root
     from scripts.colab_training_recommendations import inspect_runtime_dataset
+    from scripts.notebook_helpers.nb2_sparse_dataset_checkout import ensure_notebook2_dataset_sparse_checkout
 
     crop_key = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(CROP_NAME).strip())
     while "__" in crop_key:
@@ -11,6 +12,17 @@ with TELEMETRY.capture_cell_output("Cell 4: Dataset Validation"):
     crop_key = crop_key.strip("_")
     if not crop_key:
         raise RuntimeError("CROP_NAME bos olmayan bir crop anahtarina cozulmeli.")
+
+    ensure_notebook2_dataset_sparse_checkout(
+        ROOT,
+        crop_name=CROP_NAME,
+        part_name=PART_NAME,
+        dataset_name=DATASET_NAME,
+        ood_root=OOD_ROOT,
+        oe_root=OE_ROOT,
+        oe_enabled=OE_ENABLED,
+        print_fn=print,
+    )
 
     runtime_parent = resolve_repo_relative_root(repo_root=ROOT, repo_relative_root=RUNTIME_DATASET_ROOT)
     direct_runtime_dataset = resolve_direct_repo_dataset_root(
