@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 import torch
 from PIL import Image
+from tests.utils.test_helpers import make_image
 
 import src.data.datasets as datasets
 from src.data.loaders import create_training_loaders, dict_collate_fn
@@ -61,7 +62,7 @@ def test_create_training_loaders_uses_dict_collation(monkeypatch):
 
 def _write_image(path: Path, *, color: tuple[int, int, int] = (255, 0, 0)) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (8, 8), color=color).save(path)
+    make_image(path, size=(8, 8), color=color)
 
 
 

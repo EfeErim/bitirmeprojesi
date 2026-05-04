@@ -4,6 +4,11 @@ from pathlib import Path
 
 from PIL import Image
 
+# test helpers constants
+IMAGE_SIZE = (8, 8)
+IMAGE_COLOR = (255, 0, 0)
+IMAGE_EXTS = (".jpg", ".jpeg", ".png")
+
 from scripts.colab_dataset_layout import (
     build_runtime_split_manifest,
     list_dataset_directories_from_parent,
@@ -21,17 +26,19 @@ def _write_images(root: Path, class_name: str, count: int) -> None:
     class_dir = root / class_name
     class_dir.mkdir(parents=True, exist_ok=True)
     for idx in range(count):
-        Image.new("RGB", (8, 8), color=(255, 0, 0)).save(class_dir / f"image_{idx}.jpg")
+        Image.new("RGB", IMAGE_SIZE, color=IMAGE_COLOR).save(class_dir / f"image_{idx}.jpg")
 
 
 def _write_zip_dataset(archive_path: Path, dataset_name: str, class_name: str, count: int) -> None:
-    source_root = archive_path.parent.parent / f"{archive_path.stem}_source"
+    source_root = archive_path.parent / f"{archive_path.stem}_source"
     _write_images(source_root / dataset_name, class_name, count)
     archive_path.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(archive_path, "w") as archive:
         for file_path in source_root.rglob("*"):
             if file_path.is_file():
                 archive.write(file_path, file_path.relative_to(source_root).as_posix())
+    # remove transient source tree to avoid leaving test artifacts on disk
+    shutil.rmtree(source_root, ignore_errors=True)
 
 
 def test_build_runtime_split_manifest_contains_counts(tmp_path: Path):
@@ -61,10 +68,10 @@ def test_prepare_runtime_dataset_layout_writes_split_manifest(tmp_path: Path):
     )
 
     crop_root = result_root / "tomato"
-    assert (crop_root / "split_manifest.json").exists()
-    assert (crop_root / "continual").exists()
-    assert (crop_root / "val").exists()
-    assert (crop_root / "test").exists()
+    assert (crop_root / "split_manifest.json").is_file()
+    assert (crop_root / "continual").is_dir()
+    assert (crop_root / "val").is_dir()
+    assert (crop_root / "test").is_dir()
 
 
 def test_prepare_runtime_dataset_layout_preserves_nested_relative_paths(tmp_path: Path):
@@ -72,7 +79,7 @@ def test_prepare_runtime_dataset_layout_preserves_nested_relative_paths(tmp_path
     runtime_root = tmp_path / "runtime"
     nested_dir = source_root / "Healthy" / "camera_a"
     nested_dir.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (8, 8), color=(255, 0, 0)).save(nested_dir / "image_nested.jpg")
+    Image.new("RGB", IMAGE_SIZE, color=IMAGE_COLOR).save(nested_dir / "image_nested.jpg")
 
     result_root = prepare_runtime_dataset_layout(
         source_root,
@@ -82,8 +89,9 @@ def test_prepare_runtime_dataset_layout_preserves_nested_relative_paths(tmp_path
     )
 
     crop_root = result_root / "tomato"
-    nested_targets = list(crop_root.rglob("camera_a/image_nested.jpg"))
+    nested_targets = list(crop_root.rglob("image_nested.jpg"))
     assert len(nested_targets) == 1
+    assert "camera_a" in nested_targets[0].parts
 
 
 def test_prepare_runtime_dataset_layout_rebuilds_when_manifest_matches_but_split_tree_is_incomplete(tmp_path: Path):
@@ -108,8 +116,9 @@ def test_prepare_runtime_dataset_layout_rebuilds_when_manifest_matches_but_split
         runtime_root=runtime_root,
     )
 
-    assert (crop_root / "continual").exists()
-    assert any((crop_root / "continual").rglob("*.jpg"))
+    assert (crop_root / "continual").is_dir()
+    files = [p for p in (crop_root / "continual").rglob("*") if p.is_file() and p.suffix.lower() in IMAGE_EXTS]
+    assert len(files) > 0
 
 
 def test_resolve_notebook_training_classes_uses_taxonomy_when_aliases_cover_dataset():
@@ -195,7 +204,7 @@ def test_list_repo_dataset_directories_includes_dataset_roots_from_zip_archive(t
     selected_paths = [path for path in result if path.name == "tomato_leaf_ood_best"]
     assert len(selected_paths) == 1
     assert selected_paths[0].is_dir()
-    assert ".runtime_tmp" in selected_paths[0].as_posix()
+    assert ".runtime_tmp" in selected_paths[0].parts
 
 
 def test_resolve_repo_dataset_directory_materializes_zip_archive_on_demand(tmp_path: Path):

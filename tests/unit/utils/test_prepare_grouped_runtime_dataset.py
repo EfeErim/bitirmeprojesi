@@ -4,6 +4,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
+from tests.utils.test_helpers import make_image
 
 from scripts.prepare_grouped_runtime_dataset import (
     ImageRecord,

@@ -1,13 +1,14 @@
 from pathlib import Path
 
 from PIL import Image
+from tests.utils.test_helpers import make_image
 
 from src.data.datasets import CropDataset, infer_crop_classes_from_layout
 
 
 def _write_image(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (4, 4), color=(255, 0, 0)).save(path)
+    make_image(path, size=(4, 4), color=(255, 0, 0))
 
 
 def test_infer_crop_classes_from_layout_reads_split_dirs(tmp_path: Path):

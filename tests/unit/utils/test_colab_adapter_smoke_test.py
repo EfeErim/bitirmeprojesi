@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import torch
 from PIL import Image
+from tests.utils.test_helpers import make_image
 
 from scripts import colab_adapter_smoke_test as smoke
 
@@ -352,7 +353,7 @@ def test_load_adapter_summary_infers_crop_from_adapter_meta_classes(monkeypatch,
 def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
 
     def zero_preprocess(_image, target_size=224):
         return torch.zeros(3, target_size, target_size)
@@ -374,7 +375,7 @@ def test_predict_single_image_returns_notebook_payload(monkeypatch, tmp_path: Pa
 def test_predict_single_image_can_attach_occlusion_visualization(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (12, 10), color="green").save(image_path)
+    make_image(image_path, size=(12, 10), color="green")
 
     def zero_preprocess(_image, target_size=224):
         return torch.zeros(3, target_size, target_size)
@@ -408,7 +409,7 @@ def test_predict_single_image_can_attach_occlusion_visualization(monkeypatch, tm
 def test_predict_single_image_can_attach_attention_visualization(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (12, 10), color="green").save(image_path)
+    make_image(image_path, size=(12, 10), color="green")
 
     def zero_preprocess(_image, target_size=224):
         return torch.zeros(3, target_size, target_size)
@@ -443,7 +444,7 @@ def test_predict_single_image_can_attach_attention_visualization(monkeypatch, tm
 def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_path: Path):
     asset_dir = _write_current_drive_adapter_export(tmp_path / "telemetry" / "run_123", crop_name="tomato")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
 
     def zero_preprocess(_image, target_size=224):
         return torch.zeros(3, target_size, target_size)
@@ -461,7 +462,7 @@ def test_predict_single_image_infers_crop_from_drive_export(monkeypatch, tmp_pat
 
 def test_prepare_view_tensor_resize_pad_and_center_crop_return_target_sized_tensors(tmp_path: Path):
     image_path = tmp_path / "leaf_rect.png"
-    Image.new("RGB", (40, 20), color="green").save(image_path)
+    make_image(image_path, size=(40, 20), color="green")
 
     with Image.open(image_path) as image:
         resize_pad_tensor = smoke._prepare_view_tensor(image, target_size=32, view_name="resize_pad")
@@ -478,7 +479,7 @@ def test_predict_single_image_robust_mode_returns_ordered_views_and_full_resize_
 ):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
     payloads = {
         0.11: _make_payload(
             extra_ood={
@@ -536,7 +537,7 @@ def test_predict_single_image_robust_mode_flags_view_class_disagreement_and_keep
 ):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
     payloads = {
         0.11: _make_payload(predicted_class="blight", confidence=0.91),
         0.22: _make_payload(predicted_class="healthy", confidence=0.90),
@@ -569,7 +570,7 @@ def test_predict_single_image_robust_mode_flags_view_class_disagreement_and_keep
 def test_predict_single_image_robust_mode_flags_view_ood_disagreement(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
     payloads = {
         0.11: _make_payload(is_ood=False),
         0.22: _make_payload(is_ood=True),
@@ -599,7 +600,7 @@ def test_predict_single_image_robust_mode_flags_view_ood_disagreement(monkeypatc
 def test_predict_single_image_robust_mode_flags_large_confidence_spread(monkeypatch, tmp_path: Path):
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_path = tmp_path / "leaf.png"
-    Image.new("RGB", (8, 8), color="green").save(image_path)
+    make_image(image_path, size=(8, 8), color="green")
     payloads = {
         0.11: _make_payload(confidence=0.95),
         0.22: _make_payload(confidence=0.60),
@@ -662,7 +663,7 @@ def test_predict_image_folder_skips_non_images_and_records_errors(monkeypatch, t
     asset_dir = _write_adapter_export(tmp_path / "adapter_export")
     image_dir = tmp_path / "images"
     image_dir.mkdir()
-    Image.new("RGB", (8, 8), color="green").save(image_dir / "ok.png")
+    make_image(image_dir / "ok.png", size=(8, 8), color="green")
     (image_dir / "broken.png").write_text("not an image", encoding="utf-8")
     (image_dir / "notes.txt").write_text("skip me", encoding="utf-8")
 
