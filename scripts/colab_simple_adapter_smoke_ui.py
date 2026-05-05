@@ -23,9 +23,16 @@ _discover_adapter_candidates = None
 _load_adapter_summary = None
 _predict_single_image = None
 
+# Public compatibility aliases for older tests and notebook copies.
+build_prediction_visualization_images = None
+discover_adapter_candidates = None
+load_adapter_summary = None
+predict_single_image = None
+
 def _ensure_adapter_smoke_imports():
     """Lazy import adapter smoke functions when needed."""
     global _build_prediction_visualization_images, _discover_adapter_candidates, _load_adapter_summary, _predict_single_image
+    global build_prediction_visualization_images, discover_adapter_candidates, load_adapter_summary, predict_single_image
     if _build_prediction_visualization_images is None:
         from src.pipeline.adapter_smoke import (
             build_prediction_visualization_images as _bpvi,
@@ -37,6 +44,10 @@ def _ensure_adapter_smoke_imports():
         _discover_adapter_candidates = _dac
         _load_adapter_summary = _las
         _predict_single_image = _psi
+        build_prediction_visualization_images = _bpvi
+        discover_adapter_candidates = _dac
+        load_adapter_summary = _las
+        predict_single_image = _psi
 
 
 def _running_in_colab() -> bool:
@@ -370,7 +381,7 @@ def launch_simple_adapter_smoke_ui(
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     _ensure_adapter_smoke_imports()
-    adapter_candidates = _discover_adapter_candidates(
+    adapter_candidates = discover_adapter_candidates(
         resolved_search_roots,
         crop_name=None,
         collapse_run_mirrors=not show_mirror_adapters,
@@ -487,7 +498,7 @@ def launch_simple_adapter_smoke_ui(
             clear_output(wait=True)
             print("Adapter listesi yenileniyor...")
         _ensure_adapter_smoke_imports()
-        adapter_candidates = _discover_adapter_candidates(
+        adapter_candidates = discover_adapter_candidates(
             resolved_search_roots,
             crop_name=None,
             collapse_run_mirrors=not show_mirror_adapters,
@@ -508,12 +519,15 @@ def launch_simple_adapter_smoke_ui(
         with result_output:
             clear_output(wait=True)
             try:
+                _ensure_adapter_smoke_imports()
+                load_adapter_summary_fn = load_adapter_summary
+                predict_single_image_fn = predict_single_image
+                build_prediction_visualization_images_fn = build_prediction_visualization_images
                 image_path = resolve_image_path()
                 if not image_path.exists():
                     raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
                 candidate = selected_candidate()
-                _ensure_adapter_smoke_imports()
-                summary = _load_adapter_summary(
+                summary = load_adapter_summary_fn(
                     candidate.get("crop_name"),
                     adapter_dir=candidate.get("adapter_dir"),
                     config_env=config_env,
@@ -521,8 +535,7 @@ def launch_simple_adapter_smoke_ui(
                 )
                 with Image.open(image_path) as preview:
                     display(preview.copy())
-                _ensure_adapter_smoke_imports()
-                result = _predict_single_image(
+                result = predict_single_image_fn(
                     image_path,
                     summary["crop_name"],
                     adapter_dir=summary["resolved_adapter_dir"],
@@ -533,8 +546,7 @@ def launch_simple_adapter_smoke_ui(
                     explanation_grid_size=int(explanation_grid_size),
                     explanation_method=str(explanation_method_dropdown.value),
                 )
-                _ensure_adapter_smoke_imports()
-                visualization_images = _build_prediction_visualization_images(image_path, result)
+                visualization_images = build_prediction_visualization_images_fn(image_path, result)
                 if visualization_images:
                     display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
                     display(visualization_images["model_view"])

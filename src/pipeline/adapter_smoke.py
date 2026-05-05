@@ -790,13 +790,15 @@ def _occlusion_sensitivity_grid(
     if height <= 0 or width <= 0:
         return heatmap.tolist()
 
+    masked = image_tensor.detach().clone()
+
     for row_index in range(resolved_grid):
         top = int(round(row_index * height / resolved_grid))
         bottom = int(round((row_index + 1) * height / resolved_grid))
         for col_index in range(resolved_grid):
             left = int(round(col_index * width / resolved_grid))
             right = int(round((col_index + 1) * width / resolved_grid))
-            masked = image_tensor.detach().clone()
+            original_patch = masked[:, top:bottom, left:right].clone()
             masked[:, top:bottom, left:right] = 0.0
             occluded_confidence = _predict_payload_confidence_for_class(
                 adapter,
@@ -804,6 +806,7 @@ def _occlusion_sensitivity_grid(
                 target_class_index=int(target_class_index),
             )
             heatmap[row_index, col_index] = max(0.0, baseline - occluded_confidence)
+            masked[:, top:bottom, left:right] = original_patch
 
     max_drop = float(heatmap.max().item()) if heatmap.numel() else 0.0
     if max_drop > 0.0:
