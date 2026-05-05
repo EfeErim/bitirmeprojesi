@@ -6,8 +6,24 @@ from pathlib import Path
 import os, subprocess
 import shutil
 
+import sys
+
+# Ensure repo root is in sys.path before any imports
+def _ensure_sys_path_for_cell_script():
+    """Ensure sys.path includes repo root so notebook cell scripts can import."""
+    candidates = [Path.cwd(), Path.cwd().parent]
+    for candidate in candidates:
+        if (candidate / 'scripts' / 'notebook_helpers' / 'nb4_simple_ui_helpers.py').is_file():
+            repo_root = str(candidate.resolve())
+            if repo_root not in sys.path:
+                sys.path.insert(0, repo_root)
+            return repo_root
+    return None
+
+_ensure_sys_path_for_cell_script()
+
 CLONE_TARGET = Path('/content/bitirmeprojesi')  # Colab GitHub bootstrap contract
-REPO_URL = os.environ.get('AADS_REPO_URL', 'https://github.com/your-org/aads-continual.git')
+REPO_URL = os.environ.get('AADS_REPO_URL', 'https://github.com/EfeErim/bitirmeprojesi.git')
 
 # Git clone if needed
 if not CLONE_TARGET.exists():
@@ -38,7 +54,7 @@ BACKBONE_MODEL_NAME = str(
 ).strip()
 ACCESS_REPORT = collect_notebook_access_report(
     repo_root=ROOT,
-    hf_model_ids=[BACKBONE_MODEL_NAME] if BACKBONE_MODEL_NAME else [],
+    hf_model_ids=[BACKBONE_MODEL_NAME] if BACKBONE_MODEL_NAME.strip() else [],
 )
 print_notebook_access_report(ACCESS_REPORT, print_fn=print)
 if BACKBONE_MODEL_NAME:
