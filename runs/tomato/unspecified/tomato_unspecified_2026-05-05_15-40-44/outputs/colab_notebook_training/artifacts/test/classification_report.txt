@@ -1,0 +1,16 @@
+                                         precision    recall  f1-score   support
+
+domates_bacterial_spot_and_speck_yaprak       0.96      0.82      0.89       176
+            domates_early_blight_yaprak       0.81      0.74      0.77       145
+             domates_late_blight_yaprak       0.77      0.85      0.81       163
+               domates_leaf_mold_yaprak       0.92      0.90      0.91       106
+            domates_mosaic_virüs_yaprak       0.99      0.89      0.94       117
+          domates_powdery_mildew_yaprak       0.72      0.91      0.80        58
+                domates_sağlıklı_yaprak       0.87      0.99      0.93       118
+      domates_septoria_leaf_spot_yaprak       0.86      0.87      0.87       143
+            domates_spotted_wilt_yaprak       0.97      0.99      0.98        84
+        domates_yellow_leaf_curl_yaprak       0.95      0.93      0.94       154
+
+                               accuracy                           0.88      1264
+                              macro avg       0.88      0.89      0.88      1264
+                           weighted avg       0.89      0.88      0.88      1264
