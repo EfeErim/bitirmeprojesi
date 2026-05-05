@@ -1,0 +1,64 @@
+{
+  "blur_or_occlusion": {
+    "ood_type": "blur_or_occlusion",
+    "sample_count": 14,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.8511404561824729,
+      "ood_false_positive_rate": 0.36134453781512604,
+      "ood_samples": 14,
+      "in_distribution_samples": 119
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.8511404561824729,
+        "ood_false_positive_rate": 0.36134453781512604,
+        "ood_samples": 14,
+        "in_distribution_samples": 119
+      },
+      "energy": {
+        "ood_auroc": 0.8841536614645858,
+        "ood_false_positive_rate": 0.46218487394957986,
+        "ood_samples": 14,
+        "in_distribution_samples": 119
+      },
+      "knn": {
+        "ood_auroc": 0.8619447779111644,
+        "ood_false_positive_rate": 0.29411764705882354,
+        "ood_samples": 14,
+        "in_distribution_samples": 119
+      }
+    }
+  },
+  "unsupported_same_crop": {
+    "ood_type": "unsupported_same_crop",
+    "sample_count": 55,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.8400305576776165,
+      "ood_false_positive_rate": 0.4957983193277311,
+      "ood_samples": 55,
+      "in_distribution_samples": 119
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.8400305576776165,
+        "ood_false_positive_rate": 0.4957983193277311,
+        "ood_samples": 55,
+        "in_distribution_samples": 119
+      },
+      "energy": {
+        "ood_auroc": 0.826279602750191,
+        "ood_false_positive_rate": 0.7058823529411765,
+        "ood_samples": 55,
+        "in_distribution_samples": 119
+      },
+      "knn": {
+        "ood_auroc": 0.8388082505729565,
+        "ood_false_positive_rate": 0.5882352941176471,
+        "ood_samples": 55,
+        "in_distribution_samples": 119
+      }
+    }
+  }
+}
