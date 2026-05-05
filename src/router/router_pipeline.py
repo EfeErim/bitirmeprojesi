@@ -25,6 +25,7 @@ from src.router.policy_taxonomy_utils import (
 from src.router.roi_helpers import coerce_image_input
 from src.router.runtime_surface import (
     RouterAnalyzer,
+    coerce_bool,
     normalize_router_analysis_result,
     resolve_router_analyzer,
     resolve_runtime_controls,
@@ -99,10 +100,11 @@ class RouterPipeline:
         self._refresh_runtime_controls()
 
         # Dynamic taxonomy support
-        self.use_dynamic_taxonomy = self.vlm_config.get('use_dynamic_taxonomy', False)
+        self.use_dynamic_taxonomy = coerce_bool(self.vlm_config.get('use_dynamic_taxonomy', False), default=False)
         self.taxonomy_path = self.vlm_config.get('taxonomy_path', 'config/plant_taxonomy.json')
-        self.strict_taxonomy_loading = bool(
-            self.vlm_config.get('strict_taxonomy_loading', self.use_dynamic_taxonomy)
+        self.strict_taxonomy_loading = coerce_bool(
+            self.vlm_config.get('strict_taxonomy_loading', self.use_dynamic_taxonomy),
+            default=self.use_dynamic_taxonomy,
         )
         self.runtime_warnings: List[str] = []
 

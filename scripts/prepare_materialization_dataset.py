@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
@@ -24,6 +23,7 @@ from scripts.prune_exact_duplicates import (
     build_combined_cleanup_plan,
     write_cleanup_report,
 )
+from src.shared.csv_utils import read_csv_rows
 from src.shared.json_utils import write_json
 
 
@@ -40,8 +40,7 @@ def _resolve_report_path(artifact_root: Path, filename: str) -> Path:
 
 
 def _read_csv_rows(path: Path) -> List[Dict[str, str]]:
-    with Path(path).open("r", encoding="utf-8-sig", newline="") as handle:
-        return list(csv.DictReader(handle))
+    return read_csv_rows(Path(path))
 
 
 def _mirror_class_root_dataset(

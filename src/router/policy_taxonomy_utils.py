@@ -26,6 +26,22 @@ __all__ = [
 ]
 
 
+def _resolve_taxonomy_path(taxonomy_path: str) -> Optional[Path]:
+    path = Path(taxonomy_path)
+    if path.is_absolute():
+        return path if path.exists() else None
+
+    cwd_candidate = Path.cwd() / path
+    if cwd_candidate.exists():
+        return cwd_candidate
+
+    repo_candidate = Path(__file__).resolve().parent.parent.parent / path
+    if repo_candidate.exists():
+        return repo_candidate
+
+    return None
+
+
 def deep_merge_dicts(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     """Recursively merge two dictionaries without mutating inputs."""
     merged = copy.deepcopy(base) if isinstance(base, dict) else {}
@@ -122,13 +138,8 @@ def policy_enabled(policy_graph: Dict[str, Dict[str, Any]], stage: str, default:
 
 def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
     """Load crop/part labels from taxonomy file."""
-    path = Path(taxonomy_path)
-    if not path.is_absolute():
-        if not path.exists():
-            file_dir = Path(__file__).parent
-            path = file_dir.parent.parent / taxonomy_path
-
-    if not path.exists():
+    path = _resolve_taxonomy_path(taxonomy_path)
+    if path is None:
         raise FileNotFoundError(f"Taxonomy file not found: {taxonomy_path}")
 
     try:
@@ -158,13 +169,8 @@ def load_taxonomy(taxonomy_path: str) -> Tuple[List[str], List[str]]:
 
 def load_crop_part_compatibility(taxonomy_path: str) -> Dict[str, List[str]]:
     """Load normalized crop->compatible-parts mapping from taxonomy file."""
-    path = Path(taxonomy_path)
-    if not path.is_absolute():
-        if not path.exists():
-            file_dir = Path(__file__).parent
-            path = file_dir.parent.parent / taxonomy_path
-
-    if not path.exists():
+    path = _resolve_taxonomy_path(taxonomy_path)
+    if path is None:
         return {}
 
     with open(path, "r", encoding="utf-8") as f:

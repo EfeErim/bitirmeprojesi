@@ -85,6 +85,25 @@ def test_load_taxonomy_and_compatibility_from_file(tmp_path):
     assert compatibility == {"tomato": ["leaf", "whole plant", "fruit"]}
 
 
+def test_load_taxonomy_prefers_cwd_then_repo_root(tmp_path, monkeypatch):
+    cwd_taxonomy = {
+        "crops": ["alpha"],
+        "parts": ["leaf"],
+        "crop_part_compatibility": {"alpha": ["leaf"]},
+    }
+    cwd_path = tmp_path / "taxonomy.json"
+    cwd_path.write_text(json.dumps(cwd_taxonomy), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+
+    crops, parts = load_taxonomy("taxonomy.json")
+    repo_crops, repo_parts = load_taxonomy("config/plant_taxonomy.json")
+
+    assert crops == ["alpha"]
+    assert parts == ["leaf"]
+    assert "tomato" in repo_crops
+    assert "leaf" in repo_parts
+
+
 def test_load_taxonomy_raises_when_file_is_missing(tmp_path):
     missing_path = tmp_path / "missing_taxonomy.json"
 

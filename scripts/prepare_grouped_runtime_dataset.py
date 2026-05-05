@@ -27,6 +27,7 @@ from src.data.dataset_layout import (
     normalize_class_name,
 )
 from src.guided_artifacts import refresh_prep_guided_artifacts
+from src.shared.csv_utils import read_csv_preview as _read_csv_preview
 from src.shared.json_utils import read_json, write_json
 
 
@@ -2132,32 +2133,6 @@ def build_grouped_dataset_plan(
         },
     )
     return summary
-
-
-def _read_csv_preview(
-    path: Path,
-    *,
-    max_rows: int,
-    fields: Sequence[str],
-) -> tuple[int, List[Dict[str, Any]]]:
-    if not path.is_file() or path.stat().st_size <= 0:
-        return 0, []
-    preview: List[Dict[str, Any]] = []
-    row_count = 0
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        for row in reader:
-            row_count += 1
-            if len(preview) >= max_rows:
-                continue
-            selected = {
-                field: row.get(field, "")
-                for field in fields
-                if str(row.get(field, "")).strip()
-            }
-            if selected:
-                preview.append(selected)
-    return row_count, preview
 
 
 def _coerce_count(value: Any) -> int:

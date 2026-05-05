@@ -69,6 +69,27 @@ def _attach_open_clip_runtime(pipeline: RouterPipeline) -> FakeOpenClipModel:
     return model
 
 
+def test_pipeline_parses_string_boolean_taxonomy_flags():
+    pipeline = RouterPipeline(
+        config={
+            "router": {
+                "crop_mapping": {"tomato": {"parts": ["leaf"]}},
+                "vlm": {
+                    "enabled": True,
+                    "use_dynamic_taxonomy": "false",
+                    "strict_taxonomy_loading": "false",
+                    "crop_labels": ["tomato"],
+                    "part_labels": ["leaf"],
+                },
+            },
+        },
+        device="cpu",
+    )
+
+    assert pipeline.use_dynamic_taxonomy is False
+    assert pipeline.strict_taxonomy_loading is False
+
+
 def test_pipeline_keeps_configured_crop_part_surface_when_dynamic_taxonomy_is_enabled(tmp_path):
     taxonomy_path = tmp_path / "taxonomy.json"
     taxonomy_path.write_text(

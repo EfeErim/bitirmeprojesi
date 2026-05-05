@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 from html import escape
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -40,14 +41,35 @@ def _ensure_adapter_smoke_imports():
             load_adapter_summary as _las,
             predict_single_image as _psi,
         )
-        _build_prediction_visualization_images = _bpvi
-        _discover_adapter_candidates = _dac
-        _load_adapter_summary = _las
-        _predict_single_image = _psi
-        build_prediction_visualization_images = _bpvi
-        discover_adapter_candidates = _dac
-        load_adapter_summary = _las
-        predict_single_image = _psi
+        _build_prediction_visualization_images = build_prediction_visualization_images or _bpvi
+        _discover_adapter_candidates = discover_adapter_candidates or _dac
+        _load_adapter_summary = load_adapter_summary or _las
+        _predict_single_image = predict_single_image or _psi
+        if build_prediction_visualization_images is None:
+            build_prediction_visualization_images = _build_prediction_visualization_images
+        if discover_adapter_candidates is None:
+            discover_adapter_candidates = _discover_adapter_candidates
+        if load_adapter_summary is None:
+            load_adapter_summary = _load_adapter_summary
+        if predict_single_image is None:
+            predict_single_image = _predict_single_image
+
+
+@lru_cache(maxsize=16)
+def _cached_discover_adapter_candidates(
+    search_roots_key: tuple[str, ...],
+    crop_name: Optional[str],
+    collapse_run_mirrors: bool,
+    discovery_source_token: int,
+    refresh_nonce: int,
+) -> tuple[dict[str, Any], ...]:
+    return tuple(
+        discover_adapter_candidates(
+            [Path(candidate) for candidate in search_roots_key],
+            crop_name=crop_name,
+            collapse_run_mirrors=collapse_run_mirrors,
+        )
+    )
 
 
 def _running_in_colab() -> bool:
@@ -381,10 +403,17 @@ def launch_simple_adapter_smoke_ui(
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     _ensure_adapter_smoke_imports()
-    adapter_candidates = discover_adapter_candidates(
-        resolved_search_roots,
-        crop_name=None,
-        collapse_run_mirrors=not show_mirror_adapters,
+    adapter_candidates_key = tuple(str(candidate) for candidate in resolved_search_roots)
+    discovery_token = id(discover_adapter_candidates)
+    discovery_nonce = 0
+    adapter_candidates = list(
+        _cached_discover_adapter_candidates(
+            adapter_candidates_key,
+            None,
+            not show_mirror_adapters,
+            discovery_token,
+            discovery_nonce,
+        )
     )
     dropdown_options = [
         (candidate["display_name"], index)
@@ -493,15 +522,20 @@ def launch_simple_adapter_smoke_ui(
         display(HTML(_build_result_html(summary, result, image_path)))
 
     def refresh(_button: Any = None) -> None:
-        nonlocal adapter_candidates
+        nonlocal adapter_candidates, discovery_nonce
         with status_output:
             clear_output(wait=True)
             print("Adapter listesi yenileniyor...")
         _ensure_adapter_smoke_imports()
-        adapter_candidates = discover_adapter_candidates(
-            resolved_search_roots,
-            crop_name=None,
-            collapse_run_mirrors=not show_mirror_adapters,
+        discovery_nonce += 1
+        adapter_candidates = list(
+            _cached_discover_adapter_candidates(
+                adapter_candidates_key,
+                None,
+                not show_mirror_adapters,
+                id(discover_adapter_candidates),
+                discovery_nonce,
+            )
         )
         options = [
             (candidate["display_name"], index)

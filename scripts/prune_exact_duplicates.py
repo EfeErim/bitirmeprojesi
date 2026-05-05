@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import csv
 import re
-import zipfile
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
@@ -22,6 +21,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     _classify_review_cluster,
     _record_preference_key,
 )
+from src.shared.csv_utils import read_csv_rows_from_source
 
 DEFAULT_SEED = 42
 VARIANT_SUFFIXES = (
@@ -109,18 +109,7 @@ class DuplicateCleanupAction:
 
 
 def _load_rows_from_source(source_path: Path, *, suffix: str) -> List[Dict[str, str]]:
-    source_path = Path(source_path)
-    if source_path.suffix.lower() == ".zip":
-        with zipfile.ZipFile(source_path) as archive:
-            members = [name for name in archive.namelist() if name.endswith(f"/{suffix}")]
-            if not members:
-                raise FileNotFoundError(f"No {suffix} found in zip: {source_path}")
-            if len(members) > 1:
-                raise RuntimeError(f"Zip contains multiple {suffix} files: {members}")
-            payload = archive.read(members[0]).decode("utf-8")
-        return list(csv.DictReader(payload.splitlines()))
-    with source_path.open("r", encoding="utf-8", newline="") as handle:
-        return list(csv.DictReader(handle))
+    return read_csv_rows_from_source(Path(source_path), zip_member_suffix=suffix, encoding="utf-8")
 
 
 def _load_exact_duplicate_rows(source_path: Path) -> List[Dict[str, str]]:

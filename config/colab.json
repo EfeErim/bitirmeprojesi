@@ -57,6 +57,7 @@
   },
   "inference": {
     "adapter_root": "models/adapters",
-    "target_size": 224
+    "target_size": 224,
+    "confidence_spread_warning_threshold": 0.20
   }
 }

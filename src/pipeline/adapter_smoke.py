@@ -23,7 +23,7 @@ SUPPORTED_EXPLANATION_METHODS = {"occlusion_sensitivity", "attention_map"}
 
 # Explanation method hyperparameters.
 DEFAULT_EXPLANATION_GRID_SIZE = 7
-CONFIDENCE_SPREAD_WARNING_THRESHOLD = 0.20
+DEFAULT_CONFIDENCE_SPREAD_WARNING_THRESHOLD = 0.20
 
 DEFAULT_DISCOVERY_ROOTS = (
     Path("."),
@@ -46,12 +46,18 @@ SKIP_DISCOVERY_DIR_NAMES = {
 
 
 @lru_cache(maxsize=128)
-def _load_inference_settings(config_env: Optional[str]) -> tuple[Path, int]:
+def _load_inference_settings(config_env: Optional[str]) -> tuple[Path, int, float]:
     """Load inference settings from config. Cache expires after each call in long-running processes."""
     inference_cfg = dict(dict(get_config(environment=config_env)).get("inference", {}))
     return (
         Path(str(inference_cfg.get("adapter_root", "models/adapters"))),
         int(inference_cfg.get("target_size", 224)),
+        float(
+            inference_cfg.get(
+                "confidence_spread_warning_threshold",
+                DEFAULT_CONFIDENCE_SPREAD_WARNING_THRESHOLD,
+            )
+        ),
     )
 
 
@@ -61,6 +67,10 @@ def _default_adapter_root(config_env: Optional[str]) -> Path:
 
 def _target_size(config_env: Optional[str]) -> int:
     return _load_inference_settings(config_env)[1]
+
+
+def _confidence_spread_warning_threshold(config_env: Optional[str]) -> float:
+    return _load_inference_settings(config_env)[2]
 
 
 def _normalize_crop_name(crop_name: str) -> str:
@@ -1119,7 +1129,12 @@ def _normalize_requested_views(robust_views: Optional[Sequence[str]]) -> List[st
     return normalized
 
 
-def _view_consistency_summary(views: Sequence[Dict[str, Any]], *, primary_view: str) -> Dict[str, Any]:
+def _view_consistency_summary(
+    views: Sequence[Dict[str, Any]],
+    *,
+    primary_view: str,
+    confidence_spread_warning_threshold: float = DEFAULT_CONFIDENCE_SPREAD_WARNING_THRESHOLD,
+) -> Dict[str, Any]:
     successful = [row for row in views if row.get("status") != "error"]
     successful_names = [str(row.get("view_name", "")) for row in successful if row.get("view_name")]
     failed_names = [str(row.get("view_name", "")) for row in views if row.get("status") == "error" and row.get("view_name")]
@@ -1149,7 +1164,7 @@ def _view_consistency_summary(views: Sequence[Dict[str, Any]], *, primary_view: 
         confidence_min = min(confidences)
         confidence_max = max(confidences)
         confidence_spread = confidence_max - confidence_min
-        if confidence_spread >= CONFIDENCE_SPREAD_WARNING_THRESHOLD:
+        if confidence_spread >= confidence_spread_warning_threshold:
             warning_codes.append("view_confidence_spread_high")
     else:
         confidence_min = None
@@ -1227,6 +1242,7 @@ def _predict_single_image_robust(
     adapter: IndependentCropAdapter,
     target_size: int,
     resolved_adapter_dir: Path,
+    config_env: Optional[str],
     robust_views: Sequence[str],
     explain_prediction: bool = False,
     explanation_grid_size: int = DEFAULT_EXPLANATION_GRID_SIZE,
@@ -1271,7 +1287,11 @@ def _predict_single_image_robust(
     result = dict(primary_row)
     result["image_path"] = str(image_path)
     result["views"] = rows
-    result["view_consistency"] = _view_consistency_summary(rows, primary_view=primary_view)
+    result["view_consistency"] = _view_consistency_summary(
+        rows,
+        primary_view=primary_view,
+        confidence_spread_warning_threshold=_confidence_spread_warning_threshold(config_env),
+    )
     result["uncertainty_diagnostics"] = _uncertainty_diagnostics(
         result,
         view_consistency=result["view_consistency"],
@@ -1470,6 +1490,7 @@ def predict_single_image(
             adapter=adapter,
             target_size=_target_size(config_env),
             resolved_adapter_dir=resolved_dir,
+            config_env=config_env,
             robust_views=_normalize_requested_views(robust_views),
             explain_prediction=bool(explain_prediction),
             explanation_grid_size=int(explanation_grid_size),
