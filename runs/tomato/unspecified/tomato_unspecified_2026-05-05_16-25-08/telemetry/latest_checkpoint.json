@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e32_s480_20260505_162920_500755",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_unspecified_2026-05-05_16-25-08/checkpoints/ckpt_e32_s480_20260505_162920_500755/training_checkpoint",
+  "created_at": "2026-05-05T16:29:21.979185+00:00",
+  "global_step": 480,
+  "epoch": 32,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.31905151282212346
+}
