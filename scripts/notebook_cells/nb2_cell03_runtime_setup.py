@@ -38,6 +38,15 @@ def _ensure_matplotlib():
         plt = _plt
     return matplotlib, plt
 
+def _infer_part_name_from_dataset_name(dataset_name: str) -> str:
+    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(dataset_name or "").strip())
+    while "__" in normalized:
+        normalized = normalized.replace("__", "_")
+    tokens = [token for token in normalized.strip("_").split("_") if token]
+    if len(tokens) <= 1:
+        return "unspecified"
+    return "_".join(tokens[1:]) or "unspecified"
+
 # Imports for training notebook setup
 from scripts.colab_repo_bootstrap import (
     export_current_colab_notebook,
@@ -65,7 +74,10 @@ if IN_COLAB:
 
 # Initialize telemetry and run directories
 CROP_NAME = globals().get('CROP_NAME', 'tomato')
-PART_NAME = globals().get('PART_NAME', 'unspecified')
+_requested_part_name = str(globals().get('PART_NAME', '') or '').strip().lower()
+if not _requested_part_name or _requested_part_name == 'unspecified':
+    _requested_part_name = _infer_part_name_from_dataset_name(globals().get('DATASET_NAME', ''))
+PART_NAME = _requested_part_name or 'unspecified'
 RUN_ID = build_notebook_run_id(CROP_NAME, PART_NAME)
 NOTEBOOK_FILENAME = '2_train_continual_sd_lora_adapter.executed.ipynb'
 REPO_RUN_DIR = build_notebook_run_dir(ROOT, CROP_NAME, PART_NAME, RUN_ID)
