@@ -20,6 +20,11 @@ DEFAULT_ROBUST_VIEWS = ("full_resize", "resize_pad", "center_crop")
 IMAGE_MEAN_PAD_RGB = (124, 116, 104)
 DEFAULT_EXPLANATION_METHOD = "occlusion_sensitivity"
 SUPPORTED_EXPLANATION_METHODS = {"occlusion_sensitivity", "attention_map"}
+
+# Explanation method hyperparameters.
+DEFAULT_EXPLANATION_GRID_SIZE = 7
+CONFIDENCE_SPREAD_WARNING_THRESHOLD = 0.20
+
 DEFAULT_DISCOVERY_ROOTS = (
     Path("."),
     Path("outputs"),
@@ -1144,7 +1149,7 @@ def _view_consistency_summary(views: Sequence[Dict[str, Any]], *, primary_view: 
         confidence_min = min(confidences)
         confidence_max = max(confidences)
         confidence_spread = confidence_max - confidence_min
-        if confidence_spread >= 0.20:
+        if confidence_spread >= CONFIDENCE_SPREAD_WARNING_THRESHOLD:
             warning_codes.append("view_confidence_spread_high")
     else:
         confidence_min = None
@@ -1224,7 +1229,7 @@ def _predict_single_image_robust(
     resolved_adapter_dir: Path,
     robust_views: Sequence[str],
     explain_prediction: bool = False,
-    explanation_grid_size: int = 7,
+    explanation_grid_size: int = DEFAULT_EXPLANATION_GRID_SIZE,
     explanation_method: str = DEFAULT_EXPLANATION_METHOD,
 ) -> Dict[str, Any]:
     image_name = image_path.name
@@ -1291,7 +1296,7 @@ def _predict_image_row(
     target_size: int,
     resolved_adapter_dir: Path,
     explain_prediction: bool = False,
-    explanation_grid_size: int = 7,
+    explanation_grid_size: int = DEFAULT_EXPLANATION_GRID_SIZE,
     explanation_method: str = DEFAULT_EXPLANATION_METHOD,
 ) -> Dict[str, Any]:
     with Image.open(image_path) as image:
@@ -1444,7 +1449,7 @@ def predict_single_image(
     enable_robust_smoke: bool = False,
     robust_views: Optional[Sequence[str]] = None,
     explain_prediction: bool = False,
-    explanation_grid_size: int = 7,
+    explanation_grid_size: int = DEFAULT_EXPLANATION_GRID_SIZE,
     explanation_method: str = DEFAULT_EXPLANATION_METHOD,
     *,
     part_name: Optional[str] = None,
