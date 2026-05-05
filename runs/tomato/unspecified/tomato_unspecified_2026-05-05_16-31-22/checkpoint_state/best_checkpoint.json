@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e25_s450_20260505_163611_149223",
+  "path": "/content/bitirmeprojesi/runs/tomato/unspecified/tomato_unspecified_2026-05-05_16-31-22/checkpoint_state/checkpoints/ckpt_e25_s450_20260505_163611_149223",
+  "created_at": "2026-05-05T16:36:12.721002+00:00",
+  "global_step": 450,
+  "epoch": 25,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.5591583664954445
+}
