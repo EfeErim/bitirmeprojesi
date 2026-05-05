@@ -35,7 +35,16 @@ Load `skills/aads-training-ood/SKILL.md` for Notebook 0 or Notebook 2 training, 
 5. Notebook 3 is the fuller direct adapter validation surface, and Notebook 4 is its smaller widget wrapper. Both are separate from router-driven inference and should stay usable without the router.
 6. Notebook 5 is the router calibration wrapper over `scripts/evaluate_router_surface.py` and `scripts/calibrate_router_surface.py`; keep calibration logic in those scripts.
 7. Keep Hugging Face token resolution aligned with the maintained sources documented in the Colab manual.
-7. When notebook prose, defaults, or exposed controls imply methodological claims about training, OOD handling, inference behavior, or data-prep policy, align them with the canonical workflow docs and literature-backed rationale where available. Avoid notebook-only scientific claims.
+8. Preserve deterministic handoff cells: setup, dataset validation, training or inference execution, artifact mirroring, and publish/recovery steps should each expose enough state for salvage without rerunning expensive work.
+9. When notebook prose, defaults, or exposed controls imply methodological claims about training, OOD handling, inference behavior, or data-prep policy, align them with the canonical workflow docs and literature-backed rationale where available. Avoid notebook-only scientific claims.
+10. Prefer validation and recovery cells over hidden notebook state. If a run completed and publishing failed, salvage artifacts before suggesting retraining.
+
+## Literature And Practice Anchors
+
+- Treat notebooks as reproducible wrappers over canonical workflows. The SOTA concern here is not novelty; it is preserving provenance, deterministic setup, and recoverable artifacts.
+- For data preparation notebooks, follow the repo's leakage-prevention docs before adding augmentation or materialization convenience.
+- For Notebook 2 readiness controls, defer to OOD calibration, Outlier Exposure, and held-out evidence guidance in `docs/user_guide/ood_readiness_guide.md`.
+- For Notebook 5 router calibration, defer to `docs/architecture/router_performance_literature_review.md`: evaluate risk-coverage and negative false accepts before changing thresholds.
 
 ## Boundaries
 

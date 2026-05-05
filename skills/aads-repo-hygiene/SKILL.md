@@ -30,6 +30,14 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 6. Preserve or improve literature-backed rationale when the task changes ML methods, benchmark claims, evaluation policy, or contributor guidance about model behavior. Prefer primary sources and label engineering inference explicitly.
 7. When changing `AGENTS.md`, `skills/*/SKILL.md`, or `skills/*/agents/*.yaml`, keep the routing text and metadata aligned, and sanity-check representative task phrasings before considering the edit done.
 8. Prefer pointing skills at canonical docs and contracts over duplicating mutable repo facts across multiple skill files.
+9. Use standards-backed hygiene for process changes: explicit validation commands, traceable dependency changes, generated-artifact exclusions, reproducible outputs, and no hidden local-only assumptions.
+10. For ML-facing docs or validation changes, require the claim to name its evidence type: current repo behavior, literature-backed rationale, benchmark result, test result, or engineering inference.
+
+## Practice Anchors
+
+- Use [NIST SSDF SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) as the process baseline for secure software development language: reduce vulnerabilities, verify changes, preserve provenance, and make practices explicit enough for maintainers.
+- Use [OpenSSF Scorecard](https://openssf.org/projects/scorecard/) supply-chain thinking for dependency or CI edits: do not broaden installs, secrets, permissions, or generated artifacts without a concrete maintained-surface need.
+- Use repo literature docs for ML guidance. Keep new SOTA claims out of `AGENTS.md` or skills unless they directly improve routing, validation, or agent guardrails.
 
 ## Boundaries
 

@@ -25,9 +25,19 @@ Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 0 o
 2. Preserve the shipped config surface under `training.continual`, especially `ood` and `evaluation`, unless the user explicitly wants a config-schema change.
 3. Treat `production_readiness.json` as the deployment verdict. `validation/metric_gate.json` and `test/metric_gate.json` are split-local diagnostics.
 4. Keep the adapter bundle contract coherent: LoRA weights, classifier or fusion state, config metadata, and serialized OOD state should move together.
-5. When BER is involved, compare runs on the same crop, seed, split layout, and OOD evidence source. Use `scripts/evaluate_ber_rollout.py` when a rollout comparison is needed.
-6. Back OOD scoring, calibration, readiness-policy, and rejection-method changes with primary literature when possible. If the repo adapts an idea rather than reproducing a paper exactly, say so explicitly.
-7. If training outputs or readiness semantics change, update the matching docs instead of leaving behavior implicit.
+5. Keep OOD calibration, score selection, and final readiness evidence separate. Do not tune on the same held-out real-OOD assignment used for the final verdict.
+6. Evaluate OOD and readiness changes with deployment-relevant metrics: known-class quality, AUROC where applicable, FPR on realistic unknowns, slice breakdowns, evidence counts, and risk-coverage or abstention behavior when rejection is involved.
+7. When BER is involved, compare runs on the same crop, seed, split layout, and OOD evidence source. Use `scripts/evaluate_ber_rollout.py` when a rollout comparison is needed.
+8. Back OOD scoring, calibration, readiness-policy, and rejection-method changes with primary literature when possible. If the repo adapts an idea rather than reproducing a paper exactly, say so explicitly.
+9. If training outputs or readiness semantics change, update the matching docs instead of leaving behavior implicit.
+
+## Literature Anchors
+
+- Start with repo docs: `docs/architecture/ood_recommendation.md`, `docs/architecture/unknown_disease_rejection.md`, and `docs/user_guide/ood_readiness_guide.md`.
+- Confidence-like scores need calibration evidence; Guo et al. (ICML 2017) supports temperature scaling as a practical calibration baseline.
+- OOD method changes should be compared against simple and strong baselines such as maximum softmax probability, energy scores, and existing ensemble or kNN evidence where this repo already reports them.
+- Outlier Exposure can help training, but final OOD evidence must remain disjoint from OE inputs. Treat contaminated or reused unknown images as an evaluation bug, not stronger evidence.
+- Selective prediction literature supports abstention, but this repo must prove abstention through risk-coverage and false-accept behavior on its own held-out surfaces.
 
 ## Boundaries
 

@@ -30,8 +30,17 @@ Load `skills/aads-colab-notebooks/SKILL.md` for Notebook 1, Notebook 3, or Noteb
 2. Preserve the default adapter layout `models/adapters/<crop>/<part>/continual_sd_lora_adapter/` unless the user explicitly wants a deployment-contract change.
 3. Keep router-driven inference and direct adapter smoke testing as separate supported surfaces.
 4. Preserve the typed inference payload contract and OOD metadata semantics when changing runtime behavior.
-5. If a change touches crop routing, inspect `src/router/router_pipeline.py`, `src/router/vlm_pipeline.py`, and `src/pipeline/router_adapter_runtime.py` before editing. If it touches the public payload, inspect `src/shared/contracts.py` too.
-6. Back router evidence policy, reject-option behavior, calibration logic, and other non-trivial inference heuristics with literature when credible sources exist. Mark repo-specific engineering inference explicitly instead of overstating the citation.
+5. Treat router confidence-like scores as uncalibrated unless a repo-local evaluation surface proves the threshold behavior. Prefer calibration sweeps over hand-tuned one-example fixes.
+6. If a change touches crop routing, inspect `src/router/router_pipeline.py`, `src/router/vlm_pipeline.py`, and `src/pipeline/router_adapter_runtime.py` before editing. If it touches the public payload, inspect `src/shared/contracts.py` too.
+7. Back router evidence policy, reject-option behavior, calibration logic, and other non-trivial inference heuristics with literature when credible sources exist. Mark repo-specific engineering inference explicitly instead of overstating the citation.
+8. For runtime routing changes, verify ID accuracy, negative false accepts, abstention/risk-coverage behavior, part precision/recall, payload status transitions, and latency where the changed path affects performance.
+
+## Literature Anchors
+
+- Start with `docs/architecture/router_performance_literature_review.md` before changing router thresholds, prompt evidence, global/local fusion, or calibration scripts.
+- Calibration literature supports treating neural confidence as unreliable without validation; threshold changes need held-out evidence, not just plausible scores.
+- Selective prediction supports abstention as a first-class output. In this repo, `unknown_crop`, `router_uncertain`, `router_unavailable`, and part `unknown` are product states that must remain explicit.
+- OOD benchmark literature warns that poorly constructed evaluation sets can make a detector look better than it is. Preserve realistic off-crop, non-plant, ambiguous, and wrong-part cases when evaluating runtime changes.
 
 ## Boundaries
 

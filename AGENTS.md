@@ -21,6 +21,25 @@ Read these before making repo-wide assumptions:
 - If strong literature is not available, say so briefly and fall back to repo docs, tests, benchmarks, and measured behavior.
 - When adding new literature-backed rationale, place it in maintained docs or succinct code comments near non-obvious logic instead of ad hoc notes.
 
+## SOTA Practice Lens
+
+Use current best practice as a decision filter, not as a license for broad rewrites:
+
+- For ML reliability, prefer measured calibration, risk-coverage, false-accept, slice, and held-out OOD evidence over one-image anecdotes or confidence-looking scores.
+- For OOD and reject behavior, preserve train/dev/test evidence separation, keep Outlier Exposure separate from final OOD evidence, and report the deployment-relevant failure mode, especially FPR on realistic unknowns.
+- For router and adapter thresholds, calibrate on repo-local evaluation surfaces before changing defaults. A higher forced-label accuracy is not an improvement if abstention quality or negative false accepts regress.
+- For software changes, follow secure and reproducible engineering practice: narrow diffs, explicit contracts, dependency caution, generated-artifact boundaries, deterministic validation, and traceable artifacts.
+- For tests, prefer the smallest executable check that proves the contract. Use property-based, metamorphic, or mutation-style reasoning when exact-output examples are weak for the touched logic.
+
+Literature and standard anchors already reflected in repo docs include calibration, OOD detection, Outlier Exposure, selective prediction, conformal prediction, router risk-coverage, benchmark hygiene, and testing practice. Good starting points are:
+
+- `docs/architecture/ood_recommendation.md`
+- `docs/architecture/unknown_disease_rejection.md`
+- `docs/architecture/router_performance_literature_review.md`
+- `docs/architecture/data_augmentation_leakage_prevention.md`
+- `skills/aads-bugfix-debugging/references/bugfix_practices.md`
+- [NIST SSDF SP 800-218](https://csrc.nist.gov/pubs/sp/800/218/final) for secure/reproducible development process guidance.
+
 ## Maintained Entrypoints
 
 - Grouped dataset preparation: `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
@@ -72,7 +91,7 @@ Use the smallest set that covers the task.
 ## Routing Rules
 
 - Use `aads-training-ood` for `TrainingWorkflow.run(...)`, continual SD-LoRA config, OOD calibration, readiness artifacts, BER comparisons, and training-side adapter export semantics.
-- Use `aads-colab-notebooks` for Notebook 0, 1, 2, 3, or 4 changes, grouped dataset preparation, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
+- Use `aads-colab-notebooks` for Notebook 0, 1, 2, 3, 4, or 5 changes, grouped dataset preparation, dataset materialization, Hugging Face token handling, Drive telemetry, notebook output mirroring, and notebook-specific troubleshooting.
 - Use `aads-inference-runtime` for router inference, adapter lookup and deployment handoff, lazy adapter loading, direct adapter smoke testing, and inference payload behavior.
 - Use `aads-bugfix-debugging` for regressions, silent failures, invariant violations, unexpected fallback paths, boundary-validation gaps, and root-cause-driven bug fixes on maintained surfaces.
 - Use `aads-repo-hygiene` for CI, tests, benchmark capture, docs consistency, and tracked-vs-generated repo boundaries.

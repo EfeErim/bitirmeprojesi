@@ -1,4 +1,4 @@
 interface:
   display_name: "AADS Bugfix and Diagnostics"
-  short_description: "AADS v6 bug fixing, regression isolation, and silent-failure guidance"
-  default_prompt: "Use $aads-bugfix-debugging to diagnose and fix a bug, regression, silent failure, or boundary-validation gap in this repo."
+  short_description: "Evidence-backed AADS v6 bug fixing, regression isolation, and silent-failure guidance"
+  default_prompt: "Use $aads-bugfix-debugging to diagnose and fix a bug, regression, silent failure, or boundary-validation gap with an executable guard in this repo."

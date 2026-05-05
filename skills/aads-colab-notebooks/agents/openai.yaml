@@ -1,4 +1,4 @@
 interface:
   display_name: "AADS Colab Notebooks"
-  short_description: "AADS v6 Colab notebook, dataset-prep, router calibration, and export workflow guidance"
-  default_prompt: "Use $aads-colab-notebooks to update a maintained Colab notebook or dataset-preparation flow in this repo."
+  short_description: "AADS v6 Colab notebook, dataset-prep, calibration, recovery, and export workflow guidance"
+  default_prompt: "Use $aads-colab-notebooks to update a maintained Colab notebook, dataset-preparation flow, calibration wrapper, or recoverable export path in this repo."

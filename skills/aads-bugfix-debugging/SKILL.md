@@ -34,7 +34,14 @@ Load the owning feature skill too:
 7. Strengthen typed or schema-backed choke points instead of scattering ad hoc guards. In this repo, prefer `src/shared/contracts.py`, config normalization, workflow result objects, and artifact JSON writers.
 8. Add focused diagnostics around decision boundaries and failure transitions. Prefer one structured log or assertion at the right boundary over noisy blanket logging.
 9. Keep the fix narrow. Do not hide unresolved faults behind broad `except` blocks, silent defaults, or degraded fallbacks unless the product contract explicitly requires that mode.
-10. If test adequacy is still doubtful after the fix, use stronger negative cases, property checks, or targeted mutation-style evaluation on the touched logic instead of broad repo-wide tooling churn.
+10. When a bug affects ML decisions, test the user-visible decision boundary, not just the helper that happened to fail. Examples: readiness verdict, router status, adapter lookup outcome, OOD evidence split, artifact presence, or notebook recovery path.
+11. If test adequacy is still doubtful after the fix, use stronger negative cases, property checks, or targeted mutation-style evaluation on the touched logic instead of broad repo-wide tooling churn.
+
+## Evidence Anchors
+
+- Use `references/bugfix_practices.md` for literature-backed debugging practice: delta debugging, regression checks, property-based testing, metamorphic testing, assertions, and mutation-style adequacy checks.
+- For ML regressions, prefer invariant and contract checks over only reproducing the current numeric output. Numeric metrics can move legitimately; contracts such as split disjointness, status transitions, and artifact schemas should not drift silently.
+- For dependency, CI, or supply-chain failures, load `aads-repo-hygiene` too and follow NIST SSDF-style practice: keep remediation traceable, minimal, and tied to a verified failure mode.
 
 ## Boundaries
 
