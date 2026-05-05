@@ -33,7 +33,12 @@ def _row_split(row: Dict[str, Any]) -> str:
 
 
 def _row_family_key(row: Dict[str, Any]) -> str:
-    for field_name in ("family_id", "grouped_family_id"):
+    for field_name in (
+        "grouped_family_id",
+        "family_bundle_key",
+        "family_canonical_relative_path",
+        "family_id",
+    ):
         value = str(row.get(field_name, "") or "").strip()
         if value:
             return f"{field_name}:{value}"

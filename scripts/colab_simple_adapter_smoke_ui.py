@@ -533,6 +533,13 @@ def launch_simple_adapter_smoke_ui(
                     config_env=config_env,
                     device=device,
                 )
+                required_keys = {"crop_name", "resolved_adapter_dir"}
+                missing_keys = required_keys - set(summary.keys())
+                if missing_keys:
+                    raise ValueError(
+                        f"Adapter summary is missing required keys: {missing_keys}. "
+                        f"Got keys: {set(summary.keys())}."
+                    )
                 with Image.open(image_path) as preview:
                     display(preview.copy())
                 result = predict_single_image_fn(
@@ -563,6 +570,12 @@ def launch_simple_adapter_smoke_ui(
                 if _is_huggingface_gated_access_error(exc):
                     display(HTML(_hf_access_error_html(exc)))
                     return
+                expected_error_types = (
+                    FileNotFoundError, ValueError, RuntimeError, OSError, TypeError,
+                    KeyError, AttributeError
+                )
+                if not isinstance(exc, expected_error_types):
+                    raise
                 display(
                     HTML(
                         "<div style=\"border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px;background:#fff7f7;color:#991b1b;\">"

@@ -40,8 +40,9 @@ SKIP_DISCOVERY_DIR_NAMES = {
 }
 
 
-@lru_cache(maxsize=None)
+@lru_cache(maxsize=128)
 def _load_inference_settings(config_env: Optional[str]) -> tuple[Path, int]:
+    """Load inference settings from config. Cache expires after each call in long-running processes."""
     inference_cfg = dict(dict(get_config(environment=config_env)).get("inference", {}))
     return (
         Path(str(inference_cfg.get("adapter_root", "models/adapters"))),
@@ -785,10 +786,13 @@ def _occlusion_sensitivity_grid(
 
     resolved_grid = int(max(2, min(16, grid_size)))
     _, height, width = image_tensor.shape
+    if height <= 0 or width <= 0:
+        raise ValueError(
+            f"Image tensor has invalid spatial dimensions: height={height}, width={width}. "
+            "Occlusion visualization requires positive spatial extent."
+        )
     heatmap = torch.zeros((resolved_grid, resolved_grid), dtype=torch.float32)
     baseline = float(max(0.0, baseline_confidence))
-    if height <= 0 or width <= 0:
-        return heatmap.tolist()
 
     masked = image_tensor.detach().clone()
 
@@ -807,6 +811,14 @@ def _occlusion_sensitivity_grid(
             )
             heatmap[row_index, col_index] = max(0.0, baseline - occluded_confidence)
             masked[:, top:bottom, left:right] = original_patch
+
+    del masked
+    try:
+        import torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
 
     max_drop = float(heatmap.max().item()) if heatmap.numel() else 0.0
     if max_drop > 0.0:
@@ -949,17 +961,26 @@ def _extract_attention_heatmap(
         if hasattr(trainer, "set_eval_mode"):
             trainer.set_eval_mode()
         with torch.inference_mode():
+            device = getattr(trainer, "device", None)
+            if device is None:
+                raise RuntimeError("Trainer does not have a 'device' attribute for attention extraction.")
             outputs = model(
-                image_tensor.unsqueeze(0).to(trainer.device, non_blocking=True),
+                image_tensor.unsqueeze(0).to(device, non_blocking=True),
                 output_attentions=True,
                 output_hidden_states=True,
             )
     finally:
         if attn_impl_changed:
-            setattr(config, "_attn_implementation", previous_attn_impl)
+            try:
+                setattr(config, "_attn_implementation", previous_attn_impl)
+            except Exception as exc:
+                raise RuntimeError(
+                    f"Failed to restore attention implementation to '{previous_attn_impl}' after inference. "
+                    f"Config state may be inconsistent. Error: {exc}"
+                ) from exc
 
     attentions = getattr(outputs, "attentions", None)
-    if not attentions:
+    if not attentions or len(attentions) == 0:
         raise RuntimeError(
             "The loaded backbone did not return attentions. DINOv3 ViT requires an eager attention backend; "
             "DINOv3 ConvNeXT-style backbones do not expose attention maps."

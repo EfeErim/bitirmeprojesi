@@ -81,6 +81,78 @@ def test_validate_runtime_dataset_layout_rejects_family_cross_split_leakage(tmp_
     assert any("Family leakage detected" in item for item in result["errors"])
 
 
+def test_validate_runtime_dataset_layout_prefers_precise_family_bundle_key(tmp_path: Path):
+    root = tmp_path / "runtime"
+    _write_runtime_dataset(
+        root,
+        [
+            {
+                "runtime_relative_path": "continual/healthy/continual.jpg",
+                "normalized_class_name": "healthy",
+                "split": "continual",
+                "family_id": "healthy__coarse",
+                "family_bundle_key": "family:healthy/continual.jpg",
+            },
+            {
+                "runtime_relative_path": "val/healthy/val.jpg",
+                "normalized_class_name": "healthy",
+                "split": "val",
+                "family_id": "healthy__coarse",
+                "family_bundle_key": "family:healthy/val.jpg",
+            },
+            {
+                "runtime_relative_path": "test/healthy/test.jpg",
+                "normalized_class_name": "healthy",
+                "split": "test",
+                "family_id": "healthy__coarse",
+                "family_bundle_key": "family:healthy/test.jpg",
+            },
+        ],
+    )
+
+    result = validate_runtime_dataset_layout(root)
+
+    assert result["ok"] is True
+    assert result["summary"]["families_checked"] == 3
+    assert result["summary"]["leakage_family_count"] == 0
+
+
+def test_validate_runtime_dataset_layout_rejects_bundle_key_cross_split_leakage(tmp_path: Path):
+    root = tmp_path / "runtime"
+    _write_runtime_dataset(
+        root,
+        [
+            {
+                "runtime_relative_path": "continual/healthy/continual.jpg",
+                "normalized_class_name": "healthy",
+                "split": "continual",
+                "family_id": "healthy__coarse",
+                "family_bundle_key": "family:healthy/shared-source.jpg",
+            },
+            {
+                "runtime_relative_path": "val/healthy/val.jpg",
+                "normalized_class_name": "healthy",
+                "split": "val",
+                "family_id": "healthy__coarse",
+                "family_bundle_key": "family:healthy/shared-source.jpg",
+            },
+            {
+                "runtime_relative_path": "test/healthy/test.jpg",
+                "normalized_class_name": "healthy",
+                "split": "test",
+                "family_id": "healthy__other",
+                "family_bundle_key": "family:healthy/test.jpg",
+            },
+        ],
+    )
+
+    result = validate_runtime_dataset_layout(root)
+
+    assert result["ok"] is False
+    assert result["summary"]["leakage_family_count"] == 1
+    assert any("Family leakage detected" in item for item in result["errors"])
+
+
 def test_validate_runtime_dataset_layout_rejects_generated_eval_rows_and_files(tmp_path: Path):
     root = tmp_path / "runtime"
     _write_runtime_dataset(
