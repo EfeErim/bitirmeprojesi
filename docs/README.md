@@ -21,6 +21,7 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 - Deployability verdict file: `production_readiness.json`
 - Canonical training entrypoint: `src/workflows/training.py`
 - Canonical inference entrypoint: `src/workflows/inference.py`
+- Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`

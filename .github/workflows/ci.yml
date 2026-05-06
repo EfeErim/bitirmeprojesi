@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    # Run monthly cleanup on the 1st at midnight UTC
+    - cron: '0 0 1 * *'
 
 jobs:
   test:
@@ -63,10 +66,24 @@ jobs:
       - name: Validate config schema declarations
         run: python scripts/validate_config_schema.py
 
+      - name: Check config drift
+        run: python scripts/check_config_drift.py
+
+      - name: Validate dataset layouts (if present)
+        run: |
+          if [ -d "data/prepared_runtime_datasets" ]; then
+            python scripts/validate_dataset_layout.py --root data/prepared_runtime_datasets
+          else
+            echo "No prepared runtime datasets found, skipping validation"
+          fi
+
       - name: Run static checks
         run: |
           ruff check \
             scripts/benchmark_surfaces.py \
+            scripts/cleanup_old_artifacts.py \
+            scripts/check_config_drift.py \
+            scripts/generate_artifact_manifest.py \
             scripts/colab_checkpointing.py \
             scripts/colab_dataset_layout.py \
             scripts/colab_live_telemetry.py \
@@ -114,3 +131,19 @@ jobs:
 
       - name: Capture orchestration benchmarks
         run: python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json
+
+  cleanup:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Clean up old artifacts (>90 days)
+        run: |
+          python scripts/cleanup_old_artifacts.py --days 90
+
