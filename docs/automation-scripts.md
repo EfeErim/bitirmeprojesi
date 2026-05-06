@@ -23,7 +23,7 @@ Removes old temporary artifacts and run directories older than a retention perio
 - `.runtime_tmp/*` files/folders (except caches) modified >N days ago
 
 **CI Integration:**
-- Runs monthly via GitHub Actions scheduled job (1st of each month)
+- Runs daily via GitHub Actions scheduled job (midnight UTC)
 - Safe to run manually before large training campaigns
 
 ## 2. `check_config_drift.py`

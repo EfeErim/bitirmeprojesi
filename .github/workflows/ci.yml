@@ -6,8 +6,8 @@ on:
   pull_request:
     branches: [main, master]
   schedule:
-    # Run monthly cleanup on the 1st at midnight UTC
-    - cron: '0 0 1 * *'
+    # Run daily cleanup at midnight UTC
+    - cron: '0 0 * * *'
 
 jobs:
   test:
