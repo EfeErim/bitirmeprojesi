@@ -1,6 +1,289 @@
 # Auto-extracted from colab_notebooks/2_train_continual_sd_lora_adapter.ipynb cell 4.
 # Resolves Notebook 2 parameters after the user-editable values are set.
 
+# User-facing Notebook 2 adapter/default surface moved from the notebook cell.
+# Keep the notebook cell short; this script still exposes explicit values to validation.
+# Notebook 2 calisma kimligi
+# Bootstrap/validator defaultlari; ADAPTER_KEY secimi asagida bunlari kesin olarak ezer.
+CROP_NAME = "tomato"
+PART_NAME = "unspecified"
+DATASET_NAME = ""
+
+# Tek degistirilecek alan: egitmek istedigin adapter anahtari.
+# Bu anahtar crop/part, runtime dataset, OOD ve OE yollarini gorunur sekilde set eder.
+ADAPTER_KEY = str(globals().get("ADAPTER_KEY", "grape__fruit")).strip()
+_USER_MANUAL_PARAM_OVERRIDES = dict(globals().get("MANUAL_PARAM_OVERRIDES") or {})
+
+ADAPTER_RECS = {
+    "grape__fruit": {
+        "crop": "grape", "part": "fruit",
+        "ood": "data/prepared_runtime_datasets/grape__fruit/ood",
+        "oe": "data/prepared_runtime_datasets/grape__fruit/oe",
+        "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
+        "overrides": {"EPOCHS": 32, "BATCH_SIZE": 48, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
+    },
+    "grape__leaf": {
+        "crop": "grape", "part": "leaf",
+        "ood": "data/prepared_runtime_datasets/grape__leaf/ood",
+        "oe": "data/prepared_runtime_datasets/grape__leaf/oe",
+        "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
+        "overrides": {"EPOCHS": 28, "BATCH_SIZE": 64, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.12, "OOD_FACTOR": 3.0},
+    },
+    "strawberry__fruit": {
+        "crop": "strawberry", "part": "fruit",
+        "ood": "data/prepared_runtime_datasets/strawberry__fruit/ood",
+        "oe": "data/prepared_runtime_datasets/strawberry__fruit/oe",
+        "oe_enabled": True, "oe_w": 0.10, "allow_under_min": True,
+        "overrides": {"EPOCHS": 36, "BATCH_SIZE": 32, "LEARNING_RATE": 8e-5, "LORA_R": 16, "LORA_ALPHA": 16, "LORA_DROPOUT": 0.18, "OOD_FACTOR": 3.0},
+    },
+    "strawberry__leaf": {
+        "crop": "strawberry", "part": "leaf",
+        "ood": "data/prepared_runtime_datasets/strawberry__leaf/ood",
+        "oe": "data/prepared_runtime_datasets/strawberry__leaf/oe",
+        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
+        "overrides": {"EPOCHS": 22, "BATCH_SIZE": 96, "LEARNING_RATE": 1.5e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
+    },
+    "tomato__fruit": {
+        "crop": "tomato", "part": "fruit",
+        "ood": "data/prepared_runtime_datasets/tomato__fruit/ood",
+        "oe": "data/prepared_runtime_datasets/tomato__fruit/oe",
+        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
+        "overrides": {"EPOCHS": 30, "BATCH_SIZE": 64, "LEARNING_RATE": 8e-5, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
+    },
+    "tomato__leaf": {
+        "crop": "tomato", "part": "leaf",
+        "ood": "data/prepared_runtime_datasets/tomato__leaf/ood",
+        "oe": "data/prepared_runtime_datasets/tomato__leaf/oe",
+        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
+        "overrides": {"EPOCHS": 20, "BATCH_SIZE": 96, "LEARNING_RATE": 1.2e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
+    },
+}
+
+if ADAPTER_KEY not in ADAPTER_RECS:
+    raise ValueError(f"Unsupported ADAPTER_KEY={ADAPTER_KEY!r}. Options: {sorted(ADAPTER_RECS)}")
+
+_adapter_rec = ADAPTER_RECS[ADAPTER_KEY]
+CROP_NAME = _adapter_rec["crop"]
+PART_NAME = _adapter_rec["part"]
+DATASET_NAME = ADAPTER_KEY
+
+# Cell 3, bu parametre hucreden once calistigi icin run kimligini burada dogru adaptere yeniden bagla.
+if "ColabLiveTelemetry" in globals() and "TrainingCheckpointManager" in globals():
+    RUN_ID = build_notebook_run_id(CROP_NAME, PART_NAME)
+    NOTEBOOK_FILENAME = "2_train_continual_sd_lora_adapter.executed.ipynb"
+    REPO_RUN_DIR = build_notebook_run_dir(ROOT, CROP_NAME, PART_NAME, RUN_ID)
+    REPO_NOTEBOOK_OUTPUT_PATH = REPO_RUN_DIR / "notebooks" / NOTEBOOK_FILENAME
+    LOCAL_OUTPUT_DIR = ROOT / "outputs" / "colab_notebook_training"
+    REPO_OUTPUT_DIR = REPO_RUN_DIR / "outputs" / "colab_notebook_training"
+    REPO_TELEMETRY_DIR = REPO_RUN_DIR / "telemetry"
+    REPO_CHECKPOINT_STATE_DIR = REPO_RUN_DIR / "checkpoint_state"
+    LOCAL_TELEMETRY_ROOT = ROOT / "outputs" / "colab_notebook_training" / "telemetry_runtime"
+    LOCAL_TELEMETRY_SPOOL_ROOT = ROOT / ".runtime_tmp" / "colab_notebook_training" / "telemetry_spool"
+    TELEMETRY = ColabLiveTelemetry(
+        notebook_name="2_train_continual_sd_lora_adapter.ipynb",
+        run_id=RUN_ID,
+        drive_root=LOCAL_TELEMETRY_ROOT,
+        local_root=LOCAL_TELEMETRY_SPOOL_ROOT,
+    )
+    CHECKPOINT_ROOT = TELEMETRY.drive_run_dir
+    CHECKPOINT_MANAGER = TrainingCheckpointManager(CHECKPOINT_ROOT, retention=3)
+    LOCAL_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    REPO_NOTEBOOK_OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    TELEMETRY.configure_repo_output_export(
+        notebook_path=REPO_NOTEBOOK_OUTPUT_PATH,
+        export_notebook_fn=export_current_colab_notebook,
+    )
+    TELEMETRY.update_latest({"phase": "adapter_key_selected", "run_id": RUN_ID, "adapter_key": ADAPTER_KEY, "crop": CROP_NAME, "part": PART_NAME})
+
+# --- Notebook 2 parametreleri ---
+# Bu hucreyi duzenleyin, sonra kalan hucreleri sirayla calistirin.
+# Kosu kimligi icin CROP_NAME/PART_NAME degerlerini ustteki hucreden yonetin.
+
+# RUNTIME_DATASET_ROOT: Notebook 0'un yazdigi <dataset_key>/continual|val|test|ood yapisini tutan repo-ici root.
+RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"
+
+# DATASET_NAME: Notebook 0'un urettigi runtime dataset klasor adi. Bos ise notebook kullaniciya sorar.
+DATASET_NAME = ""
+
+# OOD_ROOT: Gercek OOD klasoru. Bos ise ASK_FOR_OOD_ROOT=True iken notebook yol sorar; Enter varsa runtime ood/ kullanir.
+OOD_ROOT = ""
+ASK_FOR_OOD_ROOT = True
+
+# OE_ROOT: Outlier Exposure egitim klasoru. OE_ENABLED=True ve bos ise ASK_FOR_OE_ROOT=True iken notebook yol sorar; Enter varsa runtime oe/ kullanir.
+OE_ROOT = ""
+ASK_FOR_OE_ROOT = True
+OE_ENABLED = False
+OE_LOSS_WEIGHT = 0.5
+
+# CROP_NAME ve PART_NAME, kosu adlandirmasi ve metadata icin kullanilir.
+CROP_NAME = globals().get("CROP_NAME", "tomato")
+PART_NAME = globals().get("PART_NAME", "unspecified")
+ENABLE_BAYESIAN_OPTIMIZATION = bool(globals().get("ENABLE_BAYESIAN_OPTIMIZATION", False))
+
+# ALLOW_UNDER_MIN_TRAINING: True olursa 100 image/class production guardrail'i research kosulari icin bypass edilir.
+ALLOW_UNDER_MIN_TRAINING = False
+
+# EPOCHS: train split uzerinden kac tam gecis yapilacagi.
+EPOCHS = 12
+
+# BATCH_SIZE: optimizer adimi basina ornek sayisi. GPU limitine yakin olacak sekilde artirilabilir.
+BATCH_SIZE = 96
+
+# LEARNING_RATE: adapter/LoRA parametreleri icin optimizer adim buyuklugu.
+LEARNING_RATE = 2e-4
+
+# LORA_R: LoRA rank degeri. Buyudukce kapasite ve VRAM/islem maliyeti artar.
+LORA_R = 24
+
+# LORA_ALPHA: LoRA olcekleme katsayisi. Genelde LORA_R degerinin 2x-4x araliginda kullanilir.
+LORA_ALPHA = 24
+
+# LORA_DROPOUT: LoRA katmanlarina uygulanan dropout. Buyudukce regularizasyon artar.
+LORA_DROPOUT = 0.1
+
+# OOD_FACTOR: OOD esik hassasiyetini carpansal olarak ayarlar.
+OOD_FACTOR = 3.0
+SURE_SEMANTIC_PERCENTILE = 90.0
+SURE_CONFIDENCE_PERCENTILE = 97.0
+CONFORMAL_ALPHA = 0.05
+CONFORMAL_METHOD = "raps"
+CONFORMAL_RAPS_LAMBDA = 0.2
+CONFORMAL_RAPS_K_REG = 1
+
+# BER_ENABLED: eski/yeni sinif enerji ayrimi icin deneysel egitim regularizeri.
+BER_ENABLED = False
+
+# BER_LAMBDA_OLD / BER_LAMBDA_NEW: eski ve yeni sinif kisimlari icin BER ceza agirliklari.
+BER_LAMBDA_OLD = 0.1
+BER_LAMBDA_NEW = 0.1
+BER_WARMUP_STEPS = 50
+
+# WEIGHT_DECAY: AdamW weight decay degeri.
+WEIGHT_DECAY = 0.01
+
+# MIXED_PRECISION: {'off', 'auto', 'fp16', 'bf16'} seceneklerinden biri.
+MIXED_PRECISION = "bf16"
+
+# GRAD_ACCUM_STEPS: gradient accumulation katsayisi.
+GRAD_ACCUM_STEPS = 1
+
+# MAX_GRAD_NORM: gradient clipping esigi. 0 olursa clipping kapanir.
+MAX_GRAD_NORM = 1.0
+
+# LABEL_SMOOTHING: CE label smoothing katsayisi.
+LABEL_SMOOTHING = 0.0
+
+# LOSS_NAME / LOGITNORM_TAU: varsayilan kayip LogitNorm'dur; CE icin loss_name='cross_entropy' secin.
+LOSS_NAME = "logitnorm"
+LOGITNORM_TAU = 1.0
+
+# Scheduler ayarlari.
+SCHEDULER_NAME = "cosine"
+SCHEDULER_WARMUP_RATIO = 0.1
+SCHEDULER_MIN_LR = 1e-6
+
+# Early stopping ayarlari.
+EARLY_STOPPING_PATIENCE = 5
+EARLY_STOPPING_MIN_DELTA = 0.0
+
+# Tekrarlanabilirlik ve runtime ayarlari.
+DETERMINISTIC = False
+TF32_ENABLED = True
+SEED = 42
+
+# NUM_WORKERS: dataloader worker sayisi. CPU veri yukleme paralelligini belirler.
+NUM_WORKERS = 12
+
+# PREFETCH: NUM_WORKERS > 0 iken worker basina prefetch katsayisi.
+PREFETCH = 8
+
+# PIN_MEMORY: host memory sabitleyerek host-to-GPU aktarimini hizlandirir.
+PIN_MEMORY = True
+
+# USE_CACHE: destekleniyorsa decode edilmis ornekleri RAM'de tutar.
+USE_CACHE = True
+
+# CACHE_TRAIN_SPLIT: continual/train split'ini de cache'ler. Yuksek RAM'li Colab icin uygundur.
+CACHE_TRAIN_SPLIT = True
+
+# VALIDATION_EVERY_N_EPOCHS: her N epoch'ta tam validation calistirir; final epoch her zaman dahildir.
+VALIDATION_EVERY_N_EPOCHS = 1
+
+# CHECKPOINT_EVERY_N_STEPS / CHECKPOINT_ON_EXCEPTION: notebook checkpoint sikligi ayarlari.
+CHECKPOINT_EVERY_N_STEPS = 250
+CHECKPOINT_ON_EXCEPTION = True
+
+# STDOUT_BATCH_INTERVAL: canli training ilerleme yazdirma araligi.
+STDOUT_BATCH_INTERVAL = 12
+
+# RESUME_MODE: "fresh" yeni kosu baslatir, "resume" son checkpointten devam eder.
+RESUME_MODE = "fresh"  # "fresh" or "resume"
+
+# AUTO_DISCONNECT_RUNTIME: tum final exportlar basariliysa Colab runtime'i kapatir.
+AUTO_DISCONNECT_RUNTIME = True
+
+# AUTO_DISCONNECT_GRACE_SECONDS: son durum gorunsun diye disconnect oncesi kisa bekleme suresi.
+AUTO_DISCONNECT_GRACE_SECONDS = 20
+
+# AUTO_PUSH_TO_GITHUB: final exportlar bitince runs/<crop>/<part>/<RUN_ID>/ klasorunu repoya commit edip pushlar.
+AUTO_PUSH_TO_GITHUB = True
+
+# AUTO_PUSH_REMOTE_NAME: auto-push aciksa kullanilacak git remote adi.
+AUTO_PUSH_REMOTE_NAME = "origin"
+
+# AUTO_PUSH_BRANCH: auto-push icin branch override degeri. None olursa mevcut branch kullanilir.
+AUTO_PUSH_BRANCH = None
+
+# ADAPTER_KEY secimi bu noktada tum notebook degerlerini kesin olarak ezer.
+rec = ADAPTER_RECS[ADAPTER_KEY]
+CROP_NAME = rec["crop"]
+PART_NAME = rec["part"]
+DATASET_NAME = ADAPTER_KEY
+RUNTIME_DATASET_ROOT = "data/prepared_runtime_datasets"
+OOD_ROOT = rec["ood"]
+ASK_FOR_OOD_ROOT = False
+OE_ROOT = rec["oe"]
+ASK_FOR_OE_ROOT = False
+OE_ENABLED = bool(rec["oe_enabled"])
+OE_LOSS_WEIGHT = float(rec["oe_w"])
+ALLOW_UNDER_MIN_TRAINING = bool(rec["allow_under_min"])
+VALIDATION_EVERY_N_EPOCHS = 1
+
+_adapter_default_overrides = {
+    **rec["overrides"],
+    "WEIGHT_DECAY": 0.01,
+    "LOSS_NAME": "logitnorm",
+    "LOGITNORM_TAU": 1.0,
+    "MIXED_PRECISION": "bf16",
+    "GRAD_ACCUM_STEPS": 1,
+    "VALIDATION_EVERY_N_EPOCHS": 1,
+    "EARLY_STOPPING_PATIENCE": 6,
+    "RANDAUGMENT_NUM_OPS": 2,
+    "RANDAUGMENT_MAGNITUDE": 7,
+    "NUM_WORKERS": 12,
+    "PREFETCH": 8,
+    "CACHE_TRAIN_SPLIT": True,
+}
+MANUAL_PARAM_OVERRIDES = {}
+MANUAL_PARAM_OVERRIDES = {
+    **_adapter_default_overrides,
+    **_USER_MANUAL_PARAM_OVERRIDES,
+}
+print(
+    f"[ADAPTER_SELECTED] key={ADAPTER_KEY} crop={CROP_NAME} part={PART_NAME} "
+    f"dataset={DATASET_NAME} ood={OOD_ROOT} oe_enabled={OE_ENABLED} oe={OE_ROOT} "
+    f"run_id={RUN_ID}"
+)
+print(
+    f"[TRAINING_PLAN] epochs={MANUAL_PARAM_OVERRIDES['EPOCHS']} batch={MANUAL_PARAM_OVERRIDES['BATCH_SIZE']} "
+    f"lr={MANUAL_PARAM_OVERRIDES['LEARNING_RATE']} lora_r={MANUAL_PARAM_OVERRIDES['LORA_R']} "
+    f"allow_under_min={ALLOW_UNDER_MIN_TRAINING} validation_every={VALIDATION_EVERY_N_EPOCHS}"
+)
+if _USER_MANUAL_PARAM_OVERRIDES:
+    print(f"[MANUAL_OVERRIDES] applied={sorted(_USER_MANUAL_PARAM_OVERRIDES)}")
+print("[SONRAKI] Erisim kontrolu -> dataset validation -> engine init -> training -> calibration -> save/eval hucresini sirayla calistirin.")
+
+
 # Notebook icinde daha sonra kullanilacak gizli repo varsayimlarini yukle.
 BASE_CONFIG = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()
 CONTINUAL_DATA_CFG = BASE_CONFIG.get("training", {}).get("continual", {}).get("data", {})
