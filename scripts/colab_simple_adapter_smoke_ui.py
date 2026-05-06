@@ -363,6 +363,28 @@ def _build_result_html(summary: dict[str, Any], result: dict[str, Any], image_pa
     """
 
 
+def _build_adapter_details_html(summary: dict[str, Any]) -> str:
+    class_names = [str(name).strip() for name in list(summary.get("class_names", [])) if str(name).strip()]
+    class_items = "".join(
+        f"<li style=\"margin:4px 0;\">{escape(name)}</li>" for name in class_names
+    )
+    class_block = (
+        f"<ul style=\"margin:6px 0 0 18px;padding:0;color:#374151;\">{class_items}</ul>"
+        if class_items
+        else "<div style=\"margin-top:6px;color:#6b7280;\">Sinif listesi metadata'da bulunamadi.</div>"
+    )
+    return f"""
+    <div style="border:1px solid #d1d5db;border-radius:12px;padding:12px 14px;background:#fafafa;color:#111827;">
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Adapter Bilgisi</div>
+      <div style="color:#374151;"><b style="color:#111827;">Adapter:</b> {escape(str(summary.get('resolved_adapter_dir', '-')))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Crop:</b> {escape(str(summary.get('crop_name', '-')))}</div>
+      <div style="color:#374151;"><b style="color:#111827;">Part:</b> {escape(str(summary.get('part_name', '-')))}</div>
+      <div style="margin-top:10px;font-weight:700;color:#111827;">Tanıyabileceği hastalıklar</div>
+      {class_block}
+    </div>
+    """
+
+
 def launch_simple_adapter_smoke_ui(
     root: str | Path,
     *,
@@ -474,6 +496,7 @@ def launch_simple_adapter_smoke_ui(
     clear_image_button = widgets.Button(description="Yeni Resim", button_style="warning")
     run_button = widgets.Button(description="Tahmin Et", button_style="success")
     status_output = widgets.Output()
+    adapter_details_output = widgets.Output()
     result_output = widgets.Output()
 
     def selected_candidate() -> dict[str, Any]:
@@ -521,6 +544,29 @@ def launch_simple_adapter_smoke_ui(
     def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
         display(HTML(_build_result_html(summary, result, image_path)))
 
+    def render_adapter_details() -> None:
+        with adapter_details_output:
+            clear_output(wait=True)
+            try:
+                _ensure_adapter_smoke_imports()
+                candidate = selected_candidate()
+                summary = load_adapter_summary(
+                    candidate.get("crop_name"),
+                    adapter_dir=candidate.get("adapter_dir"),
+                    config_env=config_env,
+                    device=device,
+                )
+                display(HTML(_build_adapter_details_html(summary)))
+            except Exception as exc:
+                display(
+                    HTML(
+                        "<div style=\"border:1px solid #fecaca;border-radius:10px;padding:12px;background:#fff7f7;color:#991b1b;\">"
+                        "<b>Adapter bilgisi yuklenemedi:</b><pre style=\"white-space:pre-wrap;word-break:break-word;\">"
+                        + escape(str(exc))
+                        + "</pre></div>"
+                    )
+                )
+
     def refresh(_button: Any = None) -> None:
         nonlocal adapter_candidates, discovery_nonce
         with status_output:
@@ -543,6 +589,7 @@ def launch_simple_adapter_smoke_ui(
         ] or [("Adapter bulunamadi, asagidan yol girin", -1)]
         adapter_dropdown.options = options
         adapter_dropdown.value = options[0][1]
+        render_adapter_details()
         with status_output:
             clear_output(wait=True)
             print(f"Bulunan adapter sayisi: {len(adapter_candidates)}")
@@ -622,6 +669,8 @@ def launch_simple_adapter_smoke_ui(
     refresh_button.on_click(refresh)
     clear_image_button.on_click(clear_image)
     run_button.on_click(run_prediction)
+    adapter_dropdown.observe(lambda change: render_adapter_details(), names="value")
+    adapter_path_text.observe(lambda change: render_adapter_details(), names="value")
     upload_widget.observe(handle_widget_upload, names="value")
     display(
         widgets.VBox(
@@ -630,6 +679,7 @@ def launch_simple_adapter_smoke_ui(
                 help_text,
                 adapter_dropdown,
                 adapter_path_text,
+                adapter_details_output,
                 image_path_text,
                 widgets.HBox([upload_widget, clear_image_button]),
                 visualization_checkbox,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Remove old temporary artifacts and run directories older than retention period."""
+"""Remove old temporary artifacts older than the retention period."""
 
 from __future__ import annotations
 
@@ -28,40 +28,10 @@ def cleanup_old_artifacts(
         Dict with counts of deleted directories and total freed space (bytes)
     """
     cutoff_time = datetime.now(timezone.utc) - timedelta(days=days_retention)
-    artifacts_root = root / "runs"
     runtime_tmp = root / ".runtime_tmp"
 
     deleted_count = 0
     freed_bytes = 0
-
-    # Cleanup runs/<RUN_ID> directories
-    if artifacts_root.exists():
-        for run_dir in artifacts_root.iterdir():
-            if run_dir.name in ("_index",):  # Skip index directory
-                continue
-            if not run_dir.is_dir():
-                continue
-
-            try:
-                # Get modification time
-                mtime = datetime.fromtimestamp(
-                    run_dir.stat().st_mtime, tz=timezone.utc
-                )
-                if mtime < cutoff_time:
-                    size = sum(
-                        f.stat().st_size
-                        for f in run_dir.rglob("*")
-                        if f.is_file()
-                    )
-                    if dry_run:
-                        print(f"[DRY RUN] Would delete: {run_dir} ({size} bytes, mtime={mtime})")
-                    else:
-                        shutil.rmtree(run_dir)
-                        print(f"Deleted: {run_dir} ({size} bytes)")
-                    deleted_count += 1
-                    freed_bytes += size
-            except Exception as e:
-                print(f"Failed to process {run_dir}: {e}", file=sys.stderr)
 
     # Cleanup .runtime_tmp/* (but keep the folder itself)
     if runtime_tmp.exists():
@@ -96,7 +66,7 @@ def cleanup_old_artifacts(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Remove old temporary artifacts and run directories"
+        description="Remove old temporary artifacts"
     )
     parser.add_argument(
         "--days",

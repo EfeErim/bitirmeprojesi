@@ -4,7 +4,7 @@ Quick-win automation improvements added to the repository.
 
 ## 1. `cleanup_old_artifacts.py`
 
-Removes old temporary artifacts and run directories older than a retention period (default: 90 days).
+Removes old temporary artifacts older than a retention period (default: 90 days). It does not touch `runs/`.
 
 **Usage:**
 ```powershell
@@ -19,7 +19,6 @@ Removes old temporary artifacts and run directories older than a retention perio
 ```
 
 **What it deletes:**
-- `runs/<RUN_ID>/` directories modified >N days ago
 - `.runtime_tmp/*` files/folders (except caches) modified >N days ago
 
 **CI Integration:**
