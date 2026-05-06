@@ -1,0 +1,42 @@
+[
+  {
+    "name": "ckpt_e3_s48_20260506_060115_764135",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_leaf_2026-05-06_06-00-15/checkpoints/ckpt_e3_s48_20260506_060115_764135/training_checkpoint",
+    "created_at": "2026-05-06T06:01:17.177599+00:00",
+    "global_step": 48,
+    "epoch": 3,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.43789904878727043
+  },
+  {
+    "name": "ckpt_e4_s64_20260506_060127_115447",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_leaf_2026-05-06_06-00-15/checkpoints/ckpt_e4_s64_20260506_060127_115447/training_checkpoint",
+    "created_at": "2026-05-06T06:01:28.572351+00:00",
+    "global_step": 64,
+    "epoch": 4,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.1552279880099651
+  },
+  {
+    "name": "ckpt_e5_s80_20260506_060138_589017",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_leaf_2026-05-06_06-00-15/checkpoints/ckpt_e5_s80_20260506_060138_589017/training_checkpoint",
+    "created_at": "2026-05-06T06:01:39.976737+00:00",
+    "global_step": 80,
+    "epoch": 5,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.03852953789912187
+  },
+  {
+    "name": "ckpt_e6_s96_20260506_060149_975826",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_leaf_2026-05-06_06-00-15/checkpoints/ckpt_e6_s96_20260506_060149_975826/training_checkpoint",
+    "created_at": "2026-05-06T06:01:51.692043+00:00",
+    "global_step": 96,
+    "epoch": 6,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.012872561075261845
+  }
+]

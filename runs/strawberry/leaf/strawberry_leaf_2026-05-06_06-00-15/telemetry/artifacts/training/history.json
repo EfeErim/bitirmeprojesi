@@ -1,0 +1,451 @@
+{
+  "train_loss": [
+    1.4032788425683975,
+    1.2998854741454124,
+    0.9982420392334461,
+    0.8516491875052452,
+    0.7285658121109009,
+    0.6916561052203178,
+    0.68276796489954,
+    0.6768547371029854,
+    0.673528790473938,
+    0.6718651875853539,
+    0.6713428050279617,
+    0.6697199158370495
+  ],
+  "val_loss": [
+    1.3265132751095805,
+    0.8921942901465655,
+    0.43789904878727043,
+    0.1552279880099651,
+    0.03852953789912187,
+    0.012872561075261845,
+    0.01645058099298535,
+    0.02016851359433229,
+    0.02683933422975022,
+    0.01914889403250362,
+    0.014057581526728284,
+    0.01786904535218835
+  ],
+  "val_accuracy": [
+    0.1975560081466395,
+    0.7006109979633401,
+    0.9714867617107943,
+    0.955193482688391,
+    0.9938900203665988,
+    0.9979633401221996,
+    0.9959266802443992,
+    0.9959266802443992,
+    0.9959266802443992,
+    0.9938900203665988,
+    0.9979633401221996,
+    0.9959266802443992
+  ],
+  "macro_precision": [
+    0.2981557250022888,
+    0.8352665901184082,
+    0.9703254103660583,
+    0.9643758535385132,
+    0.9914160966873169,
+    0.9973684549331665,
+    0.9943563938140869,
+    0.9947916865348816,
+    0.9947916865348816,
+    0.991779625415802,
+    0.9973684549331665,
+    0.9947916865348816
+  ],
+  "macro_recall": [
+    0.2536585330963135,
+    0.6057661175727844,
+    0.967186450958252,
+    0.949999988079071,
+    0.9931818246841431,
+    0.9977272748947144,
+    0.9954545497894287,
+    0.9954545497894287,
+    0.9954545497894287,
+    0.9931818246841431,
+    0.9977272748947144,
+    0.9954545497894287
+  ],
+  "macro_f1": [
+    0.08796755224466324,
+    0.5681471228599548,
+    0.9686251878738403,
+    0.9539099335670471,
+    0.9922089576721191,
+    0.9975357055664062,
+    0.9948685169219971,
+    0.9950748085975647,
+    0.9950748085975647,
+    0.9923970103263855,
+    0.9975357055664062,
+    0.9950748085975647
+  ],
+  "weighted_f1": [
+    0.07388538741288506,
+    0.6287835581482306,
+    0.971383088960667,
+    0.9533998446649058,
+    0.9938777760429927,
+    0.9979640859693228,
+    0.9959195325428016,
+    0.9959294771711112,
+    0.9959294771711112,
+    0.9938754141937691,
+    0.9979640859693228,
+    0.9959294771711112
+  ],
+  "balanced_accuracy": [
+    0.2536585330963135,
+    0.6057661175727844,
+    0.967186450958252,
+    0.949999988079071,
+    0.9931818246841431,
+    0.9977272748947144,
+    0.9954545497894287,
+    0.9954545497894287,
+    0.9954545497894287,
+    0.9931818246841431,
+    0.9977272748947144,
+    0.9954545497894287
+  ],
+  "generalization_gap": [
+    -0.07676556745881702,
+    -0.40769118399884696,
+    -0.5603429904461756,
+    -0.6964211994952801,
+    -0.690036274211779,
+    -0.678783544145056,
+    -0.6663173839065546,
+    -0.6566862235086531,
+    -0.6466894562441877,
+    -0.6527162935528502,
+    -0.6572852235012334,
+    -0.6518508704848611
+  ],
+  "per_class_accuracy": [
+    {
+      "healthy": 0.0,
+      "strawberry_leaf_scorch_leaf": 0.014634146355092525,
+      "strawberry_leaf_spot_leaf": 0.0,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 0.060975611209869385,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.37272727489471436,
+      "strawberry_powdery_mildew_leaf": 0.9893617033958435
+    },
+    {
+      "healthy": 0.9634146094322205,
+      "strawberry_leaf_scorch_leaf": 0.9902439117431641,
+      "strawberry_leaf_spot_leaf": 0.9363636374473572,
+      "strawberry_powdery_mildew_leaf": 0.978723406791687
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.800000011920929,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9727272987365723,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9909090995788574,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9818181991577148,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9818181991577148,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9818181991577148,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9727272987365723,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9909090995788574,
+      "strawberry_powdery_mildew_leaf": 1.0
+    },
+    {
+      "healthy": 1.0,
+      "strawberry_leaf_scorch_leaf": 1.0,
+      "strawberry_leaf_spot_leaf": 0.9818181991577148,
+      "strawberry_powdery_mildew_leaf": 1.0
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 110
+      },
+      {
+        "class_name": "healthy",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 82
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 0.014634146355092525,
+        "support": 205
+      }
+    ],
+    [
+      {
+        "class_name": "healthy",
+        "class_index": 0,
+        "accuracy": 0.060975611209869385,
+        "support": 82
+      },
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.37272727489471436,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 0.9893617033958435,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9363636374473572,
+        "support": 110
+      },
+      {
+        "class_name": "healthy",
+        "class_index": 0,
+        "accuracy": 0.9634146094322205,
+        "support": 82
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 0.978723406791687,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.800000011920929,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9727272987365723,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9909090995788574,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9818181991577148,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9818181991577148,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9818181991577148,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9727272987365723,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9909090995788574,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_leaf_spot_leaf",
+        "class_index": 2,
+        "accuracy": 0.9818181991577148,
+        "support": 110
+      },
+      {
+        "class_name": "strawberry_leaf_scorch_leaf",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 205
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_leaf",
+        "class_index": 3,
+        "accuracy": 1.0,
+        "support": 94
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 192,
+  "optimizer_steps": 192,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 6,
+  "best_metric_value": 0.012872561075261845
+}

@@ -1,0 +1,10 @@
+                                precision    recall  f1-score   support
+
+                       healthy       1.00      1.00      1.00        82
+   strawberry_leaf_scorch_leaf       1.00      1.00      1.00       205
+     strawberry_leaf_spot_leaf       1.00      0.97      0.99       110
+strawberry_powdery_mildew_leaf       0.98      1.00      0.99        94
+
+                      accuracy                           0.99       491
+                     macro avg       0.99      0.99      0.99       491
+                  weighted avg       0.99      0.99      0.99       491

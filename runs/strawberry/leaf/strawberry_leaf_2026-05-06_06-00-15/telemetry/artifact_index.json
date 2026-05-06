@@ -1,0 +1,1167 @@
+[
+  {
+    "relative_path": "cell_outputs/20260506_060015_959774_cell_3_parameters.log",
+    "ts": "2026-05-06T06:00:16.472610+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060016_479655_cell_3b_guncelleme_ve_erisim_kontrolu.log",
+    "ts": "2026-05-06T06:00:17.768338+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060017_776542_cell_4_dataset_validation.log",
+    "ts": "2026-05-06T06:00:17.851027+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060017_858839_cell_5_engine_init.log",
+    "ts": "2026-05-06T06:00:38.391012+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060038_398247_cell_5b_ood_config_verify.log",
+    "ts": "2026-05-06T06:00:38.399117+00:00",
+    "type": "text"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_latest.png",
+    "size_bytes": 84600,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_latest.png",
+    "ts": "2026-05-06T06:03:05.941519+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_001.png",
+    "size_bytes": 52896,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_001.png",
+    "ts": "2026-05-06T06:03:05.925335+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Epoch seviyesinde loss ve performans eğrilerini JSON olarak saklar.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 10,
+    "reader_goal": "Eğitim trendini programatik olarak incelemek",
+    "relative_path": "training/history.json",
+    "size_bytes": 10777,
+    "title_tr": "Epoch bazlı eğitim geçmişi",
+    "ts": "2026-05-06T06:03:05.823725+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Özet epoch sonuçlarını CSV halinde sunar.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 12,
+    "reader_goal": "Epoch sonuçlarını hızlıca taramak",
+    "relative_path": "training/results.csv",
+    "size_bytes": 2233,
+    "title_tr": "Eğitim sonuç tablosu",
+    "ts": "2026-05-06T06:03:05.868069+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Epoch metriklerinin tablo formatındaki karşılığı.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 11,
+    "reader_goal": "Tablo halinde eğitim eğrilerini incelemek",
+    "relative_path": "training/history.csv",
+    "size_bytes": 2233,
+    "title_tr": "Eğitim geçmişi CSV",
+    "ts": "2026-05-06T06:03:05.865607+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/00_start_here.md",
+    "ts": "2026-05-06T06:03:05.538854+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/01_run_overview.json",
+    "ts": "2026-05-06T06:03:05.567829+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/02_file_catalog.json",
+    "ts": "2026-05-06T06:03:05.570584+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/10_training.md",
+    "ts": "2026-05-06T06:03:05.604834+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/20_validation.md",
+    "ts": "2026-05-06T06:03:05.639480+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/30_test.md",
+    "ts": "2026-05-06T06:03:05.642347+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/40_ood_and_readiness.md",
+    "ts": "2026-05-06T06:03:05.673381+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/50_adapter_export.md",
+    "ts": "2026-05-06T06:03:05.707373+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "guided/60_logs_and_checkpoints.md",
+    "ts": "2026-05-06T06:03:05.710078+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_002.png",
+    "size_bytes": 92562,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_002.png",
+    "ts": "2026-05-06T06:03:05.927657+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_003.png",
+    "size_bytes": 101044,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_003.png",
+    "ts": "2026-05-06T06:03:05.929957+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_004.png",
+    "size_bytes": 99563,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_004.png",
+    "ts": "2026-05-06T06:03:05.932262+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_005.png",
+    "size_bytes": 95619,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_005.png",
+    "ts": "2026-05-06T06:03:05.934563+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_006.png",
+    "size_bytes": 92591,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_006.png",
+    "ts": "2026-05-06T06:03:05.936866+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "training",
+    "decision_importance": "training_diagnosis",
+    "description_tr": "Notebook tarafından ara/final aşamada kaydedilen eğitim eğrisi görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 20,
+    "reader_goal": "Belirli epoch anlarındaki eğitim eğrilerini görmek",
+    "relative_path": "training/training_curves_epoch_010.png",
+    "size_bytes": 84600,
+    "title_tr": "Eğitim eğrisi görseli: training_curves_epoch_010.png",
+    "ts": "2026-05-06T06:03:05.939180+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060038_407918_cell_6_training.log",
+    "ts": "2026-05-06T06:02:45.135706+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060245_147944_cell_7_ood_calibration.log",
+    "ts": "2026-05-06T06:02:46.915765+00:00",
+    "type": "text"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/README.md",
+    "ts": "2026-05-06T06:02:49.024604+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/adapter_config.json",
+    "ts": "2026-05-06T06:02:49.026488+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/adapter_meta.json",
+    "ts": "2026-05-06T06:02:49.040919+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/adapter_model.safetensors",
+    "ts": "2026-05-06T06:02:49.086996+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/classifier.pth",
+    "ts": "2026-05-06T06:02:49.088862+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "adapter_export/strawberry/leaf/continual_sd_lora_adapter/fusion.pth",
+    "ts": "2026-05-06T06:02:49.103813+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060246_924125_cell_8_adapter_save.log",
+    "ts": "2026-05-06T06:02:49.106151+00:00",
+    "type": "text"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Precision, recall ve F1 özetini metin formatında sunar.",
+    "exists": true,
+    "format": "txt",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 30,
+    "reader_goal": "Sınıf bazlı metrikleri metin olarak okumak",
+    "relative_path": "validation/classification_report.txt",
+    "size_bytes": 578,
+    "title_tr": "Validation sınıflandırma raporu",
+    "ts": "2026-05-06T06:03:05.870265+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Aynı raporun makine-okur JSON sürümü.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 31,
+    "reader_goal": "Raporu programatik olarak tüketmek",
+    "relative_path": "validation/classification_report.json",
+    "size_bytes": 870,
+    "title_tr": "Validation sınıflandırma raporu JSON",
+    "ts": "2026-05-06T06:03:05.872448+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Her sınıf için precision, recall, F1 ve support değerlerini içerir.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 32,
+    "reader_goal": "Hangi sınıfta sorun olduğunu görmek",
+    "relative_path": "validation/per_class_metrics.csv",
+    "size_bytes": 268,
+    "title_tr": "Validation sınıf bazlı metrikler",
+    "ts": "2026-05-06T06:03:05.874612+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Ham confusion matrix değerlerini tablo halinde tutar.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 33,
+    "reader_goal": "Karışan sınıf çiftlerini sayısal görmek",
+    "relative_path": "validation/confusion_matrix.csv",
+    "size_bytes": 38,
+    "title_tr": "Validation confusion matrix CSV",
+    "ts": "2026-05-06T06:03:05.876786+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Ham confusion matrix'in görsel hali.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 34,
+    "reader_goal": "Hangi sınıfların karıştığını hızlı görmek",
+    "relative_path": "validation/confusion_matrix.png",
+    "size_bytes": 77770,
+    "title_tr": "Validation confusion matrix görseli",
+    "ts": "2026-05-06T06:03:05.878963+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Sınıf büyüklüğünden bağımsız normalize confusion matrix görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 35,
+    "reader_goal": "Oransal hata desenini görmek",
+    "relative_path": "validation/confusion_matrix_normalized.png",
+    "size_bytes": 84176,
+    "title_tr": "Validation normalize confusion matrix",
+    "ts": "2026-05-06T06:03:05.881133+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Her örnek için tahmin, etiket ve güven bilgisini CSV olarak sunar.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 38,
+    "reader_goal": "Yanlış tahmin edilen örnekleri tek tek incelemek",
+    "relative_path": "validation/predictions.csv",
+    "size_bytes": 173800,
+    "title_tr": "Validation sample predictions",
+    "ts": "2026-05-06T06:03:05.887634+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/001_in_distribution_leaf_spot_365.jpg",
+    "ts": "2026-05-06T06:02:57.593756+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/002_in_distribution_leaf_spot_464.jpg",
+    "ts": "2026-05-06T06:02:57.626693+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/003_ood_off_crop_secondary_angular_leafspot_84.jpg",
+    "ts": "2026-05-06T06:02:57.634840+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/004_ood_off_crop_secondary_blossom_blight_85.jpg",
+    "ts": "2026-05-06T06:02:57.642215+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/005_ood_off_crop_secondary_angular_leafspot_86.jpg",
+    "ts": "2026-05-06T06:02:57.649941+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/006_ood_off_crop_secondary_blossom_blight_82.jpg",
+    "ts": "2026-05-06T06:02:57.657202+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/007_ood_off_crop_secondary_blossom_blight_55.jpg",
+    "ts": "2026-05-06T06:02:57.664369+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/008_ood_off_crop_secondary_blossom_blight_4.jpg",
+    "ts": "2026-05-06T06:02:57.671516+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/009_ood_other_crop_disease_F_nd_kta_Bakteriyel_Yan_kl_k_1.jpg",
+    "ts": "2026-05-06T06:02:57.676044+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/010_ood_off_crop_secondary_blossom_blight_81.jpg",
+    "ts": "2026-05-06T06:02:57.683475+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/011_ood_off_crop_secondary_blossom_blight_7.jpg",
+    "ts": "2026-05-06T06:02:57.690707+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/012_ood_other_crop_disease_Ba_k_llemesi_3.jpg",
+    "ts": "2026-05-06T06:02:57.698444+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/013_ood_off_crop_secondary_calciumdeficiency_66.jpg",
+    "ts": "2026-05-06T06:02:57.876540+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/014_ood_off_crop_secondary_angular_leafspot_1.jpg",
+    "ts": "2026-05-06T06:02:57.884936+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/015_ood_off_crop_secondary_blossom_blight_34.jpg",
+    "ts": "2026-05-06T06:02:57.892294+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/016_ood_off_crop_secondary_blossom_blight_66.jpg",
+    "ts": "2026-05-06T06:02:57.899818+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/017_ood_off_crop_secondary_blossom_blight_5.jpg",
+    "ts": "2026-05-06T06:02:57.907595+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/018_ood_other_crop_disease_F_nd_kta_K_lleme_70.jpg",
+    "ts": "2026-05-06T06:02:57.914653+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/019_ood_off_crop_secondary_blossom_blight_49.jpg",
+    "ts": "2026-05-06T06:02:57.921946+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/020_ood_off_crop_secondary_calciumdeficiency_85.jpg",
+    "ts": "2026-05-06T06:02:58.045057+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/021_ood_off_crop_secondary_calciumdeficiency_18.jpg",
+    "ts": "2026-05-06T06:02:58.154399+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/022_ood_off_crop_secondary_blossom_blight_87.jpg",
+    "ts": "2026-05-06T06:02:58.162772+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/023_ood_other_crop_disease_Ba_k_llemesi_5.jpg",
+    "ts": "2026-05-06T06:02:58.173625+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "validation/hard_examples_thumbnails/024_ood_off_crop_secondary_angular_leafspot_20.jpg",
+    "ts": "2026-05-06T06:02:58.182421+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Yanlış sınıflanan veya kaçırılan OOD örneklerini öncelikli inceleme için listeler.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 39,
+    "reader_goal": "Feedback ile düzeltilecek zor örnekleri önceliklendirmek",
+    "relative_path": "validation/hard_examples.csv",
+    "size_bytes": 26231,
+    "title_tr": "Validation hard examples",
+    "ts": "2026-05-06T06:03:05.854967+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "ood_decision",
+    "description_tr": "OOD klasör alt tiplerine göre metrik kırılımını içerir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 36,
+    "reader_goal": "Hangi OOD alt tipinde sorun olduğunu görmek",
+    "relative_path": "validation/ood_type_breakdown.json",
+    "size_bytes": 2715,
+    "title_tr": "Validation OOD tip kırılımı",
+    "ts": "2026-05-06T06:03:05.883304+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "ood_decision",
+    "description_tr": "Pooled ve slice-aware OOD score yöntem karşılaştırmasını içerir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 37,
+    "reader_goal": "Ensemble, energy ve knn kanıtlarını karşılaştırmak",
+    "relative_path": "validation/ood_method_comparison.json",
+    "size_bytes": 3133,
+    "title_tr": "Validation OOD method comparison",
+    "ts": "2026-05-06T06:03:05.885470+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "ood_decision",
+    "description_tr": "Bu split için OOD örnek sayıları ve özet metrikleri gösterir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 37,
+    "reader_goal": "OOD kanıtının yeterliliğini görmek",
+    "relative_path": "validation/ood_evidence_summary.json",
+    "size_bytes": 6883,
+    "title_tr": "Validation OOD kanıt özeti",
+    "ts": "2026-05-06T06:03:05.852737+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "supporting_diagnostic",
+    "description_tr": "Validation split üzerinde ölçülen yardımcı gate kararı.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 6,
+    "reader_goal": "Test öncesi referans performansı görmek",
+    "relative_path": "validation/metric_gate.json",
+    "size_bytes": 10002,
+    "title_tr": "Validation gate özeti",
+    "ts": "2026-05-06T06:03:05.819005+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "validation",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Zor örneklerin hızlı gözden geçirme için küçük önizlemelerini tutar.",
+    "exists": true,
+    "format": "directory",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": true,
+    "priority": "medium",
+    "read_order": 40,
+    "reader_goal": "Zor örnekleri görsel olarak hızlıca taramak",
+    "relative_path": "validation/hard_examples_thumbnails",
+    "size_bytes": null,
+    "title_tr": "Validation hard example thumbnails",
+    "ts": "2026-05-06T06:03:05.891975+00:00"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Precision, recall ve F1 özetini metin formatında sunar.",
+    "exists": true,
+    "format": "txt",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 40,
+    "reader_goal": "Sınıf bazlı metrikleri metin olarak okumak",
+    "relative_path": "test/classification_report.txt",
+    "size_bytes": 578,
+    "title_tr": "Test sınıflandırma raporu",
+    "ts": "2026-05-06T06:03:05.889803+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Aynı raporun makine-okur JSON sürümü.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 41,
+    "reader_goal": "Raporu programatik olarak tüketmek",
+    "relative_path": "test/classification_report.json",
+    "size_bytes": 899,
+    "title_tr": "Test sınıflandırma raporu JSON",
+    "ts": "2026-05-06T06:03:05.894286+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Her sınıf için precision, recall, F1 ve support değerlerini içerir.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 42,
+    "reader_goal": "Hangi sınıfta sorun olduğunu görmek",
+    "relative_path": "test/per_class_metrics.csv",
+    "size_bytes": 298,
+    "title_tr": "Test sınıf bazlı metrikler",
+    "ts": "2026-05-06T06:03:05.896484+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Ham confusion matrix değerlerini tablo halinde tutar.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 43,
+    "reader_goal": "Karışan sınıf çiftlerini sayısal görmek",
+    "relative_path": "test/confusion_matrix.csv",
+    "size_bytes": 38,
+    "title_tr": "Test confusion matrix CSV",
+    "ts": "2026-05-06T06:03:05.898663+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Ham confusion matrix'in görsel hali.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 44,
+    "reader_goal": "Hangi sınıfların karıştığını hızlı görmek",
+    "relative_path": "test/confusion_matrix.png",
+    "size_bytes": 77496,
+    "title_tr": "Test confusion matrix görseli",
+    "ts": "2026-05-06T06:03:05.900838+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Sınıf büyüklüğünden bağımsız normalize confusion matrix görseli.",
+    "exists": true,
+    "format": "png",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 45,
+    "reader_goal": "Oransal hata desenini görmek",
+    "relative_path": "test/confusion_matrix_normalized.png",
+    "size_bytes": 84632,
+    "title_tr": "Test normalize confusion matrix",
+    "ts": "2026-05-06T06:03:05.903009+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Her örnek için tahmin, etiket ve güven bilgisini CSV olarak sunar.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 48,
+    "reader_goal": "Yanlış tahmin edilen örnekleri tek tek incelemek",
+    "relative_path": "test/predictions.csv",
+    "size_bytes": 174818,
+    "title_tr": "Test sample predictions",
+    "ts": "2026-05-06T06:03:05.909512+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/001_in_distribution_leaf_spot_595.jpg",
+    "ts": "2026-05-06T06:03:03.280329+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/002_in_distribution_leaf_spot_321.jpg",
+    "ts": "2026-05-06T06:03:03.289079+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/003_in_distribution_leaf_spot_451.jpg",
+    "ts": "2026-05-06T06:03:03.297966+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/004_ood_off_crop_secondary_angular_leafspot_84.jpg",
+    "ts": "2026-05-06T06:03:03.306823+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/005_ood_off_crop_secondary_blossom_blight_85.jpg",
+    "ts": "2026-05-06T06:03:03.314765+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/006_ood_off_crop_secondary_angular_leafspot_86.jpg",
+    "ts": "2026-05-06T06:03:03.323072+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/007_ood_off_crop_secondary_blossom_blight_82.jpg",
+    "ts": "2026-05-06T06:03:03.330938+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/008_ood_off_crop_secondary_blossom_blight_55.jpg",
+    "ts": "2026-05-06T06:03:03.338731+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/009_ood_off_crop_secondary_blossom_blight_4.jpg",
+    "ts": "2026-05-06T06:03:03.346437+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/010_ood_other_crop_disease_F_nd_kta_Bakteriyel_Yan_kl_k_1.jpg",
+    "ts": "2026-05-06T06:03:03.351666+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/011_ood_off_crop_secondary_blossom_blight_81.jpg",
+    "ts": "2026-05-06T06:03:03.359525+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/012_ood_off_crop_secondary_blossom_blight_7.jpg",
+    "ts": "2026-05-06T06:03:03.367320+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/013_ood_other_crop_disease_Ba_k_llemesi_3.jpg",
+    "ts": "2026-05-06T06:03:03.375498+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/014_ood_off_crop_secondary_calciumdeficiency_66.jpg",
+    "ts": "2026-05-06T06:03:03.557041+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/015_ood_off_crop_secondary_angular_leafspot_1.jpg",
+    "ts": "2026-05-06T06:03:03.565865+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/016_ood_off_crop_secondary_blossom_blight_34.jpg",
+    "ts": "2026-05-06T06:03:03.573833+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/017_ood_off_crop_secondary_blossom_blight_66.jpg",
+    "ts": "2026-05-06T06:03:03.581854+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/018_ood_off_crop_secondary_blossom_blight_5.jpg",
+    "ts": "2026-05-06T06:03:03.590165+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/019_ood_other_crop_disease_F_nd_kta_K_lleme_70.jpg",
+    "ts": "2026-05-06T06:03:03.597810+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/020_ood_off_crop_secondary_blossom_blight_49.jpg",
+    "ts": "2026-05-06T06:03:03.605669+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/021_ood_off_crop_secondary_calciumdeficiency_85.jpg",
+    "ts": "2026-05-06T06:03:03.731521+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/022_ood_off_crop_secondary_calciumdeficiency_18.jpg",
+    "ts": "2026-05-06T06:03:03.841483+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/023_ood_off_crop_secondary_blossom_blight_87.jpg",
+    "ts": "2026-05-06T06:03:03.850451+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "test/hard_examples_thumbnails/024_ood_other_crop_disease_Ba_k_llemesi_5.jpg",
+    "ts": "2026-05-06T06:03:03.861930+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Yanlış sınıflanan veya kaçırılan OOD örneklerini öncelikli inceleme için listeler.",
+    "exists": true,
+    "format": "csv",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 49,
+    "reader_goal": "Feedback ile düzeltilecek zor örnekleri önceliklendirmek",
+    "relative_path": "test/hard_examples.csv",
+    "size_bytes": 26515,
+    "title_tr": "Test hard examples",
+    "ts": "2026-05-06T06:03:05.859179+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "ood_decision",
+    "description_tr": "OOD klasör alt tiplerine göre metrik kırılımını içerir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 46,
+    "reader_goal": "Hangi OOD alt tipinde sorun olduğunu görmek",
+    "relative_path": "test/ood_type_breakdown.json",
+    "size_bytes": 2719,
+    "title_tr": "Test OOD tip kırılımı",
+    "ts": "2026-05-06T06:03:05.905168+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "ood_decision",
+    "description_tr": "Pooled ve slice-aware OOD score yöntem karşılaştırmasını içerir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 47,
+    "reader_goal": "Ensemble, energy ve knn kanıtlarını karşılaştırmak",
+    "relative_path": "test/ood_method_comparison.json",
+    "size_bytes": 3129,
+    "title_tr": "Test OOD method comparison",
+    "ts": "2026-05-06T06:03:05.907341+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "ood_decision",
+    "description_tr": "Bu split için OOD örnek sayıları ve özet metrikleri gösterir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 47,
+    "reader_goal": "OOD kanıtının yeterliliğini görmek",
+    "relative_path": "test/ood_evidence_summary.json",
+    "size_bytes": 6876,
+    "title_tr": "Test OOD kanıt özeti",
+    "ts": "2026-05-06T06:03:05.857077+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "deploy_decision",
+    "description_tr": "Held-out test performansının gate kararını içerir.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "critical",
+    "read_order": 5,
+    "reader_goal": "Asıl test kararını görmek",
+    "relative_path": "test/metric_gate.json",
+    "size_bytes": 10001,
+    "title_tr": "Test gate özeti",
+    "ts": "2026-05-06T06:03:05.783401+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "test",
+    "decision_importance": "quality_diagnosis",
+    "description_tr": "Zor örneklerin hızlı gözden geçirme için küçük önizlemelerini tutar.",
+    "exists": true,
+    "format": "directory",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": true,
+    "priority": "medium",
+    "read_order": 50,
+    "reader_goal": "Zor örnekleri görsel olarak hızlıca taramak",
+    "relative_path": "test/hard_examples_thumbnails",
+    "size_bytes": null,
+    "title_tr": "Test hard example thumbnails",
+    "ts": "2026-05-06T06:03:05.911674+00:00"
+  },
+  {
+    "category": "ood_and_readiness",
+    "decision_importance": "deploy_decision",
+    "description_tr": "Deploy kararı için önce bakılması gereken ana dosya.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "critical",
+    "read_order": 1,
+    "reader_goal": "Modelin üretime çıkmaya hazır olup olmadığını anlamak",
+    "relative_path": "production_readiness.json",
+    "size_bytes": 13732,
+    "title_tr": "Nihai üretim hazırlığı kararı",
+    "ts": "2026-05-06T06:03:05.744348+00:00",
+    "type": "file_copy"
+  },
+  {
+    "relative_path": "cell_outputs/20260506_060249_117619_cell_9_final_evaluation.log",
+    "ts": "2026-05-06T06:03:04.125877+00:00",
+    "type": "text"
+  },
+  {
+    "category": "training",
+    "decision_importance": "run_overview",
+    "description_tr": "Koşunun kimliği, sınıfları, temel metrikleri ve export yollarını özetler.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "scripts.colab_notebook_helpers",
+    "is_directory": false,
+    "priority": "critical",
+    "read_order": 2,
+    "reader_goal": "Koşunun ne ürettiğini tek dosyada görmek",
+    "relative_path": "training/summary.json",
+    "size_bytes": 3722,
+    "title_tr": "Eğitim özeti",
+    "ts": "2026-05-06T06:03:05.780999+00:00",
+    "type": "file_copy"
+  },
+  {
+    "category": "adapter_export",
+    "decision_importance": "deploy_handoff",
+    "description_tr": "Repo mirror icindeki adapter export klasoru.",
+    "exists": true,
+    "format": "directory",
+    "generated_by": "notebook_2",
+    "is_directory": true,
+    "priority": "high",
+    "read_order": 70,
+    "reader_goal": "Export edilen adapter klasorunu bulmak",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+    "size_bytes": null,
+    "title_tr": "Repo mirror adapter export klasoru",
+    "ts": "2026-05-06T06:03:05.861271+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "run_overview",
+    "description_tr": "Notebook final ozet dosyasi.",
+    "exists": false,
+    "format": "json",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "high",
+    "read_order": 83,
+    "reader_goal": "Notebook final ozetini okumak",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/telemetry/summary.json",
+    "size_bytes": null,
+    "title_tr": "Telemetry ozeti",
+    "ts": "2026-05-06T06:03:05.863438+00:00"
+  },
+  {
+    "category": "adapter_export",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Bu kosuda calisan notebook'un kaydedilmis kopyasi.",
+    "exists": true,
+    "format": "ipynb",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 71,
+    "reader_goal": "Notebook'u ayni ciktiyla tekrar incelemek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/notebooks/2_train_continual_sd_lora_adapter.executed.ipynb",
+    "size_bytes": 81587,
+    "title_tr": "Calistirilmis notebook exportu",
+    "ts": "2026-05-06T06:03:05.913821+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Notebook olayi bazli telemetry kaydi.",
+    "exists": true,
+    "format": "jsonl",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 80,
+    "reader_goal": "Notebook akisini olay bazinda incelemek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/telemetry/events.jsonl",
+    "size_bytes": 101324,
+    "title_tr": "Telemetry event logu",
+    "ts": "2026-05-06T06:03:05.916065+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Notebook runtime boyunca yazilan metin logu.",
+    "exists": true,
+    "format": "log",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 81,
+    "reader_goal": "Calisma sirasindaki log ciktilarini okumak",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/telemetry/runtime.log",
+    "size_bytes": 132,
+    "title_tr": "Runtime logu",
+    "ts": "2026-05-06T06:03:05.918315+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "En iyi checkpoint'in repo mirror manifesti.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 84,
+    "reader_goal": "Hangi checkpoint secildigini gormek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/checkpoint_state/best_checkpoint.json",
+    "size_bytes": 376,
+    "title_tr": "Best checkpoint manifesti",
+    "ts": "2026-05-06T06:03:05.920737+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Son checkpoint manifesti.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "medium",
+    "read_order": 85,
+    "reader_goal": "Checkpoint akisini gormek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/checkpoint_state/latest_checkpoint.json",
+    "size_bytes": 376,
+    "title_tr": "Latest checkpoint manifesti",
+    "ts": "2026-05-06T06:03:05.923029+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Notebook'un son durum snapshot'i.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 82,
+    "reader_goal": "Kosunun son durumunu hizli kontrol etmek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/telemetry/latest_status.json",
+    "size_bytes": 358,
+    "title_tr": "Son durum ozeti",
+    "ts": "2026-05-06T06:03:05.943821+00:00"
+  },
+  {
+    "category": "logs_and_checkpoints",
+    "decision_importance": "runtime_diagnostic",
+    "description_tr": "Mirror edilen checkpoint manifest listesi.",
+    "exists": true,
+    "format": "json",
+    "generated_by": "notebook_2",
+    "is_directory": false,
+    "priority": "low",
+    "read_order": 86,
+    "reader_goal": "Checkpoint kayitlarini toplu gormek",
+    "relative_path": "../../../runs/strawberry/leaf/strawberry_leaf_2026-05-06_06-00-15/checkpoint_state/checkpoint_index.json",
+    "size_bytes": 400,
+    "title_tr": "Checkpoint indexi",
+    "ts": "2026-05-06T06:03:05.946169+00:00"
+  }
+]
