@@ -11,13 +11,20 @@ import sys
 # Ensure repo root is in sys.path before any imports
 def _ensure_sys_path_for_cell_script():
     """Ensure sys.path includes repo root so notebook cell scripts can import."""
-    candidates = [Path.cwd(), Path.cwd().parent]
-    for candidate in candidates:
-        if (candidate / 'scripts' / 'notebook_helpers' / 'nb4_simple_ui_helpers.py').is_file():
-            repo_root = str(candidate.resolve())
-            if repo_root not in sys.path:
-                sys.path.insert(0, repo_root)
-            return repo_root
+    # Look for repository root by walking parents from cwd
+    def _find_repo_root(start: Path = None):
+        start = start or Path.cwd()
+        for p in [start] + list(start.parents):
+            if (p / 'scripts').is_dir() and (p / 'src').is_dir():
+                return p.resolve()
+        return None
+
+    repo = _find_repo_root(Path.cwd())
+    if repo:
+        repo_root = str(repo)
+        if repo_root not in sys.path:
+            sys.path.insert(0, repo_root)
+        return repo_root
     return None
 
 _ensure_sys_path_for_cell_script()
