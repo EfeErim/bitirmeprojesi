@@ -1,0 +1,13 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=strawberry_fruit_2026-05-06_05-46-28
+started_at=2026-05-06T05:46:29.731927+00:00
+finished_at=2026-05-06T05:46:29.790572+00:00
+duration_sec=0.059
+
+[OOD] explicit ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__fruit/ood
+[OE] explicit oe root=/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__fruit/oe
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__fruit classes=4: ['strawberry_anthracnose_fruit', 'strawberry_gray_mold_fruit', 'strawberry_healthy_fruit', 'strawberry_powdery_mildew_fruit']
+[DATASET][CHECK] scale=small continual=683 val=223 test=223 ood=292 classes=4
+[DATASET][BLOCK] Supported classes remain below the production minimum of 100 images/class: strawberry_anthracnose_fruit=85. Enable ALLOW_UNDER_MIN_TRAINING manually only for a research-only run.
+[PARAMS] Manual overrides uygulandi: {'EPOCHS': 36, 'BATCH_SIZE': 32, 'LEARNING_RATE': 8e-05, 'LORA_R': 16, 'LORA_ALPHA': 16, 'LORA_DROPOUT': 0.18, 'OOD_FACTOR': 3.0, 'WEIGHT_DECAY': 0.01, 'LOSS_NAME': 'logitnorm', 'LOGITNORM_TAU': 1.0, 'MIXED_PRECISION': 'bf16', 'GRAD_ACCUM_STEPS': 1, 'VALIDATION_EVERY_N_EPOCHS': 1, 'EARLY_STOPPING_PATIENCE': 6, 'RANDAUGMENT_NUM_OPS': 2, 'RANDAUGMENT_MAGNITUDE': 7, 'NUM_WORKERS': 12, 'PREFETCH': 8, 'CACHE_TRAIN_SPLIT': True}
+[PARAMS][FINAL] epochs=36 bs=32 lr=8e-05 lora=16/16 dropout=0.18 accum=1 workers=12 prefetch=8
