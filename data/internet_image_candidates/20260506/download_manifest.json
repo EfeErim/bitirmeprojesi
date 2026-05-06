@@ -1,0 +1,218 @@
+﻿{
+    "created_date":  "2026-05-06",
+    "root":  "data\\internet_image_candidates\\20260506",
+    "policy":  "Downloaded as candidates only. ID and OE are separated. Do not mix these into final ood evidence without dedupe/leakage checks and manual label review.",
+    "downloads":  [
+                      {
+                          "kind":  "id",
+                          "adapter":  "strawberry_fruit",
+                          "label":  "anthracnose_fruit",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+                          "bytes":  53075,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1572820.jpg",
+                          "license":  "CC BY-NC 3.0",
+                          "notes":  "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "strawberry_fruit",
+                          "label":  "anthracnose_fruit",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+                          "bytes":  63726,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1572819.jpg",
+                          "license":  "CC BY-NC 3.0",
+                          "notes":  "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "strawberry_fruit",
+                          "label":  "anthracnose_fruit",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+                          "bytes":  56848,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1572815.jpg",
+                          "license":  "CC BY-NC 3.0",
+                          "notes":  "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "strawberry_fruit",
+                          "label":  "powdery_mildew_fruit_or_plant",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+                          "bytes":  1372694,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+                          "source_url":  "https://upload.wikimedia.org/wikipedia/commons/5/57/O%C3%AFdium_du_Fraisier.JPG?utm_source=commons.wikimedia.org\u0026utm_campaign=imageinfo\u0026utm_content=original",
+                          "license":  "CC BY-SA 3.0 or GFDL",
+                          "notes":  "powdery mildew on strawberry plant with fruit/flowers"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "strawberry_fruit",
+                          "label":  "powdery_mildew_fruit_or_plant",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+                          "bytes":  209079,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/5631933.jpg",
+                          "license":  "CC BY-NC 3.0",
+                          "notes":  "strawberry powdery mildew sign; noncommercial license, review before publication"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_fruit",
+                          "label":  "spotted_wilt",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+                          "bytes":  481274,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/5622695.jpg",
+                          "license":  "CC BY 3.0",
+                          "notes":  "tomato spotted wilt fruit/symptoms"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_fruit",
+                          "label":  "spotted_wilt",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+                          "bytes":  219333,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1243053.jpg",
+                          "license":  "CC BY 3.0",
+                          "notes":  "tomato spotted wilt fruit"
+                      },
+                      {
+                          "kind":  "oe",
+                          "adapter":  "strawberry_leaf",
+                          "label":  "off_crop_secondary_fruit_rot",
+                          "path":  "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+                          "bytes":  279047,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+                          "source_url":  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Strawberry_Fruit_Rot.jpg?width=1280",
+                          "license":  "CC BY 3.0 US",
+                          "notes":  "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "grape_fruit",
+                          "label":  "powdery_mildew_fruit",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+                          "bytes":  191433,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+                          "source_url":  "https://commons.wikimedia.org/wiki/Special:Redirect/file/UncinulaNecatorOnGrapes.jpg?width=1280",
+                          "license":  "CC BY-SA 3.0 or GFDL",
+                          "notes":  "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_fruit",
+                          "label":  "blossom_end_rot",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+                          "bytes":  146956,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+                          "source_url":  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Blossom_end_rot.JPG?width=1280",
+                          "license":  "CC BY-SA 3.0",
+                          "notes":  "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_fruit",
+                          "label":  "blossom_end_rot",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+                          "bytes":  155501,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+                          "source_url":  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Blossom_end_rot_tomato_2017_A.jpg?width=1280",
+                          "license":  "CC0 1.0",
+                          "notes":  "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_fruit",
+                          "label":  "late_blight_fruit",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+                          "bytes":  213805,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+                          "source_url":  "https://commons.wikimedia.org/wiki/Special:Redirect/file/Tomato_late_blight_fruit_rot_(5816739820).jpg?width=1280",
+                          "license":  "CC BY-SA 2.0",
+                          "notes":  "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "grape_leaf",
+                          "label":  "anthracnose_leaf_or_cluster",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+                          "bytes":  569975,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1235040.jpg",
+                          "license":  "CC BY 3.0 US",
+                          "notes":  "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_leaf",
+                          "label":  "early_blight_leaf",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+                          "bytes":  495274,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/1234124.jpg",
+                          "license":  "CC BY 3.0",
+                          "notes":  "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_leaf",
+                          "label":  "early_blight_leaf",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+                          "bytes":  277846,
+                          "source_page":  "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/5632425.jpg",
+                          "license":  "CC BY 3.0",
+                          "notes":  "tomato early blight leaf; Bugwood direct alternative"
+                      },
+                      {
+                          "kind":  "id",
+                          "adapter":  "tomato_leaf",
+                          "label":  "late_blight_leaf",
+                          "path":  "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+                          "bytes":  250695,
+                          "source_page":  "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+                          "source_url":  "https://bugwoodcloud.org/images/768x512/5333061.jpg",
+                          "license":  "CC BY 3.0 US",
+                          "notes":  "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+                      }
+                  ],
+    "failed":  [
+
+               ],
+    "large_dataset_sources_not_downloaded":  [
+                                                 {
+                                                     "name":  "PlantVillage",
+                                                     "url":  "https://github.com/spMohanty/PlantVillage-Dataset",
+                                                     "purpose":  "large OE source; leaf disease classes; not downloaded in this pass"
+                                                 },
+                                                 {
+                                                     "name":  "Mendeley Strawberry Disease",
+                                                     "url":  "https://data.mendeley.com/datasets/4gnywgrdcb/1",
+                                                     "purpose":  "strawberry anthracnose, powdery mildew, gray mold references; not downloaded in this pass"
+                                                 },
+                                                 {
+                                                     "name":  "TFDD Tomato Fruit Disease Detection",
+                                                     "url":  "https://data.mendeley.com/datasets/ktfnhjspjn/3",
+                                                     "purpose":  "tomato fruit ID classes including anthracnose, blossom end rot, late blight, healthy; not downloaded in this pass"
+                                                 },
+                                                 {
+                                                     "name":  "Tomato Leaf and Fruit Disease Image Dataset",
+                                                     "url":  "https://data.mendeley.com/datasets/9jxvtgh325/1",
+                                                     "purpose":  "tomato leaf/fruit ID candidates; not downloaded in this pass"
+                                                 },
+                                                 {
+                                                     "name":  "HERMOS grape leaf disease",
+                                                     "url":  "https://data.mendeley.com/datasets/j4xs3kh3fd/2",
+                                                     "purpose":  "grape powdery/downy mildew and healthy leaf candidates; not downloaded in this pass"
+                                                 },
+                                                 {
+                                                     "name":  "NGLD grape leaf disease",
+                                                     "url":  "https://data.mendeley.com/datasets/8nnd2ypcv3/4",
+                                                     "purpose":  "grape powdery mildew/downy mildew/healthy leaf candidates; not downloaded in this pass"
+                                                 }
+                                             ]
+}

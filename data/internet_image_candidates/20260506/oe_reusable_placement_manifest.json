@@ -1,0 +1,15 @@
+{
+  "created_at_utc": "2026-05-06T16:58:57.082693+00:00",
+  "placements": [
+    {
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "target_oe_path": "data\\oe_dataset\\strawberry_leaf_oe_from_fruit\\same_crop_fruit_negatives\\fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "target_oe_root": "data\\oe_dataset\\strawberry_leaf_oe_from_fruit",
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    }
+  ]
+}
