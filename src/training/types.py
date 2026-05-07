@@ -190,26 +190,36 @@ class TrainingHistory:
     def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "TrainingHistory":
         data = dict(payload or {})
         best_metric_value = data.get("best_metric_value")
-        return cls(
-            train_loss=[float(v) for v in list(data.get("train_loss", []))],
-            val_loss=[float(v) for v in list(data.get("val_loss", []))],
-            val_accuracy=[float(v) for v in list(data.get("val_accuracy", []))],
-            macro_precision=[float(v) for v in list(data.get("macro_precision", []))],
-            macro_recall=[float(v) for v in list(data.get("macro_recall", []))],
-            macro_f1=[float(v) for v in list(data.get("macro_f1", []))],
-            weighted_f1=[float(v) for v in list(data.get("weighted_f1", []))],
-            balanced_accuracy=[float(v) for v in list(data.get("balanced_accuracy", []))],
-            generalization_gap=[float(v) for v in list(data.get("generalization_gap", []))],
-            per_class_accuracy=[
-                {str(key): float(value) for key, value in dict(item).items()}
-                for item in list(data.get("per_class_accuracy", []))
+
+        def _to_float_list(key: str) -> List[float]:
+            return [float(v) for v in list(data.get(key, []))]
+
+        def _to_per_class_accuracy(key: str) -> List[Dict[str, float]]:
+            return [
+                {str(k): float(v) for k, v in dict(item).items()}
+                for item in list(data.get(key, []))
                 if isinstance(item, dict)
-            ],
-            worst_classes=[
+            ]
+
+        def _to_worst_classes(key: str) -> List[List[Dict[str, Any]]]:
+            return [
                 [dict(row) for row in group if isinstance(row, dict)]
-                for group in list(data.get("worst_classes", []))
+                for group in list(data.get(key, []))
                 if isinstance(group, list)
-            ],
+            ]
+
+        return cls(
+            train_loss=_to_float_list("train_loss"),
+            val_loss=_to_float_list("val_loss"),
+            val_accuracy=_to_float_list("val_accuracy"),
+            macro_precision=_to_float_list("macro_precision"),
+            macro_recall=_to_float_list("macro_recall"),
+            macro_f1=_to_float_list("macro_f1"),
+            weighted_f1=_to_float_list("weighted_f1"),
+            balanced_accuracy=_to_float_list("balanced_accuracy"),
+            generalization_gap=_to_float_list("generalization_gap"),
+            per_class_accuracy=_to_per_class_accuracy("per_class_accuracy"),
+            worst_classes=_to_worst_classes("worst_classes"),
             stopped_early=bool(data.get("stopped_early", False)),
             global_step=int(data.get("global_step", 0)),
             optimizer_steps=int(data.get("optimizer_steps", data.get("global_step", 0))),

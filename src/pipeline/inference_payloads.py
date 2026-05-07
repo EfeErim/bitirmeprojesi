@@ -115,11 +115,7 @@ def build_router_uncertain_result(
     normalized_router = normalize_router_analysis(router_analysis)
     if not normalized_router.message:
         normalized_router.message = str(message)
-    resolved_crop_name = str(crop_name or "").strip() or None
-    if resolved_crop_name is None and normalized_router.primary_detection is not None:
-        candidate_crop = str(normalized_router.primary_detection.crop or "").strip().lower()
-        if candidate_crop and candidate_crop != "unknown":
-            resolved_crop_name = candidate_crop
+    resolved_crop_name = _resolve_uncertain_crop_name(normalized_router, crop_name)
     return InferenceResult(
         status="router_uncertain",
         crop=resolved_crop_name,
@@ -131,6 +127,15 @@ def build_router_uncertain_result(
         ood_analysis=None,
         router=normalized_router,
     )
+
+
+def _resolve_uncertain_crop_name(normalized_router: RouterAnalysisResult, crop_name: str | None) -> str | None:
+    resolved_crop_name = str(crop_name or "").strip() or None
+    if resolved_crop_name is None and getattr(normalized_router, "primary_detection", None) is not None:
+        candidate_crop = str(normalized_router.primary_detection.crop or "").strip().lower()
+        if candidate_crop and candidate_crop != "unknown":
+            resolved_crop_name = candidate_crop
+    return resolved_crop_name
 
 
 def build_adapter_unavailable_result(

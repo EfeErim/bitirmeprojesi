@@ -1,4 +1,6 @@
-﻿"""Structured metadata specs for guided artifact catalogs."""
+"""
+Structured metadata specs for guided artifact catalogs.
+"""
 
 from __future__ import annotations
 

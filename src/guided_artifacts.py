@@ -1,4 +1,6 @@
-﻿"""Human-readable guided artifact indexes for notebook and workflow outputs."""
+"""
+Human-readable guided artifact indexes for notebook and workflow outputs.
+"""
 
 from __future__ import annotations
 

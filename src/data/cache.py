@@ -19,13 +19,18 @@ class LRUCache:
     def get(self, key: str) -> Optional[Any]:
         if key not in self.cache:
             return None
-        if self.ttl_seconds is not None:
-            age = time.time() - self.timestamps.get(key, 0.0)
-            if age > self.ttl_seconds:
-                self.__delitem__(key)
-                return None
+        if self._is_expired(key):
+            self.__delitem__(key)
+            return None
         self.cache.move_to_end(key)
         return self.cache[key]
+
+    def _is_expired(self, key: str) -> bool:
+        """Return True if the given key has expired under the current TTL."""
+        if self.ttl_seconds is None:
+            return False
+        age = time.time() - self.timestamps.get(key, 0.0)
+        return age > self.ttl_seconds
 
     def put(self, key: str, value: Any) -> None:
         if key in self.cache:

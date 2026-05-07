@@ -59,10 +59,14 @@ def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]
     merged = copy.deepcopy(base) if isinstance(base, dict) else {}
     if not isinstance(override, dict):
         return merged
+    return _deep_merge_dicts(merged, override)
 
+
+def _deep_merge_dicts(merged: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    """Recursively merge `override` into `merged` and return the result."""
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = deep_merge(merged[key], value)
+            merged[key] = _deep_merge_dicts(merged[key], value)
         else:
             merged[key] = copy.deepcopy(value)
     return merged

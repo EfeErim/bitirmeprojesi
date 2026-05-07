@@ -173,19 +173,27 @@ class CropDataset(Dataset):
         if failed and self.error_policy == "strict":
             first = failed[0]
             raise ValueError(f"Failed to validate dataset image {first['path']}: {first['error']}")
+        self._apply_validation_results(failed, valid_paths, valid_labels)
 
-        if failed:
-            self.load_errors.extend(failed)
-            self.skipped_files.extend(row["path"] for row in failed)
-            valid_path_set = {str(path) for path in valid_paths}
-            if self.split == "ood" and self.ood_sample_types:
-                self.ood_sample_types = [
-                    sample_type
-                    for path, sample_type in zip(self.image_paths, self.ood_sample_types)
-                    if str(path) in valid_path_set
-                ]
-            self.image_paths = valid_paths
-            self.labels = valid_labels
+    def _apply_validation_results(self, failed: List[Dict[str, str]], valid_paths: List[Path], valid_labels: List[int]) -> None:
+        if failed and self.error_policy == "strict":
+            first = failed[0]
+            raise ValueError(f"Failed to validate dataset image {first['path']}: {first['error']}")
+
+        if not failed:
+            return
+
+        self.load_errors.extend(failed)
+        self.skipped_files.extend(row["path"] for row in failed)
+        valid_path_set = {str(path) for path in valid_paths}
+        if self.split == "ood" and self.ood_sample_types:
+            self.ood_sample_types = [
+                sample_type
+                for path, sample_type in zip(self.image_paths, self.ood_sample_types)
+                if str(path) in valid_path_set
+            ]
+        self.image_paths = valid_paths
+        self.labels = valid_labels
 
     def __len__(self) -> int:
         return len(self.image_paths)

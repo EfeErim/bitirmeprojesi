@@ -7,9 +7,10 @@ from typing import Any, Dict, List, Optional, Sequence
 
 
 def read_csv_rows(path: Path, *, encoding: str = "utf-8-sig") -> List[Dict[str, str]]:
-    if not Path(path).is_file() or Path(path).stat().st_size <= 0:
+    p = Path(path)
+    if not p.is_file() or p.stat().st_size <= 0:
         return []
-    with Path(path).open("r", encoding=encoding, newline="") as handle:
+    with p.open("r", encoding=encoding, newline="") as handle:
         return list(csv.DictReader(handle))
 
 
@@ -21,17 +22,21 @@ def read_csv_rows_from_source(
 ) -> List[Dict[str, str]]:
     source_path = Path(source_path)
     if source_path.suffix.lower() == ".zip":
-        if not zip_member_suffix:
-            raise ValueError("zip_member_suffix is required when reading rows from a zip archive")
-        with zipfile.ZipFile(source_path) as archive:
-            members = [name for name in archive.namelist() if name.endswith(f"/{zip_member_suffix}")]
-            if not members:
-                raise FileNotFoundError(f"No {zip_member_suffix} found in zip: {source_path}")
-            if len(members) > 1:
-                raise RuntimeError(f"Zip contains multiple {zip_member_suffix} files: {members}")
-            payload = archive.read(members[0]).decode(encoding)
-        return list(csv.DictReader(payload.splitlines()))
+        return _read_csv_from_zip(source_path, zip_member_suffix, encoding)
     return read_csv_rows(source_path, encoding=encoding)
+
+
+def _read_csv_from_zip(source_path: Path, zip_member_suffix: str | None, encoding: str) -> List[Dict[str, str]]:
+    if not zip_member_suffix:
+        raise ValueError("zip_member_suffix is required when reading rows from a zip archive")
+    with zipfile.ZipFile(source_path) as archive:
+        members = [name for name in archive.namelist() if name.endswith(f"/{zip_member_suffix}")]
+        if not members:
+            raise FileNotFoundError(f"No {zip_member_suffix} found in zip: {source_path}")
+        if len(members) > 1:
+            raise RuntimeError(f"Zip contains multiple {zip_member_suffix} files: {members}")
+        payload = archive.read(members[0]).decode(encoding)
+    return list(csv.DictReader(payload.splitlines()))
 
 
 def read_csv_preview(
@@ -52,11 +57,16 @@ def read_csv_preview(
             row_count += 1
             if len(preview) >= max_rows:
                 continue
-            selected = {
-                field: row.get(field, "")
-                for field in fields
-                if str(row.get(field, "")).strip()
-            }
+            selected = _select_nonempty_fields(row, fields)
             if selected:
                 preview.append(selected)
     return row_count, preview
+
+
+def _select_nonempty_fields(row: Dict[str, str], fields: Sequence[str]) -> Dict[str, str]:
+    """Return a dict of field->value for fields where the value is non-empty after strip()."""
+    return {
+        field: row.get(field, "")
+        for field in fields
+        if str(row.get(field, "")).strip()
+    }

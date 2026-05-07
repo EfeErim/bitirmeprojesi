@@ -73,7 +73,7 @@ def build_open_set_rejection_reasons(
 
     best_confidence = float(confidence)
     unknown_score = float(unknown_confidence)
-    if unknown_score >= best_confidence:
+    if _unknown_dominates(unknown_score, best_confidence):
         reasons.append(f"unknown_confidence ({unknown_score:.4f}) >= confidence ({best_confidence:.4f})")
 
     threshold = _clamp_unit_interval(min_confidence, default=0.0)
@@ -82,6 +82,14 @@ def build_open_set_rejection_reasons(
 
     margin_floor = _coerce_non_negative_float(margin_threshold, default=0.0)
     margin = best_confidence - float(second_confidence)
-    if margin < margin_floor:
+    if _margin_too_small(margin, margin_floor):
         reasons.append(f"margin ({margin:.4f}) < threshold ({margin_floor:.4f})")
     return reasons
+
+
+def _unknown_dominates(unknown_score: float, best_confidence: float) -> bool:
+    return unknown_score >= best_confidence
+
+
+def _margin_too_small(margin: float, floor: float) -> bool:
+    return float(margin) < float(floor)
