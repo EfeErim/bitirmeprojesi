@@ -62,6 +62,22 @@ def test_resolve_notebook_device_falls_back_from_missing_cuda_index(monkeypatch)
     assert "only 1 CUDA device" in str(warning)
 
 
+def test_default_adapter_search_roots_excludes_historical_runs(tmp_path: Path):
+    roots = ui._default_adapter_search_roots(tmp_path)
+
+    assert roots == [
+        tmp_path / "outputs" / "colab_notebook_training",
+        tmp_path / "outputs" / "colab_notebook_training" / "telemetry_runtime" / "telemetry",
+        tmp_path / "models" / "adapters",
+    ]
+
+
+def test_default_adapter_search_roots_can_include_runs_for_debug(tmp_path: Path):
+    roots = ui._default_adapter_search_roots(tmp_path, include_run_adapters=True)
+
+    assert roots[-1] == tmp_path / "runs"
+
+
 def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_path):
     class _FakeWidget:
         def __init__(self, *args, **kwargs):

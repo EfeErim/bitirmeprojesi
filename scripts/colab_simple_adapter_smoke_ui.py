@@ -140,6 +140,17 @@ def _adapter_dropdown_options(adapter_candidates: list[dict[str, Any]]) -> list[
     return options or [("Adapter bulunamadi, asagidan yol girin", -1)]
 
 
+def _default_adapter_search_roots(root_path: Path, *, include_run_adapters: bool = False) -> list[Path]:
+    roots = [
+        root_path / "outputs" / "colab_notebook_training",
+        root_path / "outputs" / "colab_notebook_training" / "telemetry_runtime" / "telemetry",
+        root_path / "models" / "adapters",
+    ]
+    if include_run_adapters:
+        roots.append(root_path / "runs")
+    return roots
+
+
 def _show_status_message(output_widget: Any, *messages: str) -> None:
     with output_widget:
         clear_output(wait=True)
@@ -538,11 +549,14 @@ def launch_simple_adapter_smoke_ui(
     enable_prediction_visualization: bool = True,
     explanation_method: str = "attention_map",
     explanation_grid_size: int = 7,
+    include_run_adapters: bool = False,
 ) -> None:
     """Render the minimal direct-adapter smoke-test UI used by Notebook 4.
 
-    ``show_all_adapters`` is kept for older notebook copies, but mirror exports
-    are hidden unless ``show_mirror_adapters`` is explicitly enabled.
+    ``show_all_adapters`` is kept for older notebook copies. Historical
+    ``runs/`` exports are hidden unless ``include_run_adapters`` is explicitly
+    enabled, and mirror exports are hidden unless ``show_mirror_adapters`` is
+    explicitly enabled.
     """
     if widgets is None:
         raise RuntimeError(
@@ -556,12 +570,7 @@ def launch_simple_adapter_smoke_ui(
         Path(candidate)
         for candidate in (
             search_roots
-            or [
-                root_path,
-                root_path / "outputs",
-                root_path / "models",
-                root_path / "models" / "adapters",
-            ]
+            or _default_adapter_search_roots(root_path, include_run_adapters=include_run_adapters)
         )
     ]
     upload_dir = root_path / ".runtime_tmp" / upload_dir_name

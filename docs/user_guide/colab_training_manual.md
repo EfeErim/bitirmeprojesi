@@ -817,6 +817,7 @@ Optional helper command:
 Notebook 3 is for direct adapter validation after training or export.
 
 It does not use the router.
+By default, automatic discovery scans current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/`. Historical `runs/` exports are excluded unless `INCLUDE_RUN_ADAPTERS=True`, so old experiments do not appear as active adapter choices.
 
 Use it to:
 
@@ -852,6 +853,7 @@ Important caveat:
 ## Notebook 4 Minimal Smoke UI
 
 Notebook 4 uses the same adapter discovery and prediction helpers as Notebook 3, but presents them through a small widget UI.
+By default, the dropdown lists current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/`; historical `runs/` exports are excluded so old experiments do not look like active adapters. Pass `include_run_adapters=True` only when you intentionally want to inspect old run artifacts.
 
 Use Notebook 4 when you want:
 

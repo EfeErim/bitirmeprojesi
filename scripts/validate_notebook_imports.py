@@ -334,6 +334,9 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
 
     assert "Path('/content/drive/MyDrive/aads_ulora')" not in sources.full_source
     assert "SEARCH_ROOTS = [" in sources.full_source
+    assert "INCLUDE_RUN_ADAPTERS = False" in sources.full_source
+    assert "ROOT / 'outputs' / 'colab_notebook_training'" in sources.full_source
+    assert "SEARCH_ROOTS.append(ROOT / 'runs')" in sources.full_source
 
 
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
