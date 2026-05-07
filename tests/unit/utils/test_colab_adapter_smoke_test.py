@@ -831,6 +831,36 @@ def test_discover_adapter_candidates_keeps_same_run_crop_parts_separate(tmp_path
     assert candidates_by_part["fruit"]["adapter_dir"] == str(fruit_asset_dir)
 
 
+def test_discover_adapter_candidates_skips_run_mirrors_with_mismatched_crop_part(tmp_path: Path):
+    project_root = tmp_path / "project"
+    run_id = "grape_leaf_2026-05-07_13-23-38"
+    run_root = project_root / "runs" / "grape" / "leaf" / run_id
+    valid_asset_dir = _write_adapter_export_with_crop_info(
+        run_root
+        / "telemetry"
+        / "artifacts"
+        / "adapter_export"
+        / "grape"
+        / "leaf",
+        crop_name="grape",
+    )
+    _write_adapter_export_with_crop_info(
+        run_root
+        / "outputs"
+        / "colab_notebook_training"
+        / "grape"
+        / "fruit",
+        crop_name="grape",
+    )
+
+    candidates = smoke.discover_adapter_candidates([project_root], crop_name=None)
+
+    assert len(candidates) == 1
+    assert candidates[0]["adapter_dir"] == str(valid_asset_dir)
+    assert candidates[0]["crop_name"] == "grape"
+    assert candidates[0]["part_name"] == "leaf"
+
+
 
 def test_discover_adapter_candidates_scans_project_root_and_skips_cache_dirs(tmp_path: Path):
     project_root = tmp_path / "project"

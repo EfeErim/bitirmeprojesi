@@ -43,6 +43,19 @@ SKIP_DISCOVERY_DIR_NAMES = {
     "__pycache__",
     "node_modules",
 }
+ADAPTER_LAYOUT_RESERVED_NAMES = {
+    "adapter",
+    "adapters",
+    "adapter_export",
+    "artifacts",
+    "checkpoint_state",
+    "colab_notebook_training",
+    "models",
+    "outputs",
+    "runs",
+    "telemetry",
+}
+RUN_ARTIFACT_MARKERS = {"outputs", "telemetry", "checkpoint_state", "artifacts"}
 
 
 @lru_cache(maxsize=128)
@@ -157,6 +170,10 @@ def _iter_crop_metadata_candidates(adapter_dir: Path) -> Iterable[Path]:
 
 
 def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: bool = False) -> Optional[str]:
+    layout_crop, _layout_part = _infer_adapter_layout_crop_part(adapter_dir)
+    if layout_crop is not None:
+        return layout_crop
+
     for candidate in _iter_crop_metadata_candidates(adapter_dir):
         inferred = _extract_crop_name_from_payload(
             _read_json_if_exists(candidate, strict=strict_metadata)
@@ -166,27 +183,14 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: boo
     if adapter_dir.name == "continual_sd_lora_adapter" and adapter_dir.parent.name:
         parent_name = adapter_dir.parent.name.strip().lower()
         grandparent_name = adapter_dir.parent.parent.name.strip().lower()
-        reserved_path_names = {
-            "adapter",
-            "adapters",
-            "adapter_export",
-            "artifacts",
-            "colab_notebook_training",
-            "models",
-            "outputs",
-        }
-        if grandparent_name and parent_name not in reserved_path_names and grandparent_name not in reserved_path_names:
+        if (
+            grandparent_name
+            and parent_name not in ADAPTER_LAYOUT_RESERVED_NAMES
+            and grandparent_name not in ADAPTER_LAYOUT_RESERVED_NAMES
+        ):
             return grandparent_name
         parent_crop = parent_name
-        if parent_crop not in {
-            "adapter",
-            "adapters",
-            "adapter_export",
-            "artifacts",
-            "colab_notebook_training",
-            "models",
-            "outputs",
-        }:
+        if parent_crop not in ADAPTER_LAYOUT_RESERVED_NAMES:
             return parent_crop
     inferred_from_meta = _infer_crop_name_from_meta(adapter_dir, strict_metadata=strict_metadata)
     if inferred_from_meta is not None:
@@ -194,34 +198,55 @@ def _infer_crop_name_from_adapter_dir(adapter_dir: Path, *, strict_metadata: boo
     return None
 
 
-def _infer_part_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
+def _infer_adapter_layout_crop_part(adapter_dir: Path) -> tuple[Optional[str], Optional[str]]:
     if adapter_dir.name != "continual_sd_lora_adapter":
-        return None
+        return None, None
     parent_part = adapter_dir.parent.name.strip().lower()
     grandparent_crop = adapter_dir.parent.parent.name.strip().lower()
     if not parent_part or not grandparent_crop:
-        return None
-    if grandparent_crop in {
-        "adapter",
-        "adapters",
-        "adapter_export",
-        "artifacts",
-        "colab_notebook_training",
-        "models",
-        "outputs",
-    }:
-        return None
-    if parent_part in {
-        "adapter",
-        "adapters",
-        "adapter_export",
-        "artifacts",
-        "colab_notebook_training",
-        "models",
-        "outputs",
-    }:
-        return None
-    return parent_part
+        return None, None
+    if grandparent_crop in ADAPTER_LAYOUT_RESERVED_NAMES or parent_part in ADAPTER_LAYOUT_RESERVED_NAMES:
+        return None, None
+    return grandparent_crop, parent_part
+
+
+def _infer_part_name_from_adapter_dir(adapter_dir: Path) -> Optional[str]:
+    _layout_crop, layout_part = _infer_adapter_layout_crop_part(adapter_dir)
+    return layout_part
+
+
+def _infer_enclosing_run_crop_part(adapter_dir: Path) -> tuple[Optional[str], Optional[str]]:
+    parts = list(adapter_dir.parts)
+    lowered = [str(part).strip().lower() for part in parts]
+    for index, part in enumerate(lowered):
+        if part != "runs":
+            continue
+        if index + 4 >= len(lowered):
+            continue
+        crop_name = lowered[index + 1]
+        part_name = lowered[index + 2]
+        next_marker = lowered[index + 4]
+        if next_marker not in RUN_ARTIFACT_MARKERS:
+            continue
+        if (
+            not crop_name
+            or not part_name
+            or crop_name in ADAPTER_LAYOUT_RESERVED_NAMES
+            or part_name in ADAPTER_LAYOUT_RESERVED_NAMES
+        ):
+            continue
+        return crop_name, part_name
+    return None, None
+
+
+def _adapter_layout_matches_enclosing_run(adapter_dir: Path) -> bool:
+    layout_crop, layout_part = _infer_adapter_layout_crop_part(adapter_dir)
+    run_crop, run_part = _infer_enclosing_run_crop_part(adapter_dir)
+    if layout_crop is not None and run_crop is not None and layout_crop != run_crop:
+        return False
+    if layout_part is not None and run_part is not None and layout_part != run_part:
+        return False
+    return True
 
 
 def _resolve_crop_name(crop_name: Optional[str], *, adapter_dir: Path) -> str:
@@ -550,6 +575,8 @@ def discover_adapter_candidates(
             adapter_dir = meta_path.parent
             if not _is_adapter_dir(adapter_dir):
                 continue
+            if not _adapter_layout_matches_enclosing_run(adapter_dir):
+                continue
             adapter_key = str(adapter_dir.resolve())
             if adapter_key in seen:
                 continue
@@ -566,9 +593,11 @@ def discover_adapter_candidates(
 
             meta = _read_adapter_meta(adapter_dir)
             meta_summary = _summary_from_meta(meta)
-            candidate_crop = inferred_crop or meta_summary.get("crop_name") or requested_crop
+            layout_crop, layout_part = _infer_adapter_layout_crop_part(adapter_dir)
+            candidate_crop = layout_crop or inferred_crop or meta_summary.get("crop_name") or requested_crop
             candidate_part = (
-                str(meta_summary.get("part_name") or "").strip().lower()
+                layout_part
+                or str(meta_summary.get("part_name") or "").strip().lower()
                 or _infer_part_name_from_adapter_dir(adapter_dir)
                 or None
             )
