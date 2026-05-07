@@ -1,0 +1,16 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=tomato_fruit_2026-05-07_13-33-55
+started_at=2026-05-07T13:33:56.919568+00:00
+finished_at=2026-05-07T13:34:27.025369+00:00
+duration_sec=30.106
+
+[BOOTSTRAP] Fetching selected Notebook 2 dataset paths: ['data/prepared_runtime_datasets/tomato__fruit', 'data/ood_dataset/final/tomato__fruit_ood_final', 'data/oe_dataset/tomato_fruit_oe_from_leaf', 'data/prepared_runtime_datasets/tomato__fruit/ood', 'data/prepared_runtime_datasets/tomato__fruit/oe']
+[OOD] explicit ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__fruit/ood
+[OE] explicit oe root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__fruit/oe
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__fruit classes=7: ['domates_antraknoz_meyve', 'domates_bacterial_spot_and_speck_meyve', 'domates_blossom_end_rot_meyve', 'domates_gray_mold_meyve', 'domates_late_blight_meyve', 'domates_sağlıklı_meyve', 'domates_spotted_wilt_meyve']
+[DATASET][CHECK] scale=medium continual=2245 val=119 test=119 ood=124 classes=7
+[DATASET][WARN] Manifest rows include 1859 synthetic-hint item(s); keep main benchmark claims conservative.
+[DATASET][WARN] Manifest rows include 8 eval-quality-risk item(s); prefer cautious regularization.
+[DATASET][BLOCK] Supported classes remain below the production minimum of 100 images/class: domates_antraknoz_meyve=62, domates_bacterial_spot_and_speck_meyve=15, domates_blossom_end_rot_meyve=55, domates_sağlıklı_meyve=47, domates_spotted_wilt_meyve=26. Enable ALLOW_UNDER_MIN_TRAINING manually only for a research-only run.
+[PARAMS] Manual overrides uygulandi: {'EPOCHS': 30, 'BATCH_SIZE': 64, 'LEARNING_RATE': 8e-05, 'LORA_R': 24, 'LORA_ALPHA': 24, 'LORA_DROPOUT': 0.15, 'OOD_FACTOR': 3.0, 'ENABLE_BAYESIAN_OPTIMIZATION': True, 'WEIGHT_DECAY': 0.01, 'LOSS_NAME': 'logitnorm', 'LOGITNORM_TAU': 1.0, 'MIXED_PRECISION': 'bf16', 'GRAD_ACCUM_STEPS': 1, 'MAX_GRAD_NORM': 1.0, 'LABEL_SMOOTHING': 0.0, 'SCHEDULER_NAME': 'cosine', 'SCHEDULER_WARMUP_RATIO': 0.1, 'SCHEDULER_MIN_LR': 1e-06, 'EARLY_STOPPING_PATIENCE': 6, 'EARLY_STOPPING_MIN_DELTA': 0.0, 'DETERMINISTIC': False, 'SEED': 42, 'RANDAUGMENT_NUM_OPS': 2, 'RANDAUGMENT_MAGNITUDE': 7, 'NUM_WORKERS': 12, 'PREFETCH': 8, 'PIN_MEMORY': True, 'USE_CACHE': True, 'CACHE_TRAIN_SPLIT': True, 'VALIDATION_EVERY_N_EPOCHS': 1, 'CHECKPOINT_EVERY_N_STEPS': 250, 'CHECKPOINT_ON_EXCEPTION': True, 'STDOUT_BATCH_INTERVAL': 12, 'RESUME_MODE': 'fresh', 'AUTO_DISCONNECT_RUNTIME': True, 'AUTO_DISCONNECT_GRACE_SECONDS': 20, 'AUTO_PUSH_TO_GITHUB': True, 'AUTO_PUSH_REMOTE_NAME': 'origin', 'AUTO_PUSH_BRANCH': None}
+[PARAMS][FINAL] epochs=30 bs=64 lr=8e-05 lora=24/24 dropout=0.15 accum=1 workers=12 prefetch=8

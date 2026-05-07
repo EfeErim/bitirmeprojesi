@@ -1,0 +1,753 @@
+{
+  "train_loss": [
+    1.9628088201795306,
+    1.8843297447477068,
+    1.7717559678213937,
+    1.672240458215986,
+    1.4981993266514368,
+    1.4167142833982196,
+    1.3827608925955637,
+    1.3318212849753244,
+    1.3042004108428955,
+    1.2935250452586582,
+    1.27149635383061,
+    1.2533610820770265,
+    1.2450865404946463,
+    1.234285180909293,
+    1.22886620589665,
+    1.2302792855671474,
+    1.2241608449390957,
+    1.2121263776506697,
+    1.2043854338782174
+  ],
+  "val_loss": [
+    1.9057888834416365,
+    1.8086944317617337,
+    1.6274640500044621,
+    1.3919575675195004,
+    0.979430765664878,
+    0.7936256918586603,
+    0.7059817514499697,
+    0.5360028939086849,
+    0.5085449193706032,
+    0.37061598320969014,
+    0.39259583909972373,
+    0.4047347277152438,
+    0.33908456238378,
+    0.40806465239084067,
+    0.4077176351507171,
+    0.4303156287730241,
+    0.40448008114550293,
+    0.380709910593113,
+    0.37915617778521626
+  ],
+  "val_accuracy": [
+    0.2773109243697479,
+    0.3277310924369748,
+    0.4369747899159664,
+    0.48739495798319327,
+    0.6554621848739496,
+    0.7394957983193278,
+    0.7394957983193278,
+    0.8319327731092437,
+    0.8739495798319328,
+    0.8907563025210085,
+    0.8907563025210085,
+    0.8991596638655462,
+    0.8823529411764706,
+    0.8823529411764706,
+    0.8991596638655462,
+    0.8823529411764706,
+    0.8907563025210085,
+    0.8907563025210085,
+    0.907563025210084
+  ],
+  "macro_precision": [
+    0.04667609557509422,
+    0.2188078910112381,
+    0.32055047154426575,
+    0.35490551590919495,
+    0.48772555589675903,
+    0.6260398030281067,
+    0.659021258354187,
+    0.8016752600669861,
+    0.8103975057601929,
+    0.8517408967018127,
+    0.8398655652999878,
+    0.8611925840377808,
+    0.8460111618041992,
+    0.8635950088500977,
+    0.8568722605705261,
+    0.8613676428794861,
+    0.8568722605705261,
+    0.8522639870643616,
+    0.868819534778595
+  ],
+  "macro_recall": [
+    0.13865545392036438,
+    0.2009194940328598,
+    0.26652440428733826,
+    0.3166612982749939,
+    0.5055127739906311,
+    0.6242014169692993,
+    0.6389137506484985,
+    0.6928519606590271,
+    0.8058804273605347,
+    0.8460296988487244,
+    0.8667336106300354,
+    0.874670147895813,
+    0.8429241180419922,
+    0.8468923568725586,
+    0.8786383867263794,
+    0.8151463866233826,
+    0.8587971329689026,
+    0.862765371799469,
+    0.8788718581199646
+  ],
+  "macro_f1": [
+    0.06984127312898636,
+    0.1870187669992447,
+    0.2519167363643646,
+    0.3225553333759308,
+    0.47884172201156616,
+    0.6159629225730896,
+    0.5991708636283875,
+    0.6778610944747925,
+    0.7803854942321777,
+    0.8091560006141663,
+    0.8395859003067017,
+    0.8518401384353638,
+    0.8126029968261719,
+    0.8329371809959412,
+    0.8556216955184937,
+    0.8163352608680725,
+    0.8357135057449341,
+    0.841316282749176,
+    0.859006404876709
+  ],
+  "weighted_f1": [
+    0.13968254538143382,
+    0.28885067210477944,
+    0.4087825743090205,
+    0.49867748613117124,
+    0.6504171034869026,
+    0.7403637541442358,
+    0.7384510200564601,
+    0.8204719479344472,
+    0.8778471105238971,
+    0.893032170143448,
+    0.8960023767807904,
+    0.8994018170012146,
+    0.876210316890428,
+    0.8808718128364628,
+    0.9028400453198858,
+    0.8843712045365021,
+    0.8879259253750328,
+    0.892236533285189,
+    0.9071924546185661
+  ],
+  "balanced_accuracy": [
+    0.13865545392036438,
+    0.2009194940328598,
+    0.26652440428733826,
+    0.3166612982749939,
+    0.5055127739906311,
+    0.6242014169692993,
+    0.6389137506484985,
+    0.6928519606590271,
+    0.8058804273605347,
+    0.8460296988487244,
+    0.8667336106300354,
+    0.874670147895813,
+    0.8429241180419922,
+    0.8468923568725586,
+    0.8786383867263794,
+    0.8151463866233826,
+    0.8587971329689026,
+    0.862765371799469,
+    0.8788718581199646
+  ],
+  "generalization_gap": [
+    -0.05701993673789407,
+    -0.07563531298597304,
+    -0.14429191781693151,
+    -0.2802828906964856,
+    -0.5187685609865589,
+    -0.6230885915395593,
+    -0.676779141145594,
+    -0.7958183910666394,
+    -0.7956554914722923,
+    -0.922909062048968,
+    -0.8789005147308864,
+    -0.8486263543617827,
+    -0.9060019781108664,
+    -0.8262205285184523,
+    -0.821148570745933,
+    -0.7999636567941233,
+    -0.8196807637935928,
+    -0.8314164670575567,
+    -0.8252292560930011
+  ],
+  "per_class_accuracy": [
+    {
+      "domates_antraknoz_meyve": 0.0,
+      "domates_bacterial_spot_and_speck_meyve": 0.0,
+      "domates_blossom_end_rot_meyve": 0.0,
+      "domates_gray_mold_meyve": 0.0,
+      "domates_late_blight_meyve": 0.970588207244873,
+      "domates_sag_lıklı_meyve": 0.0,
+      "domates_spotted_wilt_meyve": 0.0
+    },
+    {
+      "domates_antraknoz_meyve": 0.1666666716337204,
+      "domates_bacterial_spot_and_speck_meyve": 0.0,
+      "domates_blossom_end_rot_meyve": 0.0,
+      "domates_gray_mold_meyve": 0.19565217196941376,
+      "domates_late_blight_meyve": 0.7941176295280457,
+      "domates_sag_lıklı_meyve": 0.0,
+      "domates_spotted_wilt_meyve": 0.25
+    },
+    {
+      "domates_antraknoz_meyve": 0.0,
+      "domates_bacterial_spot_and_speck_meyve": 0.0,
+      "domates_blossom_end_rot_meyve": 0.4545454680919647,
+      "domates_gray_mold_meyve": 0.54347825050354,
+      "domates_late_blight_meyve": 0.6176470518112183,
+      "domates_sag_lıklı_meyve": 0.0,
+      "domates_spotted_wilt_meyve": 0.25
+    },
+    {
+      "domates_antraknoz_meyve": 0.4166666567325592,
+      "domates_bacterial_spot_and_speck_meyve": 0.0,
+      "domates_blossom_end_rot_meyve": 0.1818181872367859,
+      "domates_gray_mold_meyve": 0.52173912525177,
+      "domates_late_blight_meyve": 0.7352941036224365,
+      "domates_sag_lıklı_meyve": 0.1111111119389534,
+      "domates_spotted_wilt_meyve": 0.25
+    },
+    {
+      "domates_antraknoz_meyve": 0.6666666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 0.0,
+      "domates_blossom_end_rot_meyve": 0.4545454680919647,
+      "domates_gray_mold_meyve": 0.6739130616188049,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.1111111119389534,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.75,
+      "domates_bacterial_spot_and_speck_meyve": 0.3333333432674408,
+      "domates_blossom_end_rot_meyve": 0.5454545617103577,
+      "domates_gray_mold_meyve": 0.804347813129425,
+      "domates_late_blight_meyve": 0.8529411554336548,
+      "domates_sag_lıklı_meyve": 0.3333333432674408,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.9166666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 0.3333333432674408,
+      "domates_blossom_end_rot_meyve": 0.6363636255264282,
+      "domates_gray_mold_meyve": 0.760869562625885,
+      "domates_late_blight_meyve": 0.8529411554336548,
+      "domates_sag_lıklı_meyve": 0.2222222238779068,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 0.3333333432674408,
+      "domates_blossom_end_rot_meyve": 0.7272727489471436,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.2222222238779068,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 0.6666666865348816,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.95652174949646,
+      "domates_late_blight_meyve": 0.8235294222831726,
+      "domates_sag_lıklı_meyve": 0.4444444477558136,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.95652174949646,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.3333333432674408,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.8333333134651184,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.6666666865348816,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.5555555820465088,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.3333333432674408,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.9166666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.4444444477558136,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.9166666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.6666666865348816,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.9166666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 0.6666666865348816,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.5555555820465088,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.4444444477558136,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 0.9166666865348816,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.8823529481887817,
+      "domates_sag_lıklı_meyve": 0.5555555820465088,
+      "domates_spotted_wilt_meyve": 0.75
+    },
+    {
+      "domates_antraknoz_meyve": 1.0,
+      "domates_bacterial_spot_and_speck_meyve": 1.0,
+      "domates_blossom_end_rot_meyve": 1.0,
+      "domates_gray_mold_meyve": 0.9347826242446899,
+      "domates_late_blight_meyve": 0.9117646813392639,
+      "domates_sag_lıklı_meyve": 0.5555555820465088,
+      "domates_spotted_wilt_meyve": 0.75
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "domates_gray_mold_meyve",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 46
+      },
+      {
+        "class_name": "domates_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 12
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 11
+      },
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 3
+      }
+    ],
+    [
+      {
+        "class_name": "domates_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 12
+      },
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 3
+      }
+    ],
+    [
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 3
+      },
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.1111111119389534,
+        "support": 9
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.1818181872367859,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 3
+      },
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.1111111119389534,
+        "support": 9
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.4545454680919647,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.3333333432674408,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.3333333432674408,
+        "support": 3
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.5454545617103577,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.2222222238779068,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.3333333432674408,
+        "support": 3
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.6363636255264282,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.2222222238779068,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.3333333432674408,
+        "support": 3
+      },
+      {
+        "class_name": "domates_blossom_end_rot_meyve",
+        "class_index": 2,
+        "accuracy": 0.7272727489471436,
+        "support": 11
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.4444444477558136,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.6666666865348816,
+        "support": 3
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.3333333432674408,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.6666666865348816,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.8333333134651184,
+        "support": 12
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.5555555820465088,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.3333333432674408,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.4444444477558136,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.6666666865348816,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.5555555820465088,
+        "support": 9
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_meyve",
+        "class_index": 1,
+        "accuracy": 0.6666666865348816,
+        "support": 3
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.4444444477558136,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.5555555820465088,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.8823529481887817,
+        "support": 34
+      }
+    ],
+    [
+      {
+        "class_name": "domates_sag_lıklı_meyve",
+        "class_index": 5,
+        "accuracy": 0.5555555820465088,
+        "support": 9
+      },
+      {
+        "class_name": "domates_spotted_wilt_meyve",
+        "class_index": 6,
+        "accuracy": 0.75,
+        "support": 4
+      },
+      {
+        "class_name": "domates_late_blight_meyve",
+        "class_index": 4,
+        "accuracy": 0.9117646813392639,
+        "support": 34
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 665,
+  "optimizer_steps": 665,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 13,
+  "best_metric_value": 0.33908456238378
+}
