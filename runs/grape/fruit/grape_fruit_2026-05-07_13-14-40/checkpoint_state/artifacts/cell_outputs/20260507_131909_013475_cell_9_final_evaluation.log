@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=grape_fruit_2026-05-07_13-14-40
+started_at=2026-05-07T13:19:09.013512+00:00
+finished_at=2026-05-07T13:19:17.453454+00:00
+duration_sec=8.440
+
+[DOGRULAMA (referans)] ornek=174 sinif=5 accuracy=0.8851 ood_auroc=0.8159 sure_ds_f1=0.4769 conformal_cov=0.9598
+[TEST (ayrilmis)] ornek=174 sinif=5 accuracy=0.9080 ood_auroc=0.8096 sure_ds_f1=0.4826 conformal_cov=0.9540
+[OOD] kanit=real_ood_split durum=failed gecti=False
+[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.
