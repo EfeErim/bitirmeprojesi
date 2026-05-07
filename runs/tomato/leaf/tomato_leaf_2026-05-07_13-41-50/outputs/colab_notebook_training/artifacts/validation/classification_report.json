@@ -1,0 +1,75 @@
+{
+  "domates_bacterial_spot_and_speck_yaprak": {
+    "precision": 0.9141104294478528,
+    "recall": 0.8975903614457831,
+    "f1-score": 0.9057750759878419,
+    "support": 166.0
+  },
+  "domates_early_blight_yaprak": {
+    "precision": 0.872,
+    "recall": 0.7622377622377622,
+    "f1-score": 0.8134328358208955,
+    "support": 143.0
+  },
+  "domates_late_blight_yaprak": {
+    "precision": 0.8294117647058824,
+    "recall": 0.8757763975155279,
+    "f1-score": 0.851963746223565,
+    "support": 161.0
+  },
+  "domates_leaf_mold_yaprak": {
+    "precision": 0.9207920792079208,
+    "recall": 0.9207920792079208,
+    "f1-score": 0.9207920792079208,
+    "support": 101.0
+  },
+  "domates_mosaic_virüs_yaprak": {
+    "precision": 0.9603960396039604,
+    "recall": 0.8508771929824561,
+    "f1-score": 0.9023255813953488,
+    "support": 114.0
+  },
+  "domates_powdery_mildew_yaprak": {
+    "precision": 0.7352941176470589,
+    "recall": 0.9433962264150944,
+    "f1-score": 0.8264462809917356,
+    "support": 53.0
+  },
+  "domates_sağlıklı_yaprak": {
+    "precision": 0.9090909090909091,
+    "recall": 0.9734513274336283,
+    "f1-score": 0.9401709401709402,
+    "support": 113.0
+  },
+  "domates_septoria_leaf_spot_yaprak": {
+    "precision": 0.8702290076335878,
+    "recall": 0.8571428571428571,
+    "f1-score": 0.8636363636363636,
+    "support": 133.0
+  },
+  "domates_spotted_wilt_yaprak": {
+    "precision": 0.9655172413793104,
+    "recall": 1.0,
+    "f1-score": 0.9824561403508771,
+    "support": 84.0
+  },
+  "domates_yellow_leaf_curl_yaprak": {
+    "precision": 0.9612903225806452,
+    "recall": 0.9675324675324676,
+    "f1-score": 0.9644012944983819,
+    "support": 154.0
+  },
+  "accuracy": 0.8968903436988543,
+  "macro avg": {
+    "precision": 0.8938131911297129,
+    "recall": 0.9048796671913498,
+    "f1-score": 0.8971400338283869,
+    "support": 1222.0
+  },
+  "weighted avg": {
+    "precision": 0.8993774556889996,
+    "recall": 0.8968903436988543,
+    "f1-score": 0.8966117497505505,
+    "support": 1222.0
+  }
+}

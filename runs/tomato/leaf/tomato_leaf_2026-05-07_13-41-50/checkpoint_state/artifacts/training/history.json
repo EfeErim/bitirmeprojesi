@@ -1,0 +1,851 @@
+{
+  "train_loss": [
+    2.294451097272477,
+    2.003546597822657,
+    1.7535101400231414,
+    1.6591850586657255,
+    1.6069590123194568,
+    1.5835834021838207,
+    1.5588861186549348,
+    1.546974391307471,
+    1.531428116672444,
+    1.522764525323544,
+    1.5195384160527643,
+    1.515919325486669,
+    1.5125933773112747,
+    1.5104052143276863,
+    1.5005433154555987,
+    1.500419445757596,
+    1.4991307011190451,
+    1.4972633303336378,
+    1.498697966899512,
+    1.4947704639074937
+  ],
+  "val_loss": [
+    2.2586357890096314,
+    1.4474342829271931,
+    1.0374649277295303,
+    0.7839863629075783,
+    0.7546461763046377,
+    0.575470358133316,
+    0.6095695853135785,
+    0.5021707286811304,
+    0.5383988982478062,
+    0.4952751450764957,
+    0.44858619063458544,
+    0.4804763653347613,
+    0.45466173190239406,
+    0.46203645176075875,
+    0.44790803071617497,
+    0.4607696671971713,
+    0.4399507060500682,
+    0.4519933433121043,
+    0.44695274951317504,
+    0.4460692758841132
+  ],
+  "val_accuracy": [
+    0.17103109656301146,
+    0.5482815057283142,
+    0.7029459901800328,
+    0.7757774140752864,
+    0.8044189852700491,
+    0.839607201309329,
+    0.8494271685761048,
+    0.8715220949263502,
+    0.8690671031096563,
+    0.8788870703764321,
+    0.8854337152209493,
+    0.8878887070376432,
+    0.8936170212765957,
+    0.897708674304419,
+    0.8927986906710311,
+    0.8936170212765957,
+    0.8952536824877251,
+    0.8985270049099836,
+    0.8985270049099836,
+    0.8968903436988543
+  ],
+  "macro_precision": [
+    0.1293797791004181,
+    0.5656982660293579,
+    0.7061706781387329,
+    0.7687534093856812,
+    0.8041291236877441,
+    0.8394635319709778,
+    0.8569704294204712,
+    0.868726909160614,
+    0.8713480234146118,
+    0.8755459785461426,
+    0.8818191289901733,
+    0.8841395378112793,
+    0.8913861513137817,
+    0.8956853747367859,
+    0.8889962434768677,
+    0.8898364901542664,
+    0.8906257748603821,
+    0.8948624730110168,
+    0.895892322063446,
+    0.8938132524490356
+  ],
+  "macro_recall": [
+    0.15005457401275635,
+    0.5927397012710571,
+    0.7400952577590942,
+    0.7983579039573669,
+    0.8282345533370972,
+    0.8561657071113586,
+    0.8614915609359741,
+    0.8808587789535522,
+    0.8782345056533813,
+    0.890783429145813,
+    0.8940975069999695,
+    0.8990755081176758,
+    0.9033637046813965,
+    0.9041942358016968,
+    0.9023299217224121,
+    0.9022971987724304,
+    0.9043564796447754,
+    0.9081698656082153,
+    0.907651424407959,
+    0.9048796892166138
+  ],
+  "macro_f1": [
+    0.08083958923816681,
+    0.545586109161377,
+    0.6989682912826538,
+    0.7694709300994873,
+    0.8003277778625488,
+    0.8402734994888306,
+    0.8462364077568054,
+    0.8718740344047546,
+    0.8683494329452515,
+    0.8786182403564453,
+    0.8862457275390625,
+    0.887056827545166,
+    0.89509117603302,
+    0.8977128267288208,
+    0.8935430645942688,
+    0.8932655453681946,
+    0.8954270482063293,
+    0.8989469408988953,
+    0.8992112874984741,
+    0.8971400260925293
+  ],
+  "weighted_f1": [
+    0.08724106509244578,
+    0.5305236217043013,
+    0.6911984207977445,
+    0.7666810280757723,
+    0.7929765916690108,
+    0.8343273606120857,
+    0.8415115780994271,
+    0.8695473928498363,
+    0.8662072414267082,
+    0.8783898985717573,
+    0.8847755144934022,
+    0.8873992270611702,
+    0.8937148173780176,
+    0.897360444264014,
+    0.8923352829953457,
+    0.892904877857764,
+    0.8950252252007467,
+    0.898075684392901,
+    0.8982114401659677,
+    0.8966117396877558
+  ],
+  "balanced_accuracy": [
+    0.15005457401275635,
+    0.5927397012710571,
+    0.7400952577590942,
+    0.7983579039573669,
+    0.8282345533370972,
+    0.8561657071113586,
+    0.8614915609359741,
+    0.8808587789535522,
+    0.8782345056533813,
+    0.890783429145813,
+    0.8940975069999695,
+    0.8990755081176758,
+    0.9033637046813965,
+    0.9041942358016968,
+    0.9023299217224121,
+    0.9022971987724304,
+    0.9043564796447754,
+    0.9081698656082153,
+    0.907651424407959,
+    0.9048796892166138
+  ],
+  "generalization_gap": [
+    -0.035815308262845846,
+    -0.5561123148954641,
+    -0.7160452122936112,
+    -0.8751986957581472,
+    -0.8523128360148191,
+    -1.0081130440505046,
+    -0.9493165333413562,
+    -1.0448036626263404,
+    -0.9930292184246378,
+    -1.0274893802470482,
+    -1.070952225418179,
+    -1.0354429601519077,
+    -1.0579316454088807,
+    -1.0483687625669276,
+    -1.0526352847394238,
+    -1.0396497785604246,
+    -1.0591799950689769,
+    -1.0452699870215336,
+    -1.0517452173863369,
+    -1.0487011880233805
+  ],
+  "per_class_accuracy": [
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.0,
+      "domates_early_blight_yaprak": 0.0,
+      "domates_late_blight_yaprak": 0.0,
+      "domates_leaf_mold_yaprak": 0.0,
+      "domates_mosaic_virüs_yaprak": 0.02631578966975212,
+      "domates_powdery_mildew_yaprak": 0.01886792480945587,
+      "domates_sağlıklı_yaprak": 0.3008849620819092,
+      "domates_septoria_leaf_spot_yaprak": 0.3233082592487335,
+      "domates_spotted_wilt_yaprak": 0.0,
+      "domates_yellow_leaf_curl_yaprak": 0.8311688303947449
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.5301204919815063,
+      "domates_early_blight_yaprak": 0.17482517659664154,
+      "domates_late_blight_yaprak": 0.31677019596099854,
+      "domates_leaf_mold_yaprak": 0.7524752616882324,
+      "domates_mosaic_virüs_yaprak": 0.7982456088066101,
+      "domates_powdery_mildew_yaprak": 0.7358490824699402,
+      "domates_sağlıklı_yaprak": 0.7345132827758789,
+      "domates_septoria_leaf_spot_yaprak": 0.23308271169662476,
+      "domates_spotted_wilt_yaprak": 0.976190447807312,
+      "domates_yellow_leaf_curl_yaprak": 0.6753246784210205
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.5301204919815063,
+      "domates_early_blight_yaprak": 0.30069929361343384,
+      "domates_late_blight_yaprak": 0.52173912525177,
+      "domates_leaf_mold_yaprak": 0.8415841460227966,
+      "domates_mosaic_virüs_yaprak": 0.7982456088066101,
+      "domates_powdery_mildew_yaprak": 0.8679245114326477,
+      "domates_sağlıklı_yaprak": 0.9380530714988708,
+      "domates_septoria_leaf_spot_yaprak": 0.7443609237670898,
+      "domates_spotted_wilt_yaprak": 0.988095223903656,
+      "domates_yellow_leaf_curl_yaprak": 0.8701298832893372
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.740963876247406,
+      "domates_early_blight_yaprak": 0.3496503531932831,
+      "domates_late_blight_yaprak": 0.7080745100975037,
+      "domates_leaf_mold_yaprak": 0.9405940771102905,
+      "domates_mosaic_virüs_yaprak": 0.7982456088066101,
+      "domates_powdery_mildew_yaprak": 0.849056601524353,
+      "domates_sağlıklı_yaprak": 0.9469026327133179,
+      "domates_septoria_leaf_spot_yaprak": 0.7593985199928284,
+      "domates_spotted_wilt_yaprak": 0.988095223903656,
+      "domates_yellow_leaf_curl_yaprak": 0.9025974273681641
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.7108433842658997,
+      "domates_early_blight_yaprak": 0.32867133617401123,
+      "domates_late_blight_yaprak": 0.8447204828262329,
+      "domates_leaf_mold_yaprak": 0.9207921028137207,
+      "domates_mosaic_virüs_yaprak": 0.8245614171028137,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9646017551422119,
+      "domates_septoria_leaf_spot_yaprak": 0.8345864415168762,
+      "domates_spotted_wilt_yaprak": 0.988095223903656,
+      "domates_yellow_leaf_curl_yaprak": 0.9220778942108154
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8132529854774475,
+      "domates_early_blight_yaprak": 0.4965035021305084,
+      "domates_late_blight_yaprak": 0.8260869383811951,
+      "domates_leaf_mold_yaprak": 0.9009901285171509,
+      "domates_mosaic_virüs_yaprak": 0.8245614171028137,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9646017551422119,
+      "domates_septoria_leaf_spot_yaprak": 0.8496240377426147,
+      "domates_spotted_wilt_yaprak": 0.988095223903656,
+      "domates_yellow_leaf_curl_yaprak": 0.9545454382896423
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.891566276550293,
+      "domates_early_blight_yaprak": 0.42657342553138733,
+      "domates_late_blight_yaprak": 0.8757764101028442,
+      "domates_leaf_mold_yaprak": 0.9504950642585754,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.8867924809455872,
+      "domates_sağlıklı_yaprak": 0.991150438785553,
+      "domates_septoria_leaf_spot_yaprak": 0.8120300769805908,
+      "domates_spotted_wilt_yaprak": 0.988095223903656,
+      "domates_yellow_leaf_curl_yaprak": 0.9415584206581116
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8674699068069458,
+      "domates_early_blight_yaprak": 0.6433566212654114,
+      "domates_late_blight_yaprak": 0.8571428656578064,
+      "domates_leaf_mold_yaprak": 0.9405940771102905,
+      "domates_mosaic_virüs_yaprak": 0.8421052694320679,
+      "domates_powdery_mildew_yaprak": 0.8867924809455872,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8496240377426147,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.948051929473877
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8795180916786194,
+      "domates_early_blight_yaprak": 0.5874125957489014,
+      "domates_late_blight_yaprak": 0.9130434989929199,
+      "domates_leaf_mold_yaprak": 0.9108911156654358,
+      "domates_mosaic_virüs_yaprak": 0.8421052694320679,
+      "domates_powdery_mildew_yaprak": 0.9056603908538818,
+      "domates_sağlıklı_yaprak": 0.991150438785553,
+      "domates_septoria_leaf_spot_yaprak": 0.8045112490653992,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.948051929473877
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8614457845687866,
+      "domates_early_blight_yaprak": 0.692307710647583,
+      "domates_late_blight_yaprak": 0.8633540272712708,
+      "domates_leaf_mold_yaprak": 0.9009901285171509,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9622641801834106,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8421052694320679,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9610389471054077
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8734939694404602,
+      "domates_early_blight_yaprak": 0.7552447319030762,
+      "domates_late_blight_yaprak": 0.8385093212127686,
+      "domates_leaf_mold_yaprak": 0.9405940771102905,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9056603908538818,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8421052694320679,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9610389471054077
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8433734774589539,
+      "domates_early_blight_yaprak": 0.7272727489471436,
+      "domates_late_blight_yaprak": 0.888198733329773,
+      "domates_leaf_mold_yaprak": 0.9207921028137207,
+      "domates_mosaic_virüs_yaprak": 0.8333333134651184,
+      "domates_powdery_mildew_yaprak": 0.9622641801834106,
+      "domates_sağlıklı_yaprak": 0.982300877571106,
+      "domates_septoria_leaf_spot_yaprak": 0.8721804618835449,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9610389471054077
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8975903391838074,
+      "domates_early_blight_yaprak": 0.8041958212852478,
+      "domates_late_blight_yaprak": 0.8260869383811951,
+      "domates_leaf_mold_yaprak": 0.9009901285171509,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9622641801834106,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8571428656578064,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9610389471054077
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8855421543121338,
+      "domates_early_blight_yaprak": 0.7552447319030762,
+      "domates_late_blight_yaprak": 0.9068322777748108,
+      "domates_leaf_mold_yaprak": 0.9207921028137207,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9245283007621765,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8571428656578064,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8795180916786194,
+      "domates_early_blight_yaprak": 0.7622377872467041,
+      "domates_late_blight_yaprak": 0.850931704044342,
+      "domates_leaf_mold_yaprak": 0.9306930899620056,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8646616339683533,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.891566276550293,
+      "domates_early_blight_yaprak": 0.7412587404251099,
+      "domates_late_blight_yaprak": 0.8819875717163086,
+      "domates_leaf_mold_yaprak": 0.9405940771102905,
+      "domates_mosaic_virüs_yaprak": 0.8421052694320679,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8345864415168762,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9740259647369385
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8855421543121338,
+      "domates_early_blight_yaprak": 0.7902097702026367,
+      "domates_late_blight_yaprak": 0.8447204828262329,
+      "domates_leaf_mold_yaprak": 0.9306930899620056,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8571428656578064,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.891566276550293,
+      "domates_early_blight_yaprak": 0.7622377872467041,
+      "domates_late_blight_yaprak": 0.8695651888847351,
+      "domates_leaf_mold_yaprak": 0.9306930899620056,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9622641801834106,
+      "domates_sağlıklı_yaprak": 0.982300877571106,
+      "domates_septoria_leaf_spot_yaprak": 0.8646616339683533,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8975903391838074,
+      "domates_early_blight_yaprak": 0.7622377872467041,
+      "domates_late_blight_yaprak": 0.8757764101028442,
+      "domates_leaf_mold_yaprak": 0.9207921028137207,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9622641801834106,
+      "domates_sağlıklı_yaprak": 0.982300877571106,
+      "domates_septoria_leaf_spot_yaprak": 0.8571428656578064,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    },
+    {
+      "domates_bacterial_spot_and_speck_yaprak": 0.8975903391838074,
+      "domates_early_blight_yaprak": 0.7622377872467041,
+      "domates_late_blight_yaprak": 0.8757764101028442,
+      "domates_leaf_mold_yaprak": 0.9207921028137207,
+      "domates_mosaic_virüs_yaprak": 0.8508771657943726,
+      "domates_powdery_mildew_yaprak": 0.9433962106704712,
+      "domates_sağlıklı_yaprak": 0.9734513163566589,
+      "domates_septoria_leaf_spot_yaprak": 0.8571428656578064,
+      "domates_spotted_wilt_yaprak": 1.0,
+      "domates_yellow_leaf_curl_yaprak": 0.9675324559211731
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 166
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 161
+      },
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 143
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.17482517659664154,
+        "support": 143
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.23308271169662476,
+        "support": 133
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.31677019596099854,
+        "support": 161
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.30069929361343384,
+        "support": 143
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.52173912525177,
+        "support": 161
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5301204919815063,
+        "support": 166
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.3496503531932831,
+        "support": 143
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.7080745100975037,
+        "support": 161
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.740963876247406,
+        "support": 166
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.32867133617401123,
+        "support": 143
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7108433842658997,
+        "support": 166
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8245614171028137,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.4965035021305084,
+        "support": 143
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.8132529854774475,
+        "support": 166
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8245614171028137,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.42657342553138733,
+        "support": 143
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8120300769805908,
+        "support": 133
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.6433566212654114,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8421052694320679,
+        "support": 114
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8496240377426147,
+        "support": 133
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.5874125957489014,
+        "support": 143
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8045112490653992,
+        "support": 133
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8421052694320679,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.692307710647583,
+        "support": 143
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8421052694320679,
+        "support": 133
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7552447319030762,
+        "support": 143
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.8385093212127686,
+        "support": 161
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8421052694320679,
+        "support": 133
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7272727489471436,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8333333134651184,
+        "support": 114
+      },
+      {
+        "class_name": "domates_bacterial_spot_and_speck_yaprak",
+        "class_index": 0,
+        "accuracy": 0.8433734774589539,
+        "support": 166
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.8041958212852478,
+        "support": 143
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.8260869383811951,
+        "support": 161
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7552447319030762,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8571428656578064,
+        "support": 133
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7622377872467041,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.850931704044342,
+        "support": 161
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7412587404251099,
+        "support": 143
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8345864415168762,
+        "support": 133
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8421052694320679,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7902097702026367,
+        "support": 143
+      },
+      {
+        "class_name": "domates_late_blight_yaprak",
+        "class_index": 2,
+        "accuracy": 0.8447204828262329,
+        "support": 161
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7622377872467041,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8646616339683533,
+        "support": 133
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7622377872467041,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8571428656578064,
+        "support": 133
+      }
+    ],
+    [
+      {
+        "class_name": "domates_early_blight_yaprak",
+        "class_index": 1,
+        "accuracy": 0.7622377872467041,
+        "support": 143
+      },
+      {
+        "class_name": "domates_mosaic_virüs_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8508771657943726,
+        "support": 114
+      },
+      {
+        "class_name": "domates_septoria_leaf_spot_yaprak",
+        "class_index": 7,
+        "accuracy": 0.8571428656578064,
+        "support": 133
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 1060,
+  "optimizer_steps": 1060,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 17,
+  "best_metric_value": 0.4399507060500682
+}
