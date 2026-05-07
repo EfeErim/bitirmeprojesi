@@ -217,14 +217,14 @@ Current phase-2 analysis behavior:
 
 - `pareto_frontiers.json` lists the non-dominated runs inside each comparable cohort
 - `automatic_wins.md` mirrors those cohort winners in a human-readable Markdown summary
-- Bayesian proposal generation is disabled, so fresh registry rebuilds do not write `bayesian_recommendations.json`
+- Notebook 2 refreshes Bayesian proposals by default; standalone registry rebuilds write adapter/cohort-scoped `bayesian_recommendations.json` only when explicitly enabled
 - registry files are rebuilt automatically when Notebook 2 traceability updates refresh the local run registry
 
 Notebook 2 campaign behavior:
 
-- Bayesian optimizer campaign automation is disabled.
-- Notebook 2 uses the visible notebook parameters only.
-- If `OPTIMIZATION_CAMPAIGN_MODE` is set to `continue` or `stop`, the helper ignores it and records disabled campaign status.
+- `ENABLE_BAYESIAN_OPTIMIZATION=True` is the Notebook 2 default.
+- Notebook 2 loads the current crop/part adapter cohort's next recommendation from `runs/_index/bayesian_recommendations.json` before manual overrides, then refreshes recommendations after the completed run updates traceability.
+- If no recommendation exists yet, Notebook 2 uses the visible adapter defaults plus `DEFAULT_RUNTIME_PARAMS`.
 
 When you want to inspect the comparable cohort directly from the repo, use:
 
@@ -232,7 +232,7 @@ When you want to inspect the comparable cohort directly from the repo, use:
 .\scripts\python.cmd scripts/optimize_training_runs.py --dataset-lineage-key <dataset_key>::<split_manifest_sha256> --crop-name <crop> --part-name <part>
 ```
 
-This command reports Pareto context only. Bayesian proposals and `--execute` optimization runs are disabled.
+This command reports Pareto context by default. Add `--enable-bayesian-optimization` to write and show proposal candidates. `--execute` optimization runs remain disabled.
 
 ## How The Split Is Created
 

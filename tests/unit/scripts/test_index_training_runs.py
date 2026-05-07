@@ -97,6 +97,52 @@ def test_collect_trial_records_resolves_nested_crop_part_run_dir(tmp_path: Path)
     assert Path(trials[0]["registry_source"]["run_dir"]) == run_dir
 
 
+def test_build_run_registry_can_write_bayesian_recommendations_when_enabled(tmp_path: Path):
+    runs_root = tmp_path / "runs"
+    cohort_key = "tomato__leaf::sha_a::tomato::leaf::continual_sd_lora::fake/backbone"
+    for index, learning_rate in enumerate((0.00010, 0.00014, 0.00018), start=1):
+        artifact_root = runs_root / f"run_{index}" / "training_metrics"
+        manifest, optimization = _canonical_record(
+            run_id=f"run_{index}",
+            cohort_key=cohort_key,
+            artifact_root=artifact_root,
+        )
+        optimization["parameters"] = {"training.learning_rate": learning_rate}
+        optimization["objectives"] = {
+            "classification.macro_f1": 0.80 + index * 0.02,
+            "ood.ood_auroc": 0.75 + index * 0.02,
+            "ood.ood_false_positive_rate": 0.20 - index * 0.02,
+        }
+        optimization["objective_directions"] = {
+            "classification.macro_f1": "maximize",
+            "ood.ood_auroc": "maximize",
+            "ood.ood_false_positive_rate": "minimize",
+        }
+        _write_json(artifact_root / "training" / "experiment_manifest.json", manifest)
+        _write_json(artifact_root / "training" / "optimization_record.json", optimization)
+
+    result = build_run_registry(
+        runs_root=runs_root,
+        enable_bayesian_proposals=True,
+        proposal_count=2,
+        candidate_pool_size=16,
+        search_space_payload={
+            "parameters": [
+                {"name": "training.learning_rate", "type": "float", "low": 5e-5, "high": 3e-4, "scale": "log"}
+            ]
+        },
+    )
+
+    recommendations_path = runs_root / "_index" / "bayesian_recommendations.json"
+    recommendations = json.loads(recommendations_path.read_text(encoding="utf-8"))
+    assert result["latest_registry"]["bayesian_optimization_enabled"] is True
+    assert result["latest_registry"]["paths"]["bayesian_recommendations_json"].endswith(
+        "bayesian_recommendations.json"
+    )
+    assert recommendations["cohort_count"] == 1
+    assert len(recommendations["cohorts"][0]["proposals"]) == 2
+
+
 def test_build_run_registry_backfills_old_runs_and_separates_cohorts(tmp_path: Path):
     runs_root = tmp_path / "runs"
     first_root = runs_root / "run_a" / "training_metrics"

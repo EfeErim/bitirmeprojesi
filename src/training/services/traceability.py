@@ -67,14 +67,22 @@ def _resolve_runs_root_for_registry(artifact_root: str | Path) -> Path | None:
     return None
 
 
-def _try_refresh_run_registry(*, artifact_root: str | Path, telemetry: Any = None) -> Dict[str, Any]:
+def _try_refresh_run_registry(
+    *,
+    artifact_root: str | Path,
+    telemetry: Any = None,
+    enable_bayesian_proposals: bool = False,
+) -> Dict[str, Any]:
     runs_root = _resolve_runs_root_for_registry(artifact_root)
     if runs_root is None:
         return {}
     try:
         from scripts.index_training_runs import build_run_registry
 
-        result = build_run_registry(runs_root=runs_root)
+        result = build_run_registry(
+            runs_root=runs_root,
+            enable_bayesian_proposals=bool(enable_bayesian_proposals),
+        )
     except Exception as exc:
         logger.warning("Automatic run-registry refresh failed for artifact_root=%s: %s", artifact_root, exc)
         return {}
@@ -607,6 +615,7 @@ def persist_traceability_artifacts(
     optimization_record: Mapping[str, Any],
     telemetry: Any = None,
     auto_refresh_registry: bool = True,
+    enable_bayesian_proposals: bool = False,
 ) -> Dict[str, Any]:
     root = Path(artifact_root)
     training_dir = _artifact_dir(root, "training")
@@ -621,7 +630,11 @@ def persist_traceability_artifacts(
         "optimization_record_json": optimization_json,
     }
     if auto_refresh_registry:
-        registry_result = _try_refresh_run_registry(artifact_root=root, telemetry=telemetry)
+        registry_result = _try_refresh_run_registry(
+            artifact_root=root,
+            telemetry=telemetry,
+            enable_bayesian_proposals=bool(enable_bayesian_proposals),
+        )
         if registry_result:
             result["run_registry"] = registry_result
     return result

@@ -1,8 +1,8 @@
 # Auto-extracted from colab_notebooks/2_train_continual_sd_lora_adapter.ipynb cell 4.
 # Resolves Notebook 2 parameters after the user-editable values are set.
 
-# User-facing Notebook 2 adapter/default surface moved from the notebook cell.
-# Keep the notebook cell short; this script still exposes explicit values to validation.
+# User-facing Notebook 2 adapter/default surface lives in the notebook cell.
+# Keep behavior here aligned with visible ADAPTER_RECS and DEFAULT_RUNTIME_PARAMS.
 # Notebook 2 calisma kimligi
 # Bootstrap/validator defaultlari; ADAPTER_KEY secimi asagida bunlari kesin olarak ezer.
 CROP_NAME = "tomato"
@@ -13,8 +13,9 @@ DATASET_NAME = ""
 # Bu anahtar crop/part, runtime dataset, OOD ve OE yollarini gorunur sekilde set eder.
 ADAPTER_KEY = str(globals().get("ADAPTER_KEY", "grape__fruit")).strip()
 _USER_MANUAL_PARAM_OVERRIDES = dict(globals().get("MANUAL_PARAM_OVERRIDES") or {})
+_USER_DEFAULT_RUNTIME_PARAMS = dict(globals().get("DEFAULT_RUNTIME_PARAMS") or {})
 
-ADAPTER_RECS = {
+ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or {
     "grape__fruit": {
         "crop": "grape", "part": "fruit",
         "ood": "data/prepared_runtime_datasets/grape__fruit/ood",
@@ -57,7 +58,7 @@ ADAPTER_RECS = {
         "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
         "overrides": {"EPOCHS": 20, "BATCH_SIZE": 96, "LEARNING_RATE": 1.2e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
     },
-}
+})
 
 if ADAPTER_KEY not in ADAPTER_RECS:
     raise ValueError(f"Unsupported ADAPTER_KEY={ADAPTER_KEY!r}. Options: {sorted(ADAPTER_RECS)}")
@@ -118,7 +119,7 @@ OE_LOSS_WEIGHT = 0.5
 # CROP_NAME ve PART_NAME, kosu adlandirmasi ve metadata icin kullanilir.
 CROP_NAME = globals().get("CROP_NAME", "tomato")
 PART_NAME = globals().get("PART_NAME", "unspecified")
-ENABLE_BAYESIAN_OPTIMIZATION = bool(globals().get("ENABLE_BAYESIAN_OPTIMIZATION", False))
+ENABLE_BAYESIAN_OPTIMIZATION = bool(globals().get("ENABLE_BAYESIAN_OPTIMIZATION", True))
 
 # ALLOW_UNDER_MIN_TRAINING: True olursa 100 image/class production guardrail'i research kosulari icin bypass edilir.
 ALLOW_UNDER_MIN_TRAINING = False
@@ -251,19 +252,24 @@ VALIDATION_EVERY_N_EPOCHS = 1
 
 _adapter_default_overrides = {
     **rec["overrides"],
-    "WEIGHT_DECAY": 0.01,
-    "LOSS_NAME": "logitnorm",
-    "LOGITNORM_TAU": 1.0,
-    "MIXED_PRECISION": "bf16",
-    "GRAD_ACCUM_STEPS": 1,
-    "VALIDATION_EVERY_N_EPOCHS": 1,
-    "EARLY_STOPPING_PATIENCE": 6,
-    "RANDAUGMENT_NUM_OPS": 2,
-    "RANDAUGMENT_MAGNITUDE": 7,
-    "NUM_WORKERS": 12,
-    "PREFETCH": 8,
-    "CACHE_TRAIN_SPLIT": True,
+    **_USER_DEFAULT_RUNTIME_PARAMS,
 }
+_adapter_default_overrides.setdefault("WEIGHT_DECAY", 0.01)
+_adapter_default_overrides.setdefault("LOSS_NAME", "logitnorm")
+_adapter_default_overrides.setdefault("LOGITNORM_TAU", 1.0)
+_adapter_default_overrides.setdefault("MIXED_PRECISION", "bf16")
+_adapter_default_overrides.setdefault("GRAD_ACCUM_STEPS", 1)
+_adapter_default_overrides.setdefault("VALIDATION_EVERY_N_EPOCHS", 1)
+_adapter_default_overrides.setdefault("EARLY_STOPPING_PATIENCE", 6)
+_adapter_default_overrides.setdefault("RANDAUGMENT_NUM_OPS", 2)
+_adapter_default_overrides.setdefault("RANDAUGMENT_MAGNITUDE", 7)
+_adapter_default_overrides.setdefault("NUM_WORKERS", 12)
+_adapter_default_overrides.setdefault("PREFETCH", 8)
+_adapter_default_overrides.setdefault("CACHE_TRAIN_SPLIT", True)
+_adapter_default_overrides["ENABLE_BAYESIAN_OPTIMIZATION"] = bool(
+    _adapter_default_overrides.get("ENABLE_BAYESIAN_OPTIMIZATION", ENABLE_BAYESIAN_OPTIMIZATION)
+)
+ENABLE_BAYESIAN_OPTIMIZATION = bool(_adapter_default_overrides["ENABLE_BAYESIAN_OPTIMIZATION"])
 MANUAL_PARAM_OVERRIDES = {}
 MANUAL_PARAM_OVERRIDES = {
     **_adapter_default_overrides,
@@ -404,6 +410,7 @@ def _collect_bayesian_notebook_overrides():
         "training.adapter.lora_dropout": "LORA_DROPOUT",
         "training.ood.threshold_factor": "OOD_FACTOR",
         "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
+        "training.optimization.label_smoothing": "LABEL_SMOOTHING",
         "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
         "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
     }

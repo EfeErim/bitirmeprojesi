@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_pareto_frontiers",
-  "generated_at": "2026-05-02T17:50:06.335193+00:00",
+  "generated_at": "2026-05-07T12:32:45.325585+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "objective_names": [
     "classification.macro_f1",
@@ -10,14 +10,14 @@
   "cohort_count": 4,
   "cohorts": [
     {
-      "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
+      "cohort_key": "strawberry__fruit::strawberry::fruit::continual_sd_lora",
       "comparability": {
-        "dataset_lineage_key": "grape__fruit",
-        "crop_name": "grape",
+        "dataset_lineage_key": "strawberry__fruit",
+        "crop_name": "strawberry",
         "part_name": "fruit",
         "engine": "continual_sd_lora",
         "backbone_model_name": "",
-        "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora"
+        "cohort_key": "strawberry__fruit::strawberry::fruit::continual_sd_lora"
       },
       "objective_names": [
         "classification.macro_f1",
@@ -36,21 +36,21 @@
       "frontier_runs": [],
       "excluded_runs": [
         {
-          "run_id": "grape_fruit_2026-04-21_20-22-20",
-          "run_label": "grape_fruit_2026-04-21_20-22-20",
+          "run_id": "strawberry_fruit_2026-05-06_05-46-28",
+          "run_label": "strawberry_fruit_2026-05-06_05-46-28",
           "reason": "readiness_not_passed"
         }
       ]
     },
     {
-      "cohort_key": "grape__leaf::grape::leaf::continual_sd_lora",
+      "cohort_key": "strawberry__leaf::strawberry::leaf::continual_sd_lora",
       "comparability": {
-        "dataset_lineage_key": "grape__leaf",
-        "crop_name": "grape",
+        "dataset_lineage_key": "strawberry__leaf",
+        "crop_name": "strawberry",
         "part_name": "leaf",
         "engine": "continual_sd_lora",
         "backbone_model_name": "",
-        "cohort_key": "grape__leaf::grape::leaf::continual_sd_lora"
+        "cohort_key": "strawberry__leaf::strawberry::leaf::continual_sd_lora"
       },
       "objective_names": [
         "classification.macro_f1",
@@ -63,14 +63,19 @@
         "ood.ood_false_positive_rate": "minimize"
       },
       "eligible_run_count": 0,
-      "excluded_run_count": 1,
+      "excluded_run_count": 2,
       "frontier_count": 0,
       "frontier_run_ids": [],
       "frontier_runs": [],
       "excluded_runs": [
         {
-          "run_id": "grape_leaf_2026-04-22_11-07-15",
-          "run_label": "grape_leaf_2026-04-22_11-07-15",
+          "run_id": "strawberry_leaf_2026-05-04_20-57-37",
+          "run_label": "strawberry_leaf_2026-05-04_20-57-37",
+          "reason": "readiness_not_passed"
+        },
+        {
+          "run_id": "strawberry_leaf_2026-05-06_06-00-15",
+          "run_label": "strawberry_leaf_2026-05-06_06-00-15",
           "reason": "readiness_not_passed"
         }
       ]
@@ -96,7 +101,7 @@
         "ood.ood_false_positive_rate": "minimize"
       },
       "eligible_run_count": 0,
-      "excluded_run_count": 1,
+      "excluded_run_count": 2,
       "frontier_count": 0,
       "frontier_run_ids": [],
       "frontier_runs": [],
@@ -104,6 +109,11 @@
         {
           "run_id": "tomato_fruit_2026-04-21_20-07-45",
           "run_label": "tomato_fruit_2026-04-21_20-07-45",
+          "reason": "readiness_not_passed"
+        },
+        {
+          "run_id": "tomato_unspecified_2026-05-05_16-16-31",
+          "run_label": "tomato_unspecified_2026-05-05_16-16-31",
           "reason": "readiness_not_passed"
         }
       ]
@@ -129,7 +139,7 @@
         "ood.ood_false_positive_rate": "minimize"
       },
       "eligible_run_count": 0,
-      "excluded_run_count": 1,
+      "excluded_run_count": 2,
       "frontier_count": 0,
       "frontier_run_ids": [],
       "frontier_runs": [],
@@ -137,6 +147,11 @@
         {
           "run_id": "tomato_leaf_2026-04-21_19-33-49",
           "run_label": "tomato_leaf_2026-04-21_19-33-49",
+          "reason": "readiness_not_passed"
+        },
+        {
+          "run_id": "tomato_unspecified_2026-05-05_15-40-44",
+          "run_label": "tomato_unspecified_2026-05-05_15-40-44",
           "reason": "readiness_not_passed"
         }
       ]

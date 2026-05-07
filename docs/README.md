@@ -33,8 +33,8 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 
 Optimizer status note:
 
-- Bayesian proposals are disabled.
-- Notebook 2 ignores `OPTIMIZATION_CAMPAIGN_MODE` (`continue`/`stop`) and records disabled campaign status.
+- Notebook 2 enables adapter/cohort-scoped Bayesian recommendations by default with `ENABLE_BAYESIAN_OPTIMIZATION=True`.
+- The standalone registry and optimizer CLIs still require an explicit Bayesian flag before writing `bayesian_recommendations.json`.
 
 Dataset formats:
 

@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from src.shared.json_utils import read_json, write_json
-from src.training.services.optimization import build_pareto_frontiers
+from src.training.services.optimization import build_bayesian_recommendations, build_pareto_frontiers
 from src.training.services.traceability import (
     build_experiment_manifest,
     build_optimization_record,
@@ -502,6 +502,11 @@ def write_registry(
     *,
     trials: Iterable[JsonDict],
     output_root: str | Path,
+    enable_bayesian_proposals: bool = False,
+    proposal_count: int = 3,
+    candidate_pool_size: int = 256,
+    random_seed: int = 42,
+    search_space_payload: Any = None,
 ) -> JsonDict:
     root = Path(output_root)
     root.mkdir(parents=True, exist_ok=True)
@@ -516,14 +521,24 @@ def write_registry(
     pareto_inputs_path = write_json(root / "pareto_inputs.json", pareto_inputs, ensure_ascii=False)
     pareto_frontiers = build_pareto_frontiers(materialized_trials)
     pareto_frontiers_path = write_json(root / "pareto_frontiers.json", pareto_frontiers, ensure_ascii=False)
-    stale_bayesian_recommendations_path = root / "bayesian_recommendations.json"
-    if stale_bayesian_recommendations_path.exists():
-        stale_bayesian_recommendations_path.unlink()
+    bayesian_recommendations_path = root / "bayesian_recommendations.json"
+    bayesian_recommendations = None
+    if enable_bayesian_proposals:
+        bayesian_recommendations = build_bayesian_recommendations(
+            materialized_trials,
+            proposal_count=int(proposal_count),
+            candidate_pool_size=int(candidate_pool_size),
+            random_seed=int(random_seed),
+            search_space_payload=search_space_payload,
+        )
+        write_json(bayesian_recommendations_path, bayesian_recommendations, ensure_ascii=False)
+    elif bayesian_recommendations_path.exists():
+        bayesian_recommendations_path.unlink()
     latest_registry_payload = {
         "schema_version": REGISTRY_SCHEMA,
         "generated_at": pareto_inputs["generated_at"],
         "optimization_profile": "accuracy_plus_ood",
-        "bayesian_optimization_enabled": False,
+        "bayesian_optimization_enabled": bool(enable_bayesian_proposals),
         "trial_count": len(materialized_trials),
         "canonical_count": sum(1 for trial in materialized_trials if trial.get("record_quality") == "canonical"),
         "backfilled_count": sum(1 for trial in materialized_trials if trial.get("record_quality") == "backfilled"),
@@ -542,6 +557,11 @@ def write_registry(
             for cohort in pareto_inputs.get("cohorts", [])
         ],
     }
+    if bayesian_recommendations is not None:
+        latest_registry_payload["paths"]["bayesian_recommendations_json"] = str(bayesian_recommendations_path)
+        latest_registry_payload["bayesian_recommendation_cohort_count"] = int(
+            bayesian_recommendations.get("cohort_count", 0)
+        )
     automatic_wins_markdown = _render_automatic_wins_markdown(
         latest_registry=latest_registry_payload,
         pareto_frontiers=pareto_frontiers,
@@ -550,7 +570,7 @@ def write_registry(
     automatic_wins_markdown_path.write_text(automatic_wins_markdown, encoding="utf-8")
     latest_registry_payload["paths"]["automatic_wins_markdown"] = str(automatic_wins_markdown_path)
     latest_registry_path = write_json(root / "latest_registry.json", latest_registry_payload, ensure_ascii=False)
-    return {
+    result = {
         "trials_jsonl": trials_jsonl,
         "pareto_inputs_json": pareto_inputs_path,
         "pareto_frontiers_json": pareto_frontiers_path,
@@ -558,21 +578,53 @@ def write_registry(
         "latest_registry_json": latest_registry_path,
         "latest_registry": latest_registry_payload,
     }
+    if bayesian_recommendations is not None:
+        result["bayesian_recommendations_json"] = bayesian_recommendations_path
+        result["bayesian_recommendations"] = bayesian_recommendations
+    return result
 
 
-def build_run_registry(*, runs_root: str | Path, output_root: str | Path | None = None) -> JsonDict:
+def build_run_registry(
+    *,
+    runs_root: str | Path,
+    output_root: str | Path | None = None,
+    enable_bayesian_proposals: bool = False,
+    proposal_count: int = 3,
+    candidate_pool_size: int = 256,
+    random_seed: int = 42,
+    search_space_payload: Any = None,
+) -> JsonDict:
     resolved_runs_root = Path(runs_root)
     resolved_output_root = Path(output_root) if output_root is not None else (resolved_runs_root / "_index")
     trials = collect_trial_records(resolved_runs_root)
-    return write_registry(trials=trials, output_root=resolved_output_root)
+    return write_registry(
+        trials=trials,
+        output_root=resolved_output_root,
+        enable_bayesian_proposals=enable_bayesian_proposals,
+        proposal_count=proposal_count,
+        candidate_pool_size=candidate_pool_size,
+        random_seed=random_seed,
+        search_space_payload=search_space_payload,
+    )
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs-root", type=Path, default=Path("runs"))
     parser.add_argument("--output-root", type=Path)
+    parser.add_argument("--enable-bayesian-proposals", action="store_true")
+    parser.add_argument("--proposal-count", type=int, default=3)
+    parser.add_argument("--candidate-pool-size", type=int, default=256)
+    parser.add_argument("--random-seed", type=int, default=42)
     args = parser.parse_args()
-    result = build_run_registry(runs_root=args.runs_root, output_root=args.output_root)
+    result = build_run_registry(
+        runs_root=args.runs_root,
+        output_root=args.output_root,
+        enable_bayesian_proposals=bool(args.enable_bayesian_proposals),
+        proposal_count=int(args.proposal_count),
+        candidate_pool_size=int(args.candidate_pool_size),
+        random_seed=int(args.random_seed),
+    )
     print(json.dumps(result["latest_registry"], indent=2, ensure_ascii=False))
     return 0
 

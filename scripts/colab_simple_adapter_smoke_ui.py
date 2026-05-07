@@ -30,6 +30,16 @@ discover_adapter_candidates = None
 load_adapter_summary = None
 predict_single_image = None
 
+_PREDICTION_ERROR_TYPES = (
+    FileNotFoundError,
+    ValueError,
+    RuntimeError,
+    OSError,
+    TypeError,
+    KeyError,
+    AttributeError,
+)
+
 def _ensure_adapter_smoke_imports():
     """Lazy import adapter smoke functions when needed."""
     global _build_prediction_visualization_images, _discover_adapter_candidates, _load_adapter_summary, _predict_single_image
@@ -70,6 +80,105 @@ def _cached_discover_adapter_candidates(
             collapse_run_mirrors=collapse_run_mirrors,
         )
     )
+
+
+def _discover_adapter_candidates_for_ui(
+    search_roots_key: tuple[str, ...],
+    *,
+    collapse_run_mirrors: bool,
+    discovery_token: int,
+    refresh_nonce: int,
+) -> list[dict[str, Any]]:
+    return list(
+        _cached_discover_adapter_candidates(
+            search_roots_key,
+            None,
+            collapse_run_mirrors,
+            discovery_token,
+            refresh_nonce,
+        )
+    )
+
+
+def _adapter_dropdown_options(adapter_candidates: list[dict[str, Any]]) -> list[tuple[str, int]]:
+    options = [
+        (candidate["display_name"], index)
+        for index, candidate in enumerate(adapter_candidates)
+    ]
+    return options or [("Adapter bulunamadi, asagidan yol girin", -1)]
+
+
+def _show_status_message(output_widget: Any, *messages: str) -> None:
+    with output_widget:
+        clear_output(wait=True)
+        for message in messages:
+            print(message)
+
+
+def _error_box_html(
+    title: str,
+    message: str,
+    *,
+    border_color: str = "#fecaca",
+    background_color: str = "#fff7f7",
+    text_color: str = "#991b1b",
+) -> str:
+    return (
+        f'<div style="border:1px solid {border_color};border-radius:10px;padding:12px;margin-top:12px;'
+        f'background:{background_color};color:{text_color};">'
+        f"<b>{escape(title)}</b><pre style=\"white-space:pre-wrap;word-break:break-word;\">"
+        f"{escape(message)}</pre></div>"
+    )
+
+
+def _display_html(output_widget: Any, html_text: str) -> None:
+    with output_widget:
+        clear_output(wait=True)
+        display(HTML(html_text))
+
+
+def _section_header_html(title: str) -> str:
+    return f'<div style="margin-top:12px;font-weight:700;color:#111827;">{escape(title)}</div>'
+
+
+def _raw_json_details_html(payload: dict[str, Any]) -> str:
+    return (
+        "<details><summary>Ham JSON</summary><pre>"
+        + json.dumps(payload, indent=2)
+        + "</pre></details>"
+    )
+
+
+def _display_error_box(output_widget: Any, title: str, message: str) -> None:
+    _display_html(output_widget, _error_box_html(title, message))
+
+
+def _load_adapter_summary_for_candidate(
+    candidate: dict[str, Any],
+    *,
+    config_env: str,
+    device: str,
+) -> dict[str, Any]:
+    return load_adapter_summary(
+        candidate.get("crop_name"),
+        adapter_dir=candidate.get("adapter_dir"),
+        config_env=config_env,
+        device=device,
+    )
+
+
+def _apply_dropdown_options(dropdown: Any, options: list[tuple[str, int]]) -> None:
+    dropdown.options = options
+    dropdown.value = options[0][1]
+
+
+def _build_help_text_html(running_in_colab: bool) -> str:
+    help_parts = ["Adapter secin veya yol girin."]
+    if running_in_colab:
+        help_parts.append("Yeni tahmin icin hucreyi tekrar calistirmadan resim yukleyin veya mevcut resim yolunu degistirin.")
+    else:
+        help_parts.append("Colab disinda <b>Resim</b> alanina mevcut dosya yolunu girin.")
+    return "<p style=\"margin:0 0 12px 0;\">" + " ".join(help_parts) + "</p>"
 
 
 def _running_in_colab() -> bool:
@@ -426,36 +535,26 @@ def launch_simple_adapter_smoke_ui(
 
     _ensure_adapter_smoke_imports()
     adapter_candidates_key = tuple(str(candidate) for candidate in resolved_search_roots)
+    collapse_run_mirrors = not show_mirror_adapters
     discovery_token = id(discover_adapter_candidates)
     discovery_nonce = 0
-    adapter_candidates = list(
-        _cached_discover_adapter_candidates(
-            adapter_candidates_key,
-            None,
-            not show_mirror_adapters,
-            discovery_token,
-            discovery_nonce,
-        )
+    adapter_candidates = _discover_adapter_candidates_for_ui(
+        adapter_candidates_key,
+        collapse_run_mirrors=collapse_run_mirrors,
+        discovery_token=discovery_token,
+        refresh_nonce=discovery_nonce,
     )
-    dropdown_options = [
-        (candidate["display_name"], index)
-        for index, candidate in enumerate(adapter_candidates)
-    ] or [("Adapter bulunamadi, asagidan yol girin", -1)]
+    dropdown_options = _adapter_dropdown_options(adapter_candidates)
 
     title = widgets.HTML("<h3 style=\"margin:0 0 8px 0;\">Basit Adapter Testi</h3>")
-    help_parts = ["Adapter secin veya yol girin."]
-    if _running_in_colab():
-        help_parts.append("Yeni tahmin icin hucreyi tekrar calistirmadan resim yukleyin veya mevcut resim yolunu degistirin.")
-    else:
-        help_parts.append("Colab disinda <b>Resim</b> alanina mevcut dosya yolunu girin.")
-    help_text = widgets.HTML("<p style=\"margin:0 0 12px 0;\">" + " ".join(help_parts) + "</p>")
+    help_text = widgets.HTML(_build_help_text_html(_running_in_colab()))
     adapter_dropdown = widgets.Dropdown(
-        options=dropdown_options,
-        value=dropdown_options[0][1],
+        options=[],
         description="Adapter:",
         layout=widgets.Layout(width="95%"),
         style={"description_width": "80px"},
     )
+    _apply_dropdown_options(adapter_dropdown, dropdown_options)
     adapter_path_text = widgets.Text(
         value="",
         placeholder="Isterseniz ADAPTER_DIR veya adapter_meta.json yolu girin",
@@ -519,9 +618,7 @@ def launch_simple_adapter_smoke_ui(
             uploaded_path = _upload_via_colab_files(upload_dir)
             if uploaded_path is not None:
                 image_path_text.value = str(uploaded_path)
-                with status_output:
-                    clear_output(wait=True)
-                    print(f"Yuklenen resim hazir: {uploaded_path.name}")
+                _show_status_message(status_output, f"Yuklenen resim hazir: {uploaded_path.name}")
                 return uploaded_path
             raise ValueError("Colab upload iptal edildi veya dosya secilmedi.")
         raise ValueError("Bir resim yolu girin. Colab'da bos birakirsaniz upload penceresi acilir.")
@@ -531,89 +628,54 @@ def launch_simple_adapter_smoke_ui(
         if uploaded_path is None:
             return
         image_path_text.value = str(uploaded_path)
-        with status_output:
-            clear_output(wait=True)
-            print(f"Yuklenen resim hazir: {uploaded_path.name}")
+        _show_status_message(status_output, f"Yuklenen resim hazir: {uploaded_path.name}")
 
     def clear_image(_button: Any = None) -> None:
         image_path_text.value = ""
-        with status_output:
-            clear_output(wait=True)
-            print("Yeni resim yukleyin veya Resim alanina dosya yolu girin.")
-
-    def render_result(summary: dict[str, Any], result: dict[str, Any], image_path: Path) -> None:
-        display(HTML(_build_result_html(summary, result, image_path)))
+        _show_status_message(status_output, "Yeni resim yukleyin veya Resim alanina dosya yolu girin.")
 
     def render_adapter_details() -> None:
-        with adapter_details_output:
-            clear_output(wait=True)
-            try:
-                _ensure_adapter_smoke_imports()
-                candidate = selected_candidate()
-                summary = load_adapter_summary(
-                    candidate.get("crop_name"),
-                    adapter_dir=candidate.get("adapter_dir"),
-                    config_env=config_env,
-                    device=device,
-                )
-                display(HTML(_build_adapter_details_html(summary)))
-            except Exception as exc:
-                display(
-                    HTML(
-                        "<div style=\"border:1px solid #fecaca;border-radius:10px;padding:12px;background:#fff7f7;color:#991b1b;\">"
-                        "<b>Adapter bilgisi yuklenemedi:</b><pre style=\"white-space:pre-wrap;word-break:break-word;\">"
-                        + escape(str(exc))
-                        + "</pre></div>"
-                    )
-                )
+        try:
+            _ensure_adapter_smoke_imports()
+            candidate = selected_candidate()
+            summary = _load_adapter_summary_for_candidate(candidate, config_env=config_env, device=device)
+            _display_html(adapter_details_output, _build_adapter_details_html(summary))
+        except Exception as exc:
+            _display_error_box(adapter_details_output, "Adapter bilgisi yuklenemedi:", str(exc))
 
     def refresh(_button: Any = None) -> None:
         nonlocal adapter_candidates, discovery_nonce
-        with status_output:
-            clear_output(wait=True)
-            print("Adapter listesi yenileniyor...")
+        _show_status_message(status_output, "Adapter listesi yenileniyor...")
         _ensure_adapter_smoke_imports()
         discovery_nonce += 1
-        adapter_candidates = list(
-            _cached_discover_adapter_candidates(
-                adapter_candidates_key,
-                None,
-                not show_mirror_adapters,
-                id(discover_adapter_candidates),
-                discovery_nonce,
-            )
+        adapter_candidates = _discover_adapter_candidates_for_ui(
+            adapter_candidates_key,
+            collapse_run_mirrors=collapse_run_mirrors,
+            discovery_token=id(discover_adapter_candidates),
+            refresh_nonce=discovery_nonce,
         )
-        options = [
-            (candidate["display_name"], index)
-            for index, candidate in enumerate(adapter_candidates)
-        ] or [("Adapter bulunamadi, asagidan yol girin", -1)]
+        options = _adapter_dropdown_options(adapter_candidates)
         adapter_dropdown.options = options
         adapter_dropdown.value = options[0][1]
         render_adapter_details()
-        with status_output:
-            clear_output(wait=True)
-            print(f"Bulunan adapter sayisi: {len(adapter_candidates)}")
-            for candidate_root in resolved_search_roots:
-                print(f"- taranan kok: {candidate_root}")
+        _show_status_message(
+            status_output,
+            f"Bulunan adapter sayisi: {len(adapter_candidates)}",
+            *[f"- taranan kok: {candidate_root}" for candidate_root in resolved_search_roots],
+        )
 
     def run_prediction(_button: Any = None) -> None:
         with result_output:
             clear_output(wait=True)
             try:
                 _ensure_adapter_smoke_imports()
-                load_adapter_summary_fn = load_adapter_summary
                 predict_single_image_fn = predict_single_image
                 build_prediction_visualization_images_fn = build_prediction_visualization_images
                 image_path = resolve_image_path()
                 if not image_path.exists():
                     raise FileNotFoundError(f"Resim bulunamadi: {image_path}")
                 candidate = selected_candidate()
-                summary = load_adapter_summary_fn(
-                    candidate.get("crop_name"),
-                    adapter_dir=candidate.get("adapter_dir"),
-                    config_env=config_env,
-                    device=device,
-                )
+                summary = _load_adapter_summary_for_candidate(candidate, config_env=config_env, device=device)
                 required_keys = {"crop_name", "resolved_adapter_dir"}
                 missing_keys = required_keys - set(summary.keys())
                 if missing_keys:
@@ -636,35 +698,18 @@ def launch_simple_adapter_smoke_ui(
                 )
                 visualization_images = build_prediction_visualization_images_fn(image_path, result)
                 if visualization_images:
-                    display(HTML("<div style=\"margin-top:12px;font-weight:700;color:#111827;\">Model gorunumu ve aciklama haritasi</div>"))
+                    display(HTML(_section_header_html("Model gorunumu ve aciklama haritasi")))
                     display(visualization_images["model_view"])
                     display(visualization_images["heatmap_overlay"])
-                render_result(summary, result, image_path)
-                display(
-                    HTML(
-                        "<details><summary>Ham JSON</summary><pre>"
-                        + json.dumps(result, indent=2)
-                        + "</pre></details>"
-                    )
-                )
+                _display_html(result_output, _build_result_html(summary, result, image_path))
+                display(HTML(_raw_json_details_html(result)))
             except Exception as exc:
                 if _is_huggingface_gated_access_error(exc):
                     display(HTML(_hf_access_error_html(exc)))
                     return
-                expected_error_types = (
-                    FileNotFoundError, ValueError, RuntimeError, OSError, TypeError,
-                    KeyError, AttributeError
-                )
-                if not isinstance(exc, expected_error_types):
+                if not isinstance(exc, _PREDICTION_ERROR_TYPES):
                     raise
-                display(
-                    HTML(
-                        "<div style=\"border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px;background:#fff7f7;color:#991b1b;\">"
-                        "<b>Tahmin hatasi:</b><pre style=\"white-space:pre-wrap;word-break:break-word;\">"
-                        + escape(str(exc))
-                        + "</pre></div>"
-                    )
-                )
+                _display_error_box(result_output, "Tahmin hatasi:", str(exc))
 
     refresh_button.on_click(refresh)
     clear_image_button.on_click(clear_image)

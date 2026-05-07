@@ -143,6 +143,53 @@ def test_run_optimizer_analyzes_single_cohort(tmp_path: Path):
     assert "bayesian_recommendations_json" not in result["registry_paths"]
 
 
+def test_run_optimizer_writes_adapter_cohort_bayesian_proposals_when_enabled(tmp_path: Path):
+    runs_root = tmp_path / "runs"
+    _materialize_runs(runs_root)
+    search_space_json = tmp_path / "search_space.json"
+    _write_json(
+        search_space_json,
+        {
+            "parameters": [
+                {"name": "training.learning_rate", "type": "float", "low": 5e-5, "high": 3e-4, "scale": "log"}
+            ]
+        },
+    )
+    args = argparse.Namespace(
+        runs_root=runs_root,
+        index_root=runs_root / "_index",
+        cohort_key=None,
+        dataset_lineage_key="tomato__leaf::sha_a",
+        dataset_key=None,
+        crop_name="tomato",
+        part_name="leaf",
+        backbone_model_name="fake/backbone",
+        engine="continual_sd_lora",
+        objectives=[],
+        proposal_count=2,
+        candidate_pool_size=32,
+        random_seed=11,
+        search_space_json=search_space_json,
+        enable_bayesian_optimization=True,
+        execute=False,
+        config_env="colab",
+        device="cpu",
+        data_dir=None,
+        run_output_root=runs_root,
+        num_workers=None,
+        validation_every_n_epochs=None,
+    )
+
+    result = run_optimizer(args)
+
+    recommendations = result["selected_cohort"]["bayesian_recommendations"]
+    assert result["bayesian_optimization_enabled"] is True
+    assert recommendations["enabled"] is True
+    assert recommendations["eligible_run_count"] == 3
+    assert recommendations["proposal_count"] == 2
+    assert Path(result["registry_paths"]["bayesian_recommendations_json"]).exists()
+
+
 def test_run_optimizer_executes_proposals(monkeypatch, tmp_path: Path):
     import src.workflows.training as training_module
 

@@ -303,6 +303,9 @@ summary_payload = merge_training_summary_fields(
             "mixed_precision": (STATE.get("effective_params") or {}).get("MIXED_PRECISION"),
             "num_workers": (STATE.get("effective_params") or {}).get("NUM_WORKERS"),
             "checkpoint_every_n_steps": (STATE.get("effective_params") or {}).get("CHECKPOINT_EVERY_N_STEPS"),
+            "enable_bayesian_optimization": bool(
+                (STATE.get("effective_params") or {}).get("ENABLE_BAYESIAN_OPTIMIZATION", True)
+            ),
         },
         "export_paths": {
             "repo_run_dir": str(REPO_RUN_DIR),

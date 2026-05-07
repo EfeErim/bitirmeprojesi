@@ -343,7 +343,7 @@ Current automatic behavior:
 - when a training run writes canonical traceability artifacts successfully, the repo-local `runs/_index/` registry is refreshed best-effort
 - that same refresh now also rebuilds cohort-safe Pareto frontier summaries from the indexed runs
 - that same refresh also writes `automatic_wins.md`, a human-readable Markdown summary of Pareto-frontier winners by comparable cohort
-- Bayesian proposal generation is disabled, so fresh registry rebuilds do not write `bayesian_recommendations.json`
+- Notebook 2 enables Bayesian proposal refresh by default; standalone registry rebuilds write `bayesian_recommendations.json` only when explicitly requested
 - the standalone script remains available when you want to rebuild the registry on demand across existing runs
 
 Phase 2 optimization entrypoint:
@@ -355,7 +355,7 @@ Phase 2 optimization entrypoint:
 That surface reads the canonical run registry, stays inside one comparable cohort, and reports:
 
 - analyze the current Pareto frontier
-- Bayesian optimization disabled status
+- Bayesian optimization disabled status by default, or explicit feature-flagged proposal candidates when `--enable-bayesian-optimization` is passed
 
 `training_metrics/` currently contains:
 
@@ -389,7 +389,7 @@ Current notebook naming/detail:
 - Notebook 2 run ids are human-readable and include crop/part/date-time information
 - maintained notebooks perform an early update/access check before the main long-running cells
 - Notebook 2 no longer requests Google Drive mount access by default
-- Notebook 2 keeps `OPTIMIZATION_CAMPAIGN_MODE` disabled by default; Bayesian campaign proposals are not part of the active training path
+- Notebook 2 sets `ENABLE_BAYESIAN_OPTIMIZATION=True` by default, applies the current adapter cohort's next proposal when one exists, and refreshes `runs/_index/bayesian_recommendations.json` after the run writes traceability.
 
 
 ## Colab Support Layer
