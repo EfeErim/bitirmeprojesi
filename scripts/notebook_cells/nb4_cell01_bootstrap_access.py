@@ -43,7 +43,7 @@ BOOTSTRAP = run_bootstrap_notebook_nb4()
 ROOT = BOOTSTRAP["ROOT"]
 
 # Setup adapter search and access check
-SEARCH_ROOTS = [str(ROOT / "models/adapters")]
+SEARCH_ROOTS = [str(ROOT / "models/adapters"), str(ROOT / "runs")]
 
 from scripts.colab_repo_bootstrap import (
     collect_notebook_access_report,
