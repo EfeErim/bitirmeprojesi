@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-05-03T21:16:28.993846+00:00",
+  "created_at": "2026-05-06T17:29:14.377123+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "non_plant_misc/non_plant_misc__18033105_432370500467996_8586514008141534402_n.jpg": {
@@ -1118,11 +1118,71 @@
       "slice": "off_crop_secondary",
       "split": "dev"
     },
+    "other_crop_disease/internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg": {
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "size_bytes": 495274,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_1235040_grape_anthracnose.jpg": {
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "size_bytes": 569975,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg": {
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "size_bytes": 219333,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg": {
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "size_bytes": 250695,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg": {
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "size_bytes": 481274,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg": {
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "size_bytes": 277846,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_blossom_end_rot.jpg": {
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "size_bytes": 146956,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg": {
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "size_bytes": 155501,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg": {
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "size_bytes": 213805,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg": {
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "size_bytes": 191433,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
     "other_crop_disease/other_crop_disease__1.jpg": {
       "sha256": "17e6d21bfaac1f8022ffec01f457398921ec17ab6ada09ee9fa3eae85241f95c",
       "size_bytes": 133437,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__25.jpg": {
       "sha256": "20f30c5e7df423b173c3c422864153c8a721600da2fcf7257a69700c5603c094",
@@ -1140,19 +1200,19 @@
       "sha256": "370e8fd6aff40149a2c5ed9711cca0025a1b63558b1b723d6e15cf32737e4220",
       "size_bytes": 193902,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__33e370fb-botrite_grappolo32.jpg": {
       "sha256": "5068aebf0ec19892a42e007bd9fdaa8592e7e327fa09d7130d9715c0392d002b",
       "size_bytes": 238583,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__410.jpg": {
       "sha256": "e16441317e806e05264b5f469b20bfc59192c14ca35ded3ca7fe3244fed989d6",
       "size_bytes": 51058,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__411.jpg": {
       "sha256": "c83b27af1e49cb054834e243ccb03d86e5bbb7bc4fc861b57927fd08466e513e",
@@ -1164,19 +1224,19 @@
       "sha256": "d048d9f890c272d1b20974e101eac4203bf6eaa1d364bcf6517c1301098831a8",
       "size_bytes": 161365,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__46.jpg": {
       "sha256": "7a5a1ad5c5995b60b5c780cf05fa79b2e184be7114cc2efd79661e7d43df9094",
       "size_bytes": 161425,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__5.jpg": {
       "sha256": "95d5341d840714df3d974acfb092c95d03141f6fb8e3e637f12bd7a719407bee",
       "size_bytes": 62893,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__57.jpg": {
       "sha256": "d3fa28b3c8c42ea000cac72bd8507b091d4f446f714a1b4b4208d3df4a6f5a29",
@@ -1188,19 +1248,19 @@
       "sha256": "60d0e273163c725736b21ed7937d929e5302c8ddb0e80612fd7e104cda08e168",
       "size_bytes": 127799,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__61.jpg": {
       "sha256": "06547ebf343096404e233bbde7ea1f632e6903cbf471ea461b3cd67b99e94f94",
       "size_bytes": 171033,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__65.jpg": {
       "sha256": "cf4b6b206d1afe43490644b0f168107469051012b6d12bbb0f0ccedb3031949a",
       "size_bytes": 166762,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__89.jpg": {
       "sha256": "8e20b024006f50f3854cf443fe9d2e7bdcee9593f652ad89da4ca8e1c1c7568a",
@@ -1230,19 +1290,19 @@
       "sha256": "15bbc852d15bc74d8addf4f1d275772ff9a142da292cd69a0488dd6fe8562c4c",
       "size_bytes": 41340,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Asma_yelpaze_yaprak_vir\u00fcs\u00fc_3.jpg": {
       "sha256": "47fcec594406092985ec7723c9082cef6f7edf83db45f3c096d04af7320ab434",
       "size_bytes": 7039,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_Antraknozu_20.jpg": {
       "sha256": "d004bf1cf61e516c0d77d49c0ab972747ce1d7c27a4917cf2874afa5e4230a21",
       "size_bytes": 98567,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_Mildiy\u00f6s\u00fc_151.jpg": {
       "sha256": "45c23ff3e8da17b6c7704252b1621d70cc2c3c454b7af2423dd97b8f86176699",
@@ -1254,7 +1314,7 @@
       "sha256": "2be7a05a5303246df1c75a886301f815db3cfffefcfe4f5f18082aced44f1eb0",
       "size_bytes": 17404,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_antraknozu_192.jpg": {
       "sha256": "cd746d17f10a73c830ee53a9e90ff3deb5a9de401846aeb4962ed3d2c0e671ac",
@@ -1266,13 +1326,13 @@
       "sha256": "ab79813b34417d9838ed710b18b880f92845311e91a3ffc2e3fe9d1d528a1546",
       "size_bytes": 17997,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_antraknozu_71.jpg": {
       "sha256": "fa9933216fb57109cd272efb4dbad42967372b551d52b9d622673001e2208f22",
       "size_bytes": 12260,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_antraknozu_9.jpg": {
       "sha256": "d3644d3805d2c958fe9019b5d39c31e052588dced0451dba1b7d180f3754003c",
@@ -1290,13 +1350,13 @@
       "sha256": "71167e14baab1683aeb015100eb95bb9d12acca42853f889a8db27d21a17d6b3",
       "size_bytes": 18480,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_k\u00fcllemesi_3.jpg": {
       "sha256": "6a9fec8d0072c9158366765e0083a1c81f9563a0c866ffbc6fabb6957fc2fd78",
       "size_bytes": 46241,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_k\u00fcllemesi_4.jpg": {
       "sha256": "08bbfc0fdac5e6ed6b1ea4d4102b451f12ab5ff92071a35035c11b95ff9f4570",
@@ -1308,13 +1368,13 @@
       "sha256": "fe953a86c772c2d7a4dbb84ab563f120e1ed14d6fbb0ebc876c267d456643631",
       "size_bytes": 42932,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_k\u00fcllemesi_51.jpg": {
       "sha256": "d80c35e65b4f76ebbafdb52c283dcb383f85592169a5bd4975402fa3c7b4287b",
       "size_bytes": 27989,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_mildiy\u00f6s\u00fc_1.jpg": {
       "sha256": "300dbfb7187a92b765698d9e4a9ee1db9e3f7550b9113cd9c35fee7d721c5f96",
@@ -1326,7 +1386,7 @@
       "sha256": "02b08e0a047cd83a7c4eed3c93e94e6a4495f0a098569762375b66b97c3cf977",
       "size_bytes": 13494,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_mildiy\u00f6s\u00fc__476.jpg": {
       "sha256": "50d3fc4692bacbc527fde3108e0ee36371674b6b10c48322e3e774a6a3098b4e",
@@ -1338,55 +1398,55 @@
       "sha256": "ff4fdeb57dd0d38a094d05b6f3e74c3a2d4c381c2e917302e1b5fb0b951f44d9",
       "size_bytes": 21748,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_kav_3.jpg": {
       "sha256": "86720bc4f3d21381875f71c4a56d3f079c180ce9f878766afe0651feebd7c6ad",
       "size_bytes": 92985,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_kav_61.jpg": {
       "sha256": "8bdde0cffcac1f36f829bf926b1d781cab9b487e8707ffbc3739063f43f18beb",
       "size_bytes": 77761,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_\u00f6l\u00fc_kol_5.jpg": {
       "sha256": "818c168174a6b1fc322b1515b07fd28d897a3f7610f7fd1433266038784150c9",
       "size_bytes": 8008,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_\u00f6l\u00fc_kol_7.jpg": {
       "sha256": "c35d7f94cdd2d5f6dfc69067939f171ec0ea493a50d7b446bf95994a5c46458a",
       "size_bytes": 9009,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_\u00f6l\u00fc_kol_8.jpg": {
       "sha256": "0434c21f8142786a723f39b3504c176a6928aa9b7aa8690e69ac9f12c82eba2b",
       "size_bytes": 11394,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-02-20_001222.png": {
       "sha256": "255bd6e122ddadaef108bc4caa6344a1d2b930eb3b27c7830b00a7685464f099",
       "size_bytes": 513314,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-02-20_001455.png": {
       "sha256": "b4c1008f911ea9fdd52545666354bdadd62e2ce5d7dc4cc681e871f57bf9c211",
       "size_bytes": 1222077,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__F\u0131nd\u0131k_Sa\u011fl\u0131kl\u0131_3.jpg": {
       "sha256": "feae1fa43acba490d0aede395bc1f5c238436fbb51dc1ba8ce24cc59a0fcf614",
       "size_bytes": 14031,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__F\u0131nd\u0131k_Sa\u011fl\u0131kl\u0131_41.jpg": {
       "sha256": "cde3a0c0e1982d7dfe4861b62e7aafcba4ebbd27c172a5a3b1d45c22b8d31ea7",
@@ -1416,37 +1476,37 @@
       "sha256": "1cd69d6234d9217b64f5164aa49b1f1400ae93ab8cd631d263a40d8948379b99",
       "size_bytes": 32262,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__F\u0131nd\u0131kta_Bakteriyel_Yan\u0131kl\u0131k_49.jpg": {
       "sha256": "9cae9c81b3310b8786f8d25a7a4b7dfd5cef155a801bfa992bc224acd4321a16",
       "size_bytes": 23396,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__F\u0131nd\u0131kta_K\u00fclleme_34.jpg": {
       "sha256": "7a34edf3e46a239e7768ec7d918a516fe65d04ecc8e824c006feaac3b8b23c03",
       "size_bytes": 33278,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__F\u0131nd\u0131kta_K\u00fclleme_70.jpg": {
       "sha256": "dd13edace26a4973dcdc39aaf66957f6a44ed2330b427c33fc0f38ed252ba31a",
       "size_bytes": 40576,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__IMG_174_3.jpg": {
       "sha256": "1a5089194e2bd5a249f4e74d79f02d5f63cda90706183dfaea917cf789c14de2",
       "size_bytes": 13627,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__IMG_179_3.jpg": {
       "sha256": "09ca2e0814b9771e26ed5b80c913c20349ed7aace7b445521fb44ce1622deec6",
       "size_bytes": 10858,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__IMG_259_3.jpg": {
       "sha256": "b003c317a72ba5b922675e8a9e2f31939af8b06dc1563bf80caa4466fdd65fdd",
@@ -1464,7 +1524,7 @@
       "sha256": "c49a2d0a52a4e64d0e3d81ba4a2e7bd6dc21ddc230029e538cc51f4c5a72feb3",
       "size_bytes": 10043,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_3ce9d22c-6118-48f6-a37b-0b5ad5711048___Crnl_L_Mold_9086.jpg": {
       "sha256": "3b796037fc3b9f03fdfdf4f8140e0150a69553d0d4e9867f0e300cb00b58b372",
@@ -1482,7 +1542,7 @@
       "sha256": "dbe33bc06309a47d3db7abc4157dc8e2e842876a6f0d60124f7800a87d6b6c25",
       "size_bytes": 12960,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Kaggle_83187e59-90ea-4ca2-8a87-e8801e6fa900___UF_GRC_YLCV_Lab_02212.jpg": {
       "sha256": "369334f0b71dcc00089ad8144a56b4f2fe08ddfee4c96c77bad67be0739d77d1",
@@ -1494,7 +1554,7 @@
       "sha256": "57e38810b4a0e47752deac721c580fa045be656150085fa2caad530690ec5929",
       "size_bytes": 53062,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_Blossom_end_root_2-Copy_png_rf_35145f648d280270e241b6c6fc99fc70.jpg": {
       "sha256": "7645d3fc7f8910be7870397b52c67c982714914e35a0b168691e2641c42e900f",
@@ -1518,7 +1578,7 @@
       "sha256": "74307cfb1956360f260280ea6ee19630a41d2cdf3a2de6f1fa797f2082bedc23",
       "size_bytes": 49552,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_L_blight_13-Copy_jpg_rf_cc0e99d2e2ea78ab9ff3ac479df3c36f.jpg": {
       "sha256": "a986e59d9c1e3b183040a08eab594af61785793005cfa931148a2061a6958f46",
@@ -1530,25 +1590,25 @@
       "sha256": "01cd176c2df792781fbd70f3f80365df24c0d95ffe08ebc4218df2b0500abadd",
       "size_bytes": 52158,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_anthracnose_16_zoom_1_png_rf_ca3aa7d13d4bdf7adb735be05b13fb9e.jpg": {
       "sha256": "a2b3d807055a4f0d33ea48693c39515e0efd315b7097d56936fa1817402423bb",
       "size_bytes": 49906,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_anthracnose_1_zoom_5_png_rf_b117e5dae5dd819ad6267db298800bd4.jpg": {
       "sha256": "44168082bca26f383e58f2b6bb9418f13147fbf428834432575c5022a8d7db68",
       "size_bytes": 35832,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_anthracnose_7-Copy_png_rf_cf9627ac6c930e0f2fe81d04d73cea24.jpg": {
       "sha256": "27ca5a603881a17a24d6ac8dae0f85ed3dd2b67b9c8ed648c31a06b3349f7816",
       "size_bytes": 32588,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_h12_jpg_rf_6a99e6502b43f224cb9f51b093ffc2a5.jpg": {
       "sha256": "3d92e68f6f0141375f50f3de0ed42c3a7a7e2c535b89f84dfda316c5d8e8cd51",
@@ -1560,13 +1620,13 @@
       "sha256": "94680a888f44e8fb7533c7422ffc1d5dbda4047fa96779a4028a236b2bd77714",
       "size_bytes": 24862,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_train_spot1-Copy-2-_jpg_rf_2ffce89273e6ddf4f641700a1a90aa49.jpg": {
       "sha256": "3d10e4532d33e969bcf8625c9ce6beda71f798ce411b1eb38d63db6ea7ca3cf1",
       "size_bytes": 32246,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_train_spot19-Copy-2-_jpg_rf_d01d74c66549c1c1c848cf8f6800bea7.jpg": {
       "sha256": "8e1d7bbc668cb7f8a9e4a5f4172860aa9ffed9977f0d4000a6d7a01f17066c52",
@@ -1590,13 +1650,13 @@
       "sha256": "37554895631c4fd1524b9b8e568fd42364010ebf75c606b737acf6bbacf0f14b",
       "size_bytes": 39305,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Kays\u0131_Sa\u011fl\u0131kl\u0131_25.jpg": {
       "sha256": "c3964eac0c29825140698c1b2a857842c3423ab425ea250decc20281043d1aab",
       "size_bytes": 84656,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kays\u0131da_\u00c7i\u00e7ek_Monilyas\u0131_85.jpg": {
       "sha256": "afc4aa975a119e7c56ba6d5b11f333c4b5f752d6ef53dfab5e1ae2ec2dfbd640",
@@ -1608,7 +1668,7 @@
       "sha256": "c050e9bac94159fcde25edbeadc170d6c56dc7f2e927860c6c713895764d32e6",
       "size_bytes": 46340,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kay\u0131s\u0131da_yaprak_delen_\u00e7il_2.jpg": {
       "sha256": "694377c33e14a535cfbea0de663bbe1664cc3260d917e0ca1b99f3a74992d1e4",
@@ -1626,19 +1686,19 @@
       "sha256": "4d682da253135b35df53edfeabcfe1cbabf3860b3286775ef59e41a31c08b145",
       "size_bytes": 40609,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Mendeley_Wilt_0919_007_leaf_00.jpg": {
       "sha256": "b728e0583afdb2332fa3b76b67668a3fbcd9a5bf3c9459b8fdb87e10dc56ad40",
       "size_bytes": 271196,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Mendeley_Wilt_0919_007_leaf_01.jpg": {
       "sha256": "0e8d40a7f6b7dcb21931d6de89fe47f7719db8e197c5d0e60469778dc5ecceb4",
       "size_bytes": 397867,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Roboflow_test_download-4-_jpg_rf_f83843b5e3e0871d2fc7b9385d585415.jpg": {
       "sha256": "1ae44419fbf9d04a4e9fd40da029ffb75edeb3e680c1aacaa69060640f093dc1",
@@ -1650,7 +1710,7 @@
       "sha256": "2c7e1ddb3c81c67f10641e5b654dc6350c1d099d08190fabd2cb5459e92b2f4a",
       "size_bytes": 42107,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__ba\u011f_mildiy\u00f6s\u00fc_2.webp": {
       "sha256": "0ac24be91614b82be2d64d64ace5e9a2517ba94654dba00d3e8bcd1f965b9eaa",
@@ -1662,13 +1722,13 @@
       "sha256": "f5b5c23bbb3e2cb1d8dab41b55ed083ac74c188015184d4c228238561cfec091",
       "size_bytes": 99916,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__tomato_018.jpg": {
       "sha256": "6bec12a7721bc3402adad0a7ab4ebb9545b3abc7dfab43953235aa4b2e6013c9",
       "size_bytes": 126389,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__tomato_102.jpg": {
       "sha256": "71d85020ed8a1f64a3cfcde6755d93ea620e21c71af6cccc2cfd48b95822bed0",
@@ -1686,7 +1746,7 @@
       "sha256": "8739a89da357d8d2b3ff67adb008ca33f1d7805404499a05b8cad638b6d46f52",
       "size_bytes": 115176,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__tomato_135.jpg": {
       "sha256": "deab5bece6a67b85ba3b1f8faa0eb418f5f31d5f386d11984309b4f842664bc5",
@@ -1704,13 +1764,13 @@
       "sha256": "9a6b742ff5f8c8f3be294de4d63c6c764f4e6a7093342820721f6d01338a5469",
       "size_bytes": 229451,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__tomato_324.jpg": {
       "sha256": "14e159c32793e2e68039349fd3d313b7ecf326ef5cae301cbc72c3a3761a7bbe",
       "size_bytes": 75440,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__tomato_340.jpg": {
       "sha256": "bb1271de84227b047fbcebba86d786fa6e435cb99b6af2b8db89a3a877759f16",
@@ -1728,13 +1788,13 @@
       "sha256": "4bffbf6ed499747f92e5cf823f2cf723a7cf6591e2adc7e52ccd16c0d538413e",
       "size_bytes": 19165,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__\u015earka_Vir\u00fcs\u00fc_14.jpg": {
       "sha256": "ca5595613544df57f4337e60f2db98350bdd970946703c405c7117e32ccc5b02",
       "size_bytes": 17947,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__\u015earka_Vir\u00fcs\u00fc_27.jpg": {
       "sha256": "bac31836718fa1732869f44730ded4b3360bc4d7fb776fb918b9b307b9ac5bbd",
@@ -1752,7 +1812,7 @@
       "sha256": "aae5f69cd507e4f3db8f3ecaec3e837997c94f486729adeb13b2783061087295",
       "size_bytes": 22009,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     }
   },
   "min_per_slice": 2,
@@ -1772,15 +1832,15 @@
       "total": 159
     },
     "other_crop_disease": {
-      "dev": 42,
+      "dev": 46,
       "split_policy": "slice_stratified",
-      "test": 64,
-      "total": 106
+      "test": 70,
+      "total": 116
     }
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood",
   "split_counts": {
-    "dev": 117,
-    "test": 175
+    "dev": 121,
+    "test": 181
   }
 }

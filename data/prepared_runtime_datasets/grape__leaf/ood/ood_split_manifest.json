@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-05-03T21:16:26.400169+00:00",
+  "created_at": "2026-05-06T17:29:11.641072+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "off_crop_or_root_disease/off_crop_or_root_disease__1.jpg": {
@@ -890,11 +890,95 @@
       "slice": "off_crop_or_root_disease",
       "split": "test"
     },
+    "off_crop_secondary/internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg": {
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "size_bytes": 495274,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg": {
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "size_bytes": 219333,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "size_bytes": 56848,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "size_bytes": 63726,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "size_bytes": 53075,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg": {
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "size_bytes": 250695,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg": {
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "size_bytes": 481274,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg": {
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "size_bytes": 209079,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg": {
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "size_bytes": 277846,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_blossom_end_rot.jpg": {
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "size_bytes": 146956,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg": {
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "size_bytes": 155501,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_oidium_du_fraisier.jpg": {
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "size_bytes": 1372694,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_strawberry_fruit_rot.jpg": {
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "size_bytes": 279047,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg": {
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "size_bytes": 213805,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
     "off_crop_secondary/off_crop_secondary__0656095-PPT.jpg": {
       "sha256": "0ef957af6526772f26b7db91819421bf9a2125f04b1d2df1a2c32287718bc588",
       "size_bytes": 96131,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__135.jpeg": {
       "sha256": "7bbf6edfe4e40eaeb7be752fe2838fdedd8ac2a83315c42ec52749d4ef5257c4",
@@ -924,7 +1008,7 @@
       "sha256": "255bd6e122ddadaef108bc4caa6344a1d2b930eb3b27c7830b00a7685464f099",
       "size_bytes": 513314,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-02-20_001455.png": {
       "sha256": "b4c1008f911ea9fdd52545666354bdadd62e2ce5d7dc4cc681e871f57bf9c211",
@@ -942,13 +1026,13 @@
       "sha256": "a654e7a95dd643aa1012b3cb49f2e2018c014e90b431f41241328e863b88cf3e",
       "size_bytes": 317183,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_003702.png": {
       "sha256": "f6a7815a8aea2aee2c17e76be9224fcb0248776ac2eb4aacf1d299fba43d1ae3",
       "size_bytes": 833012,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_003715.png": {
       "sha256": "fd5b6e1f111c3a5193b1fbb24b999a9149ee49404dfa52cab367cb8e01a92b60",
@@ -978,7 +1062,7 @@
       "sha256": "ee0f04c9202c65798a9a13e0495cc06642d6da4138a956d59cb69ac7d62d3702",
       "size_bytes": 120991,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__MONILA_4872.jpg": {
       "sha256": "953b8d012cbb05bc73fe62122d64c27aff74c144eb8b9bb378bf72d53869e191",
@@ -996,13 +1080,13 @@
       "sha256": "c6258d383c98b93c6897d4f8789097936da2fdddc470a90d393cb3064682f3d0",
       "size_bytes": 19919,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_34.jpg": {
       "sha256": "51f29ae829c463838e212a81045b9929fd3494ab87ab6b9f5d3755cb19b13240",
       "size_bytes": 17591,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_35.jpg": {
       "sha256": "dfd6a584b3d52038d275fd580b1e95aa63cc29bd3d340ab597c9f455c4159e75",
@@ -1020,7 +1104,7 @@
       "sha256": "afa7e02e61a573230196181c5781e78a2e1656cb576d2661013141e43b022a9b",
       "size_bytes": 16505,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__VENTCA_17303.jpg": {
       "sha256": "987941a716659bf4f3814f225d5e508697c6f5f29214bbb767c9923a5d38f7c6",
@@ -1032,7 +1116,7 @@
       "sha256": "ef00cfe439e8f94ca44a6f2c23feba6ee71d311abdc618f7848129a419344694",
       "size_bytes": 208065,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__anthracnose_fruit_rot_81.jpg": {
       "sha256": "22641776ec902f2a5645bf37eba7bf58429d2db75d3bb5e69f6978c9d23a80e4",
@@ -1044,13 +1128,13 @@
       "sha256": "f4dd63563a8eb1aaae97e335689623779ec4ad198cdb70678fb9445f2bd38dd1",
       "size_bytes": 479120,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__ers.png": {
       "sha256": "9cd7e88ebca3ae78884c75863fd7dc8ee48cad3f07980d78fdd6a07bc7ec079f",
       "size_bytes": 894682,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__gray_mold_231.jpg": {
       "sha256": "95b7370335217952584cf28ed9d0459aa85bff24473880c97f5f44b64c97fdee",
@@ -1092,19 +1176,19 @@
       "sha256": "277bf4d5c8bac3f88e190663c3acbeccbe69f60bc3f7f5df598852b3affa44b5",
       "size_bytes": 152461,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__powdery_mildew_fruit_59.jpg": {
       "sha256": "c79420f0c6af2714d8eaad376cb41593863e31191ca828abb6d83a1310f1fc84",
       "size_bytes": 110743,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__powdery_mildew_fruit_60.jpg": {
       "sha256": "cce3c138829ca418aa246c8d5c763cad78f18981e19e6218b0f361619a52745e",
       "size_bytes": 216301,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__powdery_mildew_fruit_62.jpg": {
       "sha256": "e7fb6a2b3b62e8dff8aea6a67a790da65729cc1b4e6fe4325d0b8971979ae345",
@@ -1116,7 +1200,7 @@
       "sha256": "430f6194660dbc71d41f37e4d9b1a32678ca654a02fde4acc351b3c151091fbd",
       "size_bytes": 384575,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_007.jpg": {
       "sha256": "35f0cd18b143786d1a14ebaecac7db1f4f299e652d8123b9307d19dc8afb9566",
@@ -1128,25 +1212,25 @@
       "sha256": "f6cff1550b10b4e34b819319b3bbbb1dc74482d454a92f2b29660b8387bc4bc9",
       "size_bytes": 68529,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_026.jpg": {
       "sha256": "b7273c24ec497446af2e793d5d3163484dcd98fedc0aa5fc9a07beb03d36d0f1",
       "size_bytes": 122102,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_041.jpg": {
       "sha256": "8bfd4c65fcbafb84424d016f1575ddda36e1b63246fbff65a0d7da8851936986",
       "size_bytes": 168576,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_086.jpg": {
       "sha256": "c17c95bb8c264707511ec852934a12b0fa295dc134f16cb472df6d99cba96df6",
       "size_bytes": 227480,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_1209.jpg": {
       "sha256": "aa017caaec8a1d32575125d90284868580d28380d63c41cec02cd01dee7758d5",
@@ -1158,7 +1242,7 @@
       "sha256": "0b319cb885eec3731f1ff2a16dd3635ae46fdc5d01ed87730eade33658d88834",
       "size_bytes": 189512,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_1513.jpg": {
       "sha256": "dec0c314ff41ef3c2ab46b754da8e986484bc89f9c7e14b9f3f773ce9e0c4b73",
@@ -1176,7 +1260,7 @@
       "sha256": "1c57aed17883e98c57a509c483ea1e3cc6bed4aa610f3ab6c818979ab9408fc6",
       "size_bytes": 78422,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_230.jpg": {
       "sha256": "91f2e0e5d3fc8a32afcac46d525cc865f0cab7ddf25e8b6cac6ab14e68af3f4f",
@@ -1218,7 +1302,7 @@
       "sha256": "0026cbacdf8eb51450ec1eaf65a6678f1f6c5b4f1dfe9702600604fd65c09a72",
       "size_bytes": 102399,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__8268_sanat-calismasini-animsatan-uzum-bahceleri_344616.jpg": {
       "sha256": "a449cda06313391286272b5545999f1e419e66217a3f0c2079351b4865f0749d",
@@ -1230,7 +1314,7 @@
       "sha256": "6c94cad085dfbc73a9e55a336eeb236abc3e60c3490bc95bbddd6c9127fb63f1",
       "size_bytes": 217530,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__Frutteto_CVT_100_S_Stage_V_Field_DJI_0962_preview.webp": {
       "sha256": "b0075d52f5fb284a8a6f24155500b4560b6ec0a4c67d7ce8c217c9d23b1cca8b",
@@ -1248,7 +1332,7 @@
       "sha256": "6f01b10e846eb1b288c29065fc0c2dea4481841117e074d10fdf29e3212f55a6",
       "size_bytes": 32676,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__Traveling-Long-Distance-300m-400m-Farm-Irrigation-Sprinkler-Farm-Drip-Irrigatio__98ecad137.png": {
       "sha256": "e4d3e22f2d1c2c33c637fd66a8fe87419fcdbc473d20f1fd2c559010ac3dd5bb",
@@ -1266,25 +1350,25 @@
       "sha256": "4edb1c941a60bad5137caac2823aacd7cf3482869bbddf356a780a1c477a3ded",
       "size_bytes": 51324,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__YAyca-tli-na-vinogradnom-liste.jpg": {
       "sha256": "90ea688924c64d89f66e4211a984be4e3f8854d5601545446ed44efd98caa516",
       "size_bytes": 46491,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__ZHuki-dolgonosiki-povrezhdayut-vinograd.jpg": {
       "sha256": "bd49acbc60c92fb313fdaca55bd6867d6de7f86a27e382a973f096fbdb5b17b8",
       "size_bytes": 39241,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__alaaks\u0131zzz.jpg": {
       "sha256": "424809deae694ddf68b3387bacc934791d88cc4974cf294efd5ae666e2781ad2",
       "size_bytes": 126903,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__alakasizz.jpg": {
       "sha256": "3e9382245d76e5f8f707bb32f0d5b8d9bb4fe5964a1169e467d7d882e482949d",
@@ -1326,7 +1410,7 @@
       "sha256": "05570bc5a41ad4b890b1fecb1d16a6f52c75d57c6925edeb158969b2c8aacf64",
       "size_bytes": 1747737,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__bagmaymuncuklari.jpg": {
       "sha256": "315157e173d20868eb78820b9fa079766abdec988db71aacb25071e37226e92d",
@@ -1350,7 +1434,7 @@
       "sha256": "ad24850a9c70ea19627dedb1be982b9291962168f4ce2835784cea33b2bbb178",
       "size_bytes": 157359,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__depositphotos_190169292-stock-photo-gardener-inspects-grape-leaves-with.jpg": {
       "sha256": "d195b7886f5b17e243df91351f896ad3f902e89038301746a4760a6010bdb1c7",
@@ -1368,7 +1452,7 @@
       "sha256": "2d71768253840675152156d71921076f5b5ad9d766f4b63d92843d2d3e3241dd",
       "size_bytes": 43748,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__depositphotos_354116492-stock-photo-france-chablis-2019-06-21.jpg": {
       "sha256": "baedf678bf9fdf491c2076c037d9f1f0954b0746bd7a6dbc094d667db1176b08",
@@ -1380,13 +1464,13 @@
       "sha256": "0bd9e0f6a67e23174328e17a75e89ce50e87c2d1274610c6b3a9c928c38b0700",
       "size_bytes": 59284,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__depositphotos_653331092-stock-photo-grape-phylloxera-leaf.jpg": {
       "sha256": "150b5816aea54360f1de88551e8443806d0b94a723a5865eff9d97fd33800c77",
       "size_bytes": 40966,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__duvar-resimleri-traktor-kimyasallar-ile-uzum-baglari-puskurtme_jpg.jpg": {
       "sha256": "16a0ff6f2277459747a27fa989d12a08557496d582d019ce0b6159b243a50321",
@@ -1404,13 +1488,13 @@
       "sha256": "2d47aa3689d5c75b46e7ac5b4c06fc8f76c4597f5ca445f5bb6fdc69192e17d2",
       "size_bytes": 130698,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1047180430-612x612.jpg": {
       "sha256": "4cc05f1ba88066b932dc3ca50c7af868fac0e736dd65642dd34c6f15a4424720",
       "size_bytes": 87597,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1083318734-612x612.jpg": {
       "sha256": "04a603931eb9b3abf1c51e6e1396439f67aaa8cb46df0db486f73c0cbc496c7b",
@@ -1422,7 +1506,7 @@
       "sha256": "02604383b52391b0523a4ba5b8c47591dce078fc4e6c477341f0290f3a824cc6",
       "size_bytes": 42758,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1341464834-612x612.jpg": {
       "sha256": "3f96e62a5972ceed6ea5403c3080efa1db3bf4ea546173a36032846e64af9b04",
@@ -1434,13 +1518,13 @@
       "sha256": "b3f682518f453b71dfe96b180a8a43ea3e214fc469563061b351fdcb24afb6db",
       "size_bytes": 489135,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1389712277-612x612.jpg": {
       "sha256": "b8b0bb497e2c4ebcc611cfd7d97893b5ab4a1b5fbc6f6a5139b7351a4394a8be",
       "size_bytes": 43294,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-2191239633-640x640.png": {
       "sha256": "db6442c3b9f76e04b08f68fa649c5fe2b327bf1f986d5b029b4e8433c54d36fa",
@@ -1452,13 +1536,13 @@
       "sha256": "76b9d9329444ae72350f844e0d60537f3fb2c7e67f8864c49a1d57442cc00a5b",
       "size_bytes": 72724,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__k\u00f6pek.webp": {
       "sha256": "7cc1ad33547f965b5619d0de0dbef7b353c2f4124e70e3650e7c3b9d929da2fd",
       "size_bytes": 24588,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__k\u00f6pekk.webp": {
       "sha256": "d163aff1b383711ee75c36ea3f80618fbb253d338b980574709d308bea8610ce",
@@ -1470,7 +1554,7 @@
       "sha256": "df438f33198c3448d74d25cb610546b22131599b8542369e438e5bd2acc7fd07",
       "size_bytes": 63078,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__pngtree-golden-suv-parked-amidst-rolling-vineyards-under-a-warm-hazy-sky-image_20407460.webp": {
       "sha256": "8462c5b02bedae131ab64efa68efde84eddd4d591761f00a5f8bb1a676abc0ef",
@@ -1488,7 +1572,7 @@
       "sha256": "632e99f6f8357cc4c5038dace59a4c6fecf14f6b3907b4b6cd155ac9429e2560",
       "size_bytes": 494710,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__traktor-bakimi-yaparken-nelere-dikkat-edilmeli-.jpg": {
       "sha256": "fa0c51c1485262ce0bf209934743609b07594a33a84be17cc363bd9f63a54605",
@@ -1508,10 +1592,10 @@
       "total": 148
     },
     "off_crop_secondary": {
-      "dev": 22,
+      "dev": 28,
       "split_policy": "slice_stratified",
-      "test": 33,
-      "total": 55
+      "test": 41,
+      "total": 69
     },
     "scene_context_leak_check": {
       "dev": 18,
@@ -1522,7 +1606,7 @@
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\ood",
   "split_counts": {
-    "dev": 99,
-    "test": 150
+    "dev": 105,
+    "test": 158
   }
 }

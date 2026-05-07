@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-05-05T15:48:48.479696+00:00",
+  "created_at": "2026-05-06T17:29:17.962840+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "blur_or_occlusion/blur_or_occlusion__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195623.png": {
@@ -146,17 +146,65 @@
       "slice": "blur_or_occlusion",
       "split": "dev"
     },
+    "off_crop_secondary/internet_20260506_bugwood_1235040_grape_anthracnose.jpg": {
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "size_bytes": 569975,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "size_bytes": 56848,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "size_bytes": 63726,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg": {
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "size_bytes": 53075,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg": {
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "size_bytes": 209079,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_oidium_du_fraisier.jpg": {
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "size_bytes": 1372694,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_strawberry_fruit_rot.jpg": {
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "size_bytes": 279047,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg": {
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "size_bytes": 191433,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
     "unsupported_same_crop/unsupported_same_crop__1708607383460.jpg": {
       "sha256": "9772b04e4261602b9ebb3f9d118dc298351e4cde297ba46022546a71ba07a6f7",
       "size_bytes": 137395,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__Ca-def.jpg": {
       "sha256": "85d3a1cc346df019324623f8021aed93122086d704ecc25b7fa467b945e84bd0",
       "size_bytes": 14828,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__Cu-def.jpg": {
       "sha256": "6e1afb5566c7dde309e4be30a888068526f23c320bbf26a8fd3ae6abcd3ca7e7",
@@ -174,7 +222,7 @@
       "sha256": "8840762f1b5fd2ba6b9f557c4fb053f1f83131ce9afac2e8cec81ce312eb90e6",
       "size_bytes": 4276,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__Domateste-Kedi-Y\u00fcz\u00fc-Hastal\u0131\u011f\u0131-6.png": {
       "sha256": "260ce1fb7b7c15d04186fe1337c2e58f8dd2adb4d3e8e8b3327c07ddd8c8d51e",
@@ -186,7 +234,7 @@
       "sha256": "324a6b997bac9f23475904f7b9408832f1967322ee93a875595d5999e4fc3769",
       "size_bytes": 1235541,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__Domateste-\u00d6dem-4.png": {
       "sha256": "6901435887d2616cb4197874028ee692c3a98291271f2a6f17ec15a75ad7b5ba",
@@ -306,31 +354,31 @@
       "sha256": "b59c56ea2b641a5bc8620b066132f813bab1f74b719b2dc35f37080397a47229",
       "size_bytes": 24570,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__N-def.jpg": {
       "sha256": "326dfb4c201f0aed7a9b5e4bcf9c77bf2a9742c7a43d116ae21040fa8d43645e",
       "size_bytes": 17319,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__N-def1.jpg": {
       "sha256": "e3e08b939b8bfcb97b6dffff74e3c3a48d34748821dc381d92d640d522c98c19",
       "size_bytes": 31210,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__P-def.jpg": {
       "sha256": "fefc5265473271383a4624ec0e3b3854e38d30c4ede51e603f6137748629004f",
       "size_bytes": 20583,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__P-def1.jpg": {
       "sha256": "a53f70b52a13450f46906e8f8100d20452d208f096cfa2fa870a9711d9fbef52",
       "size_bytes": 36025,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__S-def.jpg": {
       "sha256": "22d4fdc976186ad73cfa8ed0012723de5ffc333a1764c076d8f97c2a2b41e841",
@@ -342,25 +390,25 @@
       "sha256": "9a193b4e38fae02c705fd302bed4373d8182fc4a8dfcd284c994543a9911fdf0",
       "size_bytes": 1847103,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__Tomato_4_3.jpg": {
       "sha256": "966b8ffd38f23c41699fa8afef96be5a9d422080f03396d74d995cd9f66a0f5e",
       "size_bytes": 218123,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__Top_side_of_distorted_tomato_leaf.jpg": {
       "sha256": "2f3bc7838dc8727a8eb4992cb8f59cf1ec904d04c522aefd67e7c48583f49e68",
       "size_bytes": 124860,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__Underside_of_tomato_leaf.jpg": {
       "sha256": "f8b3799b57ad79bf1d017559016c20ed2d5afec63ef51d493b33bd30984ecccc",
       "size_bytes": 110983,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__Underside_of_tomato_leaf_showing_mild_symptoms_of_edema__Photo_by_G__Fearnow.jpg": {
       "sha256": "c8861d7a9c3cb335e303a9d309e9d874c3a5a56b54cea0bddabaff715b06c703",
@@ -372,7 +420,7 @@
       "sha256": "7b6536c7466dd055b25fb3a3be0bbfe628a59143942fb11eafe90012e92a2af8",
       "size_bytes": 28624,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__afalfa_mosaic.jpg": {
       "sha256": "7d9f6ce96885e05ac80f19b849c4d90f800fe03a72565d43f1a319e47e715d12",
@@ -516,13 +564,13 @@
       "sha256": "7489216db88a9250108e7bf3264b87edad81f9ae8317bc85b2e97f22c5efa677",
       "size_bytes": 38929,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__photo-2-later-stage-symptoms-of-glyphosate-injury-331x248.jpeg": {
       "sha256": "22671ce85516ccd22fc576a7c745b7c4809e9caf77d94fd83d34692e2f5b1cfe",
       "size_bytes": 20644,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__psikolojik_leaf_roll_not_harmful_.png": {
       "sha256": "c4c3fc828bd33ffec0c68ff0281759ad752ef347626fbd09d82b5b7a119f94a8",
@@ -534,43 +582,43 @@
       "sha256": "9af3adbf3a0ec25aacc3b931ab44f6e3353e9e19c2ee38c2624b409b9af5d57c",
       "size_bytes": 169512,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__sunburn-tomato-735x490_jpg.webp": {
       "sha256": "e1f40450b4166df171d14d60f66f303ce425e25521411e716de32d8a8912bd57",
       "size_bytes": 22042,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__sunburn.png": {
       "sha256": "7cd8e352fbd560bb3c74324e31bf16e023ed74b161db12ebe77b7d08a9901348",
       "size_bytes": 265539,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__sunburn_leaf.png": {
       "sha256": "048f61ffdbd096ac4d9f91a976d19a43b01cd0b032af99ea27267d02e9a5d33c",
       "size_bytes": 164126,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__sunscald.png": {
       "sha256": "462c7d85b093fb617eeb0f9cbef0f70f3c6a09aba7ff53a3f48ea1b33abcce30",
       "size_bytes": 173478,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__sunscald2.png": {
       "sha256": "10baa0a18913edc7ea9ec6bb6708842282ede0279c2d77f8de85cb5985ed86f7",
       "size_bytes": 341600,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__sunscald3.png": {
       "sha256": "f0583c7ae77e9f134cf81ed4c751a162b37fc9d48c6ccd0e69ca2616db99c0af",
       "size_bytes": 340527,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__sunscald4.png": {
       "sha256": "5f21d0d6fe75dba3c6831e1968aec9d4586fda067e6dd4cc081de8fe6a555dda",
@@ -594,7 +642,7 @@
       "sha256": "9f3c362e5cb80051a7930a7a1239db84ed2d839f798fbf609ab2d1b73e0e11e6",
       "size_bytes": 185852,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__tomato_yellowshoulder.png": {
       "sha256": "e4cfe0b5dd89faa8df721e06d5c379becef941a2e02d73d846b65594bb89589a",
@@ -612,13 +660,13 @@
       "sha256": "25b50c68cbdb727c90bf11b341187198483b7f77b0ae783813320f397a68be53",
       "size_bytes": 9650,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoes_macro_N-nitrogen.jpg": {
       "sha256": "e2488494aff5f45ca3e51cba18bda6154654b758599c0f3a371054d0dd892f10",
       "size_bytes": 38198,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoes_macro_P-phosphorus.jpg": {
       "sha256": "1d1cb90913f109a38ece09761e612290349b4b1067cf3f30a79f7ad594990a05",
@@ -636,13 +684,13 @@
       "sha256": "9d9fdf85f7061cad956756db989ba36051dca69df7f639c354bb15e44d0167c4",
       "size_bytes": 14389,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoes_micro_Mn-manganese.jpg": {
       "sha256": "3ecb671dcaf044fe845027a53599013f0a38b557d9291bc77548e5ac7732af49",
       "size_bytes": 33036,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoes_micro_Mo-molybdene.jpg": {
       "sha256": "71fb53df67f04930bddc3a6df3cbbd7a833efbd2e0e7dd0572a082bd74eac6c4",
@@ -654,13 +702,13 @@
       "sha256": "88b23b655ae069e9bd9761006ac892f9ae10aba6df87ae7f74979ade6d76aeb4",
       "size_bytes": 190039,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoyellowshoulder2.png": {
       "sha256": "eae19f270ef15ec8a824d7eba96dc2501b2f1bd32e478b30827c7668b75cef14",
       "size_bytes": 322382,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__tomatoyellowshoulder3.png": {
       "sha256": "c0d4be315bfd2b198b707eaa19c2ef83a6682e6d9af704ed934cc65a8f495068",
@@ -672,25 +720,25 @@
       "sha256": "a6b4ce4c2c7b7953fdfb8542ff37dd3d13dc79b89e41d259c5ed98eb8e047fa9",
       "size_bytes": 357983,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__uzaktan_yaprak.png": {
       "sha256": "bc96fa8f49524a34a804868545d28472eb9b7184952d968e8a4e75d2ddb86cdc",
       "size_bytes": 739329,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__\u00f6dem.png": {
       "sha256": "8369d5e8379388f87b0e1122a71a61ac4a7c7d9a5669ef2a289a880c6ab5a062",
       "size_bytes": 969012,
       "slice": "unsupported_same_crop",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_same_crop/unsupported_same_crop__\u00f6dem2.png": {
       "sha256": "4b020b8cd7bb5f4e16ecc94f3a69a438d5919ba2fdf864be1f33ac3974b97d95",
       "size_bytes": 646916,
       "slice": "unsupported_same_crop",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_same_crop/unsupported_same_crop__\u00f6dem3.png": {
       "sha256": "aac68f87cfb9fe0378af44bb573fcacaca03404c49aff5271c297b9034e953a4",
@@ -709,6 +757,12 @@
       "test": 14,
       "total": 24
     },
+    "off_crop_secondary": {
+      "dev": 3,
+      "split_policy": "slice_stratified",
+      "test": 5,
+      "total": 8
+    },
     "unsupported_same_crop": {
       "dev": 37,
       "split_policy": "slice_stratified",
@@ -718,7 +772,7 @@
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood",
   "split_counts": {
-    "dev": 47,
-    "test": 69
+    "dev": 50,
+    "test": 74
   }
 }

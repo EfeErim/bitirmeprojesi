@@ -1,0 +1,1423 @@
+{
+  "created_at_utc": "2026-05-06T17:29:18.528529+00:00",
+  "policy": "Internet candidates placed into runtime OE/OOD only where they are unknown for that dataset root. Same-root ID->OE/OOD and same-root OE/OOD SHA overlap are blocked.",
+  "placements": [
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/anthracnose_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\same_crop_fruit_negatives\\anthracnose_fruit\\internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/anthracnose_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\same_crop_fruit_negatives\\anthracnose_fruit\\internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/anthracnose_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\same_crop_fruit_negatives\\anthracnose_fruit\\internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/powdery_mildew_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\same_crop_fruit_negatives\\powdery_mildew_fruit\\internet_20260506_wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on strawberry plant with fruit/flowers"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/powdery_mildew_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\same_crop_fruit_negatives\\powdery_mildew_fruit\\internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry powdery mildew sign; noncommercial license, review before publication"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "oe/unsupported_same_crop_non_fruit_or_unknown/fruit_rot",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\unsupported_same_crop_non_fruit_or_unknown\\fruit_rot\\internet_20260506_wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_key": [
+        "oe",
+        "strawberry_leaf",
+        "off_crop_secondary_fruit_rot"
+      ],
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/powdery_mildew_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\oe\\same_crop_fruit_negatives\\powdery_mildew_fruit\\internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_key": [
+        "id",
+        "grape_fruit",
+        "powdery_mildew_fruit"
+      ],
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "oe/same_crop_leaf_negatives/anthracnose_leaf",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\oe\\same_crop_leaf_negatives\\anthracnose_leaf\\internet_20260506_bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_key": [
+        "id",
+        "grape_leaf",
+        "anthracnose_leaf_or_cluster"
+      ],
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/spotted_wilt_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\oe\\same_crop_fruit_negatives\\spotted_wilt_fruit\\internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit/symptoms"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/spotted_wilt_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\oe\\same_crop_fruit_negatives\\spotted_wilt_fruit\\internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/blossom_end_rot_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\oe\\same_crop_fruit_negatives\\blossom_end_rot_fruit\\internet_20260506_wikimedia_blossom_end_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+      "license": "CC BY-SA 3.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/blossom_end_rot_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\oe\\same_crop_fruit_negatives\\blossom_end_rot_fruit\\internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+      "license": "CC0 1.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "oe/same_crop_fruit_negatives/late_blight_fruit",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\oe\\same_crop_fruit_negatives\\late_blight_fruit\\internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "late_blight_fruit"
+      ],
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+      "license": "CC BY-SA 2.0",
+      "notes": "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "oe/same_crop_disease_negatives/unsupported_leaf_early_blight",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\oe\\same_crop_disease_negatives\\unsupported_leaf_early_blight\\internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "oe/same_crop_disease_negatives/unsupported_leaf_early_blight",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\oe\\same_crop_disease_negatives\\unsupported_leaf_early_blight\\internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative"
+    },
+    {
+      "type": "oe",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "oe/same_crop_disease_negatives/unsupported_leaf_late_blight",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\oe\\same_crop_disease_negatives\\unsupported_leaf_late_blight\\internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "late_blight_leaf"
+      ],
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_key": [
+        "id",
+        "grape_fruit",
+        "powdery_mildew_fruit"
+      ],
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_key": [
+        "id",
+        "grape_fruit",
+        "powdery_mildew_fruit"
+      ],
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_key": [
+        "id",
+        "grape_leaf",
+        "anthracnose_leaf_or_cluster"
+      ],
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_key": [
+        "id",
+        "grape_leaf",
+        "anthracnose_leaf_or_cluster"
+      ],
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit/symptoms"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit/symptoms"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_wikimedia_blossom_end_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+      "license": "CC BY-SA 3.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+      "license": "CC0 1.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_wikimedia_blossom_end_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+      "license": "CC BY-SA 3.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+      "license": "CC0 1.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "late_blight_fruit"
+      ],
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+      "license": "CC BY-SA 2.0",
+      "notes": "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "late_blight_fruit"
+      ],
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+      "license": "CC BY-SA 2.0",
+      "notes": "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__fruit",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\other_crop_disease\\internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "late_blight_leaf"
+      ],
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "strawberry__leaf",
+      "target_relative_dir": "ood/other_crop_disease",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\other_crop_disease\\internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "late_blight_leaf"
+      ],
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on strawberry plant with fruit/flowers"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry powdery mildew sign; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on strawberry plant with fruit/flowers"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry powdery mildew sign; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_key": [
+        "oe",
+        "strawberry_leaf",
+        "off_crop_secondary_fruit_rot"
+      ],
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_key": [
+        "oe",
+        "strawberry_leaf",
+        "off_crop_secondary_fruit_rot"
+      ],
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit/symptoms"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5622695",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit/symptoms"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "spotted_wilt"
+      ],
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1243053",
+      "license": "CC BY 3.0",
+      "notes": "tomato spotted wilt fruit"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_blossom_end_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+      "license": "CC BY-SA 3.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+      "license": "CC0 1.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_blossom_end_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot.JPG",
+      "license": "CC BY-SA 3.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "blossom_end_rot"
+      ],
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Blossom_end_rot_tomato_2017_A.jpg",
+      "license": "CC0 1.0",
+      "notes": "tomato blossom end rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "late_blight_fruit"
+      ],
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+      "license": "CC BY-SA 2.0",
+      "notes": "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_key": [
+        "id",
+        "tomato_fruit",
+        "late_blight_fruit"
+      ],
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Tomato_late_blight_fruit_rot_(5816739820).jpg",
+      "license": "CC BY-SA 2.0",
+      "notes": "tomato late blight fruit rot; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1234124",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "early_blight_leaf"
+      ],
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5632425",
+      "license": "CC BY 3.0",
+      "notes": "tomato early blight leaf; Bugwood direct alternative"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "late_blight_leaf"
+      ],
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "grape__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\grape__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_key": [
+        "id",
+        "tomato_leaf",
+        "late_blight_leaf"
+      ],
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Phytophthora_infestans_(late_blight)_on_tomato.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "tomato late blight leaf; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "e723f0d85e289596746b4ae8c6b864ead2244d6d68df8bc35f25db2c1b2bfce0",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572820",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572819",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "anthracnose_fruit"
+      ],
+      "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1572815",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry anthracnose fruit rot; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on strawberry plant with fruit/flowers"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry powdery mildew sign; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:O%C3%AFdium_du_Fraisier.JPG",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on strawberry plant with fruit/flowers"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_key": [
+        "id",
+        "strawberry_fruit",
+        "powdery_mildew_fruit_or_plant"
+      ],
+      "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
+      "action": "copied",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5631933",
+      "license": "CC BY-NC 3.0",
+      "notes": "strawberry powdery mildew sign; noncommercial license, review before publication"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_key": [
+        "oe",
+        "strawberry_leaf",
+        "off_crop_secondary_fruit_rot"
+      ],
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_key": [
+        "oe",
+        "strawberry_leaf",
+        "off_crop_secondary_fruit_rot"
+      ],
+      "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Strawberry_Fruit_Rot.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "fruit image for strawberry leaf reject/OE, not leaf ID; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_key": [
+        "id",
+        "grape_fruit",
+        "powdery_mildew_fruit"
+      ],
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_key": [
+        "id",
+        "grape_fruit",
+        "powdery_mildew_fruit"
+      ],
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:UncinulaNecatorOnGrapes.jpg",
+      "license": "CC BY-SA 3.0 or GFDL",
+      "notes": "powdery mildew on grape fruit; downloaded via Wikimedia thumbnail redirect width=1280"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__fruit",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\off_crop_secondary\\internet_20260506_bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_key": [
+        "id",
+        "grape_leaf",
+        "anthracnose_leaf_or_cluster"
+      ],
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+    },
+    {
+      "type": "ood",
+      "dataset_key": "tomato__leaf",
+      "target_relative_dir": "ood/off_crop_secondary",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\off_crop_secondary\\internet_20260506_bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_key": [
+        "id",
+        "grape_leaf",
+        "anthracnose_leaf_or_cluster"
+      ],
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "action": "copied",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Grapeanthracnose.jpg",
+      "license": "CC BY 3.0 US",
+      "notes": "grape anthracnose; Bugwood direct alternative after Wikimedia 429"
+    }
+  ],
+  "errors": [],
+  "updated_ood_manifests": [
+    {
+      "dataset_key": "grape__fruit",
+      "ood_root": "data\\prepared_runtime_datasets\\grape__fruit\\ood",
+      "entries": 263,
+      "split_counts": {
+        "dev": 105,
+        "test": 158
+      }
+    },
+    {
+      "dataset_key": "grape__leaf",
+      "ood_root": "data\\prepared_runtime_datasets\\grape__leaf\\ood",
+      "entries": 263,
+      "split_counts": {
+        "dev": 105,
+        "test": 158
+      }
+    },
+    {
+      "dataset_key": "strawberry__fruit",
+      "ood_root": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood",
+      "entries": 302,
+      "split_counts": {
+        "dev": 121,
+        "test": 181
+      }
+    },
+    {
+      "dataset_key": "strawberry__leaf",
+      "ood_root": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood",
+      "entries": 302,
+      "split_counts": {
+        "dev": 121,
+        "test": 181
+      }
+    },
+    {
+      "dataset_key": "tomato__fruit",
+      "ood_root": "data\\prepared_runtime_datasets\\tomato__fruit\\ood",
+      "entries": 124,
+      "split_counts": {
+        "dev": 50,
+        "test": 74
+      }
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "ood_root": "data\\prepared_runtime_datasets\\tomato__leaf\\ood",
+      "entries": 70,
+      "split_counts": {
+        "dev": 27,
+        "test": 43
+      }
+    }
+  ]
+}
