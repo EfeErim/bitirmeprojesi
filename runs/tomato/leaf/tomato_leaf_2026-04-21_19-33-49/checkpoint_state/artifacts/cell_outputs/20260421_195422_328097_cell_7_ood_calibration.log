@@ -1,7 +1,0 @@
-[CELL_CAPTURE] cell=Cell 7: OOD Calibration
-run_id=tomato_leaf_2026-04-21_19-33-49
-started_at=2026-04-21T19:54:22.328119+00:00
-finished_at=2026-04-21T19:54:31.913213+00:00
-duration_sec=9.585
-
-[OOD] Kalibrasyon tamamlandi. classes=9 version=1
