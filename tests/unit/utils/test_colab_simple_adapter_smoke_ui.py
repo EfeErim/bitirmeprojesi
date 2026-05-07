@@ -32,6 +32,36 @@ def test_ensure_colab_widget_manager_enables_custom_manager(monkeypatch):
     assert calls == ["enabled"]
 
 
+def test_resolve_notebook_device_falls_back_to_cpu_when_cuda_unavailable(monkeypatch):
+    fake_torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(
+            is_available=lambda: False,
+            device_count=lambda: 0,
+        )
+    )
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+
+    device, warning = ui._resolve_notebook_device("cuda")
+
+    assert device == "cpu"
+    assert "CUDA is not available" in str(warning)
+
+
+def test_resolve_notebook_device_falls_back_from_missing_cuda_index(monkeypatch):
+    fake_torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(
+            is_available=lambda: True,
+            device_count=lambda: 1,
+        )
+    )
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+
+    device, warning = ui._resolve_notebook_device("cuda:7")
+
+    assert device == "cuda:0"
+    assert "only 1 CUDA device" in str(warning)
+
+
 def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_path):
     class _FakeWidget:
         def __init__(self, *args, **kwargs):
@@ -70,6 +100,79 @@ def test_launch_simple_adapter_smoke_ui_builds_minimal_layout(monkeypatch, tmp_p
     monkeypatch.setattr(ui, "clear_output", lambda *_args, **_kwargs: None)
 
     ui.launch_simple_adapter_smoke_ui(tmp_path)
+
+
+def test_launch_simple_adapter_smoke_ui_uses_resolved_cpu_device(monkeypatch, tmp_path):
+    class _FakeWidget:
+        def __init__(self, *args, **kwargs):
+            self.value = kwargs.get("value")
+            self.options = kwargs.get("options")
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def on_click(self, _handler):
+            return None
+
+        def observe(self, _handler, names=None):
+            return None
+
+    fake_widgets = types.SimpleNamespace(
+        HTML=_FakeWidget,
+        Dropdown=_FakeWidget,
+        Text=_FakeWidget,
+        FileUpload=_FakeWidget,
+        Checkbox=_FakeWidget,
+        Button=_FakeWidget,
+        Output=_FakeWidget,
+        VBox=_FakeWidget,
+        HBox=_FakeWidget,
+        Layout=lambda **kwargs: kwargs,
+    )
+    fake_torch = types.SimpleNamespace(
+        cuda=types.SimpleNamespace(
+            is_available=lambda: False,
+            device_count=lambda: 0,
+        )
+    )
+    seen_devices: list[str] = []
+
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+    monkeypatch.setattr(ui, "widgets", fake_widgets)
+    monkeypatch.setattr(ui, "_running_in_colab", lambda: True)
+    monkeypatch.setattr(ui, "_ensure_adapter_smoke_imports", lambda: None)
+    monkeypatch.setattr(
+        ui,
+        "discover_adapter_candidates",
+        lambda *_args, **_kwargs: [
+            {
+                "display_name": "tomato | leaf",
+                "crop_name": "tomato",
+                "adapter_dir": str(tmp_path / "adapter"),
+            }
+        ],
+    )
+
+    def _fake_load_summary(_crop_name, *, adapter_dir=None, config_env, device):
+        seen_devices.append(device)
+        return {
+            "crop_name": "tomato",
+            "part_name": "leaf",
+            "resolved_adapter_dir": str(tmp_path / "adapter"),
+            "class_names": ["healthy"],
+        }
+
+    monkeypatch.setattr(ui, "load_adapter_summary", _fake_load_summary)
+    monkeypatch.setattr(ui, "display", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(ui, "clear_output", lambda *_args, **_kwargs: None)
+    ui._cached_discover_adapter_candidates.cache_clear()
+
+    ui.launch_simple_adapter_smoke_ui(tmp_path, device="cuda")
+
+    assert seen_devices == ["cpu"]
 
 
 def test_launch_simple_adapter_smoke_ui_collapses_run_mirrors_by_default(monkeypatch, tmp_path):

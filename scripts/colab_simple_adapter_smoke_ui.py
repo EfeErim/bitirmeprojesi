@@ -40,6 +40,38 @@ _PREDICTION_ERROR_TYPES = (
     AttributeError,
 )
 
+
+def _resolve_notebook_device(requested_device: Any) -> tuple[str, Optional[str]]:
+    requested = str(requested_device or "cpu").strip() or "cpu"
+    if not requested.startswith("cuda"):
+        return requested, None
+
+    try:
+        import torch
+    except Exception as exc:  # pragma: no cover - depends on notebook runtime
+        return "cpu", f"Requested device {requested!r} but torch could not be imported; using 'cpu'. Error: {exc}"
+
+    try:
+        if not torch.cuda.is_available():
+            return "cpu", f"Requested device {requested!r} but CUDA is not available; using 'cpu'."
+        if ":" in requested:
+            raw_index = requested.split(":", 1)[1]
+            if raw_index:
+                device_index = int(raw_index)
+                device_count = int(torch.cuda.device_count())
+                if device_index < 0 or device_index >= device_count:
+                    fallback = "cuda:0" if device_count > 0 else "cpu"
+                    return (
+                        fallback,
+                        f"Requested device {requested!r} but only {device_count} CUDA device(s) are visible; "
+                        f"using {fallback!r}.",
+                    )
+    except Exception as exc:  # pragma: no cover - defensive notebook runtime guard
+        return "cpu", f"Requested device {requested!r} could not be validated; using 'cpu'. Error: {exc}"
+
+    return requested, None
+
+
 def _ensure_adapter_smoke_imports():
     """Lazy import adapter smoke functions when needed."""
     global _build_prediction_visualization_images, _discover_adapter_candidates, _load_adapter_summary, _predict_single_image
@@ -518,6 +550,8 @@ def launch_simple_adapter_smoke_ui(
         )
 
     root_path = Path(root)
+    resolved_device, device_warning = _resolve_notebook_device(device)
+    device = resolved_device
     resolved_search_roots = [
         Path(candidate)
         for candidate in (
@@ -661,6 +695,8 @@ def launch_simple_adapter_smoke_ui(
         _show_status_message(
             status_output,
             f"Bulunan adapter sayisi: {len(adapter_candidates)}",
+            f"Cihaz: {device}",
+            *([device_warning] if device_warning else []),
             *[f"- taranan kok: {candidate_root}" for candidate_root in resolved_search_roots],
         )
 
@@ -742,6 +778,7 @@ __all__ = [
     "launch_simple_adapter_smoke_ui",
     "_running_in_colab",
     "_ensure_colab_widget_manager",
+    "_resolve_notebook_device",
     "_build_result_html",
     "_persist_upload_value",
     "_upload_via_colab_files",
