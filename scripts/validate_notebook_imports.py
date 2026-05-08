@@ -390,10 +390,11 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     assert "['reset', '--hard', f'origin/{REPO_REF}']" in sources.full_source
     assert "['pull', '--ff-only', 'origin', REPO_REF]" not in sources.full_source
     assert "ROOT / 'outputs' / 'colab_notebook_training'" in sources.full_source
-    assert "ROOT / 'outputs' / 'colab_notebook_training' / 'telemetry_runtime' / 'telemetry'" in sources.full_source
     assert "ROOT / 'models' / 'adapters'" in sources.full_source
-    assert "ROOT / 'runs'" in sources.full_source
-    assert "launch_simple_adapter_smoke_ui(ROOT, search_roots=SEARCH_ROOTS, show_all_adapters=True, show_mirror_adapters=True)" in sources.full_source
+    assert "ROOT / 'runs'" not in sources.full_source
+    assert "show_all_adapters=True" not in sources.full_source
+    assert "show_mirror_adapters=True" not in sources.full_source
+    assert "launch_simple_adapter_smoke_ui(ROOT, search_roots=SEARCH_ROOTS)" in sources.full_source
 
 
 def test_colab_helpers() -> None:
