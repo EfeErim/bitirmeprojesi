@@ -21,13 +21,51 @@ RouterCacheKey = tuple[str, str]
 _ROUTER_SESSION_CACHE: dict[RouterCacheKey, RouterPipeline] = {}
 
 
+def _coerce_optional_max_side(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        parsed = int(value)
+    except Exception:
+        return None
+    return parsed if parsed > 0 else None
+
+
+def _prepare_router_image(
+    image_path: str | Path,
+    *,
+    max_image_side: Optional[int],
+    status_printer: Optional[StatusPrinter],
+) -> Image.Image:
+    image = Image.open(image_path).convert("RGB")
+    clamped_side = _coerce_optional_max_side(max_image_side)
+    if clamped_side is None:
+        return image
+
+    width, height = image.size
+    longest_edge = max(width, height)
+    if longest_edge <= clamped_side:
+        return image
+
+    scale = float(clamped_side) / float(longest_edge)
+    resized_size = (
+        max(1, int(round(width * scale))),
+        max(1, int(round(height * scale))),
+    )
+    resampling = getattr(getattr(Image, "Resampling", Image), "BICUBIC")
+    _emit_status(
+        status_printer,
+        f"[INFER] Downscaled image from {width}x{height} to {resized_size[0]}x{resized_size[1]} for faster router inference.",
+    )
+    return image.resize(resized_size, resample=resampling)
+
+
 def _coerce_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
     except Exception as exc:
         import logging
-        logging.exception('Unhandled exception')
-        raise
+        logging.debug(f'Coercing {value!r} to float failed; using default {default}')
         return float(default)
 
 
@@ -191,10 +229,15 @@ def run_inference(
     include_diagnostics: bool = False,
     top_candidates: int = 3,
     runtime_profile: Optional[str] = None,
+    max_image_side: Optional[int] = None,
 ) -> Dict[str, Any]:
     image_ref = Path(image_path)
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
-    image = Image.open(image_path).convert("RGB")
+    image = _prepare_router_image(
+        image_path,
+        max_image_side=max_image_side,
+        status_printer=status_printer,
+    )
 
     if crop_hint and trust_crop_hint:
         crop_name = str(crop_hint).strip().lower()
