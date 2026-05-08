@@ -146,9 +146,8 @@ def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_lab
         first_code_source,
         (
             "from pathlib import Path",
-            "DOWNLOAD_PREFIXES = ('config/', 'src/')",
-            "'scripts/colab_simple_adapter_smoke_ui.py'",
-            "https://api.github.com/repos/",
+            "DOWNLOAD_MANIFEST = 'scripts/notebook4_raw_download_manifest.txt'",
+            "manifest_text = response.read().decode('utf-8')",
             "raw.githubusercontent.com",
             "Notebook 4 source ready:",
         ),
@@ -163,6 +162,7 @@ def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_lab
             "AADS_ALLOW_CLONE",
             "ALLOW_CLONE",
             "CLONE_TARGET",
+            "https://api.github.com/repos/",
             "subprocess.run(['git', 'clone'",
             "git clone",
         ),
@@ -381,6 +381,22 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     sources = _load_notebook_sources("4_simple_direct_adapter_test_ui.ipynb")
 
     _assert_raw_download_bootstrap_contract(sources.first_code_source, "Notebook 4")
+    manifest_path = ROOT / "scripts" / "notebook4_raw_download_manifest.txt"
+    assert manifest_path.is_file(), "Notebook 4 raw download manifest is missing"
+    manifest_entries = {
+        line.strip()
+        for line in manifest_path.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    for required_entry in (
+        "config/base.json",
+        "config/colab.json",
+        "scripts/colab_repo_bootstrap.py",
+        "scripts/colab_simple_adapter_smoke_ui.py",
+        "src/pipeline/adapter_smoke.py",
+        "src/core/config_manager.py",
+    ):
+        assert required_entry in manifest_entries, f"Notebook 4 manifest missing {required_entry}"
 
     assert "collect_notebook_access_report" in sources.full_source
     assert "print_notebook_access_report" in sources.full_source

@@ -2,7 +2,6 @@
 # Keep notebook execute-only cells thin; edit behavior here.
 
 from pathlib import Path
-import json
 import os
 import sys
 import urllib.request
@@ -10,12 +9,7 @@ import urllib.request
 DOWNLOAD_TARGET = Path("/content/bitirmeprojesi")
 REPO_URL = os.environ.get("AADS_REPO_URL", "https://github.com/EfeErim/bitirmeprojesi.git")
 REPO_REF = os.environ.get("AADS_REPO_REF", "master")
-DOWNLOAD_PREFIXES = ("config/", "src/")
-DOWNLOAD_FILES = (
-    "scripts/__init__.py",
-    "scripts/colab_repo_bootstrap.py",
-    "scripts/colab_simple_adapter_smoke_ui.py",
-)
+DOWNLOAD_MANIFEST = "scripts/notebook4_raw_download_manifest.txt"
 
 
 def _download_file(raw_base: str, rel_path: str, dest_root: Path) -> Path:
@@ -23,7 +17,7 @@ def _download_file(raw_base: str, rel_path: str, dest_root: Path) -> Path:
     dest_path.parent.mkdir(parents=True, exist_ok=True)
     url = f"{raw_base}/{rel_path}"
     print(f"Downloading {url} -> {dest_path}")
-    with urllib.request.urlopen(url) as response, open(dest_path, "wb") as handle:
+    with _open_url(url) as response, open(dest_path, "wb") as handle:
         handle.write(response.read())
     return dest_path
 
@@ -47,21 +41,20 @@ def _open_url(url: str):
     return urllib.request.urlopen(urllib.request.Request(url, headers=headers))
 
 
-def _download_needed_files(raw_base: str, owner: str, repo: str, ref: str, dest_root: Path) -> list[str]:
-    tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}?recursive=1"
-    with _open_url(tree_url) as response:
-        payload = json.loads(response.read().decode("utf-8"))
-    paths = sorted(
-        item["path"]
-        for item in payload.get("tree", [])
-        if item.get("type") == "blob"
-        and (
-            item.get("path") in DOWNLOAD_FILES
-            or any(str(item.get("path", "")).startswith(prefix) for prefix in DOWNLOAD_PREFIXES)
-        )
-    )
+def _download_needed_files(raw_base: str, dest_root: Path) -> list[str]:
+    manifest_url = f"{raw_base}/{DOWNLOAD_MANIFEST}"
+    print(f"Downloading {manifest_url} -> {dest_root / DOWNLOAD_MANIFEST}")
+    with _open_url(manifest_url) as response:
+        manifest_text = response.read().decode("utf-8")
+    paths = [
+        line.strip()
+        for line in manifest_text.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
     if not paths:
-        raise RuntimeError(f"No Notebook 4 source files found from {tree_url}")
+        raise RuntimeError(f"No Notebook 4 source files listed in {manifest_url}")
+    (dest_root / DOWNLOAD_MANIFEST).parent.mkdir(parents=True, exist_ok=True)
+    (dest_root / DOWNLOAD_MANIFEST).write_text(manifest_text, encoding="utf-8")
     for rel_path in paths:
         _download_file(raw_base, rel_path, dest_root)
     return paths
@@ -73,7 +66,7 @@ def _ensure_aads_repo_on_path() -> Path:
     raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{REPO_REF}"
     DOWNLOAD_TARGET.mkdir(parents=True, exist_ok=True)
     try:
-        downloaded = _download_needed_files(raw_base, owner, repo, REPO_REF, DOWNLOAD_TARGET)
+        downloaded = _download_needed_files(raw_base, DOWNLOAD_TARGET)
     except Exception as exc:
         raise RuntimeError(f"Failed to download Notebook 4 source files: {exc}") from exc
 
