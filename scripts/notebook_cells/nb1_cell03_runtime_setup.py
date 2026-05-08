@@ -37,6 +37,7 @@ SPEED_PROFILES = {
         'MAX_IMAGE_SIDE_FOR_ROUTER': 1280,
         'RENDER_ROUTER_VISUALIZATION': False,
         'MAX_RENDERED_BOXES': 0,
+        'INCLUDE_ADAPTER_TARGET': True,
     },
     'balanced': {
         'SHOW_ROUTER_DIAGNOSTICS': True,
@@ -44,6 +45,7 @@ SPEED_PROFILES = {
         'MAX_IMAGE_SIDE_FOR_ROUTER': 1600,
         'RENDER_ROUTER_VISUALIZATION': True,
         'MAX_RENDERED_BOXES': 6,
+        'INCLUDE_ADAPTER_TARGET': True,
     },
     'quality': {
         'SHOW_ROUTER_DIAGNOSTICS': True,
@@ -51,6 +53,7 @@ SPEED_PROFILES = {
         'MAX_IMAGE_SIDE_FOR_ROUTER': None,
         'RENDER_ROUTER_VISUALIZATION': True,
         'MAX_RENDERED_BOXES': 0,
+        'INCLUDE_ADAPTER_TARGET': True,
     },
 }
 
@@ -74,6 +77,7 @@ PRINT_JSON_RESULT = False
 MAX_IMAGE_SIDE_FOR_ROUTER = None  # Ornek: 1280 veya 1600
 RENDER_ROUTER_VISUALIZATION = True
 MAX_RENDERED_BOXES = 0  # 0 = sinirsiz
+INCLUDE_ADAPTER_TARGET = True
 
 # Notebook-ici guvenlik kapisi: router-only tahmini belirsizse sonucu uncertain/unknown yapar.
 ENFORCE_NOTEBOOK_ROUTER_GATE = True
@@ -97,6 +101,8 @@ TOP_CROP_CANDIDATES = int(speed_profile.get('TOP_CROP_CANDIDATES', TOP_CROP_CAND
 MAX_IMAGE_SIDE_FOR_ROUTER = speed_profile.get('MAX_IMAGE_SIDE_FOR_ROUTER', MAX_IMAGE_SIDE_FOR_ROUTER)
 RENDER_ROUTER_VISUALIZATION = bool(speed_profile.get('RENDER_ROUTER_VISUALIZATION', RENDER_ROUTER_VISUALIZATION))
 MAX_RENDERED_BOXES = int(speed_profile.get('MAX_RENDERED_BOXES', MAX_RENDERED_BOXES))
+INCLUDE_ADAPTER_TARGET = bool(speed_profile.get('INCLUDE_ADAPTER_TARGET', INCLUDE_ADAPTER_TARGET))
+ENFORCE_NOTEBOOK_ROUTER_GATE = bool(speed_profile.get('ENFORCE_NOTEBOOK_ROUTER_GATE', ENFORCE_NOTEBOOK_ROUTER_GATE))
 
 # Gerekirse son override katmani.
 INFERENCE_OVERRIDES = dict(globals().get('INFERENCE_OVERRIDES') or {})
@@ -119,6 +125,7 @@ if INFERENCE_OVERRIDES:
         INFERENCE_OVERRIDES.get('RENDER_ROUTER_VISUALIZATION', RENDER_ROUTER_VISUALIZATION)
     )
     MAX_RENDERED_BOXES = int(INFERENCE_OVERRIDES.get('MAX_RENDERED_BOXES', MAX_RENDERED_BOXES))
+    INCLUDE_ADAPTER_TARGET = bool(INFERENCE_OVERRIDES.get('INCLUDE_ADAPTER_TARGET', INCLUDE_ADAPTER_TARGET))
     ENFORCE_NOTEBOOK_ROUTER_GATE = bool(
         INFERENCE_OVERRIDES.get('ENFORCE_NOTEBOOK_ROUTER_GATE', ENFORCE_NOTEBOOK_ROUTER_GATE)
     )
@@ -134,6 +141,7 @@ print(
     f'crop_hint={CROP_HINT} part_hint={PART_HINT} preload_router={PRELOAD_ROUTER} '
     f'router_runtime_profile={ROUTER_RUNTIME_PROFILE} diagnostics={SHOW_ROUTER_DIAGNOSTICS} top_candidates={TOP_CROP_CANDIDATES} '
     f'max_side={MAX_IMAGE_SIDE_FOR_ROUTER} render_visual={RENDER_ROUTER_VISUALIZATION} max_boxes={MAX_RENDERED_BOXES} '
+    f'include_adapter_target={INCLUDE_ADAPTER_TARGET} '
     f'notebook_gate={ENFORCE_NOTEBOOK_ROUTER_GATE} min_conf={ROUTER_RESULT_MIN_CONFIDENCE:.2f} min_margin={ROUTER_RESULT_MIN_MARGIN:.2f}'
 )
 print('[SONRAKI] Router hazirlik bittikten sonra analiz hucresini calistirin; yeni goruntu icin sadece analiz hucresini tekrar calistirin.')

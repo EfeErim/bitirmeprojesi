@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import OrderedDict
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from PIL import Image
 
@@ -19,6 +20,8 @@ StatusPrinter = Callable[[str], None]
 RouterCacheKey = tuple[str, str]
 
 _ROUTER_SESSION_CACHE: dict[RouterCacheKey, RouterPipeline] = {}
+_IMAGE_SESSION_CACHE: "OrderedDict[Tuple[str, int, int, Optional[int]], Image.Image]" = OrderedDict()
+_MAX_IMAGE_SESSION_CACHE_ITEMS = 6
 
 
 def _coerce_optional_max_side(value: Any) -> Optional[int]:
@@ -37,27 +40,53 @@ def _prepare_router_image(
     max_image_side: Optional[int],
     status_printer: Optional[StatusPrinter],
 ) -> Image.Image:
-    image = Image.open(image_path).convert("RGB")
     clamped_side = _coerce_optional_max_side(max_image_side)
+    cache_key: Optional[Tuple[str, int, int, Optional[int]]] = None
+    image_path_obj = Path(image_path)
+    try:
+        stat_result = image_path_obj.stat()
+        cache_key = (
+            str(image_path_obj.resolve()),
+            int(stat_result.st_mtime_ns),
+            int(stat_result.st_size),
+            clamped_side,
+        )
+    except Exception:
+        cache_key = None
+
+    if cache_key is not None:
+        cached_image = _IMAGE_SESSION_CACHE.get(cache_key)
+        if cached_image is not None:
+            copied = cached_image.copy() if hasattr(cached_image, "copy") else cached_image
+            return copied
+
+    image = Image.open(image_path).convert("RGB")
     if clamped_side is None:
-        return image
+        final_image = image
+    else:
+        width, height = image.size
+        longest_edge = max(width, height)
+        if longest_edge <= clamped_side:
+            final_image = image
+        else:
+            scale = float(clamped_side) / float(longest_edge)
+            resized_size = (
+                max(1, int(round(width * scale))),
+                max(1, int(round(height * scale))),
+            )
+            resampling = getattr(getattr(Image, "Resampling", Image), "BILINEAR")
+            _emit_status(
+                status_printer,
+                f"[INFER] Downscaled image from {width}x{height} to {resized_size[0]}x{resized_size[1]} for faster router inference.",
+            )
+            final_image = image.resize(resized_size, resample=resampling)
 
-    width, height = image.size
-    longest_edge = max(width, height)
-    if longest_edge <= clamped_side:
-        return image
+    if cache_key is not None:
+        _IMAGE_SESSION_CACHE[cache_key] = final_image.copy() if hasattr(final_image, "copy") else final_image
+        while len(_IMAGE_SESSION_CACHE) > _MAX_IMAGE_SESSION_CACHE_ITEMS:
+            _IMAGE_SESSION_CACHE.popitem(last=False)
 
-    scale = float(clamped_side) / float(longest_edge)
-    resized_size = (
-        max(1, int(round(width * scale))),
-        max(1, int(round(height * scale))),
-    )
-    resampling = getattr(getattr(Image, "Resampling", Image), "BICUBIC")
-    _emit_status(
-        status_printer,
-        f"[INFER] Downscaled image from {width}x{height} to {resized_size[0]}x{resized_size[1]} for faster router inference.",
-    )
-    return image.resize(resized_size, resample=resampling)
+    return final_image
 
 
 def _coerce_float(value: Any, default: float = 0.0) -> float:
@@ -170,6 +199,7 @@ def _router_cache_key(*, config_env: Optional[str], device: str) -> RouterCacheK
 def clear_router_cache() -> None:
     """Drop any router instance cached for this Python session."""
     _ROUTER_SESSION_CACHE.clear()
+    _IMAGE_SESSION_CACHE.clear()
 
 
 def ensure_router_ready(
@@ -230,6 +260,7 @@ def run_inference(
     top_candidates: int = 3,
     runtime_profile: Optional[str] = None,
     max_image_side: Optional[int] = None,
+    include_adapter_target: bool = True,
 ) -> Dict[str, Any]:
     image_ref = Path(image_path)
     _emit_status(status_printer, f"[INFER] image={image_ref.name} device={device}")
@@ -255,8 +286,9 @@ def run_inference(
         )
         payload = _build_router_payload(analysis)
         payload["runtime_profile"] = str(runtime_profile or "")
-        config = get_config(environment=config_env)
-        payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=config)
+        if include_adapter_target:
+            config = get_config(environment=config_env)
+            payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=config)
         if include_diagnostics:
             payload["diagnostics"] = _build_router_diagnostics(
                 analysis,
@@ -293,8 +325,9 @@ def run_inference(
                 f"Router rejected untrusted crop_hint='{hinted_crop}' because it detected crop='{detected_crop}'."
             )
     payload["runtime_profile"] = str(getattr(router, "active_profile", runtime_profile or "") or "")
-    router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
-    payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=router_config)
+    if include_adapter_target:
+        router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
+        payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=router_config)
     if include_diagnostics:
         payload["diagnostics"] = _build_router_diagnostics(
             analysis,

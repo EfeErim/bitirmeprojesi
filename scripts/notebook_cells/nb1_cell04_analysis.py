@@ -30,6 +30,7 @@ result = run_inference(
     top_candidates=TOP_CROP_CANDIDATES,
     runtime_profile=ROUTER_RUNTIME_PROFILE,
     max_image_side=MAX_IMAGE_SIDE_FOR_ROUTER,
+    include_adapter_target=INCLUDE_ADAPTER_TARGET,
 )
 
 runtime_profile = str(result.get('runtime_profile', '') or '')
@@ -37,7 +38,7 @@ if runtime_profile:
     print(f'[ROUTER] active_runtime_profile={runtime_profile}')
 
 adapter_target = dict(result.get('adapter_target') or {})
-if adapter_target.get('crop'):
+if INCLUDE_ADAPTER_TARGET and adapter_target.get('crop'):
     print(
         f"[ADAPTER] hedef_crop={adapter_target.get('crop')} "
         f"adapter_dir={adapter_target.get('adapter_dir')} "
