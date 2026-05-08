@@ -108,11 +108,15 @@ SEARCH_ROOTS = [str(ROOT / "models/adapters"), str(ROOT / "runs")]
 
 from scripts.colab_repo_bootstrap import (
     collect_notebook_access_report,
+    install_colab_requirements,
     login_and_check_hf_token,
     print_notebook_access_report,
     resolve_hf_token,
+    running_in_colab,
 )
 from src.core.config_manager import get_config
+
+install_colab_requirements(ROOT / "colab_notebooks" / "requirements_colab.txt", running_in_colab())
 
 CONFIG_FOR_ACCESS = get_config(environment="colab")
 BACKBONE_MODEL_NAME = str(

@@ -397,6 +397,9 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     for required_entry in (
         "config/base.json",
         "config/colab.json",
+        "requirements.txt",
+        "requirements_colab.txt",
+        "colab_notebooks/requirements_colab.txt",
         "scripts/colab_repo_bootstrap.py",
         "scripts/colab_simple_adapter_smoke_ui.py",
         "src/pipeline/adapter_smoke.py",
@@ -405,6 +408,7 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
         assert required_entry in manifest_entries, f"Notebook 4 manifest missing {required_entry}"
 
     assert "collect_notebook_access_report" in sources.full_source
+    assert "install_colab_requirements(ROOT / 'colab_notebooks' / 'requirements_colab.txt', running_in_colab())" in sources.full_source
     assert "print_notebook_access_report" in sources.full_source
     assert "from scripts import colab_simple_adapter_smoke_ui" in sources.full_source
     assert "importlib.reload(colab_simple_adapter_smoke_ui)" in sources.full_source

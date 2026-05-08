@@ -1,6 +1,9 @@
 config/base.json
 config/colab.json
 config/plant_taxonomy.json
+requirements.txt
+requirements_colab.txt
+colab_notebooks/requirements_colab.txt
 scripts/__init__.py
 scripts/colab_repo_bootstrap.py
 scripts/colab_simple_adapter_smoke_ui.py
