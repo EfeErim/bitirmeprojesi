@@ -1,48 +1,91 @@
 # Auto-extracted from colab_notebooks/4_simple_direct_adapter_test_ui.ipynb cell 1.
 # Keep notebook execute-only cells thin; edit behavior here.
 
-# Bootstrap notebook via helper
 from pathlib import Path
-import os, subprocess
-import shutil
-
+import json
+import os
 import sys
+import urllib.request
 
-# Ensure repo root is in sys.path before any imports
-def _ensure_sys_path_for_cell_script():
-    """Ensure sys.path includes repo root so notebook cell scripts can import."""
-    # Look for repository root by walking parents from cwd
-    def _find_repo_root(start: Path = None):
-        start = start or Path.cwd()
-        for p in [start] + list(start.parents):
-            if (p / 'scripts').is_dir() and (p / 'src').is_dir():
-                return p.resolve()
-        return None
+DOWNLOAD_TARGET = Path("/content/bitirmeprojesi")
+REPO_URL = os.environ.get("AADS_REPO_URL", "https://github.com/EfeErim/bitirmeprojesi.git")
+REPO_REF = os.environ.get("AADS_REPO_REF", "master")
+DOWNLOAD_PREFIXES = ("config/", "src/")
+DOWNLOAD_FILES = (
+    "scripts/__init__.py",
+    "scripts/colab_repo_bootstrap.py",
+    "scripts/colab_simple_adapter_smoke_ui.py",
+)
 
-    repo = _find_repo_root(Path.cwd())
-    if repo:
-        repo_root = str(repo)
-        if repo_root not in sys.path:
-            sys.path.insert(0, repo_root)
-        return repo_root
-    return None
 
-_ensure_sys_path_for_cell_script()
+def _download_file(raw_base: str, rel_path: str, dest_root: Path) -> Path:
+    dest_path = Path(dest_root) / rel_path
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    url = f"{raw_base}/{rel_path}"
+    print(f"Downloading {url} -> {dest_path}")
+    with urllib.request.urlopen(url) as response, open(dest_path, "wb") as handle:
+        handle.write(response.read())
+    return dest_path
 
-CLONE_TARGET = Path('/content/bitirmeprojesi')  # Colab GitHub bootstrap contract
-REPO_URL = os.environ.get('AADS_REPO_URL', 'https://github.com/EfeErim/bitirmeprojesi.git')
 
-# Git clone if needed
-if not CLONE_TARGET.exists():
-    clone_url = REPO_URL
-    subprocess.run(['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)], check=True)
+def _github_repo_parts(repo_url: str) -> tuple[str, str]:
+    repo = repo_url.rstrip(".git").rstrip("/")
+    prefix = "https://github.com/"
+    if not repo.startswith(prefix):
+        raise RuntimeError("Unsupported REPO_URL format for raw fetch: " + repo_url)
+    owner_repo = repo[len(prefix) :].strip("/").split("/")
+    if len(owner_repo) < 2:
+        raise RuntimeError("Unsupported REPO_URL format for raw fetch: " + repo_url)
+    return owner_repo[0], owner_repo[1]
 
-# [KONTROL] Ilk hucre: Bootstrap kontrati
-from scripts.notebook_helpers.nb4_simple_ui_helpers import run_bootstrap_notebook_nb4
-BOOTSTRAP = run_bootstrap_notebook_nb4()
-ROOT = BOOTSTRAP["ROOT"]
 
-# Setup adapter search and access check
+def _open_url(url: str):
+    headers = {"User-Agent": "aads-notebook4-bootstrap"}
+    token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return urllib.request.urlopen(urllib.request.Request(url, headers=headers))
+
+
+def _download_needed_files(raw_base: str, owner: str, repo: str, ref: str, dest_root: Path) -> list[str]:
+    tree_url = f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}?recursive=1"
+    with _open_url(tree_url) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    paths = sorted(
+        item["path"]
+        for item in payload.get("tree", [])
+        if item.get("type") == "blob"
+        and (
+            item.get("path") in DOWNLOAD_FILES
+            or any(str(item.get("path", "")).startswith(prefix) for prefix in DOWNLOAD_PREFIXES)
+        )
+    )
+    if not paths:
+        raise RuntimeError(f"No Notebook 4 source files found from {tree_url}")
+    for rel_path in paths:
+        _download_file(raw_base, rel_path, dest_root)
+    return paths
+
+
+def _ensure_aads_repo_on_path() -> Path:
+    print("Fetching Notebook 4 source files from GitHub raw...")
+    owner, repo = _github_repo_parts(REPO_URL)
+    raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{REPO_REF}"
+    DOWNLOAD_TARGET.mkdir(parents=True, exist_ok=True)
+    try:
+        downloaded = _download_needed_files(raw_base, owner, repo, REPO_REF, DOWNLOAD_TARGET)
+    except Exception as exc:
+        raise RuntimeError(f"Failed to download Notebook 4 source files: {exc}") from exc
+
+    if str(DOWNLOAD_TARGET) not in sys.path:
+        sys.path.insert(0, str(DOWNLOAD_TARGET))
+    os.chdir(DOWNLOAD_TARGET)
+    print(f"Notebook 4 source ready: {DOWNLOAD_TARGET} ({len(downloaded)} files)")
+    return DOWNLOAD_TARGET
+
+
+repo_root = _ensure_aads_repo_on_path()
+ROOT = repo_root
 SEARCH_ROOTS = [str(ROOT / "models/adapters"), str(ROOT / "runs")]
 
 from scripts.colab_repo_bootstrap import (

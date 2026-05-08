@@ -30,6 +30,7 @@ ACCESS_CHECK_CAPTURE = (
     'with TELEMETRY.capture_cell_output("Cell 3b: Guncelleme ve Erisim Kontrolu"):'
 )
 REPO_BOOTSTRAP_REQUIRED = (
+    "from pathlib import Path",
     "CLONE_TARGET = Path('/content/bitirmeprojesi')",
     "REPO_URL = os.environ.get('AADS_REPO_URL'",
     "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
@@ -125,10 +126,47 @@ def _assert_repo_bootstrap_contract(first_code_source: str, notebook_label: str)
         REPO_BOOTSTRAP_REQUIRED,
         f"{notebook_label} first code cell is missing required GitHub bootstrap: {{snippet}}",
     )
+    assert first_code_source.index("from pathlib import Path") < first_code_source.index(
+        "CLONE_TARGET = Path('/content/bitirmeprojesi')"
+    ), f"{notebook_label} first code cell uses Path before importing it"
     _assert_not_contains_all(
         first_code_source,
         DRIVE_REPO_BOOTSTRAP_FORBIDDEN,
         f"{notebook_label} first code cell should not use Drive for repo bootstrap: {{snippet}}",
+    )
+
+
+def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
+    _assert_contains(
+        first_code_source,
+        "def _ensure_aads_repo_on_path():",
+        f"{notebook_label} first code cell should define the raw source bootstrap: {{snippet}}",
+    )
+    _assert_contains_all(
+        first_code_source,
+        (
+            "from pathlib import Path",
+            "DOWNLOAD_PREFIXES = ('config/', 'src/')",
+            "'scripts/colab_simple_adapter_smoke_ui.py'",
+            "https://api.github.com/repos/",
+            "raw.githubusercontent.com",
+            "Notebook 4 source ready:",
+        ),
+        f"{notebook_label} first code cell is missing required raw-download bootstrap: {{snippet}}",
+    )
+    assert first_code_source.index("from pathlib import Path") < first_code_source.index(
+        "DOWNLOAD_TARGET = Path('/content/bitirmeprojesi')"
+    ), f"{notebook_label} first code cell uses Path before importing it"
+    _assert_not_contains_all(
+        first_code_source,
+        (
+            "AADS_ALLOW_CLONE",
+            "ALLOW_CLONE",
+            "CLONE_TARGET",
+            "subprocess.run(['git', 'clone'",
+            "git clone",
+        ),
+        f"{notebook_label} first code cell should download raw source files instead of cloning: {{snippet}}",
     )
 
 
@@ -342,13 +380,13 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     sources = _load_notebook_sources("4_simple_direct_adapter_test_ui.ipynb")
 
-    _assert_repo_bootstrap_contract(sources.first_code_source, "Notebook 4")
+    _assert_raw_download_bootstrap_contract(sources.first_code_source, "Notebook 4")
 
     assert "collect_notebook_access_report" in sources.full_source
     assert "print_notebook_access_report" in sources.full_source
     assert "from scripts import colab_simple_adapter_smoke_ui" in sources.full_source
     assert "importlib.reload(colab_simple_adapter_smoke_ui)" in sources.full_source
-    assert "launch_simple_adapter_smoke_ui(ROOT)" in sources.full_source
+    assert "launch_simple_adapter_smoke_ui(ROOT, show_all_adapters=True, show_mirror_adapters=True)" in sources.full_source
 
 
 def test_colab_helpers() -> None:
