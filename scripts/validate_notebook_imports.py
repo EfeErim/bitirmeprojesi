@@ -136,43 +136,38 @@ def _assert_repo_bootstrap_contract(first_code_source: str, notebook_label: str)
     )
 
 
-def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
+def _assert_clone_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
     _assert_contains(
         first_code_source,
         "def _ensure_aads_repo_on_path():",
-        f"{notebook_label} first code cell should define the raw source bootstrap: {{snippet}}",
+        f"{notebook_label} first code cell should define the clone bootstrap: {{snippet}}",
     )
     _assert_contains_all(
         first_code_source,
         (
             "from pathlib import Path",
             "DEFAULT_REPO_URL = 'https://github.com/EfeErim/bitirmeprojesi.git'",
-            "REPO_URL = DEFAULT_REPO_URL",
-            "DOWNLOAD_MANIFEST = 'scripts/notebook4_raw_download_manifest.txt'",
-            "def _candidate_raw_bases():",
-            "refs.append('main')",
-            "manifest_text = response.read().decode('utf-8')",
-            "raw.githubusercontent.com",
-            "Notebook 4 source URL:",
-            "Notebook 4 source ready:",
+            "REPO_URL = os.environ.get('AADS_REPO_URL', DEFAULT_REPO_URL)",
+            "CLONE_TARGET = Path('/content/bitirmeprojesi')",
+            "subprocess.run(",
+            "'clone', '--depth', '1', '--branch', REPO_REF",
+            "Notebook 4 repo ready:",
         ),
-        f"{notebook_label} first code cell is missing required raw-download bootstrap: {{snippet}}",
+        f"{notebook_label} first code cell is missing required clone bootstrap: {{snippet}}",
     )
     assert first_code_source.index("from pathlib import Path") < first_code_source.index(
-        "DOWNLOAD_TARGET = Path('/content/bitirmeprojesi')"
+        "CLONE_TARGET = Path('/content/bitirmeprojesi')"
     ), f"{notebook_label} first code cell uses Path before importing it"
     _assert_not_contains_all(
         first_code_source,
         (
-            "AADS_ALLOW_CLONE",
-            "AADS_REPO_URL",
-            "ALLOW_CLONE",
-            "CLONE_TARGET",
             "https://api.github.com/repos/",
-            "subprocess.run(['git', 'clone'",
-            "git clone",
+            "DOWNLOAD_MANIFEST",
+            "raw.githubusercontent.com",
+            "manifest_text = response.read().decode('utf-8')",
+            "urllib.request",
         ),
-        f"{notebook_label} first code cell should download raw source files instead of cloning: {{snippet}}",
+        f"{notebook_label} first code cell should clone instead of downloading raw source files: {{snippet}}",
     )
 
 
@@ -386,27 +381,7 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     sources = _load_notebook_sources("4_simple_direct_adapter_test_ui.ipynb")
 
-    _assert_raw_download_bootstrap_contract(sources.first_code_source, "Notebook 4")
-    manifest_path = ROOT / "scripts" / "notebook4_raw_download_manifest.txt"
-    assert manifest_path.is_file(), "Notebook 4 raw download manifest is missing"
-    manifest_entries = {
-        line.strip()
-        for line in manifest_path.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    }
-    for required_entry in (
-        "config/base.json",
-        "config/colab.json",
-        "requirements.txt",
-        "requirements_colab.txt",
-        "colab_notebooks/requirements_colab.txt",
-        "scripts/colab_repo_bootstrap.py",
-        "scripts/colab_simple_adapter_smoke_ui.py",
-        "src/pipeline/adapter_smoke.py",
-        "src/core/config_manager.py",
-    ):
-        assert required_entry in manifest_entries, f"Notebook 4 manifest missing {required_entry}"
-
+    _assert_clone_bootstrap_contract(sources.first_code_source, "Notebook 4")
     assert "collect_notebook_access_report" in sources.full_source
     assert "install_colab_requirements(ROOT / 'colab_notebooks' / 'requirements_colab.txt', running_in_colab())" in sources.full_source
     assert "print_notebook_access_report" in sources.full_source
@@ -831,7 +806,7 @@ CHECKS = (
         result_name="Notebook 4 Bootstrap",
         step_id="NB4_BOOTSTRAP",
         description="Notebook 4 bootstrap contract",
-        success_message="Notebook 4 bootstrap uses GitHub/local repo discovery and launches the minimal smoke UI",
+        success_message="Notebook 4 bootstrap clones the repo and launches the minimal smoke UI",
         failure_prefix="Notebook 4 bootstrap contract failed",
         callback=test_simple_adapter_smoke_notebook_bootstrap_contract,
     ),
