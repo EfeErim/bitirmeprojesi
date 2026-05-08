@@ -7,7 +7,8 @@ import sys
 import urllib.request
 
 DOWNLOAD_TARGET = Path("/content/bitirmeprojesi")
-REPO_URL = os.environ.get("AADS_REPO_URL", "https://github.com/EfeErim/bitirmeprojesi.git")
+DEFAULT_REPO_URL = "https://github.com/EfeErim/bitirmeprojesi.git"
+REPO_URL = os.environ.get("AADS_REPO_URL", DEFAULT_REPO_URL)
 REPO_REF = os.environ.get("AADS_REPO_REF", "master")
 DOWNLOAD_MANIFEST = "scripts/notebook4_raw_download_manifest.txt"
 
@@ -60,13 +61,41 @@ def _download_needed_files(raw_base: str, dest_root: Path) -> list[str]:
     return paths
 
 
+def _candidate_raw_bases() -> list[str]:
+    repo_urls = [REPO_URL]
+    if REPO_URL.rstrip(".git").rstrip("/") != DEFAULT_REPO_URL.rstrip(".git").rstrip("/"):
+        repo_urls.append(DEFAULT_REPO_URL)
+    refs = [REPO_REF]
+    if REPO_REF != "master":
+        refs.append("master")
+    if "main" not in refs:
+        refs.append("main")
+
+    raw_bases: list[str] = []
+    for repo_url in repo_urls:
+        owner, repo = _github_repo_parts(repo_url)
+        for ref in refs:
+            raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}"
+            if raw_base not in raw_bases:
+                raw_bases.append(raw_base)
+    return raw_bases
+
+
 def _ensure_aads_repo_on_path() -> Path:
     print("Fetching Notebook 4 source files from GitHub raw...")
-    owner, repo = _github_repo_parts(REPO_URL)
-    raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{REPO_REF}"
     DOWNLOAD_TARGET.mkdir(parents=True, exist_ok=True)
+    errors: list[str] = []
+    downloaded: list[str] | None = None
     try:
-        downloaded = _download_needed_files(raw_base, DOWNLOAD_TARGET)
+        for raw_base in _candidate_raw_bases():
+            try:
+                downloaded = _download_needed_files(raw_base, DOWNLOAD_TARGET)
+                print(f"Notebook 4 source URL: {raw_base}")
+                break
+            except Exception as exc:
+                errors.append(f"{raw_base}: {exc}")
+        if downloaded is None:
+            raise RuntimeError("; ".join(errors))
     except Exception as exc:
         raise RuntimeError(f"Failed to download Notebook 4 source files: {exc}") from exc
 
