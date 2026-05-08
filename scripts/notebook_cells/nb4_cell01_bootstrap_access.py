@@ -8,7 +8,7 @@ import urllib.request
 
 DOWNLOAD_TARGET = Path("/content/bitirmeprojesi")
 DEFAULT_REPO_URL = "https://github.com/EfeErim/bitirmeprojesi.git"
-REPO_URL = os.environ.get("AADS_REPO_URL", DEFAULT_REPO_URL)
+REPO_URL = DEFAULT_REPO_URL
 REPO_REF = os.environ.get("AADS_REPO_REF", "master")
 DOWNLOAD_MANIFEST = "scripts/notebook4_raw_download_manifest.txt"
 
@@ -62,9 +62,6 @@ def _download_needed_files(raw_base: str, dest_root: Path) -> list[str]:
 
 
 def _candidate_raw_bases() -> list[str]:
-    repo_urls = [REPO_URL]
-    if REPO_URL.rstrip(".git").rstrip("/") != DEFAULT_REPO_URL.rstrip(".git").rstrip("/"):
-        repo_urls.append(DEFAULT_REPO_URL)
     refs = [REPO_REF]
     if REPO_REF != "master":
         refs.append("master")
@@ -72,12 +69,11 @@ def _candidate_raw_bases() -> list[str]:
         refs.append("main")
 
     raw_bases: list[str] = []
-    for repo_url in repo_urls:
-        owner, repo = _github_repo_parts(repo_url)
-        for ref in refs:
-            raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}"
-            if raw_base not in raw_bases:
-                raw_bases.append(raw_base)
+    owner, repo = _github_repo_parts(REPO_URL)
+    for ref in refs:
+        raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}"
+        if raw_base not in raw_bases:
+            raw_bases.append(raw_base)
     return raw_bases
 
 

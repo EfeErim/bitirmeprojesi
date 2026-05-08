@@ -147,9 +147,9 @@ def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_lab
         (
             "from pathlib import Path",
             "DEFAULT_REPO_URL = 'https://github.com/EfeErim/bitirmeprojesi.git'",
+            "REPO_URL = DEFAULT_REPO_URL",
             "DOWNLOAD_MANIFEST = 'scripts/notebook4_raw_download_manifest.txt'",
             "def _candidate_raw_bases():",
-            "repo_urls.append(DEFAULT_REPO_URL)",
             "refs.append('main')",
             "manifest_text = response.read().decode('utf-8')",
             "raw.githubusercontent.com",
@@ -165,6 +165,7 @@ def _assert_raw_download_bootstrap_contract(first_code_source: str, notebook_lab
         first_code_source,
         (
             "AADS_ALLOW_CLONE",
+            "AADS_REPO_URL",
             "ALLOW_CLONE",
             "CLONE_TARGET",
             "https://api.github.com/repos/",
