@@ -61,7 +61,12 @@ def _ensure_aads_repo_on_path() -> Path:
 
 repo_root = _ensure_aads_repo_on_path()
 ROOT = repo_root
-SEARCH_ROOTS = [str(ROOT / "models/adapters"), str(ROOT / "runs")]
+SEARCH_ROOTS = [
+    ROOT / "outputs" / "colab_notebook_training",
+    ROOT / "outputs" / "colab_notebook_training" / "telemetry_runtime" / "telemetry",
+    ROOT / "models" / "adapters",
+    ROOT / "runs",
+]
 
 from scripts.colab_repo_bootstrap import (
     collect_notebook_access_report,

@@ -553,10 +553,9 @@ def launch_simple_adapter_smoke_ui(
 ) -> None:
     """Render the minimal direct-adapter smoke-test UI used by Notebook 4.
 
-    ``show_all_adapters`` is kept for older notebook copies. Historical
-    ``runs/`` exports are hidden unless ``include_run_adapters`` is explicitly
-    enabled, and mirror exports are hidden unless ``show_mirror_adapters`` is
-    explicitly enabled.
+    ``show_all_adapters`` is kept for older notebook copies and includes
+    historical ``runs/`` exports. Mirror exports are hidden unless
+    ``show_mirror_adapters`` is explicitly enabled.
     """
     if widgets is None:
         raise RuntimeError(
@@ -570,7 +569,10 @@ def launch_simple_adapter_smoke_ui(
         Path(candidate)
         for candidate in (
             search_roots
-            or _default_adapter_search_roots(root_path, include_run_adapters=include_run_adapters)
+            or _default_adapter_search_roots(
+                root_path,
+                include_run_adapters=include_run_adapters or show_all_adapters,
+            )
         )
     ]
     upload_dir = root_path / ".runtime_tmp" / upload_dir_name

@@ -268,10 +268,10 @@ def test_launch_simple_adapter_smoke_ui_keeps_legacy_show_all_collapsed(monkeypa
         HBox=_FakeWidget,
         Layout=lambda **kwargs: kwargs,
     )
-    calls: list[dict[str, object]] = []
+    calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
 
-    def _fake_discover(*_args, **kwargs):
-        calls.append(kwargs)
+    def _fake_discover(*args, **kwargs):
+        calls.append((args, kwargs))
         return []
 
     monkeypatch.setattr(ui, "widgets", fake_widgets)
@@ -282,7 +282,8 @@ def test_launch_simple_adapter_smoke_ui_keeps_legacy_show_all_collapsed(monkeypa
 
     ui.launch_simple_adapter_smoke_ui(tmp_path, show_all_adapters=True)
 
-    assert calls[0]["collapse_run_mirrors"] is True
+    assert calls[0][1]["collapse_run_mirrors"] is True
+    assert tmp_path / "runs" in calls[0][0][0]
 
 
 def test_launch_simple_adapter_smoke_ui_can_show_mirrors_for_debug(monkeypatch, tmp_path):
