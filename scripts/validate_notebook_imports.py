@@ -387,6 +387,8 @@ def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     assert "print_notebook_access_report" in sources.full_source
     assert "from scripts import colab_simple_adapter_smoke_ui" in sources.full_source
     assert "importlib.reload(colab_simple_adapter_smoke_ui)" in sources.full_source
+    assert "['reset', '--hard', f'origin/{REPO_REF}']" in sources.full_source
+    assert "['pull', '--ff-only', 'origin', REPO_REF]" not in sources.full_source
     assert "ROOT / 'outputs' / 'colab_notebook_training'" in sources.full_source
     assert "ROOT / 'outputs' / 'colab_notebook_training' / 'telemetry_runtime' / 'telemetry'" in sources.full_source
     assert "ROOT / 'models' / 'adapters'" in sources.full_source

@@ -48,7 +48,7 @@ def _ensure_aads_repo_on_path() -> Path:
         print(f"Notebook 4 repo already exists: {target}")
         _run_git(["fetch", "--depth", "1", "origin", REPO_REF], cwd=target)
         _run_git(["checkout", REPO_REF], cwd=target)
-        _run_git(["pull", "--ff-only", "origin", REPO_REF], cwd=target)
+        _run_git(["reset", "--hard", f"origin/{REPO_REF}"], cwd=target)
     else:
         raise RuntimeError(f"Notebook 4 clone target is not usable: {target}")
 
