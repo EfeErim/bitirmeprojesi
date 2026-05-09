@@ -153,6 +153,46 @@ def test_build_cleanup_plan_supports_zip_source(tmp_path: Path):
     assert len(actions) == 1
 
 
+def test_build_cleanup_plan_is_stable_across_20_iterations(tmp_path: Path):
+    dataset_root = tmp_path / "dataset"
+    csv_path = tmp_path / "exact_duplicates.csv"
+
+    _write_file(dataset_root / "Healthy" / "dup_a.jpg", b"a")
+    _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
+    _write_file(dataset_root / "Healthy" / "dup_b_flip.jpg", b"bf")
+
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["count", "exact_hash", "normalized_class_name", "relative_paths"])
+        writer.writeheader()
+        writer.writerow(
+            {
+                "count": "2",
+                "exact_hash": "hash1",
+                "normalized_class_name": "healthy",
+                "relative_paths": "Healthy/dup_a.jpg|Healthy/dup_b.jpg",
+            }
+        )
+
+    expected = None
+    for _ in range(20):
+        actions = build_cleanup_plan(dataset_root=dataset_root, exact_duplicates_source=csv_path, seed=3)
+        serialized = [
+            (
+                action.duplicate_group_index,
+                action.duplicate_count,
+                action.kept_relative_paths,
+                action.selected_relative_path,
+                action.deleted_relative_path,
+                action.delete_reason,
+            )
+            for action in actions
+        ]
+        if expected is None:
+            expected = serialized
+        else:
+            assert serialized == expected
+
+
 def test_find_variant_relpaths_reuses_pattern_cache(tmp_path: Path, monkeypatch):
     dataset_root = tmp_path / "dataset"
     _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
