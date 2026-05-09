@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import csv
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +12,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.artifacts import ArtifactStore
+from src.shared.csv_utils import write_csv, write_csv_rows, write_csv_rows_with_order
 from src.training.services.metrics import (
     build_production_readiness,
     compute_plan_metrics,
@@ -138,33 +138,10 @@ def _epoch_rows(history_snapshot: Dict[str, Any]) -> List[List[Any]]:
     return rows
 
 
-def _write_csv(path: Path, headers: Sequence[str], rows: Iterable[Sequence[Any]]) -> Path:
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle)
-        writer.writerow(list(headers))
-        for row in rows:
-            writer.writerow(list(row))
-    return path
 
 
-def _write_dict_rows_csv(path: Path, rows: Sequence[Dict[str, Any]], *, preferred_headers: Sequence[str]) -> Path:
-    materialized_rows = [dict(row) for row in rows]
-    preferred_header_set = set(preferred_headers)
-    extra_headers = sorted(
-        {
-            str(key)
-            for row in materialized_rows
-            for key in row.keys()
-            if str(key) not in preferred_header_set
-        }
-    )
-    headers = [*preferred_headers, *extra_headers]
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=headers, extrasaction="ignore")
-        writer.writeheader()
-        for row in materialized_rows:
-            writer.writerow({header: row.get(header, "") for header in headers})
-    return path
+
+
 
 
 def _sanitize_filename_component(value: Any, *, default: str = "sample") -> str:
@@ -260,7 +237,7 @@ def _persist_hard_example_artifacts(
         except (OSError, TypeError, ValueError):
             continue
 
-    hard_examples_csv = _write_dict_rows_csv(
+    hard_examples_csv = write_csv_rows_with_order(
         validation_dir / "hard_examples.csv",
         hard_rows,
         preferred_headers=(
@@ -319,7 +296,7 @@ class BatchMetricsRecorder:
 
     def __init__(self, *, artifact_root: Path, flush_interval: int = 64) -> None:
         training_dir = _artifact_dir(Path(artifact_root), "training")
-        self.output_path = _write_csv(training_dir / "batch_metrics.csv", _BATCH_KEYS, [])
+        self.output_path = write_csv(training_dir / "batch_metrics.csv", _BATCH_KEYS, [])
         self._flush_interval = max(1, int(flush_interval))
         self._pending_rows: List[List[Any]] = []
 
@@ -551,8 +528,8 @@ def persist_training_history_artifacts(
     store = ArtifactStore(training_dir)
     history_json = store.write_json("history.json", history_snapshot)
     epoch_rows = _epoch_rows(history_snapshot)
-    results_csv = _write_csv(training_dir / "results.csv", ["epoch", *_HISTORY_KEYS], epoch_rows)
-    history_csv = _write_csv(training_dir / "history.csv", ["epoch", *_HISTORY_KEYS], epoch_rows)
+    results_csv = write_csv(training_dir / "results.csv", ["epoch", *_HISTORY_KEYS], epoch_rows)
+    history_csv = write_csv(training_dir / "history.csv", ["epoch", *_HISTORY_KEYS], epoch_rows)
 
     _copy_artifacts_to_telemetry(
         telemetry,
@@ -587,7 +564,7 @@ def persist_batch_metrics_artifacts(
         rows: List[List[Any]] = []
         for row in history_rows:
             rows.append([row.get(key, "") for key in headers])
-        batch_csv = _write_csv(training_dir / "batch_metrics.csv", headers, rows)
+        batch_csv = write_csv(training_dir / "batch_metrics.csv", headers, rows)
     _copy_artifacts_to_telemetry(telemetry, [(batch_csv, "training/batch_metrics.csv")])
     _refresh_guided_outputs(artifact_root, telemetry=telemetry)
     return {"batch_metrics_csv": batch_csv}
@@ -765,7 +742,7 @@ def persist_ood_benchmark_artifacts(
                 fold.get("resume_key", ""),
             ]
         )
-    per_fold_csv = _write_csv(benchmark_dir / "per_fold.csv", headers, rows)
+    per_fold_csv = write_csv(benchmark_dir / "per_fold.csv", headers, rows)
     _copy_artifacts_to_telemetry(
         telemetry,
         [
@@ -906,7 +883,7 @@ def _persist_prediction_outputs(
 ) -> JsonDict:
     if not prediction_rows:
         return {}
-    predictions_csv = _write_dict_rows_csv(
+    predictions_csv = write_csv_rows_with_order(
         validation_dir / "predictions.csv",
         prediction_rows,
         preferred_headers=(

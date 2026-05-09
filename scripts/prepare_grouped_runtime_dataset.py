@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import hashlib
 import itertools
 import json
@@ -27,7 +26,7 @@ from src.data.dataset_layout import (
     normalize_class_name,
 )
 from src.guided_artifacts import refresh_prep_guided_artifacts
-from src.shared.csv_utils import read_csv_preview as _read_csv_preview
+from src.shared.csv_utils import read_csv_preview as _read_csv_preview, write_csv_rows
 from src.shared.json_utils import read_json, write_json
 
 
@@ -2086,12 +2085,12 @@ def build_grouped_dataset_plan(
         summary["ood_handoff_checklist"],
         ensure_ascii=False,
     )
-    _write_csv(artifact_root / "dataset_manifest.csv", [asdict(record) for record in records])
-    _write_csv(artifact_root / "family_manifest.csv", manifest_rows)
-    _write_csv(artifact_root / "source_style_groups.csv", source_style_group_rows)
-    _write_csv(artifact_root / "label_review_candidates.csv", label_review_candidates)
-    _write_csv(artifact_root / "same_class_review_candidates.csv", [asdict(pair) for pair in review_pairs])
-    _write_csv(artifact_root / "same_class_review_clusters.csv", [asdict(cluster) for cluster in review_clusters])
+    write_csv_rows(artifact_root / "dataset_manifest.csv", [asdict(record) for record in records])
+    write_csv_rows(artifact_root / "family_manifest.csv", manifest_rows)
+    write_csv_rows(artifact_root / "source_style_groups.csv", source_style_group_rows)
+    write_csv_rows(artifact_root / "label_review_candidates.csv", label_review_candidates)
+    write_csv_rows(artifact_root / "same_class_review_candidates.csv", [asdict(pair) for pair in review_pairs])
+    write_csv_rows(artifact_root / "same_class_review_clusters.csv", [asdict(cluster) for cluster in review_clusters])
     _write_csv(
         artifact_root / "same_class_auto_resolved_clusters.csv",
         [asdict(cluster) for cluster in auto_resolved_review_clusters],
@@ -2100,7 +2099,7 @@ def build_grouped_dataset_plan(
         artifact_root / "same_class_high_risk_clusters.csv",
         [asdict(cluster) for cluster in high_risk_review_clusters],
     )
-    _write_csv(artifact_root / "cross_class_conflicts.csv", [asdict(pair) for pair in blocking_conflicts])
+    write_csv_rows(artifact_root / "cross_class_conflicts.csv", [asdict(pair) for pair in blocking_conflicts])
     _write_csv(
         artifact_root / "exact_duplicates.csv",
         [
@@ -2436,18 +2435,7 @@ def format_human_review_packet(packet: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _write_csv(path: Path, rows: Sequence[Dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if not rows:
-        with path.open("w", encoding="utf-8", newline="") as handle:
-            handle.write("")
-        return
-    fieldnames = sorted({key for row in rows for key in row.keys()})
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fieldnames)
-        writer.writeheader()
-        for row in rows:
-            writer.writerow(row)
+
 
 
 def materialize_grouped_runtime_dataset(

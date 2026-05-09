@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -16,6 +15,7 @@ import matplotlib
 
 from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.adapter_paths import build_adapter_bundle_root
+from src.shared.hash_utils import sha256_file
 from src.shared.json_utils import deep_merge, read_json, write_json
 from src.training.services.reporting import (
     persist_production_readiness_artifact as persist_production_readiness_artifact_core,
@@ -88,12 +88,7 @@ def _slug_label_component(value: str, *, default: str = "unspecified") -> str:
     return normalized or default
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+
 
 
 def _coerce_like_value(reference: Any, value: Any) -> Any:

@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 import os
@@ -14,6 +13,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from src.shared.json_utils import read_json, write_json
+from src.shared.string_utils import normalize_class_name
 
 logger = logging.getLogger(__name__)
 
@@ -35,13 +35,7 @@ _CLASS_ALIAS_GROUPS = (
 )
 
 
-def normalize_class_name(name: str) -> str:
-    normalized = str(name or "").strip().lower()
-    for token in (" ", "-", "/", "\\"):
-        normalized = normalized.replace(token, "_")
-    while "__" in normalized:
-        normalized = normalized.replace("__", "_")
-    return normalized.strip("_")
+
 
 
 def _dataset_display_name(path: Path) -> str:

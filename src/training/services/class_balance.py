@@ -12,13 +12,7 @@ CLASS_BALANCE_ELIGIBLE_MAX_SAMPLES = 200
 CLASS_BALANCE_BETA = 0.9999
 
 
-def normalize_class_name(name: str) -> str:
-    normalized = str(name or "").strip().lower()
-    for token in (" ", "-", "/", "\\"):
-        normalized = normalized.replace(token, "_")
-    while "__" in normalized:
-        normalized = normalized.replace("__", "_")
-    return normalized.strip("_")
+
 
 
 def compute_effective_number_weights(

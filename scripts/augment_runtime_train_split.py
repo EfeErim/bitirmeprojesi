@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.data.dataset_layout import normalize_class_name
 from src.shared.json_utils import read_json, write_json
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
@@ -24,13 +25,7 @@ GENERATED_DIR_NAME = "_offline_aug"
 POLICY_NAME = "train_split_only_pil_v1"
 
 
-def normalize_class_name(name: str) -> str:
-    normalized = str(name or "").strip().lower()
-    for token in (" ", "-", "/", "\\"):
-        normalized = normalized.replace(token, "_")
-    while "__" in normalized:
-        normalized = normalized.replace("__", "_")
-    return normalized.strip("_")
+
 
 
 def _is_image(path: Path) -> bool:

@@ -70,3 +70,87 @@ def _select_nonempty_fields(row: Dict[str, str], fields: Sequence[str]) -> Dict[
         for field in fields
         if str(row.get(field, "")).strip()
     }
+
+
+def write_csv(path: Path, headers: Sequence[str], rows: Sequence[Sequence[Any]], *, encoding: str = "utf-8") -> Path:
+    """Write rows to a CSV file with explicit headers.
+    
+    Args:
+        path: Output file path (parent directories created if needed).
+        headers: Column names.
+        rows: Sequence of rows, each with values matching headers.
+        encoding: Text encoding (default utf-8).
+    
+    Returns:
+        The resolved output path.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding=encoding, newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(list(headers))
+        for row in rows:
+            writer.writerow(list(row))
+    return path
+
+
+def write_csv_rows(path: Path, rows: Sequence[Dict[str, Any]], *, encoding: str = "utf-8") -> Path:
+    """Write dict rows to a CSV file with auto-discovered headers.
+    
+    Derives headers from all keys across all rows, sorts them, and writes with DictWriter.
+    
+    Args:
+        path: Output file path (parent directories created if needed).
+        rows: Sequence of dict rows.
+        encoding: Text encoding (default utf-8).
+    
+    Returns:
+        The resolved output path.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not rows:
+        path.write_text("", encoding=encoding)
+        return path
+    fieldnames = sorted({key for row in rows for key in row.keys()})
+    with path.open("w", encoding=encoding, newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+    return path
+
+
+def write_csv_rows_with_order(
+    path: Path, rows: Sequence[Dict[str, Any]], *, preferred_headers: Sequence[str], encoding: str = "utf-8"
+) -> Path:
+    """Write dict rows preserving preferred column order with fallback to sorted extras.
+    
+    Args:
+        path: Output file path (parent directories created if needed).
+        rows: Sequence of dict rows.
+        preferred_headers: Column names to prioritize (in order).
+        encoding: Text encoding (default utf-8).
+    
+    Returns:
+        The resolved output path.
+    """
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    materialized_rows = [dict(row) for row in rows]
+    preferred_header_set = set(preferred_headers)
+    extra_headers = sorted(
+        {
+            str(key)
+            for row in materialized_rows
+            for key in row.keys()
+            if str(key) not in preferred_header_set
+        }
+    )
+    headers = [*preferred_headers, *extra_headers]
+    with path.open("w", encoding=encoding, newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers, extrasaction="ignore")
+        writer.writeheader()
+        for row in materialized_rows:
+            writer.writerow({header: row.get(header, "") for header in headers})
+    return path

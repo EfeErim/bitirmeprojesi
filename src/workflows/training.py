@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import importlib.metadata
 import logging
 import subprocess
@@ -18,6 +17,7 @@ from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
 from src.shared.adapter_paths import build_adapter_bundle_root
+from src.shared.hash_utils import sha256_file
 from src.shared.json_utils import read_json
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
 from src.training.services.ood_score_selection import (
@@ -155,12 +155,7 @@ def _evaluation_metrics_summary(evaluation_payload: Any) -> Dict[str, float]:
     }
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(65536), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+
 
 
 def _git_output(repo_root: Path, *args: str) -> str:
