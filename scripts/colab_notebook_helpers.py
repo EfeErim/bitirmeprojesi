@@ -16,7 +16,8 @@ import matplotlib
 from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.adapter_paths import build_adapter_bundle_root
 from src.shared.hash_utils import sha256_file
-from src.shared.json_utils import deep_merge, read_json, write_json
+from src.shared.json_utils import clone_jsonable, coerce_like_value, deep_merge, read_json, write_json
+from src.shared.string_utils import normalize_notebook_identifier, slug_label_component
 from src.training.services.reporting import (
     persist_production_readiness_artifact as persist_production_readiness_artifact_core,
 )
@@ -82,46 +83,19 @@ _DEFAULT_PARETO_OBJECTIVES = (
 )
 
 
-def _slug_label_component(value: str, *, default: str = "unspecified") -> str:
-    normalized = re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower())
-    normalized = re.sub(r"_+", "_", normalized).strip("_")
-    return normalized or default
 
 
 
 
 
-def _coerce_like_value(reference: Any, value: Any) -> Any:
-    if isinstance(reference, bool):
-        if isinstance(value, str):
-            lowered = value.strip().lower()
-            if lowered in {"1", "true", "yes", "on"}:
-                return True
-            if lowered in {"0", "false", "no", "off"}:
-                return False
-        return bool(value)
-    if isinstance(reference, int) and not isinstance(reference, bool):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return reference
-    if isinstance(reference, float):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return reference
-    return value
 
 
-def _clone_jsonable(payload: Any) -> Any:
-    return json.loads(json.dumps(payload))
 
 
-def _normalize_notebook_identifier(name: str) -> str:
-    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in str(name or "").strip())
-    while "__" in normalized:
-        normalized = normalized.replace("__", "_")
-    return normalized.strip("_")
+
+
+
+
 
 
 def _load_trials_jsonl(path: Path) -> List[Dict[str, Any]]:
@@ -162,8 +136,8 @@ def _build_notebook_campaign_seed(
     )
     digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
     parts = (
-        _slug_label_component(crop_name, default="crop"),
-        _slug_label_component(part_name, default="part"),
+        slug_label_component(crop_name, default="crop"),
+        slug_label_component(part_name, default="part"),
         digest,
     )
     return "__".join(parts)
@@ -289,7 +263,7 @@ def prepare_notebook_access_and_dataset(
         },
     )
 
-    crop_key = _normalize_notebook_identifier(crop_name)
+    crop_key = normalize_notebook_identifier(crop_name)
     if not crop_key:
         raise RuntimeError("CROP_NAME bos olmayan bir crop anahtarina cozulmeli.")
 
@@ -705,7 +679,7 @@ def apply_notebook_optimization_proposal(
         if flat_name not in proposal_parameters or notebook_name not in updated:
             continue
         before = updated[notebook_name]
-        after = _coerce_like_value(before, proposal_parameters.get(flat_name))
+        after = coerce_like_value(before, proposal_parameters.get(flat_name))
         if before == after:
             continue
         updated[notebook_name] = after
@@ -887,7 +861,7 @@ def _build_notebook_continual_config(
     optimization_settings: Dict[str, Any],
     early_stopping_settings: Dict[str, Any],
 ) -> Dict[str, Any]:
-    continual_cfg = _clone_jsonable(dict(base_config or {}).get("training", {}).get("continual", {}))
+    continual_cfg = clone_jsonable(dict(base_config or {}).get("training", {}).get("continual", {}))
     continual_cfg["device"] = device
     continual_cfg["num_epochs"] = int(notebook_parameters["EPOCHS"])
     continual_cfg["batch_size"] = int(notebook_parameters["BATCH_SIZE"])
@@ -986,9 +960,9 @@ def initialize_notebook_training_engine(
 
     available = sorted(
         {
-            _normalize_notebook_identifier(path.name)
+            normalize_notebook_identifier(path.name)
             for path in class_root.iterdir()
-            if path.is_dir() and _normalize_notebook_identifier(path.name)
+            if path.is_dir() and normalize_notebook_identifier(path.name)
         }
     )
     resolved_ood_root = str(state.get("resolved_ood_root") or "").strip()
@@ -1506,8 +1480,8 @@ def complete_notebook_training_run(
     if trainer is None:
         raise RuntimeError("Trainer hazir degil.")
 
-    notebook_config = _clone_jsonable(base_config)
-    notebook_config.setdefault("training", {})["continual"] = _clone_jsonable(state["continual_config"])
+    notebook_config = clone_jsonable(base_config)
+    notebook_config.setdefault("training", {})["continual"] = clone_jsonable(state["continual_config"])
     evaluation_cfg = notebook_config.get("training", {}).get("continual", {}).get("evaluation", {})
     artifact_root = notebook_artifact_root(root)
 
@@ -1773,14 +1747,14 @@ def complete_notebook_training_run(
 
 def build_notebook_run_id(crop_name: str, part_name: str = "unspecified", *, now: Optional[datetime] = None) -> str:
     stamp = (now or datetime.now()).strftime("%Y-%m-%d_%H-%M-%S")
-    crop = _slug_label_component(crop_name, default="crop")
-    part = _slug_label_component(part_name, default="unspecified")
+    crop = slug_label_component(crop_name, default="crop")
+    part = slug_label_component(part_name, default="unspecified")
     return f"{crop}_{part}_{stamp}"
 
 
 def build_notebook_run_dir(root: Path, crop_name: str, part_name: str, run_id: str) -> Path:
-    crop = _slug_label_component(crop_name, default="crop")
-    part = _slug_label_component(part_name, default="unspecified")
+    crop = slug_label_component(crop_name, default="crop")
+    part = slug_label_component(part_name, default="unspecified")
     return Path(root) / "runs" / crop / part / str(run_id)
 
 

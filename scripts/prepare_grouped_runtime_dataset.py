@@ -2091,16 +2091,16 @@ def build_grouped_dataset_plan(
     write_csv_rows(artifact_root / "label_review_candidates.csv", label_review_candidates)
     write_csv_rows(artifact_root / "same_class_review_candidates.csv", [asdict(pair) for pair in review_pairs])
     write_csv_rows(artifact_root / "same_class_review_clusters.csv", [asdict(cluster) for cluster in review_clusters])
-    _write_csv(
+    write_csv_rows(
         artifact_root / "same_class_auto_resolved_clusters.csv",
         [asdict(cluster) for cluster in auto_resolved_review_clusters],
     )
-    _write_csv(
+    write_csv_rows(
         artifact_root / "same_class_high_risk_clusters.csv",
         [asdict(cluster) for cluster in high_risk_review_clusters],
     )
     write_csv_rows(artifact_root / "cross_class_conflicts.csv", [asdict(pair) for pair in blocking_conflicts])
-    _write_csv(
+    write_csv_rows(
         artifact_root / "exact_duplicates.csv",
         [
             {
