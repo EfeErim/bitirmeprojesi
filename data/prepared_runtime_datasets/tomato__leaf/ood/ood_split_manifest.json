@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-05-06T17:29:18.527718+00:00",
+  "created_at": "2026-05-09T19:25:19.330945+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "off_crop_secondary/internet_20260506_bugwood_1235040_grape_anthracnose.jpg": {
@@ -344,11 +344,65 @@
       "slice": "tomato_off_coverage_secondary",
       "split": "dev"
     },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_1263040_tomato_leaf_miner_damage.jpg": {
+      "sha256": "09246876d415e5db5367906ea9b2f00edcefb2e5d3c5bcd1c9c57660d54fb00c",
+      "size_bytes": 134201,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598509_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "8f1b0b92814dd03243de6c87d697d67ce8ebe5faf1d2b2c44feeafe60eb89c83",
+      "size_bytes": 124598,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598512_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "585246ebd9d05e627ebf0373692780339d857774d29c64a25f41c57a2d8ebe13",
+      "size_bytes": 194116,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "dc1e7431b3ce791c3080ea4b8508c71ae88a087e73a6a4ae7a8986fa6952bae4",
+      "size_bytes": 136316,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "c1da1156a5600aec593b237c0bae4a0748634665ddd0bc4994cc0eb7f66258d3",
+      "size_bytes": 96233,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "e7081178cc5ebc6829c119db2d3bc1be2401863ffc50fe8ff1986d0171a40256",
+      "size_bytes": 102695,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_bugwood_5598519_tomato_russet_mite_symptoms.jpg": {
+      "sha256": "07f7ef8531ca87b0f0dce3598a5b117848ce91fa5445fdf31f132c6ef7fedcbc",
+      "size_bytes": 203345,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_SpotSpeckBlightMite-1l4v879.jpg.jpg": {
+      "sha256": "7a39980b4f6448958db22a28da7b409e74834a820592f7302b5547703ab61578",
+      "size_bytes": 113860,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_comparing-diseases-4-canker-tomato-1y51ejs.jpg.jpg": {
+      "sha256": "2c59025109d5e9a2cfba879cfde943fa3d238a4dbaf2e44763b986d6bef5c22d",
+      "size_bytes": 125378,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-15_140851.png": {
       "sha256": "30b208c0c7e904f979247e5d1ab5f4d23ccddabd62b12e3613d02ced8d2ea9f6",
       "size_bytes": 275549,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__IMG20220323182943_1.jpg": {
       "sha256": "fc80a216f50f3505602fce33eaab8bb45413431e9f8e2fd91636be8b80c8d4c5",
@@ -366,7 +420,7 @@
       "sha256": "26a1c72d3249c9361f39d01ecae3942967767a767902e11ee8f46d0e0dd69293",
       "size_bytes": 611837,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__cold_injury2.png": {
       "sha256": "f7082799521f4f5e61f287ad15af7e16a642a8519fdca140f6093a644200c7d6",
@@ -378,7 +432,7 @@
       "sha256": "b91af7117cdd065e0e0681c300ed312e3e04b73200e78b45298c75620f40d57f",
       "size_bytes": 288316,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__demir_eksikli\u011fi_yaprak.png": {
       "sha256": "f702735f366a960feb9e0c3346cd3f35090cae23f302f7d502f9177c7c4cbf23",
@@ -390,13 +444,13 @@
       "sha256": "b1589db95fa89f3bc15d8edf6b4944062ec3c5fbd2a660bb83450c4732e35131",
       "size_bytes": 370790,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__gray_wall.png": {
       "sha256": "a0c4afbb7ab34ce0fc3c94be1fc9ddf22062272fc6c239a63a754a2d4e786ec5",
       "size_bytes": 147089,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__herbicite_injury.png": {
       "sha256": "6e4989519b5e40395216a10d90e35a4efc44736ab208478889ba9c8f990435bf",
@@ -420,7 +474,7 @@
       "sha256": "bc96fa8f49524a34a804868545d28472eb9b7184952d968e8a4e75d2ddb86cdc",
       "size_bytes": 739329,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     }
   },
   "min_per_slice": 2,
@@ -452,15 +506,15 @@
       "total": 17
     },
     "unsupported_tomato_unknowns": {
-      "dev": 5,
+      "dev": 9,
       "split_policy": "slice_stratified",
-      "test": 8,
-      "total": 13
+      "test": 13,
+      "total": 22
     }
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood",
   "split_counts": {
-    "dev": 27,
-    "test": 43
+    "dev": 31,
+    "test": 48
   }
 }

@@ -1,7 +1,391 @@
 {
-  "created_at": "2026-05-06T17:29:11.641072+00:00",
+  "created_at": "2026-05-09T19:22:56.664737+00:00",
   "dev_fraction": 0.4,
   "entries": {
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_03gb.jpg.jpg": {
+      "sha256": "e8468522aba52f73e8e919658fa833130602633a98aa3033dba6dd1595bc8718",
+      "size_bytes": 22839,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_35589125035_662dd5b258_b.jpg.jpg": {
+      "sha256": "d20cc643fdfbb07db3616a50de0a2280383e134fa8f06ca5522e07c0cfc25aa9",
+      "size_bytes": 147502,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_5-29black-rot-chardRR.jpg.jpg": {
+      "sha256": "404fd83fecf8cb839ab7c76ac90e2a9e1906d2c4a62acf86568b3ef037b88f41",
+      "size_bytes": 44255,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_Black_20rot_20on_20foliage.jpg.jpg": {
+      "sha256": "e64969c324e6981d478bfff5c9099da715e0bdd974b2ea7a7acd62fa8ee63af0",
+      "size_bytes": 219424,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_Black_20rot_20on_20foliage2.jpg.jpg": {
+      "sha256": "99c0a3a63c127e376a4120007fcc81797ec8248cf95a8020510e46f602590335",
+      "size_bytes": 268431,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_brleaf2_zoom.jpg.jpg": {
+      "sha256": "09f5a6a0ded0e8f811d4a6c10f479c5fecb09f41b713eb729d381de12bd4ac01",
+      "size_bytes": 149284,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_grape_F15a.jpg.jpg": {
+      "sha256": "2309bc80cdef703d4923dee780d5d840ec67e8d83118915b2014053de3a2a6c9",
+      "size_bytes": 7490,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_test_grape_leaf_black_rot_piano_20gully_20spray_20seed_20damage_2006_20_289_29.JPG.jpg.jpg": {
+      "sha256": "4949d0f81b7c1ec21b55e51ccbdcce34eec213d02c58f9f9121660552be6cd7c",
+      "size_bytes": 895100,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_000gb.jpg.jpg": {
+      "sha256": "a3946ea0fc75e9cf20f41a23fdf7697967b4f4a427d68ff535b3d7969152ac02",
+      "size_bytes": 3236697,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_00gb.jpg.jpg": {
+      "sha256": "cf90886cd242a9969f0a5d5bd7bc5239292359962a19dfb9941b769480d1e3d8",
+      "size_bytes": 778810,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_01gb.jpg.jpg": {
+      "sha256": "9ccf853645d2f727d660e404cb3f86ef8b7b66b23b386abad7afcf9247dd7016",
+      "size_bytes": 32307,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_02gb.jpg.jpg": {
+      "sha256": "5a123eada6b0d97bd40f3db4393575e30e3b92d9b66495005f08ac1bf723609e",
+      "size_bytes": 585583,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_072109_20Hartman_20Grape_20black_20rot-fruit_20_20lvs.JPG.jpg.jpg": {
+      "sha256": "9bdb9dbbc21bd9b3440e6d76c5c02ee6ca4217057c7f73d68463b00b9b7b28de",
+      "size_bytes": 677151,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_0gb.jpg.jpg": {
+      "sha256": "b3bbc4dee85a0103fcc554c67fcb8dc870ee80c60aa5bcd205bc2000fe1de7cd",
+      "size_bytes": 114819,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_150px-Plasmopara_viticola_000.jpg.jpg": {
+      "sha256": "cb48e0f8682d2a47500280ddd5554455cc519093f0d05187fd7525df20e60641",
+      "size_bytes": 6230,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_2009_06_069_Downy_mildew.jpg.jpg": {
+      "sha256": "7317bf5f2be1edfdafc77164f8607c172f73a30eb091c706cab3f40a51e5a305",
+      "size_bytes": 96722,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_2009_07_034_black_rot_leaf_and_berry.jpg.jpg": {
+      "sha256": "9f69415b6c366eaecaf4498b7ed1258d903a59d758a25527a3682dde110b3627",
+      "size_bytes": 38154,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_220px-Guignardia_bidwellii_08.jpg.jpg": {
+      "sha256": "e4eea2e36ac92802380796d6a1a77cfa013de7166d3911817f9db6c9a59287f9",
+      "size_bytes": 8319,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_35327886795_6f608e0eaa_b.jpg.jpg": {
+      "sha256": "a25bfd16a43a5aeddb23f2138dfc26196849ae3b1e4d680d16797a3c36ea5f22",
+      "size_bytes": 231072,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_3_21_14-Caption-Black-Rot-leaf-infection.-265x265.jpg.jpg": {
+      "sha256": "6353025ad04a7954e9c604d04853a9957220da63104613bfa015dfa9d8d23b92",
+      "size_bytes": 25077,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_3_21_14-Caption-Black-Rot-leaf-infection..jpg.jpg": {
+      "sha256": "d9436f7a2afc118cbe3217d649901beaa3dfab0e1ce17815b59c527b62e8cbd1",
+      "size_bytes": 443608,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_6-14-11_20ANNEMIEK_20blkRotSp.jpg.jpg": {
+      "sha256": "e55af8b081dab8fe84978dc01a972cd25dbb2666f79b5a8762e4bbc317c23da0",
+      "size_bytes": 779527,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_8-21-Anthracnose-shotholing-ANNEMIEK.jpg.jpg": {
+      "sha256": "1e20761767473a427ebd7c07acf15e27c61a97c85f73d3ab56d8da3b8a7bd5b0",
+      "size_bytes": 38777,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_80111791.jpg.jpg": {
+      "sha256": "e9ca5df1ede06acb046caf07a2c15e335fcaff8b1f73d57edc1400c091c55d1d",
+      "size_bytes": 199100,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1153.jpg.jpg": {
+      "sha256": "3de2602bb2431729452df9d11501dee76a03fae022aeaed4a443aaf8db762277",
+      "size_bytes": 48065,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1154.jpg.jpg": {
+      "sha256": "e194cf217d0da81a2a2232710ece87513fa1a9365f8dec7c5e0a498c649f93cc",
+      "size_bytes": 49313,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1155.jpg.jpg": {
+      "sha256": "84b1a9de92024f4c4141db381b24e7e26a84b6d3074ed4415ee9c0c6a0d1cd86",
+      "size_bytes": 52142,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1157.jpg.jpg": {
+      "sha256": "0710b834199c028685db847393cf0d4ecd085dbae905a1d358113876059facd6",
+      "size_bytes": 53879,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1166.jpg.jpg": {
+      "sha256": "b723ebc8b8be7b9f616c0f5be18988dab8898ebe8859a614723b8a2ca5d965ff",
+      "size_bytes": 49629,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1167.jpg.jpg": {
+      "sha256": "869f73d5f820252eab964321fa541d0e7fd4731cacfd47528e794c863941573d",
+      "size_bytes": 55448,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1168.jpg.jpg": {
+      "sha256": "bcb710c06a56f5cab5538ef6208853f037180906abab4b93de16c538db265c19",
+      "size_bytes": 62984,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1317.jpg.jpg": {
+      "sha256": "f09e6929382fc733b0226d27aed8f631f65725680215a3e31939101758700f36",
+      "size_bytes": 50642,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes151.jpg.jpg": {
+      "sha256": "5694ab976529678827af0ea81acf9e0ed35f4b6fda31619d7c89590af4cd861d",
+      "size_bytes": 38406,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes152.jpg.jpg": {
+      "sha256": "678e3ecfc9b25cecad03cfa6819605a7bb2f4be1e18ffc899690e6897c8cf9d9",
+      "size_bytes": 48671,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_rot_on_grape_leaves5.jpg.jpg": {
+      "sha256": "b7b59f44804b08b3ebb2ab36c3c594a8090799080263f1ae06a58a95a22c2ac0",
+      "size_bytes": 680403,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Concord-Grapes.jpg.jpg": {
+      "sha256": "033b55ada5b76bd9347066ce6fb272b0a4ef709b14ff43fbe7944accb72f27ad",
+      "size_bytes": 1882671,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_DCDl_p8UQAAf2hP.jpg.jpg": {
+      "sha256": "437383944a9c0d7dfed39438ec24e1ea2c523aeee83f6dee488c9e94d180fbc6",
+      "size_bytes": 273302,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_DSCN1228.jpg.jpg": {
+      "sha256": "64a85fc092aa49bbe0e53b544fdf50af53afa5eaaa02b2f1ce91632510440343",
+      "size_bytes": 169744,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia-vigne44.jpg.jpg": {
+      "sha256": "dec23e8d95f300f1c1e4479f50d3b5c4ae1359ff16e80f1cba214d9c5041a317",
+      "size_bytes": 115039,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia_bidwellii_28black_rot_29_on_grape_1.jpg.jpg": {
+      "sha256": "3652cbd05745f80cdc0a20ef50355ce2e4cd319dbd4f692c0330e83b9090f1c9",
+      "size_bytes": 1679692,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia_bidwellii_28black_rot_29_on_grape_4.jpg.jpg": {
+      "sha256": "a7d909e76254a619a5590da1110c2f16b74849df89686bcf2fbd3fe26978a6b3",
+      "size_bytes": 651427,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_IMG_0830_original.JPG_1472588083.jpg.jpg": {
+      "sha256": "1240b5ee519963ae7c0f63d50134f424f64589099449174ed1595dae8bbf1437",
+      "size_bytes": 2321986,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_PLPATH-FRU-24_Fig1-black-rot-spots-on-grape-leaf_Page_1.jpg.jpg": {
+      "sha256": "77c705f84131ce2e57ba549584913266f02d3861d498c47d363b3c9face672ee",
+      "size_bytes": 66138,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_apr-2016_bryan_black-rot-leaf.jpg.jpg": {
+      "sha256": "58250bfec8591b307c4c85f314fe112fa719cef22ad085896b7874b822a54d2d",
+      "size_bytes": 80662,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_bad_grapes21.jpg.jpg": {
+      "sha256": "8ff645f78c4ff863c61cbcd80f4955a1bf7ee18c9e80301ef79c8e2877c8829c",
+      "size_bytes": 253069,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-guignardia-bidwellii-leaf-spot-lesions-on-muscadine-grape-BY9J7B.jpg.jpg": {
+      "sha256": "a0caddb60b379bf4a3cac51e4a75ee61f7d3dc805eb50287b8785093bc35bbda",
+      "size_bytes": 180006,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-guignardia-bidwellii-leaf-spot-lesions-on-muscadine-grape-x85jjd.jpg.jpg": {
+      "sha256": "c3cad55207c4f32f566bdc23d5dff9decaab6df73edec81a6b27c418cffc72b6",
+      "size_bytes": 63957,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-leaves.jpg.jpg": {
+      "sha256": "755f134e5077f0dfa8b646af1d8f3f6c8a2f5db9bdf027ef7b10c991473fff80",
+      "size_bytes": 138247,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-of-grape_figure-1.jpg.jpg": {
+      "sha256": "a09bc77f43485b7af5429d3579772c0e066444c70e39fe04e77329f8927a3ffd",
+      "size_bytes": 870821,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black_20spot_20_2819_29.JPG_itok_mf4II8zq.jpg.jpg": {
+      "sha256": "3cb32ef84707ec2de5a21f13dce49168f54ebfb80e13438a057d7398f3ace04b",
+      "size_bytes": 12849,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black_rot-grape_leaf.jpeg.jpg.jpg": {
+      "sha256": "7ac1b05dde101d3b67080c452d6dfa2994f83a37e130ec8816efb715f15dbbf9",
+      "size_bytes": 57173,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_black_rot_1.jpg.jpg": {
+      "sha256": "8f0f6db33cc273d4e1f6aae9343b7f83393858f6ac6a6fe04b735fc9034dc7c5",
+      "size_bytes": 977249,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_br-ocw-dm.jpg.jpg": {
+      "sha256": "feac5e0a5db49c617c29da2e698a6a1d0fe6ae0fcc1b13fa9b513a0826fac5c6",
+      "size_bytes": 103437,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_br-ocw-phom.jpg.jpg": {
+      "sha256": "775c8828a41fec82beec792f9727ae708f3d74592715ff7d65f40ebe6c86f724",
+      "size_bytes": 131717,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_brshoot2_zoom.jpg.jpg": {
+      "sha256": "7c27351deefd799a62579efa6195f3dfee1153b86f44abaf1e471fc3a553ae3f",
+      "size_bytes": 236588,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_fungus_rust.jpg.jpg": {
+      "sha256": "806c824a0f578f43506cc5f92e057c1908e06a0292b8793507a0d03e13b49738",
+      "size_bytes": 51454,
+      "slice": "grape_specific_unknowns",
+      "split": "dev"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_grape_20black_20rot_20on_20leaf_DSC0336.jpg.jpg": {
+      "sha256": "f25280c8f24d69cc65957b015c0e15294e600543a26a9da2320bc7be63ad7d97",
+      "size_bytes": 47374,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_guignardia-bidwellii-05.jpg.jpg": {
+      "sha256": "88ce95acdab368ff001072da0a8ee1888e8f5342f42d80f2a9dc0fce3c2dc366",
+      "size_bytes": 48110,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_image66.jpg.jpg": {
+      "sha256": "9ee7ec94d8a2df21a9ef08bc5bb2ba7e39b0c6f76a1f311244844e74b391cb24",
+      "size_bytes": 9550,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_image_original.jpeg_1495058317.jpg.jpg": {
+      "sha256": "233e1b7c8660960492eeac720430ec3af3bea5e0c437064fc4693ca5db27a618",
+      "size_bytes": 2098437,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_image_original.jpeg_1495058318.jpg.jpg": {
+      "sha256": "08527e8e56d80f0ef2710c6ebb612e8024ebfbda926e9a0af576cc75f3222428",
+      "size_bytes": 1931978,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_june-9-0181.jpg.jpg": {
+      "sha256": "e751586a61fbdd1a1ae0ca681358bce56be37b9b5463a1dd3c767b3fedbe981a",
+      "size_bytes": 1444640,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_muscals2.jpg.jpg": {
+      "sha256": "a865802e2102e9ac5b9214c1675d20b4f9ea26314b06a778b3b2f714f09aec4c",
+      "size_bytes": 55574,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
+    "grape_specific_unknowns/internet_20260509_plantdoc_train_grape_leaf_black_rot_p_319.jpg.jpg": {
+      "sha256": "5b4ab0f9a16b94c2b57d6cdb0ebcfe3646aadcc29b7b35a299416caf4d8d8ff4",
+      "size_bytes": 70305,
+      "slice": "grape_specific_unknowns",
+      "split": "test"
+    },
     "off_crop_or_root_disease/off_crop_or_root_disease__1.jpg": {
       "sha256": "350b7891f60977c50c6b887b47b0b79afa53c7fea32822eef4cb535b830cc31a",
       "size_bytes": 173924,
@@ -12,7 +396,7 @@
       "sha256": "f1d61b86ab9bbc6af31db0e303add0902f3c3eb0e2aad14535cf25c305c41ef1",
       "size_bytes": 103858,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__129.jpg": {
       "sha256": "a0b234f0e3e9f3d2411e0df4442ab2bfff638438c23eef435ab67dc8d7d6dec7",
@@ -30,13 +414,13 @@
       "sha256": "ef34dd57f63debd31afd5ef2832e8d9f8246d1730c4bf56afac7c20d53359070",
       "size_bytes": 103589,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__17.jpg": {
       "sha256": "56891aaa32623a90b9ec366ead00e7f75581c3199e26beb9e36c7f1f9525c43b",
       "size_bytes": 104028,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__177.jpg": {
       "sha256": "e54b334ebe8fc8a260df322392f89dbe7c49c3ca37519f46d28baac216e133d5",
@@ -48,7 +432,7 @@
       "sha256": "6c42eb0fb38aabf373811a694b0042a205e4e919da77d4536b52b2669d2ca077",
       "size_bytes": 115691,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__209.jpg": {
       "sha256": "cdc8ba12e9a531b0d83a004166617831cdd80f417b1f66347d5307a61264a6e1",
@@ -60,13 +444,13 @@
       "sha256": "c878c9fea91097bca20ab9ad5431120965d0d46cfe7016dc3c0b88fb7956e850",
       "size_bytes": 94815,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__225_1_.jpg": {
       "sha256": "d59b6877b17bd05b17393143fe34b2546b11b3d4ca59f130f3b2451f5f115f3f",
       "size_bytes": 139051,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__232.jpg": {
       "sha256": "64a0a6b3d3c888dd672d9bcff4f0276a88edaf3806d120980d65f870c207a36c",
@@ -78,25 +462,25 @@
       "sha256": "4ebab3ce8c9cd64c4591a8f09710bf19042e65c4715ed50fc40ba15221a3d9c8",
       "size_bytes": 73575,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__241_1_.jpg": {
       "sha256": "53477c7d2d3091af52870c49b7fde38ad64abf290c66c7d559ffbd1f0c26aa04",
       "size_bytes": 95762,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__257.jpg": {
       "sha256": "632b3d1a56d9b262fb7e736b88f8f80b94c02fa68490d825876e1c185ba38010",
       "size_bytes": 70575,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__257_1_.jpg": {
       "sha256": "bc8ecd6bea20e9fdfaf8d1bd3f7ccb8026ccc68c9b376d39939d8b84447a06ea",
       "size_bytes": 118958,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__273.jpg": {
       "sha256": "ef1e18181c0cf2518528d15f374e7989a3b046e92d0a54f382f93ae37c698c75",
@@ -108,13 +492,13 @@
       "sha256": "6330dd3dc2f3f15bfa6d6bd876aa7111fc3c2e2ed76f475d572d934bb19bff47",
       "size_bytes": 147818,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__289.jpg": {
       "sha256": "0725f50feddfe9720b385b5d8dce6b68e55dc5f0f12a0cf7783727d236c815c2",
       "size_bytes": 66904,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__289_1_.jpg": {
       "sha256": "da47ac280ad39a0aa4d53e0eeb8eb49faefee560b6c2836d4550485bdc83bdaa",
@@ -132,37 +516,37 @@
       "sha256": "c6bbb1e6b3af8949cda64c09929fd97a4792a79271302b80addacedc6edb90de",
       "size_bytes": 142199,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__321.jpg": {
       "sha256": "ce6dfded6ecf7001f10a9c0f68c210d8b584af567f1dff3484f34a9929e84133",
       "size_bytes": 70293,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__321_1_.jpg": {
       "sha256": "23a355cc9b2bc65feb9af732a7ff5ac9454b4f85e627e1cc0da47b001ed60a9c",
       "size_bytes": 179327,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__33.jpg": {
       "sha256": "d950dc47f7f4558653aeabcf903d023d27ff9f7ebbc584573983c611dca2c334",
       "size_bytes": 116177,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__337.jpg": {
       "sha256": "052f4aae2ad6daf52e73b55526d7f860bea652484b1b050428d243cdadc6d405",
       "size_bytes": 81549,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__337_1_.jpg": {
       "sha256": "829da80a0a19cd362b06e735ba655e8447819dd6d23cb6442f34106120b7bb22",
       "size_bytes": 169589,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__353.jpg": {
       "sha256": "6946a5c2b09afc9d40a8d1525e30b81f2eff9389efe0b2cc94b8a927aafeb268",
@@ -198,7 +582,7 @@
       "sha256": "b9617b33d72ec210cdc149fcec59df71b357163f242987c85bbaf674215e9def",
       "size_bytes": 161450,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__401.jpg": {
       "sha256": "76e05b688dbca2fc923430a8509edd1b4c311bfbecb7842f6a44fb2ed8d83776",
@@ -216,7 +600,7 @@
       "sha256": "81b70e916cb9fbe4f1efa5f23335380ef4f42d2f5acb6bc331fc92a954884f56",
       "size_bytes": 132855,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__417_1_.jpg": {
       "sha256": "9dd4ae0fe73d9251896f5741f03714d7909d8de1f58e4e423fa752e42180e035",
@@ -246,13 +630,13 @@
       "sha256": "afc61a2ac20a6897a4ddec15dbb0e3670f3fd61795df5806c9671a5eb4559b30",
       "size_bytes": 153336,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__465.jpg": {
       "sha256": "7a762840ed48299d079db20f7cf3317333084d42b1dbb1d94e96c5f8ccbc0056",
       "size_bytes": 86295,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__465_1_.jpg": {
       "sha256": "1bb2649f4aecf1048c70f71828152743f5df29a93f576382a88dc94d5cf1f6ea",
@@ -270,13 +654,13 @@
       "sha256": "19dce5fe46270927cb41dc1bc8684038c46784ed047d25f46922de86b5727020",
       "size_bytes": 137927,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__49.jpg": {
       "sha256": "6b4c901b641c86ff3d13b99fd68ee8dc63ac60cf1a6c9a3453c6f596faeedd80",
       "size_bytes": 90079,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__497.jpg": {
       "sha256": "dc6f142c3d5b43d2b6e497a58b39c536f9c277311c7c13b371ade3d26558900b",
@@ -288,7 +672,7 @@
       "sha256": "81cb7ff8bdc5d7bd5b01a6bf2513f8cb2d165fc09034bc1d26d27daf131f8538",
       "size_bytes": 100418,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__529.jpg": {
       "sha256": "1d2d776ece3fcdc02ac95633c2b55d18195435a3b8b581fd07af56605ef7927e",
@@ -312,7 +696,7 @@
       "sha256": "fea945e812498b406d88bd018ced8700900d1fc4d8527de395c70be1410633b0",
       "size_bytes": 69615,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__593.jpg": {
       "sha256": "e612a1494312b1b43eb151acd9dd070e726ff62f4c243bde6b5803ffc535b2a5",
@@ -348,7 +732,7 @@
       "sha256": "8337443c45f84af403a5beb31e142b1c3ca79531d46e9898e226a47702d3e8b8",
       "size_bytes": 116563,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asma_yaprak_k\u0131vr\u0131lma_vir\u00fcs\u00fc_366.jpg": {
       "sha256": "770b7962daf2ee05ba438e9378f89639cb482ddbc3542d6950a14ffb1ab4ba06",
@@ -366,13 +750,13 @@
       "sha256": "c4c6efeaaf4f947caff5d62fc7864db4016a5ed487abc9f7dd4a494b2ecc029e",
       "size_bytes": 54489,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_K_noksanl\u0131k.png": {
       "sha256": "48962a07ee9bf8eb9a65c2431ac9743272427fdd63994b9f0024ade00f56ef28",
       "size_bytes": 483175,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosfor_P__noksankl\u0131\u011f\u0131.png": {
       "sha256": "586f05ffd0db1ca34939a2c67b5a5ee41d7ee84e97f4775597e4d597726e58d3",
@@ -384,7 +768,7 @@
       "sha256": "dfffb9c9a1e2ae3a32f33eabcf14897438590d210794b9d370719e172735ba2c",
       "size_bytes": 475162,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_g\u00f6vde_\u00e7ukurla\u015fma_vir\u00fcs\u00fc_26.jpg": {
       "sha256": "aec2e05e7c452343dc8489fc39aff55f454d7a0c4aa41a58b60f5b7ede22855e",
@@ -408,7 +792,7 @@
       "sha256": "20059bfd6f85c21bce3f8de06f3ad1cbc14a7e0ada4cf1255bd1984f01af593f",
       "size_bytes": 16186,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_g\u00f6vde_\u00e7ukurla\u015fma_vir\u00fcs\u00fc_72.jpg": {
       "sha256": "1191111858bdab671a25cdc26dcd08b5a411ef1c8d5ae1758ed051339bff9078",
@@ -420,19 +804,19 @@
       "sha256": "16cfe475dc25d31ba0c08c015c1b0a0e39471fd8a7f48ce6f722df387dbb279e",
       "size_bytes": 45197,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_kav_102.jpg": {
       "sha256": "09472b15a126e54854d5294127293cb0fbeb6cb44e2f54e0e8c3bf829e437937",
       "size_bytes": 48651,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_kav_442.jpg": {
       "sha256": "d1635b12094e0518f8687f41424d6449516d52a9dcbd10e720db4816b1e3e904",
       "size_bytes": 116705,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_k\u00f6k_uru_218.jpg": {
       "sha256": "9728ac48d0d028dac397a05a0f790c768bd14a8c3bbb62d22a73bab6598b296b",
@@ -450,7 +834,7 @@
       "sha256": "f4fb90547a5cc92e9fc74775fe294ffef3a3c50bd6b0b5e93dab4e4f38d372d5",
       "size_bytes": 27005,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Botritis_Cinerea_172.jpg": {
       "sha256": "73d1308d9c6cf681c297aa9301072ca0c7a5d8e6918e7ec815dfff33f281507e",
@@ -492,7 +876,7 @@
       "sha256": "1d731b2679a9e8ba4c20eda00616572b3ca8f95965b2957a01f2ebfa908c4e63",
       "size_bytes": 57733,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asma_biti.jpg": {
       "sha256": "f46bf3ca9f4e98862df2b7a03ede155fbdfda582d1306e9db8cb6da6e796faad",
@@ -516,25 +900,25 @@
       "sha256": "364729bc8b35ea91d9392e5d11b4f351b1973a8441e9459b0161cc65c6bba350",
       "size_bytes": 211834,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgg.png": {
       "sha256": "2e980a37fcd238a52d945d73eedcd39ec459ccdd5938cfa7a2fe553ba74708ae",
       "size_bytes": 309684,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgggg.png": {
       "sha256": "eb2d528c2f20e9c9c0ac15b87e25532948d84c8771f36aaa667649b127267e9a",
       "size_bytes": 304912,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_\u00e7inko_noksanl\u0131\u011f\u0131.png": {
       "sha256": "b201e0fd36472c1d2a58eda7ab6e66018b53b5535ca919e5871b0167604a4fcf",
       "size_bytes": 316335,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_\u00e7inko_noksanl\u0131\u011f\u01312.png": {
       "sha256": "c00fc9a2cc016e50d2ee47f2b68327f2dfab48946417ab0bab3ac827153c5039",
@@ -546,7 +930,7 @@
       "sha256": "c5721ecde426a0332bc46db3f73c035a83e16f99a344a9fab5b8f0739c87044a",
       "size_bytes": 504707,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__bag-yaprak-uyuzu-.jpg": {
       "sha256": "d993ec0c130a60dba8ecd0e1f6b33555792c835938d1d439921a9df62f5da056",
@@ -558,7 +942,7 @@
       "sha256": "20bfbb3e4a0f0ce79c283f01051b71b6df39df120b2b9f58b9d6596106ff507c",
       "size_bytes": 40506,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011f_filokseras\u0131\u0131.jpg": {
       "sha256": "2338c900cdb5de88c79710c953a904ade1e3497a39993c54d4d46c12684b7d49",
@@ -570,25 +954,25 @@
       "sha256": "e58207c5882f4ca2c013b9c2d1fcb9a207474b50577d041fcdac393b8dfa21b6",
       "size_bytes": 87554,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fda_bitki_besin_madde_noksanl\u0131k_belirtisi.jpg": {
       "sha256": "76c0357a8088c726bf00358fe1bb1f95430cd6de8650efbce6921f8c30bb0bc2",
       "size_bytes": 39195,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fda_bitki_besin_madde_noksanl\u0131k_belirtisi2.jpg": {
       "sha256": "e047bb18158330d5b2f42ad71c9676468b4a0f620ba20b63e6d112257b95c02a",
       "size_bytes": 38886,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fda_unlubit.jpg": {
       "sha256": "faf3a622030c414023fc914c4ca9fce21172faef3c8b35816c5598ae9b5a14cd",
       "size_bytes": 62939,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fda_unlubit.png": {
       "sha256": "77d8ce12e8a8777384c0e199119f3654971fd7bcd76790ea71b03b24a2107762",
@@ -618,7 +1002,7 @@
       "sha256": "024bbcd4d564abbd7a8e75b02143413f9dfaf283ab5c5b7e855bf343451c21ea",
       "size_bytes": 79399,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__boron.jpg": {
       "sha256": "a8c5a9b93edef0a82e7b5b02818d6ee5dd39f0463224343c09901d918498cd60",
@@ -642,7 +1026,7 @@
       "sha256": "313d58f08c64d648df68f20216093ad0ab3da669ee05957aa5cc9d77b3a25058",
       "size_bytes": 36109,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__d3d5a75e4fff494eb50feed91eb23436.jpg": {
       "sha256": "0ffb014e0439ba0f36d15033c123430a55d59b345e61977520a4755fa0e14a04",
@@ -654,19 +1038,19 @@
       "sha256": "240a9ef0aed1ca44918b7001dff298df7abee808132234d9ea60815ef8903c05",
       "size_bytes": 9391,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__filoksera_ba\u011f\u011f.jpg": {
       "sha256": "e5846526851b17107d981a81a36af601d3980a88a799425abe841e75ae9541e7",
       "size_bytes": 95945,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0204.jpg": {
       "sha256": "a050f637e5ede81052373c79be91a7e5f88787e4c1bf9740332f6cdbc7ed0c13",
       "size_bytes": 78307,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0209.jpg": {
       "sha256": "c568cca965cc77eb55d9f83b80899d2fec941418bb5c6376da70b56fd11355ba",
@@ -678,7 +1062,7 @@
       "sha256": "5e78a0e360799d923f17fecc99c2e16969e076f1bdc0a60c4049288ac8120a91",
       "size_bytes": 153275,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0237.jpg": {
       "sha256": "2902f546e2a3923c90c6481a65b6f1c9d8c11eaa16f61ddacbd858d9f3b863e8",
@@ -690,7 +1074,7 @@
       "sha256": "969f594544d45b33bfb042dae15d683ee3852a17f0345ac82e77392ca6ccaccc",
       "size_bytes": 85255,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__iron_deficiency.jpg": {
       "sha256": "07c808d31a869158e1ee658ea79e545afd7e7e6df7f99d7ca17a6f8cf8fd799d",
@@ -702,13 +1086,13 @@
       "sha256": "6a86ae6a51be6e792bd51cb836ee83eda87131b4e18d4d144b28d41c80682bc6",
       "size_bytes": 61019,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1329918244-612x612.jpg": {
       "sha256": "34caebfad240101f0bc2333233e3f14c00dfd27fbbd6568068847baf5ed9f2b0",
       "size_bytes": 60613,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-144191878-612x612.jpg": {
       "sha256": "0493c176b39def45ede4b531eafa25bcf0bbeb84aef273b7d4a998127099c0a2",
@@ -726,7 +1110,7 @@
       "sha256": "98c916d4cff3eed8370066255fc0f5ae698077aa4643fe5cd3079f25da01dd8f",
       "size_bytes": 49035,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-700678614-612x612.jpg": {
       "sha256": "44b6831dff522e8b7fa193feaea4158bd31784c4aa1239d86d081d79b8d39381",
@@ -738,25 +1122,25 @@
       "sha256": "361d4f9d19b3d8ad1fa37ff9653d200ede61fedfdc82263ce530a5c4d79549dd",
       "size_bytes": 58393,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__magnesium_deficiency_1_.jpg": {
       "sha256": "9e54def5ffffb2c8245578231bed66c02367a7cdadecc7bfb103919f0b09d548",
       "size_bytes": 34824,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__magnes\u0131um_deficiency.jpg": {
       "sha256": "1ffee6e3ca93405012dc6c9b21c79021b5276ddd4931181b3e96b1d2b1755d49",
       "size_bytes": 17258,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__magnezyum_noksanl\u0131\u011f\u0131.png": {
       "sha256": "b87d3a81f58464bd8df70912c7cbb98bd09d2682f70a1b717272a46c17182a40",
       "size_bytes": 431285,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mangan_2.jpg": {
       "sha256": "ae57f6d14f7ed537fa33397a6a57af31d840a6cb02d6183704a931328d2aeccb",
@@ -774,13 +1158,13 @@
       "sha256": "99e16742e9c1ac9013ffeae37775d7fc69e46bcb5744fba9a746f97037e6134d",
       "size_bytes": 45077,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency4.jpg": {
       "sha256": "55534a1e3cedec63038aff5ddcd08ac4b1e01efaeb8603de90ab6e6f7e9d5b58",
       "size_bytes": 44495,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mg_ddeficiency.jpg": {
       "sha256": "4755fd24ec534d4ae78c994e45fde7229ac247ef31b30019a33d5adab766511a",
@@ -798,7 +1182,7 @@
       "sha256": "c26b3f62afbec0032970a742a59e7dea31220b077648e1521dad6b0e78206ca2",
       "size_bytes": 53685,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiencyyyy.jpg": {
       "sha256": "27585fd870b5840caf27b5bba96a73a1cc53a0643a849e0d1e9cac59cd4fb99a",
@@ -810,7 +1194,7 @@
       "sha256": "b62165b67f90e186ef8ed053d23c0df254e9337650c41c995efac6c5891861be",
       "size_bytes": 40169,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__phosphorous_deficiency.jpg": {
       "sha256": "a0a4753e663448f3edc48c6aa0c35e2d103f730bcefecaa9dc8809226a56d967",
@@ -822,19 +1206,19 @@
       "sha256": "16afe33c43ec9ee79acb3fe197b8d6cf31c904f6da24d2c44e50c08a4501fa67",
       "size_bytes": 35181,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency_jpg2.jpg": {
       "sha256": "75f29bbcc2675cb2496f1c1dd4558dd959ffded50c885bff926d006f6f48d6b2",
       "size_bytes": 31096,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__red_blotch_disease.jpg": {
       "sha256": "f153b65b0493769dd1c8bc7c7f8f2ebf9ea2594250e6c66fc956943cded203d2",
       "size_bytes": 42053,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu.webp": {
       "sha256": "342224a0e78b650ed667f38ace4e76fbc50c0c2ad7512e6c54bdfdce72b61dbe",
@@ -858,13 +1242,13 @@
       "sha256": "cc46af9db9def57105cfc4e64bf5a0ad3f2eb2eb03c0966c32148d6eb5162811",
       "size_bytes": 13376,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny.jpg": {
       "sha256": "8c8e4e128f86c91f96c83a77d908f69c47181a3ac3873e6cc8dd92ecab10d263",
       "size_bytes": 21476,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny2.jpg": {
       "sha256": "1d9e1f72bf9936a5bd0f3bf6f492e24c86c26846175b084ad53764d22330e7d8",
@@ -876,7 +1260,7 @@
       "sha256": "e5eb874562be4c783e4ff3410f8d628de9b6fadb751a96456996f18aade5c6c4",
       "size_bytes": 42779,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__\u00fcz\u00fcm_ba\u011f\u0131\u0131\u0131_OOD.jpg": {
       "sha256": "7a7c60c16f25f64180013b431691cc6e793128f97bf70eeb3172d404d5540791",
@@ -906,7 +1290,7 @@
       "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
       "size_bytes": 56848,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/internet_20260506_bugwood_1572819_strawberry_anthracnose_fruit.jpg": {
       "sha256": "716f67ff88807c68068b59dbff707b103abae21614265bdf7f10d76e8b292d44",
@@ -924,7 +1308,7 @@
       "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
       "size_bytes": 250695,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg": {
       "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
@@ -936,25 +1320,25 @@
       "sha256": "4b35d928af13536babc67ef3783b3d47f227f4d31e869fe384aa6f2ce001e4fa",
       "size_bytes": 209079,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg": {
       "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
       "size_bytes": 277846,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/internet_20260506_wikimedia_blossom_end_rot.jpg": {
       "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
       "size_bytes": 146956,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg": {
       "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
       "size_bytes": 155501,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/internet_20260506_wikimedia_oidium_du_fraisier.jpg": {
       "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
@@ -972,13 +1356,13 @@
       "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
       "size_bytes": 213805,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__0656095-PPT.jpg": {
       "sha256": "0ef957af6526772f26b7db91819421bf9a2125f04b1d2df1a2c32287718bc588",
       "size_bytes": 96131,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__135.jpeg": {
       "sha256": "7bbf6edfe4e40eaeb7be752fe2838fdedd8ac2a83315c42ec52749d4ef5257c4",
@@ -1020,7 +1404,7 @@
       "sha256": "0cf4a1c5e73f43ef465e1ccedf84cad05e34d70eedd29125f3f3bb0552ddd4f1",
       "size_bytes": 200149,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_002344.png": {
       "sha256": "a654e7a95dd643aa1012b3cb49f2e2018c014e90b431f41241328e863b88cf3e",
@@ -1032,25 +1416,25 @@
       "sha256": "f6a7815a8aea2aee2c17e76be9224fcb0248776ac2eb4aacf1d299fba43d1ae3",
       "size_bytes": 833012,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_003715.png": {
       "sha256": "fd5b6e1f111c3a5193b1fbb24b999a9149ee49404dfa52cab367cb8e01a92b60",
       "size_bytes": 459108,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_235849.png": {
       "sha256": "5b53f03a91bedec89ac790115f7516ac7f3a4a85dad56da12d71ed892551f1b6",
       "size_bytes": 623806,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_235902.png": {
       "sha256": "ce78ad36d1d74b130e0d51d70f50ca50e33bc09c711d6a3713a2d5c363524621",
       "size_bytes": 474906,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-15_145231.png": {
       "sha256": "cf94051511e067583bbf3ee02e6a178026d0bd308e71c67ff06058b53154c47d",
@@ -1080,7 +1464,7 @@
       "sha256": "c6258d383c98b93c6897d4f8789097936da2fdddc470a90d393cb3064682f3d0",
       "size_bytes": 19919,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_34.jpg": {
       "sha256": "51f29ae829c463838e212a81045b9929fd3494ab87ab6b9f5d3755cb19b13240",
@@ -1092,19 +1476,19 @@
       "sha256": "dfd6a584b3d52038d275fd580b1e95aa63cc29bd3d340ab597c9f455c4159e75",
       "size_bytes": 21715,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_807.jpg": {
       "sha256": "98e012c4fa9b9bef9428f27afe73d44611adf047eab26ec353ffa54160bba0f4",
       "size_bytes": 16987,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_820.jpg": {
       "sha256": "afa7e02e61a573230196181c5781e78a2e1656cb576d2661013141e43b022a9b",
       "size_bytes": 16505,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__VENTCA_17303.jpg": {
       "sha256": "987941a716659bf4f3814f225d5e508697c6f5f29214bbb767c9923a5d38f7c6",
@@ -1116,19 +1500,19 @@
       "sha256": "ef00cfe439e8f94ca44a6f2c23feba6ee71d311abdc618f7848129a419344694",
       "size_bytes": 208065,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__anthracnose_fruit_rot_81.jpg": {
       "sha256": "22641776ec902f2a5645bf37eba7bf58429d2db75d3bb5e69f6978c9d23a80e4",
       "size_bytes": 161545,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__biber_sera.png": {
       "sha256": "f4dd63563a8eb1aaae97e335689623779ec4ad198cdb70678fb9445f2bd38dd1",
       "size_bytes": 479120,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__ers.png": {
       "sha256": "9cd7e88ebca3ae78884c75863fd7dc8ee48cad3f07980d78fdd6a07bc7ec079f",
@@ -1152,13 +1536,13 @@
       "sha256": "a0ba76f1845c36aa515e4c1c6662fac69fca4a830236698f29429d36bc6a5c4e",
       "size_bytes": 134863,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__leaf_spot_81.jpg": {
       "sha256": "08715d49c361a91d05be14c4912b757275ca24b651a857ef7d04992533ce53f9",
       "size_bytes": 156132,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__leaf_spot_82.jpg": {
       "sha256": "d6971848a4ab295e395d1a6b7361f3129755a473da75b99cb2c928e29e470db7",
@@ -1170,13 +1554,13 @@
       "sha256": "1d5b9cfc6a49e39e84e4775d3d381bb6a5d9bacaf9baf435ef0dddfdf546c546",
       "size_bytes": 130604,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__leaf_spot_84.jpg": {
       "sha256": "277bf4d5c8bac3f88e190663c3acbeccbe69f60bc3f7f5df598852b3affa44b5",
       "size_bytes": 152461,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__powdery_mildew_fruit_59.jpg": {
       "sha256": "c79420f0c6af2714d8eaad376cb41593863e31191ca828abb6d83a1310f1fc84",
@@ -1188,25 +1572,25 @@
       "sha256": "cce3c138829ca418aa246c8d5c763cad78f18981e19e6218b0f361619a52745e",
       "size_bytes": 216301,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__powdery_mildew_fruit_62.jpg": {
       "sha256": "e7fb6a2b3b62e8dff8aea6a67a790da65729cc1b4e6fe4325d0b8971979ae345",
       "size_bytes": 164318,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_002.jpg": {
       "sha256": "430f6194660dbc71d41f37e4d9b1a32678ca654a02fde4acc351b3c151091fbd",
       "size_bytes": 384575,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_007.jpg": {
       "sha256": "35f0cd18b143786d1a14ebaecac7db1f4f299e652d8123b9307d19dc8afb9566",
       "size_bytes": 250923,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__tomato_022.jpg": {
       "sha256": "f6cff1550b10b4e34b819319b3bbbb1dc74482d454a92f2b29660b8387bc4bc9",
@@ -1218,7 +1602,7 @@
       "sha256": "b7273c24ec497446af2e793d5d3163484dcd98fedc0aa5fc9a07beb03d36d0f1",
       "size_bytes": 122102,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_041.jpg": {
       "sha256": "8bfd4c65fcbafb84424d016f1575ddda36e1b63246fbff65a0d7da8851936986",
@@ -1236,7 +1620,7 @@
       "sha256": "aa017caaec8a1d32575125d90284868580d28380d63c41cec02cd01dee7758d5",
       "size_bytes": 107292,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_1304.jpg": {
       "sha256": "0b319cb885eec3731f1ff2a16dd3635ae46fdc5d01ed87730eade33658d88834",
@@ -1248,7 +1632,7 @@
       "sha256": "dec0c314ff41ef3c2ab46b754da8e986484bc89f9c7e14b9f3f773ce9e0c4b73",
       "size_bytes": 101227,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_154.jpg": {
       "sha256": "e60ef479a02418e59f3a7ec8c850ce92924333bb4b6f963a39aa24971b4a3046",
@@ -1266,7 +1650,7 @@
       "sha256": "91f2e0e5d3fc8a32afcac46d525cc865f0cab7ddf25e8b6cac6ab14e68af3f4f",
       "size_bytes": 82690,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_232.jpg": {
       "sha256": "a610fb44185239ab689bcb8686cfcf4c8abdbffba544fcca0df9a18ca7086586",
@@ -1284,7 +1668,7 @@
       "sha256": "5466cc4068693963580111845aabd6335da1840edd87edb2548f4ac82b03c151",
       "size_bytes": 113834,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__tomato_441.jpg": {
       "sha256": "6529fb11b6568e433f809ed2a7b3e51761d56e95a7cd65ed1eccd97ec51c3167",
@@ -1302,7 +1686,7 @@
       "sha256": "0026cbacdf8eb51450ec1eaf65a6678f1f6c5b4f1dfe9702600604fd65c09a72",
       "size_bytes": 102399,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__8268_sanat-calismasini-animsatan-uzum-bahceleri_344616.jpg": {
       "sha256": "a449cda06313391286272b5545999f1e419e66217a3f0c2079351b4865f0749d",
@@ -1314,19 +1698,19 @@
       "sha256": "6c94cad085dfbc73a9e55a336eeb236abc3e60c3490bc95bbddd6c9127fb63f1",
       "size_bytes": 217530,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__Frutteto_CVT_100_S_Stage_V_Field_DJI_0962_preview.webp": {
       "sha256": "b0075d52f5fb284a8a6f24155500b4560b6ec0a4c67d7ce8c217c9d23b1cca8b",
       "size_bytes": 430938,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__Listovertka.jpg": {
       "sha256": "a09929d55fc1a9ac34c010a7fab3f2cbfb6ce59008393ff8441e7e6145de8985",
       "size_bytes": 39232,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__Muchnistye-chervecy.jpg": {
       "sha256": "6f01b10e846eb1b288c29065fc0c2dea4481841117e074d10fdf29e3212f55a6",
@@ -1338,7 +1722,7 @@
       "sha256": "e4d3e22f2d1c2c33c637fd66a8fe87419fcdbc473d20f1fd2c559010ac3dd5bb",
       "size_bytes": 153428,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__Tripsy-na-vinogradnykh-listyakh.jpg": {
       "sha256": "44f96abd721e01620ede207892d304161a013a0684f660df3468c3367e31c1b7",
@@ -1356,25 +1740,25 @@
       "sha256": "90ea688924c64d89f66e4211a984be4e3f8854d5601545446ed44efd98caa516",
       "size_bytes": 46491,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__ZHuki-dolgonosiki-povrezhdayut-vinograd.jpg": {
       "sha256": "bd49acbc60c92fb313fdaca55bd6867d6de7f86a27e382a973f096fbdb5b17b8",
       "size_bytes": 39241,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__alaaks\u0131zzz.jpg": {
       "sha256": "424809deae694ddf68b3387bacc934791d88cc4974cf294efd5ae666e2781ad2",
       "size_bytes": 126903,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__alakasizz.jpg": {
       "sha256": "3e9382245d76e5f8f707bb32f0d5b8d9bb4fe5964a1169e467d7d882e482949d",
       "size_bytes": 98541,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__alakas\u0131z.jpg": {
       "sha256": "b3c7c75e8f05095f55ba7838707604cd23081c138cd64c0a1e613dd7bae163ba",
@@ -1404,7 +1788,7 @@
       "sha256": "e3999bb0157bfc483cca22c501cbe49fa8de63a653fde69b75e4cc0d5ea9be28",
       "size_bytes": 103120,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__alaka\u0131sz.jpg": {
       "sha256": "05570bc5a41ad4b890b1fecb1d16a6f52c75d57c6925edeb158969b2c8aacf64",
@@ -1416,7 +1800,7 @@
       "sha256": "315157e173d20868eb78820b9fa079766abdec988db71aacb25071e37226e92d",
       "size_bytes": 53063,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__bc6c4749-f6bc-423c-a1e5-350052ee1f0a-Ba\u015fl\u0131ks\u0131z-2.png": {
       "sha256": "31202e938c1e7a2a8e9c1376ca9796cdff507f487a8b12a61740bf741f2f4c5c",
@@ -1440,7 +1824,7 @@
       "sha256": "d195b7886f5b17e243df91351f896ad3f902e89038301746a4760a6010bdb1c7",
       "size_bytes": 34638,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__depositphotos_205603130-stock-photo-gardener-hold-hand-grapevine-leaf.jpg": {
       "sha256": "6d24742a787e53d197a00b71cb34c8ec70850a963bd6e9bb9ac3e5107bb6597a",
@@ -1452,7 +1836,7 @@
       "sha256": "2d71768253840675152156d71921076f5b5ad9d766f4b63d92843d2d3e3241dd",
       "size_bytes": 43748,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__depositphotos_354116492-stock-photo-france-chablis-2019-06-21.jpg": {
       "sha256": "baedf678bf9fdf491c2076c037d9f1f0954b0746bd7a6dbc094d667db1176b08",
@@ -1470,7 +1854,7 @@
       "sha256": "150b5816aea54360f1de88551e8443806d0b94a723a5865eff9d97fd33800c77",
       "size_bytes": 40966,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__duvar-resimleri-traktor-kimyasallar-ile-uzum-baglari-puskurtme_jpg.jpg": {
       "sha256": "16a0ff6f2277459747a27fa989d12a08557496d582d019ce0b6159b243a50321",
@@ -1500,7 +1884,7 @@
       "sha256": "04a603931eb9b3abf1c51e6e1396439f67aaa8cb46df0db486f73c0cbc496c7b",
       "size_bytes": 61245,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1273537439-612x612.jpg": {
       "sha256": "02604383b52391b0523a4ba5b8c47591dce078fc4e6c477341f0290f3a824cc6",
@@ -1512,19 +1896,19 @@
       "sha256": "3f96e62a5972ceed6ea5403c3080efa1db3bf4ea546173a36032846e64af9b04",
       "size_bytes": 48224,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1366073903-640x640.png": {
       "sha256": "b3f682518f453b71dfe96b180a8a43ea3e214fc469563061b351fdcb24afb6db",
       "size_bytes": 489135,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-1389712277-612x612.jpg": {
       "sha256": "b8b0bb497e2c4ebcc611cfd7d97893b5ab4a1b5fbc6f6a5139b7351a4394a8be",
       "size_bytes": 43294,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__istockphoto-2191239633-640x640.png": {
       "sha256": "db6442c3b9f76e04b08f68fa649c5fe2b327bf1f986d5b029b4e8433c54d36fa",
@@ -1548,13 +1932,13 @@
       "sha256": "d163aff1b383711ee75c36ea3f80618fbb253d338b980574709d308bea8610ce",
       "size_bytes": 73156,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__k\u00f6pekkk.jpeg": {
       "sha256": "df438f33198c3448d74d25cb610546b22131599b8542369e438e5bd2acc7fd07",
       "size_bytes": 63078,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__pngtree-golden-suv-parked-amidst-rolling-vineyards-under-a-warm-hazy-sky-image_20407460.webp": {
       "sha256": "8462c5b02bedae131ab64efa68efde84eddd4d591761f00a5f8bb1a676abc0ef",
@@ -1566,7 +1950,7 @@
       "sha256": "2ebca4c64fea0b90f5766dbc2d88f051e905e2ff9ffabf9ddd3e7e07b0a48cea",
       "size_bytes": 1186673,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/scene_context_leak_check__sulama_sistemi_2.png": {
       "sha256": "632e99f6f8357cc4c5038dace59a4c6fecf14f6b3907b4b6cd155ac9429e2560",
@@ -1585,6 +1969,12 @@
   "schema_version": "v1_real_ood_split_manifest",
   "seed": 42,
   "slice_summaries": {
+    "grape_specific_unknowns": {
+      "dev": 26,
+      "split_policy": "slice_stratified",
+      "test": 38,
+      "total": 64
+    },
     "off_crop_or_root_disease": {
       "dev": 59,
       "split_policy": "slice_stratified",
@@ -1606,7 +1996,7 @@
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\ood",
   "split_counts": {
-    "dev": 105,
-    "test": 158
+    "dev": 131,
+    "test": 196
   }
 }

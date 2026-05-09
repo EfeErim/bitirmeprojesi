@@ -1,0 +1,123 @@
+{
+  "created_at_utc": "2026-05-09T19:25:19.332725+00:00",
+  "source": "Bugwood / invasive.org",
+  "placements": [
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "1263040",
+      "label": "tomato_leaf_miner_damage",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=1263040",
+      "license": "CC BY-NC 3.0",
+      "notes": "tomato leaf miner leaf mine damage; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_1263040_tomato_leaf_miner_damage.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_1263040_tomato_leaf_miner_damage.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/1263040.jpg",
+      "sha256": "09246876d415e5db5367906ea9b2f00edcefb2e5d3c5bcd1c9c57660d54fb00c"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598514",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598514",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598514_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598514.jpg",
+      "sha256": "c1da1156a5600aec593b237c0bae4a0748634665ddd0bc4994cc0eb7f66258d3"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598513",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598513",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598513_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598513.jpg",
+      "sha256": "dc1e7431b3ce791c3080ea4b8508c71ae88a087e73a6a4ae7a8986fa6952bae4"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598519",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598519",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598519_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598519_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598519.jpg",
+      "sha256": "07f7ef8531ca87b0f0dce3598a5b117848ce91fa5445fdf31f132c6ef7fedcbc"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598512",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598512",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598512_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598512_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598512.jpg",
+      "sha256": "585246ebd9d05e627ebf0373692780339d857774d29c64a25f41c57a2d8ebe13"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598516",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598516",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598516_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598516.jpg",
+      "sha256": "e7081178cc5ebc6829c119db2d3bc1be2401863ffc50fe8ff1986d0171a40256"
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "unsupported_tomato_unknowns",
+      "image_id": "5598509",
+      "label": "tomato_russet_mite_symptoms",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5598509",
+      "license": "CC BY 3.0",
+      "notes": "tomato russet mite symptoms; same-crop unsupported tomato leaf condition",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598509_tomato_russet_mite_symptoms.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\bugwood_5598509_tomato_russet_mite_symptoms.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5598509.jpg",
+      "sha256": "8f1b0b92814dd03243de6c87d697d67ce8ebe5faf1d2b2c44feeafe60eb89c83"
+    },
+    {
+      "dataset_key": "strawberry__leaf",
+      "slice": "same_crop_unsupported_unknowns",
+      "image_id": "5629370",
+      "label": "strawberry_twospotted_spider_mite_webbing",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5629370",
+      "license": "CC BY 3.0",
+      "notes": "twospotted spider mite webbing on strawberry; same-crop unsupported condition",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\same_crop_unsupported_unknowns\\internet_20260509_bugwood_5629370_strawberry_twospotted_spider_mite_webbing.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\strawberry__leaf\\same_crop_unsupported_unknowns\\bugwood_5629370_strawberry_twospotted_spider_mite_webbing.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5629370.jpg",
+      "sha256": "0f6f8bea73f28a78ed2aa8f2a05bf0ad16ccb0300e78dd1670a9a191120f5c55"
+    },
+    {
+      "dataset_key": "strawberry__leaf",
+      "slice": "same_crop_unsupported_unknowns",
+      "image_id": "5629372",
+      "label": "strawberry_twospotted_spider_mite_webbing",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5629372",
+      "license": "CC BY 3.0",
+      "notes": "twospotted spider mite webbing on strawberry; same-crop unsupported condition",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\same_crop_unsupported_unknowns\\internet_20260509_bugwood_5629372_strawberry_twospotted_spider_mite_webbing.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260509\\phase1_ood_candidates\\strawberry__leaf\\same_crop_unsupported_unknowns\\bugwood_5629372_strawberry_twospotted_spider_mite_webbing.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5629372.jpg",
+      "sha256": "ff4ae313ed822fb17618c25feba77ab25e5b8060631298b9aed423e5862c66c2"
+    }
+  ]
+}
