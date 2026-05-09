@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 from src.shared.json_utils import read_json
-from src.training.services.class_balance import MIN_SUPPORTED_CLASS_SAMPLES, normalize_class_name
+from src.shared.string_utils import normalize_class_name
+from src.training.services.class_balance import MIN_SUPPORTED_CLASS_SAMPLES
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff"}
 RUNTIME_SPLITS = ("continual", "val", "test")
