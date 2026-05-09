@@ -3,10 +3,11 @@ import zipfile
 from pathlib import Path
 
 from scripts.prune_exact_duplicates import (
+    _find_variant_relpaths,
     _record_from_manifest_row,
     apply_cleanup_plan,
-    build_combined_cleanup_plan,
     build_cleanup_plan,
+    build_combined_cleanup_plan,
     build_review_cleanup_plan,
     write_cleanup_report,
 )
@@ -150,6 +151,41 @@ def test_build_cleanup_plan_supports_zip_source(tmp_path: Path):
 
     actions = build_cleanup_plan(dataset_root=dataset_root, exact_duplicates_source=zip_path, seed=11)
     assert len(actions) == 1
+
+
+def test_find_variant_relpaths_reuses_pattern_cache(tmp_path: Path, monkeypatch):
+    dataset_root = tmp_path / "dataset"
+    _write_file(dataset_root / "Healthy" / "dup_b.jpg", b"b")
+    _write_file(dataset_root / "Healthy" / "dup_b_flip.jpg", b"bf")
+
+    import scripts.prune_exact_duplicates as prune_exact_duplicates
+
+    calls = {"count": 0}
+    original = prune_exact_duplicates._variant_pattern
+
+    def _counted_variant_pattern(base_stem: str):
+        calls["count"] += 1
+        return original(base_stem)
+
+    monkeypatch.setattr(prune_exact_duplicates, "_variant_pattern", _counted_variant_pattern)
+    pattern_cache = {}
+    directory_cache = {}
+
+    first = _find_variant_relpaths(
+        dataset_root,
+        "Healthy/dup_b.jpg",
+        directory_cache=directory_cache,
+        pattern_cache=pattern_cache,
+    )
+    second = _find_variant_relpaths(
+        dataset_root,
+        "Healthy/dup_b.jpg",
+        directory_cache=directory_cache,
+        pattern_cache=pattern_cache,
+    )
+
+    assert first == second
+    assert calls["count"] == 1
 
 
 def test_apply_cleanup_plan_deletes_only_planned_files(tmp_path: Path):
