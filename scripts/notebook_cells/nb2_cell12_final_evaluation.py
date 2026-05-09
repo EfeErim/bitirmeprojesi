@@ -166,6 +166,11 @@ with TELEMETRY.capture_cell_output("Cell 9: Final Evaluation"):
     )
     print("[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.")
 
+import importlib
+import scripts.colab_notebook_helpers as notebook_helpers
+
+notebook_helpers = importlib.reload(notebook_helpers)
+
 from scripts.colab_notebook_helpers import build_notebook_completion_report, maybe_auto_disconnect_colab_runtime, merge_training_summary_fields, print_notebook_optimization_campaign_status, resolve_notebook_optimization_campaign, summarize_notebook_optimization_campaign
 
 REPO_RUN_EXPORTS = save_run_outputs_to_repo()
