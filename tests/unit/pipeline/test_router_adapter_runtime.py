@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 
 from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
-from src.shared.contracts import InferenceResult, RouterAnalysisResult
+from src.shared.contracts import InferenceResult, InputGuardAnalysis, RouterAnalysisResult
 
 
 class FakeRouter:
@@ -632,6 +632,155 @@ def test_predict_emits_status_updates_for_notebook_surfaces(monkeypatch, tmp_pat
         "[RESULT] status=success crop=tomato diagnosis=healthy confidence=0.910 ood=False",
     ]
 
+
+
+def test_input_guard_rejects_non_plant_before_adapter_loading(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "input_guard": {"enabled": True},
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    def _reject_guard(image, *, requested_part):
+        del image, requested_part
+        return InputGuardAnalysis(
+            enabled=True,
+            decision="non_plant_rejected",
+            is_plant_like=False,
+            method="bioclip_prompt_plantness",
+            plant_score=0.21,
+            non_plant_score=0.66,
+            margin=-0.45,
+            reason="non_plant_score exceeded plant_score by configured margin",
+        )
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    monkeypatch.setattr(runtime, "_evaluate_input_guard", _reject_guard)
+    monkeypatch.setattr(
+        runtime,
+        "_build_adapter",
+        lambda crop_name: (_ for _ in ()).throw(AssertionError("adapter should not load")),
+    )
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="white"))
+
+    assert result["status"] == "non_plant_rejected"
+    assert result["crop"] == "tomato"
+    assert result["diagnosis"] is None
+    assert "ood_analysis" not in result
+    assert result["input_guard"]["decision"] == "non_plant_rejected"
+    assert result["input_guard"]["plant_score"] == 0.21
+    assert result["router"]["primary_detection"]["crop"] == "tomato"
+
+
+def test_input_guard_pass_payload_is_included_on_success(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato")
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "input_guard": {"enabled": True},
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    monkeypatch.setattr(runtime, "_build_router", lambda: FakeRouter())
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+    monkeypatch.setattr(
+        runtime,
+        "_evaluate_input_guard",
+        lambda image, *, requested_part: InputGuardAnalysis(
+            enabled=True,
+            decision="pass",
+            is_plant_like=True,
+            method="bioclip_prompt_plantness",
+            plant_score=0.73,
+            non_plant_score=0.18,
+            margin=0.55,
+        ),
+    )
+
+    result = runtime.predict(Image.new("RGB", (32, 32), color="green"))
+
+    assert result["status"] == "success"
+    assert result["input_guard"]["decision"] == "pass"
+    assert result["input_guard"]["is_plant_like"] is True
+    assert result["input_guard"]["margin"] == 0.55
+
+
+def test_input_guard_runs_for_trusted_crop_hint(monkeypatch, tmp_path):
+    adapter_root = tmp_path / "models"
+    _write_adapter_meta(adapter_root, "tomato", "leaf")
+    guard_calls = []
+
+    runtime = RouterAdapterRuntime(
+        config={
+            "router": {"crop_mapping": {"tomato": {"parts": ["leaf"]}}, "vlm": {"enabled": True}},
+            "training": {"continual": {"ood": {"threshold_factor": 2.0}}},
+            "ood": {"threshold_factor": 2.0},
+            "inference": {
+                "adapter_root": str(adapter_root),
+                "target_size": 224,
+                "allow_cross_part_adapter_fallback": True,
+                "input_guard": {"enabled": True},
+            },
+        },
+        device="cpu",
+        adapter_root=adapter_root,
+    )
+
+    def _pass_guard(image, *, requested_part):
+        del image
+        guard_calls.append(requested_part)
+        return InputGuardAnalysis(
+            enabled=True,
+            decision="pass",
+            is_plant_like=True,
+            method="bioclip_prompt_plantness",
+            plant_score=0.73,
+            non_plant_score=0.18,
+            margin=0.55,
+        )
+
+    monkeypatch.setattr(
+        runtime,
+        "_build_router",
+        lambda: (_ for _ in ()).throw(AssertionError("router should not route")),
+    )
+    monkeypatch.setattr(runtime, "_evaluate_input_guard", _pass_guard)
+    monkeypatch.setattr(runtime, "_build_adapter", lambda crop_name: FakeAdapter(crop_name, device="cpu"))
+
+    result = runtime.predict(
+        Image.new("RGB", (32, 32), color="green"),
+        crop_hint="tomato",
+        part_hint="leaf",
+        trust_crop_hint=True,
+    )
+
+    assert result["status"] == "success"
+    assert result["input_guard"]["decision"] == "pass"
+    assert result["router"]["status"] == "trusted_hint_skipped"
+    assert guard_calls == ["leaf"]
 
 
 def test_load_adapter_reloads_when_bundle_changes_in_place(monkeypatch, tmp_path):

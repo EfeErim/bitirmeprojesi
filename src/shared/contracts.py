@@ -355,6 +355,57 @@ class RouterAnalysisResult:
 
 
 @dataclass
+class InputGuardAnalysis:
+    enabled: bool = False
+    decision: str = "disabled"
+    is_plant_like: bool = True
+    method: str = "disabled"
+    plant_score: float = 0.0
+    non_plant_score: float = 0.0
+    margin: float = 0.0
+    reason: str = ""
+    debug_scores: Optional[Dict[str, float]] = None
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {
+            "enabled": bool(self.enabled),
+            "decision": str(self.decision or "disabled"),
+            "is_plant_like": bool(self.is_plant_like),
+            "method": str(self.method or "disabled"),
+            "plant_score": float(self.plant_score),
+            "non_plant_score": float(self.non_plant_score),
+            "margin": float(self.margin),
+            "reason": str(self.reason or ""),
+        }
+        if self.debug_scores is not None:
+            payload["debug_scores"] = {
+                str(key): float(value)
+                for key, value in self.debug_scores.items()
+            }
+        return payload
+
+    @classmethod
+    def from_dict(cls, payload: Optional[Dict[str, Any]]) -> "InputGuardAnalysis":
+        data = dict(payload or {})
+        debug_scores_raw = data.get("debug_scores")
+        return cls(
+            enabled=bool(data.get("enabled", False)),
+            decision=str(data.get("decision", "disabled") or "disabled"),
+            is_plant_like=bool(data.get("is_plant_like", True)),
+            method=str(data.get("method", "disabled") or "disabled"),
+            plant_score=float(data.get("plant_score", 0.0)),
+            non_plant_score=float(data.get("non_plant_score", 0.0)),
+            margin=float(data.get("margin", 0.0)),
+            reason=str(data.get("reason", "") or ""),
+            debug_scores=(
+                None
+                if not isinstance(debug_scores_raw, dict)
+                else {str(key): float(value) for key, value in debug_scores_raw.items()}
+            ),
+        )
+
+
+@dataclass
 class InferenceResult:
     status: str
     crop: Optional[str] = None
@@ -367,6 +418,7 @@ class InferenceResult:
     ood_analysis: Optional[OODAnalysis] = None
     conformal_set: Optional[List[str]] = None
     router: Optional[RouterAnalysisResult] = None
+    input_guard: Optional[InputGuardAnalysis] = None
 
     def to_dict(self, *, include_ood: bool = True) -> Dict[str, Any]:
         payload: Dict[str, Any] = {
@@ -391,6 +443,8 @@ class InferenceResult:
                 payload["conformal_set"] = list(resolved_conformal_set)
         if self.router is not None:
             payload["router"] = self.router.to_summary_dict()
+        if self.input_guard is not None:
+            payload["input_guard"] = self.input_guard.to_dict()
         return payload
 
     @classmethod
@@ -418,6 +472,11 @@ class InferenceResult:
             router=(
                 RouterAnalysisResult.from_dict(data.get("router"))
                 if data.get("router") is not None
+                else None
+            ),
+            input_guard=(
+                InputGuardAnalysis.from_dict(data.get("input_guard"))
+                if data.get("input_guard") is not None
                 else None
             ),
         )

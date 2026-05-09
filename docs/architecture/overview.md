@@ -164,18 +164,19 @@ src/workflows/inference.py -> InferenceWorkflow.predict(...)
 4. The router analyzes the image and produces a typed router result with normalized detections.
 5. A plain `crop_hint` is treated as untrusted; the router must identify the same crop before the adapter can load.
 6. The router keeps one canonical primary detection using router quality ranking when available, otherwise preserving router order.
-7. Before resolving any adapter, the runtime applies a conservative uncertainty gate on that primary detection using the configured router confidence and router margin thresholds.
-8. If the primary crop signal is too weak, ambiguous, or inconsistent with an untrusted crop hint, the payload status is `router_uncertain` and no adapter runs.
-9. Otherwise the runtime resolves the crop adapter directory from that primary detection or from the explicitly trusted crop hint.
-10. The runtime loads that adapter through `IndependentCropAdapter`.
-11. The image is preprocessed to the configured target size.
-12. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
-13. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
+7. If `inference.input_guard.enabled=true`, the runtime scores the image with the BioCLIP plantness prompt groups in [plantness_input_guard_prompt_groups.md](plantness_input_guard_prompt_groups.md). A non-plant decision returns `non_plant_rejected` and skips adapter inference.
+8. Before resolving any adapter, the runtime applies a conservative uncertainty gate on that primary detection using the configured router confidence and router margin thresholds.
+9. If the primary crop signal is too weak, ambiguous, or inconsistent with an untrusted crop hint, the payload status is `router_uncertain` and no adapter runs.
+10. Otherwise the runtime resolves the crop adapter directory from that primary detection or from the explicitly trusted crop hint.
+11. The runtime loads that adapter through `IndependentCropAdapter`.
+12. The image is preprocessed to the configured target size.
+13. The adapter predicts disease plus calibrated adapter OOD information when an adapter actually runs.
+14. `src/pipeline/inference_payloads.py` converts the raw output into the public payload and adds a structured `router` summary block.
 
 If the router runs but cannot identify a supported crop, the payload status is `unknown_crop`.
 If the router backend fails to become usable or errors during routing, the payload status is `router_unavailable`.
 If router initialization fails, the runtime discards that router instance and retries a clean load on the next request.
-`unknown_crop`, `router_unavailable`, `router_uncertain`, and `adapter_unavailable` omit adapter-side `ood_analysis` because no calibrated adapter OOD verdict exists on those paths.
+`non_plant_rejected`, `unknown_crop`, `router_unavailable`, `router_uncertain`, and `adapter_unavailable` omit adapter-side `ood_analysis` because no calibrated adapter OOD verdict exists on those paths.
 
 ### Default adapter resolution
 

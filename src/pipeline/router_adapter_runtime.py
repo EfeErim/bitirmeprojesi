@@ -15,6 +15,7 @@ from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
+    build_non_plant_rejected_result,
     build_router_skipped_analysis,
     build_router_unavailable_result,
     build_router_uncertain_result,
@@ -22,12 +23,13 @@ from src.pipeline.inference_payloads import (
     build_unknown_crop_result,
     normalize_router_analysis,
 )
+from src.pipeline.input_guard import evaluate_plantness_input_guard, input_guard_enabled
 from src.shared.adapter_paths import (
     ADAPTER_BUNDLE_DIR_NAME,
     normalize_adapter_name,
     resolve_adapter_bundle_dir,
 )
-from src.shared.contracts import InferenceResult, RouterAnalysisResult
+from src.shared.contracts import InferenceResult, InputGuardAnalysis, RouterAnalysisResult
 from src.shared.json_utils import read_json_dict
 from src.training.services.runtime import resolve_runtime_device
 
@@ -75,6 +77,7 @@ class RouterAdapterRuntime:
         self.target_size = int(inference_cfg.get("target_size", 224))
         self.router_min_confidence = float(inference_cfg.get("router_min_confidence", 0.65))
         self.router_min_margin = float(inference_cfg.get("router_min_margin", 0.10))
+        self.input_guard_enabled = input_guard_enabled(self.config)
         self.allow_cross_part_adapter_fallback = bool(
             inference_cfg.get("allow_cross_part_adapter_fallback", False)
         )
@@ -362,6 +365,29 @@ class RouterAdapterRuntime:
             )
         return ""
 
+    def _evaluate_input_guard(
+        self,
+        image: Image.Image,
+        *,
+        requested_part: Optional[str],
+    ) -> Optional[InputGuardAnalysis]:
+        if not self.input_guard_enabled:
+            return None
+        router = self.load_router()
+        guard = evaluate_plantness_input_guard(
+            router,
+            image,
+            self.config,
+            requested_part=requested_part,
+        )
+        self._emit_status(
+            "[INPUT_GUARD] "
+            f"decision={guard.decision} "
+            f"plant_score={guard.plant_score:.3f} "
+            f"non_plant_score={guard.non_plant_score:.3f}"
+        )
+        return guard
+
     def predict_result(
         self,
         image: ImageInput,
@@ -377,6 +403,7 @@ class RouterAdapterRuntime:
         trusted_hint_skip = bool(crop_name and trust_crop_hint)
         router_confidence = 1.0 if crop_name else 0.0
         router_analysis: RouterAnalysisResult
+        input_guard: Optional[InputGuardAnalysis] = None
 
         if trusted_hint_skip:
             trusted_crop_name = str(crop_name or "").strip().lower()
@@ -436,6 +463,33 @@ class RouterAdapterRuntime:
                 status_message
             )
 
+        try:
+            input_guard = self._evaluate_input_guard(prepared_image, requested_part=part_name)
+        except (OSError, RuntimeError, TypeError, ValueError) as exc:
+            logger.warning("Input guard analysis failed: %s", exc)
+            result = build_router_unavailable_result(
+                message=f"Input guard runtime unavailable: {exc}",
+                include_ood=return_ood,
+            )
+            self._emit_status(f"[RESULT] status={result.status} message={result.message}")
+            return result
+
+        if input_guard is not None and input_guard.decision == "non_plant_rejected":
+            result = build_non_plant_rejected_result(
+                crop_name=crop_name,
+                part_name=part_name,
+                router_confidence=router_confidence,
+                input_guard=input_guard,
+                include_ood=return_ood,
+                router_analysis=router_analysis,
+            )
+            self._emit_status(
+                f"[RESULT] status={result.status} "
+                f"plant_score={input_guard.plant_score:.3f} "
+                f"non_plant_score={input_guard.non_plant_score:.3f}"
+            )
+            return result
+
         if not crop_name or crop_name == "unknown":
             result = build_unknown_crop_result(
                 part_name=part_name,
@@ -443,6 +497,7 @@ class RouterAdapterRuntime:
                 include_ood=return_ood,
                 router_analysis=router_analysis,
             )
+            result.input_guard = input_guard
             self._emit_status(
                 f"[RESULT] status={result.status} router_confidence={result.router_confidence:.3f}"
             )
@@ -459,6 +514,7 @@ class RouterAdapterRuntime:
                     include_ood=return_ood,
                     router_analysis=router_analysis,
                 )
+                result.input_guard = input_guard
                 self._emit_status(
                     f"[RESULT] status={result.status} "
                     f"router_confidence={result.router_confidence:.3f} "
@@ -477,6 +533,7 @@ class RouterAdapterRuntime:
                 include_ood=return_ood,
                 router_analysis=router_analysis,
             )
+            result.input_guard = input_guard
             self._emit_status(f"[RESULT] status={result.status} crop={crop_name} message={result.message}")
             return result
 
@@ -490,6 +547,7 @@ class RouterAdapterRuntime:
             include_ood=return_ood,
             router_analysis=router_analysis,
         )
+        payload.input_guard = input_guard
         status_bits = [
             f"[RESULT] status={payload.status}",
             f"crop={payload.crop or 'unknown'}",

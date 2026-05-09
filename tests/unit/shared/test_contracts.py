@@ -1,4 +1,10 @@
-from src.shared.contracts import InferenceResult, OODAnalysis, RouterAnalysisResult, RouterDetection
+from src.shared.contracts import (
+    InferenceResult,
+    InputGuardAnalysis,
+    OODAnalysis,
+    RouterAnalysisResult,
+    RouterDetection,
+)
 
 
 def test_router_analysis_result_preserves_router_order_without_quality_scores():
@@ -92,3 +98,33 @@ def test_inference_result_omits_conformal_set_when_ood_is_disabled():
 
     assert "ood_analysis" not in payload
     assert "conformal_set" not in payload
+
+
+def test_inference_result_serializes_input_guard_payload():
+    payload = InferenceResult(
+        status="non_plant_rejected",
+        confidence=0.0,
+        input_guard=InputGuardAnalysis(
+            enabled=True,
+            decision="non_plant_rejected",
+            is_plant_like=False,
+            method="bioclip_prompt_plantness",
+            plant_score=0.21,
+            non_plant_score=0.66,
+            margin=-0.45,
+            reason="non_plant_score exceeded plant_score by configured margin",
+            debug_scores={"generic_plant": 0.21, "animals_people": 0.66},
+        ),
+    ).to_dict(include_ood=True)
+
+    assert payload["input_guard"] == {
+        "enabled": True,
+        "decision": "non_plant_rejected",
+        "is_plant_like": False,
+        "method": "bioclip_prompt_plantness",
+        "plant_score": 0.21,
+        "non_plant_score": 0.66,
+        "margin": -0.45,
+        "reason": "non_plant_score exceeded plant_score by configured margin",
+        "debug_scores": {"generic_plant": 0.21, "animals_people": 0.66},
+    }

@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from src.shared.contracts import InferenceResult, OODAnalysis, RouterAnalysisResult, RouterDetection
+from src.shared.contracts import (
+    InferenceResult,
+    InputGuardAnalysis,
+    OODAnalysis,
+    RouterAnalysisResult,
+    RouterDetection,
+)
 
 
 def best_detection_from_analysis(analysis: Any) -> Dict[str, Any]:
@@ -158,6 +164,31 @@ def build_adapter_unavailable_result(
         message=str(message),
         ood_analysis=None,
         router=normalized_router,
+    )
+
+
+def build_non_plant_rejected_result(
+    *,
+    crop_name: str | None,
+    part_name: str | None,
+    router_confidence: float,
+    input_guard: InputGuardAnalysis,
+    include_ood: bool,
+    router_analysis: RouterAnalysisResult | Dict[str, Any] | None = None,
+) -> InferenceResult:
+    normalized_router = normalize_router_analysis(router_analysis)
+    reason = str(input_guard.reason or "Input guard rejected the image as non-plant.")
+    return InferenceResult(
+        status="non_plant_rejected",
+        crop=crop_name,
+        part=part_name,
+        router_confidence=float(router_confidence),
+        diagnosis=None,
+        confidence=0.0,
+        message=reason,
+        ood_analysis=None,
+        router=normalized_router,
+        input_guard=input_guard,
     )
 
 

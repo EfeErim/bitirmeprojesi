@@ -23,6 +23,7 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 - Canonical inference entrypoint: `src/workflows/inference.py`
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
+- Optional plantness input guard config: `inference.input_guard`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`
 - Dataset-aware cohort command:
@@ -89,6 +90,7 @@ Supporting references:
 - [architecture/router_performance_literature_review.md](architecture/router_performance_literature_review.md)
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)
+- [architecture/plantness_input_guard_prompt_groups.md](architecture/plantness_input_guard_prompt_groups.md)
 
 Archive (historical only):
 
