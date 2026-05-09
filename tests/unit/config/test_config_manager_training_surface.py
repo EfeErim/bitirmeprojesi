@@ -34,7 +34,7 @@ def test_training_continual_surface_exposes_reliability_defaults():
     assert continual["ood"]["real_dev_target_fpr"] == 0.05
     assert continual["ood"]["energy_temperature_mode"] == "auto"
     assert continual["ood"]["react_enabled"] is False
-    assert continual["ood"]["oe_enabled"] is False
+    assert continual["ood"]["oe_enabled"] is True
     assert continual["seed"] == 42
     assert continual["batch_size"] == 96
     assert continual["learning_rate"] == 0.0002
@@ -87,7 +87,7 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["ber_enabled"] is False
     assert root_normalized["ood"]["energy_temperature_mode"] == "auto"
     assert root_normalized["ood"]["react_enabled"] is False
-    assert root_normalized["ood"]["oe_enabled"] is False
+    assert root_normalized["ood"]["oe_enabled"] is True
     assert root_normalized["ood"]["sure_semantic_percentile"] == 90.0
     assert root_normalized["ood"]["sure_confidence_percentile"] == 97.0
     assert root_normalized["ood"]["real_split_enabled"] is True

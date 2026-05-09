@@ -51,7 +51,7 @@
         "conformal_method": "raps",
         "conformal_raps_lambda": 0.2,
         "conformal_raps_k_reg": 1,
-        "oe_enabled": false,
+        "oe_enabled": true,
         "oe_loss_weight": 0.5,
         "oe_target": "uniform",
         "oe_root": ""

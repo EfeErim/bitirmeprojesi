@@ -261,7 +261,7 @@ class ContinualSDLoRAConfig:
     conformal_method: str = "threshold"
     conformal_raps_lambda: float = 0.0
     conformal_raps_k_reg: int = 1
-    oe_enabled: bool = False
+    oe_enabled: bool = True
     oe_loss_weight: float = 0.5
     oe_target: str = "uniform"
     oe_root: str = ""
@@ -551,7 +551,7 @@ class ContinualSDLoRAConfig:
             conformal_method=str(ood.get("conformal_method", "threshold")),
             conformal_raps_lambda=float(ood.get("conformal_raps_lambda", 0.0)),
             conformal_raps_k_reg=int(ood.get("conformal_raps_k_reg", 1)),
-            oe_enabled=bool(ood.get("oe_enabled", False)),
+            oe_enabled=bool(ood.get("oe_enabled", True)),
             oe_loss_weight=float(ood.get("oe_loss_weight", 0.5)),
             oe_target=str(ood.get("oe_target", "uniform")),
             oe_root=str(ood.get("oe_root", "") or ""),

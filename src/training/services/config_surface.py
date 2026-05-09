@@ -63,7 +63,7 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "conformal_method": "raps",
             "conformal_raps_lambda": 0.2,
             "conformal_raps_k_reg": 1,
-            "oe_enabled": False,
+            "oe_enabled": True,
             "oe_loss_weight": 0.5,
             "oe_target": "uniform",
             "oe_root": "",
@@ -225,7 +225,7 @@ def normalize_continual_training_config(
     ood["conformal_method"] = str(ood.get("conformal_method", "raps"))
     ood["conformal_raps_lambda"] = float(ood.get("conformal_raps_lambda", 0.2))
     ood["conformal_raps_k_reg"] = int(ood.get("conformal_raps_k_reg", 1))
-    ood["oe_enabled"] = bool(ood.get("oe_enabled", False))
+    ood["oe_enabled"] = bool(ood.get("oe_enabled", True))
     ood["oe_loss_weight"] = float(ood.get("oe_loss_weight", 0.5))
     if ood["oe_loss_weight"] < 0.0:
         raise ValueError("training.continual.ood.oe_loss_weight must be non-negative.")
