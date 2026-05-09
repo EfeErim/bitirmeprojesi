@@ -50,7 +50,7 @@ def _collect_entries(root: Path) -> List[Dict[str, Any]]:
             {
                 "relative_path": relative_path,
                 "slice": infer_ood_slice(path, root),
-                "sha256": _sha256_file(path),
+                "sha256": sha256_file(path),
                 "size_bytes": int(path.stat().st_size),
             }
         )
