@@ -166,9 +166,28 @@ with TELEMETRY.capture_cell_output("Cell 9: Final Evaluation"):
     )
     print("[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.")
 
-from scripts.colab_notebook_helpers import build_notebook_completion_report, maybe_auto_disconnect_colab_runtime, merge_training_summary_fields
+from scripts.colab_notebook_helpers import build_notebook_completion_report, maybe_auto_disconnect_colab_runtime, merge_training_summary_fields, print_notebook_optimization_campaign_status, resolve_notebook_optimization_campaign, summarize_notebook_optimization_campaign
 
 REPO_RUN_EXPORTS = save_run_outputs_to_repo()
+effective_params = dict(STATE.get("effective_params") or {})
+resolved_dataset_root = Path(STATE.get("runtime_dataset_root") or RUNTIME_DATASET_ROOT)
+resolved_dataset_key = str(STATE.get("runtime_dataset_key") or STATE.get("selected_dataset_name") or DATASET_NAME or "").strip()
+if resolved_dataset_key:
+    optimization_campaign_mode = "continue" if bool(effective_params.get("ENABLE_BAYESIAN_OPTIMIZATION", True)) else "disabled"
+    STATE["optimization_campaign"] = resolve_notebook_optimization_campaign(
+        root=ROOT,
+        runtime_dataset_root=resolved_dataset_root,
+        dataset_key=resolved_dataset_key,
+        crop_name=CROP_NAME,
+        part_name=PART_NAME,
+        backbone_model_name=str(dict(BASE_CONFIG or {}).get("training", {}).get("continual", {}).get("backbone", {}).get("model_name", "")),
+        notebook_parameters=effective_params,
+        mode=optimization_campaign_mode,
+        telemetry=TELEMETRY,
+    )
+    STATE["recommendation_report"] = summarize_notebook_optimization_campaign(STATE["optimization_campaign"])
+    STATE["recommendation_decision"] = str(STATE["optimization_campaign"].get("status", "disabled"))
+    print_notebook_optimization_campaign_status(STATE["optimization_campaign"], print_fn=print)
 notebook_export_result = export_current_colab_notebook(REPO_NOTEBOOK_OUTPUT_PATH)
 
 extra_entries = [
