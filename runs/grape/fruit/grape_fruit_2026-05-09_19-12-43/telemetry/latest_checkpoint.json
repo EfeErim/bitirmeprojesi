@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e32_s480_20260509_191703_407698",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/grape_fruit_2026-05-09_19-12-43/checkpoints/ckpt_e32_s480_20260509_191703_407698/training_checkpoint",
+  "created_at": "2026-05-09T19:17:04.771287+00:00",
+  "global_step": 480,
+  "epoch": 32,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.29649595469878665
+}
