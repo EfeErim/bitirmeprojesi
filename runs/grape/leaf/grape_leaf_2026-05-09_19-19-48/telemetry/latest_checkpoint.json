@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e28_s504_20260509_192457_504852",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/grape_leaf_2026-05-09_19-19-48/checkpoints/ckpt_e28_s504_20260509_192457_504852/training_checkpoint",
+  "created_at": "2026-05-09T19:24:59.231302+00:00",
+  "global_step": 504,
+  "epoch": 28,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.5779823342591156
+}
