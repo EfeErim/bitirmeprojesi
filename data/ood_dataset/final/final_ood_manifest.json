@@ -1,139 +1,134 @@
-﻿{
-  "grape__fruit_ood_final": {
-    "total": 249,
+{
+  "strawberry__leaf_ood_final": {
+    "total": 213,
     "duplicates_skipped": 0,
     "missing_sources": [],
     "slices": {
-      "off_crop_or_root_disease": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_or_root_disease",
-        "copied": 148,
+      "non_plant_misc": {
+        "source": "data/prepared_runtime_datasets/strawberry__leaf/ood/non_plant_misc",
+        "copied": 5,
         "duplicates_skipped": 0
       },
       "off_crop_secondary": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_secondary",
-        "copied": 55,
+        "source": "data/prepared_runtime_datasets/strawberry__leaf/ood/off_crop_secondary",
+        "copied": 25,
         "duplicates_skipped": 0
       },
-      "scene_context_leak_check": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/scene_context_leak_check",
-        "copied": 46,
+      "other_crop_disease": {
+        "source": "data/prepared_runtime_datasets/strawberry__leaf/ood/other_crop_disease",
+        "copied": 5,
+        "duplicates_skipped": 0
+      },
+      "same_crop_unsupported_unknowns": {
+        "source": "data/prepared_runtime_datasets/strawberry__leaf/ood/same_crop_unsupported_unknowns",
+        "copied": 165,
+        "duplicates_skipped": 0
+      },
+      "strawberry_failure_cases": {
+        "source": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases",
+        "copied": 13,
         "duplicates_skipped": 0
       }
-    }
-  },
-  "grape__leaf_ood_final": {
-    "total": 249,
-    "duplicates_skipped": 0,
-    "missing_sources": [],
-    "slices": {
-      "off_crop_or_root_disease": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_or_root_disease",
-        "copied": 148,
-        "duplicates_skipped": 0
-      },
-      "off_crop_secondary": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/off_crop_secondary",
-        "copied": 55,
-        "duplicates_skipped": 0
-      },
-      "scene_context_leak_check": {
-        "source": "data/ood_dataset/_archive/grape_leaf_ood_optimized/scene_context_leak_check",
-        "copied": 46,
-        "duplicates_skipped": 0
-      }
-    }
+    },
+    "rebalance_note": "Synced from prepared runtime OOD after 2026-05-10 requested Phase 1 rebalance."
   },
   "strawberry__fruit_ood_final": {
-    "total": 292,
+    "total": 219,
     "duplicates_skipped": 0,
     "missing_sources": [],
     "slices": {
+      "fruit_failure_cases": {
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/fruit_failure_cases",
+        "copied": 11,
+        "duplicates_skipped": 0
+      },
+      "fruit_specific_unknowns": {
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/fruit_specific_unknowns",
+        "copied": 8,
+        "duplicates_skipped": 0
+      },
       "non_plant_misc": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/non_plant_misc",
-        "copied": 27,
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/non_plant_misc",
+        "copied": 5,
         "duplicates_skipped": 0
       },
       "off_crop_secondary": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/off_crop_secondary",
-        "copied": 159,
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/off_crop_secondary",
+        "copied": 25,
         "duplicates_skipped": 0
       },
       "other_crop_disease": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/other_crop_disease",
-        "copied": 106,
-        "duplicates_skipped": 0
-      }
-    }
-  },
-  "strawberry__leaf_ood_final": {
-    "total": 292,
-    "duplicates_skipped": 0,
-    "missing_sources": [],
-    "slices": {
-      "non_plant_misc": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/non_plant_misc",
-        "copied": 27,
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/other_crop_disease",
+        "copied": 5,
         "duplicates_skipped": 0
       },
-      "off_crop_secondary": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/off_crop_secondary",
-        "copied": 159,
-        "duplicates_skipped": 0
-      },
-      "other_crop_disease": {
-        "source": "data/ood_dataset/_archive/strawberry_ood_optimized/other_crop_disease",
-        "copied": 106,
+      "same_crop_unsupported_unknowns": {
+        "source": "data/prepared_runtime_datasets/strawberry__fruit/ood/same_crop_unsupported_unknowns",
+        "copied": 165,
         "duplicates_skipped": 0
       }
-    }
-  },
-  "tomato__fruit_ood_final": {
-    "total": 1297,
-    "duplicates_skipped": 0,
-    "missing_sources": [],
-    "slices": {
-      "unsupported_same_crop": {
-        "source": "data/ood_dataset/_archive/tomato_fruit_ood_optimized/unsupported_same_crop",
-        "copied": 1273,
-        "duplicates_skipped": 0
-      },
-      "blur_or_occlusion": {
-        "source": "data/ood_dataset/_archive/tomato_fruit_ood_optimized/blur_or_occlusion",
-        "copied": 24,
-        "duplicates_skipped": 0
-      }
-    }
+    },
+    "rebalance_note": "Synced from prepared runtime OOD after 2026-05-10 requested Phase 1 rebalance."
   },
   "tomato__leaf_ood_final": {
-    "total": 62,
+    "total": 325,
     "duplicates_skipped": 0,
     "missing_sources": [],
     "slices": {
-      "unsupported_tomato_unknowns": {
-        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/unsupported_tomato_unknowns",
+      "off_crop_secondary": {
+        "source": "data/prepared_runtime_datasets/tomato__leaf/ood/off_crop_secondary",
+        "copied": 20,
+        "duplicates_skipped": 0
+      },
+      "scene_context_leak_check": {
+        "source": "data/prepared_runtime_datasets/tomato__leaf/ood/scene_context_leak_check",
         "copied": 13,
         "duplicates_skipped": 0
       },
       "tomato_failure_cases": {
-        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/tomato_failure_cases",
-        "copied": 6,
+        "source": "data/prepared_runtime_datasets/tomato__leaf/ood/tomato_failure_cases",
+        "copied": 11,
         "duplicates_skipped": 0
       },
       "tomato_off_coverage_secondary": {
-        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/tomato_off_coverage_secondary",
-        "copied": 17,
+        "source": "data/prepared_runtime_datasets/tomato__leaf/ood/tomato_off_coverage_secondary",
+        "copied": 21,
+        "duplicates_skipped": 0
+      },
+      "unsupported_tomato_unknowns": {
+        "source": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns",
+        "copied": 260,
+        "duplicates_skipped": 0
+      }
+    },
+    "rebalance_note": "Synced from prepared runtime OOD after 2026-05-10 requested Phase 1 rebalance."
+  },
+  "tomato__fruit_ood_final": {
+    "total": 332,
+    "duplicates_skipped": 0,
+    "missing_sources": [],
+    "slices": {
+      "blur_or_occlusion": {
+        "source": "data/prepared_runtime_datasets/tomato__fruit/ood/blur_or_occlusion",
+        "copied": 24,
+        "duplicates_skipped": 0
+      },
+      "fruit_failure_cases": {
+        "source": "data/prepared_runtime_datasets/tomato__fruit/ood/fruit_failure_cases",
+        "copied": 80,
         "duplicates_skipped": 0
       },
       "off_crop_secondary": {
-        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/off_crop_secondary",
-        "copied": 13,
+        "source": "data/prepared_runtime_datasets/tomato__fruit/ood/off_crop_secondary",
+        "copied": 8,
         "duplicates_skipped": 0
       },
-      "scene_context_leak_check": {
-        "source": "data/ood_dataset/_archive/tomato_leaf_ood_optimized/scene_context_leak_check",
-        "copied": 13,
+      "unsupported_same_crop": {
+        "source": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop",
+        "copied": 220,
         "duplicates_skipped": 0
       }
-    }
+    },
+    "rebalance_note": "Synced from prepared runtime OOD after 2026-05-10 requested Phase 1 rebalance."
   }
 }

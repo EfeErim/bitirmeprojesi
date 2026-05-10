@@ -1,0 +1,34 @@
+{
+  "placements": [
+    {
+      "dataset_key": "strawberry__fruit",
+      "slice": "fruit_specific_unknowns",
+      "title": "Rotting_strawberry_on_white_background.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_manual_Rotting_strawberry_on_white_background.jpg.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_manual_Rotting_strawberry_on_white_background.jpg.jpg",
+      "sha256": "963f58b09f00be022e02bfc766c0ffe7689141f616921662268a1c4b08d7fcb7",
+      "width": 1280,
+      "height": 965,
+      "format": "JPEG",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Rotting_strawberry_on_white_background.jpg",
+      "source_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Rotting_strawberry_on_white_background.jpg?width=1280",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": false
+    },
+    {
+      "dataset_key": "strawberry__fruit",
+      "slice": "fruit_specific_unknowns",
+      "title": "Ripening_strawberry.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_manual_Ripening_strawberry.jpg.jpg",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_manual_Ripening_strawberry.jpg.jpg",
+      "sha256": "020e6398b0468c6760c6f8607611ce496c1eaaa29a2bc60a9dc881af6049ad15",
+      "width": 480,
+      "height": 640,
+      "format": "JPEG",
+      "source_page": "https://commons.wikimedia.org/wiki/File:Ripening_strawberry.jpg",
+      "source_url": "https://commons.wikimedia.org/wiki/Special:Redirect/file/Ripening_strawberry.jpg?width=1280",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": false
+    }
+  ]
+}

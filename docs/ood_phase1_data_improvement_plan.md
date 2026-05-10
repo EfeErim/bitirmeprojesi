@@ -20,16 +20,16 @@ If the pool is dominated by off-crop images, it can hide the real failure mode.
 
 ## Current Evidence Snapshot
 
-From `data/ood_dataset/final/final_ood_manifest.json`:
+From `data/ood_dataset/final/final_ood_manifest.json` after the 2026-05-10 Phase 1 rebalance:
 
-- `strawberry__leaf_ood_final`: 292 images
-- `strawberry__fruit_ood_final`: 292 images
-- `tomato__leaf_ood_final`: 62 images
-- `tomato__fruit_ood_final`: 1297 images
+- `strawberry__leaf_ood_final`: 213 images
+- `strawberry__fruit_ood_final`: 219 images
+- `tomato__leaf_ood_final`: 325 images
+- `tomato__fruit_ood_final`: 332 images
 - `grape__leaf_ood_final`: 249 images
 - `grape__fruit_ood_final`: 249 images
 
-The main issue is not just size. It is class balance and slice quality.
+The main issue is not just size. It is class balance and slice quality. The 2026-05-10 pass reduced easy strawberry off-crop and non-plant slices, expanded tomato leaf above the 300-image stability floor, and rebuilt tomato fruit around fruit-specific same-crop unknowns and failure cases. Strawberry fruit still needs more true fruit-specific failure cases before it should be treated as complete.
 
 ## 1. Strawberry / Leaf
 
@@ -40,19 +40,21 @@ Supported classes in the prepared runtime dataset:
 - strawberry_leaf_spot_leaf
 - strawberry_powdery_mildew_leaf
 
-Current OOD mix:
+Current OOD mix after the 2026-05-10 rebalance:
 
-- off_crop_secondary: 159
-- other_crop_disease: 106
-- non_plant_misc: 27
+- same_crop_unsupported_unknowns: 165
+- strawberry_failure_cases: 13
+- off_crop_secondary: 25
+- other_crop_disease: 5
+- non_plant_misc: 5
 
 ### Recommendation
 
-The pool is usable, but it is overweighted toward easy negatives.
+The pool is no longer dominated by easy negatives, but realistic failure cases are still under target.
 
-- Reduce `off_crop_secondary` substantially. Keep only a small validation slice of easy off-crop negatives.
-- Remove or minimize `non_plant_misc` unless it is being used to test a specific deployment failure mode.
-- Increase same-crop unknowns and realistic strawberry failure cases.
+- Keep `off_crop_secondary` and `non_plant_misc` small.
+- Keep same-crop unknowns as the dominant slice.
+- Add more realistic strawberry leaf failure cases.
 
 ### Target mix
 
@@ -69,11 +71,20 @@ This adapter already has very strong classification metrics, so the remaining ga
 
 ## 2. Strawberry / Fruit
 
-The fruit adapter uses the same 292-image strawberry OOD final pool, but the visual failure modes should be fruit-specific.
+Current OOD mix after the 2026-05-10 rebalance:
+
+- same_crop_unsupported_unknowns: 165
+- fruit_specific_unknowns: 8
+- fruit_failure_cases: 11
+- off_crop_secondary: 25
+- other_crop_disease: 5
+- non_plant_misc: 5
+
+The fruit adapter no longer uses the same off-crop-heavy strawberry pool as the leaf adapter, but the visual failure modes are still not fruit-specific enough.
 
 ### Recommendation
 
-- Rebuild the pool around fruit-specific unknowns instead of reusing a leaf-oriented mix.
+- Continue rebuilding the pool around fruit-specific unknowns instead of leaf-oriented same-crop negatives.
 - Add fruit damage, ripeness anomalies, rot patterns, sun damage, bruising, and partial occlusion.
 - Keep off-crop negatives as a small minority.
 
@@ -90,23 +101,22 @@ Fruit rejection is usually about texture, color progression, decay, and partial 
 
 ## 3. Tomato / Leaf
 
-Current OOD mix:
+Current OOD mix after the 2026-05-10 rebalance:
 
-- unsupported_tomato_unknowns: 13
-- tomato_failure_cases: 6
-- tomato_off_coverage_secondary: 17
-- off_crop_secondary: 13
+- unsupported_tomato_unknowns: 260
+- tomato_failure_cases: 11
+- tomato_off_coverage_secondary: 21
+- off_crop_secondary: 20
 - scene_context_leak_check: 13
 
-This is the weakest OOD pool in the repo.
+This pool is now large enough for a more stable FPR estimate, but the failure-case slice still needs more blur, occlusion, partial-leaf, and mixed-background examples.
 
 ### Recommendation
 
-This one needs the biggest Phase 1 expansion.
+This one was the biggest Phase 1 expansion.
 
-- Grow the pool from 62 to at least 600 images.
-- Add many more same-crop unknowns.
-- Add realistic tomato leaf failure cases.
+- Keep the pool above 300 images before using FPR as a readiness signal.
+- Add more realistic tomato leaf failure cases.
 - Keep off-crop images only as a small validation slice.
 
 ### What to add
@@ -156,14 +166,16 @@ This adapter has enough classification support, but its real OOD pool is too sma
 
 ## 4. Tomato / Fruit
 
-Current OOD mix:
+Current OOD mix after the 2026-05-10 rebalance:
 
-- unsupported_same_crop: 1273
+- unsupported_same_crop: 220
+- fruit_failure_cases: 80
 - blur_or_occlusion: 24
+- off_crop_secondary: 8
 
 ### Recommendation
 
-This pool is large, but it is too dominated by one broad category.
+This pool is now fruit-specific and no longer dominated by leaf-oriented or off-crop evidence.
 
 - Audit the `unsupported_same_crop` slice for duplicates and near-duplicates.
 - Rebalance toward failure cases and diverse hard negatives.
