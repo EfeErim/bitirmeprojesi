@@ -1,0 +1,40 @@
+name: SOTA Update
+
+on:
+  schedule:
+    - cron: '0 2 * * 1' # weekly at 02:00 UTC every Monday
+  workflow_dispatch:
+
+jobs:
+  fetch-and-propose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run SOTA update script
+        run: |
+          python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_UPDATES.md
+
+      - name: Create pull request with updates
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(sota): automated literature update"
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          title: "Automated SOTA literature candidates"
+          body: |
+            This PR was opened automatically by the scheduled SOTA update workflow.
+            It contains a candidate list of recent papers matching repo-relevant queries.
+          branch: sota/update-$(date +"%Y%m%d-%H%M%S")
+          labels: automated, literature

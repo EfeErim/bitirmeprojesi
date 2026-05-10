@@ -465,6 +465,29 @@ def _build_adapter(crop_name: str, *, device: str) -> IndependentCropAdapter:
     return IndependentCropAdapter(crop_name=_normalize_crop_name(crop_name), device=device)
 
 
+def _adapter_context_cache_key(resolved_dir: Path) -> tuple[str, int, int]:
+    normalized_dir = str(resolved_dir.resolve(strict=False))
+    meta_path = resolved_dir / "adapter_meta.json"
+    if not meta_path.exists():
+        return normalized_dir, 0, 0
+    stat = meta_path.stat()
+    return normalized_dir, int(stat.st_mtime_ns), int(stat.st_size)
+
+
+@lru_cache(maxsize=16)
+def _cached_load_adapter_context(
+    resolved_dir_key: str,
+    crop_key: str,
+    device: str,
+    meta_mtime_ns: int,
+    meta_size: int,
+) -> tuple[Path, str, IndependentCropAdapter]:
+    resolved_dir = Path(resolved_dir_key)
+    adapter = _build_adapter(crop_key, device=device)
+    adapter.load_adapter(str(resolved_dir))
+    return resolved_dir, crop_key, adapter
+
+
 def _load_adapter_context(
     crop_name: Optional[str],
     *,
@@ -482,9 +505,14 @@ def _load_adapter_context(
         config_env=config_env,
     )
     crop_key = _resolve_crop_name(crop_name, adapter_dir=resolved_dir)
-    adapter = _build_adapter(crop_key, device=device)
-    adapter.load_adapter(str(resolved_dir))
-    return resolved_dir, crop_key, adapter
+    resolved_dir_key, meta_mtime_ns, meta_size = _adapter_context_cache_key(resolved_dir)
+    return _cached_load_adapter_context(
+        resolved_dir_key,
+        crop_key,
+        device,
+        meta_mtime_ns,
+        meta_size,
+    )
 
 
 def _read_adapter_meta(adapter_dir: Path) -> Dict[str, Any]:

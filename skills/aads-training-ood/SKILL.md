@@ -30,6 +30,7 @@ Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 0 o
 7. When BER is involved, compare runs on the same crop, seed, split layout, and OOD evidence source. Use `scripts/evaluate_ber_rollout.py` when a rollout comparison is needed.
 8. Back OOD scoring, calibration, readiness-policy, and rejection-method changes with primary literature when possible. If the repo adapts an idea rather than reproducing a paper exactly, say so explicitly.
 9. If training outputs or readiness semantics change, update the matching docs instead of leaving behavior implicit.
+10. For SOTA automation work, treat `scripts/validate_ood_evidence_consistency.py` as the fast guard that deployment verdicts are backed by real OOD evidence or an explicit fallback benchmark artifact.
 
 ## Literature Anchors
 
@@ -50,5 +51,6 @@ Load `skills/aads-colab-notebooks/SKILL.md` too if the task touches Notebook 0 o
 
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
+- `.\scripts\python.cmd scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json`
 - `pytest tests/unit/workflows/test_training_workflow.py tests/colab/test_smoke_training.py -q`
 - Add or run the narrowest relevant training-side unit or integration tests for the touched modules.

@@ -817,7 +817,7 @@ Optional helper command:
 Notebook 3 is for direct adapter validation after training or export.
 
 It does not use the router.
-By default, automatic discovery scans current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/`. Historical `runs/` exports are excluded unless `INCLUDE_RUN_ADAPTERS=True`, so old experiments do not appear as active adapter choices.
+By default, automatic discovery scans current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/` or historical exports under `runs/`. Historical `runs/` exports are included as adapter sources as well, so older telemetry exports can be validated without relocating artifacts.
 
 Use it to:
 
@@ -837,12 +837,12 @@ Current accepted `ADAPTER_DIR` patterns include:
 
 Current accepted `ADAPTER_ROOT` pattern:
 
-- parent of crop folders, usually `models/adapters/`
+- parent of crop folders, usually `models/adapters/` or `runs/`
 
 Important caveat:
 
 - current helper resolution accepts the `adapter_export/` dir or the `continual_sd_lora_adapter/` folder itself for the current export layout
-- `ADAPTER_ROOT` is for deployed adapters under `models/adapters/<crop>/...`, not for telemetry run roots
+-- `ADAPTER_ROOT` can point to deployed adapters under `models/adapters/<crop>/...` or to telemetry run roots under `runs/<RUN_ID>/...` when you need to validate historical exports
 
 ### Image input rules
 
@@ -853,7 +853,7 @@ Important caveat:
 ## Notebook 4 Minimal Smoke UI
 
 Notebook 4 uses the same adapter discovery and prediction helpers as Notebook 3, but presents them through a small widget UI.
-By default, the dropdown lists current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/`; historical `runs/` exports are excluded so old experiments do not look like active adapters. Pass `include_run_adapters=True` only when you intentionally want to inspect old run artifacts.
+By default, the dropdown lists current notebook exports under `outputs/colab_notebook_training/` and deployed adapters under `models/adapters/` or `runs/`, so you can select recent exports or historical run artifacts interchangeably. Pass `include_run_adapters=False` only when you want to hide older run artifacts from the UI.
 
 Use Notebook 4 when you want:
 
@@ -895,7 +895,7 @@ The notebook reports recommended dotted-path config overrides. Review those resu
 Router inference looks for adapters here by default:
 
 ```text
-models/adapters/<crop>/<part>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/  # or runs/<RUN_ID>/.../continual_sd_lora_adapter/
 ```
 
 You can deploy from any of these outputs:

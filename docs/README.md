@@ -15,6 +15,7 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 - [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md): Notebook 0/2/3 flow, Notebook 4 relation, dataset materialization, notebook caveats
 - [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md): OOD and readiness policy, `metric_gate.json` vs `production_readiness.json`
 - [architecture/overview.md](architecture/overview.md): training and inference flow, config flow, artifact contracts, file responsibility map
+- [SOTA_AUTOMATION_GUIDE.md](SOTA_AUTOMATION_GUIDE.md): continuous automation strategy grounded in literature; recommended cascade by tier and ROI
 
 ## Fast Reference
 
@@ -24,7 +25,7 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
 - Optional plantness input guard config: `inference.input_guard`
-- Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
+-- Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/` (or historical exports under `runs/<RUN_ID>/.../continual_sd_lora_adapter/`)
 - Local run registry path: `runs/_index/`
 - Dataset-aware cohort command:
 

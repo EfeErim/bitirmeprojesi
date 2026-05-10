@@ -17,6 +17,7 @@ Use this skill for CI, tests, validation commands, benchmark capture, and docume
 - `scripts/benchmark_surfaces.py`
 - `scripts/validate_config_schema.py`
 - `scripts/validate_notebook_imports.py`
+- `scripts/validate_ood_evidence_consistency.py`
 
 Load the feature-specific skill too if the task touches training, notebooks, or inference behavior.
 
@@ -32,6 +33,7 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 8. Prefer pointing skills at canonical docs and contracts over duplicating mutable repo facts across multiple skill files.
 9. Use standards-backed hygiene for process changes: explicit validation commands, traceable dependency changes, generated-artifact exclusions, reproducible outputs, and no hidden local-only assumptions.
 10. For ML-facing docs or validation changes, require the claim to name its evidence type: current repo behavior, literature-backed rationale, benchmark result, test result, or engineering inference.
+11. For automation-guide work, prefer the next small executable guard over broad CI rewrites. Start with OOD evidence consistency, router calibration stability, and adapter smoke-test contracts before long-running drift or lineage jobs.
 
 ## Practice Anchors
 
@@ -51,6 +53,7 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 - On Windows PowerShell, prefer `.\scripts\python.cmd ...` so commands resolve the repo `.venv` before any global launcher.
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `.\scripts\python.cmd scripts/validate_config_schema.py`
+- `.\scripts\python.cmd scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json`
 - `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>` when dataset-contract guidance changes
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`

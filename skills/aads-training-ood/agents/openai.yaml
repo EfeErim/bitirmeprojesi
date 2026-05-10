@@ -1,4 +1,4 @@
 interface:
   display_name: "AADS Training and OOD"
-  short_description: "AADS v6 training, calibrated OOD, readiness, and deployment-evidence guidance"
-  default_prompt: "Use $aads-training-ood to update the training workflow, calibrated OOD behavior, readiness verdicts, or deployment evidence in this repo."
+  short_description: "AADS v6 training, calibrated OOD, readiness verdicts, and evidence automation"
+  default_prompt: "Use $aads-training-ood to update the training workflow, calibrated OOD behavior, readiness verdicts, deployment evidence, or OOD evidence automation in this repo."

@@ -69,6 +69,9 @@ jobs:
       - name: Check config drift
         run: python scripts/check_config_drift.py
 
+      - name: Validate OOD evidence consistency
+        run: python scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json
+
       - name: Validate dataset layouts (if present)
         run: |
           if [ -d "data/prepared_runtime_datasets" ]; then
@@ -84,6 +87,7 @@ jobs:
             scripts/cleanup_old_artifacts.py \
             scripts/check_config_drift.py \
             scripts/generate_artifact_manifest.py \
+            scripts/validate_ood_evidence_consistency.py \
             scripts/colab_checkpointing.py \
             scripts/colab_dataset_layout.py \
             scripts/colab_live_telemetry.py \
@@ -146,4 +150,3 @@ jobs:
       - name: Clean up old artifacts (>90 days)
         run: |
           python scripts/cleanup_old_artifacts.py --days 90
-

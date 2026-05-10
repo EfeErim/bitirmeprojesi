@@ -131,7 +131,7 @@ The maintained training path is:
 The default inference deployment path is:
 
 ```text
-models/adapters/<crop>/<part>/continual_sd_lora_adapter/
+models/adapters/<crop>/<part>/continual_sd_lora_adapter/  # or historical exports under runs/<RUN_ID>/.../continual_sd_lora_adapter/
 ```
 
 Legacy crop-only bundles still load, but future exports should land under the crop/part path.
