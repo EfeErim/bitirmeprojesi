@@ -72,6 +72,9 @@ jobs:
       - name: Validate OOD evidence consistency
         run: python scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json
 
+      - name: Validate router calibration stability
+        run: python scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json
+
       - name: Validate dataset layouts (if present)
         run: |
           if [ -d "data/prepared_runtime_datasets" ]; then
@@ -88,6 +91,7 @@ jobs:
             scripts/check_config_drift.py \
             scripts/generate_artifact_manifest.py \
             scripts/validate_ood_evidence_consistency.py \
+            scripts/validate_router_calibration_stability.py \
             scripts/colab_checkpointing.py \
             scripts/colab_dataset_layout.py \
             scripts/colab_live_telemetry.py \

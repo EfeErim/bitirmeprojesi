@@ -18,6 +18,7 @@ Use this skill for CI, tests, validation commands, benchmark capture, and docume
 - `scripts/validate_config_schema.py`
 - `scripts/validate_notebook_imports.py`
 - `scripts/validate_ood_evidence_consistency.py`
+- `scripts/validate_router_calibration_stability.py`
 
 Load the feature-specific skill too if the task touches training, notebooks, or inference behavior.
 
@@ -54,6 +55,7 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 - `.\scripts\python.cmd scripts/validate_notebook_imports.py`
 - `.\scripts\python.cmd scripts/validate_config_schema.py`
 - `.\scripts\python.cmd scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json`
+- `.\scripts\python.cmd scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json`
 - `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>` when dataset-contract guidance changes
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`

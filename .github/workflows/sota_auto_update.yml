@@ -5,6 +5,9 @@ on:
     - cron: '0 2 * * 1' # weekly at 02:00 UTC every Monday
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   fetch-and-propose:
     runs-on: ubuntu-latest
@@ -25,16 +28,14 @@ jobs:
         run: |
           python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_UPDATES.md
 
-      - name: Create pull request with updates
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore(sota): automated literature update"
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          title: "Automated SOTA literature candidates"
-          body: |
-            This PR was opened automatically by the scheduled SOTA update workflow.
-            It contains a candidate list of recent papers matching repo-relevant queries.
-          branch: sota/update-$(date +"%Y%m%d-%H%M%S")
-          labels: automated, literature
+      - name: Commit and push candidate report
+        run: |
+          if git diff --quiet -- docs/SOTA_AUTOMATION_UPDATES.md; then
+            echo "No SOTA candidate report changes to push."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/SOTA_AUTOMATION_UPDATES.md
+          git commit -m "chore(sota): automated literature update"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

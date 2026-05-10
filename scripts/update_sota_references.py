@@ -2,8 +2,8 @@
 """
 Fetch recent arXiv papers for repo-relevant keywords and write a markdown report.
 
-Intended to be run from CI on a schedule. Does NOT push or create PRs itself;
-the workflow should use `peter-evans/create-pull-request` to commit any changes.
+Intended to be run from CI on a schedule. Does NOT push by itself; the workflow
+commits and pushes the generated candidate report to the current branch.
 
 Usage:
   python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_UPDATES.md
@@ -110,8 +110,7 @@ def main():
             out_lines.append(f"{it['summary']}")
             out_lines.append("")
             out_lines.append(f"[arXiv]({it['link']})")
-            out_lines.append("
-")
+            out_lines.append("")
 
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     open(args.output, "w", encoding="utf-8").write("\n".join(out_lines))

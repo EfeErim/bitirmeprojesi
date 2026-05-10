@@ -597,26 +597,28 @@ Emit report: .runtime_tmp/notebook_output_validation.json
 
 ### Phase 1 Checklist (Tier 1)
 
-- [ ] Implement `validate_ood_evidence_consistency.py`; add to CI post-training
-- [ ] Implement `validate_router_calibration_stability.py`; integrate into PR checks
+- [x] Implement `validate_ood_evidence_consistency.py`; add to CI post-training
+- [x] Implement `validate_router_calibration_stability.py`; integrate into PR checks
 - [ ] Enhance `colab_adapter_smoke_test.py` with contract validation; add to CI
 - [ ] Document passing criteria in each script's docstring
 - [ ] Add all three scripts to [AGENTS.md](../AGENTS.md) validation defaults
  - [ ] Implement CI lint/type/test gate (ruff, mypy, pytest); add pre-commit hooks
  - [ ] Add Dependabot/scheduled action for dependency updates
 
-**Automated SOTA updates:** The repository runs a scheduled workflow that queries arXiv for recent papers matching a small set of repo-relevant queries and opens a PR with candidate literature updates. See `scripts/update_sota_references.py` and `.github/workflows/sota_auto_update.yml`.
+**Automated SOTA updates:** The repository runs a scheduled workflow that queries arXiv for recent papers matching a small set of repo-relevant queries and pushes a candidate literature report to the current branch. See `scripts/update_sota_references.py` and `.github/workflows/sota_auto_update.yml`.
 
 #### Automated SOTA Literature Updates
 
 - Purpose: keep the SOTA guidance and literature anchors fresh by surfacing recent, relevant papers for reviewer consideration.
 - Files:
-   - `scripts/update_sota_references.py` — queries arXiv for configured keywords and writes `docs/SOTA_AUTOMATION_UPDATES.md`.
-   - `.github/workflows/sota_auto_update.yml` — scheduled workflow (weekly) that runs the script and opens a PR with the generated report.
+   - `scripts/update_sota_references.py` queries arXiv for configured keywords and writes `docs/SOTA_AUTOMATION_UPDATES.md`.
+   - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and pushes the generated candidate report to the current branch.
 - Trigger: weekly schedule (workflow cron), or manual `workflow_dispatch`.
-- Reviewer flow: the workflow opens a PR named "Automated SOTA literature candidates". Reviewers should:
+- Automatic push policy: the script itself does not push. The scheduled workflow may automatically commit and push `docs/SOTA_AUTOMATION_UPDATES.md` to the current branch. It must not create a new branch, open an automatic PR, auto-merge, or directly copy accepted literature into the canonical guide.
+- Evidence scope: work derived from this guide should be literature-grounded where it changes ML methods, evaluation policy, threshold logic, or data-curation guidance. Repo wiring, CI scheduling, report formatting, and notebook/automation ergonomics are engineering adaptations; document them as current repo behavior or engineering inference instead of claiming they are directly literature-derived.
+- Reviewer flow: the workflow updates `docs/SOTA_AUTOMATION_UPDATES.md` in-place with candidate literature. Reviewers should:
    1. Inspect `docs/SOTA_AUTOMATION_UPDATES.md` for paper relevance.
- 2. If acceptable, merge; optionally copy approved entries into `docs/SOTA_AUTOMATION_GUIDE.md` under the appropriate Literature Anchors section.
+ 2. If acceptable, copy approved entries into `docs/SOTA_AUTOMATION_GUIDE.md` under the appropriate Literature Anchors section.
 - Local test: run the script locally to generate the report:
 
 ```bash
@@ -656,7 +658,8 @@ Note: the script only writes a candidate report; human review is required before
 # Validate router calibration (Tier 1B)
 .\scripts\python.cmd scripts/validate_router_calibration_stability.py \
   --router-eval-root data/router_eval/ \
-  --baseline-results main_branch_baseline.json
+  --calibration-results .runtime_tmp/router_calibration.json \
+  --output .runtime_tmp/router_calibration_stability_report.json
 
 # Run adapter smoke tests (Tier 1C)
 .\scripts\python.cmd scripts/colab_adapter_smoke_test.py \
@@ -696,4 +699,3 @@ Note: the script only writes a candidate report; human review is required before
 - **Is this aligned with your deployment pipeline?** Check [docs/user_guide/ood_readiness_guide.md](./user_guide/ood_readiness_guide.md) for readiness policy.
 - **Which tier should I prioritize?** Start with Tier 1 (high ROI, low cost); Tier 2 adds foundation; Tier 3 is long-term hardening.
 - **Where does this fit in AGENTS.md?** Each automation maps to a skill in `skills/aads-*`. See [../AGENTS.md](../AGENTS.md#routing-rules).
-
