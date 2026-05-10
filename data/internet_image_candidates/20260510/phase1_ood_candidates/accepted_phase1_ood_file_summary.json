@@ -1,0 +1,695 @@
+﻿{
+    "created_at":  "2026-05-10T20:00:21.4256575Z",
+    "note":  "Accepted Phase 1 OOD internet-source files after visual review; filenames with internet_20260509 or internet_20260510 only.",
+    "total":  107,
+    "counts":  [
+                   {
+                       "key":  "grape__fruit, grape_fruit_unknowns",
+                       "count":  2
+                   },
+                   {
+                       "key":  "grape__leaf, grape_specific_unknowns",
+                       "count":  64
+                   },
+                   {
+                       "key":  "strawberry__fruit, fruit_failure_cases",
+                       "count":  1
+                   },
+                   {
+                       "key":  "strawberry__fruit, fruit_specific_unknowns",
+                       "count":  6
+                   },
+                   {
+                       "key":  "strawberry__leaf, same_crop_unsupported_unknowns",
+                       "count":  2
+                   },
+                   {
+                       "key":  "strawberry__leaf, strawberry_failure_cases",
+                       "count":  3
+                   },
+                   {
+                       "key":  "tomato__fruit, fruit_failure_cases",
+                       "count":  3
+                   },
+                   {
+                       "key":  "tomato__fruit, unsupported_same_crop",
+                       "count":  4
+                   },
+                   {
+                       "key":  "tomato__leaf, tomato_failure_cases",
+                       "count":  3
+                   },
+                   {
+                       "key":  "tomato__leaf, tomato_off_coverage_secondary",
+                       "count":  4
+                   },
+                   {
+                       "key":  "tomato__leaf, unsupported_tomato_unknowns",
+                       "count":  15
+                   }
+               ],
+    "files":  [
+                  {
+                      "dataset_key":  "grape__fruit",
+                      "slice":  "grape_fruit_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__fruit\\ood\\grape_fruit_unknowns\\internet_20260510_wikimedia_Black_rot_on_grape.jpg.jpg",
+                      "size_bytes":  263463
+                  },
+                  {
+                      "dataset_key":  "grape__fruit",
+                      "slice":  "grape_fruit_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__fruit\\ood\\grape_fruit_unknowns\\internet_20260510_wikimedia_Guignardia_bidwellii_black_rot_on_grape_4.jpg.jpg",
+                      "size_bytes":  172225
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_03gb.jpg.jpg",
+                      "size_bytes":  22839
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_35589125035_662dd5b258_b.jpg.jpg",
+                      "size_bytes":  147502
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_5-29black-rot-chardRR.jpg.jpg",
+                      "size_bytes":  44255
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_Black_20rot_20on_20foliage.jpg.jpg",
+                      "size_bytes":  219424
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_Black_20rot_20on_20foliage2.jpg.jpg",
+                      "size_bytes":  268431
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_brleaf2_zoom.jpg.jpg",
+                      "size_bytes":  149284
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_grape_F15a.jpg.jpg",
+                      "size_bytes":  7490
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_test_grape_leaf_black_rot_piano_20gully_20spray_20seed_20damage_2006_20_289_29.JPG.jpg.jpg",
+                      "size_bytes":  895100
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_000gb.jpg.jpg",
+                      "size_bytes":  3236697
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_00gb.jpg.jpg",
+                      "size_bytes":  778810
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_01gb.jpg.jpg",
+                      "size_bytes":  32307
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_02gb.jpg.jpg",
+                      "size_bytes":  585583
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_072109_20Hartman_20Grape_20black_20rot-fruit_20_20lvs.JPG.jpg.jpg",
+                      "size_bytes":  677151
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_0gb.jpg.jpg",
+                      "size_bytes":  114819
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_150px-Plasmopara_viticola_000.jpg.jpg",
+                      "size_bytes":  6230
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_2009_06_069_Downy_mildew.jpg.jpg",
+                      "size_bytes":  96722
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_2009_07_034_black_rot_leaf_and_berry.jpg.jpg",
+                      "size_bytes":  38154
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_220px-Guignardia_bidwellii_08.jpg.jpg",
+                      "size_bytes":  8319
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_35327886795_6f608e0eaa_b.jpg.jpg",
+                      "size_bytes":  231072
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_3_21_14-Caption-Black-Rot-leaf-infection.-265x265.jpg.jpg",
+                      "size_bytes":  25077
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_3_21_14-Caption-Black-Rot-leaf-infection..jpg.jpg",
+                      "size_bytes":  443608
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_6-14-11_20ANNEMIEK_20blkRotSp.jpg.jpg",
+                      "size_bytes":  779527
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_8-21-Anthracnose-shotholing-ANNEMIEK.jpg.jpg",
+                      "size_bytes":  38777
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_80111791.jpg.jpg",
+                      "size_bytes":  199100
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_apr-2016_bryan_black-rot-leaf.jpg.jpg",
+                      "size_bytes":  80662
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_bad_grapes21.jpg.jpg",
+                      "size_bytes":  253069
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-guignardia-bidwellii-leaf-spot-lesions-on-muscadine-grape-BY9J7B.jpg.jpg",
+                      "size_bytes":  180006
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-guignardia-bidwellii-leaf-spot-lesions-on-muscadine-grape-x85jjd.jpg.jpg",
+                      "size_bytes":  63957
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-leaves.jpg.jpg",
+                      "size_bytes":  138247
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black-rot-of-grape_figure-1.jpg.jpg",
+                      "size_bytes":  870821
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black_20spot_20_2819_29.JPG_itok_mf4II8zq.jpg.jpg",
+                      "size_bytes":  12849
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black_rot-grape_leaf.jpeg.jpg.jpg",
+                      "size_bytes":  57173
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_black_rot_1.jpg.jpg",
+                      "size_bytes":  977249
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1153.jpg.jpg",
+                      "size_bytes":  48065
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1154.jpg.jpg",
+                      "size_bytes":  49313
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1155.jpg.jpg",
+                      "size_bytes":  52142
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1157.jpg.jpg",
+                      "size_bytes":  53879
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1166.jpg.jpg",
+                      "size_bytes":  49629
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1167.jpg.jpg",
+                      "size_bytes":  55448
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1168.jpg.jpg",
+                      "size_bytes":  62984
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes1317.jpg.jpg",
+                      "size_bytes":  50642
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes151.jpg.jpg",
+                      "size_bytes":  38406
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_Rot_of_Grapes152.jpg.jpg",
+                      "size_bytes":  48671
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Black_rot_on_grape_leaves5.jpg.jpg",
+                      "size_bytes":  680403
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_br-ocw-dm.jpg.jpg",
+                      "size_bytes":  103437
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_br-ocw-phom.jpg.jpg",
+                      "size_bytes":  131717
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_brshoot2_zoom.jpg.jpg",
+                      "size_bytes":  236588
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Concord-Grapes.jpg.jpg",
+                      "size_bytes":  1882671
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_DCDl_p8UQAAf2hP.jpg.jpg",
+                      "size_bytes":  273302
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_DSCN1228.jpg.jpg",
+                      "size_bytes":  169744
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_fungus_rust.jpg.jpg",
+                      "size_bytes":  51454
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_grape_20black_20rot_20on_20leaf_DSC0336.jpg.jpg",
+                      "size_bytes":  47374
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_guignardia-bidwellii-05.jpg.jpg",
+                      "size_bytes":  48110
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia-vigne44.jpg.jpg",
+                      "size_bytes":  115039
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia_bidwellii_28black_rot_29_on_grape_1.jpg.jpg",
+                      "size_bytes":  1679692
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_Guignardia_bidwellii_28black_rot_29_on_grape_4.jpg.jpg",
+                      "size_bytes":  651427
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_image66.jpg.jpg",
+                      "size_bytes":  9550
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_image_original.jpeg_1495058317.jpg.jpg",
+                      "size_bytes":  2098437
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_image_original.jpeg_1495058318.jpg.jpg",
+                      "size_bytes":  1931978
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_IMG_0830_original.JPG_1472588083.jpg.jpg",
+                      "size_bytes":  2321986
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_june-9-0181.jpg.jpg",
+                      "size_bytes":  1444640
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_muscals2.jpg.jpg",
+                      "size_bytes":  55574
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_PLPATH-FRU-24_Fig1-black-rot-spots-on-grape-leaf_Page_1.jpg.jpg",
+                      "size_bytes":  66138
+                  },
+                  {
+                      "dataset_key":  "grape__leaf",
+                      "slice":  "grape_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\grape__leaf\\ood\\grape_specific_unknowns\\internet_20260509_plantdoc_train_grape_leaf_black_rot_p_319.jpg.jpg",
+                      "size_bytes":  70305
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_failure_cases\\internet_20260510_wikimedia_Ripe_Strawberry.JPG.jpg",
+                      "size_bytes":  101030
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg",
+                      "size_bytes":  132641
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Moldy_Strawberries.jpg.jpg",
+                      "size_bytes":  125356
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Rotting_strawberry.jpg.jpg",
+                      "size_bytes":  163956
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Rot_strawberry.jpg.jpg",
+                      "size_bytes":  26801
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Strawberry_form_defect.JPG.jpg",
+                      "size_bytes":  217229
+                  },
+                  {
+                      "dataset_key":  "strawberry__fruit",
+                      "slice":  "fruit_specific_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\fruit_specific_unknowns\\internet_20260510_wikimedia_Strawberry_mold.jpg.jpg",
+                      "size_bytes":  256615
+                  },
+                  {
+                      "dataset_key":  "strawberry__leaf",
+                      "slice":  "same_crop_unsupported_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\same_crop_unsupported_unknowns\\internet_20260509_bugwood_5629370_strawberry_twospotted_spider_mite_webbing.jpg",
+                      "size_bytes":  141937
+                  },
+                  {
+                      "dataset_key":  "strawberry__leaf",
+                      "slice":  "same_crop_unsupported_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\same_crop_unsupported_unknowns\\internet_20260509_bugwood_5629372_strawberry_twospotted_spider_mite_webbing.jpg",
+                      "size_bytes":  131328
+                  },
+                  {
+                      "dataset_key":  "strawberry__leaf",
+                      "slice":  "strawberry_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\strawberry_failure_cases\\internet_20260510_wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg",
+                      "size_bytes":  291390
+                  },
+                  {
+                      "dataset_key":  "strawberry__leaf",
+                      "slice":  "strawberry_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\strawberry_failure_cases\\internet_20260510_wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg",
+                      "size_bytes":  366372
+                  },
+                  {
+                      "dataset_key":  "strawberry__leaf",
+                      "slice":  "strawberry_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\strawberry_failure_cases\\internet_20260510_wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg",
+                      "size_bytes":  327245
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "fruit_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\fruit_failure_cases\\internet_20260510_wikimedia_Cat_face_of_tomato.jpg.jpg",
+                      "size_bytes":  286717
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "fruit_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\fruit_failure_cases\\internet_20260510_wikimedia_Vivipary_in_tomato.jpg.jpg",
+                      "size_bytes":  248122
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "fruit_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\fruit_failure_cases\\internet_20260510_wikimedia_You_say_potato_i_say_tomato_6150193295_.jpg.jpg",
+                      "size_bytes":  196116
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "unsupported_same_crop",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\unsupported_same_crop\\internet_20260510_wikimedia_2015-09-14_radial_cracking.jpg.jpg",
+                      "size_bytes":  281761
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "unsupported_same_crop",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\unsupported_same_crop\\internet_20260510_wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg",
+                      "size_bytes":  108526
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "unsupported_same_crop",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\unsupported_same_crop\\internet_20260510_wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg",
+                      "size_bytes":  136577
+                  },
+                  {
+                      "dataset_key":  "tomato__fruit",
+                      "slice":  "unsupported_same_crop",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__fruit\\ood\\unsupported_same_crop\\internet_20260510_wikimedia_Tomaten_Platzer-1.jpg.jpg",
+                      "size_bytes":  258910
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_failure_cases\\internet_20260510_wikimedia_Tomato_leaf.jpg.jpg",
+                      "size_bytes":  337949
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_failure_cases\\internet_20260510_wikimedia_Tomato_Plant_Leaves_01.jpg.jpg",
+                      "size_bytes":  1077444
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_failure_cases",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_failure_cases\\internet_20260510_wikimedia_Tomato_Plant_Leaves_02.jpg.jpg",
+                      "size_bytes":  243143
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_off_coverage_secondary",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato-seedlings-3805.jpg.jpg",
+                      "size_bytes":  275590
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_off_coverage_secondary",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomatoseedlings.jpg.jpg",
+                      "size_bytes":  194225
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_off_coverage_secondary",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato_seedlings_464347374_.jpg.jpg",
+                      "size_bytes":  702546
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "tomato_off_coverage_secondary",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato_seedlings_464355129_.jpg.jpg",
+                      "size_bytes":  283113
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_1263040_tomato_leaf_miner_damage.jpg",
+                      "size_bytes":  134201
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598509_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  124598
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598512_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  194116
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  136316
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  96233
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  102695
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_bugwood_5598519_tomato_russet_mite_symptoms.jpg",
+                      "size_bytes":  203345
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_comparing-diseases-4-canker-tomato-1y51ejs.jpg.jpg",
+                      "size_bytes":  125378
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_SpotSpeckBlightMite-1l4v879.jpg.jpg",
+                      "size_bytes":  113860
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-.jpg",
+                      "size_bytes":  56927
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg",
+                      "size_bytes":  165108
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg",
+                      "size_bytes":  325413
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg",
+                      "size_bytes":  48893
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Tuta_absoluta.jpg.jpg",
+                      "size_bytes":  238347
+                  },
+                  {
+                      "dataset_key":  "tomato__leaf",
+                      "slice":  "unsupported_tomato_unknowns",
+                      "relative_path":  "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\unsupported_tomato_unknowns\\internet_20260510_wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg",
+                      "size_bytes":  209724
+                  }
+              ]
+}
