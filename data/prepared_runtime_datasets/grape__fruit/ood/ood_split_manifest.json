@@ -1,7 +1,19 @@
 {
-  "created_at": "2026-05-06T17:29:09.569870+00:00",
+  "created_at": "2026-05-10T19:48:08.206369+00:00",
   "dev_fraction": 0.4,
   "entries": {
+    "grape_fruit_unknowns/internet_20260510_wikimedia_Black_rot_on_grape.jpg.jpg": {
+      "sha256": "85dece6c9b204dc6171a5dfe41ded6e70460601423d61b031b16d7b02354c480",
+      "size_bytes": 263463,
+      "slice": "grape_fruit_unknowns",
+      "split": "test"
+    },
+    "grape_fruit_unknowns/internet_20260510_wikimedia_Guignardia_bidwellii_black_rot_on_grape_4.jpg.jpg": {
+      "sha256": "f616bd33a8451e9edbe8f635794eb7b4cc43eb1b19d68ec2c39d63f62c504b6a",
+      "size_bytes": 172225,
+      "slice": "grape_fruit_unknowns",
+      "split": "dev"
+    },
     "off_crop_or_root_disease/off_crop_or_root_disease__1.jpg": {
       "sha256": "350b7891f60977c50c6b887b47b0b79afa53c7fea32822eef4cb535b830cc31a",
       "size_bytes": 173924,
@@ -24,7 +36,7 @@
       "sha256": "ddcddff35b672954caf4ec20d484e5803f7d0ed893faecf6bfaf29b9e743a673",
       "size_bytes": 112641,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__161.jpg": {
       "sha256": "ef34dd57f63debd31afd5ef2832e8d9f8246d1730c4bf56afac7c20d53359070",
@@ -252,7 +264,7 @@
       "sha256": "7a762840ed48299d079db20f7cf3317333084d42b1dbb1d94e96c5f8ccbc0056",
       "size_bytes": 86295,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__465_1_.jpg": {
       "sha256": "1bb2649f4aecf1048c70f71828152743f5df29a93f576382a88dc94d5cf1f6ea",
@@ -366,13 +378,13 @@
       "sha256": "c4c6efeaaf4f947caff5d62fc7864db4016a5ed487abc9f7dd4a494b2ecc029e",
       "size_bytes": 54489,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_K_noksanl\u0131k.png": {
       "sha256": "48962a07ee9bf8eb9a65c2431ac9743272427fdd63994b9f0024ade00f56ef28",
       "size_bytes": 483175,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosfor_P__noksankl\u0131\u011f\u0131.png": {
       "sha256": "586f05ffd0db1ca34939a2c67b5a5ee41d7ee84e97f4775597e4d597726e58d3",
@@ -396,7 +408,7 @@
       "sha256": "821c02838d27e11abad075a6a2fbd5a634069435196e949b309386289230f2ae",
       "size_bytes": 20259,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Asmada_g\u00f6vde_\u00e7ukurla\u015fma_vir\u00fcs\u00fc_68.jpg": {
       "sha256": "b32e5358732239108434b1629ce12d682ee54e64896174a732bc5de4b0b06661",
@@ -420,19 +432,19 @@
       "sha256": "16cfe475dc25d31ba0c08c015c1b0a0e39471fd8a7f48ce6f722df387dbb279e",
       "size_bytes": 45197,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_kav_102.jpg": {
       "sha256": "09472b15a126e54854d5294127293cb0fbeb6cb44e2f54e0e8c3bf829e437937",
       "size_bytes": 48651,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_kav_442.jpg": {
       "sha256": "d1635b12094e0518f8687f41424d6449516d52a9dcbd10e720db4816b1e3e904",
       "size_bytes": 116705,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Ba\u011fda_k\u00f6k_uru_218.jpg": {
       "sha256": "9728ac48d0d028dac397a05a0f790c768bd14a8c3bbb62d22a73bab6598b296b",
@@ -468,7 +480,7 @@
       "sha256": "bd905b8bb77d383c94d0824c163352b0ed27bf9ed4e2e396d10627e8bc518160",
       "size_bytes": 30522,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Grapes-Iron-Deficiency-1-scaled.jpg": {
       "sha256": "10a866d2b8d12ebe3ede14929f8ecc5d7c7c18b39f3f5b3477e03dfb5de8e149",
@@ -486,7 +498,7 @@
       "sha256": "03b0529099892943029fbe133ca1d7f56514b5e0ee7523d6bf21612ad4deb090",
       "size_bytes": 41943,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__Potasyummm.jpg": {
       "sha256": "1d731b2679a9e8ba4c20eda00616572b3ca8f95965b2957a01f2ebfa908c4e63",
@@ -504,7 +516,7 @@
       "sha256": "01e9ac5e268cd7c922c39d1ab1288a1876c2562b12d5c5b082f071354cc1a24d",
       "size_bytes": 434392,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir.png": {
       "sha256": "e229333e54d7cae349d6647c75884947483439d245e79c5da72d2ba0c726e0c8",
@@ -534,13 +546,13 @@
       "sha256": "b201e0fd36472c1d2a58eda7ab6e66018b53b5535ca919e5871b0167604a4fcf",
       "size_bytes": 316335,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmada_\u00e7inko_noksanl\u0131\u011f\u01312.png": {
       "sha256": "c00fc9a2cc016e50d2ee47f2b68327f2dfab48946417ab0bab3ac827153c5039",
       "size_bytes": 266634,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__asmda_mg_noksanl\u0131\u011f\u0131.png": {
       "sha256": "c5721ecde426a0332bc46db3f73c035a83e16f99a344a9fab5b8f0739c87044a",
@@ -600,7 +612,7 @@
       "sha256": "ed44e0b9c895f3a82c1552287566de3f2a6ef216b56c19d8b2629be175cdc776",
       "size_bytes": 61796,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fda_yaprakuyuzu.jpg": {
       "sha256": "980a614a8d38076147eaf090715d12b8448eec015b14f6c7ec8c839a97f6595b",
@@ -612,19 +624,19 @@
       "sha256": "e3ea53011c065b6e7b40f583150d6f7c654efb78c257df9bba93036ac13f74f4",
       "size_bytes": 295570,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__ba\u011fuyuzu2.jpg": {
       "sha256": "024bbcd4d564abbd7a8e75b02143413f9dfaf283ab5c5b7e855bf343451c21ea",
       "size_bytes": 79399,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__boron.jpg": {
       "sha256": "a8c5a9b93edef0a82e7b5b02818d6ee5dd39f0463224343c09901d918498cd60",
       "size_bytes": 38594,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__boron2.jpg": {
       "sha256": "9748ec12af08881d8406575041408f1284f9be4b2ebe94ba195c0475e59fedb5",
@@ -636,13 +648,13 @@
       "sha256": "09dffd10f3f620c0e193f63113888c36ef0a1c8caf3ad9130b2251ad4a2c22ef",
       "size_bytes": 24967,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__boron_deficiency.jpg": {
       "sha256": "313d58f08c64d648df68f20216093ad0ab3da669ee05957aa5cc9d77b3a25058",
       "size_bytes": 36109,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__d3d5a75e4fff494eb50feed91eb23436.jpg": {
       "sha256": "0ffb014e0439ba0f36d15033c123430a55d59b345e61977520a4755fa0e14a04",
@@ -654,7 +666,7 @@
       "sha256": "240a9ef0aed1ca44918b7001dff298df7abee808132234d9ea60815ef8903c05",
       "size_bytes": 9391,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__filoksera_ba\u011f\u011f.jpg": {
       "sha256": "e5846526851b17107d981a81a36af601d3980a88a799425abe841e75ae9541e7",
@@ -684,19 +696,19 @@
       "sha256": "2902f546e2a3923c90c6481a65b6f1c9d8c11eaa16f61ddacbd858d9f3b863e8",
       "size_bytes": 39702,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0260.jpg": {
       "sha256": "969f594544d45b33bfb042dae15d683ee3852a17f0345ac82e77392ca6ccaccc",
       "size_bytes": 85255,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__iron_deficiency.jpg": {
       "sha256": "07c808d31a869158e1ee658ea79e545afd7e7e6df7f99d7ca17a6f8cf8fd799d",
       "size_bytes": 36047,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1320751459-612x612.jpg": {
       "sha256": "6a86ae6a51be6e792bd51cb836ee83eda87131b4e18d4d144b28d41c80682bc6",
@@ -708,31 +720,31 @@
       "sha256": "34caebfad240101f0bc2333233e3f14c00dfd27fbbd6568068847baf5ed9f2b0",
       "size_bytes": 60613,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-144191878-612x612.jpg": {
       "sha256": "0493c176b39def45ede4b531eafa25bcf0bbeb84aef273b7d4a998127099c0a2",
       "size_bytes": 37733,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1483464703-612x612.jpg": {
       "sha256": "04602f08ca5245e7e8e542097db2a467d96370dfeb28de158060ceb10ae558e5",
       "size_bytes": 41113,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-2243748606-612x612.jpg": {
       "sha256": "98c916d4cff3eed8370066255fc0f5ae698077aa4643fe5cd3079f25da01dd8f",
       "size_bytes": 49035,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-700678614-612x612.jpg": {
       "sha256": "44b6831dff522e8b7fa193feaea4158bd31784c4aa1239d86d081d79b8d39381",
       "size_bytes": 65694,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-987831222-612x612.jpg": {
       "sha256": "361d4f9d19b3d8ad1fa37ff9653d200ede61fedfdc82263ce530a5c4d79549dd",
@@ -744,7 +756,7 @@
       "sha256": "9e54def5ffffb2c8245578231bed66c02367a7cdadecc7bfb103919f0b09d548",
       "size_bytes": 34824,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__magnes\u0131um_deficiency.jpg": {
       "sha256": "1ffee6e3ca93405012dc6c9b21c79021b5276ddd4931181b3e96b1d2b1755d49",
@@ -756,19 +768,19 @@
       "sha256": "b87d3a81f58464bd8df70912c7cbb98bd09d2682f70a1b717272a46c17182a40",
       "size_bytes": 431285,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mangan_2.jpg": {
       "sha256": "ae57f6d14f7ed537fa33397a6a57af31d840a6cb02d6183704a931328d2aeccb",
       "size_bytes": 52895,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency.jpg": {
       "sha256": "456171fb47a704c851664bd308a6c185b0f954dfec9fc4f7e50a239952c56073",
       "size_bytes": 21545,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency3.jpg": {
       "sha256": "99e16742e9c1ac9013ffeae37775d7fc69e46bcb5744fba9a746f97037e6134d",
@@ -780,7 +792,7 @@
       "sha256": "55534a1e3cedec63038aff5ddcd08ac4b1e01efaeb8603de90ab6e6f7e9d5b58",
       "size_bytes": 44495,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mg_ddeficiency.jpg": {
       "sha256": "4755fd24ec534d4ae78c994e45fde7229ac247ef31b30019a33d5adab766511a",
@@ -804,19 +816,19 @@
       "sha256": "27585fd870b5840caf27b5bba96a73a1cc53a0643a849e0d1e9cac59cd4fb99a",
       "size_bytes": 28862,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__mgg_deficiency.jpg": {
       "sha256": "b62165b67f90e186ef8ed053d23c0df254e9337650c41c995efac6c5891861be",
       "size_bytes": 40169,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__phosphorous_deficiency.jpg": {
       "sha256": "a0a4753e663448f3edc48c6aa0c35e2d103f730bcefecaa9dc8809226a56d967",
       "size_bytes": 14187,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency.jpg": {
       "sha256": "16afe33c43ec9ee79acb3fe197b8d6cf31c904f6da24d2c44e50c08a4501fa67",
@@ -858,7 +870,7 @@
       "sha256": "cc46af9db9def57105cfc4e64bf5a0ad3f2eb2eb03c0966c32148d6eb5162811",
       "size_bytes": 13376,
       "slice": "off_crop_or_root_disease",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny.jpg": {
       "sha256": "8c8e4e128f86c91f96c83a77d908f69c47181a3ac3873e6cc8dd92ecab10d263",
@@ -870,7 +882,7 @@
       "sha256": "1d9e1f72bf9936a5bd0f3bf6f492e24c86c26846175b084ad53764d22330e7d8",
       "size_bytes": 41765,
       "slice": "off_crop_or_root_disease",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny3.jpg": {
       "sha256": "e5eb874562be4c783e4ff3410f8d628de9b6fadb751a96456996f18aade5c6c4",
@@ -1585,6 +1597,12 @@
   "schema_version": "v1_real_ood_split_manifest",
   "seed": 42,
   "slice_summaries": {
+    "grape_fruit_unknowns": {
+      "dev": 1,
+      "split_policy": "slice_stratified",
+      "test": 1,
+      "total": 2
+    },
     "off_crop_or_root_disease": {
       "dev": 59,
       "split_policy": "slice_stratified",
@@ -1606,7 +1624,7 @@
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\ood",
   "split_counts": {
-    "dev": 105,
-    "test": 158
+    "dev": 106,
+    "test": 159
   }
 }

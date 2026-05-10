@@ -1,7 +1,49 @@
 {
-  "created_at": "2026-05-06T17:29:14.377123+00:00",
+  "created_at": "2026-05-10T19:59:40.936109+00:00",
   "dev_fraction": 0.4,
   "entries": {
+    "fruit_failure_cases/internet_20260510_wikimedia_Ripe_Strawberry.JPG.jpg": {
+      "sha256": "35b5c7c0055a982c10437cc306fcb5be3b9a154240400264ca081fa999ee8189",
+      "size_bytes": 101030,
+      "slice": "fruit_failure_cases",
+      "split": "test"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg": {
+      "sha256": "1c8735996f03e7bbd3a4d991b9312cf73d0f1d1c9ef3005ccc0aeea14024366d",
+      "size_bytes": 132641,
+      "slice": "fruit_specific_unknowns",
+      "split": "test"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Moldy_Strawberries.jpg.jpg": {
+      "sha256": "046ce11d8c20e070ae1f0f6b2afee3b0804f2dc73b46f6198f67c36ee811b1c2",
+      "size_bytes": 125356,
+      "slice": "fruit_specific_unknowns",
+      "split": "dev"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Rot_strawberry.jpg.jpg": {
+      "sha256": "2779cadf79447ec0b6896f2057c5904405bc00b015bc415b9f18bf0102f64742",
+      "size_bytes": 26801,
+      "slice": "fruit_specific_unknowns",
+      "split": "test"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Rotting_strawberry.jpg.jpg": {
+      "sha256": "816796927f169e97260b3b977413a3c5d8ef5fa23378fe3bee5151718d2ae6c0",
+      "size_bytes": 163956,
+      "slice": "fruit_specific_unknowns",
+      "split": "dev"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Strawberry_form_defect.JPG.jpg": {
+      "sha256": "dc5fb51ea9f0a140b6588df5d489263b7629e7a0f99f98e9f47d78ef8291f2d7",
+      "size_bytes": 217229,
+      "slice": "fruit_specific_unknowns",
+      "split": "test"
+    },
+    "fruit_specific_unknowns/internet_20260510_wikimedia_Strawberry_mold.jpg.jpg": {
+      "sha256": "2d5a517ecb0c11ae6ca8c69423edfce5ce2bff05d79e0e202809a20bf36de0f5",
+      "size_bytes": 256615,
+      "slice": "fruit_specific_unknowns",
+      "split": "test"
+    },
     "non_plant_misc/non_plant_misc__18033105_432370500467996_8586514008141534402_n.jpg": {
       "sha256": "4d6cd87657bfe78465a8d3425da62d58be611d4b6b493cb2d0c1fd33d4d57d64",
       "size_bytes": 95855,
@@ -72,7 +114,7 @@
       "sha256": "c1eadd46d90b4fc52f9fcea2c65e1566853e98d2381160967c432d07a10833ac",
       "size_bytes": 236353,
       "slice": "non_plant_misc",
-      "split": "test"
+      "split": "dev"
     },
     "non_plant_misc/non_plant_misc__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200011.png": {
       "sha256": "a1d5b857248d61370c5fe30aa67c1eda0d7328f682c5901b45db615625a2082b",
@@ -84,7 +126,7 @@
       "sha256": "5d75b2b7bae804afbedbc616d600ccf598f43ef7e8598d52af11924e47ff116a",
       "size_bytes": 156839,
       "slice": "non_plant_misc",
-      "split": "dev"
+      "split": "test"
     },
     "non_plant_misc/non_plant_misc__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-15_143215.png": {
       "sha256": "1b1b82756a373f7a9fb28be75a34efa6af64425f87b1319529814795e00c352e",
@@ -114,13 +156,13 @@
       "sha256": "c2b2b6bdb9a4d9be0f7842d427e0253e178fc46b1a7686353a2d0a71a1d65ef1",
       "size_bytes": 71694,
       "slice": "non_plant_misc",
-      "split": "test"
+      "split": "dev"
     },
     "non_plant_misc/non_plant_misc__Sitospora_Kanseri_2.jpg": {
       "sha256": "ac5ddc91b4a91c2ce663270848b288f6a58d6d5db7cc94e41f4c42313d53881e",
       "size_bytes": 98359,
       "slice": "non_plant_misc",
-      "split": "dev"
+      "split": "test"
     },
     "non_plant_misc/non_plant_misc__ankara-da-cilek-tarlasi_0f1ad.webp": {
       "sha256": "5302c4e5866c19467c6cfa0227f7e6212b4771548c8866f55ab1fa616f75fa55",
@@ -156,13 +198,13 @@
       "sha256": "31974037b744ea5a2056bb26d3d718f8273f717d4982ceae663afb05f7ca37dd",
       "size_bytes": 530387,
       "slice": "non_plant_misc",
-      "split": "dev"
+      "split": "test"
     },
     "non_plant_misc/non_plant_misc__masa.png": {
       "sha256": "c1d41e01dde42f671276bb765643a1c80016e5835ace80e0070c29b0fd9b5065",
       "size_bytes": 41184,
       "slice": "non_plant_misc",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__250px-Aardbei_Lambada_vruchtrot_Botrytis_cinerea.jpg": {
       "sha256": "b2b21175dea4065696f01bcee0695f41884a0cbea3cc0bcbb5de6ca8f30a01c5",
@@ -1819,6 +1861,18 @@
   "schema_version": "v1_real_ood_split_manifest",
   "seed": 42,
   "slice_summaries": {
+    "fruit_failure_cases": {
+      "dev": 0,
+      "split_policy": "test_only_below_min_per_slice",
+      "test": 1,
+      "total": 1
+    },
+    "fruit_specific_unknowns": {
+      "dev": 2,
+      "split_policy": "slice_stratified",
+      "test": 4,
+      "total": 6
+    },
     "non_plant_misc": {
       "dev": 11,
       "split_policy": "slice_stratified",
@@ -1840,7 +1894,7 @@
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood",
   "split_counts": {
-    "dev": 121,
-    "test": 181
+    "dev": 123,
+    "test": 186
   }
 }

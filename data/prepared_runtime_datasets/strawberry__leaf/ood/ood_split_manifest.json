@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-05-09T19:25:19.140249+00:00",
+  "created_at": "2026-05-10T19:54:39.140662+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "non_plant_misc/non_plant_misc__18033105_432370500467996_8586514008141534402_n.jpg": {
@@ -1825,6 +1825,24 @@
       "size_bytes": 131328,
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260510_wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg": {
+      "sha256": "790429cfabc73a05d8922de2d69337538ed5e50fbdd315128d1aa20bed60f05a",
+      "size_bytes": 291390,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260510_wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg": {
+      "sha256": "9b680b07d6b72333b6fada56bb2fcd4dc6b850840aa7c681f80019f33ad1a1e9",
+      "size_bytes": 366372,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260510_wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg": {
+      "sha256": "8c4986b995535b0d47f0352f63f275ced530fc2c7c59eeaa7fdca02efcf0134d",
+      "size_bytes": 327245,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
     }
   },
   "min_per_slice": 2,
@@ -1854,11 +1872,17 @@
       "split_policy": "slice_stratified",
       "test": 1,
       "total": 2
+    },
+    "strawberry_failure_cases": {
+      "dev": 1,
+      "split_policy": "slice_stratified",
+      "test": 2,
+      "total": 3
     }
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\ood",
   "split_counts": {
-    "dev": 122,
-    "test": 182
+    "dev": 123,
+    "test": 184
   }
 }

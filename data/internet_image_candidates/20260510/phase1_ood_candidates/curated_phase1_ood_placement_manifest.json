@@ -1,0 +1,70 @@
+{
+  "created_at_utc": "2026-05-10T19:54:39.262524+00:00",
+  "per_split_cap": 25,
+  "placements": [
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "tomato_off_coverage_secondary",
+      "title": "File:Tomato-seedlings-3805.jpg",
+      "rationale": "tomato seedling off-coverage",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_off_coverage_secondary\\wikimedia_Tomato-seedlings-3805.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato-seedlings-3805.jpg.jpg",
+      "sha256": "45c60315a672d853b8cafcf489b32844d4b7abaf2a1a20eea89f7e04e2345b82",
+      "width": 1280,
+      "height": 960,
+      "format": "JPEG",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Tomato-seedlings-3805.jpg/1280px-Tomato-seedlings-3805.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ATomato-seedlings-3805.jpg",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": true
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "tomato_off_coverage_secondary",
+      "title": "File:Tomatoseedlings.jpg",
+      "rationale": "tomato seedlings in pots",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_off_coverage_secondary\\wikimedia_Tomatoseedlings.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomatoseedlings.jpg.jpg",
+      "sha256": "3c784598108cb2432af145f724e2fad2a9dd3260faf7b52032264ad663a13890",
+      "width": 1280,
+      "height": 851,
+      "format": "JPEG",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Tomatoseedlings.jpg/1280px-Tomatoseedlings.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ATomatoseedlings.jpg",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": true
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "tomato_off_coverage_secondary",
+      "title": "File:Tomato seedlings (464355129).jpg",
+      "rationale": "transplant seedling context",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_off_coverage_secondary\\wikimedia_Tomato_seedlings_464355129_.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato_seedlings_464355129_.jpg.jpg",
+      "sha256": "24ff5358753accd2d37158ae25675b2229977e2b4b63a91fd454405f5f0fb52b",
+      "width": 1280,
+      "height": 857,
+      "format": "JPEG",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Tomato_seedlings_%28464355129%29.jpg/1280px-Tomato_seedlings_%28464355129%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ATomato_seedlings_%28464355129%29.jpg",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": true
+    },
+    {
+      "dataset_key": "tomato__leaf",
+      "slice": "tomato_off_coverage_secondary",
+      "title": "File:Tomato seedlings (464347374).jpg",
+      "rationale": "seedling transplant context",
+      "candidate_path": "data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_off_coverage_secondary\\wikimedia_Tomato_seedlings_464347374_.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__leaf\\ood\\tomato_off_coverage_secondary\\internet_20260510_wikimedia_Tomato_seedlings_464347374_.jpg.jpg",
+      "sha256": "a39b7bc6d8b7c3dea490310039f7060246ed272d49c3738972b4c78f3517eda4",
+      "width": 1280,
+      "height": 1912,
+      "format": "JPEG",
+      "source_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Tomato_seedlings_%28464347374%29.jpg/1280px-Tomato_seedlings_%28464347374%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "source_page": "https://commons.wikimedia.org/wiki/File%3ATomato_seedlings_%28464347374%29.jpg",
+      "source": "Wikimedia Commons",
+      "needs_visual_review": true
+    }
+  ]
+}
