@@ -595,6 +595,16 @@ Emit report: .runtime_tmp/notebook_output_validation.json
 
 ## Integration Checklist
 
+### Canli Guncelleme Kurali
+
+Bu dokuman yasayan bir rehberdir. `Phase 1`, `Phase 2`, `Phase 3` checklist maddeleri ve `Literature Anchors` tablosu; ilgili CI calistirmalari, notebook ciktilari, scheduled workflow sonuclari veya yeni kabul edilen literatur geldikce bu markdown icinde guncellenmelidir.
+
+Bu dosya kullanilarak bir is tamamlandiginda, son adim olarak internette yeni yapilacak isler ve yeni literatur adaylari icin tarama yapilmali; bulunan uygun maddeler dogrudan bu rehbere islenmelidir.
+
+- Yeni bir automation eklendiginde ilgili checklist maddesi isaretlenmeli ve kisa bir durum notu eklenmelidir.
+- Yeni bir paper kabul edildiginde yalnizca `docs/SOTA_AUTOMATION_GUIDE.md` icindeki uygun literatur tablosu guncellenmelidir.
+- Canonical kaynak sadece bu dosyadir; aday dosyasi tutulmamalidir.
+
 ### Phase 1 Checklist (Tier 1)
 
 - [x] Implement `validate_ood_evidence_consistency.py`; add to CI post-training
@@ -605,27 +615,25 @@ Emit report: .runtime_tmp/notebook_output_validation.json
  - [x] Implement CI lint/type/test gate (ruff, mypy, pytest); add pre-commit hooks
  - [x] Add Dependabot/scheduled action for dependency updates
 
-**Automated SOTA updates:** The repository runs a scheduled workflow that queries arXiv for recent papers matching a small set of repo-relevant queries and pushes a candidate literature report to the current branch. See `scripts/update_sota_references.py` and `.github/workflows/sota_auto_update.yml`.
+**Automated SOTA updates:** The repository runs a scheduled workflow that queries arXiv for recent papers matching a small set of repo-relevant queries and helps refresh this guide directly. See `scripts/update_sota_references.py` and `.github/workflows/sota_auto_update.yml`.
 
 #### Automated SOTA Literature Updates
 
-- Purpose: keep the SOTA guidance and literature anchors fresh by surfacing recent, relevant papers for reviewer consideration.
+- Purpose: keep the SOTA guidance and literature anchors fresh by surfacing recent, relevant papers for reviewer consideration, then updating this markdown directly.
 - Files:
-   - `scripts/update_sota_references.py` queries arXiv for configured keywords and writes `docs/SOTA_AUTOMATION_UPDATES.md`.
-   - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and pushes the generated candidate report to the current branch.
+   - `scripts/update_sota_references.py` queries arXiv for configured keywords and produces update candidates for this guide.
+   - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and opens the resulting changes for review against this guide.
 - Trigger: weekly schedule (workflow cron), or manual `workflow_dispatch`.
-- Automatic push policy: the script itself does not push. The scheduled workflow may automatically commit and push `docs/SOTA_AUTOMATION_UPDATES.md` to the current branch. It must not create a new branch, open an automatic PR, auto-merge, or directly copy accepted literature into the canonical guide.
+- Automatic push policy: the script itself does not push. The scheduled workflow may surface or commit changes for review, but it must not create a new branch, auto-merge, or bypass review before this guide is updated.
 - Evidence scope: work derived from this guide should be literature-grounded where it changes ML methods, evaluation policy, threshold logic, or data-curation guidance. Repo wiring, CI scheduling, report formatting, and notebook/automation ergonomics are engineering adaptations; document them as current repo behavior or engineering inference instead of claiming they are directly literature-derived.
-- Reviewer flow: the workflow updates `docs/SOTA_AUTOMATION_UPDATES.md` in-place with candidate literature. Reviewers should:
-   1. Inspect `docs/SOTA_AUTOMATION_UPDATES.md` for paper relevance.
- 2. If acceptable, copy approved entries into `docs/SOTA_AUTOMATION_GUIDE.md` under the appropriate Literature Anchors section.
-- Local test: run the script locally to generate the report:
+- Reviewer flow: the workflow or local run surfaces candidate literature, and reviewers should update the relevant Literature Anchors section in this file directly.
+- Local test: run the script locally to generate candidate suggestions for this guide:
 
 ```bash
-python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_UPDATES.md
+python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_GUIDE.md
 ```
 
-Note: the script only writes a candidate report; human review is required before merging any literature into the canonical guide.
+Note: the script only suggests updates; human review is required before merging any literature into the canonical guide.
 
 ### Phase 2 Checklist (Tier 2)
 
