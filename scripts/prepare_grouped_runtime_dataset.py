@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import hashlib
 import itertools
 import json
 import math
+import os
 import re
 import shutil
 from collections import defaultdict
@@ -44,6 +46,11 @@ BIOCLIP_REVIEW_MIN = 0.950
 DINO_CROSS_CLASS_BLOCK_MIN = 0.990
 BIOCLIP_CROSS_CLASS_BLOCK_MIN = 0.980
 DEFAULT_NEIGHBORS = 8
+DEFAULT_CPU_EMBEDDING_BATCH_SIZE = 4
+DEFAULT_T4_EMBEDDING_BATCH_SIZE = 4
+DEFAULT_SMALL_GPU_EMBEDDING_BATCH_SIZE = 6
+DEFAULT_MID_GPU_EMBEDDING_BATCH_SIZE = 8
+DEFAULT_LARGE_GPU_EMBEDDING_BATCH_SIZE = 12
 GROUPED_SPLIT_POLICY = "grouped_family_canonical_eval_60_20_20"
 HUMAN_REVIEW_PACKET_FILENAME = "human_review_packet.json"
 LABEL_REVIEW_SUMMARY_FILENAME = "label_review_summary.json"
@@ -776,6 +783,69 @@ def _resolve_embedding_device(device: str) -> str:
     return requested
 
 
+def _system_memory_gb() -> Optional[float]:
+    try:
+        pages = os.sysconf("SC_PHYS_PAGES")
+        page_size = os.sysconf("SC_PAGE_SIZE")
+        if pages and page_size:
+            return float(pages * page_size) / (1024**3)
+    except (AttributeError, OSError, ValueError):
+        return None
+    return None
+
+
+def resolve_safe_embedding_batch_size(device: str, requested_batch_size: Optional[int] = None) -> int:
+    """Choose a conservative Notebook 0 embedding batch size for Colab RAM limits."""
+    if requested_batch_size is not None:
+        return max(1, int(requested_batch_size))
+
+    resolved_device = _resolve_embedding_device(device)
+    if not str(resolved_device).startswith("cuda"):
+        return DEFAULT_CPU_EMBEDDING_BATCH_SIZE
+
+    import torch
+
+    try:
+        props = torch.cuda.get_device_properties(0)
+        vram_gb = float(getattr(props, "total_memory", 0.0)) / (1024**3)
+        gpu_name = str(getattr(props, "name", "") or "").lower()
+    except Exception:
+        return DEFAULT_T4_EMBEDDING_BATCH_SIZE
+
+    system_gb = _system_memory_gb()
+    if "t4" in gpu_name or vram_gb <= 16.5 or (system_gb is not None and system_gb <= 14.0):
+        return DEFAULT_T4_EMBEDDING_BATCH_SIZE
+    if vram_gb <= 24.0:
+        return DEFAULT_SMALL_GPU_EMBEDDING_BATCH_SIZE
+    if vram_gb <= 35.0:
+        return DEFAULT_MID_GPU_EMBEDDING_BATCH_SIZE
+    return DEFAULT_LARGE_GPU_EMBEDDING_BATCH_SIZE
+
+
+def _release_embedding_batch_memory(device: str) -> None:
+    gc.collect()
+    if str(device).startswith("cuda"):
+        try:
+            import torch
+
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+
+def _is_cuda_oom(exc: BaseException) -> bool:
+    message = str(exc).lower()
+    if "cuda" in message and ("out of memory" in message or "oom" in message):
+        return True
+    try:
+        import torch
+
+        return isinstance(exc, torch.cuda.OutOfMemoryError)
+    except Exception:
+        return False
+
+
 def _load_dinov3_components(model_id: str, *, device: str = "cpu") -> tuple[Any, Any]:
     from transformers import AutoImageProcessor, AutoModel
 
@@ -844,8 +914,9 @@ def _encode_dinov3_with_components(
 
     embeddings: List[np.ndarray] = []
     total = len(paths)
-    for start in range(0, len(paths), batch_size):
-        batch_paths = paths[start : start + batch_size]
+    effective_batch_size = max(1, int(batch_size))
+    for start in range(0, len(paths), effective_batch_size):
+        batch_paths = paths[start : start + effective_batch_size]
         images = []
         for path in batch_paths:
             with Image.open(path) as raw:
@@ -861,6 +932,8 @@ def _encode_dinov3_with_components(
                     batch = outputs.last_hidden_state[:, 0]
         batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
+        del images, inputs, outputs, batch
+        _release_embedding_batch_memory(device)
         if callable(progress_fn):
             progress_fn(min(start + len(batch_paths), total), total)
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
@@ -892,8 +965,9 @@ def _encode_bioclip_with_components(
 
     embeddings: List[np.ndarray] = []
     total = len(paths)
-    for start in range(0, len(paths), batch_size):
-        batch_paths = paths[start : start + batch_size]
+    effective_batch_size = max(1, int(batch_size))
+    for start in range(0, len(paths), effective_batch_size):
+        batch_paths = paths[start : start + effective_batch_size]
         tensors = []
         for path in batch_paths:
             with Image.open(path) as raw:
@@ -905,9 +979,36 @@ def _encode_bioclip_with_components(
                 batch = model.encode_image(image_tensor)
         batch = torch.nn.functional.normalize(batch, dim=-1).to(dtype=torch.float32)
         embeddings.append(batch.detach().cpu().numpy())
+        del tensors, image_tensor, batch
+        _release_embedding_batch_memory(device)
         if callable(progress_fn):
             progress_fn(min(start + len(batch_paths), total), total)
     return np.concatenate(embeddings, axis=0) if embeddings else np.empty((0, 0), dtype=np.float32)
+
+
+def _encode_with_oom_retries(
+    encode_fn: Callable[..., np.ndarray],
+    *,
+    paths: Sequence[Path],
+    batch_size: int,
+    progress_fn: Optional[Callable[[str], None]],
+    label: str,
+    **kwargs: Any,
+) -> np.ndarray:
+    current_batch_size = max(1, int(batch_size))
+    while True:
+        try:
+            return encode_fn(paths, batch_size=current_batch_size, **kwargs)
+        except RuntimeError as exc:
+            if not _is_cuda_oom(exc) or current_batch_size <= 1:
+                raise
+            next_batch_size = max(1, current_batch_size // 2)
+            _progress(
+                progress_fn,
+                f"{label} CUDA OOM at batch_size={current_batch_size}; retrying with batch_size={next_batch_size}.",
+            )
+            _release_embedding_batch_memory(str(kwargs.get("device", "")))
+            current_batch_size = next_batch_size
 
 
 def _compute_neighbor_pairs(
@@ -1422,8 +1523,6 @@ def build_grouped_dataset_plan(
     under_min_eval_policy: str = "block",
     progress_fn: Optional[Callable[[str], None]] = None,
 ) -> Dict[str, Any]:
-    import gc
-
     import torch
 
     requested_device = str(device or "cpu").strip() or "cpu"
@@ -1434,7 +1533,7 @@ def build_grouped_dataset_plan(
             f"Requested embedding device '{requested_device}' is unavailable; falling back to '{device}'.",
         )
     amp_dtype = _resolve_amp_dtype(device)
-    effective_batch_size = max(1, int(batch_size))
+    effective_batch_size = resolve_safe_embedding_batch_size(device, requested_batch_size=batch_size)
     _progress(
         progress_fn,
         f"Embedding device={device} requested_device={requested_device} batch_size={effective_batch_size}.",
@@ -1514,8 +1613,10 @@ def build_grouped_dataset_plan(
         if len(paths) < 2:
             continue
         _progress(progress_fn, f"Encoding DINOv3 embeddings for class '{normalized_class_name}'.")
-        dino_embeddings = _encode_dinov3_with_components(
-            paths,
+        dino_embeddings = _encode_with_oom_retries(
+            _encode_dinov3_with_components,
+            paths=paths,
+            label=f"DINOv3 class '{normalized_class_name}'",
             processor=dino_processor,
             model=dino_model,
             batch_size=effective_batch_size,
@@ -1582,8 +1683,10 @@ def build_grouped_dataset_plan(
                 progress_fn,
                 f"Encoding BioCLIP refinement embeddings for class '{normalized_class_name}' ({len(unique_bioclip_paths)} images).",
             )
-            bioclip_embeddings = _encode_bioclip_with_components(
-                [Path(record_by_path[path].absolute_path) for path in unique_bioclip_paths],
+            bioclip_embeddings = _encode_with_oom_retries(
+                _encode_bioclip_with_components,
+                paths=[Path(record_by_path[path].absolute_path) for path in unique_bioclip_paths],
+                label=f"BioCLIP class '{normalized_class_name}'",
                 preprocess_val=bioclip_preprocess,
                 model=bioclip_model,
                 batch_size=effective_batch_size,

@@ -17,6 +17,7 @@ from scripts.prepare_grouped_runtime_dataset import (
     format_human_review_packet,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
+    resolve_safe_embedding_batch_size,
     _estimate_grouped_split_counts,
     _has_synthetic_hint,
     _infer_source_like_group,
@@ -147,6 +148,27 @@ def test_resolve_embedding_device_falls_back_when_cuda_unavailable(monkeypatch):
     assert _resolve_embedding_device("cuda") == "cpu"
     assert _resolve_embedding_device("cuda:0") == "cpu"
     assert _resolve_embedding_device("cpu") == "cpu"
+
+
+def test_resolve_safe_embedding_batch_size_uses_t4_safe_default(monkeypatch):
+    import torch
+
+    class _Props:
+        name = "Tesla T4"
+        total_memory = 15 * 1024**3
+
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+    monkeypatch.setattr(torch.cuda, "get_device_properties", lambda _index: _Props())
+
+    assert resolve_safe_embedding_batch_size("cuda") == 4
+
+
+def test_resolve_safe_embedding_batch_size_respects_manual_override(monkeypatch):
+    import torch
+
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: True)
+
+    assert resolve_safe_embedding_batch_size("cuda", requested_batch_size=2) == 2
 
 
 def test_build_grouped_dataset_plan_blocks_cross_class_exact_duplicate(tmp_path: Path, monkeypatch):
