@@ -1,0 +1,25 @@
+{
+  "notebook": "2_train_continual_sd_lora_adapter.ipynb",
+  "run_id": "strawberry_fruit_2026-05-11_07-36-47",
+  "status": {
+    "optimization_campaign": {
+      "campaign_json": "/content/bitirmeprojesi/runs/_index/notebook_optimization_campaigns/strawberry__fruit__e25688212c759ebc.json",
+      "campaign_seed": "strawberry__fruit__e25688212c759ebc",
+      "cohort_key": "",
+      "dataset_lineage_key": "strawberry__fruit",
+      "eligible_run_count": 0,
+      "executed_run_count": 0,
+      "frontier_count": 0,
+      "frontier_run_ids": [],
+      "last_completed_run_id": "",
+      "mode": "continue",
+      "next_proposal_rank": null,
+      "next_proposal_signature": "",
+      "selected_proposal_rank": null,
+      "selected_proposal_signature": "",
+      "status": "bootstrap_pending"
+    },
+    "phase": "optimization_campaign_resolved"
+  },
+  "ts": "2026-05-11T07:39:38.821135+00:00"
+}
