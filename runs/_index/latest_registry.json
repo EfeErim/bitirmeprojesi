@@ -1,11 +1,11 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-11T12:18:05.228584+00:00",
+  "generated_at": "2026-05-11T12:29:05.416542+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": true,
-  "trial_count": 11,
+  "trial_count": 14,
   "canonical_count": 0,
-  "backfilled_count": 11,
+  "backfilled_count": 14,
   "cohort_count": 6,
   "paths": {
     "trials_jsonl": "runs\\_index\\trials.jsonl",
@@ -43,7 +43,7 @@
     },
     {
       "cohort_key": "strawberry__fruit::strawberry::fruit::continual_sd_lora",
-      "run_count": 1,
+      "run_count": 4,
       "comparability": {
         "dataset_lineage_key": "strawberry__fruit",
         "crop_name": "strawberry",

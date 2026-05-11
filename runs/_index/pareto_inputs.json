@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-11T12:18:05.228584+00:00",
+  "generated_at": "2026-05-11T12:29:05.416542+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "cohort_count": 6,
   "cohorts": [
@@ -242,7 +242,7 @@
         "backbone_model_name": "",
         "cohort_key": "strawberry__fruit::strawberry::fruit::continual_sd_lora"
       },
-      "run_count": 1,
+      "run_count": 4,
       "runs": [
         {
           "run_id": "strawberry_fruit_2026-05-06_05-46-28",
@@ -293,6 +293,156 @@
             "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-06_05-46-28\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "strawberry_fruit_2026-05-11_07-36-47",
+          "run_label": "strawberry_fruit_2026-05-11_07-36-47",
+          "created_at": "2026-05-11T07:39:38.973063+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.8116592168807983,
+            "classification.balanced_accuracy": 0.7947237405426405,
+            "classification.macro_f1": 0.7689813775548426,
+            "classification.weighted_f1": 0.8180015378957155,
+            "classification.classification_samples": 223,
+            "ood.ood_auroc": 0.9251596684332112,
+            "ood.ood_false_positive_rate": 0.484304932735426,
+            "ood.sure_ds_f1": 0.2996328029375765,
+            "ood.conformal_empirical_coverage": 0.9461883408071748,
+            "ood.conformal_avg_set_size": 2.381165919282511,
+            "ood.ood_samples": 132,
+            "ood.in_distribution_samples": 223
+          },
+          "objective_directions": {
+            "classification.accuracy": "maximize",
+            "classification.balanced_accuracy": "maximize",
+            "classification.macro_f1": "maximize",
+            "classification.weighted_f1": "maximize",
+            "ood.ood_auroc": "maximize",
+            "ood.sure_ds_f1": "maximize",
+            "ood.conformal_empirical_coverage": "maximize",
+            "ood.ood_false_positive_rate": "minimize",
+            "ood.conformal_avg_set_size": "minimize",
+            "training_cost.optimizer_steps": "minimize",
+            "training_cost.global_step": "minimize",
+            "training_cost.checkpoint_count": "minimize"
+          },
+          "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-36-47\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "strawberry_fruit_2026-05-11_07-41-08",
+          "run_label": "strawberry_fruit_2026-05-11_07-41-08",
+          "created_at": "2026-05-11T07:43:41.222575+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.8116592168807983,
+            "classification.balanced_accuracy": 0.7946978413552275,
+            "classification.macro_f1": 0.7701728717347017,
+            "classification.weighted_f1": 0.8149342085073285,
+            "classification.classification_samples": 223,
+            "ood.ood_auroc": 0.9172102187797255,
+            "ood.ood_false_positive_rate": 0.7533632286995515,
+            "ood.sure_ds_f1": 0.3048289738430584,
+            "ood.conformal_empirical_coverage": 0.9730941704035875,
+            "ood.conformal_avg_set_size": 2.286995515695067,
+            "ood.ood_samples": 132,
+            "ood.in_distribution_samples": 223
+          },
+          "objective_directions": {
+            "classification.accuracy": "maximize",
+            "classification.balanced_accuracy": "maximize",
+            "classification.macro_f1": "maximize",
+            "classification.weighted_f1": "maximize",
+            "ood.ood_auroc": "maximize",
+            "ood.sure_ds_f1": "maximize",
+            "ood.conformal_empirical_coverage": "maximize",
+            "ood.ood_false_positive_rate": "minimize",
+            "ood.conformal_avg_set_size": "minimize",
+            "training_cost.optimizer_steps": "minimize",
+            "training_cost.global_step": "minimize",
+            "training_cost.checkpoint_count": "minimize"
+          },
+          "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-41-08\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "strawberry_fruit_2026-05-11_07-46-42",
+          "run_label": "strawberry_fruit_2026-05-11_07-46-42",
+          "created_at": "2026-05-11T07:49:41.560448+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.8161435127258301,
+            "classification.balanced_accuracy": 0.7941604332164077,
+            "classification.macro_f1": 0.7816108783051982,
+            "classification.weighted_f1": 0.8200769266896968,
+            "classification.classification_samples": 223,
+            "ood.ood_auroc": 0.9178896589210491,
+            "ood.ood_false_positive_rate": 0.8071748878923767,
+            "ood.sure_ds_f1": 0.41491726352185726,
+            "ood.conformal_empirical_coverage": 0.9730941704035875,
+            "ood.conformal_avg_set_size": 2.10762331838565,
+            "ood.ood_samples": 132,
+            "ood.in_distribution_samples": 223
+          },
+          "objective_directions": {
+            "classification.accuracy": "maximize",
+            "classification.balanced_accuracy": "maximize",
+            "classification.macro_f1": "maximize",
+            "classification.weighted_f1": "maximize",
+            "ood.ood_auroc": "maximize",
+            "ood.sure_ds_f1": "maximize",
+            "ood.conformal_empirical_coverage": "maximize",
+            "ood.ood_false_positive_rate": "minimize",
+            "ood.conformal_avg_set_size": "minimize",
+            "training_cost.optimizer_steps": "minimize",
+            "training_cost.global_step": "minimize",
+            "training_cost.checkpoint_count": "minimize"
+          },
+          "parameters": {
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-46-42\\outputs\\colab_notebook_training\\artifacts"
         }
       ]
     },

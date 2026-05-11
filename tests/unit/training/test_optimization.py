@@ -194,9 +194,15 @@ def test_build_pareto_frontiers_keeps_only_non_dominated_runs():
     payload = build_pareto_frontiers(trials)
     cohort = payload["cohorts"][0]
 
-    assert cohort["eligible_run_count"] == 4
-    assert cohort["excluded_run_count"] == 1
-    assert set(cohort["frontier_run_ids"]) == {"run2", "run3"}
+    assert cohort["eligible_run_count"] == 5
+    assert cohort["excluded_run_count"] == 0
+    assert set(cohort["frontier_run_ids"]) == {"run5"}
+
+    strict_payload = build_pareto_frontiers(trials, require_readiness_passed=True)
+    strict_cohort = strict_payload["cohorts"][0]
+    assert strict_cohort["eligible_run_count"] == 4
+    assert strict_cohort["excluded_run_count"] == 1
+    assert set(strict_cohort["frontier_run_ids"]) == {"run2", "run3"}
 
 
 def test_build_bayesian_recommendations_proposes_new_parameters():

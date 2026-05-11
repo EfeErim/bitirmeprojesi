@@ -389,7 +389,7 @@ def build_pareto_frontiers(
     trials: Iterable[Mapping[str, Any]],
     *,
     objective_names: Sequence[str] = DEFAULT_PARETO_OBJECTIVES,
-    require_readiness_passed: bool = True,
+    require_readiness_passed: bool = False,
 ) -> JsonDict:
     grouped = group_trials_by_cohort(trials)
     cohorts: List[JsonDict] = []
@@ -474,9 +474,15 @@ def build_pareto_frontiers(
 def _encode_parameters(parameters: Mapping[str, Any], dimensions: Sequence[SearchDimension]) -> Optional[np.ndarray]:
     encoded: List[float] = []
     for dimension in dimensions:
-        if dimension.name not in parameters:
-            return None
-        component = dimension.encode(parameters.get(dimension.name))
+        if dimension.name in parameters:
+            raw_value = parameters.get(dimension.name)
+        else:
+            # Backfilled notebook runs may omit some hyperparameters in traceability payloads.
+            # Use a deterministic midpoint/default so historical runs can still inform ranking.
+            raw_value = _heuristic_dimension_value(dimension, 0.5)
+        component = dimension.encode(raw_value)
+        if component is None:
+            component = dimension.encode(_heuristic_dimension_value(dimension, 0.5))
         if component is None:
             return None
         encoded.extend(component)
@@ -725,7 +731,7 @@ def build_bayesian_recommendations(
     proposal_count: int = 3,
     candidate_pool_size: int = 256,
     random_seed: int = 42,
-    require_readiness_passed: bool = True,
+    require_readiness_passed: bool = False,
 ) -> JsonDict:
     grouped = group_trials_by_cohort(trials)
     dimensions = resolve_search_space(search_space_payload)
