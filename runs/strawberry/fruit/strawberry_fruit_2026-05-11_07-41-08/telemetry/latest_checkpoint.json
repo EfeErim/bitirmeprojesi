@@ -1,0 +1,9 @@
+{
+  "name": "ckpt_e12_s250_20260511_074249_085320",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_fruit_2026-05-11_07-41-08/checkpoints/ckpt_e12_s250_20260511_074249_085320/training_checkpoint",
+  "created_at": "2026-05-11T07:42:50.656646+00:00",
+  "global_step": 250,
+  "epoch": 12,
+  "reason": "batch_250",
+  "is_best": false
+}
