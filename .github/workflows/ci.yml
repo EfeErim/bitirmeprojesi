@@ -78,6 +78,15 @@ jobs:
       - name: Validate adapter smoke contracts
         run: python scripts/colab_adapter_smoke_test.py --adapter-root models/adapters --output .runtime_tmp/adapter_smoke_test.json --strict
 
+      - name: Validate adapter metadata completeness
+        run: python scripts/validate_adapter_metadata_completeness.py --adapter-root models/adapters --output .runtime_tmp/adapter_metadata_completeness.json
+
+      - name: Monitor dataset integrity
+        run: python scripts/monitor_dataset_integrity.py --root data/prepared_runtime_datasets --output .runtime_tmp/dataset_integrity.json
+
+      - name: Validate notebook outputs
+        run: python scripts/validate_notebook_outputs.py --output .runtime_tmp/notebook_output_validation.json
+
       - name: Validate dataset layouts (if present)
         run: |
           if [ -d "data/prepared_runtime_datasets" ]; then
@@ -97,6 +106,11 @@ jobs:
             scripts/validate_router_calibration_stability.py \
             scripts/colab_checkpointing.py \
             scripts/colab_adapter_smoke_test.py \
+            scripts/detect_router_threshold_drift.py \
+            scripts/index_training_runs.py \
+            scripts/monitor_dataset_integrity.py \
+            scripts/validate_adapter_metadata_completeness.py \
+            scripts/validate_notebook_outputs.py \
             scripts/colab_dataset_layout.py \
             scripts/colab_live_telemetry.py \
             scripts/colab_notebook_helpers.py \
@@ -143,6 +157,13 @@ jobs:
 
       - name: Capture orchestration benchmarks
         run: python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json
+
+      - name: Build run lineage registry
+        run: python scripts/index_training_runs.py --runs-root runs --output-root .runtime_tmp/run_index
+
+      - name: Detect router threshold drift
+        if: github.event_name == 'schedule'
+        run: python scripts/detect_router_threshold_drift.py --root runs --output .runtime_tmp/router_drift_report.json
 
   cleanup:
     runs-on: ubuntu-latest

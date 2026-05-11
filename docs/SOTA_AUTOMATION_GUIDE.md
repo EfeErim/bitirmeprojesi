@@ -601,9 +601,9 @@ Emit report: .runtime_tmp/notebook_output_validation.json
 - [x] Implement `validate_router_calibration_stability.py`; integrate into PR checks
 - [x] Enhance `colab_adapter_smoke_test.py` with contract validation; add to CI
 - [x] Document passing criteria in each script's docstring
-- [ ] Add all three scripts to [AGENTS.md](../AGENTS.md) validation defaults
- - [ ] Implement CI lint/type/test gate (ruff, mypy, pytest); add pre-commit hooks
- - [ ] Add Dependabot/scheduled action for dependency updates
+- [x] Add all three scripts to [AGENTS.md](../AGENTS.md) validation defaults
+ - [x] Implement CI lint/type/test gate (ruff, mypy, pytest); add pre-commit hooks
+ - [x] Add Dependabot/scheduled action for dependency updates
 
 **Automated SOTA updates:** The repository runs a scheduled workflow that queries arXiv for recent papers matching a small set of repo-relevant queries and pushes a candidate literature report to the current branch. See `scripts/update_sota_references.py` and `.github/workflows/sota_auto_update.yml`.
 
@@ -629,19 +629,19 @@ Note: the script only writes a candidate report; human review is required before
 
 ### Phase 2 Checklist (Tier 2)
 
-- [ ] Implement `monitor_dataset_integrity.py` with leakage detection
-- [ ] Implement `validate_adapter_metadata_completeness.py`
-- [ ] Extend `evaluate_router_part_surface.py` to full crop+part risk-coverage
-- [ ] Add reports to `.runtime_tmp/` with clear pass/fail indicators
-- [ ] Update skill guidance in `skills/aads-repo-hygiene/SKILL.md`
+- [x] Implement `monitor_dataset_integrity.py` with leakage detection
+- [x] Implement `validate_adapter_metadata_completeness.py`
+- [x] Extend `evaluate_router_part_surface.py` to full crop+part risk-coverage
+- [x] Add reports to `.runtime_tmp/` with clear pass/fail indicators
+- [x] Update skill guidance in `skills/aads-repo-hygiene/SKILL.md`
 
 ### Phase 3 Checklist (Tier 3)
 
-- [ ] Enhance `index_training_runs.py` with full lineage chain + manifest
-- [ ] Implement `detect_router_threshold_drift.py` with statistical tests
-- [ ] Implement `validate_notebook_outputs.py` with per-notebook checks
-- [ ] Build summary dashboard linking runs → adapters → readiness verdicts
-- [ ] Add weekly drift detection to `.github/workflows/ci.yml` schedule
+- [x] Enhance `index_training_runs.py` with full lineage chain + manifest
+- [x] Implement `detect_router_threshold_drift.py` with statistical tests
+- [x] Implement `validate_notebook_outputs.py` with per-notebook checks
+- [x] Build summary dashboard linking runs → adapters → readiness verdicts
+- [x] Add weekly drift detection to `.github/workflows/ci.yml` schedule
 
 ---
 

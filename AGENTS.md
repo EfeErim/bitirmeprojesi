@@ -117,6 +117,11 @@ Start with the narrowest relevant subset:
 - `.\scripts\python.cmd scripts/validate_config_schema.py`
 - `.\scripts\python.cmd scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json`
 - `.\scripts\python.cmd scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json`
+- `.\scripts\python.cmd scripts/colab_adapter_smoke_test.py --adapter-root models/adapters --output .runtime_tmp/adapter_smoke_test.json --strict`
+- `.\scripts\python.cmd scripts/monitor_dataset_integrity.py --root data/prepared_runtime_datasets --output .runtime_tmp/dataset_integrity.json`
+- `.\scripts\python.cmd scripts/validate_adapter_metadata_completeness.py --adapter-root models/adapters --output .runtime_tmp/adapter_metadata_completeness.json`
+- `.\scripts\python.cmd scripts/validate_notebook_outputs.py --output .runtime_tmp/notebook_output_validation.json`
+- `.\scripts\python.cmd scripts/detect_router_threshold_drift.py --root runs --output .runtime_tmp/router_drift_report.json`
 - `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>`
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`

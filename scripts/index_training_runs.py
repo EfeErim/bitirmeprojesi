@@ -15,9 +15,9 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.shared.json_utils import read_json, write_json
-from src.training.services.optimization import build_bayesian_recommendations, build_pareto_frontiers
-from src.training.services.traceability import (
+from src.shared.json_utils import read_json, write_json  # noqa: E402
+from src.training.services.optimization import build_bayesian_recommendations, build_pareto_frontiers  # noqa: E402
+from src.training.services.traceability import (  # noqa: E402
     build_experiment_manifest,
     build_optimization_record,
     load_authoritative_artifacts_from_root,
@@ -38,7 +38,7 @@ def _is_under(path: Path, root: Path) -> bool:
     try:
         path.resolve().relative_to(root.resolve())
         return True
-    except Exception as exc:
+    except Exception:
         import logging
         logging.exception('Unhandled exception')
         raise
@@ -498,6 +498,85 @@ def _render_automatic_wins_markdown(
     return "\n".join(lines)
 
 
+def _build_lineage_report(trials: List[JsonDict]) -> JsonDict:
+    adapters: List[JsonDict] = []
+    for trial in trials:
+        registry_source = dict(trial.get("registry_source", {})) if isinstance(trial.get("registry_source"), dict) else {}
+        manifest = dict(trial.get("experiment_manifest", {})) if isinstance(trial.get("experiment_manifest"), dict) else {}
+        comparability = dict(trial.get("comparability", {})) if isinstance(trial.get("comparability"), dict) else {}
+        status = dict(trial.get("status", {})) if isinstance(trial.get("status"), dict) else {}
+        artifacts = manifest.get("artifacts", {}) if isinstance(manifest.get("artifacts"), dict) else {}
+        adapter_export_path = (
+            artifacts.get("adapter_export_path")
+            or artifacts.get("adapter_dir")
+            or trial.get("adapter_export_path")
+            or ""
+        )
+        adapters.append(
+            {
+                "run_id": trial.get("run_id"),
+                "crop_name": comparability.get("crop_name"),
+                "part_name": comparability.get("part_name"),
+                "dataset_key": comparability.get("dataset_key") or manifest.get("dataset_key"),
+                "record_quality": trial.get("record_quality"),
+                "artifact_root": registry_source.get("artifact_root"),
+                "adapter_export_path": adapter_export_path,
+                "readiness_status": status.get("readiness_status"),
+                "readiness_evidence_path": artifacts.get("production_readiness") or artifacts.get("production_readiness_json") or "",
+            }
+        )
+    missing_lineage = [
+        item
+        for item in adapters
+        if not item.get("artifact_root") or not item.get("readiness_status")
+    ]
+    return {
+        "schema_version": "v1_artifact_lineage_report",
+        "generated_at": _utc_now_iso(),
+        "adapter_count": len(adapters),
+        "missing_lineage_count": len(missing_lineage),
+        "adapters": adapters,
+    }
+
+
+def _render_summary_dashboard(latest_registry: JsonDict, lineage_report: JsonDict) -> str:
+    lines = [
+        "# Run Registry Dashboard",
+        "",
+        f"- Generated at: `{latest_registry.get('generated_at', '')}`",
+        f"- Indexed trials: `{latest_registry.get('trial_count', 0)}`",
+        f"- Comparable cohorts: `{latest_registry.get('cohort_count', 0)}`",
+        f"- Adapter lineage rows: `{lineage_report.get('adapter_count', 0)}`",
+        f"- Missing lineage rows: `{lineage_report.get('missing_lineage_count', 0)}`",
+        "",
+        "## Adapters To Readiness",
+        "",
+        "| Run ID | Crop | Part | Readiness | Artifact Root |",
+        "| --- | --- | --- | --- | --- |",
+    ]
+    adapters = list(lineage_report.get("adapters", []) or [])
+    if not adapters:
+        lines.append("| n/a | n/a | n/a | n/a | n/a |")
+    for adapter in adapters:
+        if not isinstance(adapter, dict):
+            continue
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    str(adapter.get("run_id", "") or ""),
+                    str(adapter.get("crop_name", "") or ""),
+                    str(adapter.get("part_name", "") or ""),
+                    str(adapter.get("readiness_status", "") or ""),
+                    f"`{adapter.get('artifact_root', '') or ''}`",
+                ]
+            )
+            + " |"
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
 def write_registry(
     *,
     trials: Iterable[JsonDict],
@@ -569,12 +648,21 @@ def write_registry(
     automatic_wins_markdown_path = root / AUTOMATIC_WINS_FILENAME
     automatic_wins_markdown_path.write_text(automatic_wins_markdown, encoding="utf-8")
     latest_registry_payload["paths"]["automatic_wins_markdown"] = str(automatic_wins_markdown_path)
+    lineage_report = _build_lineage_report(materialized_trials)
+    lineage_report_path = write_json(root / "artifact_lineage_report.json", lineage_report, ensure_ascii=False)
+    latest_registry_payload["paths"]["artifact_lineage_report_json"] = str(lineage_report_path)
+    summary_dashboard = _render_summary_dashboard(latest_registry_payload, lineage_report)
+    summary_dashboard_path = root / "summary_dashboard.md"
+    summary_dashboard_path.write_text(summary_dashboard, encoding="utf-8")
+    latest_registry_payload["paths"]["summary_dashboard_markdown"] = str(summary_dashboard_path)
     latest_registry_path = write_json(root / "latest_registry.json", latest_registry_payload, ensure_ascii=False)
     result = {
         "trials_jsonl": trials_jsonl,
         "pareto_inputs_json": pareto_inputs_path,
         "pareto_frontiers_json": pareto_frontiers_path,
         "automatic_wins_markdown": automatic_wins_markdown_path,
+        "artifact_lineage_report_json": lineage_report_path,
+        "summary_dashboard_markdown": summary_dashboard_path,
         "latest_registry_json": latest_registry_path,
         "latest_registry": latest_registry_payload,
     }

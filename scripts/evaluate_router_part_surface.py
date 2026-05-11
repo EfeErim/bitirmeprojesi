@@ -42,7 +42,7 @@ def discover_eval_samples(root: Path) -> List[Dict[str, Any]]:
 def _coerce_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
-    except Exception as exc:
+    except Exception:
         import logging
         logging.exception('Unhandled exception')
         raise
@@ -212,6 +212,51 @@ def sweep_part_thresholds(
     }
 
 
+def build_risk_coverage_report(samples: List[Dict[str, Any]], threshold_rows: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Summarize crop+part risk/coverage from the available router-part evidence."""
+    sample_count = len(samples)
+    crop_correct_count = sum(1 for sample in samples if bool(sample.get("crop_correct", False)))
+    crop_mismatch_count = sample_count - crop_correct_count
+    coverage_rows: List[Dict[str, Any]] = []
+    for row in threshold_rows:
+        accepted = int(round((1.0 - float(row.get("abstention_rate", 0.0))) * int(row.get("sample_count", 0))))
+        precision = float(row.get("non_unknown_precision", 0.0))
+        coverage = 0.0 if sample_count <= 0 else round(accepted / sample_count, 4)
+        risk = round(1.0 - precision, 4) if accepted > 0 else 0.0
+        coverage_rows.append(
+            {
+                "min_confidence": row.get("min_confidence"),
+                "margin": row.get("margin"),
+                "coverage": coverage,
+                "accepted_count": accepted,
+                "risk": risk,
+                "part_non_unknown_precision": precision,
+                "part_non_unknown_recall": row.get("non_unknown_recall"),
+                "part_abstention_rate": row.get("abstention_rate"),
+            }
+        )
+    recommended = None
+    if coverage_rows:
+        recommended = sorted(
+            coverage_rows,
+            key=lambda item: (
+                float(item["risk"]),
+                -float(item["coverage"]),
+                float(item["min_confidence"]),
+                float(item["margin"]),
+            ),
+        )[0]
+    return {
+        "sample_count": sample_count,
+        "crop_accuracy": round(crop_correct_count / max(1, sample_count), 4),
+        "crop_mismatch_count": crop_mismatch_count,
+        "coverage_definition": "coverage is accepted part predictions over all evaluated samples",
+        "risk_definition": "risk is 1 - non_unknown_precision among accepted crop-correct part predictions",
+        "rows": coverage_rows,
+        "recommended": recommended,
+    }
+
+
 def evaluate_router_part_surface(
     root: Path,
     *,
@@ -268,17 +313,20 @@ def evaluate_router_part_surface(
         else [float(value) for value in margin_grid]
     )
 
+    threshold_sweep = sweep_part_thresholds(
+        samples,
+        min_confidence_grid=min_confidence_grid,
+        margin_grid=margin_grid,
+        unknown_label="unknown",
+    )
+
     return {
         "dataset_root": str(root),
         "sample_count": len(samples),
         "crop_accuracy": round(sum(1 for sample in samples if sample["crop_correct"]) / max(1, len(samples)), 4),
         "crops": per_crop,
-        "threshold_sweep": sweep_part_thresholds(
-            samples,
-            min_confidence_grid=min_confidence_grid,
-            margin_grid=margin_grid,
-            unknown_label="unknown",
-        ),
+        "threshold_sweep": threshold_sweep,
+        "risk_coverage": build_risk_coverage_report(samples, list(threshold_sweep.get("rows", []))),
     }
 
 

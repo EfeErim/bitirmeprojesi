@@ -19,6 +19,11 @@ Use this skill for CI, tests, validation commands, benchmark capture, and docume
 - `scripts/validate_notebook_imports.py`
 - `scripts/validate_ood_evidence_consistency.py`
 - `scripts/validate_router_calibration_stability.py`
+- `scripts/colab_adapter_smoke_test.py`
+- `scripts/monitor_dataset_integrity.py`
+- `scripts/validate_adapter_metadata_completeness.py`
+- `scripts/validate_notebook_outputs.py`
+- `scripts/detect_router_threshold_drift.py`
 
 Load the feature-specific skill too if the task touches training, notebooks, or inference behavior.
 
@@ -34,7 +39,7 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 8. Prefer pointing skills at canonical docs and contracts over duplicating mutable repo facts across multiple skill files.
 9. Use standards-backed hygiene for process changes: explicit validation commands, traceable dependency changes, generated-artifact exclusions, reproducible outputs, and no hidden local-only assumptions.
 10. For ML-facing docs or validation changes, require the claim to name its evidence type: current repo behavior, literature-backed rationale, benchmark result, test result, or engineering inference.
-11. For automation-guide work, prefer the next small executable guard over broad CI rewrites. Start with OOD evidence consistency, router calibration stability, and adapter smoke-test contracts before long-running drift or lineage jobs.
+11. For automation-guide work, prefer the next small executable guard over broad CI rewrites. Start with OOD evidence consistency, router calibration stability, adapter smoke-test contracts, dataset integrity, adapter metadata, notebook output checks, lineage reports, and scheduled drift reports before heavier monitoring.
 
 ## Practice Anchors
 
@@ -56,6 +61,11 @@ Load the feature-specific skill too if the task touches training, notebooks, or 
 - `.\scripts\python.cmd scripts/validate_config_schema.py`
 - `.\scripts\python.cmd scripts/validate_ood_evidence_consistency.py --runs-root runs --output .runtime_tmp/ood_consistency_report.json`
 - `.\scripts\python.cmd scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json`
+- `.\scripts\python.cmd scripts/colab_adapter_smoke_test.py --adapter-root models/adapters --output .runtime_tmp/adapter_smoke_test.json --strict`
+- `.\scripts\python.cmd scripts/monitor_dataset_integrity.py --root data/prepared_runtime_datasets --output .runtime_tmp/dataset_integrity.json`
+- `.\scripts\python.cmd scripts/validate_adapter_metadata_completeness.py --adapter-root models/adapters --output .runtime_tmp/adapter_metadata_completeness.json`
+- `.\scripts\python.cmd scripts/validate_notebook_outputs.py --output .runtime_tmp/notebook_output_validation.json`
+- `.\scripts\python.cmd scripts/detect_router_threshold_drift.py --root runs --output .runtime_tmp/router_drift_report.json`
 - `.\scripts\python.cmd scripts/evaluate_dataset_layout.py --root <flat_class_root>` when dataset-contract guidance changes
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
