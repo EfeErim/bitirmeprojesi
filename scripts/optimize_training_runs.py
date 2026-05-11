@@ -81,7 +81,7 @@ def run_optimizer(args: argparse.Namespace) -> JsonDict:
     if bool(getattr(args, "execute", False)):
         raise ValueError("Bayesian optimization execution is disabled for this repository.")
 
-    enable_bayesian = bool(getattr(args, "enable_bayesian_optimization", False))
+    enable_bayesian = bool(getattr(args, "enable_bayesian_optimization", True))
     search_space_payload = _read_json_file(getattr(args, "search_space_json", None))
     registry_result = build_run_registry(
         runs_root=args.runs_root,
@@ -162,6 +162,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-output-root", type=Path, default=Path("runs"))
     parser.add_argument("--num-workers", type=int)
     parser.add_argument("--validation-every-n-epochs", type=int)
+    parser.set_defaults(enable_bayesian_optimization=True)
     return parser
 
 

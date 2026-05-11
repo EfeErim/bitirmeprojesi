@@ -549,22 +549,165 @@ def _fit_gaussian_process(X: np.ndarray, y: np.ndarray) -> Any:
     return model
 
 
+def _van_der_corput(index: int, base: int) -> float:
+    value = 0.0
+    denominator = 1.0
+    current = max(1, int(index))
+    radix = max(2, int(base))
+    while current > 0:
+        current, remainder = divmod(current, radix)
+        denominator *= radix
+        value += remainder / denominator
+    return float(value)
+
+
+def _heuristic_dimension_value(dimension: SearchDimension, unit_value: float) -> Any:
+    unit = float(min(1.0 - 1e-12, max(0.0, unit_value)))
+    if dimension.kind == "float":
+        if dimension.low is None or dimension.high is None:
+            raise ValueError(f"Search dimension {dimension.name} is missing bounds.")
+        if dimension.scale == "log" and dimension.low > 0.0 and dimension.high > 0.0:
+            lower = math.log(dimension.low)
+            upper = math.log(dimension.high)
+            return float(math.exp(lower + unit * (upper - lower)))
+        return float(dimension.low + unit * (dimension.high - dimension.low))
+    if dimension.kind == "int":
+        if dimension.low is None or dimension.high is None:
+            raise ValueError(f"Search dimension {dimension.name} is missing bounds.")
+        step = max(1, int(dimension.step or 1))
+        values = list(range(int(dimension.low), int(dimension.high) + 1, step))
+        if not values:
+            raise ValueError(f"Search dimension {dimension.name} has no integer candidates.")
+        index = min(len(values) - 1, int(math.floor(unit * len(values))))
+        return int(values[index])
+    if dimension.kind == "categorical":
+        if not dimension.values:
+            raise ValueError(f"Search dimension {dimension.name} is missing categorical values.")
+        index = min(len(dimension.values) - 1, int(math.floor(unit * len(dimension.values))))
+        return _copy_json(dimension.values[index])
+    raise ValueError(f"Unsupported search dimension type: {dimension.kind}")
+
+
+def _generate_anchor_neighbors(
+    dimensions: Sequence[SearchDimension],
+    *,
+    anchor_parameters: Mapping[str, Any],
+    observed_signatures: set[str],
+    max_candidates: int,
+) -> List[JsonDict]:
+    if not dimensions or max_candidates <= 0:
+        return []
+
+    anchor = {dimension.name: _copy_json(anchor_parameters.get(dimension.name)) for dimension in dimensions}
+    seen = set(observed_signatures)
+    seen.add(_parameter_signature(anchor))
+    generated: List[JsonDict] = []
+
+    def _try_add(candidate: Mapping[str, Any]) -> None:
+        if len(generated) >= max_candidates:
+            return
+        signature = _parameter_signature(candidate)
+        if signature in seen:
+            return
+        seen.add(signature)
+        generated.append(dict(candidate))
+
+    for dimension in dimensions:
+        if len(generated) >= max_candidates:
+            break
+        name = dimension.name
+        current_value = anchor.get(name)
+        if dimension.kind == "float":
+            if dimension.low is None or dimension.high is None:
+                continue
+            low = float(dimension.low)
+            high = float(dimension.high)
+            if high <= low:
+                continue
+            base = _coerce_float(current_value)
+            if base is None:
+                base = (low + high) / 2.0
+            if dimension.scale == "log" and low > 0.0 and high > 0.0 and base > 0.0:
+                log_low = math.log(low)
+                log_high = math.log(high)
+                width = log_high - log_low
+                log_base = min(log_high, max(log_low, math.log(base)))
+                for factor in (-0.2, -0.1, 0.1, 0.2):
+                    value = float(math.exp(min(log_high, max(log_low, log_base + factor * width))))
+                    candidate = dict(anchor)
+                    candidate[name] = value
+                    _try_add(candidate)
+            else:
+                width = high - low
+                for factor in (-0.2, -0.1, 0.1, 0.2):
+                    value = float(min(high, max(low, float(base) + factor * width)))
+                    candidate = dict(anchor)
+                    candidate[name] = value
+                    _try_add(candidate)
+            continue
+
+        if dimension.kind == "int":
+            if dimension.low is None or dimension.high is None:
+                continue
+            step = max(1, int(dimension.step or 1))
+            low_i = int(dimension.low)
+            high_i = int(dimension.high)
+            base = _coerce_float(current_value)
+            if base is None:
+                base_i = int((low_i + high_i) // 2)
+            else:
+                base_i = int(round(base / step) * step)
+            base_i = int(min(high_i, max(low_i, base_i)))
+            for delta in (-2 * step, -step, step, 2 * step):
+                value = int(min(high_i, max(low_i, base_i + delta)))
+                candidate = dict(anchor)
+                candidate[name] = value
+                _try_add(candidate)
+            continue
+
+        if dimension.kind == "categorical" and dimension.values:
+            for value in dimension.values:
+                if value == current_value:
+                    continue
+                candidate = dict(anchor)
+                candidate[name] = _copy_json(value)
+                _try_add(candidate)
+
+    return generated[:max_candidates]
+
+
+def _build_default_anchor_parameters(dimensions: Sequence[SearchDimension]) -> JsonDict:
+    anchor: JsonDict = {}
+    for dimension in dimensions:
+        if dimension.kind == "categorical" and dimension.values:
+            anchor[dimension.name] = _copy_json(dimension.values[0])
+            continue
+        anchor[dimension.name] = _heuristic_dimension_value(dimension, 0.5)
+    return anchor
+
+
 def _sample_candidate_pool(
     dimensions: Sequence[SearchDimension],
     *,
-    rng: random.Random,
     observed_signatures: set[str],
     proposal_count: int,
     candidate_pool_size: int,
+    sequence_offset: int = 0,
 ) -> List[JsonDict]:
     required = max(candidate_pool_size, proposal_count * 16)
     sampled: List[JsonDict] = []
     seen = set(observed_signatures)
+    bases = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
     attempts = 0
     max_attempts = max(128, required * 30)
     while len(sampled) < required and attempts < max_attempts:
         attempts += 1
-        candidate = {dimension.name: dimension.sample(rng) for dimension in dimensions}
+        seq_index = int(sequence_offset) + attempts
+        candidate: JsonDict = {}
+        for dim_index, dimension in enumerate(dimensions):
+            base = bases[dim_index % len(bases)]
+            unit_value = _van_der_corput(seq_index + dim_index * 97, base)
+            candidate[dimension.name] = _heuristic_dimension_value(dimension, unit_value)
         signature = _parameter_signature(candidate)
         if signature in seen:
             continue
@@ -619,9 +762,10 @@ def build_bayesian_recommendations(
                 continue
             observed_trials.append((dict(trial), objectives))
 
-        strategy = "random_bootstrap"
+        strategy = "heuristic_space_filling_bootstrap"
         best_run_id = ""
         best_score = None
+        anchor_parameters: Optional[JsonDict] = None
         proposals: List[JsonDict] = []
         if dimensions:
             scores, normalized_rows = (
@@ -631,29 +775,46 @@ def build_bayesian_recommendations(
             )
             observed_parameters = [dict(trial.get("parameters", {})) for trial, _objectives in observed_trials]
             observed_signatures = {_parameter_signature(parameters) for parameters in observed_parameters}
-            rng = random.Random(random_seed + sum(ord(ch) for ch in cohort_key))
-            candidates = _sample_candidate_pool(
-                dimensions,
-                rng=rng,
-                observed_signatures=observed_signatures,
-                proposal_count=proposal_count,
-                candidate_pool_size=candidate_pool_size,
-            )
-            encoded_candidates = [
-                _encode_parameters(candidate, dimensions)
-                for candidate in candidates
-            ]
-            encoded_candidates = [encoded for encoded in encoded_candidates if encoded is not None]
             if observed_trials and scores:
                 best_index = max(range(len(scores)), key=lambda idx: scores[idx])
                 best_run_id = str(observed_trials[best_index][0].get("run_id", "") or "")
                 best_score = float(scores[best_index])
+                anchor_parameters = dict(observed_parameters[best_index])
+            if anchor_parameters is None and cohort_trials:
+                for fallback_trial in reversed(cohort_trials):
+                    fallback_parameters = dict(fallback_trial.get("parameters", {}))
+                    if _encode_parameters(fallback_parameters, dimensions) is not None:
+                        anchor_parameters = fallback_parameters
+                        break
+            if anchor_parameters is None:
+                anchor_parameters = _build_default_anchor_parameters(dimensions)
+            neighbor_candidates = _generate_anchor_neighbors(
+                dimensions,
+                anchor_parameters=anchor_parameters or {},
+                observed_signatures=observed_signatures,
+                max_candidates=max(16, int(max(0, proposal_count)) * 12),
+            ) if anchor_parameters else []
+            neighbor_signatures = {_parameter_signature(item) for item in neighbor_candidates}
+            if neighbor_candidates:
+                strategy = "heuristic_neighborhood_bootstrap"
             X = (
                 np.vstack([_encode_parameters(parameters, dimensions) for parameters in observed_parameters])
                 if observed_parameters
                 else np.empty((0, 0))
             )
             y = np.asarray(scores, dtype=float) if scores else np.empty((0,), dtype=float)
+            candidates = neighbor_candidates + _sample_candidate_pool(
+                dimensions,
+                observed_signatures=observed_signatures | neighbor_signatures,
+                proposal_count=proposal_count,
+                candidate_pool_size=candidate_pool_size,
+                sequence_offset=int(random_seed) + sum(ord(ch) for ch in cohort_key),
+            )
+            encoded_candidates = [
+                _encode_parameters(candidate, dimensions)
+                for candidate in candidates
+            ]
+            encoded_candidates = [encoded for encoded in encoded_candidates if encoded is not None]
             model = None
             if len(observed_trials) >= 3 and X.size > 0 and y.size > 0 and encoded_candidates:
                 model = _fit_gaussian_process(X, y)
@@ -672,14 +833,20 @@ def build_bayesian_recommendations(
                     ranked_candidates.append((candidate, float(acquisition), float(mean), exploration))
                 ranked_candidates.sort(key=lambda item: (item[1], item[2] if item[2] is not None else -1.0), reverse=True)
             else:
+                anchor_encoded = _encode_parameters(anchor_parameters, dimensions) if anchor_parameters else None
                 for candidate, encoded in zip(candidates, encoded_candidates):
                     exploration = (
                         float(min(np.linalg.norm(X - encoded, axis=1)))
                         if X.size > 0
                         else 0.0
                     )
-                    ranked_candidates.append((candidate, exploration, None, exploration))
-                ranked_candidates.sort(key=lambda item: item[1], reverse=True)
+                    exploit = 0.0
+                    if anchor_encoded is not None and anchor_encoded.size == encoded.size:
+                        distance_to_anchor = float(np.linalg.norm(anchor_encoded - encoded))
+                        exploit = 1.0 / (1.0 + distance_to_anchor)
+                    score = float(0.75 * exploit + 0.25 * exploration)
+                    ranked_candidates.append((candidate, score, None, exploration))
+                ranked_candidates.sort(key=lambda item: (item[1], item[3]), reverse=True)
 
             for rank, (candidate, acquisition, prediction, exploration) in enumerate(
                 ranked_candidates[: max(0, proposal_count)],

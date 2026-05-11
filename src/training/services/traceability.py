@@ -71,7 +71,7 @@ def _try_refresh_run_registry(
     *,
     artifact_root: str | Path,
     telemetry: Any = None,
-    enable_bayesian_proposals: bool = False,
+    enable_bayesian_proposals: bool = True,
 ) -> Dict[str, Any]:
     runs_root = _resolve_runs_root_for_registry(artifact_root)
     if runs_root is None:
@@ -615,7 +615,7 @@ def persist_traceability_artifacts(
     optimization_record: Mapping[str, Any],
     telemetry: Any = None,
     auto_refresh_registry: bool = True,
-    enable_bayesian_proposals: bool = False,
+    enable_bayesian_proposals: bool = True,
 ) -> Dict[str, Any]:
     root = Path(artifact_root)
     training_dir = _artifact_dir(root, "training")

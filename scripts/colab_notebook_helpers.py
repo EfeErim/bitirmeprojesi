@@ -1836,7 +1836,7 @@ def _refresh_traceability_records(*, root: Path, summary_payload: Dict[str, Any]
         experiment_manifest=experiment_manifest,
         optimization_record=optimization_record,
         telemetry=telemetry,
-        enable_bayesian_proposals=bool(notebook_parameters.get("enable_bayesian_optimization", False)),
+        enable_bayesian_proposals=bool(notebook_parameters.get("enable_bayesian_optimization", True)),
     )
 
 

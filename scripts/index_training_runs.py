@@ -581,7 +581,7 @@ def write_registry(
     *,
     trials: Iterable[JsonDict],
     output_root: str | Path,
-    enable_bayesian_proposals: bool = False,
+    enable_bayesian_proposals: bool = True,
     proposal_count: int = 3,
     candidate_pool_size: int = 256,
     random_seed: int = 42,
@@ -676,7 +676,7 @@ def build_run_registry(
     *,
     runs_root: str | Path,
     output_root: str | Path | None = None,
-    enable_bayesian_proposals: bool = False,
+    enable_bayesian_proposals: bool = True,
     proposal_count: int = 3,
     candidate_pool_size: int = 256,
     random_seed: int = 42,
@@ -704,6 +704,7 @@ def main() -> int:
     parser.add_argument("--proposal-count", type=int, default=3)
     parser.add_argument("--candidate-pool-size", type=int, default=256)
     parser.add_argument("--random-seed", type=int, default=42)
+    parser.set_defaults(enable_bayesian_proposals=True)
     args = parser.parse_args()
     result = build_run_registry(
         runs_root=args.runs_root,
