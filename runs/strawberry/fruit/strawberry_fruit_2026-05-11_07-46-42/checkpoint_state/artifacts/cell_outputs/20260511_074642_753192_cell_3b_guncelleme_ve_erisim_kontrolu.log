@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 3b: Guncelleme ve Erisim Kontrolu
+run_id=strawberry_fruit_2026-05-11_07-46-42
+started_at=2026-05-11T07:46:42.753223+00:00
+finished_at=2026-05-11T07:46:43.927901+00:00
+duration_sec=1.175
+
+[KONTROL] Repo guncel gorunuyor.
+[KONTROL] GitHub okuma erisimi public; clone/pull icin ekstra token gerekmiyor.
+[KONTROL] GitHub push icin kimlik bilgisi hazir.
+[KONTROL] Gerekli Hugging Face modelleri anonim erisimle aciliyor.

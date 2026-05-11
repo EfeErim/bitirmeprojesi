@@ -1,0 +1,11 @@
+                                 precision    recall  f1-score   support
+
+   strawberry_anthracnose_fruit       0.76      0.76      0.76        17
+     strawberry_gray_mold_fruit       0.91      0.73      0.81        79
+       strawberry_healthy_fruit       0.86      0.60      0.71        30
+strawberry_powdery_mildew_fruit       0.50      0.83      0.62        23
+        strawberry_unripe_fruit       0.86      0.96      0.90        74
+
+                       accuracy                           0.80       223
+                      macro avg       0.78      0.78      0.76       223
+                   weighted avg       0.83      0.80      0.81       223

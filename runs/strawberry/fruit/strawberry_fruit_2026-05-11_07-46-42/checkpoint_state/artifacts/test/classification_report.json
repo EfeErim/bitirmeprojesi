@@ -1,0 +1,45 @@
+{
+  "strawberry_anthracnose_fruit": {
+    "precision": 0.7777777777777778,
+    "recall": 0.8235294117647058,
+    "f1-score": 0.8,
+    "support": 17.0
+  },
+  "strawberry_gray_mold_fruit": {
+    "precision": 0.9230769230769231,
+    "recall": 0.759493670886076,
+    "f1-score": 0.8333333333333334,
+    "support": 79.0
+  },
+  "strawberry_healthy_fruit": {
+    "precision": 1.0,
+    "recall": 0.6486486486486487,
+    "f1-score": 0.7868852459016393,
+    "support": 37.0
+  },
+  "strawberry_powdery_mildew_fruit": {
+    "precision": 0.4722222222222222,
+    "recall": 0.7391304347826086,
+    "f1-score": 0.576271186440678,
+    "support": 23.0
+  },
+  "strawberry_unripe_fruit": {
+    "precision": 0.8375,
+    "recall": 1.0,
+    "f1-score": 0.9115646258503401,
+    "support": 67.0
+  },
+  "accuracy": 0.8161434977578476,
+  "macro avg": {
+    "precision": 0.8021153846153848,
+    "recall": 0.7941604332164077,
+    "f1-score": 0.7816108783051982,
+    "support": 223.0
+  },
+  "weighted avg": {
+    "precision": 0.8525511670691044,
+    "recall": 0.8161434977578476,
+    "f1-score": 0.8200769266896968,
+    "support": 223.0
+  }
+}
