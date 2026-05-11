@@ -104,7 +104,7 @@ def _build_repo_access_url(repo_url: str, token: Optional[str]) -> str:
         return repo_url
     
     netloc = parsed.netloc.split("@", 1)[-1]
-    return urlunsplit((parsed.scheme, f"{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+    return urlunsplit((parsed.scheme, f"x-access-token:{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
 
 
 def find_repo_root() -> Optional[Path]:
@@ -189,7 +189,13 @@ def bootstrap_repo_root(
     )
     if completed.stdout:
         print(completed.stdout)
-    
+
+    if completed.returncode != 0:
+        raise RuntimeError(
+            "Repo bootstrap failed. Set AADS_REPO_ROOT for an existing checkout or "
+            "provide GH_TOKEN/GITHUB_TOKEN for private repo auto-clone."
+        )
+
     # Verify clone was successful
     repo_root = find_repo_root()
     if repo_root is not None:
