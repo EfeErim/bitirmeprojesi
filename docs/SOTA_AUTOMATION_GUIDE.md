@@ -599,8 +599,8 @@ Emit report: .runtime_tmp/notebook_output_validation.json
 
 - [x] Implement `validate_ood_evidence_consistency.py`; add to CI post-training
 - [x] Implement `validate_router_calibration_stability.py`; integrate into PR checks
-- [ ] Enhance `colab_adapter_smoke_test.py` with contract validation; add to CI
-- [ ] Document passing criteria in each script's docstring
+- [x] Enhance `colab_adapter_smoke_test.py` with contract validation; add to CI
+- [x] Document passing criteria in each script's docstring
 - [ ] Add all three scripts to [AGENTS.md](../AGENTS.md) validation defaults
  - [ ] Implement CI lint/type/test gate (ruff, mypy, pytest); add pre-commit hooks
  - [ ] Add Dependabot/scheduled action for dependency updates

@@ -1,12 +1,12 @@
-﻿from pathlib import Path
-
+﻿import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import torch
 from PIL import Image
-from tests.utils.test_helpers import make_image
 
 from scripts import colab_adapter_smoke_test as smoke
+from tests.utils.test_helpers import make_image
 
 
 class _FakeAdapter:
@@ -181,6 +181,68 @@ def _write_adapter_export_with_prefixed_classes(root: Path) -> Path:
         encoding="utf-8",
     )
     return asset_dir
+
+
+def test_cli_writes_skipped_report_when_no_adapters(tmp_path: Path):
+    output = tmp_path / "adapter_smoke.json"
+
+    exit_code = smoke.main([
+        "--adapter-root",
+        str(tmp_path / "models" / "adapters"),
+        "--output",
+        str(output),
+        "--strict",
+    ])
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["status"] == "skipped"
+    assert report["adapter_count"] == 0
+
+
+def test_cli_validates_adapter_metadata_contract(tmp_path: Path):
+    adapter_root = tmp_path / "models" / "adapters" / "tomato" / "leaf"
+    asset_dir = _write_adapter_export(adapter_root)
+    output = tmp_path / "adapter_smoke.json"
+
+    exit_code = smoke.main([
+        "--adapter-root",
+        str(tmp_path / "models" / "adapters"),
+        "--output",
+        str(output),
+        "--strict",
+    ])
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 0
+    assert report["status"] == "pass"
+    assert report["adapter_count"] == 1
+    assert report["adapters"][0]["adapter_dir"] == str(asset_dir)
+    assert report["adapters"][0]["crop_name"] == "tomato"
+    assert report["adapters"][0]["part_name"] == "leaf"
+
+
+def test_cli_fails_invalid_adapter_metadata_contract(tmp_path: Path):
+    asset_dir = tmp_path / "models" / "adapters" / "tomato" / "leaf" / "continual_sd_lora_adapter"
+    asset_dir.mkdir(parents=True)
+    (asset_dir / "adapter_meta.json").write_text(
+        '{"schema_version": "v6", "engine": "continual_sd_lora"}',
+        encoding="utf-8",
+    )
+    output = tmp_path / "adapter_smoke.json"
+
+    exit_code = smoke.main([
+        "--adapter-root",
+        str(tmp_path / "models" / "adapters"),
+        "--output",
+        str(output),
+    ])
+
+    report = json.loads(output.read_text(encoding="utf-8"))
+    assert exit_code == 1
+    assert report["status"] == "fail"
+    assert report["fail_count"] == 1
+    assert "adapter_meta.class_to_idx" in report["adapters"][0]["errors"][0]
 
 
 def _scripted_view_tensor(_image, *, target_size: int, view_name: str):

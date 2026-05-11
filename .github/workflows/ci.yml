@@ -75,6 +75,9 @@ jobs:
       - name: Validate router calibration stability
         run: python scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json
 
+      - name: Validate adapter smoke contracts
+        run: python scripts/colab_adapter_smoke_test.py --adapter-root models/adapters --output .runtime_tmp/adapter_smoke_test.json --strict
+
       - name: Validate dataset layouts (if present)
         run: |
           if [ -d "data/prepared_runtime_datasets" ]; then
@@ -93,6 +96,7 @@ jobs:
             scripts/validate_ood_evidence_consistency.py \
             scripts/validate_router_calibration_stability.py \
             scripts/colab_checkpointing.py \
+            scripts/colab_adapter_smoke_test.py \
             scripts/colab_dataset_layout.py \
             scripts/colab_live_telemetry.py \
             scripts/colab_notebook_helpers.py \
