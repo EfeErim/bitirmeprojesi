@@ -17,6 +17,7 @@ from scripts.colab_repo_bootstrap import (
     mount_drive_if_available,
 )
 from scripts.colab_live_telemetry import ColabLiveTelemetry
+from scripts.prepare_grouped_runtime_dataset import resolve_safe_embedding_batch_size
 from src.core.config_manager import ConfigurationManager
 import torch
 
@@ -54,7 +55,20 @@ def init_run_environment(ROOT: Path) -> dict:
     REQUESTED_DEVICE = str(ConfigurationManager(config_dir=str(ROOT / 'config'), environment='colab').load_all_configs().get('training', {}).get('continual', {}).get('device', 'cuda'))
     DEVICE = REQUESTED_DEVICE if not REQUESTED_DEVICE.startswith('cuda') or torch.cuda.is_available() else 'cpu'
 
-    EMBEDDING_BATCH_SIZE = 32 if DEVICE.startswith('cuda') else 8
+    EMBEDDING_BATCH_SIZE = resolve_safe_embedding_batch_size(DEVICE)
+    
+    # System RAM optimization for low-memory Colab environments
+    try:
+        import psutil
+        available_ram_gb = psutil.virtual_memory().available / 1e9
+        total_ram_gb = psutil.virtual_memory().total / 1e9
+        # Low memory mode: if available RAM < 8GB or total < 15GB
+        LOW_MEMORY_MODE = available_ram_gb < 8 or total_ram_gb < 15
+        MAX_IMAGES_IN_MEMORY = 256 if not LOW_MEMORY_MODE else 64
+    except Exception:
+        LOW_MEMORY_MODE = True
+        MAX_IMAGES_IN_MEMORY = 64
+    
     NEIGHBORS = 4
 
     LOCAL_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -82,6 +96,8 @@ def init_run_environment(ROOT: Path) -> dict:
         'REQUESTED_DEVICE': REQUESTED_DEVICE,
         'DEVICE': DEVICE,
         'EMBEDDING_BATCH_SIZE': EMBEDDING_BATCH_SIZE,
+        'LOW_MEMORY_MODE': LOW_MEMORY_MODE,
+        'MAX_IMAGES_IN_MEMORY': MAX_IMAGES_IN_MEMORY,
         'NEIGHBORS': NEIGHBORS,
     }
 

@@ -20,6 +20,7 @@ from scripts.colab_repo_bootstrap import (
     running_in_colab,
 )
 from scripts.colab_live_telemetry import ColabLiveTelemetry
+from scripts.prepare_grouped_runtime_dataset import resolve_safe_embedding_batch_size
 from src.core.config_manager import ConfigurationManager
 
 # Install Colab requirements if running in Colab
@@ -50,7 +51,24 @@ if DEVICE != REQUESTED_DEVICE:
     print(f"[PREP] Requested device {REQUESTED_DEVICE!r} is unavailable; using {DEVICE!r}.")
 
 # Dataset and model configuration
-EMBEDDING_BATCH_SIZE = 32 if DEVICE.startswith('cuda') else 8
+EMBEDDING_BATCH_SIZE = resolve_safe_embedding_batch_size(DEVICE)
+print(f"[PREP] device={DEVICE} embedding_batch_size={EMBEDDING_BATCH_SIZE}")
+
+# System RAM optimization for low-memory Colab environments
+# Detect available system RAM and adjust processing strategy
+try:
+    import psutil
+    available_ram_gb = psutil.virtual_memory().available / 1e9
+    total_ram_gb = psutil.virtual_memory().total / 1e9
+    # Low memory mode: if available RAM < 8GB or total < 15GB
+    LOW_MEMORY_MODE = available_ram_gb < 8 or total_ram_gb < 15
+    MAX_IMAGES_IN_MEMORY = 256 if not LOW_MEMORY_MODE else 64
+    print(f"[PREP] System RAM: {total_ram_gb:.1f}GB total, {available_ram_gb:.1f}GB available -> LOW_MEMORY_MODE={LOW_MEMORY_MODE}, MAX_IMAGES={MAX_IMAGES_IN_MEMORY}")
+except Exception as e:
+    LOW_MEMORY_MODE = True
+    MAX_IMAGES_IN_MEMORY = 64
+    print(f"[PREP] Could not detect system RAM ({e}); using conservative LOW_MEMORY_MODE=True")
+
 NEIGHBORS = 4
 PREP_DINOV3_MODEL_ID = 'facebook/dinov3-vitl16-pretrain-lvd1689m'
 PREP_BIOCLIP_MODEL_ID = 'imageomics/bioclip-2.5-vith14'
