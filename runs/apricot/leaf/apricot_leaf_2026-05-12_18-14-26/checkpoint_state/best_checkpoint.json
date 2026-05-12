@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e25_s300_20260512_181746_344507",
+  "path": "/content/bitirmeprojesi/runs/apricot/leaf/apricot_leaf_2026-05-12_18-14-26/checkpoint_state/checkpoints/ckpt_e25_s300_20260512_181746_344507",
+  "created_at": "2026-05-12T18:17:47.838340+00:00",
+  "global_step": 300,
+  "epoch": 25,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.3129776100317637
+}

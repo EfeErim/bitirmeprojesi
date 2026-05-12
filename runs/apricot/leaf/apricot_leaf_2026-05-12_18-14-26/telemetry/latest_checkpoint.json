@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e30_s360_20260512_181806_914803",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/apricot_leaf_2026-05-12_18-14-26/checkpoints/ckpt_e30_s360_20260512_181806_914803/training_checkpoint",
+  "created_at": "2026-05-12T18:18:08.387866+00:00",
+  "global_step": 360,
+  "epoch": 30,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.3296990772088369
+}
