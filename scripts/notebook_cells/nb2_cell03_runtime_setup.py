@@ -72,6 +72,10 @@ IN_COLAB = running_in_colab()
 if IN_COLAB:
     install_colab_requirements(ROOT / 'colab_notebooks' / 'requirements_colab.txt', IN_COLAB)
 
+# Allow notebook wrappers to override the exported notebook name and filename.
+NOTEBOOK_NAME = str(globals().get('NOTEBOOK_NAME', '2_train_continual_sd_lora_adapter.ipynb'))
+NOTEBOOK_FILENAME = str(globals().get('NOTEBOOK_FILENAME', '2_train_continual_sd_lora_adapter.executed.ipynb'))
+
 # Initialize telemetry and run directories
 CROP_NAME = globals().get('CROP_NAME', 'tomato')
 _requested_part_name = str(globals().get('PART_NAME', '') or '').strip().lower()
@@ -79,7 +83,6 @@ if not _requested_part_name or _requested_part_name == 'unspecified':
     _requested_part_name = _infer_part_name_from_dataset_name(globals().get('DATASET_NAME', ''))
 PART_NAME = _requested_part_name or 'unspecified'
 RUN_ID = build_notebook_run_id(CROP_NAME, PART_NAME)
-NOTEBOOK_FILENAME = '2_train_continual_sd_lora_adapter.executed.ipynb'
 REPO_RUN_DIR = build_notebook_run_dir(ROOT, CROP_NAME, PART_NAME, RUN_ID)
 REPO_NOTEBOOK_OUTPUT_PATH = REPO_RUN_DIR / 'notebooks' / NOTEBOOK_FILENAME
 LOCAL_OUTPUT_DIR = ROOT / 'outputs' / 'colab_notebook_training'
@@ -91,7 +94,7 @@ LOCAL_TELEMETRY_ROOT = ROOT / 'outputs' / 'colab_notebook_training' / 'telemetry
 LOCAL_TELEMETRY_SPOOL_ROOT = ROOT / '.runtime_tmp' / 'colab_notebook_training' / 'telemetry_spool'
 
 TELEMETRY = ColabLiveTelemetry(
-    notebook_name='2_train_continual_sd_lora_adapter.ipynb',
+    notebook_name=NOTEBOOK_NAME,
     run_id=RUN_ID,
     drive_root=LOCAL_TELEMETRY_ROOT,
     local_root=LOCAL_TELEMETRY_SPOOL_ROOT,
