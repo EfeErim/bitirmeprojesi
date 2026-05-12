@@ -38,6 +38,15 @@ DATASET_SPARSE_PATHS: dict[str, tuple[str, ...]] = {
         "data/ood_dataset/final/tomato__leaf_ood_final",
         "data/oe_dataset/tomato_leaf_oe_from_fruit",
     ),
+    "apricot__fruit": (
+        "data/prepared_runtime_datasets/apricot__fruit",
+        "data/ood_dataset/final/apricot__fruit_ood_final",
+    ),
+    "apricot__leaf": (
+        "data/prepared_runtime_datasets/apricot__leaf",
+        "data/ood_dataset/final/apricot__leaf_ood_final",
+        "data/oe_dataset/apricot_leaf_oe_unsupported_leaf_candidates",
+    ),
 }
 
 
@@ -92,8 +101,15 @@ def ensure_notebook2_dataset_sparse_checkout(
         return []
 
     paths: list[str] = []
-    for key in _requested_dataset_keys(crop_name, part_name, dataset_name):
+    requested_keys = _requested_dataset_keys(crop_name, part_name, dataset_name)
+    for key in requested_keys:
         paths.extend(DATASET_SPARSE_PATHS.get(key, ()))
+
+    # If a dataset key is new and has no static mapping yet, still fetch its prepared runtime root.
+    for key in requested_keys:
+        runtime_dataset_path = f"data/prepared_runtime_datasets/{key}"
+        if runtime_dataset_path not in paths:
+            paths.append(runtime_dataset_path)
 
     explicit_ood = _repo_relative_path(root, ood_root)
     if explicit_ood:
