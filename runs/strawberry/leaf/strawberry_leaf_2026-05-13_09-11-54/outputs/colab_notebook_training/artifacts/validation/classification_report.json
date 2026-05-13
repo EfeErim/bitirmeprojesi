@@ -1,0 +1,39 @@
+{
+  "healthy": {
+    "precision": 0.9879518072289156,
+    "recall": 1.0,
+    "f1-score": 0.9939393939393939,
+    "support": 82.0
+  },
+  "strawberry_leaf_scorch_leaf": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 205.0
+  },
+  "strawberry_leaf_spot_leaf": {
+    "precision": 1.0,
+    "recall": 0.9727272727272728,
+    "f1-score": 0.9861751152073732,
+    "support": 110.0
+  },
+  "strawberry_powdery_mildew_leaf": {
+    "precision": 0.9791666666666666,
+    "recall": 1.0,
+    "f1-score": 0.9894736842105263,
+    "support": 94.0
+  },
+  "accuracy": 0.9938900203665988,
+  "macro avg": {
+    "precision": 0.9917796184738955,
+    "recall": 0.9931818181818182,
+    "f1-score": 0.9923970483393233,
+    "support": 491.0
+  },
+  "weighted avg": {
+    "precision": 0.9939994192656573,
+    "recall": 0.9938900203665988,
+    "f1-score": 0.9938753957059692,
+    "support": 491.0
+  }
+}
