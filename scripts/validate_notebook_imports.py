@@ -640,6 +640,8 @@ def test_training_notebook_bootstrap_contract() -> None:
         'ASK_FOR_OE_ROOT = True',
         'OE_ENABLED = False',
         'OE_LOSS_WEIGHT = 0.5',
+        'from scripts.notebook_helpers.adapter_recommendations import get_adapter_recs',
+        'ADAPTER_RECS = get_adapter_recs()',
         'MANUAL_PARAM_OVERRIDES = {}',
         'EPOCHS = ',
         'BATCH_SIZE = ',
@@ -743,6 +745,8 @@ def test_batch_training_notebook_contract() -> None:
         '"AUTO_DISCONNECT_RUNTIME": False',
         '"AUTO_PUSH_TO_GITHUB": True',
         "NB6_MANUAL_PARAM_OVERRIDES = {}",
+        "from scripts.notebook_helpers.adapter_recommendations import get_adapter_recs",
+        "ADAPTER_RECS = get_adapter_recs()",
         "NB6_ADAPTER_SEQUENCE = [",
         "for index, adapter_key in enumerate(NB6_ADAPTER_SEQUENCE, start=1):",
         "MANUAL_PARAM_OVERRIDES = dict(NB6_MANUAL_PARAM_OVERRIDES.get(adapter_key, {}))",
@@ -755,6 +759,16 @@ def test_batch_training_notebook_contract() -> None:
             sources.full_source,
             snippet,
             "Notebook 6 batch surface is missing required batch-training contract: {snippet}",
+        )
+    for stale_snippet in (
+        '"grape__fruit": {"crop": "grape"',
+        '"strawberry__leaf": {"crop": "strawberry"',
+        '"tomato__leaf": {"crop": "tomato"',
+    ):
+        _assert_not_contains(
+            sources.full_source,
+            stale_snippet,
+            "Notebook 6 should not embed adapter recommendation copies; use get_adapter_recs(): {snippet}",
         )
     for script_name in (
         "nb2_cell03_runtime_setup.py",

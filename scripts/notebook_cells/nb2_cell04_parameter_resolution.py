@@ -15,62 +15,9 @@ ADAPTER_KEY = str(globals().get("ADAPTER_KEY", "grape__fruit")).strip()
 _USER_MANUAL_PARAM_OVERRIDES = dict(globals().get("MANUAL_PARAM_OVERRIDES") or {})
 _USER_DEFAULT_RUNTIME_PARAMS = dict(globals().get("DEFAULT_RUNTIME_PARAMS") or {})
 
-ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or {
-    "grape__fruit": {
-        "crop": "grape", "part": "fruit",
-        "ood": "data/prepared_runtime_datasets/grape__fruit/ood",
-        "oe": "data/prepared_runtime_datasets/grape__fruit/oe",
-        "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
-        "defaults": {"EPOCHS": 32, "BATCH_SIZE": 80, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.18, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
-    },
-    "grape__leaf": {
-        "crop": "grape", "part": "leaf",
-        "ood": "data/prepared_runtime_datasets/grape__leaf/ood",
-        "oe": "data/prepared_runtime_datasets/grape__leaf/oe",
-        "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
-        "defaults": {"EPOCHS": 28, "BATCH_SIZE": 80, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.16, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
-    },
-    "strawberry__fruit": {
-        "crop": "strawberry", "part": "fruit",
-        "ood": "data/prepared_runtime_datasets/strawberry__fruit/ood",
-        "oe": "data/prepared_runtime_datasets/strawberry__fruit/oe",
-        "oe_enabled": True, "oe_w": 0.10, "allow_under_min": True,
-        "defaults": {"EPOCHS": 34, "BATCH_SIZE": 48, "LEARNING_RATE": 6e-5, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
-    },
-    "strawberry__leaf": {
-        "crop": "strawberry", "part": "leaf",
-        "ood": "data/prepared_runtime_datasets/strawberry__leaf/ood",
-        "oe": "data/prepared_runtime_datasets/strawberry__leaf/oe",
-        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "defaults": {"EPOCHS": 22, "BATCH_SIZE": 96, "LEARNING_RATE": 1.5e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
-    },
-    "tomato__fruit": {
-        "crop": "tomato", "part": "fruit",
-        "ood": "data/prepared_runtime_datasets/tomato__fruit/ood",
-        "oe": "data/prepared_runtime_datasets/tomato__fruit/oe",
-        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "defaults": {"EPOCHS": 30, "BATCH_SIZE": 64, "LEARNING_RATE": 8e-5, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
-    },
-    "tomato__leaf": {
-        "crop": "tomato", "part": "leaf",
-        "ood": "data/prepared_runtime_datasets/tomato__leaf/ood",
-        "oe": "data/prepared_runtime_datasets/tomato__leaf/oe",
-        "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "defaults": {"EPOCHS": 20, "BATCH_SIZE": 112, "LEARNING_RATE": 1.1e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.14, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.10},
-    },
-    "apricot__fruit": {
-        "crop": "apricot", "part": "fruit",
-        "ood": "data/ood_dataset/final/apricot__fruit_ood_final",
-        "oe": "", "oe_enabled": False, "oe_w": 0.10, "allow_under_min": False,
-        "defaults": {"EPOCHS": 36, "BATCH_SIZE": 64, "LEARNING_RATE": 1e-4, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 3.0, "LABEL_SMOOTHING": 0.10},
-    },
-    "apricot__leaf": {
-        "crop": "apricot", "part": "leaf",
-        "ood": "data/ood_dataset/final/apricot__leaf_ood_final",
-        "oe": "data/oe_dataset/apricot_leaf_oe_unsupported_leaf_candidates", "oe_enabled": True, "oe_w": 0.30, "allow_under_min": False,
-        "defaults": {"EPOCHS": 38, "BATCH_SIZE": 80, "LEARNING_RATE": 1.2e-4, "LORA_R": 26, "LORA_ALPHA": 26, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 4.0, "LABEL_SMOOTHING": 0.10},
-    },
-})
+from scripts.notebook_helpers.adapter_recommendations import get_adapter_recs
+
+ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or get_adapter_recs())
 
 if ADAPTER_KEY not in ADAPTER_RECS:
     raise ValueError(f"Unsupported ADAPTER_KEY={ADAPTER_KEY!r}. Options: {sorted(ADAPTER_RECS)}")
@@ -259,8 +206,13 @@ OE_LOSS_WEIGHT = float(rec["oe_w"])
 ALLOW_UNDER_MIN_TRAINING = bool(rec["allow_under_min"])
 VALIDATION_EVERY_N_EPOCHS = 1
 
+_adapter_defaults = dict(rec.get("defaults") or rec.get("overrides") or {})
+if not _adapter_defaults:
+    raise ValueError(
+        f"ADAPTER_RECS[{ADAPTER_KEY!r}] must define a non-empty 'defaults' mapping."
+    )
 _adapter_default_overrides = {
-    **rec["defaults"],
+    **_adapter_defaults,
     **_USER_DEFAULT_RUNTIME_PARAMS,
 }
 _adapter_default_overrides.setdefault("WEIGHT_DECAY", 0.01)
