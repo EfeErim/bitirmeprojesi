@@ -21,42 +21,54 @@ ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or {
         "ood": "data/prepared_runtime_datasets/grape__fruit/ood",
         "oe": "data/prepared_runtime_datasets/grape__fruit/oe",
         "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
-        "overrides": {"EPOCHS": 32, "BATCH_SIZE": 48, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 32, "BATCH_SIZE": 80, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.18, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
     },
     "grape__leaf": {
         "crop": "grape", "part": "leaf",
         "ood": "data/prepared_runtime_datasets/grape__leaf/ood",
         "oe": "data/prepared_runtime_datasets/grape__leaf/oe",
         "oe_enabled": True, "oe_w": 0.20, "allow_under_min": False,
-        "overrides": {"EPOCHS": 28, "BATCH_SIZE": 64, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.12, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 28, "BATCH_SIZE": 80, "LEARNING_RATE": 1e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.16, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
     },
     "strawberry__fruit": {
         "crop": "strawberry", "part": "fruit",
         "ood": "data/prepared_runtime_datasets/strawberry__fruit/ood",
         "oe": "data/prepared_runtime_datasets/strawberry__fruit/oe",
         "oe_enabled": True, "oe_w": 0.10, "allow_under_min": True,
-        "overrides": {"EPOCHS": 36, "BATCH_SIZE": 32, "LEARNING_RATE": 8e-5, "LORA_R": 16, "LORA_ALPHA": 16, "LORA_DROPOUT": 0.18, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 34, "BATCH_SIZE": 48, "LEARNING_RATE": 6e-5, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.08},
     },
     "strawberry__leaf": {
         "crop": "strawberry", "part": "leaf",
         "ood": "data/prepared_runtime_datasets/strawberry__leaf/ood",
         "oe": "data/prepared_runtime_datasets/strawberry__leaf/oe",
         "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "overrides": {"EPOCHS": 22, "BATCH_SIZE": 96, "LEARNING_RATE": 1.5e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 22, "BATCH_SIZE": 96, "LEARNING_RATE": 1.5e-4, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
     },
     "tomato__fruit": {
         "crop": "tomato", "part": "fruit",
         "ood": "data/prepared_runtime_datasets/tomato__fruit/ood",
         "oe": "data/prepared_runtime_datasets/tomato__fruit/oe",
         "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "overrides": {"EPOCHS": 30, "BATCH_SIZE": 64, "LEARNING_RATE": 8e-5, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 30, "BATCH_SIZE": 64, "LEARNING_RATE": 8e-5, "LORA_R": 24, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 3.0},
     },
     "tomato__leaf": {
         "crop": "tomato", "part": "leaf",
         "ood": "data/prepared_runtime_datasets/tomato__leaf/ood",
         "oe": "data/prepared_runtime_datasets/tomato__leaf/oe",
         "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
-        "overrides": {"EPOCHS": 20, "BATCH_SIZE": 96, "LEARNING_RATE": 1.2e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.10, "OOD_FACTOR": 3.0},
+        "defaults": {"EPOCHS": 20, "BATCH_SIZE": 112, "LEARNING_RATE": 1.1e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.14, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.10},
+    },
+    "apricot__fruit": {
+        "crop": "apricot", "part": "fruit",
+        "ood": "data/ood_dataset/final/apricot__fruit_ood_final",
+        "oe": "", "oe_enabled": False, "oe_w": 0.10, "allow_under_min": False,
+        "defaults": {"EPOCHS": 36, "BATCH_SIZE": 64, "LEARNING_RATE": 1e-4, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 3.0, "LABEL_SMOOTHING": 0.10},
+    },
+    "apricot__leaf": {
+        "crop": "apricot", "part": "leaf",
+        "ood": "data/ood_dataset/final/apricot__leaf_ood_final",
+        "oe": "data/oe_dataset/apricot_leaf_oe_unsupported_leaf_candidates", "oe_enabled": True, "oe_w": 0.30, "allow_under_min": False,
+        "defaults": {"EPOCHS": 38, "BATCH_SIZE": 80, "LEARNING_RATE": 1.2e-4, "LORA_R": 26, "LORA_ALPHA": 26, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 4.0, "LABEL_SMOOTHING": 0.10},
     },
 })
 
@@ -119,7 +131,6 @@ OE_LOSS_WEIGHT = 0.5
 
 # CROP_NAME ve PART_NAME, kosu adlandirmasi ve metadata icin kullanilir.
 CROP_NAME = globals().get("CROP_NAME", "tomato")
-PART_NAME = globals().get("PART_NAME", "unspecified")
 ENABLE_BAYESIAN_OPTIMIZATION = bool(globals().get("ENABLE_BAYESIAN_OPTIMIZATION", True))
 
 # ALLOW_UNDER_MIN_TRAINING: True olursa 100 image/class production guardrail'i research kosulari icin bypass edilir.
@@ -133,7 +144,6 @@ BATCH_SIZE = 96
 
 # LEARNING_RATE: adapter/LoRA parametreleri icin optimizer adim buyuklugu.
 LEARNING_RATE = 2e-4
-
 # LORA_R: LoRA rank degeri. Buyudukce kapasite ve VRAM/islem maliyeti artar.
 LORA_R = 24
 
@@ -154,19 +164,16 @@ CONFORMAL_RAPS_K_REG = 1
 
 # BER_ENABLED: eski/yeni sinif enerji ayrimi icin deneysel egitim regularizeri.
 BER_ENABLED = False
-
 # BER_LAMBDA_OLD / BER_LAMBDA_NEW: eski ve yeni sinif kisimlari icin BER ceza agirliklari.
 BER_LAMBDA_OLD = 0.1
 BER_LAMBDA_NEW = 0.1
 BER_WARMUP_STEPS = 50
 
-# WEIGHT_DECAY: AdamW weight decay degeri.
 WEIGHT_DECAY = 0.01
 
 # MIXED_PRECISION: {'off', 'auto', 'fp16', 'bf16'} seceneklerinden biri.
 MIXED_PRECISION = "bf16"
 
-# GRAD_ACCUM_STEPS: gradient accumulation katsayisi.
 GRAD_ACCUM_STEPS = 1
 
 # MAX_GRAD_NORM: gradient clipping esigi. 0 olursa clipping kapanir.
@@ -252,7 +259,7 @@ ALLOW_UNDER_MIN_TRAINING = bool(rec["allow_under_min"])
 VALIDATION_EVERY_N_EPOCHS = 1
 
 _adapter_default_overrides = {
-    **rec["overrides"],
+    **rec["defaults"],
     **_USER_DEFAULT_RUNTIME_PARAMS,
 }
 _adapter_default_overrides.setdefault("WEIGHT_DECAY", 0.01)
@@ -375,40 +382,34 @@ def _collect_bayesian_notebook_overrides():
     if not recommendations_path.exists():
         print(f"[BAYES] Toggle acik ama dosya yok: {recommendations_path}")
         return {}
-    try:
         payload = json.loads(recommendations_path.read_text(encoding="utf-8"))
     except Exception as exc:
         print(f"[BAYES] Oneri dosyasi okunamadi: {exc}")
         return {}
 
     cohorts = list(payload.get("cohorts", [])) if isinstance(payload, dict) else []
-    selected_cohort = None
     for cohort in cohorts:
         comparability = cohort.get("comparability", {}) if isinstance(cohort, dict) else {}
         if str(comparability.get("crop_name", "")).strip().lower() == str(CROP_NAME).strip().lower() and str(comparability.get("part_name", "")).strip().lower() == str(PART_NAME).strip().lower():
             selected_cohort = cohort
             break
     if selected_cohort is None and cohorts:
-        selected_cohort = cohorts[0]
-
     proposals = list((selected_cohort or {}).get("proposals", [])) if isinstance(selected_cohort, dict) else []
     if not proposals:
         print("[BAYES] Uygulanabilir oneriler bulunamadi.")
         return {}
 
-    proposal = proposals[0]
+               "overrides": {"EPOCHS": 20, "BATCH_SIZE": 112, "LEARNING_RATE": 1.1e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.14, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.10},
     parameters = proposal.get("parameters", {}) if isinstance(proposal, dict) else {}
     if not isinstance(parameters, dict):
         return {}
 
     mapping = {
-        "training.learning_rate": "LEARNING_RATE",
         "training.weight_decay": "WEIGHT_DECAY",
         "training.num_epochs": "EPOCHS",
         "training.batch_size": "BATCH_SIZE",
         "training.adapter.lora_r": "LORA_R",
         "training.adapter.lora_alpha": "LORA_ALPHA",
-        "training.adapter.lora_dropout": "LORA_DROPOUT",
         "training.ood.threshold_factor": "OOD_FACTOR",
         "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
         "training.optimization.label_smoothing": "LABEL_SMOOTHING",
