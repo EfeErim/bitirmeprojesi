@@ -164,6 +164,12 @@ Examples:
 
 This adapter has enough classification support, but its real OOD pool is too small to make the false-positive rate meaningful. This is the highest-priority adapter for Phase 1.
 
+## References
+
+- Hendrycks, D., Mazeika, M., & Dietterich, T. (2018). Deep Anomaly Detection with Outlier Exposure. arXiv. https://arxiv.org/abs/1812.04606
+- Angelopoulos, A. N., & Bates, S. (2021). A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification. arXiv. https://arxiv.org/abs/2107.07511
+- Naqvi, A., et al. (2022). Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies. arXiv. https://doi.org/10.48550/arXiv.2206.04374
+
 ## 4. Tomato / Fruit
 
 Current OOD mix after the 2026-05-10 rebalance:

@@ -113,3 +113,7 @@ For a checked-in reusable OOD example pool, point Notebook 0 at one of:
 - `data/ood_dataset/grape_leaf_ood_best`
 - `data/ood_dataset/tomato_fruit_ood_best`
 - `data/ood_dataset/tomato_leaf_ood_best`
+
+## References
+
+- Naqvi, A., et al. (2022). Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies. arXiv. https://doi.org/10.48550/arXiv.2206.04374

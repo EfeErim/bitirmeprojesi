@@ -179,3 +179,7 @@ See troubleshooting section in guide for details.
 For issues or improvements to the refactoring, refer to:
 - `docs/notebook-refactoring-guide.md` - Complete troubleshooting section
 - `scripts/colab_notebooks_bootstrap.py` - Module docstrings for API details
+
+## References
+
+- Best practices for reproducible notebooks and tooling are drawn from community guidance on notebook hygiene and modularization; see `docs/notebook-refactoring-guide.md` for repo-specific rationale.

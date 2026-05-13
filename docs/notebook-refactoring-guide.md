@@ -198,6 +198,10 @@ ROOT = BOOTSTRAP["ROOT"]
 ## Benefits
 
 ✅ **Cleaner Notebooks**
+
+## References
+
+- Repository-specific bootstrap pattern influenced by general notebook engineering guidance (modular bootstrap scripts, small starter cells) and the project's internal `scripts/colab_notebooks_bootstrap.py` implementation.
 - Focus on interactive/main logic
 - Less boilerplate
 - Easier to understand flow

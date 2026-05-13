@@ -36,15 +36,15 @@ Detects config schema changes and warns if documentation/tests are not updated.
 ```
 
 **Checks:**
-- `base.json` vs `colab.json` schema version mismatch
-- New keys in base not in colab
-- Missing documentation references
-- Provides guidance for schema versioning
 
+## References
+
+- Hendrycks, D., Mazeika, M., & Dietterich, T. (2018). Deep Anomaly Detection with Outlier Exposure. arXiv. https://arxiv.org/abs/1812.04606
+- Goodfellow, I., Bengio, Y., & Courville, A. (2016). Deep Learning. MIT Press. https://www.deeplearningbook.org/
+- DeVries, T., & Taylor, G. W. (2017). Improved regularization of convolutional neural networks with cutout. arXiv:1708.04552. https://arxiv.org/abs/1708.04552
+- Cubuk, E. D., Zoph, B., Shlens, J., & Le, Q. V. (2019). RandAugment: Practical automated data augmentation with a reduced search space. arXiv. https://arxiv.org/abs/1909.13719
 **CI Integration:**
 - Runs on every push to ensure config consistency
-- Prevents silent config drift across environments
-
 ## 3. `generate_artifact_manifest.py`
 
 Creates manifest metadata for exported adapters, tracking version, commit, and training info.

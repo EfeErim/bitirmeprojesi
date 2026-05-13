@@ -210,6 +210,26 @@ Automatic real-OOD dev/test splitting:
 - if the manifest cannot produce both non-empty dev and test assignments, the repo falls back to the legacy pooled `ood/` loader
 - `ood_dev` is used for primary-score method and threshold selection when `training.continual.ood.real_dev_selection_enabled=true`; `production_readiness.json` uses the final held-out real-OOD test assignment exposed as the normal `ood` loader
 
+### Automation For Internet Candidates
+
+If you already have reviewed staging manifests under `data/internet_image_candidates/`, use the repo applier to promote them into the runtime dataset:
+
+```powershell
+.\scripts\python.cmd scripts\apply_internet_candidate_manifests.py `
+  --manifest-root data\internet_image_candidates `
+  --repo-root . `
+  --summary-out .runtime_tmp\internet_candidate_apply_summary.json
+```
+
+This command:
+
+- copies manifest-listed files into their declared `data/prepared_runtime_datasets/<dataset_key>/ood/` or `oe/` targets
+- verifies SHA-256 when the manifest provides it
+- refuses to place the same file hash into both OOD and OE for the same dataset
+- writes a machine-readable summary so you can trace what was promoted
+
+Use `--dry-run` first if you only want to validate the manifests without copying files.
+
 ## What Happens When Real OOD Data Exists
 
 This is the strongest current evidence path.

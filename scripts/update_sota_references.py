@@ -35,6 +35,37 @@ QUERIES = [
 ARXIV_API = "http://export.arxiv.org/api/query"
 CANDIDATE_SECTION_BEGIN = "<!-- BEGIN SOTA AUTOMATION CANDIDATES -->"
 CANDIDATE_SECTION_END = "<!-- END SOTA AUTOMATION CANDIDATES -->"
+DEFAULT_OPPORTUNITY_ROOTS = (".github", "scripts", "src", "tests", "docs", "config", "skills")
+TEXT_FILE_SUFFIXES = {
+    ".cfg",
+    ".ini",
+    ".json",
+    ".md",
+    ".py",
+    ".toml",
+    ".txt",
+    ".yaml",
+    ".yml",
+}
+SKIP_DIRS = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".runtime_tmp", ".venv", "__pycache__"}
+IMPROVEMENT_MARKER_PATTERN = re.compile(r"\b(?P<tag>TODO|FIXME|HACK|XXX|BUG)\b\s*[:\-]\s*(?P<detail>.*)")
+RELEVANCE_TERMS = (
+    "adapter",
+    "bioclip",
+    "calibration",
+    "conformal",
+    "disease",
+    "energy score",
+    "energy-based",
+    "mahalanobis",
+    "ood",
+    "out-of-distribution",
+    "plant",
+    "risk-coverage",
+    "router",
+    "selective prediction",
+    "segment anything",
+)
 
 
 def query_arxiv(q, max_results=5):
@@ -76,6 +107,18 @@ def load_existing_titles(guide_path):
     return titles
 
 
+def is_relevant_candidate(item):
+    text = " ".join([item.get("title", ""), item.get("summary", "")]).lower()
+    for term in RELEVANCE_TERMS:
+        if term == "ood":
+            if re.search(r"\bood\b", text):
+                return True
+            continue
+        if term in text:
+            return True
+    return False
+
+
 def summarize_query_error(error):
     error_text = str(error)
     if "WinError 10013" in error_text:
@@ -85,8 +128,9 @@ def summarize_query_error(error):
     return error_text.splitlines()[0][:200]
 
 
-def render_candidate_section(found, generated_at, query_errors=None):
+def render_candidate_section(found, generated_at, query_errors=None, extra_sections=None):
     query_errors = query_errors or []
+    extra_sections = extra_sections or []
     out_lines = [
         CANDIDATE_SECTION_BEGIN,
         "#### Latest Automated Candidate Scan",
@@ -115,7 +159,105 @@ def render_candidate_section(found, generated_at, query_errors=None):
             out_lines.append(f"- Link: {it['link']}")
             out_lines.append(f"- Review note: {it['summary']}")
             out_lines.append("")
+    for section in extra_sections:
+        out_lines.extend(["", section])
     out_lines.extend(["", CANDIDATE_SECTION_END])
+    return "\n".join(out_lines)
+
+
+def _iter_text_files(repo_root, roots):
+    repo_root = Path(repo_root)
+    for root_name in roots:
+        root = repo_root / root_name
+        if not root.exists():
+            continue
+        files = [root] if root.is_file() else root.rglob("*")
+        for path in files:
+            if not path.is_file():
+                continue
+            relative_parts = path.relative_to(repo_root).parts
+            if any(part in SKIP_DIRS for part in relative_parts):
+                continue
+            if path.suffix.lower() not in TEXT_FILE_SUFFIXES:
+                continue
+            yield path
+
+
+def _relative_posix(path, repo_root):
+    return Path(path).resolve().relative_to(Path(repo_root).resolve()).as_posix()
+
+
+def scan_repo_opportunities(repo_root, max_items=25, roots=DEFAULT_OPPORTUNITY_ROOTS):
+    """Find lightweight repo-local bug, weak-point, and improvement signals."""
+    repo_root = Path(repo_root)
+    opportunities = []
+
+    stale_candidate_path = repo_root / "docs" / "SOTA_AUTOMATION_UPDATES.md"
+    if stale_candidate_path.exists():
+        opportunities.append(
+            {
+                "kind": "weak_point",
+                "file": "docs/SOTA_AUTOMATION_UPDATES.md",
+                "line": 1,
+                "summary": "stale standalone SOTA candidate report exists; guide is the canonical target",
+            }
+        )
+
+    workflow_path = repo_root / ".github" / "workflows" / "sota_auto_update.yml"
+    if workflow_path.exists():
+        workflow_text = workflow_path.read_text(encoding="utf-8", errors="replace")
+        if "SOTA_AUTOMATION_UPDATES.md" in workflow_text:
+            opportunities.append(
+                {
+                    "kind": "bug",
+                    "file": ".github/workflows/sota_auto_update.yml",
+                    "line": workflow_text[: workflow_text.index("SOTA_AUTOMATION_UPDATES.md")].count("\n") + 1,
+                    "summary": "workflow writes standalone update report instead of the canonical guide",
+                }
+            )
+
+    for path in _iter_text_files(repo_root, roots):
+        if len(opportunities) >= max_items:
+            break
+        rel_path = _relative_posix(path, repo_root)
+        try:
+            lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            continue
+        for line_number, line in enumerate(lines, start=1):
+            if path.suffix.lower() == ".py" and not line.lstrip().startswith("#"):
+                continue
+            marker = IMPROVEMENT_MARKER_PATTERN.search(line)
+            if not marker:
+                continue
+            detail = marker.group("detail").strip(" -:#")
+            summary = f"{marker.group('tag').upper()} marker"
+            if detail:
+                summary = f"{summary}: {detail[:160]}"
+            opportunities.append(
+                {
+                    "kind": "improvement",
+                    "file": rel_path,
+                    "line": line_number,
+                    "summary": summary,
+                }
+            )
+            if len(opportunities) >= max_items:
+                break
+
+    return opportunities[:max_items]
+
+
+def render_repo_opportunity_scan(opportunities):
+    out_lines = ["#### Repo Bug / Weak Point / Improvement Scan", ""]
+    if not opportunities:
+        out_lines.append("No lightweight repo-local improvement signals found in the configured roots.")
+        return "\n".join(out_lines)
+
+    out_lines.append("Machine-collected candidates for triage. Review before treating any item as a confirmed defect.")
+    out_lines.append("")
+    for item in opportunities:
+        out_lines.append(f"- `{item['kind']}` [{item['file']}:{item['line']}]: {item['summary']}")
     return "\n".join(out_lines)
 
 
@@ -125,7 +267,7 @@ def update_guide_with_candidate_section(guide_text, candidate_section):
             rf"{re.escape(CANDIDATE_SECTION_BEGIN)}.*?{re.escape(CANDIDATE_SECTION_END)}",
             flags=re.DOTALL,
         )
-        return pattern.sub(candidate_section, guide_text)
+        return pattern.sub(lambda _match: candidate_section, guide_text)
 
     phase_2_heading = "### Phase 2 Checklist"
     if phase_2_heading in guide_text:
@@ -139,6 +281,8 @@ def main():
     p.add_argument("--output", default="docs/SOTA_AUTOMATION_GUIDE.md")
     p.add_argument("--guide", default="docs/SOTA_AUTOMATION_GUIDE.md")
     p.add_argument("--max-per-query", type=int, default=5)
+    p.add_argument("--max-opportunities", type=int, default=25)
+    p.add_argument("--skip-repo-scan", action="store_true")
     args = p.parse_args()
 
     existing = load_existing_titles(args.guide)
@@ -156,12 +300,19 @@ def main():
             key = it["title"].lower()
             if key in existing:
                 continue
-            found.append({"query": q, **it})
+            candidate = {"query": q, **it}
+            if not is_relevant_candidate(candidate):
+                continue
+            found.append(candidate)
 
     now = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
     output_path = Path(args.output)
     guide_path = Path(args.guide)
-    candidate_section = render_candidate_section(found, now, query_errors=query_errors)
+    extra_sections = []
+    if not args.skip_repo_scan:
+        opportunities = scan_repo_opportunities(Path.cwd(), max_items=args.max_opportunities)
+        extra_sections.append(render_repo_opportunity_scan(opportunities))
+    candidate_section = render_candidate_section(found, now, query_errors=query_errors, extra_sections=extra_sections)
 
     if output_path == guide_path:
         guide_text = guide_path.read_text(encoding="utf-8")
