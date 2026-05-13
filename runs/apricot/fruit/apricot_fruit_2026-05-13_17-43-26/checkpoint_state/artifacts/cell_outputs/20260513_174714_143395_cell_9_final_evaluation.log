@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=apricot_fruit_2026-05-13_17-43-26
+started_at=2026-05-13T17:47:14.143427+00:00
+finished_at=2026-05-13T17:47:22.415510+00:00
+duration_sec=8.272
+
+[DOGRULAMA (referans)] ornek=280 sinif=5 accuracy=0.9393 ood_auroc=0.8312 sure_ds_f1=0.4770 conformal_cov=0.9536
+[TEST (ayrilmis)] ornek=280 sinif=5 accuracy=0.9536 ood_auroc=0.8373 sure_ds_f1=0.4462 conformal_cov=0.9607
+[OOD] kanit=real_ood_split durum=failed gecti=False
+[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.
