@@ -1,0 +1,108 @@
+{
+  "recommendation": {
+    "decision": "bootstrap_pending",
+    "change_count": 0,
+    "manual_overrides": {
+      "EPOCHS": 38,
+      "BATCH_SIZE": 40,
+      "LEARNING_RATE": 8e-05,
+      "LORA_R": 20,
+      "LORA_ALPHA": 20,
+      "LORA_DROPOUT": 0.2,
+      "OOD_FACTOR": 4.0,
+      "LABEL_SMOOTHING": 0.1,
+      "AUTO_DISCONNECT_RUNTIME": false,
+      "AUTO_PUSH_TO_GITHUB": true,
+      "WEIGHT_DECAY": 0.01,
+      "LOSS_NAME": "logitnorm",
+      "LOGITNORM_TAU": 1.0,
+      "MIXED_PRECISION": "bf16",
+      "GRAD_ACCUM_STEPS": 1,
+      "VALIDATION_EVERY_N_EPOCHS": 1,
+      "EARLY_STOPPING_PATIENCE": 6,
+      "RANDAUGMENT_NUM_OPS": 2,
+      "RANDAUGMENT_MAGNITUDE": 7,
+      "NUM_WORKERS": 12,
+      "PREFETCH": 8,
+      "CACHE_TRAIN_SPLIT": true,
+      "ENABLE_BAYESIAN_OPTIMIZATION": true
+    }
+  },
+  "run_id": "strawberry_fruit_2026-05-13_09-16-47",
+  "run_label": "strawberry_fruit_2026-05-13_09-16-47",
+  "crop_name": "strawberry",
+  "part_name": "fruit",
+  "notebook_surface": "2_train_continual_sd_lora_adapter.ipynb",
+  "dataset_roots": {
+    "runtime_dataset_root": "data/prepared_runtime_datasets",
+    "runtime_dataset_key": "strawberry__fruit",
+    "selected_dataset_name": "strawberry__fruit",
+    "selected_runtime_dataset_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__fruit",
+    "resolved_ood_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__fruit/ood",
+    "resolved_runtime_dataset_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets"
+  },
+  "notebook_parameters": {
+    "epochs": 38,
+    "batch_size": 40,
+    "learning_rate": 8e-05,
+    "lora_r": 20,
+    "ood_factor": 4.0,
+    "mixed_precision": "bf16",
+    "num_workers": 12,
+    "checkpoint_every_n_steps": 250,
+    "enable_bayesian_optimization": true
+  },
+  "export_paths": {
+    "repo_run_dir": "/content/bitirmeprojesi/runs/strawberry/fruit/strawberry_fruit_2026-05-13_09-16-47",
+    "repo_output_dir": "/content/bitirmeprojesi/runs/strawberry/fruit/strawberry_fruit_2026-05-13_09-16-47/outputs/colab_notebook_training",
+    "repo_telemetry_dir": "/content/bitirmeprojesi/runs/strawberry/fruit/strawberry_fruit_2026-05-13_09-16-47/telemetry",
+    "repo_checkpoint_state_dir": "/content/bitirmeprojesi/runs/strawberry/fruit/strawberry_fruit_2026-05-13_09-16-47/checkpoint_state",
+    "executed_notebook_path": "/content/bitirmeprojesi/runs/strawberry/fruit/strawberry_fruit_2026-05-13_09-16-47/notebooks/6_train_all_continual_sd_lora_adapters.executed.ipynb",
+    "adapter_export_dir": "/content/bitirmeprojesi/outputs/colab_notebook_training/strawberry/fruit/continual_sd_lora_adapter"
+  },
+  "access_check": {
+    "github": {
+      "status": "ok",
+      "repo_url": "https://github.com/EfeErim/bitirmeprojesi.git",
+      "token_present": true,
+      "read_access_mode": "public",
+      "anonymous_read_access": true,
+      "token_read_access": true,
+      "push_requires_auth": true,
+      "push_ready": true,
+      "detail": "f231cdea44f668c0d7c384374fb7888e55ab72e1\tHEAD"
+    },
+    "repo_updates": {
+      "status": "ok",
+      "branch": "master",
+      "local_head": "f231cdea44f668c0d7c384374fb7888e55ab72e1",
+      "remote_head": "f231cdea44f668c0d7c384374fb7888e55ab72e1",
+      "update_available": false,
+      "relation": "up_to_date"
+    },
+    "huggingface": {
+      "status": "ok",
+      "model_ids": [
+        "facebook/dinov3-vitl16-pretrain-lvd1689m"
+      ],
+      "token_present": true,
+      "access_mode": "public",
+      "requires_token_for_any": false,
+      "per_model": [
+        {
+          "model_id": "facebook/dinov3-vitl16-pretrain-lvd1689m",
+          "access_mode": "public",
+          "anonymous_ok": true,
+          "token_ok": true,
+          "detail": ""
+        }
+      ]
+    }
+  },
+  "readiness_summary": {
+    "status": "failed",
+    "passed": false,
+    "ood_evidence_source": "real_ood_split"
+  },
+  "created_at": "2026-05-13T09:19:13.279571+00:00"
+}
