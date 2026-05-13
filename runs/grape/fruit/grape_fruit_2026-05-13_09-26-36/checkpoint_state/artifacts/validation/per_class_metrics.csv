@@ -1,0 +1,6 @@
+class,precision,recall,f1-score,support
+u_zu_m_antraknoz_meyve,0.92,1.0,0.9583333333333334,23.0
+u_zu_m_botrytis_cinerea_meyve,1.0,0.7959183673469388,0.8863636363636364,49.0
+u_zu_m_ku_lleme_meyve,0.6,1.0,0.75,9.0
+u_zu_m_mildiyo_meyve,0.8636363636363636,0.76,0.8085106382978723,25.0
+u_zu_m_sag_lıklı_meyve,0.9041095890410958,0.9705882352941176,0.9361702127659575,68.0

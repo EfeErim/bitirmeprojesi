@@ -1,0 +1,1183 @@
+{
+  "train_loss": [
+    1.6304194609324136,
+    1.6077398538589478,
+    1.6050753672917684,
+    1.5882012526194254,
+    1.4719430605570476,
+    1.3614134311676025,
+    1.275611972808838,
+    1.201005744934082,
+    1.1626031557718912,
+    1.1281305313110352,
+    1.1266218423843384,
+    1.1050344387690225,
+    1.0765304644902547,
+    1.062886651357015,
+    1.050543189048767,
+    1.047099232673645,
+    1.0324796239535015,
+    1.017805782953898,
+    1.0083132187525432,
+    1.0044574936230977,
+    1.009717333316803,
+    0.9938830971717835,
+    0.9977308630943298,
+    0.9873716711997986,
+    1.000113300482432,
+    0.9845073819160461,
+    0.9942384362220764,
+    0.9851483623186748,
+    0.9973082661628723,
+    0.9843067725499471,
+    0.9909642140070597,
+    0.9887305577596028
+  ],
+  "val_loss": [
+    1.6800386946776817,
+    1.682057730082808,
+    1.4662798971965396,
+    1.4207118955151787,
+    1.207317576326173,
+    0.9586032382373152,
+    0.7294528078416298,
+    0.6715067691844085,
+    0.6771688529386602,
+    0.6210465567379162,
+    0.6262145637181299,
+    0.5721365032267982,
+    0.5214810330934566,
+    0.4409122077651836,
+    0.44004064273281857,
+    0.42459281770801494,
+    0.3528457790661346,
+    0.35991783578205727,
+    0.33693132090687367,
+    0.3584524157601569,
+    0.3100922100551041,
+    0.30675639624803747,
+    0.2993651043447056,
+    0.288817420079983,
+    0.3179337739430625,
+    0.2547322789142872,
+    0.29976586222744966,
+    0.2956569879556653,
+    0.28227572723548733,
+    0.30034425529522885,
+    0.29609607925221065,
+    0.2891014906465365
+  ],
+  "val_accuracy": [
+    0.05172413793103448,
+    0.13793103448275862,
+    0.367816091954023,
+    0.5689655172413793,
+    0.4942528735632184,
+    0.6839080459770115,
+    0.7586206896551724,
+    0.764367816091954,
+    0.7873563218390804,
+    0.7758620689655172,
+    0.7758620689655172,
+    0.7816091954022989,
+    0.8275862068965517,
+    0.8793103448275862,
+    0.867816091954023,
+    0.8563218390804598,
+    0.896551724137931,
+    0.8850574712643678,
+    0.896551724137931,
+    0.8793103448275862,
+    0.8850574712643678,
+    0.896551724137931,
+    0.896551724137931,
+    0.896551724137931,
+    0.9022988505747126,
+    0.9137931034482759,
+    0.896551724137931,
+    0.896551724137931,
+    0.896551724137931,
+    0.896551724137931,
+    0.896551724137931,
+    0.896551724137931
+  ],
+  "macro_precision": [
+    0.01034482754766941,
+    0.09356725215911865,
+    0.1683405190706253,
+    0.5739150047302246,
+    0.5202825665473938,
+    0.6251119375228882,
+    0.5934904217720032,
+    0.7180057764053345,
+    0.766477108001709,
+    0.7471774220466614,
+    0.7612193822860718,
+    0.7719432711601257,
+    0.7916063070297241,
+    0.8477923274040222,
+    0.8298413157463074,
+    0.8201260566711426,
+    0.8635007739067078,
+    0.8505008816719055,
+    0.8751152157783508,
+    0.8425382375717163,
+    0.8513369560241699,
+    0.8553333282470703,
+    0.863896369934082,
+    0.8575491905212402,
+    0.8687001466751099,
+    0.881794810295105,
+    0.8575491905212402,
+    0.8575491905212402,
+    0.8575491905212402,
+    0.8575491905212402,
+    0.8575491905212402,
+    0.8575491905212402
+  ],
+  "macro_recall": [
+    0.20000000298023224,
+    0.18694117665290833,
+    0.22929172217845917,
+    0.46378350257873535,
+    0.4293598234653473,
+    0.6346536874771118,
+    0.6313751935958862,
+    0.7392416000366211,
+    0.8036044239997864,
+    0.7805233001708984,
+    0.7954410910606384,
+    0.8112179040908813,
+    0.8524033427238464,
+    0.8969748616218567,
+    0.8920342326164246,
+    0.872811496257782,
+    0.9053012728691101,
+    0.8925239443778992,
+    0.9131380915641785,
+    0.8891380429267883,
+    0.8971379995346069,
+    0.9131380915641785,
+    0.9002424478530884,
+    0.9053012728691101,
+    0.908242404460907,
+    0.929301381111145,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101
+  ],
+  "macro_f1": [
+    0.019672129303216934,
+    0.052572570741176605,
+    0.17783859372138977,
+    0.4059949517250061,
+    0.3279380202293396,
+    0.6066020727157593,
+    0.6021164655685425,
+    0.6975782513618469,
+    0.7497168779373169,
+    0.7176579236984253,
+    0.7212644815444946,
+    0.7304739356040955,
+    0.7865095138549805,
+    0.8598759770393372,
+    0.8405042886734009,
+    0.8237169981002808,
+    0.8761512637138367,
+    0.8633235692977905,
+    0.8871256709098816,
+    0.8477855920791626,
+    0.8620094060897827,
+    0.8703311085700989,
+    0.8702541589736938,
+    0.8678755760192871,
+    0.8749753832817078,
+    0.8971471786499023,
+    0.8678755760192871,
+    0.8678755760192871,
+    0.8678755760192871,
+    0.8678755760192871,
+    0.8678755760192871,
+    0.8678755760192871
+  ],
+  "weighted_f1": [
+    0.005087619882890548,
+    0.04472896148418558,
+    0.3017910047509204,
+    0.5162774886208019,
+    0.42021389665274783,
+    0.6921764242238012,
+    0.7331700379821076,
+    0.757843105272315,
+    0.7761997792912626,
+    0.7695942144284303,
+    0.7749087454258711,
+    0.7862210328551544,
+    0.8244249190407238,
+    0.8767901891949533,
+    0.8657729927150682,
+    0.8548500674894486,
+    0.8954043333557831,
+    0.8835684239179239,
+    0.8945137111619971,
+    0.8790877769733297,
+    0.8835489558077406,
+    0.8969467864639458,
+    0.8949471835432381,
+    0.8971024436512213,
+    0.9024462645081268,
+    0.9135137974530801,
+    0.8971024436512213,
+    0.8971024436512213,
+    0.8971024436512213,
+    0.8971024436512213,
+    0.8971024436512213,
+    0.8971024436512213
+  ],
+  "balanced_accuracy": [
+    0.20000000298023224,
+    0.18694117665290833,
+    0.22929172217845917,
+    0.46378350257873535,
+    0.4293598234653473,
+    0.6346536874771118,
+    0.6313751935958862,
+    0.7392416000366211,
+    0.8036044239997864,
+    0.7805233001708984,
+    0.7954410910606384,
+    0.8112179040908813,
+    0.8524033427238464,
+    0.8969748616218567,
+    0.8920342326164246,
+    0.872811496257782,
+    0.9053012728691101,
+    0.8925239443778992,
+    0.9131380915641785,
+    0.8891380429267883,
+    0.8971379995346069,
+    0.9131380915641785,
+    0.9002424478530884,
+    0.9053012728691101,
+    0.908242404460907,
+    0.929301381111145,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101,
+    0.9053012728691101
+  ],
+  "generalization_gap": [
+    0.04961923374526811,
+    0.0743178762238601,
+    -0.13879547009522875,
+    -0.16748935710424662,
+    -0.2646254842308746,
+    -0.4028101929302873,
+    -0.5461591649672082,
+    -0.5294989757496735,
+    -0.48543430283323097,
+    -0.507083974573119,
+    -0.5004072786662085,
+    -0.5328979355422243,
+    -0.5550494313967981,
+    -0.6219744435918314,
+    -0.6105025463159486,
+    -0.6225064149656301,
+    -0.6796338448873669,
+    -0.6578879471718407,
+    -0.6713818978456696,
+    -0.6460050778629407,
+    -0.6996251232616989,
+    -0.6871267009237461,
+    -0.6983657587496241,
+    -0.6985542511198156,
+    -0.6821795265393695,
+    -0.729775103001759,
+    -0.6944725739946267,
+    -0.6894913743630094,
+    -0.7150325389273849,
+    -0.6839625172547183,
+    -0.6948681347548491,
+    -0.6996290671130663
+  ],
+  "per_class_accuracy": [
+    {
+      "u_zu_m_antraknoz_meyve": 0.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.0,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.0,
+      "u_zu_m_sag_lıklı_meyve": 0.0
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.0,
+      "u_zu_m_ku_lleme_meyve": 0.0,
+      "u_zu_m_mildiyo_meyve": 0.9200000166893005,
+      "u_zu_m_sag_lıklı_meyve": 0.014705882407724857
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7346938848495483,
+      "u_zu_m_ku_lleme_meyve": 0.0,
+      "u_zu_m_mildiyo_meyve": 0.0,
+      "u_zu_m_sag_lıklı_meyve": 0.4117647111415863
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.95652174949646,
+      "u_zu_m_botrytis_cinerea_meyve": 0.3877550959587097,
+      "u_zu_m_ku_lleme_meyve": 0.1111111119389534,
+      "u_zu_m_mildiyo_meyve": 0.03999999910593033,
+      "u_zu_m_sag_lıklı_meyve": 0.8235294222831726
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.95652174949646,
+      "u_zu_m_botrytis_cinerea_meyve": 0.020408162847161293,
+      "u_zu_m_ku_lleme_meyve": 0.2222222238779068,
+      "u_zu_m_mildiyo_meyve": 0.07999999821186066,
+      "u_zu_m_sag_lıklı_meyve": 0.8676470518112183
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8260869383811951,
+      "u_zu_m_botrytis_cinerea_meyve": 0.4897959232330322,
+      "u_zu_m_ku_lleme_meyve": 0.4444444477558136,
+      "u_zu_m_mildiyo_meyve": 0.5600000023841858,
+      "u_zu_m_sag_lıklı_meyve": 0.8529411554336548
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8695651888847351,
+      "u_zu_m_botrytis_cinerea_meyve": 0.5714285969734192,
+      "u_zu_m_ku_lleme_meyve": 0.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.9558823704719543
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8695651888847351,
+      "u_zu_m_botrytis_cinerea_meyve": 0.4693877696990967,
+      "u_zu_m_ku_lleme_meyve": 0.6666666865348816,
+      "u_zu_m_mildiyo_meyve": 0.7200000286102295,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8695651888847351,
+      "u_zu_m_botrytis_cinerea_meyve": 0.44897958636283875,
+      "u_zu_m_ku_lleme_meyve": 0.8888888955116272,
+      "u_zu_m_mildiyo_meyve": 0.8399999737739563,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8260869383811951,
+      "u_zu_m_botrytis_cinerea_meyve": 0.40816327929496765,
+      "u_zu_m_ku_lleme_meyve": 0.7777777910232544,
+      "u_zu_m_mildiyo_meyve": 0.9200000166893005,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.8695651888847351,
+      "u_zu_m_botrytis_cinerea_meyve": 0.40816327929496765,
+      "u_zu_m_ku_lleme_meyve": 0.8888888955116272,
+      "u_zu_m_mildiyo_meyve": 0.8399999737739563,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.95652174949646,
+      "u_zu_m_botrytis_cinerea_meyve": 0.44897958636283875,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.6800000071525574,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.5714285969734192,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7200000286102295,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7142857313156128,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.800000011920929,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.95652174949646,
+      "u_zu_m_botrytis_cinerea_meyve": 0.6530612111091614,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.8799999952316284,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.6734693646430969,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7200000286102295,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 0.95652174949646,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7755101919174194,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7551020383834839,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.8399999737739563,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7551020383834839,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7200000286102295,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7551020383834839,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.7551020383834839,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.8399999737739563,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7200000286102295,
+      "u_zu_m_sag_lıklı_meyve": 0.9852941036224365
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.9852941036224365
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.8799999952316284,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    },
+    {
+      "u_zu_m_antraknoz_meyve": 1.0,
+      "u_zu_m_botrytis_cinerea_meyve": 0.795918345451355,
+      "u_zu_m_ku_lleme_meyve": 1.0,
+      "u_zu_m_mildiyo_meyve": 0.7599999904632568,
+      "u_zu_m_sag_lıklı_meyve": 0.970588207244873
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 68
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 25
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 23
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 9
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 23
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 9
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.03999999910593033,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.1111111119389534,
+        "support": 9
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.3877550959587097,
+        "support": 49
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.020408162847161293,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.07999999821186066,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.2222222238779068,
+        "support": 9
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.4444444477558136,
+        "support": 9
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.4897959232330322,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.5600000023841858,
+        "support": 25
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 9
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.5714285969734192,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.4693877696990967,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.6666666865348816,
+        "support": 9
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7200000286102295,
+        "support": 25
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.44897958636283875,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8399999737739563,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.8695651888847351,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.40816327929496765,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_meyve",
+        "class_index": 2,
+        "accuracy": 0.7777777910232544,
+        "support": 9
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.8260869383811951,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.40816327929496765,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8399999737739563,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.8695651888847351,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.44897958636283875,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.6800000071525574,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.95652174949646,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.5714285969734192,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7200000286102295,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7142857313156128,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.800000011920929,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.6530612111091614,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8799999952316284,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.95652174949646,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.6734693646430969,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7200000286102295,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7755101919174194,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_meyve",
+        "class_index": 0,
+        "accuracy": 0.95652174949646,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7551020383834839,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8399999737739563,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7200000286102295,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7551020383834839,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7551020383834839,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.7551020383834839,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8399999737739563,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7200000286102295,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.9852941036224365,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.9852941036224365,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.8799999952316284,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_meyve",
+        "class_index": 3,
+        "accuracy": 0.7599999904632568,
+        "support": 25
+      },
+      {
+        "class_name": "u_zu_m_botrytis_cinerea_meyve",
+        "class_index": 1,
+        "accuracy": 0.795918345451355,
+        "support": 49
+      },
+      {
+        "class_name": "u_zu_m_sag_lıklı_meyve",
+        "class_index": 4,
+        "accuracy": 0.970588207244873,
+        "support": 68
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 480,
+  "optimizer_steps": 480,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 26,
+  "best_metric_value": 0.2547322789142872
+}
