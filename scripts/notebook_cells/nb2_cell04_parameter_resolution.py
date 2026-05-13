@@ -71,7 +71,8 @@ DATASET_NAME = ADAPTER_KEY
 # Cell 3, bu parametre hucreden once calistigi icin run kimligini burada dogru adaptere yeniden bagla.
 if "ColabLiveTelemetry" in globals() and "TrainingCheckpointManager" in globals():
     RUN_ID = build_notebook_run_id(CROP_NAME, PART_NAME)
-    NOTEBOOK_FILENAME = "2_train_continual_sd_lora_adapter.executed.ipynb"
+    NOTEBOOK_NAME = str(globals().get("NOTEBOOK_NAME", "2_train_continual_sd_lora_adapter.ipynb"))
+    NOTEBOOK_FILENAME = str(globals().get("NOTEBOOK_FILENAME", "2_train_continual_sd_lora_adapter.executed.ipynb"))
     REPO_RUN_DIR = build_notebook_run_dir(ROOT, CROP_NAME, PART_NAME, RUN_ID)
     REPO_NOTEBOOK_OUTPUT_PATH = REPO_RUN_DIR / "notebooks" / NOTEBOOK_FILENAME
     LOCAL_OUTPUT_DIR = ROOT / "outputs" / "colab_notebook_training"
@@ -81,7 +82,7 @@ if "ColabLiveTelemetry" in globals() and "TrainingCheckpointManager" in globals(
     LOCAL_TELEMETRY_ROOT = ROOT / "outputs" / "colab_notebook_training" / "telemetry_runtime"
     LOCAL_TELEMETRY_SPOOL_ROOT = ROOT / ".runtime_tmp" / "colab_notebook_training" / "telemetry_spool"
     TELEMETRY = ColabLiveTelemetry(
-        notebook_name="2_train_continual_sd_lora_adapter.ipynb",
+        notebook_name=NOTEBOOK_NAME,
         run_id=RUN_ID,
         drive_root=LOCAL_TELEMETRY_ROOT,
         local_root=LOCAL_TELEMETRY_SPOOL_ROOT,

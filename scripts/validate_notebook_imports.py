@@ -727,6 +727,54 @@ def test_training_notebook_bootstrap_contract() -> None:
         )
 
 
+def test_batch_training_notebook_contract() -> None:
+    sources = _load_notebook_sources("6_train_all_continual_sd_lora_adapters.ipynb")
+
+    _assert_update_check_contract(
+        sources.first_code_source,
+        "Notebook 6",
+        forbid_drive_bootstrap=True,
+    )
+    for snippet in (
+        'NOTEBOOK_NAME = "6_train_all_continual_sd_lora_adapters.ipynb"',
+        'NOTEBOOK_FILENAME = "6_train_all_continual_sd_lora_adapters.executed.ipynb"',
+        "NB6_AUTO_DISCONNECT_RUNTIME = True",
+        "NB6_AUTO_DISCONNECT_GRACE_SECONDS = 20",
+        '"AUTO_DISCONNECT_RUNTIME": False',
+        '"AUTO_PUSH_TO_GITHUB": True',
+        "NB6_MANUAL_PARAM_OVERRIDES = {}",
+        "NB6_ADAPTER_SEQUENCE = [",
+        "for index, adapter_key in enumerate(NB6_ADAPTER_SEQUENCE, start=1):",
+        "MANUAL_PARAM_OVERRIDES = dict(NB6_MANUAL_PARAM_OVERRIDES.get(adapter_key, {}))",
+        "from scripts.colab_notebook_helpers import maybe_auto_disconnect_colab_runtime",
+        '"batch_loop_completed": True',
+        '"all_adapters_attempted": len(NB6_RESULTS) == len(NB6_ADAPTER_SEQUENCE)',
+        "enabled=bool(NB6_AUTO_DISCONNECT_RUNTIME)",
+    ):
+        _assert_contains(
+            sources.full_source,
+            snippet,
+            "Notebook 6 batch surface is missing required batch-training contract: {snippet}",
+        )
+    for script_name in (
+        "nb2_cell03_runtime_setup.py",
+        "nb2_cell04_parameter_resolution.py",
+        "nb2_cell05_access_check.py",
+        "nb2_cell06_dataset_validation.py",
+        "nb2_cell07_engine_init.py",
+        "nb2_cell08_ood_config_verify.py",
+        "nb2_cell09_training.py",
+        "nb2_cell10_ood_calibration.py",
+        "nb2_cell11_adapter_save.py",
+        "nb2_cell12_final_evaluation.py",
+    ):
+        _assert_contains(
+            sources.full_source,
+            f"run_cell_script('{script_name}', globals())",
+            "Notebook 6 should execute the maintained Notebook 2 cell script sequence: {snippet}",
+        )
+
+
 def test_router_calibration_notebook_contract() -> None:
     sources = _load_notebook_sources("5_calibrate_router_handoff_thresholds.ipynb")
 
@@ -824,6 +872,15 @@ CHECKS = (
         success_message="Notebook 5 wraps maintained router evaluation and calibration scripts",
         failure_prefix="Notebook 5 router calibration contract failed",
         callback=test_router_calibration_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 6 Batch Training",
+        step_id="NB6_BATCH",
+        description="Notebook 6 batch training contract",
+        success_message="Notebook 6 bootstraps Colab and wraps maintained Notebook 2 training cells",
+        failure_prefix="Notebook 6 batch training contract failed",
+        callback=test_batch_training_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
