@@ -131,6 +131,7 @@ OE_LOSS_WEIGHT = 0.5
 
 # CROP_NAME ve PART_NAME, kosu adlandirmasi ve metadata icin kullanilir.
 CROP_NAME = globals().get("CROP_NAME", "tomato")
+PART_NAME = globals().get("PART_NAME", "unspecified")
 ENABLE_BAYESIAN_OPTIMIZATION = bool(globals().get("ENABLE_BAYESIAN_OPTIMIZATION", True))
 
 # ALLOW_UNDER_MIN_TRAINING: True olursa 100 image/class production guardrail'i research kosulari icin bypass edilir.
@@ -382,24 +383,28 @@ def _collect_bayesian_notebook_overrides():
     if not recommendations_path.exists():
         print(f"[BAYES] Toggle acik ama dosya yok: {recommendations_path}")
         return {}
+    try:
         payload = json.loads(recommendations_path.read_text(encoding="utf-8"))
     except Exception as exc:
         print(f"[BAYES] Oneri dosyasi okunamadi: {exc}")
         return {}
 
     cohorts = list(payload.get("cohorts", [])) if isinstance(payload, dict) else []
+    selected_cohort = None
     for cohort in cohorts:
         comparability = cohort.get("comparability", {}) if isinstance(cohort, dict) else {}
         if str(comparability.get("crop_name", "")).strip().lower() == str(CROP_NAME).strip().lower() and str(comparability.get("part_name", "")).strip().lower() == str(PART_NAME).strip().lower():
             selected_cohort = cohort
             break
     if selected_cohort is None and cohorts:
+        selected_cohort = cohorts[0]
+
     proposals = list((selected_cohort or {}).get("proposals", [])) if isinstance(selected_cohort, dict) else []
     if not proposals:
         print("[BAYES] Uygulanabilir oneriler bulunamadi.")
         return {}
 
-               "overrides": {"EPOCHS": 20, "BATCH_SIZE": 112, "LEARNING_RATE": 1.1e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.14, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.10},
+    proposal = proposals[0]
     parameters = proposal.get("parameters", {}) if isinstance(proposal, dict) else {}
     if not isinstance(parameters, dict):
         return {}

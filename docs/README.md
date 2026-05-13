@@ -1,6 +1,6 @@
 # Documentation Map
 
-Use this file as a routing index. If you are new, start with [../README.md](../README.md).
+Use this file as the routing index. If you are new, start with [../README.md](../README.md).
 
 ## Quick Reading Paths
 
@@ -25,7 +25,7 @@ Use this file as a routing index. If you are new, start with [../README.md](../R
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
 - Optional plantness input guard config: `inference.input_guard`
--- Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/` (or historical exports under `runs/<RUN_ID>/.../continual_sd_lora_adapter/`)
+- Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`
 - Dataset-aware cohort command:
 

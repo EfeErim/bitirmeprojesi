@@ -1,173 +1,57 @@
-﻿# AADS v6
+# AADS v6
 
-AADS v6 is a focused plant-disease training and inference repository.
+AADS v6 is a narrow plant-disease training and inference repository. It focuses on three maintained surfaces:
 
-In plain language, this repo does three things:
+1. Preparing grouped datasets for training
+2. Training crop-specific SD-LoRA adapters
+3. Running router-guided inference and readiness checks
 
-1. It trains one crop-specific disease adapter at a time.
-2. It checks whether that adapter is accurate enough and safe enough to deploy.
-3. It uses a router plus the saved adapter to predict disease from a new image.
+If you are new to the project, start with [docs/README.md](docs/README.md), then read [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md) and [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md) as needed.
 
-You do not need prior machine learning experience to read this repo if you follow the docs in order. This README is the starting point.
+## Maintained entry points
 
-## Start Here
+- Notebook 0: [colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb](colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb)
+- Notebook 1: [colab_notebooks/1_identify_crop_part_with_router.ipynb](colab_notebooks/1_identify_crop_part_with_router.ipynb)
+- Notebook 2: [colab_notebooks/2_train_continual_sd_lora_adapter.ipynb](colab_notebooks/2_train_continual_sd_lora_adapter.ipynb)
+- Notebook 3: [colab_notebooks/3_validate_exported_adapter_directly.ipynb](colab_notebooks/3_validate_exported_adapter_directly.ipynb)
+- Notebook 5: [colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb)
+- Training workflow: [src/workflows/training.py](src/workflows/training.py)
+- Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
 
-If you are completely new, read in this order:
+Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface.
 
-1. This file.
-2. [docs/README.md](docs/README.md)
-3. [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md) if you want to train.
-4. [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md) if you want to decide whether a model is deployable.
-5. [docs/architecture/overview.md](docs/architecture/overview.md) if you want the code map.
+## What the repo covers
 
-## What The Main Words Mean
+- Dataset auditing and materialization for Notebook 0
+- Continual adapter training for one crop at a time
+- OOD calibration and readiness reporting
+- Router-driven inference with adapter lookup
+- Direct adapter validation and router calibration notebooks
 
-- `crop`: The plant type, such as `tomato`, `potato`, or `wheat`.
-- `class`: One label the model can predict for that crop, such as `healthy` or `late_blight`.
-- `adapter`: The saved crop-specific model bundle that contains LoRA weights, classifier state, metadata, and OOD state.
-- `router`: The front part of inference that looks at an image and guesses the crop and plant part before the crop adapter runs.
-- `OOD`: "Out of distribution." This means the input does not look like the disease classes the adapter was trained to support.
-- `readiness`: The final deployment verdict written to `production_readiness.json`.
-- `artifact`: A file produced by training, evaluation, or notebook telemetry, such as a JSON report, plot, or exported adapter.
-- `runtime dataset`: The split dataset layout used by the workflow code during training.
+## Core concepts
 
-## What This Repo Actually Supports
+- `crop`: plant type such as `tomato` or `grape`
+- `class`: one label the model can predict for a crop
+- `adapter`: exported crop-specific model bundle
+- `router`: crop and part selector used before adapter loading
+- `OOD`: out-of-distribution input outside the supported class set
+- `readiness`: final deployment verdict written to `production_readiness.json`
 
-This repository is intentionally narrow. The maintained user surfaces are:
+## Setup
 
-- Notebook 0 prepare grouped dataset for training: `colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb`
-- Notebook 1 identify crop and part with router: `colab_notebooks/1_identify_crop_part_with_router.ipynb`
-- Notebook 2 train continual SD-LoRA adapter: `colab_notebooks/2_train_continual_sd_lora_adapter.ipynb`
-- Notebook 3 validate exported adapter directly: `colab_notebooks/3_validate_exported_adapter_directly.ipynb`
-- Notebook 5 calibrate router handoff thresholds: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
-- CLI training: `.\scripts\python.cmd -m src.app.cli training ...`
-- CLI inference: `.\scripts\python.cmd -m src.app.cli inference ...`
-
-There is also one tracked convenience notebook:
-
-- Notebook 4 simple direct adapter test UI: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
-
-Notebook 4 is a thin convenience wrapper over the same direct-adapter smoke-test helpers used by Notebook 3. It is tracked in the repo, but it is not a separate canonical workflow surface.
-
-The canonical app-facing entrypoints are:
-
-- `src/workflows/training.py` via `TrainingWorkflow.run(...)`
-- `src/workflows/inference.py` via `InferenceWorkflow.predict(...)`
-
-This repo does not aim to be:
-
-- a general-purpose ML framework
-- a multi-model research playground
-- an autonomous agent system
-
-## The System In One Minute
-
-Training works like this:
-
-1. You start with images for one crop.
-2. The training flow builds one adapter for that crop.
-3. The workflow evaluates the adapter on validation and test data.
-4. The workflow calibrates OOD behavior.
-5. The workflow writes reports and a final readiness artifact.
-6. A run is `ready` only when classification targets pass and real `ood/` evidence exists; held-out fallback evidence can still yield a `provisional` verdict.
-7. You can copy the exported adapter into the deployment adapter root.
-
-Inference works like this:
-
-1. The router looks at the image and guesses the crop and part.
-2. The router fuses whole-image crop evidence with SAM3 ROI evidence so one misleading patch does not dominate by itself.
-3. The runtime rejects weak or ambiguous router outputs as `router_uncertain` before loading any adapter.
-4. The runtime loads the adapter for the accepted crop.
-5. The adapter predicts the disease class.
-6. If an adapter actually runs, the runtime also reports calibrated adapter OOD information.
-7. The response keeps the mirrored top-level crop fields and also includes a structured `router` block with router status, message, primary detection, and detection count.
-
-Current naming note:
-
-- the maintained router methodology is `SAM3 + BioCLIP-2.5`
-- `VLM` survives only as a backward-compatible module/config name on some repo surfaces
-
-Notebook 1 is different:
-
-- It stops after the router.
-- It is used to inspect crop and part identification only.
-- `part` is an advisory organ label; when organ evidence is ambiguous the router returns `part=unknown`, but it can keep a supported part when the generic and crop-conditioned organ surfaces agree on the same compatible label.
-- It does not load a crop adapter.
-
-Notebook 0 is different:
-
-- It runs before training.
-- Its canonical repo-local audit input root is `data/class_root_dataset/`.
-- It now asks you which repo dataset under that root to audit unless you prefill the dataset name or explicit repo-relative path.
-- It audits the flat class-root dataset for duplicate, near-duplicate, and split-leakage risks.
-- It can build a cleaned class-root working copy from the audit reports before runtime materialization.
-- It uses DINOv3 and BioCLIP-2.5 embeddings as similarity signals for grouped family prep.
-- It is the audit-first surface for auditing, grouping, and materializing the prepared runtime dataset for Notebook 2.
-
-Notebook 3 is different:
-
-- It skips the router.
-- It loads one adapter directly.
-- It is used to confirm that an exported adapter still works.
-
-Notebook 5 is different:
-
-- It calibrates router handoff thresholds from an offline `data/router_eval/` surface.
-- It runs the maintained router evaluation and calibration scripts.
-- It reports recommended config overrides, but it does not edit config files automatically.
-
-## Key Technical Facts
-
-The maintained training path is:
-
-- frozen DINOv3 backbone
-- LoRA adapters on selected transformer linear layers
-- multi-scale feature fusion
-- classifier head on the fused representation
-- OOD calibration saved inside the exported adapter bundle
-- training loader sampling defaults to `auto`, promoting the train split to weighted sampling when class counts are materially imbalanced
-- training now resolves supported-class reference counts from `split_manifest.json` when available, otherwise from the runtime `continual` split; normal runs fail before adapter initialization if any supported class resolves below `100` images, explicit few-shot research runs record that production guardrail bypass in artifacts, and when at least one class lands in the eligible low-support range the training loss adds effective-number class-balanced weighting while validation and test loss stay unweighted
-
-The default inference deployment path is:
-
-```text
-models/adapters/<crop>/<part>/continual_sd_lora_adapter/  # or historical exports under runs/<RUN_ID>/.../continual_sd_lora_adapter/
-```
-
-Legacy crop-only bundles still load, but future exports should land under the crop/part path.
-
-## Repo Layout
-
-These folders matter most:
-
-- `src/workflows/`: stable training and inference facades
-- `src/training/`: training session logic, evaluation, OOD calibration, and artifact writing
-- `src/pipeline/` and `src/router/`: router-driven inference runtime
-- `scripts/`: notebook helpers, validation tools, and small entrypoints
-- `config/`: shipped JSON configuration
-- `data/`: repo-local dataset staging roots for Notebook 0 and Notebook 2, including `data/class_root_dataset/` for supported classes and `data/ood_dataset/` for reusable OOD pools; most contents stay local-only, but the repo currently tracks checked-in grape and tomato class-root datasets plus reusable `*_ood_best` example OOD pools
-- `docs/`: maintained Markdown documentation
-- `tests/`: unit, integration, and notebook-surface coverage
-
-## Before You Run Anything
-
-### 1. Use the repo Python launcher on Windows
-
-Windows PowerShell examples in this repo use:
+On Windows, use the repo launcher so the local `.venv` is preferred:
 
 ```powershell
 .\scripts\python.cmd
 ```
 
-That launcher prefers the repo `.venv` and avoids the Microsoft Store `python.exe` stub.
-
-### 2. Create or reuse the virtual environment
+Create or reuse the virtual environment:
 
 ```powershell
 .\scripts\python.cmd -m venv .venv
 ```
 
-### 3. Install dependencies
+Install dependencies:
 
 ```powershell
 .\scripts\python.cmd -m pip install --upgrade pip
@@ -175,49 +59,22 @@ That launcher prefers the repo `.venv` and avoids the Microsoft Store `python.ex
 .\scripts\python.cmd -m pip install -r requirements-dev.txt
 ```
 
-### Dependency baseline
-
-The root dependency files intentionally pin the maintained ML stack to validated minor lines instead of using open-ended latest releases.
-
-Current preferred baseline:
-
-- `Python 3.11`
-- `torch 2.10.x`
-- `torchvision 0.25.x`
-- `torchaudio 2.10.x` in Colab/runtime helper installs
-- `transformers 5.1.x`
-- `peft 0.18.x`
-- `accelerate 1.13.x`
-- `huggingface-hub 1.4.x`
-- `open-clip-torch 3.2.x`
-- `ultralytics 8.4.x`
-
-Why this repo does it this way:
-
-- DINOv3 requires modern Transformers support
-- SAM3 and adapter-loading behavior are sensitive to upstream API drift
-- reproducible notebook, CI, and local workflow behavior matters more than chasing every new upstream release
-
-CI validates both:
-
-- the pinned preferred baseline from `requirements*.txt`
-- the latest available patch releases inside the same validated minor lines
-
-### 4. Run the narrow validation commands
+Run the main validation checks:
 
 ```powershell
 .\scripts\python.cmd scripts/validate_notebook_imports.py
 .\scripts\python.cmd scripts/validate_config_schema.py
 pytest tests/unit tests/colab/test_smoke_training.py -q
+```
+
+For broader verification, also run:
+
+```powershell
 pytest tests/integration -q --runintegration
 .\scripts\python.cmd scripts/benchmark_surfaces.py
 ```
 
-## Dataset Formats Explained
-
-This is the most common beginner mistake, so treat these as two different contracts.
-
-### Notebook 0 prep input contract
+## Data layout
 
 Notebook 0 starts from a flat class-root layout:
 
@@ -225,28 +82,7 @@ Notebook 0 starts from a flat class-root layout:
 <root>/<class>/<images>
 ```
 
-Current checked-in Notebook 0 examples:
-
-- `data/class_root_dataset/grape_fruit/`
-- `data/class_root_dataset/grape_leaf/`
-- `data/class_root_dataset/tomato_fruit/`
-- `data/class_root_dataset/tomato_leaf/`
-
-Because these datasets live under the shared repo staging root, Notebook 0 now prompts you to choose one of them from the repo by default. You can still prefill the dataset name or explicit repo-relative path if you want to skip the prompt:
-
-```python
-REPO_DATASET_NAME = "grape_fruit"
-```
-
-or:
-
-```python
-REPO_DATASET_NAME = "grape_leaf"
-```
-
-### Notebook 2 and workflow training contract
-
-Notebook 2 and the workflow code train only from the runtime split layout:
+Notebook 2 and the workflow code train from the prepared runtime layout:
 
 ```text
 <data_dir>/<crop>/
@@ -257,344 +93,43 @@ Notebook 2 and the workflow code train only from the runtime split layout:
   oe/*
 ```
 
-Notebook 0 materializes that layout under:
+Prepared runtime datasets are written under `data/prepared_runtime_datasets/`. Reusable OOD pools live under `data/ood_dataset/`.
 
-```text
-data/prepared_runtime_datasets/<crop_or_crop__part>/
-```
+## Training and inference
 
-Reusable repo-local OOD pools can live under:
+The canonical training entry point is `TrainingWorkflow.run(...)` in [src/workflows/training.py](src/workflows/training.py). The canonical inference entry point is `InferenceWorkflow.predict(...)` in [src/workflows/inference.py](src/workflows/inference.py).
 
-```text
-data/ood_dataset/<ood_dataset_name>/
-```
+Training loads `config/base.json`, optionally merges `config/colab.json`, trains the adapter, calibrates OOD behavior, and writes the exported adapter plus readiness artifacts.
 
-Notebook 0 can pull one of those repo OOD folders into the materialized runtime `ood/` tree.
+Inference loads the router first. If the router cannot make a reliable decision, the runtime returns an abstaining result instead of forcing a crop or class prediction. When a crop is accepted, the matching adapter is loaded and the response includes the structured router result together with calibrated adapter output.
 
-When enabled, Notebook 0 first prepares a cleaned class-root working copy under:
+## Default paths
 
-```text
-data/prepared_class_root_datasets/<crop_or_crop__part>/
-```
-
-Notebook 2 now uses one path only:
-
-- run Notebook 0 first
-- let Notebook 0 write `data/prepared_runtime_datasets/<dataset_key>/`
-- point Notebook 2 at that prepared runtime dataset
-
-Current notebook UX detail:
-
-- Notebook 2 exposes a visible run-identity cell with `CROP_NAME` and `PART_NAME`
-- maintained notebooks now include an early access/update check cell so you can verify repo freshness plus GitHub/Hugging Face access needs before a long run
-
-Recommended usage:
-
-- use Notebook 0 first to inspect audit artifacts and materialize the runtime dataset
-- use Notebook 2 only on that prepared runtime dataset
-
-The split folder is named `continual` because the project uses continual-training terminology. Internally, workflow loading maps the public training split onto that folder.
-
-`ood/` is one shared pool of unsupported inputs for that crop adapter. It is not another supported class. Nested folders inside `ood/` are allowed for organization and are loaded recursively. They are not treated as labels, but the top-level folder name is carried into evaluation artifacts as `ood_type` when real OOD data is present. When enough real OOD images exist, training writes or reuses `ood/ood_split_manifest.json`, exposes a slice-aware `ood_dev` assignment for primary-score and threshold selection, and uses the held-out real-OOD test assignment for final readiness evidence. If deployment guarantees the crop upstream, prioritize same-crop unknowns and same-crop failure cases in this pool; other crops become secondary negatives instead of the main adapter risk. Optional `oe/` is a separate Outlier Exposure training pool and is never counted as final readiness evidence. For concrete curation guidance, see [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
-
-## Training, Step By Step
-
-The canonical training entrypoint is `TrainingWorkflow.run(...)` in `src/workflows/training.py`.
-
-In practice, the flow is:
-
-1. Load `config/base.json`.
-2. Optionally merge `config/colab.json` when the environment is `colab`.
-3. Normalize the public training surface under `training.continual`.
-4. Build data loaders from the runtime dataset and resolve the supported-class count policy from the runtime manifest or continual split.
-5. Fail early if a supported class is below the minimum reference count, otherwise train the crop adapter with the shipped imbalance policy.
-6. Restore the best in-memory weights.
-7. Calibrate OOD using the chosen calibration split.
-8. Save the adapter.
-9. Write evaluation artifacts for validation and test.
-10. Use held-out real-OOD test evidence from `ood/` when automatic splitting is viable, use legacy pooled real `ood/` evidence when it is not, otherwise run the held-out fallback benchmark automatically.
-11. Write the final readiness verdict to `production_readiness.json`.
-
-## Inference, Step By Step
-
-The canonical inference entrypoint is `InferenceWorkflow.predict(...)` in `src/workflows/inference.py`.
-
-In practice, the runtime does this:
-
-1. Load config and locate the adapter root.
-2. Run the router. A plain `crop_hint` is treated as untrusted and must agree with the router before adapter loading.
-3. Normalize router detections once and keep one canonical primary detection.
-4. Resolve the crop adapter directory.
-5. Load the adapter for that crop.
-6. Preprocess the image to the configured target size.
-7. Predict the disease class.
-8. When the adapter produces calibrated OOD output, return that OOD information together with the prediction plus the structured `router` summary block.
-
-If the router cannot identify a crop, the runtime returns an `unknown` result instead of forcing a disease prediction.
-If the router backend itself is unavailable, the runtime returns `router_unavailable` instead of pretending the crop was merely unknown.
-When router startup fails, the next request retries a fresh router load instead of reusing a broken cached instance.
-`unknown_crop`, `router_unavailable`, `router_uncertain`, and `adapter_unavailable` do not fabricate adapter-side `ood_analysis` payloads.
-If the crop is known but the organ evidence is ambiguous, the router keeps the crop and may return `part=unknown` plus a short guardrail message instead of inventing a confident part label. A compatible part is only retained when the generic and crop-conditioned organ surfaces independently agree on it.
-Only `trust_crop_hint=True` or the CLI flag `--trust-crop-hint` preserves the old explicit bypass behavior, and that payload records router status `trusted_hint_skipped`.
-
-## Common Commands
-
-### Train from an already materialized runtime dataset
-
-```powershell
-.\scripts\python.cmd -m src.app.cli training tomato data\prepared_runtime_datasets outputs\training_run --config-env colab
-```
-
-### Run router-driven inference
-
-```powershell
-.\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab
-```
-
-### Run the script wrapper for router-only identification
-
-```powershell
-.\scripts\python.cmd scripts/colab_router_adapter_inference.py path\to\image.jpg --config-env colab
-```
-
-### Evaluate and sweep router part thresholds
-
-```powershell
-.\scripts\python.cmd scripts/evaluate_router_part_surface.py --root data\router_part_eval --config-env colab --output .runtime_tmp\router_part_eval.json
-```
-
-This eval-only dataset uses:
-
-```text
-data/router_part_eval/<crop>/<part>/*
-```
-
-The script reports per-crop part confusion, abstention rate, unsupported-part emissions, and an offline threshold sweep based on the raw router part evidence.
-
-### Evaluate the full router handoff surface
-
-```powershell
-.\scripts\python.cmd scripts/evaluate_router_surface.py --root data\router_eval --config-env colab --output .runtime_tmp\router_eval.json
-```
-
-This eval-only dataset uses `id/`, `negatives/off_crop/`, `negatives/non_plant/`, `ambiguous/`, and `wrong_part/` groups. The script reports crop accuracy, negative false accepts, abstention, part precision/recall, unsupported-part emissions, latency, risk-coverage, and threshold-sweep recommendations.
-
-### Provide a known crop hint
-
-```powershell
-.\scripts\python.cmd -m src.app.cli inference path\to\image.jpg --config-env colab --crop tomato
-```
-
-Passing `--crop` alone gives the router an untrusted crop hint. The router still runs and must agree before the adapter loads. Add `--trust-crop-hint` only when upstream crop selection is already trusted and you intentionally want to skip router crop selection. That narrows the most relevant OOD cases toward unsupported tomato inputs and tomato-image failure cases, but it does not turn off the repo's OOD-readiness expectations.
-
-## Configuration Overview
-
-The config flow is:
-
-1. `config/base.json` is always loaded.
-2. `config/<environment>.json` is merged on top when requested.
-3. `ConfigurationManager` applies the versioned migration step declared by `config_schema_version`.
-4. `ConfigurationManager` normalizes the training surface.
-5. Config files must declare `config_schema_version: 2` and use the canonical `training.continual` / `colab.training.checkpoint_every_n_steps` surface. Only the canonical surface is accepted; old aliases now fail fast.
-6. Prohibited 4-bit flags are rejected before use.
-
-The most important config areas are:
-
-- `training.continual.backbone`
-- `training.continual.adapter`
-- `training.continual.fusion`
-- `training.continual.optimization`
-- `training.continual.ood`
-- `training.continual.evaluation`
-- `colab.training`
-- `router`
-- `inference`
-
-## What Training Produces
-
-Workflow and CLI training write:
-
-```text
-<output_dir>/
-  <crop>/
-    <part>/
-      continual_sd_lora_adapter/
-      training_metrics/
-        training/
-          results.png
-          results.csv
-          history.json
-          history.csv
-          batch_metrics.csv
-          summary.json
-        validation/
-          classification_report.txt
-          classification_report.json
-          per_class_metrics.csv
-          confusion_matrix.csv
-          confusion_matrix.png
-          confusion_matrix_normalized.png
-          metric_gate.json
-        test/
-          ...
-        ood_benchmark/
-          summary.json
-          per_fold.csv
-        production_readiness.json
-```
-
-What these files mean:
-
-- `continual_sd_lora_adapter/`: the exported adapter bundle you can deploy
-- `training/`: training curves and summary data
-- `validation/` and `test/`: split-specific evaluation reports
-- `validation/ood_type_breakdown.json` and `test/ood_type_breakdown.json`: optional OOD breakdown by top-level folder under `ood/`
-- `ood_benchmark/`: fallback OOD evidence when no real `ood/` split exists
-- `production_readiness.json`: the final deployment verdict
-
-## What Notebook 2 Produces
-
-Notebook 2 writes to three places. The artifact roots now also include a `guided/` layer so a user can start from a short index without losing any raw JSON, CSV, PNG, or log files.
-
-### Local notebook output
-
-```text
-outputs/colab_notebook_training/
-  <crop>/
-    <part>/
-      continual_sd_lora_adapter/
-  artifacts/
-    guided/
-```
-
-Start here when you want the immediate local result of the run.
-
-Human-first entry files:
-
-- `guided/00_start_here.md`
-- `guided/01_run_overview.json`
-- `guided/02_file_catalog.json`
-
-These files organize the existing raw artifacts; they do not replace or delete them.
-
-### Repo mirror for the run
-
-```text
-runs/<crop>/<part>/<RUN_ID>/
-  notebooks/2_train_continual_sd_lora_adapter.executed.ipynb
-  outputs/colab_notebook_training/
-  telemetry/
-  checkpoint_state/
-```
-
-For Notebook 2 runs, `RUN_ID` is now human-readable and typically includes crop, part, and date-time information.
-
-`checkpoint_state/` keeps the checkpoint manifests plus only the mirrored best checkpoint. Rolling checkpoint history stays under the repo-local telemetry runtime root.
-
-### Repo-local telemetry runtime
-
-```text
-outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/
-  checkpoints/
-  artifacts/
-    guided/
-    training/
-    validation/
-    test/
-    ood_benchmark/
-    adapter_export/
-      <crop>/
-        <part>/
-          continual_sd_lora_adapter/
-  events.jsonl
-  runtime.log
-  latest_status.json
-  summary.json
-  latest_checkpoint.json
-  best_checkpoint.json
-  checkpoint_index.json
-```
-
-Important current detail:
-
-- Notebook 2 exports the telemetry adapter bundle under `artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
-- Notebook 2 no longer requests Google Drive mount access by default; use the repo mirror and `AUTO_PUSH_TO_GITHUB=True` when artifacts must survive Colab runtime reset.
-
-## How Deployment Handoff Works
-
-Router inference looks for adapters here by default:
+The default adapter deployment path is:
 
 ```text
 models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 ```
 
-You can deploy a trained adapter by copying one of these outputs there:
+Workflow and notebook runs may also export adapters under `runs/` and `outputs/`. Those locations are for generated artifacts, not maintained source.
 
-- workflow output: `<output_dir>/<crop>/<part>/continual_sd_lora_adapter/`
-- Notebook 2 local output: `outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
-- Notebook 2 repo mirror: `runs/<crop>/<part>/<RUN_ID>/outputs/colab_notebook_training/<crop>/<part>/continual_sd_lora_adapter/`
-- Notebook 2 telemetry export: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`
+## Repository layout
 
-If you keep adapters somewhere else, pass `--adapter-root`.
+- `src/`: workflow, pipeline, and runtime code
+- `scripts/`: validation tools and notebook helpers
+- `config/`: shipped JSON configuration
+- `docs/`: maintained documentation
+- `colab_notebooks/`: maintained notebook surfaces
+- `tests/`: unit, integration, and smoke coverage
+- `data/`: tracked examples and local staging roots
 
-## OOD And Readiness In Plain Language
+## Read next
 
-The repo does not treat high validation accuracy as enough for deployment.
+- [docs/README.md](docs/README.md)
+- [docs/architecture/overview.md](docs/architecture/overview.md)
+- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md)
+- [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md)
 
-The workflow also checks whether the adapter can recognize inputs that do not belong to its supported disease set. That decision is written to:
+## License
 
-```text
-production_readiness.json
-```
-
-Use this file as the final go/no-go artifact.
-
-Current naming note:
-
-- The repo label `SURE+` means `SURE+/DS-F1-inspired double scoring`, not a claim that this code is a paper-faithful reproduction of a standalone upstream method.
-- The conformal surface now distinguishes threshold conformalization from set-valued APS/RAPS classification.
-
-Do not use only these files for the final decision:
-
-- `validation/metric_gate.json`
-- `test/metric_gate.json`
-
-Those are useful diagnostics, but they are not the authoritative deployment verdict by themselves.
-
-For the full explanation, read [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md).
-
-## Tracked Vs Local-Only Files
-
-Tracked source of truth:
-
-- `src/`
-- `tests/`
-- `scripts/`
-- `config/`
-- `docs/`
-- `README.md`
-- `colab_notebooks/*.ipynb`
-- root dependency files
-- the checked-in example datasets under `data/class_root_dataset/{grape,tomato}_{fruit,leaf}/` and `data/ood_dataset/*_ood_best/`
-
-Local or generated only:
-
-- `runs/<crop>/<part>/<RUN_ID>/`
-- `models/adapters/`
-- `outputs/`
-- `.runtime_tmp/`
-- caches and virtual environments
-- most other dataset contents under `data/`
-
-Do not treat generated outputs as tracked implementation files unless you explicitly need to inspect a local run. For the maintained dataset boundary and local-data rules, use `data/README.md`.
-
-## Where To Read Next
-
-- [docs/README.md](docs/README.md): documentation map and reading paths
-- [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md): beginner-friendly Notebook 2, Notebook 3, Notebook 4, and Notebook 5 guide
-- [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md): how deployment readiness is decided
-- [docs/architecture/overview.md](docs/architecture/overview.md): code and data flow map
-
-
-
-
+See [LICENSE](LICENSE) for terms.

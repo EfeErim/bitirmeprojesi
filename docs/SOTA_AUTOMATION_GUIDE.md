@@ -621,8 +621,8 @@ Bu dosya kullanilarak bir is tamamlandiginda, son adim olarak internette yeni ya
 
 - Purpose: keep the SOTA guidance and literature anchors fresh by surfacing recent, relevant papers for reviewer consideration, then updating this markdown directly.
 - Files:
-   - `scripts/update_sota_references.py` queries arXiv for configured keywords and produces update candidates for this guide.
-   - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and opens the resulting changes for review against this guide.
+   - `scripts/update_sota_references.py` queries arXiv for configured keywords and refreshes a managed candidate-scan section inside this guide.
+   - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and pushes the resulting guide changes back to the current branch for review.
 - Trigger: weekly schedule (workflow cron), or manual `workflow_dispatch`.
 - Automatic push policy: the script itself does not push. The scheduled workflow may surface or commit changes for review, but it must not create a new branch, auto-merge, or bypass review before this guide is updated.
 - Evidence scope: work derived from this guide should be literature-grounded where it changes ML methods, evaluation policy, threshold logic, or data-curation guidance. Repo wiring, CI scheduling, report formatting, and notebook/automation ergonomics are engineering adaptations; document them as current repo behavior or engineering inference instead of claiming they are directly literature-derived.
@@ -633,7 +633,30 @@ Bu dosya kullanilarak bir is tamamlandiginda, son adim olarak internette yeni ya
 python scripts/update_sota_references.py --output docs/SOTA_AUTOMATION_GUIDE.md
 ```
 
-Note: the script only suggests updates; human review is required before merging any literature into the canonical guide.
+Note: the script only suggests candidates inside this guide; human review is required before promoting any literature into the canonical Literature Anchors tables.
+
+<!-- BEGIN SOTA AUTOMATION CANDIDATES -->
+#### Latest Automated Candidate Scan
+
+Generated: `2026-05-13T17:30:54Z`
+
+These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
+
+Candidate scan could not query all configured sources:
+
+- `out-of-distribution detection`: network access blocked by local permissions
+- `energy based ood`: network access blocked by local permissions
+- `mahalanobis ood`: network access blocked by local permissions
+- `logitnorm`: network access blocked by local permissions
+- `selective prediction`: network access blocked by local permissions
+- `segment anything`: network access blocked by local permissions
+- `sam segmentation`: network access blocked by local permissions
+- `bioclip`: network access blocked by local permissions
+- `router calibration`: network access blocked by local permissions
+- `conformal prediction`: network access blocked by local permissions
+
+
+<!-- END SOTA AUTOMATION CANDIDATES -->
 
 ### Phase 2 Checklist (Tier 2)
 
