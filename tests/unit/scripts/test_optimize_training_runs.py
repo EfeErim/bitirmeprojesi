@@ -130,6 +130,7 @@ def test_run_optimizer_analyzes_single_cohort(tmp_path: Path):
         run_output_root=runs_root,
         num_workers=None,
         validation_every_n_epochs=None,
+        enable_bayesian_optimization=False,
     )
 
     result = run_optimizer(args)

@@ -1,12 +1,12 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-11T12:29:05.416542+00:00",
+  "generated_at": "2026-05-13T19:37:53.235696+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": true,
-  "trial_count": 14,
+  "trial_count": 23,
   "canonical_count": 0,
-  "backfilled_count": 14,
-  "cohort_count": 6,
+  "backfilled_count": 23,
+  "cohort_count": 8,
   "paths": {
     "trials_jsonl": "runs\\_index\\trials.jsonl",
     "pareto_inputs_json": "runs\\_index\\pareto_inputs.json",
@@ -17,6 +17,30 @@
     "summary_dashboard_markdown": "runs\\_index\\summary_dashboard.md"
   },
   "cohorts": [
+    {
+      "cohort_key": "apricot__fruit::apricot::fruit::continual_sd_lora",
+      "run_count": 2,
+      "comparability": {
+        "dataset_lineage_key": "apricot__fruit",
+        "crop_name": "apricot",
+        "part_name": "fruit",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "apricot__fruit::apricot::fruit::continual_sd_lora"
+      }
+    },
+    {
+      "cohort_key": "apricot__leaf::apricot::leaf::continual_sd_lora",
+      "run_count": 3,
+      "comparability": {
+        "dataset_lineage_key": "apricot__leaf",
+        "crop_name": "apricot",
+        "part_name": "leaf",
+        "engine": "continual_sd_lora",
+        "backbone_model_name": "",
+        "cohort_key": "apricot__leaf::apricot::leaf::continual_sd_lora"
+      }
+    },
     {
       "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
       "run_count": 2,
@@ -43,7 +67,7 @@
     },
     {
       "cohort_key": "strawberry__fruit::strawberry::fruit::continual_sd_lora",
-      "run_count": 4,
+      "run_count": 5,
       "comparability": {
         "dataset_lineage_key": "strawberry__fruit",
         "crop_name": "strawberry",
@@ -55,7 +79,7 @@
     },
     {
       "cohort_key": "strawberry__leaf::strawberry::leaf::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "strawberry__leaf",
         "crop_name": "strawberry",
@@ -67,7 +91,7 @@
     },
     {
       "cohort_key": "tomato__fruit::tomato::fruit::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "tomato__fruit",
         "crop_name": "tomato",
@@ -79,7 +103,7 @@
     },
     {
       "cohort_key": "tomato__leaf::tomato::leaf::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "tomato__leaf",
         "crop_name": "tomato",
@@ -90,5 +114,5 @@
       }
     }
   ],
-  "bayesian_recommendation_cohort_count": 6
+  "bayesian_recommendation_cohort_count": 8
 }

@@ -671,9 +671,9 @@ def test_training_notebook_bootstrap_contract() -> None:
     required_training_surface_snippets = (
         'optimization_cfg["loss_name"] = str(effective_params["LOSS_NAME"]).strip().lower()',
         'optimization_cfg["logitnorm_tau"] = float(effective_params["LOGITNORM_TAU"])',
-        'data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)',
+        'data_cfg["augmentation_policy"] = str(effective_params.get("AUGMENTATION_POLICY", AUGMENTATION_POLICY))',
         'data_cfg["allow_under_min_training"] = bool(effective_params["ALLOW_UNDER_MIN_TRAINING"])',
-        'augmentation_policy=AUGMENTATION_POLICY',
+        'augmentation_policy=str(effective_params.get("AUGMENTATION_POLICY", AUGMENTATION_POLICY))',
         'STATE["resolved_ood_root"] = resolved_ood_root_value',
         'STATE["resolved_oe_root"] = resolved_oe_root_value',
         'continual_cfg["ood"]["oe_enabled"] = bool(OE_ENABLED)',

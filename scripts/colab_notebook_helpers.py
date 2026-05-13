@@ -51,6 +51,7 @@ _NOTEBOOK_OPTIMIZATION_SEARCH_SPACE = {
         {"name": "training.adapter.lora_alpha", "type": "categorical", "values": [8, 16, 24, 32]},
         {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
         {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
+        {"name": "training.ood.oe_loss_weight", "type": "float", "low": 0.0, "high": 0.5},
         {"name": "training.ood.react_enabled", "type": "categorical", "values": [False, True]},
         {"name": "training.ood.react_percentile", "type": "float", "low": 0.95, "high": 0.999},
         {"name": "training.optimization.logitnorm_tau", "type": "float", "low": 0.5, "high": 2.0},
@@ -70,12 +71,19 @@ _NOTEBOOK_PARAM_MAP = {
     "training.adapter.lora_r": "LORA_R",
     "training.adapter.lora_alpha": "LORA_ALPHA",
     "training.adapter.lora_dropout": "LORA_DROPOUT",
+    "training.fusion.dropout": "FUSION_DROPOUT",
     "training.ood.threshold_factor": "OOD_FACTOR",
+    "training.ood.oe_loss_weight": "OE_LOSS_WEIGHT",
+    "training.ood.react_enabled": "REACT_ENABLED",
+    "training.ood.react_percentile": "REACT_PERCENTILE",
+    "training.data.augmentation_policy": "AUGMENTATION_POLICY",
     "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
     "training.optimization.label_smoothing": "LABEL_SMOOTHING",
     "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
     "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
     "training.data.augmix_severity": "AUGMIX_SEVERITY",
+    "training.classifier_rebalance.enabled": "CLASSIFIER_REBALANCE_ENABLED",
+    "training.classifier_rebalance.logit_adjustment_tau": "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU",
 }
 _DEFAULT_PARETO_OBJECTIVES = (
     "classification.macro_f1",
@@ -419,7 +427,7 @@ def _resolve_runtime_dataset_identity(
     manifest_path = runtime_dataset_root / "split_manifest.json"
     manifest = read_json(manifest_path, default={}, expect_type=dict) if manifest_path.exists() else {}
     dataset_key_value = str(manifest.get("dataset_key", "") or dataset_key or "").strip().lower()
-    manifest_sha = _sha256_file(manifest_path) if manifest_path.exists() else ""
+    manifest_sha = sha256_file(manifest_path) if manifest_path.exists() else ""
     dataset_lineage_key = f"{dataset_key_value}::{manifest_sha}" if dataset_key_value and manifest_sha else dataset_key_value or manifest_sha
     return {
         "dataset_key": dataset_key_value,
@@ -875,8 +883,14 @@ def _build_notebook_continual_config(
     adapter_cfg["lora_alpha"] = int(notebook_parameters["LORA_ALPHA"])
     adapter_cfg["lora_dropout"] = float(notebook_parameters["LORA_DROPOUT"])
 
+    fusion_cfg = continual_cfg.setdefault("fusion", {})
+    if "FUSION_DROPOUT" in notebook_parameters:
+        fusion_cfg["dropout"] = float(notebook_parameters["FUSION_DROPOUT"])
+
     data_cfg = continual_cfg.setdefault("data", {})
-    data_cfg["augmentation_policy"] = str(data_settings["AUGMENTATION_POLICY"])
+    data_cfg["augmentation_policy"] = str(
+        notebook_parameters.get("AUGMENTATION_POLICY", data_settings["AUGMENTATION_POLICY"])
+    )
     data_cfg["randaugment_num_ops"] = int(
         notebook_parameters.get("RANDAUGMENT_NUM_OPS", data_settings["RANDAUGMENT_NUM_OPS"])
     )
@@ -893,6 +907,20 @@ def _build_notebook_continual_config(
     ood_cfg["threshold_factor"] = float(notebook_parameters["OOD_FACTOR"])
     for key, value in ood_settings.items():
         ood_cfg[key] = value
+    if "OE_LOSS_WEIGHT" in notebook_parameters:
+        ood_cfg["oe_loss_weight"] = float(notebook_parameters["OE_LOSS_WEIGHT"])
+    if "REACT_ENABLED" in notebook_parameters:
+        ood_cfg["react_enabled"] = bool(notebook_parameters["REACT_ENABLED"])
+    if "REACT_PERCENTILE" in notebook_parameters:
+        ood_cfg["react_percentile"] = float(notebook_parameters["REACT_PERCENTILE"])
+
+    classifier_rebalance_cfg = continual_cfg.setdefault("classifier_rebalance", {})
+    if "CLASSIFIER_REBALANCE_ENABLED" in notebook_parameters:
+        classifier_rebalance_cfg["enabled"] = bool(notebook_parameters["CLASSIFIER_REBALANCE_ENABLED"])
+    if "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU" in notebook_parameters:
+        classifier_rebalance_cfg["logit_adjustment_tau"] = float(
+            notebook_parameters["CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU"]
+        )
 
     optimization_cfg = continual_cfg.setdefault("optimization", {})
     for key, value in optimization_settings.items():

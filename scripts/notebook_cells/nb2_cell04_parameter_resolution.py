@@ -253,7 +253,11 @@ print("[SONRAKI] Erisim kontrolu -> dataset validation -> engine init -> trainin
 
 # Notebook icinde daha sonra kullanilacak gizli repo varsayimlarini yukle.
 BASE_CONFIG = ConfigurationManager(config_dir=str(ROOT / "config"), environment="colab").load_all_configs()
+CONTINUAL_CFG = BASE_CONFIG.get("training", {}).get("continual", {})
 CONTINUAL_DATA_CFG = BASE_CONFIG.get("training", {}).get("continual", {}).get("data", {})
+CONTINUAL_FUSION_CFG = CONTINUAL_CFG.get("fusion", {})
+CONTINUAL_OOD_CFG = CONTINUAL_CFG.get("ood", {})
+CONTINUAL_CLASSIFIER_REBALANCE_CFG = CONTINUAL_CFG.get("classifier_rebalance", {})
 
 # Ensure torch is imported (lazy-loaded from runtime_setup)
 _ensure_torch()
@@ -267,6 +271,11 @@ DATA_SAMPLER = str(CONTINUAL_DATA_CFG.get("sampler", "shuffle"))
 AUGMENTATION_POLICY = str(CONTINUAL_DATA_CFG.get("augmentation_policy", "randaugment")).strip().lower()
 RANDAUGMENT_NUM_OPS = int(CONTINUAL_DATA_CFG.get("randaugment_num_ops", 2))
 RANDAUGMENT_MAGNITUDE = int(CONTINUAL_DATA_CFG.get("randaugment_magnitude", 7))
+FUSION_DROPOUT = float(CONTINUAL_FUSION_CFG.get("dropout", 0.1))
+REACT_ENABLED = bool(CONTINUAL_OOD_CFG.get("react_enabled", False))
+REACT_PERCENTILE = float(CONTINUAL_OOD_CFG.get("react_percentile", 0.99))
+CLASSIFIER_REBALANCE_ENABLED = bool(CONTINUAL_CLASSIFIER_REBALANCE_CFG.get("enabled", False))
+CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU = float(CONTINUAL_CLASSIFIER_REBALANCE_CFG.get("logit_adjustment_tau", 1.0))
 ALLOW_UNDER_MIN_TRAINING = bool(ALLOW_UNDER_MIN_TRAINING)
 LOADER_ERROR_POLICY = str(CONTINUAL_DATA_CFG.get("loader_error_policy", "tolerant"))
 CACHE_SIZE = int(CONTINUAL_DATA_CFG.get("cache_size", 1000))
@@ -277,13 +286,18 @@ from scripts.colab_training_recommendations import resolve_notebook_params
 def _collect_notebook_base_params():
     return {
         "ALLOW_UNDER_MIN_TRAINING": bool(ALLOW_UNDER_MIN_TRAINING),
+        "AUGMENTATION_POLICY": str(AUGMENTATION_POLICY),
+        "OE_LOSS_WEIGHT": float(OE_LOSS_WEIGHT),
         "EPOCHS": int(EPOCHS),
         "BATCH_SIZE": int(BATCH_SIZE),
         "LEARNING_RATE": float(LEARNING_RATE),
         "LORA_R": int(LORA_R),
         "LORA_ALPHA": int(LORA_ALPHA),
         "LORA_DROPOUT": float(LORA_DROPOUT),
+        "FUSION_DROPOUT": float(FUSION_DROPOUT),
         "OOD_FACTOR": float(OOD_FACTOR),
+        "REACT_ENABLED": bool(REACT_ENABLED),
+        "REACT_PERCENTILE": float(REACT_PERCENTILE),
         "SURE_SEMANTIC_PERCENTILE": float(SURE_SEMANTIC_PERCENTILE),
         "SURE_CONFIDENCE_PERCENTILE": float(SURE_CONFIDENCE_PERCENTILE),
         "CONFORMAL_ALPHA": float(CONFORMAL_ALPHA),
@@ -301,6 +315,8 @@ def _collect_notebook_base_params():
         "GRAD_ACCUM_STEPS": int(GRAD_ACCUM_STEPS),
         "MAX_GRAD_NORM": float(MAX_GRAD_NORM),
         "LABEL_SMOOTHING": float(LABEL_SMOOTHING),
+        "CLASSIFIER_REBALANCE_ENABLED": bool(CLASSIFIER_REBALANCE_ENABLED),
+        "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": float(CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU),
         "LOSS_NAME": str(LOSS_NAME),
         "LOGITNORM_TAU": float(LOGITNORM_TAU),
         "SCHEDULER_NAME": str(SCHEDULER_NAME),
@@ -362,16 +378,25 @@ def _collect_bayesian_notebook_overrides():
         return {}
 
     mapping = {
+        "training.learning_rate": "LEARNING_RATE",
         "training.weight_decay": "WEIGHT_DECAY",
         "training.num_epochs": "EPOCHS",
         "training.batch_size": "BATCH_SIZE",
         "training.adapter.lora_r": "LORA_R",
         "training.adapter.lora_alpha": "LORA_ALPHA",
+        "training.adapter.lora_dropout": "LORA_DROPOUT",
+        "training.fusion.dropout": "FUSION_DROPOUT",
         "training.ood.threshold_factor": "OOD_FACTOR",
+        "training.ood.oe_loss_weight": "OE_LOSS_WEIGHT",
+        "training.ood.react_enabled": "REACT_ENABLED",
+        "training.ood.react_percentile": "REACT_PERCENTILE",
         "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
         "training.optimization.label_smoothing": "LABEL_SMOOTHING",
+        "training.data.augmentation_policy": "AUGMENTATION_POLICY",
         "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
         "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
+        "training.classifier_rebalance.enabled": "CLASSIFIER_REBALANCE_ENABLED",
+        "training.classifier_rebalance.logit_adjustment_tau": "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU",
     }
     overrides = {}
     for source_key, target_key in mapping.items():

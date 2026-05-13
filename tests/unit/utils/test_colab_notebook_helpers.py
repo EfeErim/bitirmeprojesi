@@ -906,8 +906,16 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
                 "training.learning_rate": 0.00015,
                 "training.num_epochs": 16,
                 "training.adapter.lora_r": 32,
+                "training.adapter.lora_dropout": 0.18,
+                "training.fusion.dropout": 0.12,
+                "training.ood.oe_loss_weight": 0.35,
+                "training.ood.react_enabled": True,
+                "training.ood.react_percentile": 0.995,
+                "training.data.augmentation_policy": "augmix",
                 "training.data.randaugment_num_ops": 3,
                 "training.data.randaugment_magnitude": 9,
+                "training.classifier_rebalance.enabled": True,
+                "training.classifier_rebalance.logit_adjustment_tau": 1.4,
             },
         },
     }
@@ -920,9 +928,16 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
             "LORA_R": 24,
             "LORA_ALPHA": 24,
             "LORA_DROPOUT": 0.1,
+            "FUSION_DROPOUT": 0.1,
             "WEIGHT_DECAY": 0.01,
             "OOD_FACTOR": 3.0,
+            "OE_LOSS_WEIGHT": 0.2,
+            "REACT_ENABLED": False,
+            "REACT_PERCENTILE": 0.99,
+            "AUGMENTATION_POLICY": "randaugment",
             "LOGITNORM_TAU": 1.0,
+            "CLASSIFIER_REBALANCE_ENABLED": False,
+            "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": 1.0,
             "RANDAUGMENT_NUM_OPS": 2,
             "RANDAUGMENT_MAGNITUDE": 7,
         },
@@ -934,6 +949,14 @@ def test_apply_notebook_optimization_proposal_updates_visible_parameters(tmp_pat
     assert result["notebook_parameters"]["LEARNING_RATE"] == 0.00015
     assert result["notebook_parameters"]["EPOCHS"] == 16
     assert result["notebook_parameters"]["LORA_R"] == 32
+    assert result["notebook_parameters"]["LORA_DROPOUT"] == 0.18
+    assert result["notebook_parameters"]["FUSION_DROPOUT"] == 0.12
+    assert result["notebook_parameters"]["OE_LOSS_WEIGHT"] == 0.35
+    assert result["notebook_parameters"]["REACT_ENABLED"] is True
+    assert result["notebook_parameters"]["REACT_PERCENTILE"] == 0.995
+    assert result["notebook_parameters"]["AUGMENTATION_POLICY"] == "augmix"
+    assert result["notebook_parameters"]["CLASSIFIER_REBALANCE_ENABLED"] is True
+    assert result["notebook_parameters"]["CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU"] == 1.4
     assert result["notebook_parameters"]["RANDAUGMENT_NUM_OPS"] == 3
     assert result["notebook_parameters"]["RANDAUGMENT_MAGNITUDE"] == 9
 

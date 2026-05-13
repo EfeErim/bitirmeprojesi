@@ -29,6 +29,50 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     class_root = runtime_data_root / dataset_key / "continual"
     if not class_root.is_dir():
         raise RuntimeError(f"Prepared runtime continual split not found: {class_root}")
+
+    from scripts.colab_notebook_helpers import (
+        apply_notebook_optimization_proposal,
+        print_notebook_optimization_campaign_status,
+        resolve_notebook_optimization_campaign,
+        summarize_notebook_optimization_campaign,
+    )
+
+    optimization_campaign_mode = "continue" if bool(effective_params.get("ENABLE_BAYESIAN_OPTIMIZATION", True)) else "disabled"
+    backbone_model_name = str(dict(BASE_CONFIG.get("training", {}).get("continual", {})).get("backbone", {}).get("model_name", ""))
+    optimization_campaign = resolve_notebook_optimization_campaign(
+        root=ROOT,
+        runtime_dataset_root=runtime_data_root / dataset_key,
+        dataset_key=dataset_key,
+        crop_name=CROP_NAME,
+        part_name=PART_NAME,
+        backbone_model_name=backbone_model_name,
+        notebook_parameters=effective_params,
+        mode=optimization_campaign_mode,
+        telemetry=TELEMETRY,
+    )
+    print_notebook_optimization_campaign_status(optimization_campaign, print_fn=print)
+    proposal_application = apply_notebook_optimization_proposal(
+        notebook_parameters=effective_params,
+        campaign=optimization_campaign,
+        telemetry=TELEMETRY,
+        print_fn=print,
+    )
+    optimization_campaign = proposal_application.get("campaign", optimization_campaign)
+    effective_params = dict(proposal_application.get("notebook_parameters", effective_params))
+    STATE["effective_params"] = dict(effective_params)
+    STATE["notebook_parameters"] = dict(effective_params)
+    STATE["optimization_campaign"] = optimization_campaign
+    STATE["optimization_applied_params"] = proposal_application
+    STATE["recommendation_report"] = summarize_notebook_optimization_campaign(optimization_campaign)
+    STATE["recommendation_decision"] = str(optimization_campaign.get("status", "disabled"))
+    if not proposal_application.get("applied"):
+        if optimization_campaign.get("status") == "bootstrap_pending":
+            print("[OPT] No prior comparable run yet. Bootstrap run will use the visible notebook parameters.")
+        elif optimization_campaign.get("status") == "stopped":
+            print("[OPT] Campaign is marked stopped. Notebook will keep the visible parameters as-is.")
+        elif optimization_campaign.get("status") == "active" and not optimization_campaign.get("next_proposal"):
+            print("[OPT] No unseen proposal is available. Notebook will keep the visible parameters as-is.")
+
     available = sorted({_normalize(path.name) for path in class_root.iterdir() if path.is_dir() and _normalize(path.name)})
     resolved_ood_root = str(STATE.get("resolved_ood_root") or "").strip()
     if resolved_ood_root:
@@ -71,14 +115,19 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     continual_cfg["adapter"]["lora_r"] = int(effective_params["LORA_R"])
     continual_cfg["adapter"]["lora_alpha"] = int(effective_params["LORA_ALPHA"])
     continual_cfg["adapter"]["lora_dropout"] = float(effective_params["LORA_DROPOUT"])
+    continual_cfg.setdefault("fusion", {})["dropout"] = float(effective_params.get("FUSION_DROPOUT", 0.1))
     continual_cfg["weight_decay"] = float(effective_params["WEIGHT_DECAY"])
     continual_cfg["deterministic"] = bool(effective_params["DETERMINISTIC"])
     data_cfg = continual_cfg.setdefault("data", {})
-    data_cfg["augmentation_policy"] = str(AUGMENTATION_POLICY)
+    data_cfg["augmentation_policy"] = str(effective_params.get("AUGMENTATION_POLICY", AUGMENTATION_POLICY))
     data_cfg["randaugment_num_ops"] = int(effective_params["RANDAUGMENT_NUM_OPS"])
     data_cfg["randaugment_magnitude"] = int(effective_params["RANDAUGMENT_MAGNITUDE"])
     data_cfg["allow_under_min_training"] = bool(effective_params["ALLOW_UNDER_MIN_TRAINING"])
     continual_cfg["ood"]["threshold_factor"] = float(effective_params["OOD_FACTOR"])
+    continual_cfg["ood"]["react_enabled"] = bool(effective_params.get("REACT_ENABLED", continual_cfg["ood"].get("react_enabled", False)))
+    continual_cfg["ood"]["react_percentile"] = float(
+        effective_params.get("REACT_PERCENTILE", continual_cfg["ood"].get("react_percentile", 0.99))
+    )
     continual_cfg["ood"]["sure_semantic_percentile"] = float(effective_params["SURE_SEMANTIC_PERCENTILE"])
     continual_cfg["ood"]["sure_confidence_percentile"] = float(effective_params["SURE_CONFIDENCE_PERCENTILE"])
     continual_cfg["ood"]["conformal_alpha"] = float(effective_params["CONFORMAL_ALPHA"])
@@ -90,9 +139,20 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     continual_cfg["ood"]["ber_lambda_new"] = float(effective_params["BER_LAMBDA_NEW"])
     continual_cfg["ood"]["ber_warmup_steps"] = int(effective_params["BER_WARMUP_STEPS"])
     continual_cfg["ood"]["oe_enabled"] = bool(OE_ENABLED)
-    continual_cfg["ood"]["oe_loss_weight"] = float(OE_LOSS_WEIGHT)
+    continual_cfg["ood"]["oe_loss_weight"] = float(effective_params.get("OE_LOSS_WEIGHT", OE_LOSS_WEIGHT))
     continual_cfg["ood"]["oe_root"] = resolved_oe_root
     print(f"[ENGINE][OOD_CFG] {json.dumps(continual_cfg['ood'], sort_keys=True)}")
+
+    classifier_rebalance_cfg = continual_cfg.setdefault("classifier_rebalance", {})
+    classifier_rebalance_cfg["enabled"] = bool(
+        effective_params.get("CLASSIFIER_REBALANCE_ENABLED", classifier_rebalance_cfg.get("enabled", False))
+    )
+    classifier_rebalance_cfg["logit_adjustment_tau"] = float(
+        effective_params.get(
+            "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU",
+            classifier_rebalance_cfg.get("logit_adjustment_tau", 1.0),
+        )
+    )
 
     optimization_cfg = continual_cfg.setdefault("optimization", {})
     optimization_cfg["grad_accumulation_steps"] = int(effective_params["GRAD_ACCUM_STEPS"])
@@ -138,7 +198,7 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
         sampler=DATA_SAMPLER,
         seed=int(effective_params["SEED"]),
         validate_images_on_init=VALIDATE_IMAGES_ON_INIT,
-        augmentation_policy=AUGMENTATION_POLICY,
+        augmentation_policy=str(effective_params.get("AUGMENTATION_POLICY", AUGMENTATION_POLICY)),
         randaugment_num_ops=int(effective_params["RANDAUGMENT_NUM_OPS"]),
         randaugment_magnitude=int(effective_params["RANDAUGMENT_MAGNITUDE"]),
         ood_root=resolved_ood_root or None,
