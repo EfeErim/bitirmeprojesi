@@ -1,0 +1,126 @@
+{
+  "grape_specific_unknowns": {
+    "ood_type": "grape_specific_unknowns",
+    "sample_count": 38,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.8243989603638726,
+      "ood_false_positive_rate": 0.4444444444444444,
+      "ood_samples": 38,
+      "in_distribution_samples": 324
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.8243989603638726,
+        "ood_false_positive_rate": 0.4444444444444444,
+        "ood_samples": 38,
+        "in_distribution_samples": 324
+      },
+      "energy": {
+        "ood_auroc": 0.8075860948667967,
+        "ood_false_positive_rate": 0.6203703703703703,
+        "ood_samples": 38,
+        "in_distribution_samples": 324
+      },
+      "knn": {
+        "ood_auroc": 0.8673651721897335,
+        "ood_false_positive_rate": 0.49691358024691357,
+        "ood_samples": 38,
+        "in_distribution_samples": 324
+      }
+    }
+  },
+  "off_crop_or_root_disease": {
+    "ood_type": "off_crop_or_root_disease",
+    "sample_count": 89,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.8140518795949507,
+      "ood_false_positive_rate": 0.5,
+      "ood_samples": 89,
+      "in_distribution_samples": 324
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.8140518795949507,
+        "ood_false_positive_rate": 0.5,
+        "ood_samples": 89,
+        "in_distribution_samples": 324
+      },
+      "energy": {
+        "ood_auroc": 0.7577333888195311,
+        "ood_false_positive_rate": 0.6759259259259259,
+        "ood_samples": 89,
+        "in_distribution_samples": 324
+      },
+      "knn": {
+        "ood_auroc": 0.8729712858926342,
+        "ood_false_positive_rate": 0.43209876543209874,
+        "ood_samples": 89,
+        "in_distribution_samples": 324
+      }
+    }
+  },
+  "off_crop_secondary": {
+    "ood_type": "off_crop_secondary",
+    "sample_count": 41,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.8346883468834688,
+      "ood_false_positive_rate": 0.5432098765432098,
+      "ood_samples": 41,
+      "in_distribution_samples": 324
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.8346883468834688,
+        "ood_false_positive_rate": 0.5432098765432098,
+        "ood_samples": 41,
+        "in_distribution_samples": 324
+      },
+      "energy": {
+        "ood_auroc": 0.8568202348690155,
+        "ood_false_positive_rate": 0.36728395061728397,
+        "ood_samples": 41,
+        "in_distribution_samples": 324
+      },
+      "knn": {
+        "ood_auroc": 0.890770852152966,
+        "ood_false_positive_rate": 0.3117283950617284,
+        "ood_samples": 41,
+        "in_distribution_samples": 324
+      }
+    }
+  },
+  "scene_context_leak_check": {
+    "ood_type": "scene_context_leak_check",
+    "sample_count": 28,
+    "primary_score_method": "ensemble",
+    "metrics": {
+      "ood_auroc": 0.9130291005291006,
+      "ood_false_positive_rate": 0.3888888888888889,
+      "ood_samples": 28,
+      "in_distribution_samples": 324
+    },
+    "method_metrics": {
+      "ensemble": {
+        "ood_auroc": 0.9130291005291006,
+        "ood_false_positive_rate": 0.3888888888888889,
+        "ood_samples": 28,
+        "in_distribution_samples": 324
+      },
+      "energy": {
+        "ood_auroc": 0.9163359788359788,
+        "ood_false_positive_rate": 0.33024691358024694,
+        "ood_samples": 28,
+        "in_distribution_samples": 324
+      },
+      "knn": {
+        "ood_auroc": 0.9541446208112875,
+        "ood_false_positive_rate": 0.16666666666666666,
+        "ood_samples": 28,
+        "in_distribution_samples": 324
+      }
+    }
+  }
+}

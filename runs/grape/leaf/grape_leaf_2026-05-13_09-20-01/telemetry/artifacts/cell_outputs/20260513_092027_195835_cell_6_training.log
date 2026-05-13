@@ -1,0 +1,88 @@
+[CELL_CAPTURE] cell=Cell 6: Training
+run_id=grape_leaf_2026-05-13_09-20-01
+started_at=2026-05-13T09:20:27.195865+00:00
+finished_at=2026-05-13T09:25:16.293236+00:00
+duration_sec=289.097
+
+[TRAIN] epochs=30 device=cuda batch_interval=12
+[TRAIN] epoch=1 batch=12/21 loss=0.0000 lr=0.000100 speed=248.8s/s elapsed=5s eta=273s
+[CKPT] epoch_end epoch=1 step=21
+[EPOCH] 1/30: train_loss=1.9833 val_loss=1.8905 val_acc=0.1759 macro_f1=0.0614 * BEST
+[TRAIN] epoch=2 batch=12/21 loss=0.0000 lr=0.000099 speed=248.4s/s elapsed=18s eta=332s
+[EPOCH] 2/30: train_loss=1.9373 val_loss=1.9251 val_acc=0.1111 macro_f1=0.0725
+[TRAIN] epoch=3 batch=12/21 loss=0.0000 lr=0.000098 speed=249.1s/s elapsed=26s eta=279s
+[CKPT] epoch_end epoch=3 step=63
+[EPOCH] 3/30: train_loss=1.9119 val_loss=1.8781 val_acc=0.2593 macro_f1=0.2147 * BEST
+[TRAIN] epoch=4 batch=12/21 loss=0.0000 lr=0.000097 speed=248.3s/s elapsed=37s eta=275s
+[CKPT] epoch_end epoch=4 step=84
+[EPOCH] 4/30: train_loss=1.7596 val_loss=1.4423 val_acc=0.4537 macro_f1=0.4083 * BEST
+[TRAIN] epoch=5 batch=12/21 loss=0.0000 lr=0.000094 speed=249.1s/s elapsed=48s eta=268s
+[CKPT] epoch_end epoch=5 step=105
+[EPOCH] 5/30: train_loss=1.6433 val_loss=1.2308 val_acc=0.4877 macro_f1=0.4379 * BEST
+[TRAIN] epoch=6 batch=12/21 loss=0.0000 lr=0.000092 speed=249.0s/s elapsed=59s eta=257s
+[CKPT] epoch_end epoch=6 step=126
+[EPOCH] 6/30: train_loss=1.5509 val_loss=1.0488 val_acc=0.6142 macro_f1=0.5889 * BEST
+[TRAIN] epoch=7 batch=12/21 loss=0.0000 lr=0.000089 speed=247.6s/s elapsed=69s eta=247s
+[CKPT] epoch_end epoch=7 step=147
+[EPOCH] 7/30: train_loss=1.5079 val_loss=0.9413 val_acc=0.6543 macro_f1=0.6337 * BEST
+[TRAIN] epoch=8 batch=12/21 loss=0.0000 lr=0.000085 speed=249.4s/s elapsed=80s eta=237s
+[CKPT] epoch_end epoch=8 step=168
+[EPOCH] 8/30: train_loss=1.4459 val_loss=0.8789 val_acc=0.7160 macro_f1=0.6907 * BEST
+[TRAIN] epoch=9 batch=12/21 loss=0.0000 lr=0.000081 speed=248.4s/s elapsed=91s eta=228s
+[EPOCH] 9/30: train_loss=1.4367 val_loss=0.8829 val_acc=0.7407 macro_f1=0.7091
+[TRAIN] epoch=10 batch=12/21 loss=0.0000 lr=0.000077 speed=249.0s/s elapsed=99s eta=211s
+[EPOCH] 10/30: train_loss=1.4434 val_loss=0.8944 val_acc=0.7284 macro_f1=0.6923
+[TRAIN] epoch=11 batch=12/21 loss=0.0000 lr=0.000073 speed=248.6s/s elapsed=107s eta=197s
+[CKPT] epoch_end epoch=11 step=231
+[EPOCH] 11/30: train_loss=1.4035 val_loss=0.7589 val_acc=0.7685 macro_f1=0.7370 * BEST
+[TRAIN] epoch=12 batch=12/21 loss=0.0000 lr=0.000068 speed=249.6s/s elapsed=118s eta=187s
+[CKPT] batch_250 epoch=12 step=250
+[EPOCH] 12/30: train_loss=1.3915 val_loss=0.7930 val_acc=0.7840 macro_f1=0.7600
+[TRAIN] epoch=13 batch=12/21 loss=0.0000 lr=0.000063 speed=248.6s/s elapsed=127s eta=176s
+[CKPT] epoch_end epoch=13 step=273
+[EPOCH] 13/30: train_loss=1.3888 val_loss=0.7134 val_acc=0.7932 macro_f1=0.7603 * BEST
+[TRAIN] epoch=14 batch=12/21 loss=0.0000 lr=0.000058 speed=248.7s/s elapsed=138s eta=166s
+[CKPT] epoch_end epoch=14 step=294
+[EPOCH] 14/30: train_loss=1.3722 val_loss=0.6689 val_acc=0.8056 macro_f1=0.7740 * BEST
+[TRAIN] epoch=15 batch=12/21 loss=0.0000 lr=0.000053 speed=249.1s/s elapsed=148s eta=157s
+[CKPT] epoch_end epoch=15 step=315
+[EPOCH] 15/30: train_loss=1.3665 val_loss=0.6335 val_acc=0.8117 macro_f1=0.7815 * BEST
+[TRAIN] epoch=16 batch=12/21 loss=0.0000 lr=0.000048 speed=248.0s/s elapsed=158s eta=147s
+[EPOCH] 16/30: train_loss=1.3569 val_loss=0.6419 val_acc=0.8302 macro_f1=0.8012
+[TRAIN] epoch=17 batch=12/21 loss=0.0000 lr=0.000042 speed=249.7s/s elapsed=166s eta=134s
+[EPOCH] 17/30: train_loss=1.3448 val_loss=0.6422 val_acc=0.8333 macro_f1=0.8099
+[TRAIN] epoch=18 batch=12/21 loss=0.0000 lr=0.000037 speed=249.1s/s elapsed=173s eta=123s
+[CKPT] epoch_end epoch=18 step=378
+[EPOCH] 18/30: train_loss=1.3352 val_loss=0.5750 val_acc=0.8549 macro_f1=0.8292 * BEST
+[TRAIN] epoch=19 batch=12/21 loss=0.0000 lr=0.000032 speed=248.5s/s elapsed=184s eta=113s
+[CKPT] epoch_end epoch=19 step=399
+[EPOCH] 19/30: train_loss=1.3320 val_loss=0.5607 val_acc=0.8611 macro_f1=0.8356 * BEST
+[TRAIN] epoch=20 batch=12/21 loss=0.0000 lr=0.000028 speed=249.0s/s elapsed=194s eta=103s
+[EPOCH] 20/30: train_loss=1.3205 val_loss=0.5851 val_acc=0.8519 macro_f1=0.8271
+[TRAIN] epoch=21 batch=12/21 loss=0.0000 lr=0.000023 speed=249.7s/s elapsed=202s eta=93s
+[EPOCH] 21/30: train_loss=1.3245 val_loss=0.5799 val_acc=0.8488 macro_f1=0.8229
+[TRAIN] epoch=22 batch=12/21 loss=0.0000 lr=0.000019 speed=250.4s/s elapsed=209s eta=82s
+[CKPT] epoch_end epoch=22 step=462
+[EPOCH] 22/30: train_loss=1.3286 val_loss=0.5377 val_acc=0.8488 macro_f1=0.8222 * BEST
+[TRAIN] epoch=23 batch=12/21 loss=0.0000 lr=0.000015 speed=249.3s/s elapsed=220s eta=72s
+[EPOCH] 23/30: train_loss=1.3230 val_loss=0.5486 val_acc=0.8611 macro_f1=0.8384
+[TRAIN] epoch=24 batch=12/21 loss=0.0000 lr=0.000012 speed=247.4s/s elapsed=227s eta=62s
+[CKPT] batch_250 epoch=24 step=500
+[CKPT] epoch_end epoch=24 step=504
+[EPOCH] 24/30: train_loss=1.3218 val_loss=0.5373 val_acc=0.8549 macro_f1=0.8270 * BEST
+[TRAIN] epoch=25 batch=12/21 loss=0.0000 lr=0.000009 speed=249.3s/s elapsed=239s eta=53s
+[CKPT] epoch_end epoch=25 step=525
+[EPOCH] 25/30: train_loss=1.3098 val_loss=0.5313 val_acc=0.8519 macro_f1=0.8239 * BEST
+[TRAIN] epoch=26 batch=12/21 loss=0.0000 lr=0.000006 speed=249.5s/s elapsed=249s eta=43s
+[EPOCH] 26/30: train_loss=1.3239 val_loss=0.5378 val_acc=0.8580 macro_f1=0.8318
+[TRAIN] epoch=27 batch=12/21 loss=0.0000 lr=0.000004 speed=250.2s/s elapsed=257s eta=33s
+[EPOCH] 27/30: train_loss=1.3111 val_loss=0.5330 val_acc=0.8580 macro_f1=0.8318
+[TRAIN] epoch=28 batch=12/21 loss=0.0000 lr=0.000003 speed=250.2s/s elapsed=264s eta=23s
+[CKPT] epoch_end epoch=28 step=588
+[EPOCH] 28/30: train_loss=1.3148 val_loss=0.5241 val_acc=0.8549 macro_f1=0.8262 * BEST
+[TRAIN] epoch=29 batch=12/21 loss=0.0000 lr=0.000002 speed=250.0s/s elapsed=275s eta=14s
+[EPOCH] 29/30: train_loss=1.3155 val_loss=0.5250 val_acc=0.8580 macro_f1=0.8302
+[TRAIN] epoch=30 batch=12/21 loss=0.0000 lr=0.000001 speed=249.2s/s elapsed=282s eta=4s
+[CKPT] epoch_end epoch=30 step=630
+[EPOCH] 30/30: train_loss=1.3071 val_loss=0.5279 val_acc=0.8549 macro_f1=0.8260
+[TRAIN] Complete. elapsed=288.5s stopped_early=False stopped_by_user=False cycles=1
