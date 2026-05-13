@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e15_s870_20260513_094101_105976",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_leaf_2026-05-13_09-31-57/checkpoints/ckpt_e15_s870_20260513_094101_105976/training_checkpoint",
+  "created_at": "2026-05-13T09:41:02.608320+00:00",
+  "global_step": 870,
+  "epoch": 15,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.3812129185847487
+}

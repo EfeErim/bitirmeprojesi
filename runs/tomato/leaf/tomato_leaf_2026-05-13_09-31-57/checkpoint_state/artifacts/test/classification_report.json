@@ -1,0 +1,75 @@
+{
+  "domates_bacterial_spot_and_speck_yaprak": {
+    "precision": 0.9664429530201343,
+    "recall": 0.8571428571428571,
+    "f1-score": 0.9085173501577287,
+    "support": 168.0
+  },
+  "domates_early_blight_yaprak": {
+    "precision": 0.8064516129032258,
+    "recall": 0.8802816901408451,
+    "f1-score": 0.8417508417508418,
+    "support": 142.0
+  },
+  "domates_late_blight_yaprak": {
+    "precision": 0.8562091503267973,
+    "recall": 0.81875,
+    "f1-score": 0.8370607028753994,
+    "support": 160.0
+  },
+  "domates_leaf_mold_yaprak": {
+    "precision": 0.9381443298969072,
+    "recall": 0.9191919191919192,
+    "f1-score": 0.9285714285714286,
+    "support": 99.0
+  },
+  "domates_mosaic_virüs_yaprak": {
+    "precision": 1.0,
+    "recall": 0.8796296296296297,
+    "f1-score": 0.9359605911330049,
+    "support": 108.0
+  },
+  "domates_powdery_mildew_yaprak": {
+    "precision": 0.7368421052631579,
+    "recall": 0.9545454545454546,
+    "f1-score": 0.8316831683168316,
+    "support": 44.0
+  },
+  "domates_sağlıklı_yaprak": {
+    "precision": 0.9047619047619048,
+    "recall": 0.991304347826087,
+    "f1-score": 0.946058091286307,
+    "support": 115.0
+  },
+  "domates_septoria_leaf_spot_yaprak": {
+    "precision": 0.8805970149253731,
+    "recall": 0.9076923076923077,
+    "f1-score": 0.8939393939393939,
+    "support": 130.0
+  },
+  "domates_spotted_wilt_yaprak": {
+    "precision": 0.9655172413793104,
+    "recall": 1.0,
+    "f1-score": 0.9824561403508771,
+    "support": 84.0
+  },
+  "domates_yellow_leaf_curl_yaprak": {
+    "precision": 0.9668874172185431,
+    "recall": 0.948051948051948,
+    "f1-score": 0.9573770491803278,
+    "support": 154.0
+  },
+  "accuracy": 0.9053156146179402,
+  "macro avg": {
+    "precision": 0.9021853729695355,
+    "recall": 0.9156590154221048,
+    "f1-score": 0.906337475756214,
+    "support": 1204.0
+  },
+  "weighted avg": {
+    "precision": 0.910048747507256,
+    "recall": 0.9053156146179402,
+    "f1-score": 0.9058694390077648,
+    "support": 1204.0
+  }
+}
