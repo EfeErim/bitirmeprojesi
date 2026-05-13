@@ -1,0 +1,57 @@
+{
+  "u_zu_m_antraknoz_yaprak": {
+    "precision": 0.8444444444444444,
+    "recall": 0.76,
+    "f1-score": 0.8,
+    "support": 50.0
+  },
+  "u_zu_m_kav_esca_yaprak": {
+    "precision": 0.8979591836734694,
+    "recall": 0.9166666666666666,
+    "f1-score": 0.9072164948453608,
+    "support": 48.0
+  },
+  "u_zu_m_ku_lleme_yaprak": {
+    "precision": 0.5909090909090909,
+    "recall": 0.65,
+    "f1-score": 0.6190476190476191,
+    "support": 20.0
+  },
+  "u_zu_m_leafroll_viru_s_yaprak": {
+    "precision": 1.0,
+    "recall": 0.8703703703703703,
+    "f1-score": 0.9306930693069307,
+    "support": 54.0
+  },
+  "u_zu_m_mildiyo_yaprak": {
+    "precision": 0.8448275862068966,
+    "recall": 0.8032786885245902,
+    "f1-score": 0.8235294117647058,
+    "support": 61.0
+  },
+  "u_zu_m_sag_lıklı_yaprak": {
+    "precision": 0.9264705882352942,
+    "recall": 0.9692307692307692,
+    "f1-score": 0.9473684210526315,
+    "support": 65.0
+  },
+  "u_zu_m_yelpaze_viru_su_yaprak": {
+    "precision": 0.6571428571428571,
+    "recall": 0.8846153846153846,
+    "f1-score": 0.7540983606557377,
+    "support": 26.0
+  },
+  "accuracy": 0.8549382716049383,
+  "macro avg": {
+    "precision": 0.8231076786588647,
+    "recall": 0.8363088399153974,
+    "f1-score": 0.8259933395247122,
+    "support": 324.0
+  },
+  "weighted avg": {
+    "precision": 0.8641457720258015,
+    "recall": 0.8549382716049383,
+    "f1-score": 0.8568073109235222,
+    "support": 324.0
+  }
+}
