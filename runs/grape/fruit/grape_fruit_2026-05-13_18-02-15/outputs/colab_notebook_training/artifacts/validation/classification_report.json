@@ -1,0 +1,45 @@
+{
+  "u_zu_m_antraknoz_meyve": {
+    "precision": 0.92,
+    "recall": 1.0,
+    "f1-score": 0.9583333333333334,
+    "support": 23.0
+  },
+  "u_zu_m_botrytis_cinerea_meyve": {
+    "precision": 1.0,
+    "recall": 0.7959183673469388,
+    "f1-score": 0.8863636363636364,
+    "support": 49.0
+  },
+  "u_zu_m_ku_lleme_meyve": {
+    "precision": 0.6,
+    "recall": 1.0,
+    "f1-score": 0.75,
+    "support": 9.0
+  },
+  "u_zu_m_mildiyo_meyve": {
+    "precision": 0.8636363636363636,
+    "recall": 0.76,
+    "f1-score": 0.8085106382978723,
+    "support": 25.0
+  },
+  "u_zu_m_sag_lıklı_meyve": {
+    "precision": 0.9041095890410958,
+    "recall": 0.9705882352941176,
+    "f1-score": 0.9361702127659575,
+    "support": 68.0
+  },
+  "accuracy": 0.896551724137931,
+  "macro avg": {
+    "precision": 0.857549190535492,
+    "recall": 0.9053013205282113,
+    "f1-score": 0.8678755641521599,
+    "support": 174.0
+  },
+  "weighted avg": {
+    "precision": 0.9116687422166874,
+    "recall": 0.896551724137931,
+    "f1-score": 0.8971024441035446,
+    "support": 174.0
+  }
+}
