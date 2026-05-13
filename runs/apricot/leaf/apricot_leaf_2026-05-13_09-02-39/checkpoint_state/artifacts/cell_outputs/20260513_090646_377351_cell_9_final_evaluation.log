@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=apricot_leaf_2026-05-13_09-02-39
+started_at=2026-05-13T09:06:46.377382+00:00
+finished_at=2026-05-13T09:06:56.338431+00:00
+duration_sec=9.961
+
+[DOGRULAMA (referans)] ornek=150 sinif=3 accuracy=0.9400 ood_auroc=0.8223 sure_ds_f1=0.2128 conformal_cov=0.9600
+[TEST (ayrilmis)] ornek=150 sinif=3 accuracy=0.8867 ood_auroc=0.8099 sure_ds_f1=0.2375 conformal_cov=0.9400
+[OOD] kanit=real_ood_split durum=failed gecti=False
+[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.
