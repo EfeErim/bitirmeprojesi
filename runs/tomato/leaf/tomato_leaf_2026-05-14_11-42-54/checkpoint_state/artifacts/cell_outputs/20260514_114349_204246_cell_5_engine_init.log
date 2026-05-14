@@ -1,0 +1,17 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=tomato_leaf_2026-05-14_11-42-54
+started_at=2026-05-14T11:43:49.204276+00:00
+finished_at=2026-05-14T11:43:52.028898+00:00
+duration_sec=2.825
+
+[OPT] mode=continue status=bootstrap_pending eligible=0 frontier=0 executed=0
+[OPT] No prior comparable run yet. Bootstrap run will use the visible notebook parameters.
+[OOD] selected ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/ood
+[OE] selected oe root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/oe
+[CLASSES] ['domates_bacterial_spot_and_speck_yaprak', 'domates_early_blight_yaprak', 'domates_late_blight_yaprak', 'domates_leaf_mold_yaprak', 'domates_mosaic_virüs_yaprak', 'domates_powdery_mildew_yaprak', 'domates_sağlıklı_yaprak', 'domates_septoria_leaf_spot_yaprak', 'domates_spotted_wilt_yaprak', 'domates_yellow_leaf_curl_yaprak']
+[CLASSES] mode=dataset_fallback reason=partial_taxonomy_alignment_fallback matched=0 unmatched=10
+[CLASSES] taxonomy-unmatched classes kept: ['domates_bacterial_spot_and_speck_yaprak', 'domates_early_blight_yaprak', 'domates_late_blight_yaprak', 'domates_leaf_mold_yaprak', 'domates_mosaic_virüs_yaprak', 'domates_powdery_mildew_yaprak', 'domates_sağlıklı_yaprak', 'domates_septoria_leaf_spot_yaprak', 'domates_spotted_wilt_yaprak', 'domates_yellow_leaf_curl_yaprak']
+[ENGINE][OOD_CFG] {"ber_enabled": false, "ber_lambda_new": 0.1, "ber_lambda_old": 0.1, "ber_warmup_steps": 50, "conformal_alpha": 0.05, "conformal_enabled": true, "conformal_method": "raps", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.2, "energy_temperature": 1.0, "energy_temperature_mode": "auto", "energy_temperature_range": [0.5, 3.0], "energy_temperature_steps": 16, "enforce_oe_disjoint": true, "knn_backend": "auto", "knn_chunk_size": 2048, "oe_enabled": true, "oe_loss_weight": 0.25, "oe_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/oe", "oe_target": "uniform", "primary_score_method": "auto", "radial_beta_range": [0.5, 2.0], "radial_beta_steps": 16, "radial_l2_enabled": true, "react_apply_during_calibration": true, "react_apply_during_inference": true, "react_enabled": false, "react_percentile": 0.99, "real_dev_selection_enabled": true, "real_dev_target_fpr": 0.05, "real_split_dev_fraction": 0.4, "real_split_enabled": true, "real_split_manifest_name": "ood_split_manifest.json", "real_split_min_per_slice": 2, "real_split_min_total": 30, "sure_confidence_percentile": 97.0, "sure_enabled": true, "sure_semantic_percentile": 90.0, "threshold_factor": 3.5}
+[ENGINE][OPT_CFG] loss=logitnorm tau=1.0 label_smoothing=0.1 mixed_precision=bf16
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Hazir. trainable_params=17,313,806  classes=10
