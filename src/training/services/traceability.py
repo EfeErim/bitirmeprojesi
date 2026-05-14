@@ -132,6 +132,21 @@ def _coerce_float(value: Any) -> Optional[float]:
         return None
 
 
+def _coerce_bool(value: Any) -> Optional[bool]:
+    if value in (None, ""):
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off"}:
+        return False
+    return None
+
+
 def _resolve_surface(summary_payload: Mapping[str, Any] | None, explicit_surface: str | None = None) -> str:
     if explicit_surface:
         return str(explicit_surface)
@@ -360,7 +375,58 @@ def _config_value(config: Mapping[str, Any], *keys: str) -> Any:
     return current
 
 
-def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> JsonDict:
+_NOTEBOOK_PARAMETER_MAP: dict[str, tuple[str, Any]] = {
+    "learning_rate": ("training.learning_rate", _coerce_float),
+    "weight_decay": ("training.weight_decay", _coerce_float),
+    "epochs": ("training.num_epochs", _coerce_int),
+    "batch_size": ("training.batch_size", _coerce_int),
+    "lora_r": ("training.adapter.lora_r", _coerce_int),
+    "lora_alpha": ("training.adapter.lora_alpha", _coerce_int),
+    "lora_dropout": ("training.adapter.lora_dropout", _coerce_float),
+    "fusion_dropout": ("training.fusion.dropout", _coerce_float),
+    "ood_factor": ("training.ood.threshold_factor", _coerce_float),
+    "oe_loss_weight": ("training.ood.oe_loss_weight", _coerce_float),
+    "react_enabled": ("training.ood.react_enabled", _coerce_bool),
+    "react_percentile": ("training.ood.react_percentile", _coerce_float),
+    "loss_name": ("training.optimization.loss_name", str),
+    "logitnorm_tau": ("training.optimization.logitnorm_tau", _coerce_float),
+    "label_smoothing": ("training.optimization.label_smoothing", _coerce_float),
+    "grad_accum_steps": ("training.optimization.grad_accumulation_steps", _coerce_int),
+    "mixed_precision": ("training.optimization.mixed_precision", str),
+    "max_grad_norm": ("training.optimization.max_grad_norm", _coerce_float),
+    "augmentation_policy": ("training.data.augmentation_policy", str),
+    "randaugment_num_ops": ("training.data.randaugment_num_ops", _coerce_int),
+    "randaugment_magnitude": ("training.data.randaugment_magnitude", _coerce_int),
+    "augmix_severity": ("training.data.augmix_severity", _coerce_int),
+    "classifier_rebalance_enabled": ("training.classifier_rebalance.enabled", _coerce_bool),
+    "classifier_rebalance_logit_adjustment_tau": (
+        "training.classifier_rebalance.logit_adjustment_tau",
+        _coerce_float,
+    ),
+}
+
+
+def _merge_notebook_parameters(parameters: JsonDict, notebook_parameters: Mapping[str, Any] | None) -> JsonDict:
+    merged = dict(parameters)
+    if not isinstance(notebook_parameters, Mapping):
+        return merged
+    normalized = {str(key).strip().lower(): value for key, value in dict(notebook_parameters).items()}
+    for notebook_key, (parameter_key, coercer) in _NOTEBOOK_PARAMETER_MAP.items():
+        value = normalized.get(notebook_key)
+        if value in (None, "", []):
+            continue
+        if parameter_key in merged and merged[parameter_key] not in (None, "", []):
+            continue
+        coerced = coercer(value)
+        if coerced not in (None, "", []):
+            merged[parameter_key] = coerced
+    return merged
+
+
+def _extract_parameter_block(
+    run_context_payload: Mapping[str, Any] | None,
+    summary_payload: Mapping[str, Any] | None = None,
+) -> JsonDict:
     run_context = dict(run_context_payload or {})
     config = _nested_dict(run_context, "resolved_config")
     training_cfg = _nested_dict(config, "training", "continual")
@@ -438,7 +504,8 @@ def _extract_parameter_block(run_context_payload: Mapping[str, Any] | None) -> J
             classifier_rebalance_cfg.get("logit_adjustment_tau")
         ),
     }
-    return {key: value for key, value in parameters.items() if value not in (None, "", [])}
+    merged = _merge_notebook_parameters(parameters, _nested_dict(summary_payload, "notebook_parameters"))
+    return {key: value for key, value in merged.items() if value not in (None, "", [])}
 
 
 def _weighted_f1_from_report(report_dict: Mapping[str, Any] | None) -> Optional[float]:
@@ -589,7 +656,7 @@ def build_optimization_record(
         },
         "model_family": model_family,
         "comparability": comparability,
-        "parameters": _extract_parameter_block(run_context),
+        "parameters": _extract_parameter_block(run_context, summary),
         "objectives": objectives,
         "objective_directions": objective_directions,
         "dataset": build_experiment_manifest(

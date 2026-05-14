@@ -87,10 +87,10 @@ def _build_default_search_space_payload() -> JsonDict:
         "parameters": [
             {"name": "training.learning_rate", "type": "float", "low": 5e-5, "high": 3e-4, "scale": "log"},
             {"name": "training.weight_decay", "type": "float", "low": 1e-4, "high": 5e-2, "scale": "log"},
-            {"name": "training.num_epochs", "type": "int", "low": 8, "high": 24, "step": 2},
-            {"name": "training.batch_size", "type": "categorical", "values": [4, 8, 12, 16]},
-            {"name": "training.adapter.lora_r", "type": "categorical", "values": [8, 16, 24, 32]},
-            {"name": "training.adapter.lora_alpha", "type": "categorical", "values": [8, 16, 24, 32]},
+            {"name": "training.num_epochs", "type": "int", "low": 8, "high": 40, "step": 2},
+            {"name": "training.batch_size", "type": "categorical", "values": [4, 8, 12, 16, 32, 40, 48, 52, 56, 64, 88, 96, 128]},
+            {"name": "training.adapter.lora_r", "type": "categorical", "values": [8, 16, 20, 24, 26, 32]},
+            {"name": "training.adapter.lora_alpha", "type": "categorical", "values": [8, 16, 20, 24, 26, 32]},
             {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
             {"name": "training.fusion.dropout", "type": "float", "low": 0.0, "high": 0.25},
             {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
@@ -495,6 +495,11 @@ def _parameter_signature(parameters: Mapping[str, Any]) -> str:
     return json.dumps(normalized, ensure_ascii=False, sort_keys=True)
 
 
+def _search_space_signature(parameters: Mapping[str, Any], dimensions: Sequence[SearchDimension]) -> str:
+    scoped = {dimension.name: _copy_json(parameters.get(dimension.name)) for dimension in dimensions}
+    return _parameter_signature(scoped)
+
+
 def _normalize_objective_matrix(
     observed: Sequence[Tuple[JsonDict, JsonDict]],
     objective_names: Sequence[str],
@@ -605,7 +610,12 @@ def _generate_anchor_neighbors(
     if not dimensions or max_candidates <= 0:
         return []
 
-    anchor = {dimension.name: _copy_json(anchor_parameters.get(dimension.name)) for dimension in dimensions}
+    anchor: JsonDict = {}
+    for dimension in dimensions:
+        value = anchor_parameters.get(dimension.name)
+        if dimension.encode(value) is None:
+            value = _heuristic_dimension_value(dimension, 0.5)
+        anchor[dimension.name] = _copy_json(value)
     seen = set(observed_signatures)
     seen.add(_parameter_signature(anchor))
     generated: List[JsonDict] = []
@@ -781,7 +791,10 @@ def build_bayesian_recommendations(
                 else ([], [])
             )
             observed_parameters = [dict(trial.get("parameters", {})) for trial, _objectives in observed_trials]
-            observed_signatures = {_parameter_signature(parameters) for parameters in observed_parameters}
+            observed_signatures = {
+                _search_space_signature(parameters, dimensions)
+                for parameters in observed_parameters
+            }
             if observed_trials and scores:
                 best_index = max(range(len(scores)), key=lambda idx: scores[idx])
                 best_run_id = str(observed_trials[best_index][0].get("run_id", "") or "")

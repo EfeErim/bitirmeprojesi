@@ -280,11 +280,7 @@ def test_build_bayesian_recommendations_proposes_new_parameters():
     payload = build_bayesian_recommendations(trials, proposal_count=2, random_seed=7)
     cohort = payload["cohorts"][0]
     observed_signatures = {
-        (
-            trial["parameters"]["training.learning_rate"],
-            trial["parameters"]["training.weight_decay"],
-            trial["parameters"]["training.num_epochs"],
-        )
+        tuple(sorted(trial["parameters"].items()))
         for trial in trials
     }
 
@@ -293,9 +289,5 @@ def test_build_bayesian_recommendations_proposes_new_parameters():
     for proposal in cohort["proposals"]:
         assert proposal["parameters"]
         assert proposal["config_override"]["training"]["continual"]
-        signature = (
-            proposal["parameters"]["training.learning_rate"],
-            proposal["parameters"]["training.weight_decay"],
-            proposal["parameters"]["training.num_epochs"],
-        )
+        signature = tuple(sorted(proposal["parameters"].items()))
         assert signature not in observed_signatures

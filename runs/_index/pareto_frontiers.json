@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_pareto_frontiers",
-  "generated_at": "2026-05-13T19:37:53.237064+00:00",
+  "generated_at": "2026-05-14T08:31:33.300426+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "objective_names": [
     "classification.macro_f1",
@@ -62,6 +62,12 @@
             "ood.in_distribution_samples": 280
           },
           "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 36,
+            "training.batch_size": 40,
+            "training.adapter.lora_r": 20,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 4.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -70,7 +76,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\apricot\\fruit\\apricot_fruit_2026-05-13_17-43-26\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\apricot\\fruit\\apricot_fruit_2026-05-13_17-43-26\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -129,6 +135,12 @@
             "ood.in_distribution_samples": 150
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 30,
+            "training.batch_size": 40,
+            "training.adapter.lora_r": 20,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 4.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -137,7 +149,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\apricot\\leaf\\apricot_leaf_2026-05-12_18-14-26\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\apricot\\leaf\\apricot_leaf_2026-05-12_18-14-26\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "apricot_leaf_2026-05-13_17-38-34",
@@ -165,6 +177,12 @@
             "ood.in_distribution_samples": 150
           },
           "parameters": {
+            "training.learning_rate": 0.00012,
+            "training.num_epochs": 38,
+            "training.batch_size": 52,
+            "training.adapter.lora_r": 26,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 5.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -173,7 +191,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\apricot\\leaf\\apricot_leaf_2026-05-13_17-38-34\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\apricot\\leaf\\apricot_leaf_2026-05-13_17-38-34\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -232,6 +250,12 @@
             "ood.in_distribution_samples": 174
           },
           "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 32,
+            "training.batch_size": 48,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -240,7 +264,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\grape\\fruit\\grape_fruit_2026-05-09_19-12-43\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\grape\\fruit\\grape_fruit_2026-05-09_19-12-43\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "grape_fruit_2026-05-13_18-02-15",
@@ -268,6 +292,12 @@
             "ood.in_distribution_samples": 174
           },
           "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 34,
+            "training.batch_size": 48,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -276,7 +306,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\grape\\fruit\\grape_fruit_2026-05-13_18-02-15\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\grape\\fruit\\grape_fruit_2026-05-13_18-02-15\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -334,6 +364,12 @@
             "ood.in_distribution_samples": 324
           },
           "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 30,
+            "training.batch_size": 56,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -342,7 +378,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\grape\\leaf\\grape_leaf_2026-05-13_17-55-48\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\grape\\leaf\\grape_leaf_2026-05-13_17-55-48\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -403,6 +439,12 @@
             "ood.in_distribution_samples": 223
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 36,
+            "training.batch_size": 32,
+            "training.adapter.lora_r": 16,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -411,7 +453,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-06_05-46-28\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\fruit\\strawberry_fruit_2026-05-06_05-46-28\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "strawberry_fruit_2026-05-11_07-36-47",
@@ -439,6 +481,12 @@
             "ood.in_distribution_samples": 223
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 36,
+            "training.batch_size": 32,
+            "training.adapter.lora_r": 16,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -447,7 +495,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-36-47\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-36-47\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "strawberry_fruit_2026-05-11_07-46-42",
@@ -475,6 +523,12 @@
             "ood.in_distribution_samples": 223
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 36,
+            "training.batch_size": 32,
+            "training.adapter.lora_r": 16,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -483,7 +537,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-46-42\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\fruit\\strawberry_fruit_2026-05-11_07-46-42\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "strawberry_fruit_2026-05-13_17-52-38",
@@ -511,6 +565,12 @@
             "ood.in_distribution_samples": 223
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 38,
+            "training.batch_size": 40,
+            "training.adapter.lora_r": 20,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 4.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -519,7 +579,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\strawberry\\fruit\\strawberry_fruit_2026-05-13_17-52-38\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\fruit\\strawberry_fruit_2026-05-13_17-52-38\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -577,6 +637,12 @@
             "ood.in_distribution_samples": 491
           },
           "parameters": {
+            "training.learning_rate": 0.00012,
+            "training.num_epochs": 24,
+            "training.batch_size": 88,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 4.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -585,7 +651,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\strawberry\\leaf\\strawberry_leaf_2026-05-13_17-47-58\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\leaf\\strawberry_leaf_2026-05-13_17-47-58\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -645,6 +711,12 @@
             "ood.in_distribution_samples": 119
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 30,
+            "training.batch_size": 64,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -653,7 +725,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\tomato\\fruit\\tomato_fruit_2026-05-05_16-16-31\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\tomato\\fruit\\tomato_fruit_2026-05-05_16-16-31\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "tomato_fruit_2026-05-07_13-33-55",
@@ -681,6 +753,12 @@
             "ood.in_distribution_samples": 119
           },
           "parameters": {
+            "training.learning_rate": 8e-05,
+            "training.num_epochs": 30,
+            "training.batch_size": 64,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.0,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -689,7 +767,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\tomato\\fruit\\tomato_fruit_2026-05-07_13-33-55\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\tomato\\fruit\\tomato_fruit_2026-05-07_13-33-55\\outputs\\colab_notebook_training\\artifacts"
         },
         {
           "run_id": "tomato_fruit_2026-05-13_18-21-28",
@@ -717,6 +795,12 @@
             "ood.in_distribution_samples": 119
           },
           "parameters": {
+            "training.learning_rate": 9e-05,
+            "training.num_epochs": 32,
+            "training.batch_size": 64,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -725,7 +809,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\tomato\\fruit\\tomato_fruit_2026-05-13_18-21-28\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\tomato\\fruit\\tomato_fruit_2026-05-13_18-21-28\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -783,6 +867,12 @@
             "ood.in_distribution_samples": 1204
           },
           "parameters": {
+            "training.learning_rate": 0.00011,
+            "training.num_epochs": 24,
+            "training.batch_size": 88,
+            "training.adapter.lora_r": 32,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.5,
             "training.ood.react_enabled": false,
             "training.ood.oe_enabled": false,
             "training.ood.radial_l2_enabled": false,
@@ -791,7 +881,7 @@
             "training.ood.conformal_enabled": false,
             "training.classifier_rebalance.enabled": false
           },
-          "artifact_root": "runs\\tomato\\leaf\\tomato_leaf_2026-05-13_18-07-42\\outputs\\colab_notebook_training\\artifacts"
+          "artifact_root": "D:\\bitirme projesi\\runs\\tomato\\leaf\\tomato_leaf_2026-05-13_18-07-42\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
