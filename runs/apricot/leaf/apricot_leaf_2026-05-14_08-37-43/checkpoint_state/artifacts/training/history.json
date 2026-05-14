@@ -1,0 +1,1289 @@
+{
+  "train_loss": [
+    1.10582611295912,
+    1.0892584588792589,
+    1.0816366407606337,
+    1.0584615071614583,
+    0.9835883114073012,
+    0.9004836082458496,
+    0.8489931358231438,
+    0.8145244850052727,
+    0.7654861675368415,
+    0.7351147996054755,
+    0.7050948275460137,
+    0.6826837327745225,
+    0.6896309587690566,
+    0.6405524942609999,
+    0.6603223548995124,
+    0.661034882068634,
+    0.6345011327001784,
+    0.6673449807696872,
+    0.6441895167032877,
+    0.6303138666682773,
+    0.6242643660969205,
+    0.6189711888631185,
+    0.6159176031748453,
+    0.6098901894357469,
+    0.6112600564956665,
+    0.6127941144837273,
+    0.6062653064727783,
+    0.6106178959210714,
+    0.6105900473064847,
+    0.6025515198707581,
+    0.6136221422089471,
+    0.6164310442076789,
+    0.6069272425439622,
+    0.6106112864282396,
+    0.6068542467223274,
+    0.605863458580441,
+    0.6082839833365546
+  ],
+  "val_loss": [
+    1.0603629493713378,
+    1.0764554532368977,
+    1.034643020629883,
+    1.0105517292022705,
+    0.9019275077184041,
+    0.8551534326871236,
+    0.8689652156829833,
+    0.7494378558794658,
+    0.852548037370046,
+    0.7939737240473429,
+    0.634733516772588,
+    0.7316078035036723,
+    0.6074280726909638,
+    0.5946618938446044,
+    0.5598966236909231,
+    0.4827363049983978,
+    0.46238851328690844,
+    0.432841681043307,
+    0.34477437734603883,
+    0.283312292098999,
+    0.25340724070866905,
+    0.24060075849294663,
+    0.2448721081018448,
+    0.20079223910967509,
+    0.22070144832134247,
+    0.21172701299190522,
+    0.2033101804057757,
+    0.2028865048289299,
+    0.20066320439179738,
+    0.1913817282517751,
+    0.18222032606601715,
+    0.18502713521321615,
+    0.1920180877049764,
+    0.1968485238154729,
+    0.19768361369768778,
+    0.19469168076912563,
+    0.19228432337443033
+  ],
+  "val_accuracy": [
+    0.41333333333333333,
+    0.42,
+    0.52,
+    0.5,
+    0.5933333333333334,
+    0.5866666666666667,
+    0.5666666666666667,
+    0.6466666666666666,
+    0.64,
+    0.74,
+    0.82,
+    0.7933333333333333,
+    0.82,
+    0.84,
+    0.8333333333333334,
+    0.84,
+    0.84,
+    0.8266666666666667,
+    0.84,
+    0.8733333333333333,
+    0.9,
+    0.9066666666666666,
+    0.9133333333333333,
+    0.92,
+    0.9066666666666666,
+    0.92,
+    0.92,
+    0.92,
+    0.9333333333333333,
+    0.9466666666666667,
+    0.94,
+    0.9333333333333333,
+    0.9266666666666666,
+    0.9333333333333333,
+    0.92,
+    0.9266666666666666,
+    0.9333333333333333
+  ],
+  "macro_precision": [
+    0.3421361446380615,
+    0.28311339020729065,
+    0.3505747318267822,
+    0.6651990413665771,
+    0.6198036074638367,
+    0.6445370316505432,
+    0.657676637172699,
+    0.664405882358551,
+    0.6897435784339905,
+    0.7706800103187561,
+    0.8321290612220764,
+    0.8238846659660339,
+    0.8308200836181641,
+    0.8516907095909119,
+    0.8472620844841003,
+    0.8483364582061768,
+    0.8531100153923035,
+    0.845031201839447,
+    0.8499999642372131,
+    0.8721491694450378,
+    0.8961926102638245,
+    0.9040995240211487,
+    0.9130117297172546,
+    0.9166855812072754,
+    0.9040995240211487,
+    0.9186263680458069,
+    0.9163499474525452,
+    0.9163499474525452,
+    0.930333137512207,
+    0.9430511593818665,
+    0.9351913928985596,
+    0.9284591674804688,
+    0.9219757914543152,
+    0.9293072819709778,
+    0.9152405858039856,
+    0.9219757914543152,
+    0.9293072819709778
+  ],
+  "macro_recall": [
+    0.3534804582595825,
+    0.46520963311195374,
+    0.4611448347568512,
+    0.5548281073570251,
+    0.6089464426040649,
+    0.6331638693809509,
+    0.6199765801429749,
+    0.6813772320747375,
+    0.6802046298980713,
+    0.7694275379180908,
+    0.8359449505805969,
+    0.8120669722557068,
+    0.8372241854667664,
+    0.8541733622550964,
+    0.8485236167907715,
+    0.8541733622550964,
+    0.8541733622550964,
+    0.8428738713264465,
+    0.8548129200935364,
+    0.8824976086616516,
+    0.9076549410820007,
+    0.9164268374443054,
+    0.9214369654655457,
+    0.9283658862113953,
+    0.9164268374443054,
+    0.9277262687683105,
+    0.9290054440498352,
+    0.9290054440498352,
+    0.9396653175354004,
+    0.9516043066978455,
+    0.9428324103355408,
+    0.9371826648712158,
+    0.9315329194068909,
+    0.9403049349784851,
+    0.9258832335472107,
+    0.9315329194068909,
+    0.9403049349784851
+  ],
+  "macro_f1": [
+    0.24369953572750092,
+    0.33945515751838684,
+    0.39528271555900574,
+    0.4287048578262329,
+    0.5878621935844421,
+    0.5775203108787537,
+    0.5450793504714966,
+    0.64088374376297,
+    0.6381950378417969,
+    0.7400109171867371,
+    0.8185184597969055,
+    0.7904866337776184,
+    0.8179223537445068,
+    0.8375861644744873,
+    0.8308200240135193,
+    0.8371024131774902,
+    0.8365671634674072,
+    0.8235785961151123,
+    0.8372004628181458,
+    0.8713865876197815,
+    0.8983979821205139,
+    0.9057631492614746,
+    0.9110409617424011,
+    0.9196568131446838,
+    0.9057631492614746,
+    0.9181483387947083,
+    0.9190515875816345,
+    0.9190515875816345,
+    0.9310125708580017,
+    0.9448630809783936,
+    0.937340497970581,
+    0.9312982559204102,
+    0.925262451171875,
+    0.9326661229133606,
+    0.9184468388557434,
+    0.925262451171875,
+    0.9326661229133606
+  ],
+  "weighted_f1": [
+    0.2810080973307292,
+    0.3227793121337891,
+    0.44337056477864584,
+    0.39893043518066407,
+    0.5853763834635417,
+    0.5675548807779948,
+    0.5293841044108073,
+    0.6310370890299479,
+    0.63364990234375,
+    0.7400129191080729,
+    0.8165185546875,
+    0.7923858642578125,
+    0.8201289876302084,
+    0.8389010620117188,
+    0.8334315490722656,
+    0.8386839803059896,
+    0.8402131652832031,
+    0.8299581909179687,
+    0.8407998657226563,
+    0.8734853108723958,
+    0.9006978352864583,
+    0.9071884155273438,
+    0.9145726521809896,
+    0.9201395670572917,
+    0.9071884155273438,
+    0.92106689453125,
+    0.9205326334635416,
+    0.9205326334635416,
+    0.9343282063802083,
+    0.9471625773111979,
+    0.9405136108398438,
+    0.9337491861979167,
+    0.9269854736328125,
+    0.9335084025065105,
+    0.9205027262369792,
+    0.9269854736328125,
+    0.9335084025065105
+  ],
+  "balanced_accuracy": [
+    0.3534804582595825,
+    0.46520963311195374,
+    0.4611448347568512,
+    0.5548281073570251,
+    0.6089464426040649,
+    0.6331638693809509,
+    0.6199765801429749,
+    0.6813772320747375,
+    0.6802046298980713,
+    0.7694275379180908,
+    0.8359449505805969,
+    0.8120669722557068,
+    0.8372241854667664,
+    0.8541733622550964,
+    0.8485236167907715,
+    0.8541733622550964,
+    0.8541733622550964,
+    0.8428738713264465,
+    0.8548129200935364,
+    0.8824976086616516,
+    0.9076549410820007,
+    0.9164268374443054,
+    0.9214369654655457,
+    0.9283658862113953,
+    0.9164268374443054,
+    0.9277262687683105,
+    0.9290054440498352,
+    0.9290054440498352,
+    0.9396653175354004,
+    0.9516043066978455,
+    0.9428324103355408,
+    0.9371826648712158,
+    0.9315329194068909,
+    0.9403049349784851,
+    0.9258832335472107,
+    0.9315329194068909,
+    0.9403049349784851
+  ],
+  "generalization_gap": [
+    -0.04546316358778224,
+    -0.012803005642361143,
+    -0.04699362013075081,
+    -0.047909777959187716,
+    -0.08166080368889705,
+    -0.04533017555872598,
+    0.01997207985983951,
+    -0.06508662912580698,
+    0.08706186983320452,
+    0.058858924441867355,
+    -0.07036131077342567,
+    0.04892407072914973,
+    -0.08220288607809279,
+    -0.04589060041639548,
+    -0.10042573120858933,
+    -0.17829857707023622,
+    -0.17211261941326994,
+    -0.23450329972638018,
+    -0.2994151393572489,
+    -0.34700157456927827,
+    -0.37085712538825144,
+    -0.37837043037017193,
+    -0.37104549507300055,
+    -0.4090979503260718,
+    -0.39055860817432403,
+    -0.4010671014918221,
+    -0.4029551260670026,
+    -0.4077313910921415,
+    -0.4099268429146873,
+    -0.4111697916189829,
+    -0.43140181614292994,
+    -0.4314039089944628,
+    -0.4149091548389858,
+    -0.4137627626127667,
+    -0.4091706330246396,
+    -0.41117177781131536,
+    -0.4159996599621243
+  ],
+  "per_class_accuracy": [
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.09433962404727936,
+      "kayısı_sag_lıklı_yaprak_302": 0.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9661017060279846
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.0,
+      "kayısı_sag_lıklı_yaprak_302": 0.9210526347160339,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.47457626461982727
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.6037735939025879,
+      "kayısı_sag_lıklı_yaprak_302": 0.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.7796609997749329
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.7358490824699402,
+      "kayısı_sag_lıklı_yaprak_302": 0.8947368264198303,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.033898305147886276
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.7358490824699402,
+      "kayısı_sag_lıklı_yaprak_302": 0.6842105388641357,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.4067796468734741
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.6037735939025879,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.32203391194343567
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.6226415038108826,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.23728813230991364
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.43396225571632385,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.6101694703102112
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.5660377144813538,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.47457626461982727
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.6101694703102112
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.6603773832321167,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8474576473236084
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.6226415038108826,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8135592937469482
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8135592937469482
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8644067645072937
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8474576473236084
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8644067645072937
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8644067645072937
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.698113203048706,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8305084705352783
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.7169811129570007,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8474576473236084
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.7924528121948242,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8679245114326477,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8679245114326477,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.849056601524353,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8867924809455872,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8983050584793091
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8679245114326477,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8679245114326477,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8813559412956238
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.8867924809455872,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9322034120559692
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9491525292396545
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9491525292396545
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9322034120559692
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.8983050584793091
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 0.9736841917037964,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    },
+    {
+      "kayısı_s_arka_viru_su_yaprak_206": 0.9056603908538818,
+      "kayısı_sag_lıklı_yaprak_302": 1.0,
+      "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300": 0.9152542352676392
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 38
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.09433962404727936,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9661017060279846,
+        "support": 59
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.47457626461982727,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9210526347160339,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 38
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.6037735939025879,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7796609997749329,
+        "support": 59
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.033898305147886276,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.7358490824699402,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.8947368264198303,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.4067796468734741,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6842105388641357,
+        "support": 38
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.7358490824699402,
+        "support": 53
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.32203391194343567,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.6037735939025879,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.23728813230991364,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.6226415038108826,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.43396225571632385,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6101694703102112,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.47457626461982727,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.5660377144813538,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6101694703102112,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.6603773832321167,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8474576473236084,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.6226415038108826,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8135592937469482,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8135592937469482,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8644067645072937,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8474576473236084,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8644067645072937,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8644067645072937,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8305084705352783,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.7169811129570007,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8474576473236084,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.7924528121948242,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8679245114326477,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8679245114326477,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.849056601524353,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8867924809455872,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8983050584793091,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8679245114326477,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8679245114326477,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8813559412956238,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8867924809455872,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9322034120559692,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9491525292396545,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9491525292396545,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9322034120559692,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8983050584793091,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_s_arka_viru_su_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9056603908538818,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.9152542352676392,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sag_lıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 333,
+  "optimizer_steps": 333,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 31,
+  "best_metric_value": 0.18222032606601715
+}
