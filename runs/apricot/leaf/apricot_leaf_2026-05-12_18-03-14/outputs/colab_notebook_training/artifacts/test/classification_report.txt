@@ -1,9 +1,0 @@
-                                                precision    recall  f1-score   support
-
-              kayısı_s_arka_viru_su_yaprak_206       0.76      0.60      0.67        53
-                   kayısı_sag_lıklı_yaprak_302       0.48      0.97      0.64        38
-kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300       0.87      0.46      0.60        59
-
-                                      accuracy                           0.64       150
-                                     macro avg       0.70      0.68      0.64       150
-                                  weighted avg       0.73      0.64      0.64       150
