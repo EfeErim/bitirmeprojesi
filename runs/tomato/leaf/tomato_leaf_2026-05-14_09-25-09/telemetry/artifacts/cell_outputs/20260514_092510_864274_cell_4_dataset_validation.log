@@ -1,0 +1,14 @@
+[CELL_CAPTURE] cell=Cell 4: Dataset Validation
+run_id=tomato_leaf_2026-05-14_09-25-09
+started_at=2026-05-14T09:25:10.864311+00:00
+finished_at=2026-05-14T09:26:06.087932+00:00
+duration_sec=55.224
+
+[BOOTSTRAP] Fetching selected Notebook 2 dataset paths: ['data/prepared_runtime_datasets/tomato__leaf', 'data/ood_dataset/final/tomato__leaf_ood_final', 'data/oe_dataset/tomato_leaf_oe_from_fruit', 'data/prepared_runtime_datasets/tomato__leaf/ood', 'data/prepared_runtime_datasets/tomato__leaf/oe']
+[OOD] explicit ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/ood
+[OE] explicit oe root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/oe
+[DATASET] runtime root=/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf classes=10: ['domates_bacterial_spot_and_speck_yaprak', 'domates_early_blight_yaprak', 'domates_late_blight_yaprak', 'domates_leaf_mold_yaprak', 'domates_mosaic_virüs_yaprak', 'domates_powdery_mildew_yaprak', 'domates_sağlıklı_yaprak', 'domates_septoria_leaf_spot_yaprak', 'domates_spotted_wilt_yaprak', 'domates_yellow_leaf_curl_yaprak']
+[DATASET][CHECK] scale=medium continual=5176 val=1222 test=1204 ood=78 classes=10
+[DATASET][WARN] Manifest rows include 217 eval-quality-risk item(s); prefer cautious regularization.
+[PARAMS] Manual overrides uygulandi: {'EPOCHS': 24, 'BATCH_SIZE': 88, 'LEARNING_RATE': 0.00011, 'LORA_R': 32, 'LORA_ALPHA': 32, 'LORA_DROPOUT': 0.14, 'OOD_FACTOR': 4.0, 'LABEL_SMOOTHING': 0.08, 'AUTO_DISCONNECT_RUNTIME': False, 'AUTO_PUSH_TO_GITHUB': True, 'WEIGHT_DECAY': 0.01, 'LOSS_NAME': 'logitnorm', 'LOGITNORM_TAU': 1.0, 'MIXED_PRECISION': 'bf16', 'GRAD_ACCUM_STEPS': 1, 'VALIDATION_EVERY_N_EPOCHS': 1, 'EARLY_STOPPING_PATIENCE': 6, 'RANDAUGMENT_NUM_OPS': 2, 'RANDAUGMENT_MAGNITUDE': 7, 'NUM_WORKERS': 12, 'PREFETCH': 8, 'CACHE_TRAIN_SPLIT': True, 'ENABLE_BAYESIAN_OPTIMIZATION': True}
+[PARAMS][FINAL] epochs=24 bs=88 lr=0.00011 lora=32/32 dropout=0.14 accum=1 workers=12 prefetch=8
