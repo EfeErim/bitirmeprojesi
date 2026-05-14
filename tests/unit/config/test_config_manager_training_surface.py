@@ -93,7 +93,9 @@ def test_extract_continual_training_config_normalizes_root_shape():
     assert root_normalized["ood"]["real_split_enabled"] is True
     assert root_normalized["ood"]["real_split_dev_fraction"] == 0.4
     assert root_normalized["ood"]["real_split_min_per_slice"] == 2
+    assert root_normalized["ood"]["real_split_min_total"] == 30
     assert root_normalized["ood"]["real_split_manifest_name"] == "ood_split_manifest.json"
+    assert root_normalized["ood"]["enforce_oe_disjoint"] is True
     assert root_normalized["ood"]["real_dev_selection_enabled"] is True
     assert root_normalized["ood"]["real_dev_target_fpr"] == 0.05
     assert root_normalized["ood"]["conformal_method"] == "raps"

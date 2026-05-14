@@ -244,9 +244,11 @@ def prepare_training_run(
         real_ood_split_enabled=bool(ood_cfg.get("real_split_enabled", True)),
         real_ood_split_dev_fraction=float(ood_cfg.get("real_split_dev_fraction", 0.4)),
         real_ood_split_min_per_slice=int(ood_cfg.get("real_split_min_per_slice", 2)),
+        real_ood_split_min_total=int(ood_cfg.get("real_split_min_total", 30)),
         real_ood_split_manifest_name=str(
             ood_cfg.get("real_split_manifest_name", "ood_split_manifest.json") or "ood_split_manifest.json"
         ),
+        real_ood_enforce_oe_disjoint=bool(ood_cfg.get("enforce_oe_disjoint", True)),
         pin_memory=bool(colab_cfg.get("pin_memory", True) if pin_memory is None else pin_memory),
     )
     loader_sizes = build_loader_sizes(loaders)

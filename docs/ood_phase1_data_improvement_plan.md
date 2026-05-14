@@ -18,20 +18,107 @@ If the pool is too easy, the model may look better than it is.
 If the pool is too small, the metrics are unstable.
 If the pool is dominated by off-crop images, it can hide the real failure mode.
 
+## Split Policy For OOD Evidence
+
+The cleanest evaluation setup is to keep the unknown pool separate from both training and calibration decisions.
+
+Recommended split roles:
+
+- `ood_dev`: a small calibration subset used only for threshold selection, score comparison, and readiness tuning
+- `ood_test`: the final held-out OOD evidence that is never used for tuning
+- `ood_sanity_check`: a separate mixed set with a small amount of ID inserted into OOD so we can measure false positives and contamination sensitivity
+
+This follows the literature and avoids evaluation leakage:
+
+- Outlier Exposure explicitly separates auxiliary outliers from test outliers and does not tune on the test distribution. Source: [Hendrycks et al., 2018](https://openreview.net/forum?id=HyxCxhRcY7)
+- OOD benchmark quality matters, and contaminated test OOD sets can distort conclusions. Source: [Bitterwolf et al., 2023](https://proceedings.mlr.press/v202/bitterwolf23a.html)
+- The amount of auxiliary outlier data can be small, but training outliers and final OOD evidence still must be disjoint. Source: [Liznerski et al., 2022](https://openreview.net/forum?id=3v78awEzyB)
+
+Practical rule for this repo:
+
+- keep `val/` for in-distribution calibration and model selection
+- keep `ood/` as the source of final unknown evidence
+- if the pool is large enough, split `ood/` into `ood_dev` and `ood_test`
+- if the pool is too small, use `val/` for calibration and reserve `ood/` for final readiness evidence only
+- do not mix the exact same images between `oe/` and final `ood/` evidence
+
+The `ood_sanity_check` set is optional but useful when you want to answer a specific question: "does the adapter still call real ID images OOD if a few are mixed into a harder unknown set?"
+
+It is a diagnostic stress set, not the canonical final OOD benchmark.
+
 ## Current Evidence Snapshot
 
-From `data/ood_dataset/final/final_ood_manifest.json` after the 2026-05-10 Phase 1 rebalance:
+From `data/ood_dataset/final/final_ood_manifest.json` after the 2026-05-14 targeted OOD/OE takviye:
 
+- `apricot__fruit_ood_final`: 175 images
+- `apricot__leaf_ood_final`: 195 images
+- `grape__fruit_ood_final`: 126 images
+- `grape__leaf_ood_final`: 343 images
+- `strawberry__fruit_ood_final`: 95 images
 - `strawberry__leaf_ood_final`: 213 images
-- `strawberry__fruit_ood_final`: 219 images
-- `tomato__leaf_ood_final`: 325 images
-- `tomato__fruit_ood_final`: 332 images
-- `grape__leaf_ood_final`: 249 images
-- `grape__fruit_ood_final`: 249 images
+- `tomato__fruit_ood_final`: 352 images
+- `tomato__leaf_ood_final`: 370 images
 
-The main issue is not just size. It is class balance and slice quality. The 2026-05-10 pass reduced easy strawberry off-crop and non-plant slices, expanded tomato leaf above the 300-image stability floor, and rebuilt tomato fruit around fruit-specific same-crop unknowns and failure cases. Strawberry fruit still needs more true fruit-specific failure cases before it should be treated as complete.
+The main issue is not just size. It is class balance and slice quality. The 2026-05-14 pass added apricot coverage, kept tomato leaf above the 300-image stability floor, and refreshed tomato fruit around same-crop unsupported unknowns plus failure cases. The weakest current pools are strawberry fruit and grape fruit; strawberry fruit still needs more true fruit-specific failure cases before it should be treated as complete.
 
-## 1. Strawberry / Leaf
+## 1. Apricot / Leaf
+
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
+
+- same_crop_unsupported_unknowns: 90
+- other_crop_disease: 61
+- off_crop_secondary: 35
+- non_plant_misc: 9
+
+The apricot leaf pool exists, but it is still small and currently leans toward other-crop and off-crop evidence rather than same-crop unknowns.
+
+### Recommendation
+
+- Increase apricot-specific unsupported disease states.
+- Keep off-crop and non-plant slices as secondary evidence.
+- Add more apricot leaf failure cases such as blur, occlusion, and canopy clutter.
+
+### Target mix
+
+- same-crop unsupported or unusual apricot disease states: 120 to 140
+- failure cases: 60 to 80
+- off-crop validation negatives: 20 to 30
+- non-plant misc: a very small token set if needed
+
+### Why this matters
+
+This pool is useful, but not yet rich enough to stress rejection on apricot-specific unknowns.
+
+## 2. Apricot / Fruit
+
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
+
+- same_crop_unsupported_unknowns: 51
+- other_crop_disease: 50
+- scene_context_leak_check: 20
+- off_crop_secondary: 35
+- non_plant_misc: 19
+
+The apricot fruit pool is even more mixed than the leaf pool and still needs fruit-specific hard negatives.
+
+### Recommendation
+
+- Rebuild around fruit-specific unknowns instead of relying on other-crop disease.
+- Add fruit damage, ripeness anomalies, bruising, rot, sun damage, and partial occlusion.
+- Keep off-crop and non-plant images as minority slices.
+
+### Target mix
+
+- fruit-specific unknowns and unsupported disease states: 120 to 140
+- fruit failure cases: 60 to 80
+- off-crop validation negatives: 20 to 30
+- non-plant misc: only if needed for a specific gate
+
+### Why this matters
+
+Apricot fruit rejection should be decided by fruit-like failure modes, not by off-crop shortcuts.
+
+## 3. Strawberry / Leaf
 
 Supported classes in the prepared runtime dataset:
 
@@ -40,7 +127,7 @@ Supported classes in the prepared runtime dataset:
 - strawberry_leaf_spot_leaf
 - strawberry_powdery_mildew_leaf
 
-Current OOD mix after the 2026-05-10 rebalance:
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
 
 - same_crop_unsupported_unknowns: 165
 - strawberry_failure_cases: 13
@@ -69,18 +156,18 @@ A better Phase 1 balance would look like:
 
 This adapter already has very strong classification metrics, so the remaining gap is mostly about OOD rejection. A pool dominated by easy off-crop images does not stress the detector enough.
 
-## 2. Strawberry / Fruit
+## 4. Strawberry / Fruit
 
-Current OOD mix after the 2026-05-10 rebalance:
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
 
-- same_crop_unsupported_unknowns: 165
+- same_crop_unsupported_unknowns: 42
 - fruit_specific_unknowns: 8
 - fruit_failure_cases: 11
-- off_crop_secondary: 25
-- other_crop_disease: 5
-- non_plant_misc: 5
+- off_crop_secondary: 6
+- other_crop_disease: 0
+- non_plant_misc: 28
 
-The fruit adapter no longer uses the same off-crop-heavy strawberry pool as the leaf adapter, but the visual failure modes are still not fruit-specific enough.
+The fruit adapter is now much smaller than the leaf adapter, and the current mix is still not fruit-specific enough.
 
 ### Recommendation
 
@@ -99,17 +186,17 @@ The fruit adapter no longer uses the same off-crop-heavy strawberry pool as the 
 
 Fruit rejection is usually about texture, color progression, decay, and partial visibility. If the OOD pool is leaf-shaped, the evaluation can miss the actual fruit failure mode.
 
-## 3. Tomato / Leaf
+## 5. Tomato / Leaf
 
-Current OOD mix after the 2026-05-10 rebalance:
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
 
 - unsupported_tomato_unknowns: 260
 - tomato_failure_cases: 11
 - tomato_off_coverage_secondary: 21
-- off_crop_secondary: 20
-- scene_context_leak_check: 13
+- off_crop_secondary: 40
+- scene_context_leak_check: 38
 
-This pool is now large enough for a more stable FPR estimate, but the failure-case slice still needs more blur, occlusion, partial-leaf, and mixed-background examples.
+This pool is large enough for a stable FPR estimate, but the failure-case slice still needs more blur, occlusion, partial-leaf, and mixed-background examples.
 
 ### Recommendation
 
@@ -162,26 +249,21 @@ Examples:
 
 ### Why this matters
 
-This adapter has enough classification support, but its real OOD pool is too small to make the false-positive rate meaningful. This is the highest-priority adapter for Phase 1.
+This adapter has enough classification support, but its real OOD pool is still not the most weakly covered surface in the manifest. FPR is meaningful here, but the failure slice should still be expanded.
 
-## References
+## 6. Tomato / Fruit
 
-- Hendrycks, D., Mazeika, M., & Dietterich, T. (2018). Deep Anomaly Detection with Outlier Exposure. arXiv. https://arxiv.org/abs/1812.04606
-- Angelopoulos, A. N., & Bates, S. (2021). A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification. arXiv. https://arxiv.org/abs/2107.07511
-- Naqvi, A., et al. (2022). Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies. arXiv. https://doi.org/10.48550/arXiv.2206.04374
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
 
-## 4. Tomato / Fruit
-
-Current OOD mix after the 2026-05-10 rebalance:
-
-- unsupported_same_crop: 220
+- unsupported_same_crop: 208
 - fruit_failure_cases: 80
 - blur_or_occlusion: 24
-- off_crop_secondary: 8
+- off_crop_secondary: 20
+- non_plant_misc: 20
 
 ### Recommendation
 
-This pool is now fruit-specific and no longer dominated by leaf-oriented or off-crop evidence.
+This pool is fruit-specific and no longer dominated by leaf-oriented or off-crop evidence.
 
 - Audit the `unsupported_same_crop` slice for duplicates and near-duplicates.
 - Rebalance toward failure cases and diverse hard negatives.
@@ -197,17 +279,18 @@ This pool is now fruit-specific and no longer dominated by leaf-oriented or off-
 
 A huge single slice can make the evaluation look broad while still being narrow in practice. The detector should face varied tomato fruit failure modes, not just one dominant unknown bucket.
 
-## 5. Grape / Leaf
+## 7. Grape / Leaf
 
-Current OOD mix:
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
 
 - off_crop_or_root_disease: 148
-- off_crop_secondary: 55
-- scene_context_leak_check: 46
+- off_crop_secondary: 90
+- same_crop_unsupported_unknowns: 35
+- scene_context_leak_check: 70
 
 ### Recommendation
 
-This pool is closer to strawberry leaf than tomato leaf: it has useful coverage, but it is still too easy in parts.
+This pool has useful coverage, but it is still too easy in parts and still leans heavily on off-crop evidence.
 
 - Reduce off-crop-heavy slices.
 - Increase grape-specific same-crop unknowns.
@@ -227,7 +310,14 @@ This pool is closer to strawberry leaf than tomato leaf: it has useful coverage,
 - blur and occlusion
 - unusual angle and canopy clutter
 
-## 6. Grape / Fruit
+## 8. Grape / Fruit
+
+Current OOD mix after the 2026-05-14 targeted OOD/OE takviye:
+
+- off_crop_or_root_disease: 14
+- off_crop_secondary: 55
+- same_crop_unsupported_unknowns: 30
+- scene_context_leak_check: 27
 
 The fruit adapter should follow the same principle as grape leaf, but with fruit-specific failure modes.
 
@@ -245,14 +335,16 @@ The fruit adapter should follow the same principle as grape leaf, but with fruit
 
 ## Prioritization Order
 
-If only one adapter can be improved first, do this order:
+If only one adapter can be improved first, do this order based on current pool weakness and OOD risk:
 
-1. `tomato__leaf`
-2. `strawberry__leaf`
-3. `tomato__fruit`
-4. `strawberry__fruit`
-5. `grape__leaf`
-6. `grape__fruit`
+1. `strawberry__fruit`
+2. `grape__fruit`
+3. `apricot__fruit`
+4. `apricot__leaf`
+5. `strawberry__leaf`
+6. `grape__leaf`
+7. `tomato__fruit`
+8. `tomato__leaf`
 
 ## Practical Rule For Phase 1
 
@@ -274,3 +366,9 @@ Once the OOD pools are improved, then Phase 2 should compare score methods on th
 - kNN-style score
 
 Only after the data surface is strong should training-side regularization or OE-style exposure be considered.
+
+## References
+
+- Hendrycks, D., Mazeika, M., & Dietterich, T. (2018). Deep Anomaly Detection with Outlier Exposure. arXiv. https://arxiv.org/abs/1812.04606
+- Angelopoulos, A. N., & Bates, S. (2021). A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification. arXiv. https://arxiv.org/abs/2107.07511
+- Naqvi, A., et al. (2022). Uncovering bias in the PlantVillage dataset: A comparison of diseased plant leaves in isolation and within canopies. arXiv. https://doi.org/10.48550/arXiv.2206.04374

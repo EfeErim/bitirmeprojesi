@@ -219,6 +219,7 @@ def test_create_training_loaders_auto_splits_real_ood_by_slice(tmp_path: Path):
         num_workers=0,
         seed=7,
         real_ood_split_dev_fraction=0.5,
+        real_ood_split_min_total=8,
     )
 
     assert "ood" in loaders
@@ -251,6 +252,48 @@ def test_create_training_loaders_reuses_pooled_ood_when_split_has_no_dev(tmp_pat
     assert "ood_dev" not in loaders
     assert len(loaders["ood"].dataset) == 1
     assert getattr(loaders["ood"], "_ood_split_name") == "ood"
+
+
+def test_create_training_loaders_keeps_small_ood_pool_test_only(tmp_path: Path):
+    runtime_root = tmp_path / "runtime"
+    _write_image(runtime_root / "tomato" / "continual" / "healthy" / "train.jpg")
+    _write_image(runtime_root / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(runtime_root / "tomato" / "test" / "healthy" / "test.jpg")
+    for idx in range(4):
+        _write_image(runtime_root / "tomato" / "ood" / "unsupported_disease" / f"u_{idx}.jpg", color=(0, 0, 255))
+
+    loaders = create_training_loaders(
+        data_dir=str(runtime_root),
+        crop="tomato",
+        batch_size=2,
+        num_workers=0,
+        seed=7,
+        real_ood_split_dev_fraction=0.5,
+        real_ood_split_min_total=30,
+    )
+
+    assert "ood" in loaders
+    assert "ood_dev" not in loaders
+    assert len(loaders["ood"].dataset) == 4
+    assert getattr(loaders["ood"], "_ood_split_name") == "ood"
+
+
+def test_create_training_loaders_rejects_oe_overlap_with_real_ood(tmp_path: Path):
+    runtime_root = tmp_path / "runtime"
+    _write_image(runtime_root / "tomato" / "continual" / "healthy" / "train.jpg")
+    _write_image(runtime_root / "tomato" / "val" / "healthy" / "val.jpg")
+    _write_image(runtime_root / "tomato" / "test" / "healthy" / "test.jpg")
+    _write_image(runtime_root / "tomato" / "ood" / "unsupported_disease" / "ood.jpg", color=(0, 0, 255))
+    _write_image(runtime_root / "tomato" / "oe" / "aux_unknown" / "oe.jpg", color=(0, 0, 255))
+
+    with pytest.raises(ValueError, match="Exact image overlap between real OOD evidence and OE"):
+        create_training_loaders(
+            data_dir=str(runtime_root),
+            crop="tomato",
+            batch_size=2,
+            num_workers=0,
+            seed=7,
+        )
 
 
 

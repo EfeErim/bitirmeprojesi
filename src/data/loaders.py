@@ -12,7 +12,12 @@ import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from .datasets import CropDataset, infer_crop_classes_from_layout
-from .ood_splits import ensure_ood_split_manifest, manifest_slice_map, select_manifest_paths
+from .ood_splits import (
+    ensure_ood_split_manifest,
+    manifest_slice_map,
+    select_manifest_paths,
+    validate_ood_oe_disjoint,
+)
 
 VALID_SAMPLERS = {"auto", "shuffle", "weighted"}
 AUTO_WEIGHTED_SAMPLER_IMBALANCE_RATIO = 1.5
@@ -133,7 +138,9 @@ def create_training_loaders(
     real_ood_split_enabled: bool = True,
     real_ood_split_dev_fraction: float = 0.4,
     real_ood_split_min_per_slice: int = 2,
+    real_ood_split_min_total: int = 30,
     real_ood_split_manifest_name: str = "ood_split_manifest.json",
+    real_ood_enforce_oe_disjoint: bool = True,
     *,
     dataset_cls: type[CropDataset] = CropDataset,
     infer_classes_fn: Callable[[str, str], List[str]] = infer_crop_classes_from_layout,
@@ -326,6 +333,10 @@ def create_training_loaders(
     if resolved_ood_root.exists():
         if not resolved_ood_root.is_dir():
             raise NotADirectoryError(f"OOD root is not a directory: {resolved_ood_root}")
+        if bool(real_ood_enforce_oe_disjoint) and resolved_oe_root.exists():
+            if not resolved_oe_root.is_dir():
+                raise NotADirectoryError(f"OE root is not a directory: {resolved_oe_root}")
+            validate_ood_oe_disjoint(resolved_ood_root, resolved_oe_root)
         manifest = None
         if bool(real_ood_split_enabled):
             try:
@@ -335,6 +346,7 @@ def create_training_loaders(
                     seed=int(seed),
                     dev_fraction=float(real_ood_split_dev_fraction),
                     min_per_slice=int(real_ood_split_min_per_slice),
+                    min_total_for_dev_test=int(real_ood_split_min_total),
                 )
             except OSError:
                 manifest = None
