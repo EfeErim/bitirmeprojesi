@@ -1,0 +1,679 @@
+{
+  "train_loss": [
+    1.633603572845459,
+    1.6076794652377857,
+    1.590023903285756,
+    1.570198739276213,
+    1.4649859526578117,
+    1.3466240377987133,
+    1.2822437005884506,
+    1.228686066234813,
+    1.2091938257217407,
+    1.1843838270972757,
+    1.1794568370370304,
+    1.1572785517748665,
+    1.131905247183407,
+    1.1140745387357824,
+    1.1184436854194193,
+    1.0732369212543262,
+    1.0661490384270162,
+    1.0804409700281479
+  ],
+  "val_loss": [
+    1.6297415537684488,
+    1.6606383484040674,
+    1.4910443288862973,
+    1.4461650281743619,
+    1.3943610490704865,
+    1.1714814094150012,
+    0.9733529058807099,
+    0.850506843071882,
+    0.7525907304522168,
+    0.7778085172176361,
+    0.7741285958765868,
+    0.6870999464873776,
+    0.7494638135214023,
+    0.6906355027393375,
+    0.7813729825742843,
+    0.7303780936155753,
+    0.7896654623155503,
+    0.7630065294074504
+  ],
+  "val_accuracy": [
+    0.13452914798206278,
+    0.1031390134529148,
+    0.49327354260089684,
+    0.6502242152466368,
+    0.48878923766816146,
+    0.6547085201793722,
+    0.757847533632287,
+    0.757847533632287,
+    0.7488789237668162,
+    0.7668161434977578,
+    0.7623318385650224,
+    0.7847533632286996,
+    0.7757847533632287,
+    0.7802690582959642,
+    0.7802690582959642,
+    0.7713004484304933,
+    0.7757847533632287,
+    0.7847533632286996
+  ],
+  "macro_precision": [
+    0.026905829086899757,
+    0.02062780223786831,
+    0.28353309631347656,
+    0.48546943068504333,
+    0.6185635328292847,
+    0.4636884331703186,
+    0.7860080003738403,
+    0.6880277395248413,
+    0.6842382550239563,
+    0.7112752199172974,
+    0.7572957277297974,
+    0.721072793006897,
+    0.7372556924819946,
+    0.7264671325683594,
+    0.7507120370864868,
+    0.7145997285842896,
+    0.7359359860420227,
+    0.7446435689926147
+  ],
+  "macro_recall": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.33908283710479736,
+    0.47665172815322876,
+    0.5657863616943359,
+    0.491469144821167,
+    0.6543540954589844,
+    0.6707652807235718,
+    0.6082228422164917,
+    0.7004328370094299,
+    0.7390720248222351,
+    0.6900383234024048,
+    0.7527792453765869,
+    0.7152317762374878,
+    0.770707905292511,
+    0.7163325548171997,
+    0.7466152310371399,
+    0.7609115839004517
+  ],
+  "macro_f1": [
+    0.04743083193898201,
+    0.03739837557077408,
+    0.29016390442848206,
+    0.4669573903083801,
+    0.4392237067222595,
+    0.475750595331192,
+    0.670031726360321,
+    0.6726902723312378,
+    0.632988691329956,
+    0.6891894340515137,
+    0.7132200598716736,
+    0.6872385740280151,
+    0.7180953025817871,
+    0.7027943730354309,
+    0.7318090200424194,
+    0.6951663494110107,
+    0.7178670167922974,
+    0.7277764678001404
+  ],
+  "weighted_f1": [
+    0.03190414574114196,
+    0.019286157838966814,
+    0.4349329653342209,
+    0.6020410648910454,
+    0.41956859639941846,
+    0.6395085082460412,
+    0.7574865914246427,
+    0.7553508399313341,
+    0.7370264711935959,
+    0.7630412011937711,
+    0.769484857807245,
+    0.7689150823071399,
+    0.7808084530680703,
+    0.7728244114349776,
+    0.7846975283772422,
+    0.7691298685800869,
+    0.7804396419781741,
+    0.7887905103743343
+  ],
+  "balanced_accuracy": [
+    0.20000000298023224,
+    0.20000000298023224,
+    0.33908283710479736,
+    0.47665172815322876,
+    0.5657863616943359,
+    0.491469144821167,
+    0.6543540954589844,
+    0.6707652807235718,
+    0.6082228422164917,
+    0.7004328370094299,
+    0.7390720248222351,
+    0.6900383234024048,
+    0.7527792453765869,
+    0.7152317762374878,
+    0.770707905292511,
+    0.7163325548171997,
+    0.7466152310371399,
+    0.7609115839004517
+  ],
+  "generalization_gap": [
+    -0.003862019077010226,
+    0.05295888316628172,
+    -0.09897957439945859,
+    -0.12403371110185102,
+    -0.0706249035873252,
+    -0.17514262838371208,
+    -0.3088907947077407,
+    -0.37817922316293096,
+    -0.4566030952695239,
+    -0.40657530987963963,
+    -0.40532824116044364,
+    -0.4701786052874889,
+    -0.38244143366200467,
+    -0.42343903599644495,
+    -0.33707070284513496,
+    -0.342858827638751,
+    -0.2764835761114659,
+    -0.3174344406206975
+  ],
+  "per_class_accuracy": [
+    {
+      "strawberry_anthracnose_fruit": 0.0,
+      "strawberry_gray_mold_fruit": 0.0,
+      "strawberry_healthy_fruit": 1.0,
+      "strawberry_powdery_mildew_fruit": 0.0,
+      "strawberry_unripe_fruit": 0.0
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.0,
+      "strawberry_gray_mold_fruit": 0.0,
+      "strawberry_healthy_fruit": 0.0,
+      "strawberry_powdery_mildew_fruit": 1.0,
+      "strawberry_unripe_fruit": 0.0
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.0,
+      "strawberry_gray_mold_fruit": 0.4556961953639984,
+      "strawberry_healthy_fruit": 0.0,
+      "strawberry_powdery_mildew_fruit": 0.3478260934352875,
+      "strawberry_unripe_fruit": 0.8918918967247009
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.23529411852359772,
+      "strawberry_gray_mold_fruit": 0.8101266026496887,
+      "strawberry_healthy_fruit": 0.5,
+      "strawberry_powdery_mildew_fruit": 0.0,
+      "strawberry_unripe_fruit": 0.837837815284729
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8823529481887817,
+      "strawberry_gray_mold_fruit": 0.012658228166401386,
+      "strawberry_healthy_fruit": 0.4333333373069763,
+      "strawberry_powdery_mildew_fruit": 0.6086956262588501,
+      "strawberry_unripe_fruit": 0.8918918967247009
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.0,
+      "strawberry_gray_mold_fruit": 0.7721518874168396,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.260869562625885,
+      "strawberry_unripe_fruit": 0.8243243098258972
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.3529411852359772,
+      "strawberry_gray_mold_fruit": 0.746835470199585,
+      "strawberry_healthy_fruit": 0.5333333611488342,
+      "strawberry_powdery_mildew_fruit": 0.6521739363670349,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.5882353186607361,
+      "strawberry_gray_mold_fruit": 0.7341772317886353,
+      "strawberry_healthy_fruit": 0.5666666626930237,
+      "strawberry_powdery_mildew_fruit": 0.47826087474823,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.47058823704719543,
+      "strawberry_gray_mold_fruit": 0.8101266026496887,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.17391304671764374,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8235294222831726,
+      "strawberry_gray_mold_fruit": 0.7341772317886353,
+      "strawberry_healthy_fruit": 0.5666666626930237,
+      "strawberry_powdery_mildew_fruit": 0.3913043439388275,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.5882353186607361,
+      "strawberry_gray_mold_fruit": 0.607594907283783,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.9130434989929199,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8235294222831726,
+      "strawberry_gray_mold_fruit": 0.8227847814559937,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.21739129722118378,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8235294222831726,
+      "strawberry_gray_mold_fruit": 0.6582278609275818,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.695652186870575,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8823529481887817,
+      "strawberry_gray_mold_fruit": 0.7594936490058899,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.3478260934352875,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8823529481887817,
+      "strawberry_gray_mold_fruit": 0.6455696225166321,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.739130437374115,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8823529481887817,
+      "strawberry_gray_mold_fruit": 0.7215189933776855,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.3913043439388275,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8235294222831726,
+      "strawberry_gray_mold_fruit": 0.6708860993385315,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.6521739363670349,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    },
+    {
+      "strawberry_anthracnose_fruit": 0.8823529481887817,
+      "strawberry_gray_mold_fruit": 0.6835442781448364,
+      "strawberry_healthy_fruit": 0.6000000238418579,
+      "strawberry_powdery_mildew_fruit": 0.6521739363670349,
+      "strawberry_unripe_fruit": 0.9864864945411682
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 79
+      },
+      {
+        "class_name": "strawberry_unripe_fruit",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 74
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 79
+      },
+      {
+        "class_name": "strawberry_unripe_fruit",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 74
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.0,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.3478260934352875,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.0,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.23529411852359772,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.5,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.012658228166401386,
+        "support": 79
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.4333333373069763,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.6086956262588501,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.260869562625885,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.3529411852359772,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.5333333611488342,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.6521739363670349,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.47826087474823,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.5666666626930237,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.5882353186607361,
+        "support": 17
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.17391304671764374,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.47058823704719543,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.3913043439388275,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.5666666626930237,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.7341772317886353,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_anthracnose_fruit",
+        "class_index": 0,
+        "accuracy": 0.5882353186607361,
+        "support": 17
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.607594907283783,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.21739129722118378,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.8227847814559937,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.6582278609275818,
+        "support": 79
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.695652186870575,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.3478260934352875,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.7594936490058899,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.6455696225166321,
+        "support": 79
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.739130437374115,
+        "support": 23
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.3913043439388275,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.7215189933776855,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.6521739363670349,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.6708860993385315,
+        "support": 79
+      }
+    ],
+    [
+      {
+        "class_name": "strawberry_healthy_fruit",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 30
+      },
+      {
+        "class_name": "strawberry_powdery_mildew_fruit",
+        "class_index": 3,
+        "accuracy": 0.6521739363670349,
+        "support": 23
+      },
+      {
+        "class_name": "strawberry_gray_mold_fruit",
+        "class_index": 1,
+        "accuracy": 0.6835442781448364,
+        "support": 79
+      }
+    ]
+  ],
+  "stopped_early": true,
+  "global_step": 306,
+  "optimizer_steps": 306,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 12,
+  "best_metric_value": 0.6870999464873776
+}
