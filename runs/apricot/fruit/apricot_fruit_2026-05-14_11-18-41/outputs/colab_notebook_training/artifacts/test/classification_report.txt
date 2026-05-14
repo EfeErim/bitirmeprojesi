@@ -1,0 +1,11 @@
+                                                 precision    recall  f1-score   support
+
+                     kayısı_sag_lıklı_meyve_800       0.99      0.98      0.98       159
+            kayısıda_c_ic_ek_monilyası_meyve_40       0.70      0.88      0.78         8
+              kayısıda_s_arka_viru_su_meyve_230       1.00      0.93      0.96        44
+         kayısıda_s_eftali_karalekesi_meyve_232       0.91      0.93      0.92        45
+kayısıda_yaprak_delen_c_il_hastalıg_ı_meyve_128       0.80      0.83      0.82        24
+
+                                       accuracy                           0.95       280
+                                      macro avg       0.88      0.91      0.89       280
+                                   weighted avg       0.95      0.95      0.95       280
