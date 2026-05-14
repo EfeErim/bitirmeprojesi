@@ -1,0 +1,13 @@
+                               precision    recall  f1-score   support
+
+      u_zu_m_antraknoz_yaprak       0.86      0.76      0.81        50
+       u_zu_m_kav_esca_yaprak       0.92      0.92      0.92        48
+       u_zu_m_ku_lleme_yaprak       0.52      0.65      0.58        20
+u_zu_m_leafroll_viru_s_yaprak       0.96      0.85      0.90        54
+        u_zu_m_mildiyo_yaprak       0.82      0.74      0.78        61
+      u_zu_m_sag_lıklı_yaprak       0.93      0.97      0.95        65
+u_zu_m_yelpaze_viru_su_yaprak       0.64      0.88      0.74        26
+
+                     accuracy                           0.84       324
+                    macro avg       0.81      0.82      0.81       324
+                 weighted avg       0.85      0.84      0.84       324

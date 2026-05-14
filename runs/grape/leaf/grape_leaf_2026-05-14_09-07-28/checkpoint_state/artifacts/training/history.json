@@ -1,0 +1,1171 @@
+{
+  "train_loss": [
+    1.9832772016525269,
+    1.9373841739836193,
+    1.9120786530630929,
+    1.760247378122239,
+    1.6436237267085485,
+    1.5512618507657732,
+    1.5088308368410384,
+    1.4469469501858665,
+    1.430593694959368,
+    1.3978107883816673,
+    1.3755568265914917,
+    1.3617077725274223,
+    1.3582460028784615,
+    1.3432424409048898,
+    1.353054063660758,
+    1.3424850134622484,
+    1.3298570144744146,
+    1.3242650542940413,
+    1.3199934505280995,
+    1.3104817015784127,
+    1.3131423848015922,
+    1.3194802545365834,
+    1.311239168757484,
+    1.3164083787373133,
+    1.3021969965526037,
+    1.3127809024992443,
+    1.3033604792186193,
+    1.3084602980386644,
+    1.3090008383705503,
+    1.297596011843
+  ],
+  "val_loss": [
+    1.8903032614861006,
+    1.9253979406239075,
+    1.8788988472502908,
+    1.4435956330946933,
+    1.2257409081046964,
+    1.0531043491245788,
+    0.9390653864836987,
+    0.8929681034735691,
+    0.7508814688082095,
+    0.7610186323707486,
+    0.7648199752525047,
+    0.7370509593575089,
+    0.6481814476442925,
+    0.5947485396891464,
+    0.5791484500155036,
+    0.6034731062842004,
+    0.5447226667109831,
+    0.5287892080751466,
+    0.5283589565459593,
+    0.5611943885867978,
+    0.5511673214258971,
+    0.5172992517918716,
+    0.5531308444929711,
+    0.524919229157177,
+    0.5189350578520033,
+    0.5305420520864887,
+    0.5201946901686397,
+    0.51641638190658,
+    0.5184223331786968,
+    0.5211742167119626
+  ],
+  "val_accuracy": [
+    0.17592592592592593,
+    0.1111111111111111,
+    0.25925925925925924,
+    0.4537037037037037,
+    0.4876543209876543,
+    0.6049382716049383,
+    0.6574074074074074,
+    0.7160493827160493,
+    0.75,
+    0.7654320987654321,
+    0.7777777777777778,
+    0.7870370370370371,
+    0.7962962962962963,
+    0.8271604938271605,
+    0.8364197530864198,
+    0.8148148148148148,
+    0.8302469135802469,
+    0.8580246913580247,
+    0.8518518518518519,
+    0.8271604938271605,
+    0.8333333333333334,
+    0.8518518518518519,
+    0.8302469135802469,
+    0.8364197530864198,
+    0.8333333333333334,
+    0.8302469135802469,
+    0.8425925925925926,
+    0.8395061728395061,
+    0.8395061728395061,
+    0.8364197530864198
+  ],
+  "macro_precision": [
+    0.05881673842668533,
+    0.21963979303836823,
+    0.2886098325252533,
+    0.47385352849960327,
+    0.4845220148563385,
+    0.6225717663764954,
+    0.6498953700065613,
+    0.7099586129188538,
+    0.731178343296051,
+    0.7525766491889954,
+    0.7606557011604309,
+    0.7731336355209351,
+    0.7706651091575623,
+    0.7993963360786438,
+    0.8108692169189453,
+    0.7902116775512695,
+    0.8024958372116089,
+    0.8309522271156311,
+    0.8286963701248169,
+    0.7967394590377808,
+    0.8009750247001648,
+    0.8218593597412109,
+    0.7996686100959778,
+    0.8033012747764587,
+    0.7993158102035522,
+    0.7972578406333923,
+    0.8115320205688477,
+    0.8051437139511108,
+    0.8053283095359802,
+    0.8030776381492615
+  ],
+  "macro_recall": [
+    0.14897215366363525,
+    0.18473748862743378,
+    0.32819801568984985,
+    0.4516313672065735,
+    0.47730788588523865,
+    0.5890291333198547,
+    0.6724423170089722,
+    0.6903402209281921,
+    0.7260093688964844,
+    0.7467080354690552,
+    0.7576377987861633,
+    0.769317626953125,
+    0.7868212461471558,
+    0.8149637579917908,
+    0.8173219561576843,
+    0.8050557374954224,
+    0.8100784420967102,
+    0.8384913206100464,
+    0.8333326578140259,
+    0.8194252848625183,
+    0.8196118474006653,
+    0.8339515924453735,
+    0.821767270565033,
+    0.8219384551048279,
+    0.8196118474006653,
+    0.8169663548469543,
+    0.8314384818077087,
+    0.8242956399917603,
+    0.8242956399917603,
+    0.8219537734985352
+  ],
+  "macro_f1": [
+    0.061447594314813614,
+    0.07253680378198624,
+    0.2147337943315506,
+    0.4093630313873291,
+    0.4389023780822754,
+    0.5807627439498901,
+    0.6375376582145691,
+    0.6859959959983826,
+    0.7183841466903687,
+    0.7355042099952698,
+    0.7443927526473999,
+    0.762545645236969,
+    0.7671109437942505,
+    0.8010812401771545,
+    0.8094692230224609,
+    0.7882092595100403,
+    0.8023635745048523,
+    0.8306630253791809,
+    0.826562762260437,
+    0.7980702519416809,
+    0.8041010499000549,
+    0.8242612481117249,
+    0.8016038537025452,
+    0.8073251843452454,
+    0.8036141395568848,
+    0.8002840280532837,
+    0.8156704902648926,
+    0.8092426657676697,
+    0.8096870183944702,
+    0.806808590888977
+  ],
+  "weighted_f1": [
+    0.0747035050097807,
+    0.07215818946744189,
+    0.19025585975176024,
+    0.3970543661235291,
+    0.4410532256703318,
+    0.5958429972330729,
+    0.6569065988799672,
+    0.7151412492916908,
+    0.7553480171862944,
+    0.7644763051727672,
+    0.7792634846251688,
+    0.7862761226701148,
+    0.8007968855492863,
+    0.8307566701630016,
+    0.8380879531671972,
+    0.8169344678337191,
+    0.8319078610267168,
+    0.8602894912531347,
+    0.8533434455777392,
+    0.8318442827389564,
+    0.8355792010271991,
+    0.8546443044403453,
+    0.8342970859857253,
+    0.8410847981770834,
+    0.8359140466760706,
+    0.8337428716965664,
+    0.8454842273099923,
+    0.8428985218942902,
+    0.8422738534432871,
+    0.8392849203980999
+  ],
+  "balanced_accuracy": [
+    0.14897215366363525,
+    0.18473748862743378,
+    0.32819801568984985,
+    0.4516313672065735,
+    0.47730788588523865,
+    0.5890291333198547,
+    0.6724423170089722,
+    0.6903402209281921,
+    0.7260093688964844,
+    0.7467080354690552,
+    0.7576377987861633,
+    0.769317626953125,
+    0.7868212461471558,
+    0.8149637579917908,
+    0.8173219561576843,
+    0.8050557374954224,
+    0.8100784420967102,
+    0.8384913206100464,
+    0.8333326578140259,
+    0.8194252848625183,
+    0.8196118474006653,
+    0.8339515924453735,
+    0.821767270565033,
+    0.8219384551048279,
+    0.8196118474006653,
+    0.8169663548469543,
+    0.8314384818077087,
+    0.8242956399917603,
+    0.8242956399917603,
+    0.8219537734985352
+  ],
+  "generalization_gap": [
+    -0.09297394016642624,
+    -0.011986233359711829,
+    -0.03317980581280211,
+    -0.3166517450275457,
+    -0.4178828186038521,
+    -0.4981575016411943,
+    -0.5697654503573396,
+    -0.5539788467122974,
+    -0.6797122261511586,
+    -0.6367921560109187,
+    -0.610736851338987,
+    -0.6246568131699134,
+    -0.710064555234169,
+    -0.7484939012157433,
+    -0.7739056136452543,
+    -0.739011907178048,
+    -0.7851343477634315,
+    -0.7954758462188947,
+    -0.7916344939821401,
+    -0.7492873129916149,
+    -0.7619750633756951,
+    -0.8021810027447117,
+    -0.7581083242645129,
+    -0.7914891495801363,
+    -0.7832619387006003,
+    -0.7822388504127555,
+    -0.7831657890499796,
+    -0.7920439161320844,
+    -0.7905785051918535,
+    -0.7764217951310375
+  ],
+  "per_class_accuracy": [
+    {
+      "u_zu_m_antraknoz_yaprak": 0.0,
+      "u_zu_m_kav_esca_yaprak": 0.0,
+      "u_zu_m_ku_lleme_yaprak": 0.0,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.9444444179534912,
+      "u_zu_m_mildiyo_yaprak": 0.09836065769195557,
+      "u_zu_m_sag_lıklı_yaprak": 0.0,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.0
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.0,
+      "u_zu_m_kav_esca_yaprak": 0.0,
+      "u_zu_m_ku_lleme_yaprak": 1.0,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.2777777910232544,
+      "u_zu_m_mildiyo_yaprak": 0.0,
+      "u_zu_m_sag_lıklı_yaprak": 0.015384615398943424,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.0
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7200000286102295,
+      "u_zu_m_kav_esca_yaprak": 0.1041666641831398,
+      "u_zu_m_ku_lleme_yaprak": 0.6000000238418579,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.29629629850387573,
+      "u_zu_m_mildiyo_yaprak": 0.0,
+      "u_zu_m_sag_lıklı_yaprak": 0.0,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.5769230723381042
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.30000001192092896,
+      "u_zu_m_kav_esca_yaprak": 0.25,
+      "u_zu_m_ku_lleme_yaprak": 0.6000000238418579,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.5555555820465088,
+      "u_zu_m_mildiyo_yaprak": 0.032786883413791656,
+      "u_zu_m_sag_lıklı_yaprak": 1.0,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.42307692766189575
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.30000001192092896,
+      "u_zu_m_kav_esca_yaprak": 0.375,
+      "u_zu_m_ku_lleme_yaprak": 0.550000011920929,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.6111111044883728,
+      "u_zu_m_mildiyo_yaprak": 0.08196721225976944,
+      "u_zu_m_sag_lıklı_yaprak": 1.0,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.42307692766189575
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.3799999952316284,
+      "u_zu_m_kav_esca_yaprak": 0.6458333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.5,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.48148149251937866,
+      "u_zu_m_mildiyo_yaprak": 0.5081967115402222,
+      "u_zu_m_sag_lıklı_yaprak": 0.9538461565971375,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.6538461446762085
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.5799999833106995,
+      "u_zu_m_kav_esca_yaprak": 0.7708333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.75,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.6666666865348816,
+      "u_zu_m_mildiyo_yaprak": 0.39344263076782227,
+      "u_zu_m_sag_lıklı_yaprak": 0.8153846263885498,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.7307692170143127
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.5400000214576721,
+      "u_zu_m_kav_esca_yaprak": 0.8125,
+      "u_zu_m_ku_lleme_yaprak": 0.44999998807907104,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.6296296119689941,
+      "u_zu_m_mildiyo_yaprak": 0.7540983557701111,
+      "u_zu_m_sag_lıklı_yaprak": 0.8769230842590332,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.7692307829856873
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.6000000238418579,
+      "u_zu_m_kav_esca_yaprak": 0.7708333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.5,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.7407407164573669,
+      "u_zu_m_mildiyo_yaprak": 0.7704917788505554,
+      "u_zu_m_sag_lıklı_yaprak": 0.892307698726654,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.807692289352417
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.5400000214576721,
+      "u_zu_m_kav_esca_yaprak": 0.875,
+      "u_zu_m_ku_lleme_yaprak": 0.6000000238418579,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.6481481194496155,
+      "u_zu_m_mildiyo_yaprak": 0.7868852615356445,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.807692289352417
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.6399999856948853,
+      "u_zu_m_kav_esca_yaprak": 0.8958333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.550000011920929,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.6481481194496155,
+      "u_zu_m_mildiyo_yaprak": 0.7540983557701111,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8461538553237915
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.6000000238418579,
+      "u_zu_m_kav_esca_yaprak": 0.875,
+      "u_zu_m_ku_lleme_yaprak": 0.6000000238418579,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.7407407164573669,
+      "u_zu_m_mildiyo_yaprak": 0.7540983557701111,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8461538553237915
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.6600000262260437,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8148148059844971,
+      "u_zu_m_mildiyo_yaprak": 0.6393442749977112,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.807692289352417
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7400000095367432,
+      "u_zu_m_kav_esca_yaprak": 0.8958333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8148148059844971,
+      "u_zu_m_mildiyo_yaprak": 0.7540983557701111,
+      "u_zu_m_sag_lıklı_yaprak": 0.9538461565971375,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8461538553237915
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7799999713897705,
+      "u_zu_m_kav_esca_yaprak": 0.8958333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.6000000238418579,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7704917788505554,
+      "u_zu_m_sag_lıklı_yaprak": 0.9384615421295166,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.699999988079071,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8148148059844971,
+      "u_zu_m_mildiyo_yaprak": 0.688524603843689,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8461538553237915
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7200000286102295,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7704917788505554,
+      "u_zu_m_sag_lıklı_yaprak": 0.9538461565971375,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.807692289352417
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.8524590134620667,
+      "u_zu_m_sag_lıklı_yaprak": 0.9538461565971375,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.8958333134651184,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8703703880310059,
+      "u_zu_m_mildiyo_yaprak": 0.8032786846160889,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8333333134651184,
+      "u_zu_m_mildiyo_yaprak": 0.6721311211585999,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7049180269241333,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.8360655903816223,
+      "u_zu_m_sag_lıklı_yaprak": 0.9384615421295166,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8333333134651184,
+      "u_zu_m_mildiyo_yaprak": 0.688524603843689,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8333333134651184,
+      "u_zu_m_mildiyo_yaprak": 0.7704917788505554,
+      "u_zu_m_sag_lıklı_yaprak": 0.9384615421295166,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7049180269241333,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8333333134651184,
+      "u_zu_m_mildiyo_yaprak": 0.7049180269241333,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.699999988079071,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7377049326896667,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7377049326896667,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7377049326896667,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    },
+    {
+      "u_zu_m_antraknoz_yaprak": 0.7599999904632568,
+      "u_zu_m_kav_esca_yaprak": 0.9166666865348816,
+      "u_zu_m_ku_lleme_yaprak": 0.6499999761581421,
+      "u_zu_m_leafroll_viru_s_yaprak": 0.8518518805503845,
+      "u_zu_m_mildiyo_yaprak": 0.7213114500045776,
+      "u_zu_m_sag_lıklı_yaprak": 0.9692307710647583,
+      "u_zu_m_yelpaze_viru_su_yaprak": 0.8846153616905212
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "u_zu_m_sag_lıklı_yaprak",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 65
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_sag_lıklı_yaprak",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 65
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.1041666641831398,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.032786883413791656,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.25,
+        "support": 48
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.30000001192092896,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.08196721225976944,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.30000001192092896,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.375,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.3799999952316284,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.48148149251937866,
+        "support": 54
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.5,
+        "support": 20
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.39344263076782227,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5799999833106995,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6666666865348816,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.44999998807907104,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5400000214576721,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6296296119689941,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.5,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6000000238418579,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5400000214576721,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6481481194496155,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.550000011920929,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6399999856948853,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6481481194496155,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6000000238418579,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6393442749977112,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6600000262260437,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7540983557701111,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7704917788505554,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7799999713897705,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.688524603843689,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.699999988079071,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7200000286102295,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7704917788505554,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_leafroll_viru_s_yaprak",
+        "class_index": 3,
+        "accuracy": 0.8518518805503845,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8032786846160889,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6721311211585999,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7049180269241333,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8360655903816223,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.688524603843689,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7704917788505554,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7049180269241333,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7049180269241333,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "u_zu_m_ku_lleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "u_zu_m_mildiyo_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7213114500045776,
+        "support": 61
+      },
+      {
+        "class_name": "u_zu_m_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 630,
+  "optimizer_steps": 630,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 28,
+  "best_metric_value": 0.51641638190658
+}
