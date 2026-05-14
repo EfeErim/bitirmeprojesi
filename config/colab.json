@@ -24,6 +24,7 @@
     "continual": {
       "num_epochs": 12,
       "batch_size": 96,
+      "enable_torch_compile": true,
       "learning_rate": 0.0002,
       "device": "cuda",
       "strict_model_loading": true,

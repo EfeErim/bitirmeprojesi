@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import inspect
 import logging
+import os
+import types
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, cast
@@ -210,6 +212,7 @@ class ContinualSDLoRAConfig:
     grad_accumulation_steps: int = 4
     max_grad_norm: float = 1.0
     mixed_precision: str = "auto"
+    enable_torch_compile: bool = True
     loss_name: str = "logitnorm"
     logitnorm_tau: float = 1.0
     label_smoothing: float = 0.0
@@ -769,6 +772,36 @@ class ContinualSDLoRATrainer:
             auto_model_factory=AutoModel,
             fusion_cls=MultiScaleFeatureFusion,
         )
+        # Optionally attempt to compile the training_step with torch.compile.
+        # This is guarded: enabled via config.extra['enable_torch_compile'] or
+        # environment variable AADS_ENABLE_TORCH_COMPILE. Failures fall back
+        # to the original uncompiled method.
+        try_compile_flag = bool(self.config.extra.get("enable_torch_compile", False))
+        env_flag = os.getenv("AADS_ENABLE_TORCH_COMPILE", "").lower() in ("1", "true", "yes")
+        if self.config.enable_torch_compile or try_compile_flag or env_flag:
+            if hasattr(torch, "compile") and callable(getattr(torch, "compile")):
+                # First attempt default (likely inductor on Colab). If that fails,
+                # try a safer eager backend before giving up.
+                try:
+                    compiled = torch.compile(self.training_step)
+                    self.training_step = types.MethodType(compiled, self)
+                    logger.info("torch.compile: training_step compiled successfully (default backend)")
+                except Exception as exc_default:  # pragma: no cover - runtime guard
+                    logger.warning(
+                        "torch.compile default backend failed for training_step: %s; attempting eager backend",
+                        exc_default,
+                    )
+                    try:
+                        compiled_eager = torch.compile(self.training_step, backend="eager")
+                        self.training_step = types.MethodType(compiled_eager, self)
+                        logger.info("torch.compile: training_step compiled successfully (eager backend)")
+                    except Exception as exc_eager:  # pragma: no cover - runtime guard
+                        logger.warning(
+                            "torch.compile eager backend also failed; continuing without compile: %s",
+                            exc_eager,
+                        )
+            else:
+                logger.debug("torch.compile not available in this PyTorch build; skipping compile attempt.")
 
     def _raise_missing_peft(self) -> None:
         message = (
