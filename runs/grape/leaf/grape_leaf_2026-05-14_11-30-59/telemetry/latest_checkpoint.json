@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e30_s630_20260514_113619_503987",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/grape_leaf_2026-05-14_11-30-59/checkpoints/ckpt_e30_s630_20260514_113619_503987/training_checkpoint",
+  "created_at": "2026-05-14T11:36:20.999928+00:00",
+  "global_step": 630,
+  "epoch": 30,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.527079536958977
+}
