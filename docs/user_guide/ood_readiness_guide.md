@@ -205,10 +205,12 @@ Automatic real-OOD dev/test splitting:
 
 - `training.continual.ood.real_split_enabled` defaults to `true`
 - the loader preserves the input `ood/<slice>/*` tree and writes a manifest instead of copying images
+- `training.continual.ood.real_split_min_total` defaults to `30`; pools below this size stay test-only so `val/` remains the calibration surface and the small `ood/` pool remains final evidence
 - each slice with at least `real_split_min_per_slice` images contributes at least one image to `ood_dev` and one image to the held-out final OOD test assignment
 - slices below that minimum are kept in the final test assignment and marked as too small for dev splitting in the manifest
 - if the manifest cannot produce both non-empty dev and test assignments, the repo falls back to the legacy pooled `ood/` loader
 - `ood_dev` is used for primary-score method and threshold selection when `training.continual.ood.real_dev_selection_enabled=true`; `production_readiness.json` uses the final held-out real-OOD test assignment exposed as the normal `ood` loader
+- `training.continual.ood.enforce_oe_disjoint` defaults to `true` and blocks exact SHA-256 overlap between `ood/` and `oe/`
 
 ### Automation For Internet Candidates
 

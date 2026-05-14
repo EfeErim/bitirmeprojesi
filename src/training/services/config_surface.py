@@ -50,7 +50,9 @@ def _build_default_continual_surface(*, model_name: str, device: Any) -> Dict[st
             "real_split_enabled": True,
             "real_split_dev_fraction": 0.4,
             "real_split_min_per_slice": 2,
+            "real_split_min_total": 30,
             "real_split_manifest_name": "ood_split_manifest.json",
+            "enforce_oe_disjoint": True,
             "real_dev_selection_enabled": True,
             "real_dev_target_fpr": 0.05,
             "knn_backend": "auto",
@@ -210,9 +212,11 @@ def normalize_continual_training_config(
     ood["real_split_enabled"] = bool(ood.get("real_split_enabled", True))
     ood["real_split_dev_fraction"] = max(0.05, min(0.95, float(ood.get("real_split_dev_fraction", 0.4))))
     ood["real_split_min_per_slice"] = max(2, int(ood.get("real_split_min_per_slice", 2)))
+    ood["real_split_min_total"] = max(0, int(ood.get("real_split_min_total", 30)))
     ood["real_split_manifest_name"] = str(
         ood.get("real_split_manifest_name", "ood_split_manifest.json") or "ood_split_manifest.json"
     )
+    ood["enforce_oe_disjoint"] = bool(ood.get("enforce_oe_disjoint", True))
     ood["real_dev_selection_enabled"] = bool(ood.get("real_dev_selection_enabled", True))
     ood["real_dev_target_fpr"] = max(0.0, min(1.0, float(ood.get("real_dev_target_fpr", 0.05))))
     ood["knn_backend"] = str(ood.get("knn_backend", "auto"))

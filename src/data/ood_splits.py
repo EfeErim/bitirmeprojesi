@@ -7,7 +7,7 @@ import random
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from src.shared.hash_utils import sha256_file
 
@@ -64,12 +64,15 @@ def _manifest_matches(
     seed: int,
     dev_fraction: float,
     min_per_slice: int,
+    min_total_for_dev_test: int,
 ) -> bool:
     if int(manifest.get("seed", -1)) != int(seed):
         return False
     if abs(float(manifest.get("dev_fraction", -1.0)) - float(dev_fraction)) > 1e-9:
         return False
     if int(manifest.get("min_per_slice", -1)) != int(min_per_slice):
+        return False
+    if int(manifest.get("min_total_for_dev_test", -1)) != int(min_total_for_dev_test):
         return False
     manifest_entries = dict(manifest.get("entries", {})) if isinstance(manifest.get("entries"), Mapping) else {}
     current = {
@@ -104,7 +107,8 @@ def _assign_splits(
     seed: int,
     dev_fraction: float,
     min_per_slice: int,
-) -> tuple[Dict[str, str], Dict[str, Any]]:
+    min_total_for_dev_test: int,
+) -> Tuple[Dict[str, str], Dict[str, Any], str]:
     rng = random.Random(int(seed))
     by_slice: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
     for entry in entries:
@@ -112,6 +116,19 @@ def _assign_splits(
 
     assignments: Dict[str, str] = {}
     slice_summaries: Dict[str, Any] = {}
+    total_count = len(entries)
+    if total_count < int(min_total_for_dev_test):
+        for slice_name, slice_entries in sorted(by_slice.items(), key=lambda item: item[0]):
+            for entry in slice_entries:
+                assignments[str(entry["relative_path"])] = "test"
+            slice_summaries[slice_name] = {
+                "total": len(slice_entries),
+                "dev": 0,
+                "test": len(slice_entries),
+                "split_policy": "test_only_below_min_total_for_dev_test",
+            }
+        return assignments, slice_summaries, "test_only_below_min_total_for_dev_test"
+
     for slice_name, slice_entries in sorted(by_slice.items(), key=lambda item: item[0]):
         shuffled = list(slice_entries)
         rng.shuffle(shuffled)
@@ -139,7 +156,7 @@ def _assign_splits(
             "test": count - dev_count,
             "split_policy": "slice_stratified",
         }
-    return assignments, slice_summaries
+    return assignments, slice_summaries, "slice_stratified_dev_test"
 
 
 def ensure_ood_split_manifest(
@@ -149,6 +166,7 @@ def ensure_ood_split_manifest(
     seed: int = 42,
     dev_fraction: float = 0.4,
     min_per_slice: int = 2,
+    min_total_for_dev_test: int = 30,
 ) -> Dict[str, Any]:
     """Create or reuse a persistent manifest for real-OOD dev/test splits."""
     root = Path(ood_root).expanduser()
@@ -160,20 +178,23 @@ def ensure_ood_split_manifest(
     existing = _load_manifest(manifest_path)
     resolved_dev_fraction = max(0.05, min(0.95, float(dev_fraction)))
     resolved_min_per_slice = max(2, int(min_per_slice))
+    resolved_min_total_for_dev_test = max(0, int(min_total_for_dev_test))
     if existing is not None and _manifest_matches(
         existing,
         entries,
         seed=int(seed),
         dev_fraction=resolved_dev_fraction,
         min_per_slice=resolved_min_per_slice,
+        min_total_for_dev_test=resolved_min_total_for_dev_test,
     ):
         return existing
 
-    assignments, slice_summaries = _assign_splits(
+    assignments, slice_summaries, assignment_policy = _assign_splits(
         entries,
         seed=int(seed),
         dev_fraction=resolved_dev_fraction,
         min_per_slice=resolved_min_per_slice,
+        min_total_for_dev_test=resolved_min_total_for_dev_test,
     )
     split_counts = {"dev": 0, "test": 0}
     entry_payload: Dict[str, Any] = {}
@@ -192,9 +213,12 @@ def ensure_ood_split_manifest(
         "schema_version": OOD_SPLIT_MANIFEST_SCHEMA,
         "created_at": _utc_now_iso(),
         "source_root": str(root.resolve()),
+        "split_policy": "phase1_real_ood_dev_test_if_large_enough",
+        "assignment_policy": assignment_policy,
         "seed": int(seed),
         "dev_fraction": resolved_dev_fraction,
         "min_per_slice": resolved_min_per_slice,
+        "min_total_for_dev_test": resolved_min_total_for_dev_test,
         "split_counts": split_counts,
         "slice_summaries": slice_summaries,
         "entries": entry_payload,
@@ -233,3 +257,48 @@ def manifest_slice_map(
             continue
         result[str((root / str(relative_path)).resolve(strict=False))] = str(payload.get("slice", "unlabeled") or "unlabeled")
     return result
+
+
+def find_ood_oe_hash_overlaps(
+    ood_root: str | Path,
+    oe_root: str | Path,
+) -> List[Dict[str, str]]:
+    """Return exact image-hash overlaps between real-OOD and OE pools."""
+    resolved_ood_root = Path(ood_root).expanduser()
+    resolved_oe_root = Path(oe_root).expanduser()
+    ood_by_hash: Dict[str, List[str]] = defaultdict(list)
+    for entry in _collect_entries(resolved_ood_root):
+        ood_by_hash[str(entry["sha256"])].append(str(entry["relative_path"]))
+
+    overlaps: List[Dict[str, str]] = []
+    for entry in _collect_entries(resolved_oe_root):
+        digest = str(entry["sha256"])
+        for ood_relative_path in ood_by_hash.get(digest, []):
+            overlaps.append(
+                {
+                    "sha256": digest,
+                    "ood_relative_path": ood_relative_path,
+                    "oe_relative_path": str(entry["relative_path"]),
+                }
+            )
+    return overlaps
+
+
+def validate_ood_oe_disjoint(
+    ood_root: str | Path,
+    oe_root: str | Path,
+) -> None:
+    """Raise if exact images are reused between final OOD evidence and OE."""
+    overlaps = find_ood_oe_hash_overlaps(ood_root, oe_root)
+    if not overlaps:
+        return
+    preview = "; ".join(
+        f"{item['ood_relative_path']} == {item['oe_relative_path']}"
+        for item in overlaps[:5]
+    )
+    suffix = "" if len(overlaps) <= 5 else f"; +{len(overlaps) - 5} more"
+    raise ValueError(
+        "Exact image overlap between real OOD evidence and OE training pool is not allowed: "
+        + preview
+        + suffix
+    )
