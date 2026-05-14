@@ -639,33 +639,62 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-13T18:19:59Z`
+Generated: `2026-05-14T07:44:34Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
-##### LychSim: A Controllable and Interactive Simulation Framework for Vision Research
+The local script could not query arXiv directly in this sandbox, so this run used a manual web fallback for the most relevant configured topics. The local script should still be treated as the canonical scheduled path in CI.
 
-- Query: `mahalanobis ood`
-- Published: `2026-05-12T17:40:38Z`
-- Authors: Wufei Ma, Chloe Wang, Siyi Chen, Jiawei Peng, Patrick Li, Alan Yuille
-- Link: http://arxiv.org/abs/2605.12449v1
-- Review note: While self-supervised pretraining has reduced vision systems' reliance on synthetic data, simulation remains an indispensable tool for closed-loop optimization and rigorous out-of-distribution (OOD) evaluation. However, modern simulation platforms often present steep technical barriers, requiring extensive expertise in computer graphics and game development. In this work, we present LychSim, a highly controllable and interactive simulation framework built upon Unreal Engine 5 to bridge this gap. LychSim is built around three key designs: (1) a streamlined Python API that abstracts away underlying engine complexities; (2) a procedural data pipeline capable of generating diverse, high-fidelity environments with varying out-of-distribution (OOD) visual challenges, paired with rich 2D and 3D ground truths; and (3) a native integration of the Model Context Protocol (MCP) that transforms the simulator into a dynamic, closed-loop playground for reasoning agentic LLMs. We further annotate scene-level procedural rules and object-level pose alignments to enable semantically aligned 3D ground truths and automated scene modification. We demonstrate LychSim's capability across multiple downstream applications, including serving as a synthetic data engine, powering reinforcement learning-based adversarial examiners, and facilitating interactive, language-driven scene layout generation. To benefit the broader vision community, LychSim will be made publicly available, including full source code and various data annotations.
+- `out-of-distribution detection`: network access blocked by local permissions
+- `energy based ood`: network access blocked by local permissions
+- `mahalanobis ood`: network access blocked by local permissions
+- `logitnorm`: network access blocked by local permissions
+- `selective prediction`: network access blocked by local permissions
+- `segment anything`: network access blocked by local permissions
+- `sam segmentation`: network access blocked by local permissions
+- `bioclip`: network access blocked by local permissions
+- `router calibration`: network access blocked by local permissions
+- `conformal prediction`: network access blocked by local permissions
 
 ##### Self-Supervised Learning of Plant Image Representations
 
 - Query: `bioclip`
 - Published: `2026-04-30T07:41:49Z`
-- Authors: Ilyass Moummad, Kawtar Zaher, Hervé Goëau, Jean-Christophe Lombardo, Pierre Bonnet, Alexis Joly
-- Link: http://arxiv.org/abs/2604.27538v1
-- Review note: Automated plant recognition plays a crucial role in biodiversity monitoring and conservation, yet current approaches rely heavily on supervised learning, which is limited by the availability of expert-labeled data. Self-supervised learning (SSL) offers a scalable alternative, but existing methods and training protocols are largely designed for coarse-grained visual tasks and may not transfer well to fine-grained domains such as plant species recognition. In this work, we investigate SSL for plant image representation learning. We show that commonly used augmentations in SSL pipelines - such as Gaussian blur, grayscale conversion, and solarization - are detrimental in the context of plant images, as they remove subtle discriminative cues essential for fine-grained recognition. We instead identify alternative transformations, including affine and posterization, that are better suited to this domain. We further demonstrate that training SimDINOv2 on the iNaturalist 2021 Plantae subset yields significantly stronger representations than training on ImageNet-1K, highlighting the importance of domain-specific data for SSL. Our findings are consistent across both ViT-Base and ViT-Large architectures. Moreover, our models achieve competitive performance and sometimes outperform strong supervised baselines Pl@ntCLEF and BioCLIP on downstream plant recognition tasks in few-shot settings. Overall, our results highlight the critical importance of domain-adapted augmentation strategies and dataset selection in self-supervised learning, and provide practical guidelines for building scalable models for biodiversity monitoring.
+- Authors: Ilyass Moummad, Kawtar Zaher, Herve Goeau, Jean-Christophe Lombardo, Pierre Bonnet, Alexis Joly
+- Link: https://arxiv.org/abs/2604.27538
+- Review note: Directly relevant to plant-domain representation learning. The paper reports that generic SSL augmentations such as blur, grayscale, and solarization can remove fine-grained plant cues, while domain-adapted training on iNaturalist Plantae improves downstream plant recognition. Review for Notebook 0 augmentation guidance and router embedding assumptions before promoting to the main anchors.
 
-##### Routers Learn the Geometry of Their Experts: Geometric Coupling in Sparse Mixture-of-Experts
+##### Entropy Alone is Insufficient for Safe Selective Prediction in LLMs
+
+- Query: `selective prediction`
+- Published: `2026-03-22T11:27:13Z`
+- Authors: Edward Phillips, Fredrik K. Gustafsson, Sean Wu, Anshul Thakur, David A. Clifton
+- Link: https://arxiv.org/abs/2603.21172
+- Review note: Domain is LLM QA, not plant vision, but the evaluation lesson is relevant: abstention methods should be judged with deployment-facing risk-coverage and calibration metrics rather than a single uncertainty score. Review only as supporting rationale for router/OOD reporting, not as a direct implementation recipe.
+
+##### When should we trust the annotation? Selective prediction for molecular structure retrieval from mass spectra
+
+- Query: `selective prediction risk-coverage`
+- Published: `2026-03-11T16:40:50Z`
+- Authors: Mira Juergens, Gaetan De Waele, Morteza Rakhshaninejad, Willem Waegeman
+- Link: https://arxiv.org/abs/2603.10950
+- Review note: Non-vision domain, but it gives a recent risk-coverage framing for abstaining under user-specified error tolerance. Review as possible wording support for `risk_coverage` reports and readiness policy language.
+
+##### ConformalHDC: Uncertainty-Aware Hyperdimensional Computing with Application to Neural Decoding
+
+- Query: `conformal prediction out-of-distribution`
+- Published: `2026-02-24T23:52:08Z`
+- Authors: Ziyi Liang, Hamed Poursiami, Zhishun Yang, Keiland Cooper, Akhilesh Jaiswal, Maryam Parsa, Norbert Fortin, Babak Shahbaba
+- Link: https://arxiv.org/abs/2602.21446
+- Review note: Non-plant domain, but relevant to uncertainty-aware abstention and outlier handling with conformal guarantees. Review only if conformal set prediction becomes an active router or adapter output mode.
+
+##### Is Retraining-Free Enough? The Necessity of Router Calibration for Efficient MoE Compression
 
 - Query: `router calibration`
-- Published: `2026-05-12T17:55:02Z`
-- Authors: Sagi Ahrac, Noya Hochwald, Mor Geva
-- Link: http://arxiv.org/abs/2605.12476v1
-- Review note: Sparse Mixture-of-Experts (SMoE) models enable scaling language models efficiently, but training them remains challenging, as routing can collapse onto few experts and auxiliary load-balancing losses can reduce specialization. Motivated by these hurdles, we study how routing decisions in SMoEs are formed mechanistically. First, we reveal a geometric coupling between routers and their corresponding experts. For a given token, the router weights for the selected expert and the expert weights processing it receive gradients along the same input direction, differing only in scalar coefficients. Thus, matched router--expert directions accumulate the same routed token history. This theoretical coupling also appears empirically in routing dynamics. In a $1$B SMoE trained from scratch, higher router scores predict stronger expert neuron activations, showing that routing decisions are mirrored inside the selected expert. Next, we analyze the effects of auxiliary load balancing on the router--expert geometric coupling, showing that such losses break this structure by spreading input-directed gradients across router weights, making distinct router directions nearly three times more similar to each other. Last, we demonstrate the centrality of geometric coupling for effective routing with a parameter-free online K-Means router, in which each expert maintains a running average of the hidden states routed to it and tokens are assigned based on cosine similarity. Compared with auxiliary-loss and loss-free balancing, this router achieves the lowest load imbalance with only a modest perplexity increase, indicating that geometric coupling captures a substantial part of what the router learns. Overall, our results explain how routers form assignment geometry that supports an effective division of labor.
+- Published: `2026-02-10T08:04:07Z`
+- Authors: Sieun Hyeon, Jaeyoung Do
+- Link: https://arxiv.org/abs/2603.02217
+- Review note: This is about MoE compression rather than crop routing, so it should not be promoted as direct evidence for AADS router thresholds. It is still a useful reminder that router/expert mismatch can require explicit calibration after expert changes.
 
 
 #### Repo Bug / Weak Point / Improvement Scan

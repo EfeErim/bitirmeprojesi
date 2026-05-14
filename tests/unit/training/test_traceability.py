@@ -217,6 +217,50 @@ def test_build_optimization_record_flattens_parameters_and_sets_objective_direct
     assert record["objective_directions"]["ood.ood_false_positive_rate"] == "minimize"
 
 
+def test_build_optimization_record_backfills_notebook_parameters_without_run_context_config(tmp_path: Path):
+    summary = {
+        **_summary_payload(),
+        "notebook_surface": "2_train_continual_sd_lora_adapter.ipynb",
+        "notebook_parameters": {
+            "epochs": 24,
+            "batch_size": 88,
+            "learning_rate": 0.00012,
+            "lora_r": 32,
+            "lora_alpha": 32,
+            "lora_dropout": 0.14,
+            "ood_factor": 4.0,
+            "label_smoothing": 0.08,
+            "logitnorm_tau": 1.2,
+            "react_enabled": "false",
+            "randaugment_num_ops": 3,
+            "randaugment_magnitude": 9,
+        },
+    }
+    record = build_optimization_record(
+        summary_payload=summary,
+        run_context_payload={},
+        production_readiness_payload=_production_readiness_payload(),
+        authoritative_artifacts=_authoritative_artifacts(),
+        artifact_root=tmp_path / "training_metrics",
+        explicit_surface="notebook_2",
+        created_at="2026-04-14T10:00:00+00:00",
+        record_quality="backfilled",
+    )
+
+    assert record["parameters"]["training.num_epochs"] == 24
+    assert record["parameters"]["training.batch_size"] == 88
+    assert record["parameters"]["training.learning_rate"] == 0.00012
+    assert record["parameters"]["training.adapter.lora_r"] == 32
+    assert record["parameters"]["training.adapter.lora_alpha"] == 32
+    assert record["parameters"]["training.adapter.lora_dropout"] == 0.14
+    assert record["parameters"]["training.ood.threshold_factor"] == 4.0
+    assert record["parameters"]["training.optimization.label_smoothing"] == 0.08
+    assert record["parameters"]["training.optimization.logitnorm_tau"] == 1.2
+    assert record["parameters"]["training.ood.react_enabled"] is False
+    assert record["parameters"]["training.data.randaugment_num_ops"] == 3
+    assert record["parameters"]["training.data.randaugment_magnitude"] == 9
+
+
 def test_persist_traceability_artifacts_writes_files_and_refreshes_guided_catalog(tmp_path: Path):
     artifact_root = tmp_path / "training_metrics"
     (artifact_root / "training").mkdir(parents=True, exist_ok=True)

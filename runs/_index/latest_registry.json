@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-13T19:37:53.235696+00:00",
+  "generated_at": "2026-05-14T08:31:33.298131+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": true,
   "trial_count": 23,
@@ -8,13 +8,13 @@
   "backfilled_count": 23,
   "cohort_count": 8,
   "paths": {
-    "trials_jsonl": "runs\\_index\\trials.jsonl",
-    "pareto_inputs_json": "runs\\_index\\pareto_inputs.json",
-    "pareto_frontiers_json": "runs\\_index\\pareto_frontiers.json",
-    "bayesian_recommendations_json": "runs\\_index\\bayesian_recommendations.json",
-    "automatic_wins_markdown": "runs\\_index\\automatic_wins.md",
-    "artifact_lineage_report_json": "runs\\_index\\artifact_lineage_report.json",
-    "summary_dashboard_markdown": "runs\\_index\\summary_dashboard.md"
+    "trials_jsonl": "D:\\bitirme projesi\\runs\\_index\\trials.jsonl",
+    "pareto_inputs_json": "D:\\bitirme projesi\\runs\\_index\\pareto_inputs.json",
+    "pareto_frontiers_json": "D:\\bitirme projesi\\runs\\_index\\pareto_frontiers.json",
+    "bayesian_recommendations_json": "D:\\bitirme projesi\\runs\\_index\\bayesian_recommendations.json",
+    "automatic_wins_markdown": "D:\\bitirme projesi\\runs\\_index\\automatic_wins.md",
+    "artifact_lineage_report_json": "D:\\bitirme projesi\\runs\\_index\\artifact_lineage_report.json",
+    "summary_dashboard_markdown": "D:\\bitirme projesi\\runs\\_index\\summary_dashboard.md"
   },
   "cohorts": [
     {
