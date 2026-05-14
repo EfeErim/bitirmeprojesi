@@ -1,0 +1,45 @@
+{
+  "kayısı_sag_lıklı_meyve_800": {
+    "precision": 1.0,
+    "recall": 0.9748427672955975,
+    "f1-score": 0.9872611464968153,
+    "support": 159.0
+  },
+  "kayısıda_c_ic_ek_monilyası_meyve_40": {
+    "precision": 0.8888888888888888,
+    "recall": 1.0,
+    "f1-score": 0.9411764705882353,
+    "support": 8.0
+  },
+  "kayısıda_s_arka_viru_su_meyve_230": {
+    "precision": 0.9090909090909091,
+    "recall": 0.9090909090909091,
+    "f1-score": 0.9090909090909091,
+    "support": 44.0
+  },
+  "kayısıda_s_eftali_karalekesi_meyve_232": {
+    "precision": 0.8958333333333334,
+    "recall": 0.9555555555555556,
+    "f1-score": 0.9247311827956989,
+    "support": 45.0
+  },
+  "kayısıda_yaprak_delen_c_il_hastalıg_ı_meyve_128": {
+    "precision": 0.7083333333333334,
+    "recall": 0.7083333333333334,
+    "f1-score": 0.7083333333333334,
+    "support": 24.0
+  },
+  "accuracy": 0.9392857142857143,
+  "macro avg": {
+    "precision": 0.880429292929293,
+    "recall": 0.9095645130550791,
+    "f1-score": 0.8941186084609983,
+    "support": 280.0
+  },
+  "weighted avg": {
+    "precision": 0.9407986111111111,
+    "recall": 0.9392857142857143,
+    "f1-score": 0.9397029902982356,
+    "support": 280.0
+  }
+}

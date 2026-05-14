@@ -1,0 +1,16 @@
+[CELL_CAPTURE] cell=Cell 8: Adapter Save
+run_id=apricot_fruit_2026-05-14_08-45-33
+started_at=2026-05-14T08:49:17.568079+00:00
+finished_at=2026-05-14T08:49:18.825334+00:00
+duration_sec=1.257
+
+Cell 8: adapter save started
+Kaydedilen adapter klasoru: /content/bitirmeprojesi/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/README.md
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/adapter_config.json
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/adapter_meta.json
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/adapter_model.safetensors
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/classifier.pth
+ - outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter/fusion.pth
+Telemetry adapter klasoru: /content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/apricot_fruit_2026-05-14_08-45-33/artifacts/adapter_export/apricot/fruit/continual_sd_lora_adapter
+Cell 8: adapter save completed
