@@ -50,6 +50,7 @@ _NOTEBOOK_OPTIMIZATION_SEARCH_SPACE = {
         {"name": "training.adapter.lora_r", "type": "categorical", "values": [8, 16, 20, 24, 26, 32]},
         {"name": "training.adapter.lora_alpha", "type": "categorical", "values": [8, 16, 20, 24, 26, 32]},
         {"name": "training.adapter.lora_dropout", "type": "float", "low": 0.0, "high": 0.25},
+        {"name": "training.fusion.dropout", "type": "float", "low": 0.0, "high": 0.25},
         {"name": "training.ood.threshold_factor", "type": "float", "low": 1.5, "high": 4.5},
         {"name": "training.ood.oe_loss_weight", "type": "float", "low": 0.0, "high": 0.5},
         {"name": "training.ood.react_enabled", "type": "categorical", "values": [False, True]},
@@ -61,6 +62,7 @@ _NOTEBOOK_OPTIMIZATION_SEARCH_SPACE = {
         {"name": "training.data.randaugment_magnitude", "type": "int", "low": 3, "high": 12, "step": 1},
         {"name": "training.data.augmix_severity", "type": "int", "low": 1, "high": 5, "step": 1},
         {"name": "training.classifier_rebalance.enabled", "type": "categorical", "values": [False, True]},
+        {"name": "training.classifier_rebalance.logit_adjustment_tau", "type": "float", "low": 0.5, "high": 2.0},
     ],
 }
 _NOTEBOOK_PARAM_MAP = {
