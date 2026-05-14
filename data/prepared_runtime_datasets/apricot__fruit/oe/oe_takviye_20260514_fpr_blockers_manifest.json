@@ -1,0 +1,285 @@
+{
+  "created_at": "2026-05-14T17:39:07.767888+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "apricot__fruit",
+  "placed": [
+    {
+      "adapter": "apricot__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/same_crop_unsupported_unknowns/bugwood_5609963_apricot_brown_rot_fruit_24c9022142.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_5609963_apricot_brown_rot_fruit_24c9022142.jpg",
+      "sha256": "24c9022142d594edfbf7a052e5bbcfc7db1d44d869526b71f1608fcf9c7759bc",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood apricot brown-rot fruit image; unsupported by current apricot fruit labels"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "near_id_prunus_fruit_disease",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/near_id_prunus_fruit_disease/bugwood_1436079_stonefruit_bacterial_spot_peach_b30364d4ea.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/near_id_prunus_fruit_disease/oe_takviye_20260514_fpr_blockers_near_id_prunus_fruit_disease_near_id_prunus_frui_bugwood_1436079_stonefruit_bacterial_spot_peach_b30364d4ea.jpg",
+      "sha256": "b30364d4eacf412cdd9558a200f96d1bcdcea804587bc1b57fb7d87461feda4e",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood peach/Prunus fruit disease images visually close to apricot fruit"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "near_id_prunus_fruit_disease",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/near_id_prunus_fruit_disease/bugwood_1492036_stonefruit_brown_rot_peach_8eb16d9f22.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/near_id_prunus_fruit_disease/oe_takviye_20260514_fpr_blockers_near_id_prunus_fruit_disease_near_id_prunus_frui_bugwood_1492036_stonefruit_brown_rot_peach_8eb16d9f22.jpg",
+      "sha256": "8eb16d9f22a790216ce0b60e7533e8ecf6b5aa879e51380ce49035bfc037efbd",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood peach/Prunus fruit disease images visually close to apricot fruit"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "near_id_prunus_fruit_disease",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/near_id_prunus_fruit_disease/bugwood_1492099_stonefruit_bacterial_spot_peach_e579bb0c33.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/near_id_prunus_fruit_disease/oe_takviye_20260514_fpr_blockers_near_id_prunus_fruit_disease_near_id_prunus_frui_bugwood_1492099_stonefruit_bacterial_spot_peach_e579bb0c33.jpg",
+      "sha256": "e579bb0c338a3ecc465b7e75efdec1d90becc35fe998ad9bc01ff578803fc4ab",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood peach/Prunus fruit disease images visually close to apricot fruit"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "near_id_prunus_fruit_disease",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/near_id_prunus_fruit_disease/bugwood_1492101_stonefruit_bacterial_spot_peach_f14994b6ff.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/near_id_prunus_fruit_disease/oe_takviye_20260514_fpr_blockers_near_id_prunus_fruit_disease_near_id_prunus_frui_bugwood_1492101_stonefruit_bacterial_spot_peach_f14994b6ff.jpg",
+      "sha256": "f14994b6ff513bc42285fb157c639b021144cb066326f45f487df6e448b18fd9",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood peach/Prunus fruit disease images visually close to apricot fruit"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "near_id_prunus_fruit_disease",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/apricot__fruit/near_id_prunus_fruit_disease/bugwood_5555284_stonefruit_brown_rot_peach_c315a59b3c.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/near_id_prunus_fruit_disease/oe_takviye_20260514_fpr_blockers_near_id_prunus_fruit_disease_near_id_prunus_frui_bugwood_5555284_stonefruit_brown_rot_peach_c315a59b3c.jpg",
+      "sha256": "c315a59b3cdfc5756c96ab6595d51f8997398888e0a77487217a8f39c9bca32f",
+      "width": 432,
+      "height": 768,
+      "rationale": "fresh Bugwood peach/Prunus fruit disease images visually close to apricot fruit"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_demir.png",
+      "sha256": "e229333e54d7cae349d6647c75884947483439d245e79c5da72d2ba0c726e0c8",
+      "width": 393,
+      "height": 255,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir_noksanlığı.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_demir_noksanl.png",
+      "sha256": "364729bc8b35ea91d9392e5d11b4f351b1973a8441e9459b0161cc65c6bba350",
+      "width": 389,
+      "height": 254,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosfor_P__noksanklığı.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_fosfor_p_noksankl.png",
+      "sha256": "586f05ffd0db1ca34939a2c67b5a5ee41d7ee84e97f4775597e4d597726e58d3",
+      "width": 712,
+      "height": 439,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosforr_eksikliği.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_fosforr_eksikli_i.png",
+      "sha256": "dfffb9c9a1e2ae3a32f33eabcf14897438590d210794b9d370719e172735ba2c",
+      "width": 714,
+      "height": 397,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_K_noksanlık.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_k_noksanl_k.png",
+      "sha256": "48962a07ee9bf8eb9a65c2431ac9743272427fdd63994b9f0024ade00f56ef28",
+      "width": 496,
+      "height": 477,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_K_noksanlığı.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_k_noksanl.png",
+      "sha256": "01e9ac5e268cd7c922c39d1ab1288a1876c2562b12d5c5b082f071354cc1a24d",
+      "width": 497,
+      "height": 480,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgg.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_mgg.png",
+      "sha256": "2e980a37fcd238a52d945d73eedcd39ec459ccdd5938cfa7a2fe553ba74708ae",
+      "width": 434,
+      "height": 459,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgggg.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_mgggg.png",
+      "sha256": "eb2d528c2f20e9c9c0ac15b87e25532948d84c8771f36aaa667649b127267e9a",
+      "width": 432,
+      "height": 459,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_inko_noksanl.png",
+      "sha256": "b201e0fd36472c1d2a58eda7ab6e66018b53b5535ca919e5871b0167604a4fcf",
+      "width": 393,
+      "height": 353,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı2.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmada_inko_noksanl_2.png",
+      "sha256": "c00fc9a2cc016e50d2ee47f2b68327f2dfab48946417ab0bab3ac827153c5039",
+      "width": 388,
+      "height": 353,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmda_mg_noksanlığı.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_asmda_mg_noksanl.png",
+      "sha256": "c5721ecde426a0332bc46db3f73c035a83e16f99a344a9fab5b8f0739c87044a",
+      "width": 530,
+      "height": 492,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "other_crop_disease",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/other_crop_disease/oe_takviye_20260514_fpr_blockers_other_crop_disease_off_crop_or_root_disease_off_crop_or_root_disease_ba_da_unlubit.png",
+      "sha256": "77d8ce12e8a8777384c0e199119f3654971fd7bcd76790ea71b03b24a2107762",
+      "width": 412,
+      "height": 323,
+      "rationale": "small realistic other-crop disease negatives for apricot fruit OE"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-14_195623.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_non_plant_misc_ekran_g_r_nt_s_2026_03_14_195623.png",
+      "sha256": "20045d61f38de016b78990e9ebcf706b9497783466e70d328b032cd3fa6e27ce",
+      "width": 608,
+      "height": 283,
+      "rationale": "minority non-plant negatives only"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-15_143215.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_non_plant_misc_ekran_g_r_nt_s_2026_03_15_143215.png",
+      "sha256": "1b1b82756a373f7a9fb28be75a34efa6af64425f87b1319529814795e00c352e",
+      "width": 257,
+      "height": 435,
+      "rationale": "minority non-plant negatives only"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__image-2-1.png",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_non_plant_misc_image_2_1.png",
+      "sha256": "06385d582dfb121e84e0861b881e35d2240fa75b41dec8e7cdc765391aa79932",
+      "width": 1000,
+      "height": 667,
+      "rationale": "minority non-plant negatives only"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__22_277c2fb3f941.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_22_277c2fb3f941.jpg",
+      "sha256": "277c2fb3f94162ad03574d3b957ead1c6cd9d5487445a3338bf0241a07946e0e",
+      "width": 222,
+      "height": 227,
+      "rationale": "minority non-plant negatives only"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__28_8d8760a5c095.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_28_8d8760a5c095.jpg",
+      "sha256": "8d8760a5c0956b65ea6fedceb7a0e0921e340e4d68d652b75c6f9f061cdeac6a",
+      "width": 300,
+      "height": 168,
+      "rationale": "minority non-plant negatives only"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız4_e6b9c6dcb40f.jpg",
+      "destination": "data/prepared_runtime_datasets/apricot__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_scene_context_leak_check_alakas_z4_e6b9c6dcb40f.jpg",
+      "sha256": "e6b9c6dcb40f0f855226031ba4bd3b70aed3fffc3e6ae8e7cdef1df712a7206f",
+      "width": 1100,
+      "height": 650,
+      "rationale": "minority non-plant negatives only"
+    }
+  ],
+  "skipped": [
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_akdeniz_perfect_red_kayisi_fidani_346aaeee41b8.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/apricot__fruit/ood/non_plant_misc/akdeniz-perfect-red-kayisi-fidani.png"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_hakmar_yaz_meyvesi_kayisi_hakkinda_neler_biliyorsunuz_96_c389dbdb23bd.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/apricot__fruit/ood/non_plant_misc/hakmar-yaz-meyvesi-kayisi-hakkinda-neler-biliyorsunuz-960x720-1.jpg"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__17_422fde032872.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/apricot__fruit/ood/non_plant_misc/images (17).jpg"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__18_846797d8d777.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/apricot__fruit/ood/non_plant_misc/images (18).jpg"
+    },
+    {
+      "adapter": "apricot__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız2_fe74f0bdeaa6.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/apricot__fruit/ood/scene_context_leak_check/takviye_20260514_scene_context_leak_check__alakasız2_fe74f0bdeaa6.jpg"
+    }
+  ]
+}

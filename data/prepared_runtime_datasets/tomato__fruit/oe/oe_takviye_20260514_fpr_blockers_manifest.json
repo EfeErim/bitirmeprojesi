@@ -1,0 +1,1972 @@
+{
+  "created_at": "2026-05-14T17:39:07.767888+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "tomato__fruit",
+  "placed": [
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__135.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_135.jpeg",
+      "sha256": "7bbf6edfe4e40eaeb7be752fe2838fdedd8ac2a83315c42ec52749d4ef5257c4",
+      "width": 800,
+      "height": 1000,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__4.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_4.jpeg",
+      "sha256": "afbe1c220f78ec292d9ff556df380a8147399e043299ba3d2ff9c99b04c2f8e5",
+      "width": 800,
+      "height": 1000,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__792.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_792.jpeg",
+      "sha256": "70c25e3caa37a99c578af92ce6c871a23793b300c1902b9bc145ef0b3a96244c",
+      "width": 800,
+      "height": 1000,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__biber_sera.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_biber_sera.png",
+      "sha256": "f4dd63563a8eb1aaae97e335689623779ec4ad198cdb70678fb9445f2bd38dd1",
+      "width": 536,
+      "height": 412,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-02-20_001222.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_02_20_001222.png",
+      "sha256": "255bd6e122ddadaef108bc4caa6344a1d2b930eb3b27c7830b00a7685464f099",
+      "width": 701,
+      "height": 437,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-02-20_001455.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_02_20_001455.png",
+      "sha256": "b4c1008f911ea9fdd52545666354bdadd62e2ce5d7dc4cc681e871f57bf9c211",
+      "width": 1196,
+      "height": 664,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_001701.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_001701.png",
+      "sha256": "0cf4a1c5e73f43ef465e1ccedf84cad05e34d70eedd29125f3f3bb0552ddd4f1",
+      "width": 304,
+      "height": 332,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_002344.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_002344.png",
+      "sha256": "a654e7a95dd643aa1012b3cb49f2e2018c014e90b431f41241328e863b88cf3e",
+      "width": 386,
+      "height": 501,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_003702.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_003702.png",
+      "sha256": "f6a7815a8aea2aee2c17e76be9224fcb0248776ac2eb4aacf1d299fba43d1ae3",
+      "width": 917,
+      "height": 579,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_003715.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_003715.png",
+      "sha256": "fd5b6e1f111c3a5193b1fbb24b999a9149ee49404dfa52cab367cb8e01a92b60",
+      "width": 658,
+      "height": 502,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_235902.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_235902.png",
+      "sha256": "ce78ad36d1d74b130e0d51d70f50ca50e33bc09c711d6a3713a2d5c363524621",
+      "width": 602,
+      "height": 503,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-15_145231.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_15_145231.png",
+      "sha256": "cf94051511e067583bbf3ee02e6a178026d0bd308e71c67ff06058b53154c47d",
+      "width": 493,
+      "height": 447,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-15_145320.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_15_145320.png",
+      "sha256": "ee0f04c9202c65798a9a13e0495cc06642d6da4138a956d59cb69ac7d62d3702",
+      "width": 177,
+      "height": 291,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__ers.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ers.png",
+      "sha256": "9cd7e88ebca3ae78884c75863fd7dc8ee48cad3f07980d78fdd6a07bc7ec079f",
+      "width": 917,
+      "height": 557,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/takviye_20260514_743_jpg_adlı_dosyanın_kopyası_0ae84f707be4.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_takviye_20260514_743_jpg_adl_dosyan_n_kopyas_0ae84f707be4.jpg",
+      "sha256": "0ae84f707be457b565f8e6e7501dca3417429cdd9cf4a9c5403b575348861e62",
+      "width": 800,
+      "height": 1000,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/takviye_20260514_Ekran_görüntüsü_2026_05_04_125636_742951cf9784.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_takviye_20260514_ekran_g_r_nt_s_2026_05_04_125636_742951cf9784.png",
+      "sha256": "742951cf9784be52a4c337848d0bc5d8fe275c3607e239ae091be045e072058a",
+      "width": 320,
+      "height": 373,
+      "rationale": "other crop fruit/plant negatives for off-crop secondary FPR"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-15_143215.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_non_plant_misc_ekran_g_r_nt_s_2026_03_15_143215.png",
+      "sha256": "1b1b82756a373f7a9fb28be75a34efa6af64425f87b1319529814795e00c352e",
+      "width": 257,
+      "height": 435,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_akdeniz_perfect_red_kayisi_fidani_346aaeee41b8.png",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_akdeniz_perfect_red_kayisi_fidani_346aaeee41b8.png",
+      "sha256": "346aaeee41b8bb9588e4f9970d5c5e631e3cf039de69349d8f0276fc3c1a0e04",
+      "width": 500,
+      "height": 500,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_hakmar_yaz_meyvesi_kayisi_hakkinda_neler_biliyorsunuz_96_c389dbdb23bd.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_hakmar_yaz_meyvesi_kayisi_hakkinda_neler_biliyorsunuz_9.jpg",
+      "sha256": "c389dbdb23bdfaae1c89a446a9d9e8e1c70d6ba8822347f1fe40c0679c74a4e8",
+      "width": 960,
+      "height": 720,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__17_422fde032872.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_17_422fde032872.jpg",
+      "sha256": "422fde032872c34fffff65e4a0f429ece922874670e168ee324f234078f76833",
+      "width": 225,
+      "height": 225,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__28_8d8760a5c095.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_28_8d8760a5c095.jpg",
+      "sha256": "8d8760a5c0956b65ea6fedceb7a0e0921e340e4d68d652b75c6f9f061cdeac6a",
+      "width": 300,
+      "height": 168,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız2_fe74f0bdeaa6.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_scene_context_leak_check_alakas_z2_fe74f0bdeaa6.jpg",
+      "sha256": "fe74f0bdeaa66e5e30f60747636f95b3aaed6d9501f69be3afe35f34f7f696a3",
+      "width": 750,
+      "height": 500,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız4_e6b9c6dcb40f.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_scene_context_leak_check_alakas_z4_e6b9c6dcb40f.jpg",
+      "sha256": "e6b9c6dcb40f0f855226031ba4bd3b70aed3fffc3e6ae8e7cdef1df712a7206f",
+      "width": 1100,
+      "height": 650,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__depositphotos_354116492_stock_baedf678bf9f.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_scene_context_leak_check_depositphotos_354116492_stock.jpg",
+      "sha256": "baedf678bf9fdf491c2076c037d9f1f0954b0746bd7a6dbc094d667db1176b08",
+      "width": 600,
+      "height": 400,
+      "rationale": "minority non-plant negatives for tomato fruit OE"
+    }
+  ],
+  "skipped": [
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231247.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231247.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231309.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231309.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231323.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231323.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231343.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231343.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231401.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231401.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231425.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231425.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231443.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231443.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231457.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231457.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231513.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231513.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231550.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231550.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231605.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231605.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231643.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231643.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231708.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231708.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231717.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231717.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231729.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231729.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/bacterial_canker_fruit/Domates_Outlier-20260503T132553Z-3-001/Ekran görüntüsü 2026-03-14 231739.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_bacterial_canker/unsupported_same_crop__Ekran_görüntüsü_2026-03-14_231739.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0001.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0001.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0004.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0004.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0007.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0007.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0010.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0010.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0012.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0012.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0013.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0013.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0016.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0016.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0017.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0017.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0020.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0020.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0023.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0023.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0026.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0026.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0028.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0028.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0029.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0029.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0032.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0032.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0033.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0033.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0036.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0036.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0039.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0039.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0042.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0042.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0044.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0044.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0045.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0045.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0048.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0048.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0049.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0049.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0052.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0052.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0055.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0055.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0058.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0058.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0060.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0060.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0061.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0061.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0064.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0064.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0065.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0065.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0068.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0068.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0071.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0071.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0074.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0074.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0076.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0076.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0077.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0077.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0080.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0080.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0081.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0081.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0084.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0084.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0087.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0087.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0090.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0090.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0092.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0092.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0093.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0093.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0096.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0096.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0097.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0097.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0100.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0100.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0103.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0103.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0106.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0106.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0108.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0108.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0109.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0109.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0112.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0112.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0113.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0113.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0116.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0116.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0119.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0119.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0122.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0122.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0124.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0124.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0125.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0125.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0128.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0128.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0129.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0129.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0132.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0132.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0135.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0135.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0138.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0138.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0140.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0140.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0141.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0141.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0144.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0144.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0145.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0145.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0148.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0148.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0151.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0151.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0154.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0154.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0156.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0156.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0157.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0157.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0160.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0160.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0161.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0161.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0164.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0164.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0167.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0167.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0170.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0170.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0172.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0172.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0173.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0173.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0176.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0176.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0177.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0177.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0180.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0180.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0183.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0183.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0186.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0186.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0188.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0188.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0189.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0189.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0192.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0192.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0193.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0193.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0196.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0196.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0199.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0199.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0202.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0202.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0204.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0204.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0205.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0205.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0208.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0208.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0209.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0209.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0212.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0212.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0215.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0215.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0218.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0218.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0220.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0220.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0221.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0221.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0224.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0224.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0225.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0225.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0228.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0228.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0231.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0231.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0234.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0234.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0236.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0236.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0237.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0237.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0240.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0240.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0241.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0241.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0244.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0244.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0247.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0247.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0250.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0250.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0252.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0252.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0253.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0253.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0256.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0256.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0257.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0257.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0260.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0260.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0263.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0263.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0266.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0266.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0268.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0268.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0269.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0269.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0272.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0272.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0273.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0273.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0276.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0276.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0279.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0279.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0282.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0282.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0284.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/rebalanced_20260510_oe_to_ood_fruit_unknown_unsupported_same_crop__image_0284.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0285.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0285.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0288.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0288.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0289.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0289.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0292.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0292.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0295.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0295.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0298.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0298.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0300.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0300.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0301.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0301.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0304.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0304.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0305.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0305.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0308.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0308.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0311.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0311.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0314.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0314.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0316.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0316.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0317.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0317.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0320.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0320.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0321.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0321.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0324.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0324.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0327.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0327.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0330.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0330.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0332.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0332.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0333.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0333.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0336.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0336.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0337.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0337.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0340.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0340.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0343.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0343.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0346.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0346.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0348.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0348.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0352.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0352.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0353.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0353.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0356.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0356.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0359.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0359.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0362.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0362.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0364.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0364.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0365.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0365.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0368.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0368.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0369.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0369.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0372.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0372.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0375.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0375.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0378.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0378.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0380.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0380.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0381.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0381.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0384.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0384.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0385.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0385.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0388.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0388.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0391.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0391.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0394.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0394.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0396.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0396.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0397.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0397.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0400.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0400.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0401.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0401.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0404.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0404.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0407.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0407.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0410.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0410.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0412.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0412.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0413.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0413.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0416.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0416.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0417.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0417.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0420.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0420.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0423.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0423.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0426.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0426.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0428.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0428.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0429.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0429.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0432.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0432.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0433.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0433.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0436.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0436.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0439.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0439.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0442.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0442.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0444.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0444.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0445.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0445.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0448.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0448.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0449.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0449.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0452.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0452.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0455.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0455.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0458.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0458.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0460.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0460.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0461.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0461.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0464.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0464.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0465.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0465.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0468.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0468.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0471.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0471.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0474.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0474.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0476.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0476.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0477.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0477.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0480.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0480.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0481.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0481.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0484.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0484.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0487.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0487.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0490.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0490.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0492.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0492.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0493.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0493.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0496.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0496.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0497.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0497.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/oe_dataset/tomato_leaf_oe_from_fruit/same_crop_fruit_negatives/target_spot_fruit/Domates_Outlier-20260503T132553Z-3-001/image_0500.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/oe/same_crop_disease_negatives/unsupported_fruit_target_spot/unsupported_same_crop__image_0500.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260510/phase1_ood_candidates/tomato__fruit/unsupported_same_crop/wikimedia_2015-09-14_radial_cracking.jpg.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/internet_20260510_wikimedia_2015-09-14_radial_cracking.jpg.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260510/phase1_ood_candidates/tomato__fruit/unsupported_same_crop/wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/internet_20260510_wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260510/phase1_ood_candidates/tomato__fruit/unsupported_same_crop/wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/internet_20260510_wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260510/phase1_ood_candidates/tomato__fruit/unsupported_same_crop/wikimedia_Tomaten_Platzer-1.jpg.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/unsupported_same_crop/internet_20260510_wikimedia_Tomaten_Platzer-1.jpg.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_235849.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/off_crop_secondary/takviye_20260514_off_crop_secondary__Ekran_görüntüsü_2026_03_04_235849_5b53f03a91be.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/grape__fruit_ood_final/off_crop_secondary/takviye_20260514_blur_or_occlusion__Ekran_görüntüsü_2026_03_15_003032_cc835b172774.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/blur_or_occlusion/blur_or_occlusion__Ekran_görüntüsü_2026-03-15_003032.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-14_195623.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/blur_or_occlusion/blur_or_occlusion__Ekran_görüntüsü_2026-03-14_195623.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__image-2-1.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/non_plant_misc/takviye_20260514_non_plant_misc__image_2_1_06385d582dfb.png"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__18_846797d8d777.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/non_plant_misc/takviye_20260514_images__18_846797d8d777.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__22_277c2fb3f941.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/off_crop_secondary/takviye_20260514_images__22_277c2fb3f941.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız5_e3999bb0157b.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/non_plant_misc/takviye_20260514_scene_context_leak_check__alakasız5_e3999bb0157b.jpg"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_scene_context_leak_check__damping_off_da3cc7112bb4.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__fruit/ood/blur_or_occlusion/blur_or_occlusion__damping_off.png"
+    }
+  ]
+}

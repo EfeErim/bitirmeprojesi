@@ -1,0 +1,49 @@
+{
+  "created_at": "2026-05-14T17:40:48.754813+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers_supplement",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "tomato__fruit",
+  "placed": [
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/tomato__fruit/unsupported_same_crop/bugwood_1263093_tomato_bacterial_canker_fruit_d5ce06c48a.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/unsupported_same_crop/oe_takviye_20260514_fpr_blockers_supplement_bugwood_1263093_tomato_bacterial_canker_fruit_d5ce06c48a.jpg",
+      "sha256": "d5ce06c48a584092bd5428d0b860f8773ebd89c31c5d2b8510b05e99d104b45d",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood tomato bacterial-canker/russet-mite fruit negatives"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/tomato__fruit/unsupported_same_crop/bugwood_1263094_tomato_bacterial_canker_fruit_23cc01e237.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/unsupported_same_crop/oe_takviye_20260514_fpr_blockers_supplement_bugwood_1263094_tomato_bacterial_canker_fruit_23cc01e237.jpg",
+      "sha256": "23cc01e23722cc726def90157d42ca90f189acc8b2a1843408c12370c0988c28",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood tomato bacterial-canker/russet-mite fruit negatives"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/tomato__fruit/unsupported_same_crop/bugwood_5333075_tomato_bacterial_canker_fruit_9c9e6f4b4a.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/unsupported_same_crop/oe_takviye_20260514_fpr_blockers_supplement_bugwood_5333075_tomato_bacterial_canker_fruit_9c9e6f4b4a.jpg",
+      "sha256": "9c9e6f4b4a19a0ae8bb3f631a7c6f1ff25760958168e2584c7274f9a773edb5f",
+      "width": 768,
+      "height": 504,
+      "rationale": "fresh Bugwood tomato bacterial-canker/russet-mite fruit negatives"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "category": "unsupported_same_crop",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/tomato__fruit/unsupported_same_crop/bugwood_5598512_tomato_russet_mite_fruit_585246ebd9.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__fruit/oe/unsupported_same_crop/oe_takviye_20260514_fpr_blockers_supplement_bugwood_5598512_tomato_russet_mite_fruit_585246ebd9.jpg",
+      "sha256": "585246ebd9d05e627ebf0373692780339d857774d29c64a25f41c57a2d8ebe13",
+      "width": 512,
+      "height": 768,
+      "rationale": "fresh Bugwood tomato bacterial-canker/russet-mite fruit negatives"
+    }
+  ],
+  "skipped": []
+}

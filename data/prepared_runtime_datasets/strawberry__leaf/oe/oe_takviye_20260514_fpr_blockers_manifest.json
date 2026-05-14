@@ -1,0 +1,201 @@
+{
+  "created_at": "2026-05-14T17:39:07.767888+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "strawberry__leaf",
+  "placed": [
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/internet_20260510_wikimedia_Ripe_Strawberry.JPG.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_failure_cas_internet_20260510_wikimedia_ripe_strawberry_jpg.jpg",
+      "sha256": "35b5c7c0055a982c10437cc306fcb5be3b9a154240400264ca081fa999ee8189",
+      "width": 1280,
+      "height": 848,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_specific_unknowns/internet_20260510_wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_specific_un_internet_20260510_wikimedia_erdbeere_strawberry_malformed_img_8875_jpg.jpg",
+      "sha256": "1c8735996f03e7bbd3a4d991b9312cf73d0f1d1c9ef3005ccc0aeea14024366d",
+      "width": 578,
+      "height": 698,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_specific_unknowns/internet_20260510_wikimedia_manual_Ripening_strawberry.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_specific_un_internet_20260510_wikimedia_manual_ripening_strawberry_jpg.jpg",
+      "sha256": "020e6398b0468c6760c6f8607611ce496c1eaaa29a2bc60a9dc881af6049ad15",
+      "width": 480,
+      "height": 640,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_specific_unknowns/internet_20260510_wikimedia_manual_Rotting_strawberry_on_white_background.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_specific_un_internet_20260510_wikimedia_manual_rotting_strawberry_on_white_backgroun.jpg",
+      "sha256": "963f58b09f00be022e02bfc766c0ffe7689141f616921662268a1c4b08d7fcb7",
+      "width": 1280,
+      "height": 965,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_specific_unknowns/internet_20260510_wikimedia_Moldy_Strawberries.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_specific_un_internet_20260510_wikimedia_moldy_strawberries_jpg.jpg",
+      "sha256": "046ce11d8c20e070ae1f0f6b2afee3b0804f2dc73b46f6198f67c36ee811b1c2",
+      "width": 640,
+      "height": 480,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_specific_unknowns/internet_20260510_wikimedia_Rot_strawberry.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_fruit_specific_un_internet_20260510_wikimedia_rot_strawberry_jpg.jpg",
+      "sha256": "2779cadf79447ec0b6896f2057c5904405bc00b015bc415b9f18bf0102f64742",
+      "width": 567,
+      "height": 420,
+      "rationale": "very small same-crop non-leaf/fruit unknown OE for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_akdeniz_perfect_red_kayisi_fidani_346aaeee41b8.png",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_akdeniz_perfect_red_kayisi_fidani_346aaeee41b8.png",
+      "sha256": "346aaeee41b8bb9588e4f9970d5c5e631e3cf039de69349d8f0276fc3c1a0e04",
+      "width": 500,
+      "height": 500,
+      "rationale": "very small non-plant OE top-up for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_hakmar_yaz_meyvesi_kayisi_hakkinda_neler_biliyorsunuz_96_c389dbdb23bd.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_hakmar_yaz_meyvesi_kayisi_hakkinda_neler_biliyorsunuz_9.jpg",
+      "sha256": "c389dbdb23bdfaae1c89a446a9d9e8e1c70d6ba8822347f1fe40c0679c74a4e8",
+      "width": 960,
+      "height": 720,
+      "rationale": "very small non-plant OE top-up for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__17_422fde032872.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_17_422fde032872.jpg",
+      "sha256": "422fde032872c34fffff65e4a0f429ece922874670e168ee324f234078f76833",
+      "width": 225,
+      "height": 225,
+      "rationale": "very small non-plant OE top-up for the near-ready adapter"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/takviye_20260514_images__18_846797d8d777.jpg",
+      "destination": "data/prepared_runtime_datasets/strawberry__leaf/oe/non_plant_misc/oe_takviye_20260514_fpr_blockers_non_plant_misc_non_plant_misc_takviye_20260514_images_18_846797d8d777.jpg",
+      "sha256": "846797d8d77720bb48837c04590f1755bdae486d385a24bceb5d76e0f52ce5bc",
+      "width": 201,
+      "height": 251,
+      "rationale": "very small non-plant OE top-up for the near-ready adapter"
+    }
+  ],
+  "skipped": [
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-02-20_001222.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-02-20_001222.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-02-20_001455.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-02-20_001455.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_195810.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_195810.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_195957.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_195957.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_200011.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_200011.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-15_143125.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-15_143125.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012834.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012834.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012844.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012844.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012855.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-05-03_012855.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/fruit_failure_cases/rebalanced_20260510_zip_strawberry_failure_figure4-25.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_figure4-25.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-14_195623.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-14_195623.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-15_143215.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/non_plant_misc/non_plant_misc__Ekran_görüntüsü_2026-03-15_143215.png"
+    },
+    {
+      "adapter": "strawberry__leaf",
+      "category": "non_plant_misc",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/non_plant_misc/non_plant_misc__image-2-1.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/strawberry__leaf/ood/non_plant_misc/non_plant_misc__image-2-1.png"
+    }
+  ]
+}

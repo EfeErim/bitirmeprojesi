@@ -15,7 +15,14 @@ ADAPTER_KEY = str(globals().get("ADAPTER_KEY", "grape__fruit")).strip()
 _USER_MANUAL_PARAM_OVERRIDES = dict(globals().get("MANUAL_PARAM_OVERRIDES") or {})
 _USER_DEFAULT_RUNTIME_PARAMS = dict(globals().get("DEFAULT_RUNTIME_PARAMS") or {})
 
-ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or {
+try:
+    from scripts.notebook_helpers.adapter_recommendations import get_adapter_recs
+except Exception:
+    _SHARED_ADAPTER_RECS = None
+else:
+    _SHARED_ADAPTER_RECS = get_adapter_recs()
+
+ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or _SHARED_ADAPTER_RECS or {
     "grape__fruit": {
         "crop": "grape", "part": "fruit",
         "ood": "data/prepared_runtime_datasets/grape__fruit/ood",
@@ -58,12 +65,12 @@ ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or {
         "oe_enabled": True, "oe_w": 0.15, "allow_under_min": False,
         "defaults": {"EPOCHS": 20, "BATCH_SIZE": 112, "LEARNING_RATE": 1.1e-4, "LORA_R": 32, "LORA_ALPHA": 32, "LORA_DROPOUT": 0.16, "OOD_FACTOR": 2.6, "LABEL_SMOOTHING": 0.10},
     },
-    # apricot__fruit has no OE pool yet; lower OOD_FACTOR is the main lever until near-ID negatives are added.
     "apricot__fruit": {
         "crop": "apricot", "part": "fruit",
-        "ood": "data/ood_dataset/final/apricot__fruit_ood_final",
-        "oe": "", "oe_enabled": False, "oe_w": 0.10, "allow_under_min": False,
-        "defaults": {"EPOCHS": 36, "BATCH_SIZE": 40, "LEARNING_RATE": 1e-4, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.22, "OOD_FACTOR": 2.8, "LABEL_SMOOTHING": 0.10},
+        "ood": "data/prepared_runtime_datasets/apricot__fruit/ood",
+        "oe": "data/prepared_runtime_datasets/apricot__fruit/oe",
+        "oe_enabled": True, "oe_w": 0.30, "allow_under_min": False,
+        "defaults": {"EPOCHS": 36, "BATCH_SIZE": 40, "LEARNING_RATE": 1e-4, "LORA_R": 20, "LORA_ALPHA": 20, "LORA_DROPOUT": 0.20, "OOD_FACTOR": 4.5, "LABEL_SMOOTHING": 0.12, "OE_LOSS_WEIGHT": 0.30, "REACT_ENABLED": True, "REACT_PERCENTILE": 0.985, "FUSION_DROPOUT": 0.12, "CLASSIFIER_REBALANCE_ENABLED": True, "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": 1.10},
     },
     "apricot__leaf": {
         "crop": "apricot", "part": "leaf",

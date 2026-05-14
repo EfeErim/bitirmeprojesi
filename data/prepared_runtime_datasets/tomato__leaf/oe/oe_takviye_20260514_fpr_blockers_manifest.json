@@ -1,0 +1,928 @@
+{
+  "created_at": "2026-05-14T17:39:07.767888+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "tomato__leaf",
+  "placed": [
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0005.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0005.png",
+      "sha256": "a47a18e97155c05c791bca2dbbf565e6ca49ca5f03624a5f104c61b4a57c1c43",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0008.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0008.png",
+      "sha256": "44e71c6dec1f19396b1b4ebe289f6ce1b93b60c605bd3404b5d323c6d295accc",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0021.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0021.png",
+      "sha256": "bea439142eae39e00212d284971c282b4f4c6ab9e8992c112497f82a17937ca6",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0024.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0024.png",
+      "sha256": "1551c3807ecee8ec7ad582524e4faedf00b5b6c290d57393510a6a9ad9611586",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0037.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0037.png",
+      "sha256": "534cb24a18370c4c4a8e669dae104aed752d5cb64ac67fea5141e9ee96d17cdf",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0040.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0040.png",
+      "sha256": "d3fcd914ffdfa23788f6caf36770ace7610be8d46d6804b2b9a3029dedfcdbe1",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0053.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0053.png",
+      "sha256": "c4fd4d30e86c293e0f820241c7e1863d61acb47a23908a7ab1760e3105e95f6a",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0056.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0056.png",
+      "sha256": "f453ee98060f86e7aeb1e75bbccab75ec37fe9b1dcf57496cfe3d86f6aa24da1",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0069.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0069.png",
+      "sha256": "bcf4fff704d8613dbf8aad1b8635fd27377fba25e4c1d0bed44fed648f4fad02",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0072.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0072.png",
+      "sha256": "7e587390e3e60d815756af27c8e86d3ee9d4580b8c074d9b3631ee62e407073f",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0085.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0085.png",
+      "sha256": "161bc4e87768cbc22653ef9b85519e816e0d4f138710da361c3e66797c377721",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0088.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0088.png",
+      "sha256": "18874e44a035d5066e93ef0fd7dea5c0ee6ab1c343f53e223f911ed787ed78ca",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0101.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0101.png",
+      "sha256": "1ac7a53098d5984f478d00a886bab7613173d1318442288a66974f55d2852557",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0104.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0104.png",
+      "sha256": "c2f24a64e21345f9524a5443473b97947ce04333fbfb66c840b86b36b5a167c8",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0117.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0117.png",
+      "sha256": "17d04f3218335f3e5c4f1dbbeeb66988e472fb7bfedb8e65fce7669ab976ff4b",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0120.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0120.png",
+      "sha256": "6c7cb1dc65c609157694033f043ccdb4821e77a03f70dcc1c74569391283931e",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0133.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0133.png",
+      "sha256": "6e9711e60b0af9658890bf69d17d05c68f1bcd39c4da6375dfb740e2e5373766",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0136.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0136.png",
+      "sha256": "948591bb3c04821f91bda8aa690836e367fcae193ace480d4a86ace0b24b4aa1",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0149.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0149.png",
+      "sha256": "ed437fd2b1963b1fd5b6ea02cf34efaee4e9c93967aa2f0bbb535cb2098c0a02",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0152.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0152.png",
+      "sha256": "daae8b1772e09624ce64c62f3916b769da35e3c1dcc653e85caaa53b488ca5f0",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0165.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0165.png",
+      "sha256": "f6c91d598106b34fc43134dbac09b5da5b1e7c0e34fa0ad3b4b712cc6e365d0c",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0168.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0168.png",
+      "sha256": "f47b5797d2ab1d0deb36162143863818e5b031e203ef15565e2d5fa2e122d461",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0181.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0181.png",
+      "sha256": "f2233dbfb5bb51be2653a0523611a638253cb266274bf8c4e5a446f814ff380e",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0184.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0184.png",
+      "sha256": "30597d6b19d6c2f05e16297e675d51c1bbd2e1cd0838347714338a8411b8c41a",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0197.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0197.png",
+      "sha256": "372e58808d0caa793cd9f2f732dc7a454e0ab360d5f90adac9322f1a0ecd2ad0",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0200.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0200.png",
+      "sha256": "ac3ab3337dbd22499b949acf99f2dace93a2cd69708beb6ade741c6cd73b1d5f",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0213.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0213.png",
+      "sha256": "6b90a47ede853bb21f19fb1c2adcbd202d9a6fe1394c5eba404422148d89d18e",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0216.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0216.png",
+      "sha256": "8849fef1e410af1e3390d3e5792caa145057abf625fd980ede6783b8de705d0e",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0229.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0229.png",
+      "sha256": "7245fef8ba837bccfbaac02cf69a8355be7ac06f41b072f9723ba2ee455c2a18",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0232.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0232.png",
+      "sha256": "c1d5ac1efe3d97e70b5e6cb1ddfaa8e047b08e932ec274842611b3b461cfee01",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0245.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0245.png",
+      "sha256": "5fbd912a4feadd6e5bd99880254d38b48f03e1fcdb84a97238803570e56fe330",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0248.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0248.png",
+      "sha256": "b06186d5824596dcc56db4c3e90a2a2815525344a1282325db32f4156d157507",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0261.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0261.png",
+      "sha256": "b12f218cf9d5d8640de85a7566b2bf4e499363a647b454434857ccb02cda08a7",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0264.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0264.png",
+      "sha256": "a9a23208b8a794491ebf64e9a707cd297ab29de78617b009658bcbf7abdf0577",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0277.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0277.png",
+      "sha256": "71d3374d0218dc13af5e377e3dec94fa1c2d39c462df15fe23b6c661faf117e4",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0280.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/unsupported_tomato_unknowns/oe_takviye_20260514_fpr_blockers_unsupported_tomato_unknowns_unsupported_leaf_bus_unsupported_same_crop_image_0280.png",
+      "sha256": "6d5d5800e111e0ffe0f32f1f7c026465a6f80b1fd31dae793f7d4e80e6426ca0",
+      "width": 512,
+      "height": 512,
+      "rationale": "tomato leaf-like but unsupported disease/pest negatives for unsupported tomato unknown FPR"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__0656095-PPT.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_0656095_ppt.jpg",
+      "sha256": "0ef957af6526772f26b7db91819421bf9a2125f04b1d2df1a2c32287718bc588",
+      "width": 768,
+      "height": 512,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__135.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_135.jpeg",
+      "sha256": "7bbf6edfe4e40eaeb7be752fe2838fdedd8ac2a83315c42ec52749d4ef5257c4",
+      "width": 800,
+      "height": 1000,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__4.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_4.jpeg",
+      "sha256": "afbe1c220f78ec292d9ff556df380a8147399e043299ba3d2ff9c99b04c2f8e5",
+      "width": 800,
+      "height": 1000,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__5.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_5.jpg",
+      "sha256": "7e68feb2f06c6313252fcefa11109d384a1888713f7d3f91528b8d287476040a",
+      "width": 800,
+      "height": 1000,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__792.jpeg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_792.jpeg",
+      "sha256": "70c25e3caa37a99c578af92ce6c871a23793b300c1902b9bc145ef0b3a96244c",
+      "width": 800,
+      "height": 1000,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__anthracnose_fruit_rot_58.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_anthracnose_fruit_rot_58.jpg",
+      "sha256": "ef00cfe439e8f94ca44a6f2c23feba6ee71d311abdc618f7848129a419344694",
+      "width": 419,
+      "height": 419,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__anthracnose_fruit_rot_81.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_anthracnose_fruit_rot_81.jpg",
+      "sha256": "22641776ec902f2a5645bf37eba7bf58429d2db75d3bb5e69f6978c9d23a80e4",
+      "width": 419,
+      "height": 419,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__biber_sera.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_biber_sera.png",
+      "sha256": "f4dd63563a8eb1aaae97e335689623779ec4ad198cdb70678fb9445f2bd38dd1",
+      "width": 536,
+      "height": 412,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-02-20_001222.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_02_20_001222.png",
+      "sha256": "255bd6e122ddadaef108bc4caa6344a1d2b930eb3b27c7830b00a7685464f099",
+      "width": 701,
+      "height": 437,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-02-20_001455.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_02_20_001455.png",
+      "sha256": "b4c1008f911ea9fdd52545666354bdadd62e2ce5d7dc4cc681e871f57bf9c211",
+      "width": 1196,
+      "height": 664,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_002344.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_002344.png",
+      "sha256": "a654e7a95dd643aa1012b3cb49f2e2018c014e90b431f41241328e863b88cf3e",
+      "width": 386,
+      "height": 501,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_003702.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_003702.png",
+      "sha256": "f6a7815a8aea2aee2c17e76be9224fcb0248776ac2eb4aacf1d299fba43d1ae3",
+      "width": 917,
+      "height": 579,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_003715.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_003715.png",
+      "sha256": "fd5b6e1f111c3a5193b1fbb24b999a9149ee49404dfa52cab367cb8e01a92b60",
+      "width": 658,
+      "height": 502,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_235849.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_04_235849.png",
+      "sha256": "5b53f03a91bedec89ac790115f7516ac7f3a4a85dad56da12d71ed892551f1b6",
+      "width": 762,
+      "height": 458,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-15_145231.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_15_145231.png",
+      "sha256": "cf94051511e067583bbf3ee02e6a178026d0bd308e71c67ff06058b53154c47d",
+      "width": 493,
+      "height": 447,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-15_145320.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ekran_g_r_nt_s_2026_03_15_145320.png",
+      "sha256": "ee0f04c9202c65798a9a13e0495cc06642d6da4138a956d59cb69ac7d62d3702",
+      "width": 177,
+      "height": 291,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__ers.png",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_ers.png",
+      "sha256": "9cd7e88ebca3ae78884c75863fd7dc8ee48cad3f07980d78fdd6a07bc7ec079f",
+      "width": 917,
+      "height": 557,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__gray_mold_231.jpg",
+      "destination": "data/prepared_runtime_datasets/tomato__leaf/oe/off_crop_leaf_disease/oe_takviye_20260514_fpr_blockers_off_crop_leaf_disease_off_crop_secondary_off_crop_secondary_gray_mold_231.jpg",
+      "sha256": "95b7370335217952584cf28ed9d0459aa85bff24473880c97f5f44b64c97fdee",
+      "width": 419,
+      "height": 419,
+      "rationale": "off-crop leaf disease negatives for tomato leaf OE"
+    }
+  ],
+  "skipped": [
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0001_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0001_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0012_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0012_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0016_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0016_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0017_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0017_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0028_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0028_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0032_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0032_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0033_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0033_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0044_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0044_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0048_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0048_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0049_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0049_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0060_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0060_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0064_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0064_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0065_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0065_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0076_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0076_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0080_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0080_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0081_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0081_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0092_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0092_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0096_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0096_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0097_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0097_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0108_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0108_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0112_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0112_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0113_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0113_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0124_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0124_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0128_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0128_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0129_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0129_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0140_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0140_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0144_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0144_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0145_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0145_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0156_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0156_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0160_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0160_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0161_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0161_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0172_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0172_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0176_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0176_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0177_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0177_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0188_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0188_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0192_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0192_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0193_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0193_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0204_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0204_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0208_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0208_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0209_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0209_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0220_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0220_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0224_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0224_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0225_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0225_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0236_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0236_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0240_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0240_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0241_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0241_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0252_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0252_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0256_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0256_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0257_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0257_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0268_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0268_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0272_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0272_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "unsupported_tomato_unknowns",
+      "source": "data/oe_dataset/tomato_fruit_oe_from_leaf/same_crop_disease_negatives/unsupported_leaf_bushy_stunt_virus/unsupported_same_crop__image_0273_domates_outlier_Domates_Çalımsı_Cücelik_Virüsü__Tomato_Bushy_Stunt_Virus_-_TBSV.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0273_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_001701.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_001701.png"
+    },
+    {
+      "adapter": "tomato__leaf",
+      "category": "off_crop_leaf_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_235902.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/tomato__leaf/ood/off_crop_secondary/takviye_20260514_off_crop_secondary__Ekran_görüntüsü_2026_03_04_235902_ce78ad36d1d7.png"
+    }
+  ]
+}

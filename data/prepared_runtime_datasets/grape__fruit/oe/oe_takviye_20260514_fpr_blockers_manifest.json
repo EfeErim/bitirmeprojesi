@@ -1,0 +1,1654 @@
+{
+  "created_at": "2026-05-14T17:39:07.767888+00:00",
+  "tag": "oe_takviye_20260514_fpr_blockers",
+  "policy": "OE-only auxiliary negatives. No final OOD evidence was added or copied by this script.",
+  "adapter": "grape__fruit",
+  "placed": [
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_0176030_grape_black_rot_fruit_992ca2f788.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_0176030_grape_black_rot_fruit_992ca2f788.jpg",
+      "sha256": "992ca2f788cbf2bf819b82a8b531b4ee38938ce61d4ce3a315ed766acf2d924a",
+      "width": 768,
+      "height": 512,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_1495048_grape_black_rot_fruit_51d09fd36b.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_1495048_grape_black_rot_fruit_51d09fd36b.jpg",
+      "sha256": "51d09fd36b34c4ed03839a218a4eaa9497078749b178fb6e50afc202f281837b",
+      "width": 771,
+      "height": 515,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_1495063_grape_black_rot_fruit_e0b5448939.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_1495063_grape_black_rot_fruit_e0b5448939.jpg",
+      "sha256": "e0b5448939d828ff5ed0c9097ca05800cfa74d800de51ae20cc850a0c4144455",
+      "width": 590,
+      "height": 525,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_5492804_grape_black_rot_fruit_a14168d0f9.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_5492804_grape_black_rot_fruit_a14168d0f9.jpg",
+      "sha256": "a14168d0f9249d89d3417bcbf5fef953d476ebd4d35845356ae5d51191b540db",
+      "width": 768,
+      "height": 574,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_5511718_grape_black_rot_fruit_f4a388a778.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_5511718_grape_black_rot_fruit_f4a388a778.jpg",
+      "sha256": "f4a388a77845966f49cf2ec296ee988b57423fadbb6c4872291a8935f10d51a3",
+      "width": 768,
+      "height": 575,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "same_crop_unsupported_unknowns",
+      "source": "data/internet_image_candidates/20260514_oe_takviye/grape__fruit/same_crop_unsupported_unknowns/bugwood_5511720_grape_black_rot_fruit_1b97102498.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/same_crop_unsupported_unknowns/oe_takviye_20260514_fpr_blockers_same_crop_unsupported_unknowns_same_crop_unsuppo_bugwood_5511720_grape_black_rot_fruit_1b97102498.jpg",
+      "sha256": "1b971024982a4fc1ea9a2ff259283be1ef3099b6e9d4819a131e2a92a0a69356",
+      "width": 768,
+      "height": 573,
+      "rationale": "fresh Bugwood grape black-rot fruit images; hard same-crop unsupported fruit unknowns"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__Boron_Deficiency.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_boron_deficiency.png",
+      "sha256": "104a8decb91bddd2e64c66c551d20025190cdf8d658b76996f7b5b5d2aab3139",
+      "width": 292,
+      "height": 291,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__Boron_Çilek.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_boron_ilek.png",
+      "sha256": "17296cd5266d9357353d7cac604242056cfef9c4d3587a7e013e382fb7e0afc2",
+      "width": 418,
+      "height": 278,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__figure4-33.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_figure4_33.png",
+      "sha256": "0bc23dc98cdb29beeed5fa10ad5f62699d7cd497207ba0c33574b68b3ef76eda",
+      "width": 139,
+      "height": 218,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__K.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_k.png",
+      "sha256": "1b407b22602a9644a91af323ca63cc3f74b936c158e35fc7a8bf1d5664935add",
+      "width": 289,
+      "height": 289,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__Mgg.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_mgg.png",
+      "sha256": "065db50890729ec7b933df5a05f24f84b3c65db27df1201bb89ac69f6b893ef0",
+      "width": 289,
+      "height": 288,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__fruit_ood_final/off_crop_secondary/off_crop_secondary__Çilek_Ca2.png",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_ilek_ca2.png",
+      "sha256": "23632d5a44d775ebd5ff82984e21b45dee14eabad635592b986ab2e2cea550e0",
+      "width": 420,
+      "height": 285,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_1.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_1.jpg",
+      "sha256": "1d72e31d4943d9b3368f88eab813335ca65c2bfa67cb13657aaff044f8828672",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_102.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_102.jpg",
+      "sha256": "1c0130fc1d44016d7de3bffba6cd530bc02a0b83d4aef567193b30ac4d822b3a",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_23.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_23.jpg",
+      "sha256": "0345094a7ddab3600a41c74aeae7aa28fb99bda7ade021b69b4af64aa9176852",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_36.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_36.jpg",
+      "sha256": "0c14711425d018642ca76acb6b32277499c0f10079c07bf3febd4d19afa94181",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_50.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_50.jpg",
+      "sha256": "1aff6c1a61d74e2c7756848d7f073f847bc13d19e9d1675ddeba6353290e4cb1",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_69.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_69.jpg",
+      "sha256": "0b287c9ef06891289109c96104691fa79fedd129a2f687d85f90deea6a73ae43",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_82.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_82.jpg",
+      "sha256": "0096766b9ece114c58084928e66c5647263f641bfa71601bc393c21fbcb9a409",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_83.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_83.jpg",
+      "sha256": "1714797ba57c22a0947aa475beee3512843d3ff0c6ae2f0ca43552a433f992cd",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__angular_leafspot_98.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_angular_leafspot_98.jpg",
+      "sha256": "1db4ade1d2d6a7e17ce7d487c2ff2ea1641d6b5519a01f238e38d7b33b33a2b3",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__blossom_blight_19.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_blossom_blight_19.jpg",
+      "sha256": "08f96a1b2fc227190e186ea36b9a5f83b5e775e4fcf98b2a63a32fd9d1f1d54e",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__blossom_blight_49.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_blossom_blight_49.jpg",
+      "sha256": "0809ae61edab08e29eccefc6ebbbf81a7857bdc9beb8234c5ae408969f925c65",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__blossom_blight_7.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_blossom_blight_7.jpg",
+      "sha256": "1c86399c071b27e795d1e8b6c9d248830ad274ef3cf8cdf41ef98f0d2fa008c6",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__blossom_blight_84.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_blossom_blight_84.jpg",
+      "sha256": "08a69e52d95cb30421a6ce5ebbf5df26a3e1b1e0b353fc75e6209114bc58ee0a",
+      "width": 419,
+      "height": 419,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__calciumdeficiency_20.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_calciumdeficiency_20.jpg",
+      "sha256": "037ba7e09cc4782daf5074d9f563c5f9f9cad22fbac8b7ded0a40866177c0cda",
+      "width": 3968,
+      "height": 2976,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__calciumdeficiency_34.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_calciumdeficiency_34.jpg",
+      "sha256": "0d8cab14408e5ba57bfa867a95b75913e9d3f1a3342bb90d2cb9c0254520240b",
+      "width": 3968,
+      "height": 2976,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__calciumdeficiency_38.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_calciumdeficiency_38.jpg",
+      "sha256": "1da3c9627d67c29ea8c96160b8da7a1a3a3fbf7b956c83990bf8936e847c4610",
+      "width": 3968,
+      "height": 2976,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__calciumdeficiency_52.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_calciumdeficiency_52.jpg",
+      "sha256": "12a48ecce8193bb166e6a7a94a71cd70c56e5ba55834656fb7740e012c48eab1",
+      "width": 5664,
+      "height": 4248,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__calciumdeficiency_53.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_calciumdeficiency_53.jpg",
+      "sha256": "05680d09d9792ed988fa369f326e20557fa9c3fe23779cbfe877cc1ffba60eab",
+      "width": 3968,
+      "height": 2976,
+      "rationale": "realistic fruit/leaf negatives from non-grape adapters for off-crop secondary FPR"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_1263040_tomato_leaf_miner_damage.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_1263040_tomato_leaf_miner_damage.jpg",
+      "sha256": "09246876d415e5db5367906ea9b2f00edcefb2e5d3c5bcd1c9c57660d54fb00c",
+      "width": 768,
+      "height": 512,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598512_tomato_russet_mite_symptoms.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_5598512_tomato_russet_mite_symptoms.jpg",
+      "sha256": "585246ebd9d05e627ebf0373692780339d857774d29c64a25f41c57a2d8ebe13",
+      "width": 512,
+      "height": 768,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg",
+      "sha256": "dc1e7431b3ce791c3080ea4b8508c71ae88a087e73a6a4ae7a8986fa6952bae4",
+      "width": 432,
+      "height": 768,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg",
+      "sha256": "c1da1156a5600aec593b237c0bae4a0748634665ddd0bc4994cc0eb7f66258d3",
+      "width": 768,
+      "height": 480,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg",
+      "sha256": "e7081178cc5ebc6829c119db2d3bc1be2401863ffc50fe8ff1986d0171a40256",
+      "width": 768,
+      "height": 481,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598519_tomato_russet_mite_symptoms.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_bugwood_5598519_tomato_russet_mite_symptoms.jpg",
+      "sha256": "07f7ef8531ca87b0f0dce3598a5b117848ce91fa5445fdf31f132c6ef7fedcbc",
+      "width": 768,
+      "height": 480,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_comparing-diseases-4-canker-tomato-1y51ejs.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_plantdoc_train_tomato_two_spotted_spider_mites_leaf_co.jpg",
+      "sha256": "2c59025109d5e9a2cfba879cfde943fa3d238a4dbaf2e44763b986d6bef5c22d",
+      "width": 960,
+      "height": 720,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_SpotSpeckBlightMite-1l4v879.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260509_plantdoc_train_tomato_two_spotted_spider_mites_leaf_sp.jpg",
+      "sha256": "7a39980b4f6448958db22a28da7b409e74834a820592f7302b5547703ab61578",
+      "width": 960,
+      "height": 720,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_fig5_leaf_damages_between_upper_and_lower_ep.jpg",
+      "sha256": "50cd8e551672a03ea4e406080ed97a70c77c956e68063acd83e5369a87543afa",
+      "width": 359,
+      "height": 540,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_fig6_enormous_tomato_losses_caused_by_tuta_a.jpg",
+      "sha256": "9adc74e87457a8df1129dbfba65a792b107fa326b9d16e4062cc678ed6496625",
+      "width": 709,
+      "height": 532,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_tomate_blatt_kalimangel_jpg.jpg",
+      "sha256": "88cfcfba3072d1f7a0c02bedf39db9adfbea136c916a2b8d606b63c49c43a492",
+      "width": 1280,
+      "height": 960,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_tomatoes_damaged_by_tuta_absoluta_jpg.jpg",
+      "sha256": "1a4954cc902cb6ea03b0025f838f4565ca52d12a2b45476b9419d6f3350ba2cc",
+      "width": 709,
+      "height": 531,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Tuta_absoluta.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_tuta_absoluta_jpg.jpg",
+      "sha256": "a1991c2edd7d66ca402c2ec6d22f7f08a265393c5872beb5f68c60d3dde173ba",
+      "width": 1280,
+      "height": 956,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260510_wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_internet_20260510_wikimedia_tuta_absoluta_tomato_loss_jpg.jpg",
+      "sha256": "b650ce349888e54a73fc73827d2b669a977e36d95ed12ce348e5f1c797186200",
+      "width": 1280,
+      "height": 960,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_006.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_006.jpg",
+      "sha256": "b78732c52e390ea1d4d41d4a29fb6d6ebddf1c87bfb96ebb7d2072af7ffb9c45",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_010.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_010.jpg",
+      "sha256": "d4014353097ebf2b0bcbbaa6bb781402a57c40dea1d4abdd4f86b662b2584b1e",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_016.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_016.jpg",
+      "sha256": "8fb06bf15d4eef4ae810ecd55c7f068ed618c2b6c928708dd1d88a70dcd6fcc9",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_017.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_017.jpg",
+      "sha256": "00d84375dd0c533fa1d93b196262a78cdff4e2b62f48ec68e05b3d590b0a64a1",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_022.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_022.jpg",
+      "sha256": "7462db8d0245125b5d0043f4a32beb05dcdfb8705a0b0720b5c4f4f5293abe7d",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_026.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_026.jpg",
+      "sha256": "20678ef0a9d5cee651386157854a075692afb3b1fd2df023c7c2f5132510e11f",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_033.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_033.jpg",
+      "sha256": "e318abb591f6a28363a01b4c94b0b40609c2a12d59b750f7ea586ef29036fb6e",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_038.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_038.jpg",
+      "sha256": "4ddaef2d4a9879fb50f0b12cfc22b2871c93aed3ae783c476720abbc0f598ee7",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_042.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_042.jpg",
+      "sha256": "c19f2ae8b86e9f8508bf18fccc3c4fa4128120aedb9f83656027d1cf4a05a7cd",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_048.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_048.jpg",
+      "sha256": "b9fdccced5088f356caed70b6f16e04e151c4130aa6c1d064b58d3a1f0909f5a",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_054.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_054.jpg",
+      "sha256": "290bafaa728b538e981e484288ab80694285ebbe866052e13ad1eb0e523132b1",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_058.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_058.jpg",
+      "sha256": "72cc46658519e632008da30287844bf78e3b46bd44cf67d889777c0be25926f8",
+      "width": 1200,
+      "height": 800,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_064.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_064.jpg",
+      "sha256": "2ac62b6f9f4417c36be163323eec820217980cd54c8e562021c2ce3644dc3f71",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_065.jpg",
+      "destination": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_or_root_disease/oe_takviye_20260514_fpr_blockers_off_crop_or_root_disease_unsupported_tomato_unkn_rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop_tomato_065.jpg",
+      "sha256": "cbe80bd5dfd610eb874387bd237144079e7a30a503810d5dd9cdc4ad509c8dae",
+      "width": 800,
+      "height": 1200,
+      "rationale": "plant disease and root/leaf-like negatives to reduce off-crop/root false accepts"
+    }
+  ],
+  "skipped": [
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__Boron_Deficiency.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_boron_deficiency.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_secondary",
+      "source": "data/ood_dataset/final/strawberry__leaf_ood_final/off_crop_secondary/off_crop_secondary__Boron_Çilek.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/oe/off_crop_secondary/oe_takviye_20260514_fpr_blockers_off_crop_secondary_off_crop_secondary_off_crop_secondary_boron_ilek.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__1.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__1.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__113.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__113.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__129.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__129.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__145.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__145.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__161.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__161.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__17.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__17.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__177.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__177.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__193.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__193.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__209.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__209.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__225.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__225.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__225_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__225_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__232.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__232.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__241.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__241.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__241_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__241_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__257.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__257.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__257_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__257_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__273.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__273.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__273_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__273_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__289.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__289.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__289_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__289_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__305.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__305.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__305_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__305_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__321.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__321.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__321_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__321_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__33.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__33.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__337.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__337.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__337_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__337_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__353.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__353.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__353_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__353_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__369.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__369.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__369_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__369_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__385.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__385.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__385_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__385_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__401.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__401.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__401_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__401_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__417.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__417.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__417_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__417_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__433.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__433.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__433_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__433_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__449.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__449.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__449_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__449_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__465.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__465.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__465_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__465_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__478.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__478.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__481.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__481.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__49.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__49.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__497.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__497.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__513.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__513.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__529.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__529.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__545.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__545.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__561.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__561.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__577.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__577.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__593.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__593.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__609.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__609.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__625.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__625.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__65.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__65.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__81.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__81.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__97.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__97.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asma_biti.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asma_biti.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yaprak_kıvrılma_virüsü_366.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yaprak_kıvrılma_virüsü_366.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yelpaze_yaprak_virüsü_168.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yelpaze_yaprak_virüsü_168.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yelpaze_yaprak_virüsü_52.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asma_yelpaze_yaprak_virüsü_52.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir_noksanlığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_demir_noksanlığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosfor_P__noksanklığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosfor_P__noksanklığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosforr_eksikliği.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_fosforr_eksikliği.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_26.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_26.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_64.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_64.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_68.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_68.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_71.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_71.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_72.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_gövde_çukurlaşma_virüsü_72.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_K_noksanlık.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Asmada_K_noksanlık.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_K_noksanlığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_K_noksanlığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgg.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgg.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgggg.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_mgggg.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı2.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmada_çinko_noksanlığı2.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__asmda_mg_noksanlığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__asmda_mg_noksanlığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bag-yaprak-uyuzu-.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bag-yaprak-uyuzu-.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bagda-yaprak-uyuzu.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bagda-yaprak-uyuzu.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağ_filokserasıı.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağ_filokserasıı.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağ_mildiyösü_209__2_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağ_mildiyösü_209__2_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağ_mildiyösü_467.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağ_mildiyösü_467.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_bitki_besin_madde_noksanlık_belirtisi.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_bitki_besin_madde_noksanlık_belirtisi.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_bitki_besin_madde_noksanlık_belirtisi2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_bitki_besin_madde_noksanlık_belirtisi2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kav_102.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kav_102.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kav_442.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kav_442.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_218.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_218.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_219.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_219.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_47.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Bağda_kök_uru_47.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_unlubit2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_yaprakuyuzu.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_yaprakuyuzu.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağda_yaprakuyuzuu.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağda_yaprakuyuzuu.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__bağuyuzu2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__bağuyuzu2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__boron.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__boron.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__boron2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__boron2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__boron3.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__boron3.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__boron_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__boron_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Botritis_Cinerea_172.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Botritis_Cinerea_172.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Botritis_Cinerea_72.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Botritis_Cinerea_72.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Ca_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Ca_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__d3d5a75e4fff494eb50feed91eb23436.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__d3d5a75e4fff494eb50feed91eb23436.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__filoksera_bağ.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__filoksera_bağ.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__filoksera_bağğ.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__filoksera_bağğ.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0204.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0204.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0209.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0209.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0223.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0223.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0237.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0237.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0260.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__grape_black_rot_google_0260.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Grapes-Iron-Deficiency-1-scaled.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Grapes-Iron-Deficiency-1-scaled.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__iron_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__iron_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Iron_Deficiency4.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Iron_Deficiency4.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1320751459-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1320751459-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1329918244-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1329918244-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-144191878-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-144191878-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1483464703-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-1483464703-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-2243748606-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-2243748606-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-700678614-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-700678614-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-987831222-612x612.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__istockphoto-987831222-612x612.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__İron_Deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__İron_Deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__magnesium_deficiency_1_.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__magnesium_deficiency_1_.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__magnesıum_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__magnesıum_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__magnezyum_noksanlığı.png",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__magnezyum_noksanlığı.png"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mangan_2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mangan_2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency3.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency3.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency4.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mangan_deficiency4.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mg_ddeficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mg_ddeficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiencyy.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiencyy.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiencyyyy.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mg_deficiencyyyy.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__mgg_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__mgg_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__phosphorous_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__phosphorous_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency_jpg2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__potasyum_deficiency_jpg2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Potasyum_eksikliğii.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Potasyum_eksikliğii.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__Potasyummm.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__Potasyummm.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__red_blotch_disease.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__red_blotch_disease.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu.webp",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu.webp"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu3.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu3.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu4.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu4.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu5.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__yaprakuyuzu5.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny2.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny2.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny3.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__zinc_deficiecny3.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/grape__leaf_ood_final/off_crop_or_root_disease/off_crop_or_root_disease__üzüm_bağııı_OOD.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_or_root_disease/off_crop_or_root_disease__üzüm_bağııı_OOD.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/internet_20260509_bugwood_5598509_tomato_russet_mite_symptoms.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_secondary/takviye_20260514_internet_20260509_bugwood_5598509_tomato_russet_mite_sym_8f1b0b92814d.jpg"
+    },
+    {
+      "adapter": "grape__fruit",
+      "category": "off_crop_or_root_disease",
+      "source": "data/ood_dataset/final/tomato__leaf_ood_final/unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_032.jpg",
+      "reason": "adapter_local_duplicate_hash",
+      "existing_path": "data/prepared_runtime_datasets/grape__fruit/ood/off_crop_secondary/takviye_20260514_rebalanced_20260510_oe_leaf_unknown_unsupported_same_cro_fc12b62ab98b.jpg"
+    }
+  ]
+}
