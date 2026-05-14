@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e12_s216_20260514_085549_548167",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/strawberry_leaf_2026-05-14_08-53-00/checkpoints/ckpt_e12_s216_20260514_085549_548167/training_checkpoint",
+  "created_at": "2026-05-14T08:55:50.955068+00:00",
+  "global_step": 216,
+  "epoch": 12,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.007273102054870811
+}

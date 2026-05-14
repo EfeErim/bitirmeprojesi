@@ -1,0 +1,17 @@
+[CELL_CAPTURE] cell=Cell 5: Engine Init
+run_id=strawberry_leaf_2026-05-14_08-53-00
+started_at=2026-05-14T08:53:21.972190+00:00
+finished_at=2026-05-14T08:53:23.928336+00:00
+duration_sec=1.956
+
+[OPT] mode=continue status=bootstrap_pending eligible=0 frontier=0 executed=0
+[OPT] No prior comparable run yet. Bootstrap run will use the visible notebook parameters.
+[OOD] selected ood root=/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__leaf/ood
+[OE] selected oe root=/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__leaf/oe
+[CLASSES] ['healthy', 'strawberry_leaf_scorch_leaf', 'strawberry_leaf_spot_leaf', 'strawberry_powdery_mildew_leaf']
+[CLASSES] mode=dataset_fallback reason=partial_taxonomy_alignment_fallback matched=1 unmatched=3
+[CLASSES] taxonomy-unmatched classes kept: ['strawberry_leaf_scorch_leaf', 'strawberry_leaf_spot_leaf', 'strawberry_powdery_mildew_leaf']
+[ENGINE][OOD_CFG] {"ber_enabled": false, "ber_lambda_new": 0.1, "ber_lambda_old": 0.1, "ber_warmup_steps": 50, "conformal_alpha": 0.05, "conformal_enabled": true, "conformal_method": "raps", "conformal_raps_k_reg": 1, "conformal_raps_lambda": 0.2, "energy_temperature": 1.0, "energy_temperature_mode": "auto", "energy_temperature_range": [0.5, 3.0], "energy_temperature_steps": 16, "knn_backend": "auto", "knn_chunk_size": 2048, "oe_enabled": true, "oe_loss_weight": 0.42196104216322844, "oe_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/strawberry__leaf/oe", "oe_target": "uniform", "primary_score_method": "auto", "radial_beta_range": [0.5, 2.0], "radial_beta_steps": 16, "radial_l2_enabled": true, "react_apply_during_calibration": true, "react_apply_during_inference": true, "react_enabled": true, "react_percentile": 0.9609707629821087, "real_dev_selection_enabled": true, "real_dev_target_fpr": 0.05, "real_split_dev_fraction": 0.4, "real_split_enabled": true, "real_split_manifest_name": "ood_split_manifest.json", "real_split_min_per_slice": 2, "sure_confidence_percentile": 97.0, "sure_enabled": true, "sure_semantic_percentile": 90.0, "threshold_factor": 4.5}
+[ENGINE][OPT_CFG] loss=logitnorm tau=1.0 label_smoothing=0.1 mixed_precision=bf16
+[ENGINE] Initializing adapter (may download backbone)...
+[ENGINE] Hazir. trainable_params=13,770,248  classes=4
