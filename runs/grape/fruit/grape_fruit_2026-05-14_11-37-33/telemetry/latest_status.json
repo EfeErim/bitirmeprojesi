@@ -1,0 +1,25 @@
+{
+  "notebook": "6_train_all_continual_sd_lora_adapters.ipynb",
+  "run_id": "grape_fruit_2026-05-14_11-37-33",
+  "status": {
+    "optimization_campaign": {
+      "campaign_json": "/content/bitirmeprojesi/runs/_index/notebook_optimization_campaigns/grape__fruit__b765bcfe9b38543e.json",
+      "campaign_seed": "grape__fruit__b765bcfe9b38543e",
+      "cohort_key": "",
+      "dataset_lineage_key": "grape__fruit",
+      "eligible_run_count": 0,
+      "executed_run_count": 0,
+      "frontier_count": 0,
+      "frontier_run_ids": [],
+      "last_completed_run_id": "",
+      "mode": "continue",
+      "next_proposal_rank": null,
+      "next_proposal_signature": "",
+      "selected_proposal_rank": null,
+      "selected_proposal_signature": "",
+      "status": "bootstrap_pending"
+    },
+    "phase": "optimization_campaign_resolved"
+  },
+  "ts": "2026-05-14T11:41:48.470863+00:00"
+}
