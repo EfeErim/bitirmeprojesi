@@ -1,0 +1,13 @@
+                                        precision    recall  f1-score   support
+
+               domates_antraknoz_meyve       0.92      1.00      0.96        12
+domates_bacterial_spot_and_speck_meyve       1.00      1.00      1.00         3
+         domates_blossom_end_rot_meyve       0.58      1.00      0.73        11
+               domates_gray_mold_meyve       1.00      0.89      0.94        46
+             domates_late_blight_meyve       0.97      0.85      0.91        34
+               domates_sag_lıklı_meyve       0.86      0.67      0.75         9
+            domates_spotted_wilt_meyve       0.67      1.00      0.80         4
+
+                              accuracy                           0.89       119
+                             macro avg       0.86      0.92      0.87       119
+                          weighted avg       0.92      0.89      0.90       119

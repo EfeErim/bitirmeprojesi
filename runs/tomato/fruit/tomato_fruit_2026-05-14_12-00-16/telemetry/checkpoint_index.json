@@ -1,0 +1,41 @@
+[
+  {
+    "name": "ckpt_e18_s630_20260514_120537_414892",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_fruit_2026-05-14_12-00-16/checkpoints/ckpt_e18_s630_20260514_120537_414892/training_checkpoint",
+    "created_at": "2026-05-14T12:05:39.004274+00:00",
+    "global_step": 630,
+    "epoch": 18,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.3779368776233256
+  },
+  {
+    "name": "ckpt_e19_s665_20260514_120553_305728",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_fruit_2026-05-14_12-00-16/checkpoints/ckpt_e19_s665_20260514_120553_305728/training_checkpoint",
+    "created_at": "2026-05-14T12:05:55.432363+00:00",
+    "global_step": 665,
+    "epoch": 19,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.373633909125288
+  },
+  {
+    "name": "ckpt_e20_s700_20260514_120612_319901",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_fruit_2026-05-14_12-00-16/checkpoints/ckpt_e20_s700_20260514_120612_319901/training_checkpoint",
+    "created_at": "2026-05-14T12:06:13.956143+00:00",
+    "global_step": 700,
+    "epoch": 20,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.34595952840412364
+  },
+  {
+    "name": "ckpt_e22_s750_20260514_120633_448080",
+    "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_fruit_2026-05-14_12-00-16/checkpoints/ckpt_e22_s750_20260514_120633_448080/training_checkpoint",
+    "created_at": "2026-05-14T12:06:35.073937+00:00",
+    "global_step": 750,
+    "epoch": 22,
+    "reason": "batch_250",
+    "is_best": false
+  }
+]
