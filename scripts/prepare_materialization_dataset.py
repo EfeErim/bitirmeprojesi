@@ -143,10 +143,9 @@ def prepare_class_root_for_materialization(
 
     if not class_root.is_dir():
         raise FileNotFoundError(f"Class-root dataset not found: {class_root}")
-    if prepared_class_root == class_root:
-        raise ValueError("prepared_class_root must differ from the source class_root.")
     if prepared_artifact_root == audit_artifact_root:
         raise ValueError("prepared_artifact_root must differ from audit_artifact_root.")
+    source_is_prepared_target = prepared_class_root == class_root
     if prepared_artifact_root.exists():
         shutil.rmtree(prepared_artifact_root)
     prepared_artifact_root.mkdir(parents=True, exist_ok=True)
@@ -156,39 +155,59 @@ def prepare_class_root_for_materialization(
     dataset_manifest_source = _resolve_report_path(audit_artifact_root, "dataset_manifest.csv")
     cross_class_conflicts_source = _resolve_report_path(audit_artifact_root, "cross_class_conflicts.csv")
 
-    _progress(progress_fn, "Creating a working class-root copy from the audited dataset.")
-    mirror_summary = _mirror_class_root_dataset(
-        source_root=class_root,
-        destination_root=prepared_class_root,
-        materialization_strategy=materialization_strategy,
-        progress_fn=progress_fn,
-    )
-
-    _progress(progress_fn, "Applying exact-duplicate and auto-resolved same-class cleanup actions.")
-    cleanup_actions = build_combined_cleanup_plan(
-        dataset_root=prepared_class_root,
-        exact_duplicates_source=exact_duplicates_source,
-        review_source=review_source,
-        dataset_manifest_source=dataset_manifest_source,
-        seed=cleanup_seed,
-    )
     cleanup_plan_path = prepared_artifact_root / "cleanup_plan.csv"
-    write_cleanup_report(cleanup_plan_path, cleanup_actions)
-    cleanup_deleted_files = apply_cleanup_plan(dataset_root=prepared_class_root, actions=cleanup_actions)
-
-    conflict_actions: List[DuplicateCleanupAction] = []
     conflict_plan_path = prepared_artifact_root / "cross_class_conflict_quarantine_plan.csv"
-    conflict_deleted_files = 0
-    if quarantine_cross_class_conflicts:
-        _progress(progress_fn, "Quarantining both sides of reported cross-class conflicts.")
-        conflict_actions = _build_cross_class_quarantine_actions(
-            cross_class_conflicts_path=cross_class_conflicts_source,
-            starting_group_index=max((action.duplicate_group_index for action in cleanup_actions), default=0),
+    if source_is_prepared_target:
+        _progress(
+            progress_fn,
+            (
+                "Source class-root already matches the prepared class-root target; "
+                "skipping mirror and cleanup copy, then re-running audit in the prepared artifact root."
+            ),
         )
+        mirror_summary = {
+            "mirrored_images": 0,
+            "skipped_non_images": 0,
+            "source_already_prepared": 1,
+        }
+        cleanup_actions: List[DuplicateCleanupAction] = []
+        cleanup_deleted_files = 0
+        conflict_actions: List[DuplicateCleanupAction] = []
+        conflict_deleted_files = 0
+        write_cleanup_report(cleanup_plan_path, cleanup_actions)
         write_cleanup_report(conflict_plan_path, conflict_actions)
-        conflict_deleted_files = apply_cleanup_plan(dataset_root=prepared_class_root, actions=conflict_actions)
     else:
-        write_cleanup_report(conflict_plan_path, [])
+        _progress(progress_fn, "Creating a working class-root copy from the audited dataset.")
+        mirror_summary = _mirror_class_root_dataset(
+            source_root=class_root,
+            destination_root=prepared_class_root,
+            materialization_strategy=materialization_strategy,
+            progress_fn=progress_fn,
+        )
+
+        _progress(progress_fn, "Applying exact-duplicate and auto-resolved same-class cleanup actions.")
+        cleanup_actions = build_combined_cleanup_plan(
+            dataset_root=prepared_class_root,
+            exact_duplicates_source=exact_duplicates_source,
+            review_source=review_source,
+            dataset_manifest_source=dataset_manifest_source,
+            seed=cleanup_seed,
+        )
+        write_cleanup_report(cleanup_plan_path, cleanup_actions)
+        cleanup_deleted_files = apply_cleanup_plan(dataset_root=prepared_class_root, actions=cleanup_actions)
+
+        conflict_actions = []
+        conflict_deleted_files = 0
+        if quarantine_cross_class_conflicts:
+            _progress(progress_fn, "Quarantining both sides of reported cross-class conflicts.")
+            conflict_actions = _build_cross_class_quarantine_actions(
+                cross_class_conflicts_path=cross_class_conflicts_source,
+                starting_group_index=max((action.duplicate_group_index for action in cleanup_actions), default=0),
+            )
+            write_cleanup_report(conflict_plan_path, conflict_actions)
+            conflict_deleted_files = apply_cleanup_plan(dataset_root=prepared_class_root, actions=conflict_actions)
+        else:
+            write_cleanup_report(conflict_plan_path, [])
 
     _progress(progress_fn, "Re-running the grouped audit on the prepared working copy.")
     rerun_summary = build_grouped_dataset_plan(
@@ -218,6 +237,7 @@ def prepare_class_root_for_materialization(
         "under_min_eval_policy": str(under_min_eval_policy),
         "materialization_strategy": str(materialization_strategy),
         "quarantine_cross_class_conflicts": bool(quarantine_cross_class_conflicts),
+        "source_already_prepared": bool(source_is_prepared_target),
         "mirror_summary": dict(mirror_summary),
         "cleanup_plan_path": str(cleanup_plan_path),
         "cleanup_candidate_files": len(cleanup_actions),
