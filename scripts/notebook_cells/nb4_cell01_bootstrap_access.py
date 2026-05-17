@@ -65,7 +65,6 @@ SEARCH_ROOTS = [
     ROOT / "outputs" / "colab_notebook_training",
     ROOT / "outputs" / "colab_notebook_training" / "telemetry_runtime" / "telemetry",
     ROOT / "models" / "adapters",
-    ROOT / "runs",
 ]
 
 from scripts.colab_repo_bootstrap import (
