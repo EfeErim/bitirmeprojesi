@@ -58,8 +58,8 @@ ADAPTER_RECS: dict[str, dict[str, Any]] = {
     },
     "apricot__leaf": {
         "crop": "apricot", "part": "leaf",
-        "ood": "data/ood_dataset/final/apricot__leaf_ood_final",
-        "oe": "data/oe_dataset/apricot_leaf_oe_unsupported_leaf_candidates",
+        "ood": "data/prepared_runtime_datasets/apricot__leaf/ood",
+        "oe": "data/prepared_runtime_datasets/apricot__leaf/oe",
         "oe_enabled": True, "oe_w": 0.30, "allow_under_min": False,
         "defaults": {"EPOCHS": 38, "BATCH_SIZE": 52, "LEARNING_RATE": 1.2e-4, "LORA_R": 26, "LORA_ALPHA": 24, "LORA_DROPOUT": 0.125, "OOD_FACTOR": 4.5, "LABEL_SMOOTHING": 0.10, "OE_LOSS_WEIGHT": 0.30, "REACT_ENABLED": True, "REACT_PERCENTILE": 0.985, "FUSION_DROPOUT": 0.10, "CLASSIFIER_REBALANCE_ENABLED": True, "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": 1.10},
     },
