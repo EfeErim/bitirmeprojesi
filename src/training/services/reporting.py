@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.artifacts import ArtifactStore
-from src.shared.csv_utils import write_csv, write_csv_rows, write_csv_rows_with_order
+from src.shared.csv_utils import write_csv, write_csv_rows_with_order
 from src.training.services.metrics import (
     build_production_readiness,
     compute_plan_metrics,

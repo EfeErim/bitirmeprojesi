@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict, Sequence
 
 from src.shared.json_utils import read_json
+from src.shared.string_utils import normalize_class_name
 
 MIN_SUPPORTED_CLASS_SAMPLES = 100
 CLASS_BALANCE_ELIGIBLE_MAX_SAMPLES = 200

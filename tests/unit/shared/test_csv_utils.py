@@ -1,4 +1,3 @@
-import csv
 import zipfile
 from pathlib import Path
 

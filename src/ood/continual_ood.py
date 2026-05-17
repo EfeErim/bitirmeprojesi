@@ -34,7 +34,6 @@ from src.ood.conformal_prediction import (
 )
 from src.ood.radial_normalization import auto_tune_beta, radial_l2_normalize
 from src.ood.sure_scoring import (
-    apply_sure_decision,
     calibrate_sure_thresholds,
     compute_confidence_score,
     compute_semantic_score,

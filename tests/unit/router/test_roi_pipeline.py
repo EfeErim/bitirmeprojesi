@@ -1,5 +1,5 @@
-from PIL import Image
 import pytest
+from PIL import Image
 
 from src.router.roi_helpers import bbox_area_ratio, sanitize_bbox
 from src.router.roi_pipeline import (

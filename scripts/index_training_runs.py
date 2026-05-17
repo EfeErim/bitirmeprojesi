@@ -676,7 +676,7 @@ def build_run_registry(
     *,
     runs_root: str | Path,
     output_root: str | Path | None = None,
-    enable_bayesian_proposals: bool = True,
+    enable_bayesian_proposals: bool = False,
     proposal_count: int = 3,
     candidate_pool_size: int = 256,
     random_seed: int = 42,

@@ -1,9 +1,7 @@
 from pathlib import Path
 
-from PIL import Image
-from tests.utils.test_helpers import make_image
-
 from src.data.datasets import CropDataset, infer_crop_classes_from_layout
+from tests.utils.test_helpers import make_image
 
 
 def _write_image(path: Path) -> None:

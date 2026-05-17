@@ -137,10 +137,12 @@ def build_router_uncertain_result(
 
 def _resolve_uncertain_crop_name(normalized_router: RouterAnalysisResult, crop_name: str | None) -> str | None:
     resolved_crop_name = str(crop_name or "").strip() or None
-    if resolved_crop_name is None and getattr(normalized_router, "primary_detection", None) is not None:
-        candidate_crop = str(normalized_router.primary_detection.crop or "").strip().lower()
-        if candidate_crop and candidate_crop != "unknown":
-            resolved_crop_name = candidate_crop
+    if resolved_crop_name is None:
+        detection = getattr(normalized_router, "primary_detection", None)
+        if detection is not None:
+            candidate_crop = str(getattr(detection, "crop", "") or "").strip().lower()
+            if candidate_crop and candidate_crop != "unknown":
+                resolved_crop_name = candidate_crop
     return resolved_crop_name
 
 

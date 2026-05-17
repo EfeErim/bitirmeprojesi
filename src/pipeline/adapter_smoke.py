@@ -992,7 +992,6 @@ def _patch_grid_shape(patch_count: int, config: Any) -> tuple[int, int]:
 
 
 def _normalize_heatmap_tensor(values: Any, *, rows: int, cols: int) -> List[List[float]]:
-    import torch
 
     heatmap = values.detach().float().reshape(int(rows), int(cols)).cpu()
     heatmap = heatmap - heatmap.min()

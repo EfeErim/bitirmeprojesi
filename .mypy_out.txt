@@ -1,0 +1,80 @@
+src\pipeline\inference_payloads.py:141: error: Item "None" of "RouterDetection | None" has no attribute "crop"  [union-attr]
+src\guided_artifacts.py:260: error: No overload variant of "int" matches argument type "object"  [call-overload]
+src\guided_artifacts.py:260: note: Possible overload variants:
+src\guided_artifacts.py:260: note:     def __new__(cls, str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc = ..., /) -> int
+src\guided_artifacts.py:260: note:     def __new__(cls, str | bytes | bytearray, /, base: SupportsIndex) -> int
+src\guided_artifacts.py:272: error: No overload variant of "int" matches argument type "object"  [call-overload]
+src\guided_artifacts.py:272: note: Possible overload variants:
+src\guided_artifacts.py:272: note:     def __new__(cls, str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc = ..., /) -> int
+src\guided_artifacts.py:272: note:     def __new__(cls, str | bytes | bytearray, /, base: SupportsIndex) -> int
+src\guided_artifacts.py:301: error: No overload variant of "int" matches argument type "object"  [call-overload]
+src\guided_artifacts.py:301: note: Possible overload variants:
+src\guided_artifacts.py:301: note:     def __new__(cls, str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc = ..., /) -> int
+src\guided_artifacts.py:301: note:     def __new__(cls, str | bytes | bytearray, /, base: SupportsIndex) -> int
+src\training\services\class_balance.py:60: error: Name "normalize_class_name" is not defined  [name-defined]
+src\training\services\class_balance.py:65: error: Argument 1 to "int" has incompatible type "Any | None"; expected "str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc"  [arg-type]
+src\training\services\class_balance.py:83: error: Name "normalize_class_name" is not defined  [name-defined]
+src\training\services\class_balance.py:100: error: Name "normalize_class_name" is not defined  [name-defined]
+src\training\services\class_balance.py:123: error: Name "normalize_class_name" is not defined  [name-defined]
+src\data\dataset_layout.py:509: error: Name "hashlib" is not defined  [name-defined]
+src\training\services\optimization.py:180: error: Incompatible types in assignment (expression has type "list[float]", variable has type "float")  [assignment]
+src\training\services\optimization.py:185: error: Unsupported target for indexed assignment ("float")  [index]
+src\training\services\optimization.py:186: error: Incompatible return value type (got "float", expected "list[float] | None")  [return-value]
+src\training\services\optimization.py:821: error: List comprehension has incompatible type List[ndarray[tuple[Any, ...], dtype[Any]] | None]; expected List[_SupportsArray[dtype[Any]] | _NestedSequence[_SupportsArray[dtype[Any]]]]  [misc]
+src\training\services\optimization.py:844: error: Argument 1 to "vstack" has incompatible type "list[ndarray[tuple[Any, ...], dtype[Any]] | None]"; expected "Sequence[_SupportsArray[dtype[Any]] | _NestedSequence[_SupportsArray[dtype[Any]]]]"  [arg-type]
+src\training\services\optimization.py:849: error: No overload variant of "__sub__" of "ndarray" matches argument type "None"  [operator]
+src\training\services\optimization.py:849: note: Possible overload variants:
+src\training\services\optimization.py:849: note:     def __sub__(self, int | numpy.bool[builtins.bool], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool]]]] | builtins.bool | _NestedSequence[builtins.bool], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[floating[_64Bit] | floating[_32Bit] | floating[_16Bit] | integer[Any] | numpy.bool[builtins.bool]]] | _NestedSequence[_SupportsArray[dtype[floating[_64Bit] | floating[_32Bit] | floating[_16Bit] | integer[Any] | numpy.bool[builtins.bool]]]] | float | _NestedSequence[float], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[floating[_64Bit]]] | _NestedSequence[_SupportsArray[dtype[floating[_64Bit]]]], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[complexfloating[_64Bit, _64Bit]]] | _NestedSequence[_SupportsArray[dtype[complexfloating[_64Bit, _64Bit]]]], /) -> ndarray[tuple[Any, ...], dtype[complex128]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | integer[Any] | floating[Any]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | integer[Any] | floating[Any]]]] | float | _NestedSequence[float], /) -> ndarray[tuple[Any, ...], dtype[floating[Any]]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]]] | complex | _NestedSequence[complex], /) -> ndarray[tuple[Any, ...], dtype[complexfloating[Any, Any]]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]]] | complex | _NestedSequence[complex], /) -> ndarray[tuple[Any, ...], dtype[number[Any, int | float | complex]]]
+src\training\services\optimization.py:849: note:     def __sub__(self, _SupportsArray[dtype[object_]] | _NestedSequence[_SupportsArray[dtype[object_]]], /) -> Any
+src\training\services\optimization.py:849: note: Both left and right operands are unions
+src\training\services\optimization.py:859: error: No overload variant of "__sub__" of "ndarray" matches argument type "None"  [operator]
+src\training\services\optimization.py:859: note: Possible overload variants:
+src\training\services\optimization.py:859: note:     def __sub__(self, int | numpy.bool[builtins.bool], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool]]]] | builtins.bool | _NestedSequence[builtins.bool], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[floating[_64Bit] | floating[_32Bit] | floating[_16Bit] | integer[Any] | numpy.bool[builtins.bool]]] | _NestedSequence[_SupportsArray[dtype[floating[_64Bit] | floating[_32Bit] | floating[_16Bit] | integer[Any] | numpy.bool[builtins.bool]]]] | float | _NestedSequence[float], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[floating[_64Bit]]] | _NestedSequence[_SupportsArray[dtype[floating[_64Bit]]]], /) -> ndarray[tuple[Any, ...], dtype[float64]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[complexfloating[_64Bit, _64Bit]]] | _NestedSequence[_SupportsArray[dtype[complexfloating[_64Bit, _64Bit]]]], /) -> ndarray[tuple[Any, ...], dtype[complex128]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | integer[Any] | floating[Any]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | integer[Any] | floating[Any]]]] | float | _NestedSequence[float], /) -> ndarray[tuple[Any, ...], dtype[floating[Any]]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]]] | complex | _NestedSequence[complex], /) -> ndarray[tuple[Any, ...], dtype[complexfloating[Any, Any]]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]] | _NestedSequence[_SupportsArray[dtype[numpy.bool[builtins.bool] | number[Any, int | float | complex]]]] | complex | _NestedSequence[complex], /) -> ndarray[tuple[Any, ...], dtype[number[Any, int | float | complex]]]
+src\training\services\optimization.py:859: note:     def __sub__(self, _SupportsArray[dtype[object_]] | _NestedSequence[_SupportsArray[dtype[object_]]], /) -> Any
+src\training\services\optimization.py:859: note: Both left and right operands are unions
+src\training\services\optimization.py:864: error: Item "None" of "ndarray[tuple[Any, ...], dtype[Any]] | None" has no attribute "size"  [union-attr]
+src\training\services\runtime.py:214: error: Argument 2 to "AdamW" has incompatible type "**dict[str, float]"; expected "tuple[float | Tensor, float | Tensor]"  [arg-type]
+src\training\services\runtime.py:214: error: Argument 2 to "AdamW" has incompatible type "**dict[str, float]"; expected "bool"  [arg-type]
+src\training\services\runtime.py:214: error: Argument 2 to "AdamW" has incompatible type "**dict[str, float]"; expected "bool | None"  [arg-type]
+src\training\services\metrics.py:114: error: Incompatible types in assignment (expression has type "float | None", target has type "None")  [assignment]
+src\training\services\metrics.py:115: error: Incompatible return value type (got "dict[str, None]", expected "dict[str, float | None]")  [return-value]
+src\training\services\metrics.py:115: note: "dict" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+src\training\services\metrics.py:115: note: Consider using "Mapping" instead, which is covariant in the value type
+src\training\services\metrics.py:115: note: Perhaps you need a type annotation for "resolved_ood_metrics"? Suggestion: "dict[str, float | None]"
+src\training\validation.py:413: error: Argument "batch_sample_types" to "_update_detector_artifact_state_for_batch" has incompatible type "list[str] | None"; expected "list[str | None] | None"  [arg-type]
+src\training\validation.py:427: error: Argument "batch_sample_types" to "_append_prediction_rows_for_batch" has incompatible type "list[str] | None"; expected "list[str | None] | None"  [arg-type]
+src\ood\conformal_prediction.py:183: error: Name "included" already defined on line 169  [no-redef]
+src\ood\conformal_prediction.py:189: error: Argument 1 to "append" of "list" has incompatible type "tuple[float, str]"; expected "str"  [arg-type]
+src\ood\conformal_prediction.py:192: error: Unpacking a string is disallowed  [misc]
+src\ood\conformal_prediction.py:192: error: Cannot determine type of "name"  [has-type]
+src\training\services\reporting.py:177: error: Argument 1 to "float" has incompatible type "Any | None"; expected "str | Buffer | SupportsFloat | SupportsIndex"  [arg-type]
+src\training\services\reporting.py:183: error: Argument 1 to "float" has incompatible type "Any | None"; expected "str | Buffer | SupportsFloat | SupportsIndex"  [arg-type]
+src\training\services\reporting.py:229: error: Dict entry 0 has incompatible type "str": "int"; expected "str": "str"  [dict-item]
+src\training\session.py:289: error: Argument 2 to "evaluate_model" has incompatible type "Iterable[dict[str, Tensor]] | None"; expected "Iterable[dict[str, Tensor]]"  [arg-type]
+src\training\services\ood_benchmark.py:1499: error: Argument "train_loader" to "_run_benchmark_fold" has incompatible type "Any | None"; expected "DataLoader[Any]"  [arg-type]
+src\training\continual_sd_lora.py:787: error: Cannot assign to a method  [method-assign]
+src\training\continual_sd_lora.py:796: error: Cannot assign to a method  [method-assign]
+src\training\continual_sd_lora.py:1053: error: Incompatible return value type (got "dict[str, float | str]", expected "dict[str, float]")  [return-value]
+src\workflows\training.py:230: error: Name "_sha256_file" is not defined  [name-defined]
+src\workflows\training.py:941: error: Argument 2 to "evaluate_model_with_artifact_metrics" has incompatible type "Any | None"; expected "Iterable[dict[str, Tensor]]"  [arg-type]
+src\pipeline\adapter_smoke.py:763: error: Argument "border" to "crop" has incompatible type "tuple[int, int, int, int]"; expected "int"  [arg-type]
+src\pipeline\adapter_smoke.py:833: error: Argument 1 to "int" has incompatible type "Any | None"; expected "str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc"  [arg-type]
+src\pipeline\adapter_smoke.py:982: error: Argument 1 to "int" has incompatible type "Any | None"; expected "str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc"  [arg-type]
+src\pipeline\adapter_smoke.py:983: error: Argument 1 to "int" has incompatible type "Any | None"; expected "str | Buffer | SupportsInt | SupportsIndex | SupportsTrunc"  [arg-type]
+src\app\cli.py:64: error: Incompatible types in assignment (expression has type "TrainingWorkflow", variable has type "InferenceWorkflow")  [assignment]
+src\app\cli.py:68: error: "InferenceWorkflow" has no attribute "run"  [attr-defined]
+Found 45 errors in 16 files (checked 89 source files)

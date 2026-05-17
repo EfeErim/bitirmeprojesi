@@ -2,11 +2,10 @@ from pathlib import Path
 
 import pytest
 import torch
-from PIL import Image
-from tests.utils.test_helpers import make_image
 
 import src.data.datasets as datasets
 from src.data.loaders import create_training_loaders, dict_collate_fn
+from tests.utils.test_helpers import make_image
 
 
 class DummyCropDataset:

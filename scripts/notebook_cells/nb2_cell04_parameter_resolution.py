@@ -39,8 +39,8 @@ ADAPTER_RECS = dict(globals().get("ADAPTER_RECS") or _SHARED_ADAPTER_RECS or {
     },
     "strawberry__fruit": {
         "crop": "strawberry", "part": "fruit",
-        "ood": "data/prepared_runtime_datasets/strawberry__fruit/ood",
-        "oe": "data/prepared_runtime_datasets/strawberry__fruit/oe",
+        "ood": "data/ood_dataset/final/strawberry__fruit_ood_final",
+        "oe": "data/oe_dataset/strawberry_fruit_oe_candidates",
         "oe_enabled": True, "oe_w": 0.20, "allow_under_min": True,
         "defaults": {"EPOCHS": 36, "BATCH_SIZE": 40, "LEARNING_RATE": 5.5e-5, "LORA_R": 20, "LORA_ALPHA": 26, "LORA_DROPOUT": 0.15, "OOD_FACTOR": 2.0, "LABEL_SMOOTHING": 0.08, "OE_LOSS_WEIGHT": 0.20, "REACT_ENABLED": True, "REACT_PERCENTILE": 0.99, "FUSION_DROPOUT": 0.12, "CLASSIFIER_REBALANCE_ENABLED": True, "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": 1.10},
     },
@@ -384,63 +384,7 @@ def _collect_notebook_base_params():
         "ENABLE_BAYESIAN_OPTIMIZATION": bool(ENABLE_BAYESIAN_OPTIMIZATION),
     }
 
-def _collect_bayesian_notebook_overrides():
-    if not bool(ENABLE_BAYESIAN_OPTIMIZATION):
-        return {}
-    recommendations_path = ROOT / "runs" / "_index" / "bayesian_recommendations.json"
-    if not recommendations_path.exists():
-        print(f"[BAYES] Toggle acik ama dosya yok: {recommendations_path}")
-        return {}
-    try:
-        payload = json.loads(recommendations_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        print(f"[BAYES] Oneri dosyasi okunamadi: {exc}")
-        return {}
-
-    cohorts = list(payload.get("cohorts", [])) if isinstance(payload, dict) else []
-    selected_cohort = None
-    for cohort in cohorts:
-        comparability = cohort.get("comparability", {}) if isinstance(cohort, dict) else {}
-        if str(comparability.get("crop_name", "")).strip().lower() == str(CROP_NAME).strip().lower() and str(comparability.get("part_name", "")).strip().lower() == str(PART_NAME).strip().lower():
-            selected_cohort = cohort
-            break
-    if selected_cohort is None and cohorts:
-        selected_cohort = cohorts[0]
-
-    proposals = list((selected_cohort or {}).get("proposals", [])) if isinstance(selected_cohort, dict) else []
-    if not proposals:
-        print("[BAYES] Uygulanabilir oneriler bulunamadi.")
-        return {}
-
-    proposal = proposals[0]
-    parameters = proposal.get("parameters", {}) if isinstance(proposal, dict) else {}
-    if not isinstance(parameters, dict):
-        return {}
-
-    mapping = {
-        "training.weight_decay": "WEIGHT_DECAY",
-        "training.num_epochs": "EPOCHS",
-        "training.batch_size": "BATCH_SIZE",
-        "training.adapter.lora_r": "LORA_R",
-        "training.adapter.lora_alpha": "LORA_ALPHA",
-        "training.ood.threshold_factor": "OOD_FACTOR",
-        "training.optimization.logitnorm_tau": "LOGITNORM_TAU",
-        "training.optimization.label_smoothing": "LABEL_SMOOTHING",
-        "training.data.randaugment_num_ops": "RANDAUGMENT_NUM_OPS",
-        "training.data.randaugment_magnitude": "RANDAUGMENT_MAGNITUDE",
-    }
-    overrides = {}
-    for source_key, target_key in mapping.items():
-        if source_key in parameters:
-            overrides[target_key] = parameters[source_key]
-
-    rank = int(proposal.get("rank", 1)) if str(proposal.get("rank", "")).strip() else 1
-    print(f"[BAYES] rank={rank} ile {len(overrides)} parametre onerisi yuklendi.")
-    return overrides
-
-bayesian_overrides = _collect_bayesian_notebook_overrides()
-resolved_manual_overrides = dict(bayesian_overrides)
-resolved_manual_overrides.update(dict(MANUAL_PARAM_OVERRIDES or {}))
+resolved_manual_overrides = dict(MANUAL_PARAM_OVERRIDES or {})
 
 INITIAL_EFFECTIVE_PARAMS = resolve_notebook_params(
     _collect_notebook_base_params(),

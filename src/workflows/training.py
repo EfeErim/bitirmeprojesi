@@ -227,7 +227,7 @@ def _collect_dataset_manifest_context(crop_root: Path) -> JsonDict:
             manifest_json = {}
         payload.update(
             {
-                "sha256": _sha256_file(manifest_path),
+                "sha256": sha256_file(manifest_path),
                 "schema_version": manifest_json.get("schema_version"),
                 "source_root": manifest_json.get("source_root"),
                 "crop_name": manifest_json.get("crop_name"),

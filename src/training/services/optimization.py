@@ -8,7 +8,7 @@ import math
 import random
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple, cast
 
 import numpy as np
 
@@ -162,28 +162,28 @@ class SearchDimension:
                     return None
                 lower = math.log(self.low)
                 upper = math.log(self.high)
-                encoded = (math.log(raw) - lower) / max(1e-12, upper - lower)
+                scaled = (math.log(raw) - lower) / max(1e-12, upper - lower)
             else:
-                encoded = (raw - self.low) / max(1e-12, self.high - self.low)
-            return [float(min(1.0, max(0.0, encoded)))]
+                scaled = (raw - self.low) / max(1e-12, self.high - self.low)
+            return [float(min(1.0, max(0.0, scaled)))]
         if self.kind == "int":
             raw = _coerce_float(value)
             if raw is None or self.low is None or self.high is None:
                 return None
             if self.high <= self.low:
                 return [0.0]
-            encoded = (raw - self.low) / max(1e-12, self.high - self.low)
-            return [float(min(1.0, max(0.0, encoded)))]
+            scaled = (raw - self.low) / max(1e-12, self.high - self.low)
+            return [float(min(1.0, max(0.0, scaled)))]
         if self.kind == "categorical":
             if not self.values:
                 return None
-            encoded = [0.0] * len(self.values)
+            one_hot = [0.0] * len(self.values)
             try:
                 index = next(idx for idx, item in enumerate(self.values) if item == value)
             except StopIteration:
                 return None
-            encoded[index] = 1.0
-            return encoded
+            one_hot[index] = 1.0
+            return one_hot
         return None
 
 
@@ -817,11 +817,13 @@ def build_bayesian_recommendations(
             neighbor_signatures = {_parameter_signature(item) for item in neighbor_candidates}
             if neighbor_candidates:
                 strategy = "heuristic_neighborhood_bootstrap"
-            X = (
-                np.vstack([_encode_parameters(parameters, dimensions) for parameters in observed_parameters])
-                if observed_parameters
-                else np.empty((0, 0))
-            )
+            # Build X as a stacked ndarray of encoded observed parameters, filtering out any None encodings.
+            encoded_observed: List[np.ndarray] = []
+            for parameters in observed_parameters:
+                enc = _encode_parameters(parameters, dimensions)
+                if enc is not None:
+                    encoded_observed.append(enc)
+            X = np.vstack(encoded_observed) if encoded_observed else np.empty((0, 0))
             y = np.asarray(scores, dtype=float) if scores else np.empty((0,), dtype=float)
             candidates = neighbor_candidates + _sample_candidate_pool(
                 dimensions,
@@ -830,11 +832,11 @@ def build_bayesian_recommendations(
                 candidate_pool_size=candidate_pool_size,
                 sequence_offset=int(random_seed) + sum(ord(ch) for ch in cohort_key),
             )
-            encoded_candidates = [
-                _encode_parameters(candidate, dimensions)
-                for candidate in candidates
-            ]
-            encoded_candidates = [encoded for encoded in encoded_candidates if encoded is not None]
+            encoded_candidates: List[np.ndarray] = []
+            for candidate in candidates:
+                enc = _encode_parameters(candidate, dimensions)
+                if enc is not None:
+                    encoded_candidates.append(enc)
             model = None
             if len(observed_trials) >= 3 and X.size > 0 and y.size > 0 and encoded_candidates:
                 model = _fit_gaussian_process(X, y)
@@ -846,7 +848,7 @@ def build_bayesian_recommendations(
                 for candidate, encoded, mean, std in zip(candidates, encoded_candidates, means, stds):
                     acquisition = _expected_improvement(float(mean), float(std), float(best_score or 0.0))
                     exploration = (
-                        float(min(np.linalg.norm(X - encoded, axis=1)))
+                        float(min(np.linalg.norm(cast(np.ndarray, X) - cast(np.ndarray, encoded), axis=1)))
                         if X.size > 0
                         else 0.0
                     )
@@ -856,13 +858,13 @@ def build_bayesian_recommendations(
                 anchor_encoded = _encode_parameters(anchor_parameters, dimensions) if anchor_parameters else None
                 for candidate, encoded in zip(candidates, encoded_candidates):
                     exploration = (
-                        float(min(np.linalg.norm(X - encoded, axis=1)))
+                        float(min(np.linalg.norm(cast(np.ndarray, X) - cast(np.ndarray, encoded), axis=1)))
                         if X.size > 0
                         else 0.0
                     )
                     exploit = 0.0
                     if anchor_encoded is not None and anchor_encoded.size == encoded.size:
-                        distance_to_anchor = float(np.linalg.norm(anchor_encoded - encoded))
+                        distance_to_anchor = float(np.linalg.norm(cast(np.ndarray, anchor_encoded) - cast(np.ndarray, encoded)))
                         exploit = 1.0 / (1.0 + distance_to_anchor)
                     score = float(0.75 * exploit + 0.25 * exploration)
                     ranked_candidates.append((candidate, score, None, exploration))

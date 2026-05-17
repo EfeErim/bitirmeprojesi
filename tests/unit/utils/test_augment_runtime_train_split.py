@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 from PIL import Image, ImageDraw
-from tests.utils.test_helpers import make_image
 
 from scripts.augment_runtime_train_split import augment_runtime_train_split
 

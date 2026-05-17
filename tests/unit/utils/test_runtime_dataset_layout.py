@@ -1,13 +1,8 @@
-import zipfile
 import shutil
+import zipfile
 from pathlib import Path
 
 from PIL import Image
-
-# test helpers constants
-IMAGE_SIZE = (8, 8)
-IMAGE_COLOR = (255, 0, 0)
-IMAGE_EXTS = (".jpg", ".jpeg", ".png")
 
 from scripts.colab_dataset_layout import (
     build_runtime_split_manifest,
@@ -20,6 +15,11 @@ from scripts.colab_dataset_layout import (
     resolve_notebook_training_classes,
     resolve_repo_dataset_directory,
 )
+
+# test helpers constants
+IMAGE_SIZE = (8, 8)
+IMAGE_COLOR = (255, 0, 0)
+IMAGE_EXTS = (".jpg", ".jpeg", ".png")
 
 
 def _write_images(root: Path, class_name: str, count: int) -> None:

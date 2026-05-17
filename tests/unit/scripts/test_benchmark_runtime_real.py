@@ -1,7 +1,6 @@
 import importlib.util
 from pathlib import Path
 
-
 _MODULE_PATH = Path(__file__).resolve().parents[3] / "scripts" / "benchmark_runtime_real.py"
 _SPEC = importlib.util.spec_from_file_location("benchmark_runtime_real", _MODULE_PATH)
 assert _SPEC is not None and _SPEC.loader is not None

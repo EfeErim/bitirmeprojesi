@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, Iterable, List, Sequence, cast
 
 from src.guided_artifact_specs import (
     PREP_CATEGORY_DOCS,
@@ -257,7 +257,7 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
                 reader_goal=str(TRAINING_CURVE_GLOB_SPEC["reader_goal"]),
                 generated_by=generated_by,
                 decision_importance=str(TRAINING_CURVE_GLOB_SPEC["decision_importance"]),
-                read_order=int(TRAINING_CURVE_GLOB_SPEC["read_order"]),
+                read_order=int(cast(int, TRAINING_CURVE_GLOB_SPEC["read_order"])),
             )
         )
 
@@ -269,7 +269,7 @@ def _find_training_entries(artifact_root: Path, *, base_dir: Path, generated_by:
         for spec in TRAINING_SPLIT_ENTRY_SPECS:
             spec_with_order = {
                 **spec,
-                "read_order": int(order_base) + int(spec.get("read_order_offset", 0)),
+                "read_order": int(cast(int, order_base)) + int(spec.get("read_order_offset", 0)),
             }
             _append_spec_entry(
                 entries,

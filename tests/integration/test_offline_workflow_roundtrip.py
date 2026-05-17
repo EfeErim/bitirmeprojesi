@@ -12,7 +12,6 @@ from src.training.types import EvaluationArtifactsPayload, TrainBatchStats, Vali
 from src.workflows.inference import InferenceWorkflow
 from src.workflows.training import TrainingWorkflow
 
-
 FIXTURE_ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "golden" / "offline_workflow"
 
 

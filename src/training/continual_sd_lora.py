@@ -780,26 +780,53 @@ class ContinualSDLoRATrainer:
         env_flag = os.getenv("AADS_ENABLE_TORCH_COMPILE", "").lower() in ("1", "true", "yes")
         if self.config.enable_torch_compile or try_compile_flag or env_flag:
             if hasattr(torch, "compile") and callable(getattr(torch, "compile")):
-                # First attempt default (likely inductor on Colab). If that fails,
-                # try a safer eager backend before giving up.
+                # On some developer machines (notably Windows without MSVC installed),
+                # Torch Inductor will attempt to invoke a C++ compiler during
+                # codegen and fail if `cl` is missing. Detect that situation and
+                # skip compile to keep tests and lightweight runs stable.
                 try:
-                    compiled = torch.compile(self.training_step)
-                    self.training_step = types.MethodType(compiled, self)
-                    logger.info("torch.compile: training_step compiled successfully (default backend)")
-                except Exception as exc_default:  # pragma: no cover - runtime guard
-                    logger.warning(
-                        "torch.compile default backend failed for training_step: %s; attempting eager backend",
-                        exc_default,
-                    )
+                    import shutil
+                    import platform
+
+                    if platform.system().lower().startswith("windows") and shutil.which("cl") is None:
+                        logger.debug("MSVC cl compiler not found; skipping torch.compile to avoid inductor build errors")
+                        compile_available = False
+                    else:
+                        compile_available = True
+                except Exception:
+                    compile_available = True
+                if not compile_available:
+                    logger.debug("Skipping torch.compile based on platform/compiler checks.")
+                else:
+                    # First attempt default (likely inductor on Colab). If that fails,
+                    # try a safer eager backend before giving up.
                     try:
-                        compiled_eager = torch.compile(self.training_step, backend="eager")
-                        self.training_step = types.MethodType(compiled_eager, self)
-                        logger.info("torch.compile: training_step compiled successfully (eager backend)")
-                    except Exception as exc_eager:  # pragma: no cover - runtime guard
+                        # Compile the underlying function rather than the bound method so we can
+                        # bind the compiled function to this instance reliably. Compiling the
+                        # already-bound method can produce a callable that already has `self`
+                        # captured which would make an additional MethodType binding pass the
+                        # `self` argument twice (causing a TypeError at runtime).
+                        unbound = type(self).training_step
+                        compiled = torch.compile(unbound)
+                        # Bind compiled unbound function with a lightweight wrapper that
+                        # calls the compiled function with the instance as first arg.
+                        self.training_step = (lambda batch, _compiled=compiled, _self=self: _compiled(_self, batch))
+                        logger.info("torch.compile: training_step compiled successfully (default backend)")
+                    except Exception as exc_default:  # pragma: no cover - runtime guard
                         logger.warning(
-                            "torch.compile eager backend also failed; continuing without compile: %s",
-                            exc_eager,
+                            "torch.compile default backend failed for training_step: %s; attempting eager backend",
+                            exc_default,
                         )
+                        try:
+                            unbound = type(self).training_step
+                            compiled_eager = torch.compile(unbound, backend="eager")
+                            self.training_step = (lambda batch, _compiled=compiled_eager, _self=self: _compiled(_self, batch))
+                            logger.info("torch.compile: training_step compiled successfully (eager backend)")
+                        except Exception as exc_eager:  # pragma: no cover - runtime guard
+                            logger.warning(
+                                "torch.compile eager backend also failed; continuing without compile: %s",
+                                exc_eager,
+                            )
             else:
                 logger.debug("torch.compile not available in this PyTorch build; skipping compile attempt.")
 

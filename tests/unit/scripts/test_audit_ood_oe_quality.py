@@ -2,9 +2,8 @@ import csv
 import json
 from pathlib import Path
 
-from tests.utils.test_helpers import make_image
-
 from scripts.audit_ood_oe_quality import apply_review_decisions, discover_prepared_datasets, run_audit, run_batch_audit
+from tests.utils.test_helpers import make_image
 
 
 def _write_image(path: Path, *, color: tuple[int, int, int]) -> None:

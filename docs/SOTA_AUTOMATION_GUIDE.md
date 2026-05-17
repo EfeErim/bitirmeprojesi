@@ -639,11 +639,11 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-14T07:44:34Z`
+Generated: `2026-05-17T19:01:07Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
-The local script could not query arXiv directly in this sandbox, so this run used a manual web fallback for the most relevant configured topics. The local script should still be treated as the canonical scheduled path in CI.
+Candidate scan could not query all configured sources:
 
 - `out-of-distribution detection`: network access blocked by local permissions
 - `energy based ood`: network access blocked by local permissions
@@ -656,6 +656,16 @@ The local script could not query arXiv directly in this sandbox, so this run use
 - `router calibration`: network access blocked by local permissions
 - `conformal prediction`: network access blocked by local permissions
 
+The local script could not query arXiv directly in this sandbox, so this run used a manual web fallback for the most relevant configured topics. The local script should still be treated as the canonical scheduled path in CI.
+
+##### MahaVar: OOD Detection via Class-wise Mahalanobis Distance Variance under Neural Collapse
+
+- Query: `mahalanobis ood`
+- Published: `2026-05-14T05:58:19Z`
+- Authors: Donghwan Kim, Hyunsoo Yoon
+- Link: https://arxiv.org/abs/2605.14413
+- Review note: Directly relevant to the repo's Mahalanobis-style OOD detector. Review as a possible post-hoc scoring comparison only after checking whether class-wise distance variance can be computed from existing adapter feature statistics without changing the OOD/OE evidence contract.
+
 ##### Self-Supervised Learning of Plant Image Representations
 
 - Query: `bioclip`
@@ -664,29 +674,13 @@ The local script could not query arXiv directly in this sandbox, so this run use
 - Link: https://arxiv.org/abs/2604.27538
 - Review note: Directly relevant to plant-domain representation learning. The paper reports that generic SSL augmentations such as blur, grayscale, and solarization can remove fine-grained plant cues, while domain-adapted training on iNaturalist Plantae improves downstream plant recognition. Review for Notebook 0 augmentation guidance and router embedding assumptions before promoting to the main anchors.
 
-##### Entropy Alone is Insufficient for Safe Selective Prediction in LLMs
+##### Conformal Selective Prediction with General Risk Control
 
-- Query: `selective prediction`
-- Published: `2026-03-22T11:27:13Z`
-- Authors: Edward Phillips, Fredrik K. Gustafsson, Sean Wu, Anshul Thakur, David A. Clifton
-- Link: https://arxiv.org/abs/2603.21172
-- Review note: Domain is LLM QA, not plant vision, but the evaluation lesson is relevant: abstention methods should be judged with deployment-facing risk-coverage and calibration metrics rather than a single uncertainty score. Review only as supporting rationale for router/OOD reporting, not as a direct implementation recipe.
-
-##### When should we trust the annotation? Selective prediction for molecular structure retrieval from mass spectra
-
-- Query: `selective prediction risk-coverage`
-- Published: `2026-03-11T16:40:50Z`
-- Authors: Mira Juergens, Gaetan De Waele, Morteza Rakhshaninejad, Willem Waegeman
-- Link: https://arxiv.org/abs/2603.10950
-- Review note: Non-vision domain, but it gives a recent risk-coverage framing for abstaining under user-specified error tolerance. Review as possible wording support for `risk_coverage` reports and readiness policy language.
-
-##### ConformalHDC: Uncertainty-Aware Hyperdimensional Computing with Application to Neural Decoding
-
-- Query: `conformal prediction out-of-distribution`
-- Published: `2026-02-24T23:52:08Z`
-- Authors: Ziyi Liang, Hamed Poursiami, Zhishun Yang, Keiland Cooper, Akhilesh Jaiswal, Maryam Parsa, Norbert Fortin, Babak Shahbaba
-- Link: https://arxiv.org/abs/2602.21446
-- Review note: Non-plant domain, but relevant to uncertainty-aware abstention and outlier handling with conformal guarantees. Review only if conformal set prediction becomes an active router or adapter output mode.
+- Query: `conformal prediction`
+- Published: `2026-03-25T18:29:23Z`
+- Authors: Tian Bai, Ying Jin
+- Link: https://arxiv.org/abs/2603.24704
+- Review note: Relevant to future selective prediction or conformal risk-control work. Do not treat it as current repo behavior; review only if router/adapter outputs add conformal trust decisions or bounded-risk acceptance rules.
 
 ##### Is Retraining-Free Enough? The Necessity of Router Calibration for Efficient MoE Compression
 
@@ -695,6 +689,14 @@ The local script could not query arXiv directly in this sandbox, so this run use
 - Authors: Sieun Hyeon, Jaeyoung Do
 - Link: https://arxiv.org/abs/2603.02217
 - Review note: This is about MoE compression rather than crop routing, so it should not be promoted as direct evidence for AADS router thresholds. It is still a useful reminder that router/expert mismatch can require explicit calibration after expert changes.
+
+##### SAM 3: Segment Anything with Concepts
+
+- Query: `segment anything`
+- Published: `2025-11-20T18:59:56Z`
+- Authors: Nicolas Carion, Laura Gustafson, Yuan-Ting Hu, Shoubhik Debnath, Ronghang Hu, Didac Suris, Chaitanya Ryali, Kalyan Vasudev Alwala, Haitham Khedr, Andrew Huang, Jie Lei, Tengyu Ma, Baishan Guo, Arpit Kalla, Markus Marks, Joseph Greer, Meng Wang, Peize Sun, Roman Radle, Triantafyllos Afouras, Effrosyni Mavroudi, Katherine Xu, Tsung-Han Wu, Yu Zhou, Liliane Momeni, Rishi Hazra, Shuangrui Ding, Sagar Vaze, Francois Porcher, Feng Li, Siyuan Li, Aishwarya Kamath, Ho Kei Cheng, Piotr Dollar, Nikhila Ravi, Kate Saenko, Pengchuan Zhang, Christoph Feichtenhofer
+- Link: https://arxiv.org/abs/2511.16719
+- Review note: Relevant to the guide's router segmentation assumptions because it is the actual SAM 3 concept-prompt paper. Before promoting, verify the repo runtime dependency and API surface instead of assuming paper-level behavior matches local implementation.
 
 
 #### Repo Bug / Weak Point / Improvement Scan

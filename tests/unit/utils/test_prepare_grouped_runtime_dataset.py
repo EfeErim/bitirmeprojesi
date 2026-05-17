@@ -4,23 +4,22 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageDraw
-from tests.utils.test_helpers import make_image
 
 from scripts.prepare_grouped_runtime_dataset import (
     ImageRecord,
     _compute_neighbor_pairs,
+    _estimate_grouped_split_counts,
+    _has_synthetic_hint,
+    _infer_source_like_group,
     _resolve_embedding_device,
-    build_prepared_dataset_key,
+    build_grouped_dataset_plan,
     build_human_review_packet,
     build_label_review_summary,
-    build_grouped_dataset_plan,
+    build_prepared_dataset_key,
     format_human_review_packet,
     materialize_grouped_runtime_dataset,
     normalize_prepared_class_name,
     resolve_safe_embedding_batch_size,
-    _estimate_grouped_split_counts,
-    _has_synthetic_hint,
-    _infer_source_like_group,
     scan_class_root_dataset,
 )
 
