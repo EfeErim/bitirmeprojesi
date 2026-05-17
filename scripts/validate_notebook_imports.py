@@ -112,6 +112,17 @@ def _find_code_cell_source(sources: NotebookSources, marker: str, missing_messag
     raise AssertionError(missing_message)
 
 
+def _assert_code_cells_compile(sources: NotebookSources, notebook_label: str) -> None:
+    for index, source in enumerate(sources.code_cells, start=1):
+        try:
+            compile(source, f"{sources.notebook_path}:code_cell_{index}", "exec")
+        except SyntaxError as exc:
+            raise AssertionError(
+                f"{notebook_label} code cell {index} has invalid Python syntax: "
+                f"line {exc.lineno}, offset {exc.offset}: {exc.msg}"
+            ) from exc
+
+
 def _assert_repo_bootstrap_contract(first_code_source: str, notebook_label: str) -> None:
     _assert_contains(
         first_code_source,
@@ -381,6 +392,7 @@ def test_adapter_smoke_notebook_bootstrap_contract() -> None:
 def test_simple_adapter_smoke_notebook_bootstrap_contract() -> None:
     sources = _load_notebook_sources("4_simple_direct_adapter_test_ui.ipynb")
 
+    _assert_code_cells_compile(sources, "Notebook 4")
     _assert_clone_bootstrap_contract(sources.first_code_source, "Notebook 4")
     assert "collect_notebook_access_report" in sources.full_source
     assert "install_colab_requirements(ROOT / 'colab_notebooks' / 'requirements_colab.txt', running_in_colab())" in sources.full_source
