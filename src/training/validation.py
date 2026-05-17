@@ -194,11 +194,13 @@ def _build_ood_type_breakdown(state: _ArtifactMetricState) -> Dict[str, Any]:
             labels = ([0] * len(id_indices)) + ([1] * len(ood_indices))
             scores = [float(all_scores[idx]) for idx in id_indices] + [float(all_scores[idx]) for idx in ood_indices]
             metrics = compute_ood_detection_metrics(ood_labels=labels, ood_scores=scores)
+            ood_samples_val = metrics.get("ood_samples")
+            in_dist_samples_val = metrics.get("in_distribution_samples")
             method_metrics[str(method_name)] = {
                 "ood_auroc": metrics["ood_auroc"],
                 "ood_false_positive_rate": metrics["ood_false_positive_rate"],
-                "ood_samples": int(metrics["ood_samples"]),
-                "in_distribution_samples": int(metrics["in_distribution_samples"]),
+                "ood_samples": None if ood_samples_val is None else int(ood_samples_val),
+                "in_distribution_samples": None if in_dist_samples_val is None else int(in_dist_samples_val),
             }
         breakdown[str(ood_type)] = {
             "ood_type": str(ood_type),

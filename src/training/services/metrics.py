@@ -181,7 +181,7 @@ def compute_ood_detection_metrics(
     *,
     ood_labels: Optional[Sequence[int]] = None,
     ood_scores: Optional[Sequence[float]] = None,
-) -> Dict[str, Any]:
+) -> Dict[str, Optional[float | int]]:
     ood_auroc: Optional[float] = None
     ood_fpr: Optional[float] = None
     ood_total: Optional[int] = None
@@ -229,7 +229,7 @@ def compute_plan_metrics(
     sure_ds_f1: Optional[float] = None,
     conformal_empirical_coverage: Optional[float] = None,
     conformal_avg_set_size: Optional[float] = None,
-) -> Dict[str, Optional[float]]:
+) -> Dict[str, Optional[float | int]]:
     if len(y_true) == 0:
         raise ValueError("y_true must not be empty")
     if len(y_true) != len(y_pred):
