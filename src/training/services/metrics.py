@@ -108,10 +108,10 @@ def _build_threshold_checks(
 
 
 def _resolve_ood_metric_payload(ood_metrics: Optional[Dict[str, Optional[float]]]) -> Dict[str, Optional[float]]:
-    resolved_ood_metrics = {name: None for name in OOD_METRIC_NAMES}
+    resolved_ood_metrics: Dict[str, Optional[float]] = {name: None for name in OOD_METRIC_NAMES}
     for name, value in dict(ood_metrics or {}).items():
         if name in resolved_ood_metrics:
-            resolved_ood_metrics[name] = value
+            resolved_ood_metrics[name] = None if value is None else float(value)
     return resolved_ood_metrics
 
 

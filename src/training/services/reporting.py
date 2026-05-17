@@ -6,7 +6,7 @@ import csv
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Protocol, Sequence
+from typing import Any, Dict, Iterable, List, Protocol, Sequence, cast
 
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
@@ -174,13 +174,13 @@ def _hard_example_sort_key(row: Dict[str, Any]) -> tuple[int, float, str]:
     if sample_origin == "ood":
         score = row.get("ood_primary_score")
         try:
-            resolved_score = float(score)
+            resolved_score = float(cast(float, score))
         except (TypeError, ValueError):
             resolved_score = float("inf")
         return (1, resolved_score, image_path)
     confidence = row.get("class_confidence")
     try:
-        resolved_confidence = -float(confidence)
+        resolved_confidence = -float(cast(float, confidence))
     except (TypeError, ValueError):
         resolved_confidence = 0.0
     return (0, resolved_confidence, image_path)
@@ -374,8 +374,8 @@ def _extract_worst_slice_summary(method_name: str, ood_type_breakdown: Dict[str,
     candidates.sort(
         key=lambda item: (
             bool(item.get("ood_false_positive_rate") is None),
-            0.0 if item.get("ood_false_positive_rate") is None else -float(item["ood_false_positive_rate"]),
-            float("inf") if item.get("ood_auroc") is None else float(item["ood_auroc"]),
+            0.0 if item.get("ood_false_positive_rate") is None else -float(cast(float, item["ood_false_positive_rate"])),
+            float("inf") if item.get("ood_auroc") is None else float(cast(float, item["ood_auroc"])),
             str(item.get("slice_name", "")),
         )
     )
@@ -459,11 +459,11 @@ def _build_ood_evidence_summary(
         "primary_score_method": str(context.get("ood_primary_score_method", "ensemble") or "ensemble"),
         "score_methods": [str(name) for name in list(context.get("ood_score_methods", []))],
         "metrics": {
-            "ood_auroc": metrics.get("ood_auroc"),
-            "ood_false_positive_rate": metrics.get("ood_false_positive_rate"),
-            "sure_ds_f1": metrics.get("sure_ds_f1"),
-            "conformal_empirical_coverage": metrics.get("conformal_empirical_coverage"),
-            "conformal_avg_set_size": metrics.get("conformal_avg_set_size"),
+            "ood_auroc": _coerce_float(metrics.get("ood_auroc")),
+            "ood_false_positive_rate": _coerce_float(metrics.get("ood_false_positive_rate")),
+            "sure_ds_f1": _coerce_float(metrics.get("sure_ds_f1")),
+            "conformal_empirical_coverage": _coerce_float(metrics.get("conformal_empirical_coverage")),
+            "conformal_avg_set_size": _coerce_float(metrics.get("conformal_avg_set_size")),
         },
         "sample_counts": sample_counts,
         "ood_types": ood_types,

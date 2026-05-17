@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, cast
 
 from src.shared.json_utils import read_json
 from src.shared.string_utils import normalize_class_name
@@ -21,7 +21,7 @@ def compute_effective_number_weights(
     *,
     beta: float = CLASS_BALANCE_BETA,
 ) -> list[float]:
-    resolved_counts = [int(count) for count in counts]
+    resolved_counts = [int(cast(int, count)) for count in counts]
     if not resolved_counts:
         return []
     raw_weights: list[float] = []
@@ -58,7 +58,7 @@ def _manifest_class_counts(crop_root: Path) -> tuple[str, Dict[str, int], list[s
         for entry in classes:
             if not isinstance(entry, dict):
                 continue
-            class_name = normalize_class_name(entry.get("class_name", ""))
+            class_name = normalize_class_name(str(entry.get("class_name", "") or ""))
             if not class_name:
                 continue
             raw_count = entry.get("reference_image_count", entry.get("image_count"))
@@ -98,7 +98,7 @@ def resolve_reference_class_counts(
 ) -> Dict[str, Any]:
     crop_root = Path(data_dir) / str(dataset_key or crop_name)
     filename, manifest_counts, skipped = _manifest_class_counts(crop_root)
-    normalized_detected = [normalize_class_name(name) for name in list(detected_classes)]
+    normalized_detected = [str(normalize_class_name(name) or "") for name in list(detected_classes)]
     resolved_counts: Dict[str, int] = {}
     missing: list[str] = []
     if manifest_counts:
