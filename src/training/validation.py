@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, cast
 
 import torch
 
@@ -410,7 +410,7 @@ def _update_detector_artifact_state(
                 predictions=predictions,
                 ood_loader_present=ood_loader_present,
                 is_ood_loader=is_ood_loader,
-                batch_sample_types=batch_sample_types,
+                batch_sample_types=cast(List[Optional[str]], batch_sample_types),
                 ood_payload=ood_payload,
             )
             if prediction_rows is not None:
@@ -424,7 +424,7 @@ def _update_detector_artifact_state(
                     image_offset=sample_offset,
                     sample_origin=("ood" if is_ood_loader else "in_distribution"),
                     split_name=str(getattr(getattr(eval_loader, "dataset", None), "split", "") or ""),
-                    batch_sample_types=batch_sample_types,
+                    batch_sample_types=cast(List[Optional[str]], batch_sample_types),
                     ood_payload=ood_payload,
                 )
             sample_offset += batch_size

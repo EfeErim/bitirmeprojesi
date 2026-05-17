@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from collections.abc import Sized
 from datetime import datetime
-from typing import Any, Callable, Dict, Iterable, List, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional, cast
 
 import torch
 
@@ -286,7 +286,9 @@ class ContinualTrainingSession:
                 epoch_payload["validation_every_n_epochs"] = int(self.validation_every_n_epochs)
                 epoch_payload["validation_skipped"] = not should_validate
                 if should_validate:
-                    validation_report = evaluate_model(self.trainer, self.val_loader)
+                    validation_report = evaluate_model(
+                        self.trainer, cast(Iterable[Dict[str, torch.Tensor]], self.val_loader)
+                    )
                     if validation_report is not None:
                         decorated = decorate_validation(validation_report, epoch_loss)
                         validation_report = decorated

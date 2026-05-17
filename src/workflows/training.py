@@ -9,7 +9,7 @@ import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Optional, Protocol, Sequence, cast
 
 import torch
 
@@ -938,8 +938,8 @@ class TrainingWorkflow:
             return None
         dev_evaluation = evaluate_model_with_artifact_metrics(
             trainer,
-            id_dev_loader,
-            ood_loader=ood_dev_loader,
+            cast(Iterable[Dict[str, torch.Tensor]], id_dev_loader),
+            ood_loader=cast(Iterable[Dict[str, torch.Tensor]], ood_dev_loader),
         )
         selection = build_real_ood_dev_selection(
             dev_evaluation,

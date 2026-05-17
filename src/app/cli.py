@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 from PIL import Image
+from typing import Any
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -40,6 +41,7 @@ def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
 
+    workflow: Any
     if args.command == "inference":
         from src.workflows.inference import InferenceWorkflow
 

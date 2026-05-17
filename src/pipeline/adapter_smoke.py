@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence, cast
 
 from PIL import Image, ImageDraw, ImageOps, UnidentifiedImageError
 
@@ -536,7 +536,7 @@ def _summary_from_meta(meta: Dict[str, Any]) -> Dict[str, Any]:
         "class_count": len(ordered_classes),
         "fusion": dict(meta.get("fusion", {})),
         "target_modules_resolved": [str(item) for item in list(meta.get("target_modules_resolved", []))],
-        "ood_calibration_version": int(dict(meta.get("ood_calibration", {})).get("version", 0)),
+        "ood_calibration_version": int(cast(int, dict(meta.get("ood_calibration", {})).get("version", 0))),
         "adapter_runtime": dict(meta.get("adapter_runtime", {})),
     }
 
@@ -760,11 +760,14 @@ def _prepare_view_image(image: Image.Image, *, target_size: int, view_name: str)
         top = max(0, (resized.height - int(target_size)) // 2)
         cropped = ImageOps.crop(
             resized,
-            border=(
-                left,
-                top,
-                max(0, resized.width - int(target_size) - left),
-                max(0, resized.height - int(target_size) - top),
+            border=cast(
+                Any,
+                (
+                    left,
+                    top,
+                    max(0, resized.width - int(target_size) - left),
+                    max(0, resized.height - int(target_size) - top),
+                ),
             ),
         )
         if cropped.size != (int(target_size), int(target_size)):
@@ -830,7 +833,7 @@ def _predict_payload_confidence_for_class(
     payload = adapter.predict_with_ood(image_tensor)
     disease = dict(payload.get("disease", {}))
     try:
-        predicted_index = int(disease.get("class_index"))
+        predicted_index = int(cast(int, disease.get("class_index")))
     except (TypeError, ValueError):
         return 0.0
     if predicted_index != int(target_class_index):
@@ -979,8 +982,8 @@ def _patch_grid_shape(patch_count: int, config: Any) -> tuple[int, int]:
         if isinstance(image_size, (list, tuple)):
             image_height, image_width = int(image_size[0]), int(image_size[1])
         else:
-            image_height = image_width = int(image_size)
-        patch = int(patch_size)
+            image_height = image_width = int(cast(int, image_size))
+        patch = int(cast(int, patch_size))
         rows = max(1, image_height // max(1, patch))
         cols = max(1, image_width // max(1, patch))
         if rows * cols == count:

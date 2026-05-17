@@ -180,16 +180,16 @@ def build_prediction_set(
 
     all_scores = score_all_classes(features, logits, class_stats, energy_temperature=energy_temperature)
 
-    included: List[tuple[float, str]] = []
+    included_pairs: List[tuple[float, str]] = []
     for class_id, ensemble_score in all_scores.items():
         threshold = class_stats[class_id].threshold
         nonconformity = ensemble_score - threshold
         if nonconformity <= qhat:
             class_name = idx_to_class.get(class_id, str(class_id))
-            included.append((ensemble_score, class_name))
+            included_pairs.append((ensemble_score, class_name))
 
-    included.sort(key=lambda x: x[0])
-    return [name for _, name in included]
+    included_pairs.sort(key=lambda x: x[0])
+    return [name for _, name in included_pairs]
 
 
 def describe_conformal_method(

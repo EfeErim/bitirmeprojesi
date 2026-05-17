@@ -226,7 +226,7 @@ def _persist_hard_example_artifacts(
             with Image.open(image_path) as image:
                 preview = image.convert("RGB")
                 preview.thumbnail((256, 256))
-                save_kwargs = {"format": "PNG"} if suffix == ".png" else {"quality": 90}
+                save_kwargs: dict[str, Any] = {"format": "PNG"} if suffix == ".png" else {"quality": 90}
                 preview.save(thumbnail_path, **save_kwargs)
             row["thumbnail_path"] = thumbnail_path.relative_to(validation_dir).as_posix()
             written_thumbnail_count += 1

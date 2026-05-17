@@ -63,7 +63,7 @@ def _manifest_class_counts(crop_root: Path) -> tuple[str, Dict[str, int], list[s
                 continue
             raw_count = entry.get("reference_image_count", entry.get("image_count"))
             try:
-                counts[class_name] = int(raw_count)
+                counts[class_name] = int(cast(int, raw_count))
             except (TypeError, ValueError):
                 skipped.append(class_name)
     if counts:
@@ -81,7 +81,7 @@ def _manifest_class_counts(crop_root: Path) -> tuple[str, Dict[str, int], list[s
                 continue
             if bool(row.get("synthetic_hint")):
                 continue
-            class_name = normalize_class_name(row.get("normalized_class_name", row.get("class_name", "")))
+            class_name = normalize_class_name(str(row.get("normalized_class_name", row.get("class_name", ""))))
             if not class_name:
                 continue
             counts[class_name] = int(counts.get(class_name, 0)) + 1

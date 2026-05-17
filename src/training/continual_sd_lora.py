@@ -810,7 +810,7 @@ class ContinualSDLoRATrainer:
                         compiled = torch.compile(unbound)
                         # Bind compiled unbound function with a lightweight wrapper that
                         # calls the compiled function with the instance as first arg.
-                        self.training_step = (lambda batch, _compiled=compiled, _self=self: _compiled(_self, batch))
+                        setattr(self, "training_step", cast(Any, (lambda batch, _compiled=compiled, _self=self: _compiled(_self, batch))))
                         logger.info("torch.compile: training_step compiled successfully (default backend)")
                     except Exception as exc_default:  # pragma: no cover - runtime guard
                         logger.warning(
@@ -820,7 +820,7 @@ class ContinualSDLoRATrainer:
                         try:
                             unbound = type(self).training_step
                             compiled_eager = torch.compile(unbound, backend="eager")
-                            self.training_step = (lambda batch, _compiled=compiled_eager, _self=self: _compiled(_self, batch))
+                            setattr(self, "training_step", cast(Any, (lambda batch, _compiled=compiled_eager, _self=self: _compiled(_self, batch))))
                             logger.info("torch.compile: training_step compiled successfully (eager backend)")
                         except Exception as exc_eager:  # pragma: no cover - runtime guard
                             logger.warning(
@@ -1075,7 +1075,7 @@ class ContinualSDLoRATrainer:
     def flush_pending_gradients(self) -> Optional[float]:
         return flush_pending_gradients(self)
 
-    def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float]:
+    def calibrate_ood(self, loader: Iterable[Dict[str, torch.Tensor]]) -> Dict[str, float | str]:
         self._ood_calibration_loader = loader
         return calibrate_trainer_ood(self, loader)
 

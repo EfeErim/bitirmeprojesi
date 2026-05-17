@@ -10,7 +10,7 @@ import traceback
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, cast
 
 import torch
 from torch.utils.data import DataLoader, Dataset, RandomSampler, WeightedRandomSampler
@@ -1496,7 +1496,7 @@ def run_leave_one_class_out_benchmark(
         fold_payload = _run_benchmark_fold(
             crop_name=crop_name,
             fold_context=fold_context,
-            train_loader=train_loader,
+            train_loader=cast(DataLoader[Any], train_loader),
             calibration_loader=calibration_loader,
             eval_loader=eval_loader,
             train_dataset=train_dataset,
