@@ -639,64 +639,22 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-17T19:01:07Z`
+Generated: `2026-05-18T06:11:23Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
 Candidate scan could not query all configured sources:
 
-- `out-of-distribution detection`: network access blocked by local permissions
-- `energy based ood`: network access blocked by local permissions
-- `mahalanobis ood`: network access blocked by local permissions
-- `logitnorm`: network access blocked by local permissions
-- `selective prediction`: network access blocked by local permissions
-- `segment anything`: network access blocked by local permissions
-- `sam segmentation`: network access blocked by local permissions
-- `bioclip`: network access blocked by local permissions
-- `router calibration`: network access blocked by local permissions
-- `conformal prediction`: network access blocked by local permissions
-
-The local script could not query arXiv directly in this sandbox, so this run used a manual web fallback for the most relevant configured topics. The local script should still be treated as the canonical scheduled path in CI.
-
-##### MahaVar: OOD Detection via Class-wise Mahalanobis Distance Variance under Neural Collapse
-
-- Query: `mahalanobis ood`
-- Published: `2026-05-14T05:58:19Z`
-- Authors: Donghwan Kim, Hyunsoo Yoon
-- Link: https://arxiv.org/abs/2605.14413
-- Review note: Directly relevant to the repo's Mahalanobis-style OOD detector. Review as a possible post-hoc scoring comparison only after checking whether class-wise distance variance can be computed from existing adapter feature statistics without changing the OOD/OE evidence contract.
-
-##### Self-Supervised Learning of Plant Image Representations
-
-- Query: `bioclip`
-- Published: `2026-04-30T07:41:49Z`
-- Authors: Ilyass Moummad, Kawtar Zaher, Herve Goeau, Jean-Christophe Lombardo, Pierre Bonnet, Alexis Joly
-- Link: https://arxiv.org/abs/2604.27538
-- Review note: Directly relevant to plant-domain representation learning. The paper reports that generic SSL augmentations such as blur, grayscale, and solarization can remove fine-grained plant cues, while domain-adapted training on iNaturalist Plantae improves downstream plant recognition. Review for Notebook 0 augmentation guidance and router embedding assumptions before promoting to the main anchors.
-
-##### Conformal Selective Prediction with General Risk Control
-
-- Query: `conformal prediction`
-- Published: `2026-03-25T18:29:23Z`
-- Authors: Tian Bai, Ying Jin
-- Link: https://arxiv.org/abs/2603.24704
-- Review note: Relevant to future selective prediction or conformal risk-control work. Do not treat it as current repo behavior; review only if router/adapter outputs add conformal trust decisions or bounded-risk acceptance rules.
-
-##### Is Retraining-Free Enough? The Necessity of Router Calibration for Efficient MoE Compression
-
-- Query: `router calibration`
-- Published: `2026-02-10T08:04:07Z`
-- Authors: Sieun Hyeon, Jaeyoung Do
-- Link: https://arxiv.org/abs/2603.02217
-- Review note: This is about MoE compression rather than crop routing, so it should not be promoted as direct evidence for AADS router thresholds. It is still a useful reminder that router/expert mismatch can require explicit calibration after expert changes.
-
-##### SAM 3: Segment Anything with Concepts
-
-- Query: `segment anything`
-- Published: `2025-11-20T18:59:56Z`
-- Authors: Nicolas Carion, Laura Gustafson, Yuan-Ting Hu, Shoubhik Debnath, Ronghang Hu, Didac Suris, Chaitanya Ryali, Kalyan Vasudev Alwala, Haitham Khedr, Andrew Huang, Jie Lei, Tengyu Ma, Baishan Guo, Arpit Kalla, Markus Marks, Joseph Greer, Meng Wang, Peize Sun, Roman Radle, Triantafyllos Afouras, Effrosyni Mavroudi, Katherine Xu, Tsung-Han Wu, Yu Zhou, Liliane Momeni, Rishi Hazra, Shuangrui Ding, Sagar Vaze, Francois Porcher, Feng Li, Siyuan Li, Aishwarya Kamath, Ho Kei Cheng, Piotr Dollar, Nikhila Ravi, Kate Saenko, Pengchuan Zhang, Christoph Feichtenhofer
-- Link: https://arxiv.org/abs/2511.16719
-- Review note: Relevant to the guide's router segmentation assumptions because it is the actual SAM 3 concept-prompt paper. Before promoting, verify the repo runtime dependency and API surface instead of assuming paper-level behavior matches local implementation.
+- `out-of-distribution detection`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Aout-of-distribution+detection&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `energy based ood`: query timed out
+- `mahalanobis ood`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Amahalanobis+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `logitnorm`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Alogitnorm&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `selective prediction`: query timed out
+- `segment anything`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asegment+anything&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `sam segmentation`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asam+segmentation&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `bioclip`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Abioclip&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `router calibration`: query timed out
+- `conformal prediction`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aconformal+prediction&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
 
 
 #### Repo Bug / Weak Point / Improvement Scan
