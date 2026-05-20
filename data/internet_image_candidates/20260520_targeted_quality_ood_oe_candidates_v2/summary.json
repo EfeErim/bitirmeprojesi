@@ -1,0 +1,27 @@
+{
+  "root": "data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_candidates_v2",
+  "counts_by_adapter_split": {
+    "apricot__leaf|oe": 20,
+    "apricot__leaf|ood": 12,
+    "grape__leaf|oe": 15,
+    "strawberry__fruit|oe": 12,
+    "strawberry__leaf|ood": 7,
+    "tomato__leaf|oe": 20
+  },
+  "counts_by_target": {
+    "grape__leaf|oe|unsupported_same_crop": 15,
+    "apricot__leaf|ood|prunus_leaf_unknowns": 12,
+    "apricot__leaf|oe|prunus_leaf_aux_negatives": 20,
+    "tomato__leaf|oe|unsupported_same_crop": 20,
+    "strawberry__fruit|oe|unsupported_same_crop": 12,
+    "strawberry__leaf|ood|strawberry_leaf_unsupported": 7
+  },
+  "placement_count": 86,
+  "unique_hashes": 86,
+  "ood_hashes": 19,
+  "oe_hashes": 67,
+  "ood_oe_hash_overlap": [],
+  "manifest": "data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_candidates_v2\\targeted_quality_ood_oe_placement_manifest.json",
+  "review_csv": "data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_candidates_v2\\targeted_quality_ood_oe_review_manifest.csv",
+  "download_manifest": "data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_candidates_v2\\download_manifest.json"
+}

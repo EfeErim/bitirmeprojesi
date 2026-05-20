@@ -1,0 +1,50 @@
+{
+  "created_at": "2026-05-20",
+  "created_at_utc": "2026-05-20T00:00:00Z",
+  "staging_root": "data\\internet_image_candidates\\20260514_oe_takviye",
+  "policy": "Same-crop unsupported strawberry fruit candidates are auxiliary OE training inputs, not final OOD evidence.",
+  "placements": [
+    {
+      "adapter": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "type": "oe",
+      "slice_name": "same_crop_unsupported_unknowns",
+      "candidate_path": "data\\internet_image_candidates\\20260514_oe_takviye\\strawberry__fruit\\same_crop_unsupported_unknowns\\bugwood_5385825_strawberry_phomopsis_fruit_rot_ca9380733e.jpg",
+      "source_path": "data\\internet_image_candidates\\20260514_oe_takviye\\strawberry__fruit\\same_crop_unsupported_unknowns\\bugwood_5385825_strawberry_phomopsis_fruit_rot_ca9380733e.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\same_crop_unsupported_unknowns\\oe_takviye_20260514_strawberry_phomopsis_fruit_rot_bugwood_5385825_ca9380733e.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5385825.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5385825",
+      "license": "Bugwood/Invasive.org source page; review page license before publication",
+      "source_note": "Bugwood/Invasive.org source page; review page license before publication",
+      "sha256": "ca9380733e5365992104255b0d2a0d4c57127b615be55cbf35a6ee64167479bc",
+      "short_rationale": "Bugwood describes Phomopsis leaf blight and fruit rot on strawberry; unsupported by current strawberry fruit labels, so it is OE rather than final OOD evidence.",
+      "notes": "Bugwood describes Phomopsis leaf blight and fruit rot on strawberry; unsupported by current strawberry fruit labels, so it is OE rather than final OOD evidence.",
+      "width": 767,
+      "height": 575,
+      "format": "jpeg",
+      "source_kind": "bugwood"
+    },
+    {
+      "adapter": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "type": "oe",
+      "slice_name": "same_crop_unsupported_unknowns",
+      "candidate_path": "data\\internet_image_candidates\\20260514_oe_takviye\\strawberry__fruit\\same_crop_unsupported_unknowns\\bugwood_5385835_strawberry_phomopsis_fruit_rot_633ceba59b.jpg",
+      "source_path": "data\\internet_image_candidates\\20260514_oe_takviye\\strawberry__fruit\\same_crop_unsupported_unknowns\\bugwood_5385835_strawberry_phomopsis_fruit_rot_633ceba59b.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\same_crop_unsupported_unknowns\\oe_takviye_20260514_strawberry_phomopsis_fruit_rot_bugwood_5385835_633ceba59b.jpg",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5385835.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5385835",
+      "license": "Bugwood/Invasive.org source page; review page license before publication",
+      "source_note": "Bugwood/Invasive.org source page; review page license before publication",
+      "sha256": "633ceba59b9f4ca096494cb732d0f8b7395869a5be2ca8cdaeec95e5c1ed0476",
+      "short_rationale": "Bugwood describes Phomopsis leaf blight and fruit rot on strawberry; unsupported by current strawberry fruit labels, so it is OE rather than final OOD evidence.",
+      "notes": "Bugwood describes Phomopsis leaf blight and fruit rot on strawberry; unsupported by current strawberry fruit labels, so it is OE rather than final OOD evidence.",
+      "width": 768,
+      "height": 576,
+      "format": "jpeg",
+      "source_kind": "bugwood"
+    }
+  ]
+}

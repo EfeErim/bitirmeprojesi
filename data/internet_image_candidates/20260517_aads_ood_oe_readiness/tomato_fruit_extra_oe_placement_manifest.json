@@ -1,0 +1,50 @@
+{
+  "created_at": "2026-05-20",
+  "created_at_utc": "2026-05-20T00:00:00Z",
+  "staging_root": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness",
+  "policy": "Previously unplaced tomato fruit unsupported-same-crop candidates are auxiliary OE training inputs, not final OOD evidence.",
+  "placements": [
+    {
+      "adapter": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "type": "oe",
+      "slice_name": "unsupported_same_crop",
+      "candidate_path": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\tomato__fruit\\oe\\unsupported_same_crop\\wikimedia_Tomato_with_fungus.jpg.jpg",
+      "source_path": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\tomato__fruit\\oe\\unsupported_same_crop\\wikimedia_Tomato_with_fungus.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\oe\\unsupported_same_crop\\internet_20260517_wikimedia_Tomato_with_fungus.jpg.jpg",
+      "source_url": "",
+      "source_page": "",
+      "license": "Wikimedia candidate; source page was not preserved in the original staging manifest.",
+      "source_note": "Wikimedia candidate; source page was not preserved in the original staging manifest.",
+      "sha256": "994cf3dcfa039a1a680685f9fa09adb33393f5286f8536a479ad488381b5aecc",
+      "short_rationale": "Tomato fruit with visible fungal growth; unsupported same-crop condition for tomato fruit OE, not held-out OOD evidence.",
+      "notes": "Tomato fruit with visible fungal growth; unsupported same-crop condition for tomato fruit OE, not held-out OOD evidence.",
+      "width": 1280,
+      "height": 960,
+      "format": "jpeg",
+      "source_kind": "wikimedia"
+    },
+    {
+      "adapter": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "type": "oe",
+      "slice_name": "unsupported_same_crop",
+      "candidate_path": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\tomato__fruit\\oe\\unsupported_same_crop\\wikimedia_2.jpg.jpg",
+      "source_path": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\tomato__fruit\\oe\\unsupported_same_crop\\wikimedia_2.jpg.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\tomato__fruit\\oe\\unsupported_same_crop\\internet_20260517_wikimedia_2.jpg.jpg",
+      "source_url": "",
+      "source_page": "",
+      "license": "Wikimedia candidate; source page was not preserved in the original staging manifest.",
+      "source_note": "Wikimedia candidate; source page was not preserved in the original staging manifest.",
+      "sha256": "06b6e7110a313e40507fb0abdf083d31093a39bff737a34ed5efe74a2f7adf15",
+      "short_rationale": "Microscope image of fungal structures from the tomato fruit unsupported-same-crop candidate pool; OE only, not held-out OOD evidence.",
+      "notes": "Microscope image of fungal structures from the tomato fruit unsupported-same-crop candidate pool; OE only, not held-out OOD evidence.",
+      "width": 1280,
+      "height": 1255,
+      "format": "jpeg",
+      "source_kind": "wikimedia"
+    }
+  ]
+}
