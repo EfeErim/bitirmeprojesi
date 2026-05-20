@@ -67,3 +67,7 @@ def test_training_notebook_bootstrap_contract_matches_repo_notebook():
 
 def test_training_notebook_dataset_contract_matches_repo_notebook():
     validator.test_training_notebook_dataset_contract_detection()
+
+
+def test_ood_oe_quality_notebook_contract_matches_repo_notebook():
+    validator.test_ood_oe_quality_notebook_contract()

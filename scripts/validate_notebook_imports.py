@@ -817,6 +817,44 @@ def test_router_calibration_notebook_contract() -> None:
     assert "max_part_precision_drop=MAX_PART_PRECISION_DROP" in sources.full_source
 
 
+def test_ood_oe_quality_notebook_contract() -> None:
+    sources = _load_notebook_sources("7_ood_oe_quality_human_review.ipynb")
+
+    _assert_code_cells_compile(sources, "Notebook 7")
+    _assert_contains(
+        sources.full_source,
+        "RUN_ALL_DATASETS = True",
+        "Notebook 7 should default to the batch prepared-runtime audit flow: {snippet}",
+    )
+    _assert_contains(
+        sources.full_source,
+        "review_decisions.csv",
+        "Notebook 7 should expose the maintained review CSV contract: {snippet}",
+    )
+    _assert_contains(
+        sources.full_source,
+        "APPLY_REVIEW_DECISIONS = False",
+        "Notebook 7 should keep quarantine application opt-in: {snippet}",
+    )
+    _assert_contains(
+        sources.full_source,
+        "--apply-decisions",
+        "Notebook 7 should apply decisions through the maintained audit script: {snippet}",
+    )
+    for stale_snippet in (
+        "Fully Automated",
+        "AUTO_QUARANTINE",
+        "APPLY_NOW",
+        "Auto-generate",
+        "auto-quarantine",
+    ):
+        _assert_not_contains(
+            sources.full_source,
+            stale_snippet,
+            "Notebook 7 should stay human-in-loop and avoid automatic quarantine wording: {snippet}",
+        )
+
+
 CHECKS = (
     ValidationCheck(
         result_name="Runtime Dependencies",
@@ -907,6 +945,15 @@ CHECKS = (
         success_message="Notebook 6 bootstraps Colab and wraps maintained Notebook 2 training cells",
         failure_prefix="Notebook 6 batch training contract failed",
         callback=test_batch_training_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 7 OOD/OE Review",
+        step_id="NB7_OOD_OE_REVIEW",
+        description="Notebook 7 OOD/OE human-review contract",
+        success_message="Notebook 7 stays batchable and human-in-loop for quarantine decisions",
+        failure_prefix="Notebook 7 OOD/OE review contract failed",
+        callback=test_ood_oe_quality_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
