@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-17T19:56:30.617680+00:00",
+  "generated_at": "2026-05-20T07:38:04.993706+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": true,
   "trial_count": 25,
