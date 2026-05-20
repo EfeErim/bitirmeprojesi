@@ -73,7 +73,19 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
         elif optimization_campaign.get("status") == "active" and not optimization_campaign.get("next_proposal"):
             print("[OPT] No unseen proposal is available. Notebook will keep the visible parameters as-is.")
 
-    available = sorted({_normalize(path.name) for path in class_root.iterdir() if path.is_dir() and _normalize(path.name)})
+    raw_class_names = sorted(path.name for path in class_root.iterdir() if path.is_dir())
+    normalized_to_raw = {}
+    for raw_name in raw_class_names:
+        normalized_name = _normalize(raw_name)
+        if not normalized_name:
+            continue
+        existing_raw = normalized_to_raw.get(normalized_name)
+        if existing_raw is not None and existing_raw != raw_name:
+            raise RuntimeError(
+                f"Class names collapse to the same normalized key: {existing_raw!r} and {raw_name!r}"
+            )
+        normalized_to_raw[normalized_name] = raw_name
+    available = sorted(normalized_to_raw)
     resolved_ood_root = str(STATE.get("resolved_ood_root") or "").strip()
     if resolved_ood_root:
         print(f"[OOD] selected ood root={resolved_ood_root}")
@@ -91,7 +103,10 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     if not aligned:
         raise RuntimeError(f"No usable classes for crop '{crop_name}'. Available: {available}")
 
-    final_class_names = aligned
+    final_class_names = [normalized_to_raw[name] for name in aligned if name in normalized_to_raw]
+    if len(final_class_names) != len(aligned):
+        missing = sorted(set(aligned) - set(normalized_to_raw))
+        raise RuntimeError(f"Resolved class names are not present on disk after normalization: {missing}")
     STATE["runtime_dataset_root"] = runtime_data_root
     STATE["runtime_dataset_key"] = dataset_key
 
@@ -188,6 +203,7 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
     loaders = create_training_loaders(
         data_dir=str(runtime_data_root),
         crop=dataset_key,
+        class_names=final_class_names,
         batch_size=int(effective_params["BATCH_SIZE"]),
         num_workers=int(effective_params["NUM_WORKERS"]),
         use_cache=bool(effective_params["USE_CACHE"]),
@@ -206,6 +222,13 @@ with TELEMETRY.capture_cell_output("Cell 5: Engine Init"):
         pin_memory=bool(effective_params["PIN_MEMORY"]),
         **loader_kwargs,
     )
+    train_dataset_class_to_idx = dict(getattr(getattr(loaders.get("train"), "dataset", None), "class_to_idx", {}) or {})
+    adapter_class_to_idx = dict(getattr(adapter, "class_to_idx", {}) or {})
+    if train_dataset_class_to_idx and adapter_class_to_idx != train_dataset_class_to_idx:
+        raise RuntimeError(
+            "Adapter class_to_idx does not match the runtime dataset loader class_to_idx. "
+            f"adapter={adapter_class_to_idx} loader={train_dataset_class_to_idx}"
+        )
 
     STATE["crop_name"] = crop_name
     STATE["part_name"] = str(PART_NAME or "unspecified").strip().lower() or "unspecified"

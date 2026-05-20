@@ -989,13 +989,19 @@ def initialize_notebook_training_engine(
     if not class_root.is_dir():
         raise RuntimeError(f"Prepared runtime continual split not found: {class_root}")
 
-    available = sorted(
-        {
-            normalize_notebook_identifier(path.name)
-            for path in class_root.iterdir()
-            if path.is_dir() and normalize_notebook_identifier(path.name)
-        }
-    )
+    raw_class_names = sorted(path.name for path in class_root.iterdir() if path.is_dir())
+    normalized_to_raw: Dict[str, str] = {}
+    for raw_name in raw_class_names:
+        normalized_name = normalize_notebook_identifier(raw_name)
+        if not normalized_name:
+            continue
+        existing_raw = normalized_to_raw.get(normalized_name)
+        if existing_raw is not None and existing_raw != raw_name:
+            raise RuntimeError(
+                f"Class names collapse to the same normalized key: {existing_raw!r} and {raw_name!r}"
+            )
+        normalized_to_raw[normalized_name] = raw_name
+    available = sorted(normalized_to_raw)
     resolved_ood_root = str(state.get("resolved_ood_root") or "").strip()
     resolved_oe_root = str(state.get("resolved_oe_root") or "").strip()
     if resolved_ood_root:
@@ -1008,9 +1014,13 @@ def initialize_notebook_training_engine(
         crop_name=resolved_crop_name,
         taxonomy_path=root / "config" / "plant_taxonomy.json",
     )
-    final_class_names = list(class_resolution.get("selected_classes", available))
-    if not final_class_names:
+    aligned = list(class_resolution.get("selected_classes", available))
+    if not aligned:
         raise RuntimeError(f"No usable classes for crop '{resolved_crop_name}'. Available: {available}")
+    final_class_names = [normalized_to_raw[name] for name in aligned if name in normalized_to_raw]
+    if len(final_class_names) != len(aligned):
+        missing = sorted(set(aligned) - set(normalized_to_raw))
+        raise RuntimeError(f"Resolved class names are not present on disk after normalization: {missing}")
 
     emit(f"[CLASSES] {final_class_names}")
     emit(
@@ -1083,6 +1093,7 @@ def initialize_notebook_training_engine(
     loaders = create_training_loaders(
         data_dir=str(runtime_data_root),
         crop=dataset_key,
+        class_names=final_class_names,
         batch_size=int(resolved_parameters["BATCH_SIZE"]),
         num_workers=int(loader_settings["NUM_WORKERS"]),
         use_cache=bool(loader_settings["USE_CACHE"]),
@@ -1105,6 +1116,13 @@ def initialize_notebook_training_engine(
         pin_memory=bool(loader_settings["PIN_MEMORY"]),
         **loader_kwargs,
     )
+    train_dataset_class_to_idx = dict(getattr(getattr(loaders.get("train"), "dataset", None), "class_to_idx", {}) or {})
+    adapter_class_to_idx = dict(getattr(adapter, "class_to_idx", {}) or {})
+    if train_dataset_class_to_idx and adapter_class_to_idx != train_dataset_class_to_idx:
+        raise RuntimeError(
+            "Adapter class_to_idx does not match the runtime dataset loader class_to_idx. "
+            f"adapter={adapter_class_to_idx} loader={train_dataset_class_to_idx}"
+        )
 
     verified_ood = verify_notebook_ood_config(
         continual_config=continual_cfg,

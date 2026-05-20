@@ -1,0 +1,21 @@
+{
+  "root": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness",
+  "counts_by_target": {
+    "grape__fruit|ood|grape_fruit_unknowns": 15,
+    "grape__leaf|ood|grape_failure_cases": 30,
+    "tomato__fruit|oe|unsupported_same_crop": 13,
+    "tomato__leaf|ood|tomato_failure_cases": 40,
+    "strawberry__leaf|ood|strawberry_failure_cases": 10,
+    "strawberry__leaf|ood|other_crop_disease": 15,
+    "grape__fruit|ood|grape_fruit_failure_cases": 25,
+    "strawberry__leaf|ood|non_plant_misc": 5
+  },
+  "placement_count": 153,
+  "unique_hashes": 153,
+  "ood_hashes": 140,
+  "oe_hashes": 13,
+  "ood_oe_hash_overlap": [],
+  "manifest": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\targeted_aads_ood_oe_placement_manifest.json",
+  "review_csv": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\targeted_aads_ood_oe_review_manifest.csv",
+  "download_manifest": "data\\internet_image_candidates\\20260517_aads_ood_oe_readiness\\download_manifest.json"
+}

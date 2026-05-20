@@ -1045,7 +1045,7 @@ def test_prepare_notebook_access_and_dataset_collects_access_and_runtime_dataset
 def test_initialize_notebook_training_engine_applies_campaign_proposal_and_builds_loader_state(tmp_path: Path, monkeypatch):
     dataset_root = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf"
     for split_name in ("continual", "val", "test"):
-        (dataset_root / split_name / "healthy").mkdir(parents=True, exist_ok=True)
+        (dataset_root / split_name / "Healthy Leaf").mkdir(parents=True, exist_ok=True)
 
     class _FakeParam:
         def __init__(self, count, requires_grad):
@@ -1060,9 +1060,11 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
             self.crop_name = crop_name
             self.device = device
             self.engine_calls = []
+            self.class_to_idx = {}
 
         def initialize_engine(self, class_names, config):
             self.engine_calls.append((list(class_names), dict(config)))
+            self.class_to_idx = {name: index for index, name in enumerate(class_names)}
 
         def parameters(self):
             return [_FakeParam(10, True), _FakeParam(5, False)]
@@ -1070,10 +1072,10 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
     monkeypatch.setattr(
         "scripts.colab_dataset_layout.resolve_notebook_training_classes",
         lambda available_classes, crop_name, taxonomy_path: {
-            "selected_classes": ["healthy"],
+            "selected_classes": ["healthy_leaf"],
             "used_taxonomy_filter": True,
             "reason": "matched",
-            "matched_classes": ["healthy"],
+            "matched_classes": ["healthy_leaf"],
             "unmatched_classes": [],
         },
     )
@@ -1083,9 +1085,21 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
     )
     loader_calls = []
 
+    class _FakeDataset:
+        def __init__(self, class_names):
+            self.class_to_idx = {name: index for index, name in enumerate(class_names)}
+
+    class _FakeLoader:
+        def __init__(self, class_names):
+            self.dataset = _FakeDataset(class_names)
+
     def _fake_create_training_loaders(**kwargs):
         loader_calls.append(dict(kwargs))
-        return {"train": object(), "val": object(), "test": object()}
+        return {
+            "train": _FakeLoader(kwargs.get("class_names", [])),
+            "val": _FakeLoader(kwargs.get("class_names", [])),
+            "test": _FakeLoader(kwargs.get("class_names", [])),
+        }
 
     monkeypatch.setattr("src.data.loaders.create_training_loaders", _fake_create_training_loaders)
     monkeypatch.setattr(
@@ -1191,10 +1205,12 @@ def test_initialize_notebook_training_engine_applies_campaign_proposal_and_build
     )
 
     assert result["notebook_parameters"]["BATCH_SIZE"] == 16
-    assert state["class_names"] == ["healthy"]
+    assert state["class_names"] == ["Healthy Leaf"]
     assert state["continual_config"]["batch_size"] == 16
     assert state["continual_config"]["num_epochs"] == 14
     assert state["continual_config"]["data"]["randaugment_num_ops"] == 4
+    assert state["adapter"].engine_calls[0][0] == ["Healthy Leaf"]
+    assert loader_calls[0]["class_names"] == ["Healthy Leaf"]
     assert loader_calls[0]["randaugment_num_ops"] == 4
     assert state["adapter"].crop_name == "tomato"
     assert result["trainable_params"] == 10
