@@ -256,14 +256,14 @@ AADS v6 is a **production-oriented plant disease detection pipeline** that chain
    - Prefer sources with explicit licenses: Wikimedia Commons, Flickr (license-filtered), specialized plant repositories, and vetted public datasets.
    - Avoid scraping copyrighted paywalled sources; require license metadata (CC0/CC-BY) before download.
    - Use curated keyword templates derived from crop + "disease", "symptom", "leaf spot", "unknown", and domain synonyms.
-3. Download candidates into a quarantine folder: `data/ood_candidates/<crop>/` with provenance metadata (source URL, license, query).
+3. Download candidates into the repo-native quarantine inbox: `data/internet_image_candidates/<run>/` with provenance metadata (source URL, license, query, intended adapter, intended split).
 4. Automatic de-duplication and leakage checks:
    - Compute perceptual hashes (pHash/average hash) and MD5 for each candidate.
    - Compare against `data/prepared_runtime_datasets/<dataset_key>/{continual,val,test}` hashes — reject exact or near-duplicate matches (threshold e.g., hamming distance <= 6).
    - Run a nearest-neighbor feature check in repo's feature space (if available) to flag overly similar images to supported classes.
 5. Human review UI and acceptance workflow:
-   - Generate review grids and a CSV manifest `data/ood_candidates/<crop>/manifest.csv` with provenance and similarity scores.
-   - A human reviewer accepts/rejects each candidate; accepted images move to `data/<crop>/ood/` or `data/<crop>/oe/` depending on role.
+   - Generate review grids and a manifest under `data/internet_image_candidates/<run>/` with provenance and similarity scores.
+   - A human reviewer accepts/rejects each candidate; accepted images are promoted into the matching prepared-runtime `ood/` or `oe/` split by manifest.
 6. Final validation:
    - Re-run leakage checks, compute new class counts, and emit `.runtime_tmp/dataset_integrity_postaugment.json`.
 
@@ -271,19 +271,18 @@ AADS v6 is a **production-oriented plant disease detection pipeline** that chain
 
 - Avoid contamination: ensure `oe/` (auxiliary outlier exposure) and `ood/` (readiness evidence) remain disjoint sets and do not contain supported-class images.
 
-**Suggested script:** `scripts/augment_ood_pool.py`
+**Promotion script:** `scripts/apply_internet_candidate_manifests.py`
 
 Basic usage (local test):
 
-```bash
-python scripts/augment_ood_pool.py \
-  --crop grape \
-  --dataset-root data/prepared_runtime_datasets/grape_full_may2026 \
-  --out-dir data/ood_candidates/grape \
-  --min-ood 50
+```powershell
+.\scripts\python.cmd scripts\apply_internet_candidate_manifests.py \
+  --manifest-root data/internet_image_candidates \
+  --repo-root . \
+  --dry-run
 ```
 
-**Trigger:** Run automatically when dataset integrity detects weak OOD/OE pools or run on-demand from notebook 0. Always require human review before adding to canonical `data/<crop>/ood/`.
+**Trigger:** Run automatically when dataset integrity detects weak OOD/OE pools or run on-demand from notebook 0. Always require human review before promoting into prepared-runtime `ood/` or `oe/`.
 
 **Pass/Fail Criteria:**
 - Candidates collected and quarantined with provenance metadata.
@@ -639,22 +638,48 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-18T06:11:23Z`
+Generated: `2026-05-22T14:04:19Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
 Candidate scan could not query all configured sources:
 
-- `out-of-distribution detection`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Aout-of-distribution+detection&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `energy based ood`: query timed out
-- `mahalanobis ood`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Amahalanobis+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `logitnorm`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Alogitnorm&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `selective prediction`: query timed out
-- `segment anything`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asegment+anything&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `sam segmentation`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asam+segmentation&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `bioclip`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Abioclip&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `router calibration`: query timed out
-- `conformal prediction`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aconformal+prediction&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `out-of-distribution detection`: network access blocked by local permissions
+- `energy based ood`: network access blocked by local permissions
+- `mahalanobis ood`: network access blocked by local permissions
+- `logitnorm`: network access blocked by local permissions
+- `selective prediction`: network access blocked by local permissions
+- `segment anything`: network access blocked by local permissions
+- `sam segmentation`: network access blocked by local permissions
+- `bioclip`: network access blocked by local permissions
+- `router calibration`: network access blocked by local permissions
+- `conformal prediction`: network access blocked by local permissions
+
+Manual web fallback candidates checked on 2026-05-22 because the local arXiv API call was blocked. These are not accepted repo guidance until a maintainer promotes them into the Literature Anchors table above.
+
+##### Selecting Informative Conformal Prediction Sets with an Optimized FCR-Controlled Approach
+
+- Query: `conformal prediction`
+- Published: `2026-05-21`
+- Authors: Israela Solomon, Etienne Roquain, Saharon Rosset, Ruth Heller
+- Link: https://arxiv.org/abs/2605.22004
+- Review note: Relevant to selective prediction because it studies informative conformal sets and FCR control after selection; consider only as a reviewer candidate for future abstention/risk-coverage work.
+
+##### Conformal Selective Prediction with General Risk Control
+
+- Query: `selective prediction`
+- Published: `2026-03-25`
+- Authors: Tian Bai, Ying Jin
+- Link: https://arxiv.org/abs/2603.24704
+- Review note: Relevant to trust/abstain decisions because it frames selective decisions with finite-sample risk control; review before any implementation claim.
+
+##### Multi-Variable Conformal Prediction: Optimizing Prediction Sets without Data Splitting
+
+- Query: `conformal prediction`
+- Published: `2026-05-12`
+- Authors: Laura Lutzow, Simone Garatti, Marco C. Campi, Lars Lindemann, Matthias Althoff
+- Link: https://arxiv.org/abs/2605.12341
+- Review note: Relevant as a calibration-method candidate, but not directly repo policy until evaluated against AADS router/adapter constraints.
 
 
 #### Repo Bug / Weak Point / Improvement Scan
@@ -694,37 +719,37 @@ No lightweight repo-local improvement signals found in the configured roots.
 # Validate router calibration (Tier 1B)
 .\scripts\python.cmd scripts/validate_router_calibration_stability.py \
   --router-eval-root data/router_eval/ \
-  --calibration-results .runtime_tmp/router_calibration.json \
   --output .runtime_tmp/router_calibration_stability_report.json
 
 # Run adapter smoke tests (Tier 1C)
 .\scripts\python.cmd scripts/colab_adapter_smoke_test.py \
   --adapter-root models/adapters/ \
+  --output .runtime_tmp/adapter_smoke_test.json \
   --strict
 
 # Monitor dataset integrity (Tier 2A)
 .\scripts\python.cmd scripts/monitor_dataset_integrity.py \
-  --dataset-root data/prepared_runtime_datasets/<key> \
+  --root data/prepared_runtime_datasets \
   --output .runtime_tmp/dataset_integrity.json
 
 # Validate adapter metadata (Tier 2B)
 .\scripts\python.cmd scripts/validate_adapter_metadata_completeness.py \
   --adapter-root models/adapters/ \
-  --output .runtime_tmp/adapter_metadata_report.json
+  --output .runtime_tmp/adapter_metadata_completeness.json
 
 # Index artifact lineage (Tier 3A)
-.\scripts\python.cmd scripts/index_artifact_lineage.py \
+.\scripts\python.cmd scripts/index_training_runs.py \
   --runs-root runs/ \
-  --output .runtime_tmp/artifact_lineage_report.json
+  --output-root .runtime_tmp/run_index
 
 # Detect router drift (Tier 3B)
 .\scripts\python.cmd scripts/detect_router_threshold_drift.py \
-  --inference-logs-dir .runtime_tmp/inference_logs/ \
-  --baseline-week 2026-05-03
+  --root runs \
+  --output .runtime_tmp/router_drift_report.json
 
 # Validate notebook outputs (Tier 3C)
 .\scripts\python.cmd scripts/validate_notebook_outputs.py \
-  --notebook-output-root outputs/ \
+  --output-root outputs/colab_notebook_training \
   --output .runtime_tmp/notebook_output_validation.json
 ```
 
