@@ -1,0 +1,60 @@
+# OOD/OE Quality Audit
+
+- dataset: `grape__fruit`
+- records: 2033
+- issues: 631
+- roles: `{"continual": 767, "oe": 564, "ood": 354, "test": 174, "val": 174}`
+- issue types: `{"near_duplicate_perceptual_hash": 8, "semantic_slice_suspicion": 623}`
+
+## Top Review Items
+
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__161.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/157.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__161.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/165.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__177.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/173.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__177.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/181.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__193.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/197.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__257_1_.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/261.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__273_1_.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/277.jpg` - dHash Hamming distance <= 6
+- `review` `near_duplicate_perceptual_hash` `ood/off_crop_or_root_disease/off_crop_or_root_disease__65.jpg` vs `oe/same_crop_leaf_negatives/mites_leaf/z_m_Outlier-20260503T132613Z-3-001/61.jpg` - dHash Hamming distance <= 6
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/anthracnose_leaf/internet_20260506_bugwood_1235040_grape_anthracnose.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/1.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/101.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/105.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/109.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/110.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/113.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/117.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/121.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/125.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/126.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/129.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/13.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/133.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/137.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/14.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/141.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/142.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/145.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/149.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/153.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/157.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/158.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/161.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/165.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/169.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/17.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/173.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/174.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/177.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/181.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/185.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/189.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/190.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/193.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/197.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/201.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/205.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/206.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/209.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/21.jpg` - fruit adapter pool item has leaf-like path or slice tokens
+- `review` `semantic_slice_suspicion` `oe/same_crop_leaf_negatives/brown_spot_leaf/z_m_Outlier-20260503T132613Z-3-001/213.jpg` - fruit adapter pool item has leaf-like path or slice tokens

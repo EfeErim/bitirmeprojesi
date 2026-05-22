@@ -1,0 +1,31 @@
+{
+  "schema_version": "v1_ood_oe_quality_audit",
+  "created_at": "2026-05-14T17:06:49.214387+00:00",
+  "dataset_key": "grape__fruit",
+  "dataset_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit",
+  "record_count": 2033,
+  "counts_by_role": {
+    "continual": 767,
+    "val": 174,
+    "test": 174,
+    "ood": 354,
+    "oe": 564
+  },
+  "issue_count": 631,
+  "counts_by_issue_type": {
+    "near_duplicate_perceptual_hash": 8,
+    "semantic_slice_suspicion": 623
+  },
+  "counts_by_severity": {
+    "review": 631
+  },
+  "human_loop": {
+    "review_csv": "review_decisions.csv",
+    "allowed_decisions": [
+      "accept",
+      "ignore",
+      "quarantine"
+    ],
+    "apply_mode": "only rows with decision=quarantine are moved; no files are deleted"
+  }
+}

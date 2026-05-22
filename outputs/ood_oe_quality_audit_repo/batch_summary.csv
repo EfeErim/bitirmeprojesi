@@ -1,0 +1,9 @@
+dataset_key,record_count,issue_count,blocker_count,review_count,info_count,exact_overlap_count,near_duplicate_count,semantic_suspicion_count,output_dir,dataset_root
+apricot__fruit,1727,37,0,37,0,0,3,34,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\apricot__fruit,D:\bitirme projesi\data\prepared_runtime_datasets\apricot__fruit
+apricot__leaf,1125,25,0,25,0,0,8,17,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\apricot__leaf,D:\bitirme projesi\data\prepared_runtime_datasets\apricot__leaf
+grape__fruit,2033,631,0,631,0,0,8,623,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\grape__fruit,D:\bitirme projesi\data\prepared_runtime_datasets\grape__fruit
+grape__leaf,2842,33,0,33,0,0,8,25,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\grape__leaf,D:\bitirme projesi\data\prepared_runtime_datasets\grape__leaf
+strawberry__fruit,2083,121,0,121,0,0,49,72,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\strawberry__fruit,D:\bitirme projesi\data\prepared_runtime_datasets\strawberry__fruit
+strawberry__leaf,2958,17,0,17,0,0,5,12,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\strawberry__leaf,D:\bitirme projesi\data\prepared_runtime_datasets\strawberry__leaf
+tomato__fruit,3844,783,0,783,0,0,7,776,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\tomato__fruit,D:\bitirme projesi\data\prepared_runtime_datasets\tomato__fruit
+tomato__leaf,8423,455,0,455,0,0,6,449,D:\bitirme projesi\.runtime_tmp\ood_oe_quality_audit\tomato__leaf,D:\bitirme projesi\data\prepared_runtime_datasets\tomato__leaf
