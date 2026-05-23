@@ -638,7 +638,7 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-22T14:04:19Z`
+Generated: `2026-05-23T08:06:10Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
@@ -655,7 +655,7 @@ Candidate scan could not query all configured sources:
 - `router calibration`: network access blocked by local permissions
 - `conformal prediction`: network access blocked by local permissions
 
-Manual web fallback candidates checked on 2026-05-22 because the local arXiv API call was blocked. These are not accepted repo guidance until a maintainer promotes them into the Literature Anchors table above.
+Manual web fallback checked on 2026-05-23 because the local arXiv API call was blocked. These are not accepted repo guidance until a maintainer promotes them into the Literature Anchors table above.
 
 ##### Selecting Informative Conformal Prediction Sets with an Optimized FCR-Controlled Approach
 

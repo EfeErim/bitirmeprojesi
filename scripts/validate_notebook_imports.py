@@ -818,7 +818,7 @@ def test_router_calibration_notebook_contract() -> None:
 
 
 def test_ood_oe_quality_notebook_contract() -> None:
-    sources = _load_notebook_sources("7_ood_oe_quality_human_review.ipynb")
+    sources = _load_notebook_sources("7_ood_oe_quality.ipynb")
 
     _assert_code_cells_compile(sources, "Notebook 7")
     _assert_contains(
