@@ -24,6 +24,8 @@ desktop.ini
 Thumbs.db
 checkpoints/
 outputs/
+!outputs/ood_oe_quality_audit_repo/
+!outputs/ood_oe_quality_audit_repo/**
 logs/
 wandb/
 tensorboard/
