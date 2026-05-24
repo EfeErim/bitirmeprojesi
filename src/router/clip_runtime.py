@@ -154,21 +154,10 @@ def _build_limited_prompt_batch(
     vlm_config: Dict[str, Any],
     num_prompts: Optional[int],
 ) -> tuple[List[str], List[int]]:
-    if num_prompts is None:
-        return build_prompt_batch(labels=labels, label_type=label_type, vlm_config=vlm_config)
-
-    prompt_templates = get_prompt_templates_for_type(vlm_config, label_type)
     try:
-        prompt_limit = int(num_prompts)
+        prompt_limit = int(num_prompts) if num_prompts is not None else 0
     except (TypeError, ValueError, OverflowError):
         prompt_limit = 0
-    if prompt_limit > 0:
-        prompt_templates = prompt_templates[:prompt_limit]
-    prompt_vlm_config = dict(vlm_config)
-    prompt_templates_cfg = prompt_vlm_config.get("prompt_templates", {})
-    prompt_templates_cfg = dict(prompt_templates_cfg) if isinstance(prompt_templates_cfg, dict) else {}
-    prompt_templates_cfg[label_type] = list(prompt_templates)
-    prompt_vlm_config["prompt_templates"] = prompt_templates_cfg
 
     prompt_texts: List[str] = []
     prompt_to_class: List[int] = []
@@ -176,10 +165,12 @@ def _build_limited_prompt_batch(
         class_prompts = build_prompt_ensemble(
             label=label,
             label_type=label_type,
-            vlm_config=prompt_vlm_config,
+            vlm_config=vlm_config,
         )
         if not class_prompts:
             class_prompts = [str(label)]
+        if prompt_limit > 0:
+            class_prompts = class_prompts[:prompt_limit]
         prompt_texts.extend(class_prompts)
         prompt_to_class.extend([class_index] * len(class_prompts))
     return prompt_texts, prompt_to_class
@@ -292,6 +283,56 @@ def _aggregate_prompt_probabilities(
     with torch.no_grad():
         logits = aggregate_prompt_logits(prompt_logits, prompt_to_class, class_count)
     return torch.softmax(logits, dim=-1)
+
+
+def _aggregate_batch_prompt_probabilities(
+    probabilities: torch.Tensor,
+    *,
+    prompt_to_class: List[int],
+    class_count: int,
+) -> torch.Tensor:
+    if probabilities.numel() <= 0 or class_count <= 0:
+        return torch.zeros((int(probabilities.shape[0]), max(0, class_count)), dtype=torch.float32)
+
+    prompt_logits = torch.log(probabilities.clamp_min(1e-12))
+    class_logits = torch.full(
+        (int(prompt_logits.shape[0]), class_count),
+        float("-inf"),
+        dtype=prompt_logits.dtype,
+        device=prompt_logits.device,
+    )
+    for prompt_index, class_index in enumerate(prompt_to_class):
+        class_logits[:, class_index] = torch.maximum(class_logits[:, class_index], prompt_logits[:, prompt_index])
+    return torch.softmax(class_logits, dim=-1).detach().cpu()
+
+
+def _class_probabilities_to_label_scores(
+    probabilities: torch.Tensor,
+    *,
+    labels: List[str],
+) -> Dict[str, float]:
+    if probabilities.numel() <= 0:
+        return {}
+    return {
+        str(label): float(probabilities[0, index].item())
+        for index, label in enumerate(labels)
+    }
+
+
+def _batch_class_probabilities_to_label_scores(
+    probabilities: torch.Tensor,
+    *,
+    labels: List[str],
+) -> List[Dict[str, float]]:
+    if probabilities.numel() <= 0:
+        return [{} for _ in range(int(probabilities.shape[0]))]
+    return [
+        {
+            str(label): float(probabilities[image_index, label_index].item())
+            for label_index, label in enumerate(labels)
+        }
+        for image_index in range(int(probabilities.shape[0]))
+    ]
 
 
 def get_open_clip_text_embeddings(runtime: Any, prompts: List[str]) -> torch.Tensor:
@@ -455,15 +496,25 @@ def clip_score_labels_ensemble(
     if not labels:
         return "unknown", 0.0, {}
 
-    plan = _build_prompt_matrix_plan(runtime, labels=labels, label_type=label_type, num_prompts=num_prompts)
-    if plan.template_count <= 0 or not plan.flattened_prompts:
+    text_prompts, prompt_to_class = _build_limited_prompt_batch(
+        labels=labels,
+        label_type=label_type,
+        vlm_config=runtime.vlm_config,
+        num_prompts=num_prompts,
+    )
+    if not text_prompts:
         return "unknown", 0.0, {}
     request = ClipScoreRequest(image=image)
-    probabilities = _score_prompt_probabilities(runtime, list(plan.flattened_prompts), request=request)
-    label_avg_scores = _prompt_matrix_to_label_scores(
-        probabilities[0],
-        labels=plan.labels,
-        template_count=plan.template_count,
+    probabilities = _aggregate_prompt_probabilities(
+        runtime,
+        request=request,
+        text_prompts=text_prompts,
+        prompt_to_class=prompt_to_class,
+        class_count=len(labels),
+    )
+    label_avg_scores = _class_probabilities_to_label_scores(
+        probabilities,
+        labels=labels,
     )
     best_label, best_score = _best_label_and_score(label_avg_scores)
     return best_label, best_score, label_avg_scores
@@ -584,8 +635,13 @@ def clip_score_labels_ensemble_batch(
     if not labels:
         return [("unknown", 0.0, {}) for _ in images]
 
-    plan = _build_prompt_matrix_plan(runtime, labels=labels, label_type=label_type, num_prompts=num_prompts)
-    if plan.template_count <= 0 or not plan.flattened_prompts:
+    text_prompts, prompt_to_class = _build_limited_prompt_batch(
+        labels=labels,
+        label_type=label_type,
+        vlm_config=runtime.vlm_config,
+        num_prompts=num_prompts,
+    )
+    if not text_prompts:
         return [("unknown", 0.0, {}) for _ in images]
     shared_image_embeddings: Optional[torch.Tensor] = None
     if runtime.bioclip_backend == "open_clip":
@@ -597,15 +653,19 @@ def clip_score_labels_ensemble_batch(
 
     batch_scores = _score_prompt_probabilities(
         runtime,
-        list(plan.flattened_prompts),
+        text_prompts,
         images=images,
         image_batch_size=image_batch_size,
         image_embeddings=shared_image_embeddings,
     )
-    per_image_scores = _prompt_tensor_to_batch_label_scores(
+    class_probabilities = _aggregate_batch_prompt_probabilities(
         batch_scores,
-        labels=plan.labels,
-        template_count=plan.template_count,
+        prompt_to_class=prompt_to_class,
+        class_count=len(labels),
+    )
+    per_image_scores = _batch_class_probabilities_to_label_scores(
+        class_probabilities,
+        labels=labels,
     )
     results: List[Tuple[str, float, Dict[str, float]]] = []
     for label_avg_scores in per_image_scores:

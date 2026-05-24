@@ -211,6 +211,34 @@ def test_clip_score_labels_ensemble_reuses_open_clip_image_embedding():
     assert model.encode_image_calls == 1
 
 
+def test_clip_score_labels_ensemble_uses_crop_alias_prompts(monkeypatch):
+    pipeline = _build_pipeline()
+    pipeline.vlm_config.pop("prompt_templates", None)
+    captured_prompts = []
+
+    def _fake_score(_runtime, prompts, *, request=None, **_kwargs):
+        del request
+        captured_prompts.extend(prompts)
+        scores = torch.zeros((1, len(prompts)), dtype=torch.float32)
+        alias_index = next(index for index, prompt in enumerate(prompts) if "Solanum lycopersicum" in prompt)
+        scores[0, alias_index] = 1.0
+        return scores
+
+    monkeypatch.setattr(clip_runtime, "_score_prompt_probabilities", _fake_score)
+
+    best_label, best_score, scores = clip_runtime.clip_score_labels_ensemble(
+        pipeline,
+        Image.new("RGB", (8, 8), color="green"),
+        ["tomato", "potato"],
+        label_type="crop",
+    )
+
+    assert best_label == "tomato"
+    assert best_score > scores["potato"]
+    assert any("Solanum lycopersicum" in prompt for prompt in captured_prompts)
+    assert any("tomato leaf" in prompt for prompt in captured_prompts)
+
+
 def test_encode_and_score_raises_on_scoring_error_when_strict(monkeypatch):
     pipeline = _build_pipeline()
     pipeline.bioclip_backend = "transformers"

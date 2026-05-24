@@ -2,6 +2,80 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 
+TURKEY_PRIORITY_CROP_ALIASES: Dict[str, List[str]] = {
+    'wheat': ['wheat', 'bread wheat', 'durum wheat', 'Triticum aestivum', 'Triticum durum'],
+    'sugar beet': ['sugar beet', 'Beta vulgaris'],
+    'tomato': ['tomato', 'Solanum lycopersicum'],
+    'barley': ['barley', 'Hordeum vulgare'],
+    'maize': ['maize', 'corn', 'Zea mays'],
+    'potato': ['potato', 'Solanum tuberosum'],
+    'grape': ['grape', 'grapevine', 'Vitis vinifera'],
+    'strawberry': ['strawberry', 'Fragaria × ananassa'],
+    'apricot': ['apricot', 'Prunus armeniaca'],
+    'hazelnut': ['hazelnut', 'hazel', 'Corylus avellana'],
+    'olive': ['olive', 'olive tree', 'Olea europaea'],
+    'sunflower': ['sunflower', 'Helianthus annuus'],
+    'cotton': ['cotton', 'Gossypium'],
+}
+
+TURKEY_PRIORITY_CROP_PARTS: Dict[str, List[str]] = {
+    'wheat': ['leaf', 'stem', 'root', 'grain', 'ear', 'spike', 'kernel', 'seedling', 'whole plant'],
+    'sugar beet': ['leaf', 'root', 'crown', 'stem', 'seed', 'seedling', 'whole plant'],
+    'tomato': ['leaf', 'fruit', 'flower', 'stem', 'seed', 'bud', 'shoot', 'seedling', 'whole plant'],
+    'barley': ['leaf', 'stem', 'root', 'grain', 'ear', 'spike', 'kernel', 'seedling', 'whole plant'],
+    'maize': ['leaf', 'stem', 'root', 'grain', 'ear', 'cob', 'kernel', 'tassel', 'husk', 'seedling', 'whole plant'],
+    'potato': ['leaf', 'tuber', 'flower', 'stem', 'root', 'shoot', 'seedling', 'whole plant'],
+    'grape': ['leaf', 'fruit', 'berry', 'vine', 'stem', 'tendril', 'shoot', 'whole plant'],
+    'strawberry': ['leaf', 'fruit', 'berry', 'flower', 'crown', 'root', 'shoot', 'seedling', 'whole plant'],
+    'apricot': ['leaf', 'fruit', 'flower', 'branch', 'stem', 'bark', 'trunk', 'seed', 'bud', 'shoot', 'whole plant'],
+    'hazelnut': [
+        'leaf', 'nut', 'kernel', 'shell', 'husk', 'involucre', 'cupule',
+        'cluster', 'fruit cluster', 'nut cluster', 'hazelnut cluster',
+        'flower', 'male catkin', 'female flower', 'catkin', 'branch', 'shoot',
+        'stem', 'bark', 'trunk', 'root', 'bud', 'whole plant',
+    ],
+    'olive': ['leaf', 'fruit', 'flower', 'branch', 'stem', 'bark', 'trunk', 'seed', 'whole plant'],
+    'sunflower': ['leaf', 'flower', 'head', 'stem', 'seed', 'root', 'bud', 'seedling', 'whole plant'],
+    'cotton': ['leaf', 'flower', 'boll', 'stem', 'root', 'seed', 'bud', 'branch', 'whole plant'],
+}
+
+
+def _crop_key(label: str) -> str:
+    return str(label or '').strip().lower()
+
+
+def default_prompt_templates_for_type(label_type: str) -> List[str]:
+    """Return built-in prompt templates for a semantic label type."""
+    if label_type == 'part':
+        return [
+            "a photo of a plant {term}",
+            "a close-up photo of a plant {term}",
+            "a macro photo of a plant {term}",
+            "a {term} with damage",
+            "a {term} with disease",
+            "a diseased plant {term}",
+        ]
+    if label_type == 'crop':
+        return [
+            "a photo of {term}",
+            "a close-up photo of {term}",
+            "a macro photo of {term}",
+            "an image of {term}",
+            "a {term} crop",
+            "a {term} plant",
+            "a {term} with disease",
+            "a diseased {term}",
+        ]
+    return ["{term}"]
+
+
+def _crop_part_prompt_variants(term: str, part: str) -> List[str]:
+    return [
+        f"a photo of a {term} {part}",
+        f"a close-up photo of a {term} {part}",
+        f"a diseased {term} {part}",
+    ]
+
 
 def get_prompt_templates_for_type(vlm_config: Dict[str, Any], label_type: str) -> List[str]:
     """Get dynamic prompt templates from config with sane default fallback."""
@@ -14,17 +88,13 @@ def get_prompt_templates_for_type(vlm_config: Dict[str, Any], label_type: str) -
         label_templates = []
 
     cleaned_templates = [str(template).strip() for template in label_templates if str(template).strip()]
-    return cleaned_templates if cleaned_templates else ["{term}"]
+    return cleaned_templates if cleaned_templates else default_prompt_templates_for_type(label_type)
 
 
 def crop_prompt_aliases() -> Dict[str, List[str]]:
     """Return crop prompt aliases including scientific names where available."""
-    return {
-        'tomato': ['tomato', 'Solanum lycopersicum'],
-        'potato': ['potato', 'Solanum tuberosum'],
-        'grape': ['grape', 'Vitis vinifera'],
-        'strawberry': ['strawberry', 'Fragaria × ananassa'],
-    }
+    aliases = dict(TURKEY_PRIORITY_CROP_ALIASES)
+    return aliases
 
 
 def build_prompt_ensemble(label: str, label_type: str, vlm_config: Dict[str, Any]) -> List[str]:
@@ -37,36 +107,14 @@ def build_prompt_ensemble(label: str, label_type: str, vlm_config: Dict[str, Any
     custom_templates = prompt_templates_cfg.get(label_type, []) if isinstance(prompt_templates_cfg, dict) else []
 
     if label_type == 'part':
-        if custom_templates:
-            templates = custom_templates
-        else:
-            templates = [
-                "a photo of a plant {term}",
-                "a close-up photo of a plant {term}",
-                "a macro photo of a plant {term}",
-                "a {term} with damage",
-                "a {term} with disease",
-                "a diseased plant {term}",
-            ]
+        templates = custom_templates if custom_templates else default_prompt_templates_for_type(label_type)
         base_terms = [label_text]
     else:
         aliases = crop_prompt_aliases()
         alias_terms = aliases.get(label_text.lower(), [label_text])
         base_terms = [term for term in [label_text, *alias_terms] if isinstance(term, str) and term.strip()]
 
-        if custom_templates:
-            templates = custom_templates
-        else:
-            templates = [
-                "a photo of {term}",
-                "a close-up photo of {term}",
-                "a macro photo of {term}",
-                "an image of {term}",
-                "a {term} crop",
-                "a {term} plant",
-                "a {term} with disease",
-                "a diseased {term}",
-            ]
+        templates = custom_templates if custom_templates else default_prompt_templates_for_type(label_type)
 
     prompts: List[str] = []
     seen = set()
@@ -78,6 +126,13 @@ def build_prompt_ensemble(label: str, label_type: str, vlm_config: Dict[str, Any
             if key not in seen:
                 seen.add(key)
                 prompts.append(prompt)
+        if label_type == 'crop' and not custom_templates:
+            for part_name in TURKEY_PRIORITY_CROP_PARTS.get(_crop_key(label_text), []):
+                for prompt in _crop_part_prompt_variants(clean_term, part_name):
+                    key = prompt.lower()
+                    if key not in seen:
+                        seen.add(key)
+                        prompts.append(prompt)
     return prompts
 
 

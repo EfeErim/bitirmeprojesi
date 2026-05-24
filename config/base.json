@@ -183,7 +183,7 @@
         "balanced": {
           "sam3_prompt_limit": 6,
           "ensemble_config": {
-            "crop_num_prompts": 4,
+            "crop_num_prompts": 0,
             "part_num_prompts": 4
           }
         },
