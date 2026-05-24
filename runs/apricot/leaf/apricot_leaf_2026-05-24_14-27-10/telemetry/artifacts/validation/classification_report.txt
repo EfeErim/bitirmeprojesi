@@ -1,0 +1,9 @@
+                                                precision    recall  f1-score   support
+
+             kayısı_şarka_virüsü_yaprak_206       0.78      1.00      0.87        38
+                   kayısı_sağlıklı_yaprak_302       0.95      0.70      0.80        53
+kayısı_yaprak_delen_çil_hastalığı_yaprak_300       0.84      0.88      0.86        59
+
+                                      accuracy                           0.85       150
+                                     macro avg       0.85      0.86      0.85       150
+                                  weighted avg       0.86      0.85      0.84       150

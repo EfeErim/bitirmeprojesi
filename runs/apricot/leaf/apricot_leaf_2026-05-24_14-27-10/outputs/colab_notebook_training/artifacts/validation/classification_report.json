@@ -1,0 +1,33 @@
+{
+  "kayısı_şarka_virüsü_yaprak_206": {
+    "precision": 0.7755102040816326,
+    "recall": 1.0,
+    "f1-score": 0.8735632183908046,
+    "support": 38.0
+  },
+  "kayısı_sağlıklı_yaprak_302": {
+    "precision": 0.9487179487179487,
+    "recall": 0.6981132075471698,
+    "f1-score": 0.8043478260869565,
+    "support": 53.0
+  },
+  "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": {
+    "precision": 0.8387096774193549,
+    "recall": 0.8813559322033898,
+    "f1-score": 0.859504132231405,
+    "support": 59.0
+  },
+  "accuracy": 0.8466666666666667,
+  "macro avg": {
+    "precision": 0.8543126100729787,
+    "recall": 0.8598230465835198,
+    "f1-score": 0.8458050589030554,
+    "support": 150.0
+  },
+  "weighted avg": {
+    "precision": 0.8615687333659685,
+    "recall": 0.8466666666666667,
+    "f1-score": 0.8435772058874145,
+    "support": 150.0
+  }
+}
