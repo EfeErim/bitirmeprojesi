@@ -15,10 +15,11 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 - Notebook 2: [colab_notebooks/2_train_continual_sd_lora_adapter.ipynb](colab_notebooks/2_train_continual_sd_lora_adapter.ipynb)
 - Notebook 3: [colab_notebooks/3_validate_exported_adapter_directly.ipynb](colab_notebooks/3_validate_exported_adapter_directly.ipynb)
 - Notebook 5: [colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb)
+- Notebook 8: [colab_notebooks/8_auto_router_adapter_prediction.ipynb](colab_notebooks/8_auto_router_adapter_prediction.ipynb)
 - Training workflow: [src/workflows/training.py](src/workflows/training.py)
 - Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
 
-Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface.
+Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
 
 ## What the repo covers
 

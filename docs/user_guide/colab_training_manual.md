@@ -14,8 +14,9 @@ The repo also tracks one auxiliary notebook:
 
 - Notebook 4: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
 - Notebook 5: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
+- Notebook 8: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 
-Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts.
+Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts. Notebook 8 is a thin single-image wrapper over Notebook 1's router cells plus the canonical inference workflow.
 
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
@@ -43,6 +44,12 @@ Notebook 4 exposes the same direct adapter validation path behind a smaller widg
 ### Notebook 5
 
 Notebook 5 calibrates router crop/part handoff thresholds from a prepared `data/router_eval/` surface and writes JSON summaries under `.runtime_tmp/`.
+
+### Notebook 8
+
+Notebook 8 runs the full single-image deployment path. It reuses Notebook 1's router bootstrap, setup, upload, cache, diagnostics, and analysis cells, then hands the accepted router crop/part to the canonical `InferenceWorkflow.predict(...)` path for adapter loading, disease prediction, and OOD output.
+
+If the router result is uncertain, unknown, rejected, or unavailable, Notebook 8 does not force adapter prediction.
 
 ## Important Terms
 

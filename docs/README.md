@@ -24,6 +24,7 @@ Use this file as the routing index. If you are new, start with [../README.md](..
 - Canonical inference entrypoint: `src/workflows/inference.py`
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
+- Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 - Optional plantness input guard config: `inference.input_guard`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`

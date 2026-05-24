@@ -341,6 +341,7 @@ def test_adapter_surface() -> None:
 def test_runtime_surface() -> None:
     from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
     from src.workflows.inference import InferenceWorkflow
+    from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction
 
     runtime = RouterAdapterRuntime(
         config={
@@ -361,6 +362,57 @@ def test_runtime_surface() -> None:
     assert hasattr(runtime, "load_adapter")
     assert hasattr(runtime, "predict")
     assert InferenceWorkflow is not None
+    assert callable(run_auto_router_adapter_prediction)
+
+
+def test_auto_router_adapter_notebook_contract() -> None:
+    import inspect
+
+    from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction
+
+    sources = _load_notebook_sources("8_auto_router_adapter_prediction.ipynb")
+    helper_source = inspect.getsource(run_auto_router_adapter_prediction)
+
+    _assert_code_cells_compile(sources, "Notebook 8")
+    _assert_contains(
+        sources.first_code_source,
+        "def _ensure_aads_repo_on_path():",
+        "Notebook 8 first code cell should bootstrap the repo before cell runner import: {snippet}",
+    )
+    _assert_contains(
+        sources.first_code_source,
+        "run_cell_script('nb1_cell01_bootstrap.py', globals())",
+        "Notebook 8 should reuse Notebook 1 bootstrap cell script: {snippet}",
+    )
+    for script_name in (
+        "nb1_cell02_access_check.py",
+        "nb1_cell03_runtime_setup.py",
+        "nb1_cell04_analysis.py",
+        "nb8_cell05_adapter_prediction.py",
+    ):
+        _assert_contains(
+            sources.full_source,
+            f"run_cell_script('{script_name}', globals())",
+            "Notebook 8 should stay a thin wrapper over maintained cell scripts: {snippet}",
+        )
+    _assert_contains(
+        sources.full_source,
+        "from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction",
+        "Notebook 8 should use the maintained auto router-adapter helper: {snippet}",
+    )
+    _assert_contains(
+        helper_source,
+        "workflow_factory: WorkflowFactory = InferenceWorkflow",
+        "Notebook 8 helper should call the canonical InferenceWorkflow: {snippet}",
+    )
+    _assert_contains(
+        helper_source,
+        "trust_crop_hint=True",
+        "Notebook 8 helper should avoid duplicating Notebook 1 routing by using a trusted router handoff: {snippet}",
+    )
+    assert sources.full_source.count("run_inference(") == 1, (
+        "Notebook 8 should inherit the single Notebook 1 router call, not add a second router-only implementation"
+    )
 
 
 def test_adapter_smoke_notebook_surface() -> None:
@@ -954,6 +1006,15 @@ CHECKS = (
         success_message="Notebook 7 stays batchable and human-in-loop for quarantine decisions",
         failure_prefix="Notebook 7 OOD/OE review contract failed",
         callback=test_ood_oe_quality_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 8 Auto Inference",
+        step_id="NB8_AUTO_INFER",
+        description="Notebook 8 auto router-adapter contract",
+        success_message="Notebook 8 wraps Notebook 1 routing and canonical adapter inference",
+        failure_prefix="Notebook 8 auto inference contract failed",
+        callback=test_auto_router_adapter_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
