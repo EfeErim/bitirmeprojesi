@@ -1,0 +1,9 @@
+{
+  "name": "ckpt_e18_s1000_20260524_150256_227816",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_leaf_2026-05-24_14-53-08/checkpoints/ckpt_e18_s1000_20260524_150256_227816/training_checkpoint",
+  "created_at": "2026-05-24T15:02:57.787415+00:00",
+  "global_step": 1000,
+  "epoch": 18,
+  "reason": "batch_250",
+  "is_best": false
+}

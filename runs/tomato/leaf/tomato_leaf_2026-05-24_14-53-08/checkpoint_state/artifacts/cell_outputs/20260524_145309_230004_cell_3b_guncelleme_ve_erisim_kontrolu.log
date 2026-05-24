@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 3b: Guncelleme ve Erisim Kontrolu
+run_id=tomato_leaf_2026-05-24_14-53-08
+started_at=2026-05-24T14:53:09.230046+00:00
+finished_at=2026-05-24T14:53:09.960758+00:00
+duration_sec=0.731
+
+[KONTROL] Repo guncel gorunuyor.
+[KONTROL] GitHub okuma erisimi public; clone/pull icin ekstra token gerekmiyor.
+[KONTROL] GitHub push icin kimlik bilgisi hazir.
+[KONTROL] Gerekli Hugging Face modelleri anonim erisimle aciliyor.
