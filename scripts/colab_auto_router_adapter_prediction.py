@@ -72,12 +72,21 @@ def run_auto_router_adapter_prediction(
     status = str(handoff["status"] or "").strip().lower()
     crop = handoff["crop"]
     part = handoff["part"]
-    adapter_allowed = status in _ADAPTER_ALLOWED_ROUTER_STATUSES and bool(crop) and crop != "unknown"
+    adapter_allowed = (
+        status in _ADAPTER_ALLOWED_ROUTER_STATUSES
+        and bool(crop)
+        and crop != "unknown"
+        and bool(part)
+        and part != "unknown"
+    )
 
     if not adapter_allowed:
         if not crop or crop == "unknown":
             result_status = "unknown_crop"
             default_message = "Router could not resolve a supported crop."
+        elif not part or part == "unknown":
+            result_status = "router_uncertain"
+            default_message = "Router could not resolve a supported plant part."
         else:
             result_status = status or "router_unavailable"
             default_message = "Router result is not eligible for adapter prediction."

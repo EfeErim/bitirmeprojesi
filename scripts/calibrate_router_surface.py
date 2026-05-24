@@ -255,6 +255,9 @@ def _eligibility_reasons(
     target_negative_false_accept_rate: float,
     max_crop_accuracy_drop: float,
     max_part_precision_drop: float,
+    max_part_recall_drop: float,
+    max_wrong_part_rejection_drop: float,
+    max_p95_latency_regression: float,
 ) -> List[str]:
     reasons: List[str] = []
     if float(metrics.get("negative_false_accept_rate", 0.0)) > float(target_negative_false_accept_rate):
@@ -268,6 +271,19 @@ def _eligibility_reasons(
     )
     if float(metrics.get("part_non_unknown_precision", 0.0)) < min_part_precision:
         reasons.append("part_precision_drop")
+    min_part_recall = max(0.0, float(baseline_metrics.get("part_recall", 0.0)) - float(max_part_recall_drop))
+    if float(metrics.get("part_recall", 0.0)) < min_part_recall:
+        reasons.append("part_recall_drop")
+    min_wrong_part_rejection = max(
+        0.0,
+        float(baseline_metrics.get("wrong_part_rejection_rate", 0.0)) - float(max_wrong_part_rejection_drop),
+    )
+    if float(metrics.get("wrong_part_rejection_rate", 0.0)) < min_wrong_part_rejection:
+        reasons.append("wrong_part_rejection_drop")
+    baseline_p95_latency = float(baseline_metrics.get("p95_latency_ms", 0.0) or 0.0)
+    p95_latency = float(metrics.get("p95_latency_ms", 0.0) or 0.0)
+    if baseline_p95_latency > 0.0 and p95_latency > baseline_p95_latency * (1.0 + float(max_p95_latency_regression)):
+        reasons.append("p95_latency_regression")
     return reasons
 
 
@@ -278,6 +294,9 @@ def annotate_and_rank_variants(
     target_negative_false_accept_rate: float = 0.05,
     max_crop_accuracy_drop: float = 0.02,
     max_part_precision_drop: float = 0.02,
+    max_part_recall_drop: float = 0.02,
+    max_wrong_part_rejection_drop: float = 0.02,
+    max_p95_latency_regression: float = 0.25,
 ) -> List[JsonDict]:
     baseline_metrics = baseline.get("metrics", {})
     annotated: List[JsonDict] = []
@@ -290,6 +309,9 @@ def annotate_and_rank_variants(
             target_negative_false_accept_rate=target_negative_false_accept_rate,
             max_crop_accuracy_drop=max_crop_accuracy_drop,
             max_part_precision_drop=max_part_precision_drop,
+            max_part_recall_drop=max_part_recall_drop,
+            max_wrong_part_rejection_drop=max_wrong_part_rejection_drop,
+            max_p95_latency_regression=max_p95_latency_regression,
         )
         row["eligible"] = not reasons
         row["eligibility_reasons"] = reasons
@@ -306,6 +328,7 @@ def annotate_and_rank_variants(
             -float(metrics.get("part_non_unknown_precision", 0.0)),
             -float(metrics.get("part_recall", 0.0)),
             float(metrics.get("abstention_rate", 0.0)),
+            float(metrics.get("p95_latency_ms", 0.0)),
             float(metrics.get("mean_latency_ms", 0.0)),
             row.get("variant_id", ""),
         )
@@ -331,6 +354,9 @@ def calibrate_router_surface(
     target_negative_false_accept_rate: float = 0.05,
     max_crop_accuracy_drop: float = 0.02,
     max_part_precision_drop: float = 0.02,
+    max_part_recall_drop: float = 0.02,
+    max_wrong_part_rejection_drop: float = 0.02,
+    max_p95_latency_regression: float = 0.25,
     include_samples: bool = False,
 ) -> JsonDict:
     dataset = discover_eval_samples(root)
@@ -381,6 +407,9 @@ def calibrate_router_surface(
         target_negative_false_accept_rate=target_negative_false_accept_rate,
         max_crop_accuracy_drop=max_crop_accuracy_drop,
         max_part_precision_drop=max_part_precision_drop,
+        max_part_recall_drop=max_part_recall_drop,
+        max_wrong_part_rejection_drop=max_wrong_part_rejection_drop,
+        max_p95_latency_regression=max_p95_latency_regression,
     )
     recommended = ranked[0] if ranked else baseline
     variant_times = [float(row.get("metrics", {}).get("variant_wall_time_ms", 0.0)) for row in variants]
@@ -444,6 +473,14 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--max-crop-accuracy-drop", type=float, default=0.02)
     parser.add_argument("--max-part-precision-drop", type=float, default=0.02)
+    parser.add_argument("--max-part-recall-drop", type=float, default=0.02)
+    parser.add_argument("--max-wrong-part-rejection-drop", type=float, default=0.02)
+    parser.add_argument(
+        "--max-p95-latency-regression",
+        type=float,
+        default=0.25,
+        help="Maximum allowed p95 latency increase vs baseline as a fraction (default: 0.25).",
+    )
     parser.add_argument("--include-samples", action="store_true", help="Include per-sample rows for every variant.")
     parser.add_argument("--output", type=Path, help="Optional JSON output path")
     return parser
@@ -462,6 +499,9 @@ def main() -> int:
         target_negative_false_accept_rate=args.target_negative_far,
         max_crop_accuracy_drop=args.max_crop_accuracy_drop,
         max_part_precision_drop=args.max_part_precision_drop,
+        max_part_recall_drop=args.max_part_recall_drop,
+        max_wrong_part_rejection_drop=args.max_wrong_part_rejection_drop,
+        max_p95_latency_regression=args.max_p95_latency_regression,
         include_samples=args.include_samples,
     )
     body = json.dumps(result, indent=2)

@@ -122,3 +122,20 @@ def test_auto_prediction_skips_adapter_when_crop_is_unknown():
     assert result["crop"] == "unknown"
     assert result["router_handoff"]["adapter_ran"] is False
     assert FakeWorkflow.calls == []
+
+
+def test_auto_prediction_skips_adapter_when_part_is_unknown():
+    FakeWorkflow.calls.clear()
+
+    result = run_auto_router_adapter_prediction(
+        "leaf.jpg",
+        router_result=_router_result(status="ok", crop="tomato", part="unknown"),
+        workflow_factory=FakeWorkflow,
+    )
+
+    assert result["status"] == "router_uncertain"
+    assert result["crop"] == "tomato"
+    assert result["part"] == "unknown"
+    assert result["message"] == "Router could not resolve a supported plant part."
+    assert result["router_handoff"]["adapter_ran"] is False
+    assert FakeWorkflow.calls == []

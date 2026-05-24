@@ -121,6 +121,77 @@ def test_sample_from_analysis_marks_negative_false_accept_and_unsupported_part()
     assert sample["unsupported_part_emitted"] is True
     assert sample["predicted_crop"] == "tomato"
     assert sample["predicted_part"] == "root"
+    assert sample["top_crop_candidates"][0]["crop"] == "tomato"
+
+
+def test_sample_from_analysis_preserves_router_diagnostics():
+    item = {
+        "image_path": Path("sample.png"),
+        "group": "id",
+        "expected_crop": "tomato",
+        "expected_part": "leaf",
+        "expected_handoff": True,
+    }
+    analysis = RouterAnalysisResult(
+        status="ok",
+        message="Part abstained for crop=tomato",
+        detections=[
+            RouterDetection(
+                crop="tomato",
+                part="unknown",
+                crop_confidence=0.91,
+                part_confidence=0.50,
+                quality_score=0.77,
+                metadata={
+                    "raw_part_label": "fruit",
+                    "raw_part_confidence": 0.41,
+                    "raw_part_second_confidence": 0.20,
+                    "part_unknown_confidence": 0.46,
+                    "raw_part_margin": 0.21,
+                    "part_rejection_reason": "unknown_confidence (0.4600) >= confidence (0.4100)",
+                },
+            ),
+            RouterDetection(
+                crop="pepper",
+                part="leaf",
+                crop_confidence=0.81,
+                part_confidence=0.70,
+                quality_score=0.65,
+            ),
+        ],
+        detections_count=2,
+    )
+
+    sample = eval_script.sample_from_analysis(
+        item=item,
+        analysis=analysis,
+        latency_ms=14.0,
+        config={"router": {"crop_mapping": {"tomato": {"parts": ["leaf", "fruit"]}}}},
+    )
+
+    assert sample["top_crop_candidates"] == [
+        {
+            "crop": "tomato",
+            "part": "unknown",
+            "crop_confidence": 0.91,
+            "part_confidence": 0.5,
+            "quality_score": 0.77,
+        },
+        {
+            "crop": "pepper",
+            "part": "leaf",
+            "crop_confidence": 0.81,
+            "part_confidence": 0.7,
+            "quality_score": 0.65,
+        },
+    ]
+    assert sample["crop_confidence_margin"] == 0.1
+    assert sample["raw_part_label"] == "fruit"
+    assert sample["raw_part_confidence"] == 0.41
+    assert sample["part_unknown_confidence"] == 0.46
+    assert sample["part_rejection_reason"] == "unknown_confidence (0.4600) >= confidence (0.4100)"
+    assert sample["detection_count"] == 2
+    assert sample["latency_ms"] == 14.0
 
 
 def test_threshold_sweep_prefers_low_false_accept_then_accuracy():

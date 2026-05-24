@@ -135,6 +135,29 @@ def _routing_score(detection_payload: Dict[str, Any]) -> float:
     return _coerce_float(detection_payload.get("crop_confidence"), 0.0)
 
 
+def _top_crop_candidates(analysis: RouterAnalysisResult, *, limit: int = 5) -> List[Dict[str, Any]]:
+    best_by_crop: Dict[str, Dict[str, Any]] = {}
+    detections = list(analysis.detections or [])
+    if not detections and analysis.primary_detection is not None:
+        detections = [analysis.primary_detection]
+    for detection in detections:
+        payload = detection.to_dict()
+        crop_name = str(payload.get("crop", "unknown") or "unknown").strip().lower()
+        candidate = {
+            "crop": crop_name,
+            "part": normalize_part_label(payload.get("part", "unknown")) or "unknown",
+            "crop_confidence": _coerce_float(payload.get("crop_confidence"), 0.0),
+            "part_confidence": _coerce_float(payload.get("part_confidence"), 0.0),
+            "quality_score": None if payload.get("quality_score") is None else _coerce_float(payload.get("quality_score")),
+        }
+        existing = best_by_crop.get(crop_name)
+        if existing is None or _routing_score(candidate) > _routing_score(existing):
+            best_by_crop[crop_name] = candidate
+
+    ordered = sorted(best_by_crop.values(), key=lambda item: _routing_score(item), reverse=True)
+    return ordered[: max(1, int(limit))]
+
+
 def _routing_runner_up(
     analysis: RouterAnalysisResult,
     *,
@@ -174,8 +197,20 @@ def sample_from_analysis(
 ) -> Dict[str, Any]:
     detection = analysis.primary_detection
     detection_payload = {} if detection is None else detection.to_dict()
+    top_crop_candidates = _top_crop_candidates(analysis)
     predicted_crop = str(detection_payload.get("crop", "unknown") or "unknown").strip().lower()
     predicted_part = normalize_part_label(detection_payload.get("part", "unknown")) or "unknown"
+    raw_part_label = str(detection_payload.get("raw_part_label", predicted_part) or predicted_part).strip().lower()
+    raw_part_confidence = _coerce_float(
+        detection_payload.get("raw_part_confidence"),
+        _coerce_float(detection_payload.get("part_confidence"), 0.0),
+    )
+    raw_part_second_confidence = _coerce_float(detection_payload.get("raw_part_second_confidence"), 0.0)
+    raw_part_margin = _coerce_float(
+        detection_payload.get("raw_part_margin"),
+        raw_part_confidence - raw_part_second_confidence,
+    )
+    part_rejection_reason = str(detection_payload.get("part_rejection_reason", "") or "")
     confidence = _coerce_float(detection_payload.get("crop_confidence"), 0.0)
     status = str(analysis.status or "ok").strip().lower()
     supported_crops = _supported_crops(config)
@@ -192,6 +227,11 @@ def sample_from_analysis(
     if raw_handoff_crop and min_margin > 0.0 and routing_margin is not None and routing_margin < min_margin:
         gate_reasons.append("router_min_margin")
     handoff_crop = raw_handoff_crop and not gate_reasons
+    rejection_reasons = [
+        str(reason)
+        for reason in [str(analysis.message or ""), part_rejection_reason, *gate_reasons]
+        if str(reason).strip()
+    ]
     compatible_parts = _compatible_parts(config, predicted_crop)
     unsupported_part_emitted = bool(
         predicted_part not in {"", "unknown"}
@@ -212,6 +252,16 @@ def sample_from_analysis(
         "predicted_part": predicted_part,
         "router_status": status,
         "router_message": str(analysis.message or ""),
+        "top_crop_candidates": top_crop_candidates,
+        "crop_confidence_margin": (
+            None
+            if len(top_crop_candidates) < 2
+            else round(
+                _coerce_float(top_crop_candidates[0].get("crop_confidence"), 0.0)
+                - _coerce_float(top_crop_candidates[1].get("crop_confidence"), 0.0),
+                4,
+            )
+        ),
         "crop_confidence": confidence,
         "routing_score": primary_score,
         "runner_up_crop": runner_up_crop,
@@ -220,6 +270,14 @@ def sample_from_analysis(
         "router_handoff_crop": bool(raw_handoff_crop),
         "runtime_gate_rejected": bool(gate_reasons),
         "runtime_gate_reasons": gate_reasons,
+        "rejection_reason": "; ".join(rejection_reasons),
+        "raw_part_label": raw_part_label,
+        "raw_part_confidence": raw_part_confidence,
+        "raw_part_second_confidence": raw_part_second_confidence,
+        "raw_part_margin": raw_part_margin,
+        "part_unknown_confidence": _coerce_float(detection_payload.get("part_unknown_confidence"), 0.0),
+        "part_rejection_reason": part_rejection_reason,
+        "part_open_set_rejection_reason": str(detection_payload.get("part_open_set_rejection_reason", "") or ""),
         "processing_time_ms": float(analysis.processing_time_ms or latency_ms),
         "latency_ms": float(latency_ms),
         "handoff_crop": bool(handoff_crop),
