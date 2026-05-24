@@ -1,0 +1,1171 @@
+{
+  "train_loss": [
+    1.9849588303338914,
+    1.9374754542396182,
+    1.9153721332550049,
+    1.7760399125871205,
+    1.6613322780245827,
+    1.5731212298075359,
+    1.5334754160472326,
+    1.4741203898475284,
+    1.468320409456889,
+    1.441328525543213,
+    1.4161716813132876,
+    1.39565486567361,
+    1.397158219700768,
+    1.3836179574330647,
+    1.3864373479570662,
+    1.3771373828252156,
+    1.3673546654837472,
+    1.3589065472284954,
+    1.3543163878577096,
+    1.3448233774730138,
+    1.3455544312795003,
+    1.3509236971537273,
+    1.3445020346414476,
+    1.3470840681166876,
+    1.335057218869527,
+    1.344378460021246,
+    1.3353264104752314,
+    1.3383981443586803,
+    1.3397955326806932,
+    1.3294395208358765
+  ],
+  "val_loss": [
+    1.8852658065748804,
+    1.9299512498172713,
+    1.8761129202666107,
+    1.452675160066581,
+    1.2365392063870841,
+    1.0592332960646829,
+    0.9576723516723256,
+    0.9045844019195179,
+    0.8086994753943549,
+    0.7658994532661674,
+    0.6954982648661108,
+    0.7430971684279265,
+    0.7400879065195719,
+    0.6286281880773144,
+    0.5968120631612377,
+    0.6104050834237793,
+    0.5565470468114924,
+    0.539449092230679,
+    0.5439126020596351,
+    0.5745521106837709,
+    0.5584697495272131,
+    0.5282150698296818,
+    0.5604529163719695,
+    0.5228957022413795,
+    0.5226396719614664,
+    0.529273333924788,
+    0.5250190043890918,
+    0.520662937267327,
+    0.520605664562296,
+    0.5225540543044055
+  ],
+  "val_accuracy": [
+    0.18209876543209877,
+    0.10802469135802469,
+    0.2623456790123457,
+    0.43209876543209874,
+    0.49691358024691357,
+    0.6172839506172839,
+    0.6481481481481481,
+    0.7191358024691358,
+    0.7561728395061729,
+    0.7654320987654321,
+    0.7839506172839507,
+    0.7746913580246914,
+    0.7623456790123457,
+    0.8179012345679012,
+    0.8055555555555556,
+    0.8148148148148148,
+    0.8148148148148148,
+    0.8549382716049383,
+    0.8364197530864198,
+    0.8209876543209876,
+    0.8240740740740741,
+    0.845679012345679,
+    0.8240740740740741,
+    0.8395061728395061,
+    0.8271604938271605,
+    0.8271604938271605,
+    0.8364197530864198,
+    0.8364197530864198,
+    0.8364197530864198,
+    0.8302469135802469
+  ],
+  "macro_precision": [
+    0.10166500508785248,
+    0.07674901932477951,
+    0.2897351086139679,
+    0.4372534453868866,
+    0.502630889415741,
+    0.6317514777183533,
+    0.6360191702842712,
+    0.705012857913971,
+    0.7307340502738953,
+    0.7584092020988464,
+    0.7575664520263672,
+    0.7567671537399292,
+    0.7534751296043396,
+    0.7917945981025696,
+    0.7724846601486206,
+    0.7854066491127014,
+    0.783649742603302,
+    0.8287544250488281,
+    0.8098692893981934,
+    0.7933515906333923,
+    0.7912615537643433,
+    0.8150476813316345,
+    0.796602725982666,
+    0.8071714043617249,
+    0.7933862805366516,
+    0.7972230315208435,
+    0.8062227964401245,
+    0.8034089803695679,
+    0.8034089803695679,
+    0.7972951531410217
+  ],
+  "macro_recall": [
+    0.15417121350765228,
+    0.1825396865606308,
+    0.3310551643371582,
+    0.41955259442329407,
+    0.48777347803115845,
+    0.5961549878120422,
+    0.6566846966743469,
+    0.692207396030426,
+    0.7280454635620117,
+    0.7373642921447754,
+    0.7627676725387573,
+    0.7577352523803711,
+    0.7641043663024902,
+    0.8030956983566284,
+    0.7899314165115356,
+    0.8021148443222046,
+    0.7946090698242188,
+    0.8361493945121765,
+    0.8176516890525818,
+    0.8158745765686035,
+    0.8122825026512146,
+    0.8294118642807007,
+    0.8160529732704163,
+    0.8237651586532593,
+    0.8149279952049255,
+    0.8189101219177246,
+    0.8259358406066895,
+    0.8216501474380493,
+    0.8216501474380493,
+    0.8169663548469543
+  ],
+  "macro_f1": [
+    0.06908130645751953,
+    0.0681489109992981,
+    0.21641992032527924,
+    0.38176584243774414,
+    0.45365673303604126,
+    0.5921945571899414,
+    0.6246560215950012,
+    0.6876551508903503,
+    0.7215467691421509,
+    0.7369838356971741,
+    0.7545568346977234,
+    0.7483352422714233,
+    0.7396754026412964,
+    0.7904646992683411,
+    0.7737755179405212,
+    0.785650908946991,
+    0.7846445441246033,
+    0.828395426273346,
+    0.8094287514686584,
+    0.7946701645851135,
+    0.7939707040786743,
+    0.8179253935813904,
+    0.7959128618240356,
+    0.8105134963989258,
+    0.7969293594360352,
+    0.798736035823822,
+    0.8084127306938171,
+    0.8063883781433105,
+    0.8063883781433105,
+    0.7999106049537659
+  ],
+  "weighted_f1": [
+    0.08327970387023172,
+    0.06605343171107916,
+    0.19172444755648388,
+    0.37579284479588637,
+    0.4556273472161941,
+    0.609445736732012,
+    0.6469192504882812,
+    0.7173499119134596,
+    0.7541912691092786,
+    0.766238648214458,
+    0.7857579360773534,
+    0.7755052542980806,
+    0.7630393887743537,
+    0.8202833010826582,
+    0.8096748634620949,
+    0.818247006263262,
+    0.8172780731577932,
+    0.8573011233482832,
+    0.8379819893542632,
+    0.8238606394073109,
+    0.8272362226321374,
+    0.849328217683015,
+    0.8283487955729166,
+    0.8438096223054109,
+    0.8298373752170138,
+    0.8324003808292342,
+    0.8413347785855517,
+    0.8408454612449363,
+    0.8408454612449363,
+    0.8348945335105613
+  ],
+  "balanced_accuracy": [
+    0.15417121350765228,
+    0.1825396865606308,
+    0.3310551643371582,
+    0.41955259442329407,
+    0.48777347803115845,
+    0.5961549878120422,
+    0.6566846966743469,
+    0.692207396030426,
+    0.7280454635620117,
+    0.7373642921447754,
+    0.7627676725387573,
+    0.7577352523803711,
+    0.7641043663024902,
+    0.8030956983566284,
+    0.7899314165115356,
+    0.8021148443222046,
+    0.7946090698242188,
+    0.8361493945121765,
+    0.8176516890525818,
+    0.8158745765686035,
+    0.8122825026512146,
+    0.8294118642807007,
+    0.8160529732704163,
+    0.8237651586532593,
+    0.8149279952049255,
+    0.8189101219177246,
+    0.8259358406066895,
+    0.8216501474380493,
+    0.8216501474380493,
+    0.8169663548469543
+  ],
+  "generalization_gap": [
+    -0.09969302375901101,
+    -0.007524204422346914,
+    -0.03925921298839419,
+    -0.3233647525205394,
+    -0.4247930716374986,
+    -0.513887933742853,
+    -0.575803064374907,
+    -0.5695359879280104,
+    -0.659620934062534,
+    -0.6754290722770455,
+    -0.7206734164471769,
+    -0.6525576972456836,
+    -0.657070313181196,
+    -0.7549897693557504,
+    -0.7896252847958285,
+    -0.7667322994014363,
+    -0.8108076186722548,
+    -0.8194574549978163,
+    -0.8104037857980745,
+    -0.770271266789243,
+    -0.7870846817522872,
+    -0.8227086273240455,
+    -0.7840491182694781,
+    -0.8241883658753081,
+    -0.8124175469080607,
+    -0.815105126096458,
+    -0.8103074060861396,
+    -0.8177352070913533,
+    -0.8191898681183972,
+    -0.806885466531471
+  ],
+  "per_class_accuracy": [
+    {
+      "üzüm_antraknoz_yaprak": 0.019999999552965164,
+      "üzüm_kav_esca_yaprak": 0.0,
+      "üzüm_külleme_yaprak": 0.0,
+      "üzüm_leafroll_virüs_yaprak": 0.9444444179534912,
+      "üzüm_mildiyö_yaprak": 0.1147540956735611,
+      "üzüm_sağlıklı_yaprak": 0.0,
+      "üzüm_yelpaze_virüsü_yaprak": 0.0
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.0,
+      "üzüm_kav_esca_yaprak": 0.0,
+      "üzüm_külleme_yaprak": 1.0,
+      "üzüm_leafroll_virüs_yaprak": 0.2777777910232544,
+      "üzüm_mildiyö_yaprak": 0.0,
+      "üzüm_sağlıklı_yaprak": 0.0,
+      "üzüm_yelpaze_virüsü_yaprak": 0.0
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.1041666641831398,
+      "üzüm_külleme_yaprak": 0.6000000238418579,
+      "üzüm_leafroll_virüs_yaprak": 0.29629629850387573,
+      "üzüm_mildiyö_yaprak": 0.0,
+      "üzüm_sağlıklı_yaprak": 0.0,
+      "üzüm_yelpaze_virüsü_yaprak": 0.5769230723381042
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.2199999988079071,
+      "üzüm_kav_esca_yaprak": 0.2708333432674408,
+      "üzüm_külleme_yaprak": 0.550000011920929,
+      "üzüm_leafroll_virüs_yaprak": 0.5555555820465088,
+      "üzüm_mildiyö_yaprak": 0.032786883413791656,
+      "üzüm_sağlıklı_yaprak": 1.0,
+      "üzüm_yelpaze_virüsü_yaprak": 0.3076923191547394
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.25999999046325684,
+      "üzüm_kav_esca_yaprak": 0.3541666567325592,
+      "üzüm_külleme_yaprak": 0.6000000238418579,
+      "üzüm_leafroll_virüs_yaprak": 0.6296296119689941,
+      "üzüm_mildiyö_yaprak": 0.14754098653793335,
+      "üzüm_sağlıklı_yaprak": 1.0,
+      "üzüm_yelpaze_virüsü_yaprak": 0.42307692766189575
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.3799999952316284,
+      "üzüm_kav_esca_yaprak": 0.6458333134651184,
+      "üzüm_külleme_yaprak": 0.5,
+      "üzüm_leafroll_virüs_yaprak": 0.5370370149612427,
+      "üzüm_mildiyö_yaprak": 0.5409836173057556,
+      "üzüm_sağlıklı_yaprak": 0.9538461565971375,
+      "üzüm_yelpaze_virüsü_yaprak": 0.6153846383094788
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.5799999833106995,
+      "üzüm_kav_esca_yaprak": 0.75,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.6666666865348816,
+      "üzüm_mildiyö_yaprak": 0.37704917788505554,
+      "üzüm_sağlıklı_yaprak": 0.8307692408561707,
+      "üzüm_yelpaze_virüsü_yaprak": 0.692307710647583
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.5400000214576721,
+      "üzüm_kav_esca_yaprak": 0.7916666865348816,
+      "üzüm_külleme_yaprak": 0.44999998807907104,
+      "üzüm_leafroll_virüs_yaprak": 0.6481481194496155,
+      "üzüm_mildiyö_yaprak": 0.7540983557701111,
+      "üzüm_sağlıklı_yaprak": 0.892307698726654,
+      "üzüm_yelpaze_virüsü_yaprak": 0.7692307829856873
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.5400000214576721,
+      "üzüm_kav_esca_yaprak": 0.8125,
+      "üzüm_külleme_yaprak": 0.5,
+      "üzüm_leafroll_virüs_yaprak": 0.8148148059844971,
+      "üzüm_mildiyö_yaprak": 0.7213114500045776,
+      "üzüm_sağlıklı_yaprak": 0.9384615421295166,
+      "üzüm_yelpaze_virüsü_yaprak": 0.7692307829856873
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.5199999809265137,
+      "üzüm_kav_esca_yaprak": 0.7916666865348816,
+      "üzüm_külleme_yaprak": 0.550000011920929,
+      "üzüm_leafroll_virüs_yaprak": 0.7407407164573669,
+      "üzüm_mildiyö_yaprak": 0.8360655903816223,
+      "üzüm_sağlıklı_yaprak": 0.9538461565971375,
+      "üzüm_yelpaze_virüsü_yaprak": 0.7692307829856873
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.6399999856948853,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.6000000238418579,
+      "üzüm_leafroll_virüs_yaprak": 0.7407407164573669,
+      "üzüm_mildiyö_yaprak": 0.7704917788505554,
+      "üzüm_sağlıklı_yaprak": 0.9230769276618958,
+      "üzüm_yelpaze_virüsü_yaprak": 0.7692307829856873
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.6000000238418579,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.6000000238418579,
+      "üzüm_leafroll_virüs_yaprak": 0.7592592835426331,
+      "üzüm_mildiyö_yaprak": 0.6721311211585999,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.807692289352417
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.6399999856948853,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.75,
+      "üzüm_leafroll_virüs_yaprak": 0.7777777910232544,
+      "üzüm_mildiyö_yaprak": 0.5081967115402222,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.807692289352417
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.6800000071525574,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.8148148059844971,
+      "üzüm_mildiyö_yaprak": 0.7540983557701111,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.807692289352417
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.6000000238418579,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.6557376980781555,
+      "üzüm_sağlıklı_yaprak": 0.9384615421295166,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8461538553237915
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7200000286102295,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.7962962985038757,
+      "üzüm_mildiyö_yaprak": 0.7049180269241333,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.807692289352417
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7200000286102295,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8148148059844971,
+      "üzüm_mildiyö_yaprak": 0.7377049326896667,
+      "üzüm_sağlıklı_yaprak": 0.9538461565971375,
+      "üzüm_yelpaze_virüsü_yaprak": 0.7692307829856873
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8518518805503845,
+      "üzüm_mildiyö_yaprak": 0.8360655903816223,
+      "üzüm_sağlıklı_yaprak": 0.9538461565971375,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.8958333134651184,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8518518805503845,
+      "üzüm_mildiyö_yaprak": 0.7704917788505554,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8461538553237915
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.75,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.6557376980781555,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8461538553237915
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.6721311211585999,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8518518805503845,
+      "üzüm_mildiyö_yaprak": 0.8196721076965332,
+      "üzüm_sağlıklı_yaprak": 0.9230769276618958,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7200000286102295,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.688524603843689,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.8032786846160889,
+      "üzüm_sağlıklı_yaprak": 0.9384615421295166,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8518518805503845,
+      "üzüm_mildiyö_yaprak": 0.6721311211585999,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.688524603843689,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7400000095367432,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.699999988079071,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.7377049326896667,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.7377049326896667,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.7377049326896667,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    },
+    {
+      "üzüm_antraknoz_yaprak": 0.7599999904632568,
+      "üzüm_kav_esca_yaprak": 0.9166666865348816,
+      "üzüm_külleme_yaprak": 0.6499999761581421,
+      "üzüm_leafroll_virüs_yaprak": 0.8333333134651184,
+      "üzüm_mildiyö_yaprak": 0.7049180269241333,
+      "üzüm_sağlıklı_yaprak": 0.9692307710647583,
+      "üzüm_yelpaze_virüsü_yaprak": 0.8846153616905212
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "üzüm_sağlıklı_yaprak",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 65
+      },
+      {
+        "class_name": "üzüm_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 48
+      },
+      {
+        "class_name": "üzüm_yelpaze_virüsü_yaprak",
+        "class_index": 6,
+        "accuracy": 0.0,
+        "support": 26
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_sağlıklı_yaprak",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 65
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_sağlıklı_yaprak",
+        "class_index": 5,
+        "accuracy": 0.0,
+        "support": 65
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.0,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.1041666641831398,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.032786883413791656,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.2199999988079071,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.2708333432674408,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.14754098653793335,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.25999999046325684,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_kav_esca_yaprak",
+        "class_index": 1,
+        "accuracy": 0.3541666567325592,
+        "support": 48
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.3799999952316284,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.5,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_leafroll_virüs_yaprak",
+        "class_index": 3,
+        "accuracy": 0.5370370149612427,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.37704917788505554,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5799999833106995,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_leafroll_virüs_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6666666865348816,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.44999998807907104,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5400000214576721,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_leafroll_virüs_yaprak",
+        "class_index": 3,
+        "accuracy": 0.6481481194496155,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.5,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5400000214576721,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7213114500045776,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.5199999809265137,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.550000011920929,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_leafroll_virüs_yaprak",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6399999856948853,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_leafroll_virüs_yaprak",
+        "class_index": 3,
+        "accuracy": 0.7407407164573669,
+        "support": 54
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6000000238418579,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6721311211585999,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.5081967115402222,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6399999856948853,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 20
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.6800000071525574,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7540983557701111,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6000000238418579,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6557376980781555,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7049180269241333,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7200000286102295,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7200000286102295,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8360655903816223,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7704917788505554,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6557376980781555,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.75,
+        "support": 20
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6721311211585999,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8196721076965332,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.688524603843689,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7200000286102295,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.8032786846160889,
+        "support": 61
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.6721311211585999,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.688524603843689,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.699999988079071,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7400000095367432,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7377049326896667,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ],
+    [
+      {
+        "class_name": "üzüm_külleme_yaprak",
+        "class_index": 2,
+        "accuracy": 0.6499999761581421,
+        "support": 20
+      },
+      {
+        "class_name": "üzüm_mildiyö_yaprak",
+        "class_index": 4,
+        "accuracy": 0.7049180269241333,
+        "support": 61
+      },
+      {
+        "class_name": "üzüm_antraknoz_yaprak",
+        "class_index": 0,
+        "accuracy": 0.7599999904632568,
+        "support": 50
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 630,
+  "optimizer_steps": 630,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 29,
+  "best_metric_value": 0.520605664562296
+}
