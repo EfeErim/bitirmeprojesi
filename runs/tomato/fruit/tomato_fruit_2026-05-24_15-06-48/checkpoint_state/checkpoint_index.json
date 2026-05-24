@@ -1,0 +1,12 @@
+[
+  {
+    "name": "ckpt_e20_s700_20260524_151223_766818",
+    "path": "/content/bitirmeprojesi/runs/tomato/fruit/tomato_fruit_2026-05-24_15-06-48/checkpoint_state/checkpoints/ckpt_e20_s700_20260524_151223_766818",
+    "created_at": "2026-05-24T15:12:25.341656+00:00",
+    "global_step": 700,
+    "epoch": 20,
+    "reason": "epoch_end",
+    "is_best": true,
+    "val_loss": 0.34419529503133117
+  }
+]
