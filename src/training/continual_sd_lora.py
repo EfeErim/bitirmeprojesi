@@ -212,7 +212,7 @@ class ContinualSDLoRAConfig:
     grad_accumulation_steps: int = 4
     max_grad_norm: float = 1.0
     mixed_precision: str = "auto"
-    enable_torch_compile: bool = True
+    enable_torch_compile: bool = False
     loss_name: str = "logitnorm"
     logitnorm_tau: float = 1.0
     label_smoothing: float = 0.0
