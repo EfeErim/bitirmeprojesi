@@ -754,8 +754,8 @@ class TrainingWorkflow:
         artifact_subdir: str,
         telemetry_subdir: Optional[str] = None,
         evaluation_result: Any = None,
-        requested_primary_score_method: str = "ensemble",
-        selected_primary_score_method: str = "ensemble",
+        requested_primary_score_method: str = "auto",
+        selected_primary_score_method: str = "auto",
         selection_source: str = "",
         gate_targets: Optional[Dict[str, float]] = None,
         gate_auxiliary_ood_diagnostics: bool = False,
@@ -999,7 +999,7 @@ class TrainingWorkflow:
                     self.config.get("training", {})
                     .get("continual", {})
                     .get("ood", {})
-                    .get("primary_score_method", "ensemble")
+                    .get("primary_score_method", "auto")
                 ),
                 "min_classes": int(min_classes),
             },

@@ -8,7 +8,6 @@ import csv
 from pathlib import Path
 from PIL import Image
 import random
-import os
 import json
 
 RUNTIME = Path('.runtime_tmp')
@@ -29,35 +28,48 @@ REPORT = {}
 
 def local_path(image_path):
     # convert /content/bitirmeprojesi/... to workspace path
+    if not image_path:
+        return Path(image_path)
     if image_path.startswith('/content/bitirmeprojesi'):
         rel = image_path.replace('/content/bitirmeprojesi/', '').lstrip('/')
-        # on Windows workspace root is current dir
         p = Path(rel)
         return Path.cwd() / p
-    # handle absolute workspace-like
     if image_path.startswith('data/') or image_path.startswith('runs/'):
         return Path.cwd() / image_path
     return Path(image_path)
+
+
+def find_key(obj, key):
+    if isinstance(obj, dict):
+        if key in obj:
+            return obj[key]
+        for v in obj.values():
+            res = find_key(v, key)
+            if res is not None:
+                return res
+    return None
 
 for crop, part, run in TARGETS:
     print('Processing', run)
     # find predictions.csv
     preds = None
-    p1 = Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'test'/'predictions.csv'
-    p2 = Path('runs')/crop/part/run/'telemetry'/'artifacts'/'test'/'predictions.csv'
-    p3 = Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'test'/'predictions.csv'
-    for candidate in [p1,p2,p3]:
+    candidates = [
+        Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'test'/'predictions.csv',
+        Path('runs')/crop/part/run/'telemetry'/'artifacts'/'test'/'predictions.csv',
+        Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'test'/'predictions.csv',
+    ]
+    for candidate in candidates:
         if candidate.exists():
             preds = candidate
             break
     if not preds:
-        # search
         for p in (Path('runs')/crop/part/run).rglob('predictions.csv'):
             preds = p
             break
     if not preds:
         print('predictions.csv not found for', run)
         continue
+
     # load production_readiness to get worst slice name
     prod = None
     for p in (Path('runs')/crop/part/run).rglob('production_readiness.json'):
@@ -68,15 +80,16 @@ for crop, part, run in TARGETS:
         try:
             with open(prod,'r',encoding='utf-8') as f:
                 pr = json.load(f)
-            w = pr.get('ood_method_comparison', {}).get('methods', {}).get('ensemble', {}).get('worst_slice', {})
+            omc = find_key(pr, 'ood_method_comparison') or {}
+            w = omc.get('methods', {}).get('ensemble', {}).get('worst_slice', {})
             worst_slice = w.get('slice_name') if isinstance(w, dict) else None
         except Exception:
             worst_slice = None
-    # fallback: ask user (but we'll pick first ood_type in breakdown)
+    # fallback: pick first ood_type in breakdown
     if not worst_slice and prod:
         with open(prod,'r',encoding='utf-8') as f:
             pr = json.load(f)
-        types = list(pr.get('ood_type_breakdown', {}).keys())
+        types = list(find_key(pr, 'ood_type_breakdown') or {})
         worst_slice = types[0] if types else None
     if not worst_slice:
         print('Could not determine worst slice for', run)
@@ -91,16 +104,14 @@ for crop, part, run in TARGETS:
         reader = csv.DictReader(f)
         for r in reader:
             ot = r.get('ood_type') or r.get('sample_origin')
-            if ot == worst_slice or (r.get('sample_origin') and r.get('sample_origin') != 'in_distribution' and worst_slice in r.get('image_path')):
+            if ot == worst_slice or (r.get('sample_origin') and r.get('sample_origin') != 'in_distribution' and worst_slice in (r.get('image_path') or '')):
                 rows.append(r)
     if not rows:
-        # try matching by ood_primary_score_method? fallback to any ood sample
         with open(preds, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             for r in reader:
                 if r.get('sample_origin') and r.get('sample_origin') != 'in_distribution':
                     rows.append(r)
-    # sample up to N
     sample = rows if len(rows) <= N else random.sample(rows, N)
     stats = []
     for i, r in enumerate(sample):

@@ -20,27 +20,48 @@ TARGET_RUNS = [
 
 rows = []
 for crop, part, run in TARGET_RUNS:
-    # try outputs path then telemetry path
-    candidates = [
-        Path('runs')/crop/part/run/ 'outputs' / 'colab_notebook_training' / 'artifacts' / 'production_readiness.json',
-    ]
-    # correct builder: some runs have production_readiness under outputs/...; also under telemetry/artifacts/production_readiness.json
-    p1 = Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'production_readiness.json'
-    p2 = Path('runs')/crop/part/run/'telemetry'/'artifacts'/'production_readiness.json'
+    # locate production_readiness.json by searching under run dir
     prod = None
-    if p1.exists(): prod = p1
-    elif p2.exists(): prod = p2
+    run_dir = Path('runs') / crop / part / run
+    # prefer outputs/colab_notebook_training/artifacts/production_readiness.json if present
+    p_outputs = Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'production_readiness.json'
+    p_outputs2 = Path('runs')/crop/part/run/'outputs'/'colab_notebook_training'/'artifacts'/'test'/'production_readiness.json'
+    p_telemetry = Path('runs')/crop/part/run/'telemetry'/'artifacts'/'production_readiness.json'
+    prod = None
+    if p_outputs.exists():
+        prod = p_outputs
+    elif p_outputs2.exists():
+        prod = p_outputs2
+    elif p_telemetry.exists():
+        prod = p_telemetry
     else:
-        # search
-        for p in (Path('runs')/crop/part/run).rglob('production_readiness.json'):
-            prod = p
-            break
+        if run_dir.exists():
+            for p in run_dir.rglob('production_readiness.json'):
+                prod = p
+                break
+    # try alternative path where crop_part combined
+    if not prod:
+        run_dir2 = Path('runs') / f"{crop}_{part}" / run
+        if run_dir2.exists():
+            for p in run_dir2.rglob('production_readiness.json'):
+                prod = p
+                break
     if not prod:
         print('production_readiness.json not found for', run)
         continue
     with open(prod, 'r', encoding='utf-8') as f:
         pr = json.load(f)
-    omc = pr.get('ood_method_comparison', {})
+    # ood_method_comparison may be nested under context; search recursively
+    def find_key(obj, key):
+        if isinstance(obj, dict):
+            if key in obj:
+                return obj[key]
+            for v in obj.values():
+                res = find_key(v, key)
+                if res is not None:
+                    return res
+        return None
+    omc = find_key(pr, 'ood_method_comparison') or {}
     methods = omc.get('methods', {})
     for m, info in methods.items():
         pooled = info.get('pooled_metrics', {})

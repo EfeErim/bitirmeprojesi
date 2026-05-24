@@ -747,6 +747,98 @@ def test_training_workflow_keeps_configured_runtime_method_for_real_ood_auto_mod
     assert saved_methods == [{"config": "ensemble", "detector": "ensemble"}]
 
 
+def test_training_workflow_auto_selects_knn_for_real_ood_dev(monkeypatch, tmp_path: Path):
+    saved_methods = []
+
+    class RealOodDevAdapter(FakeAdapter):
+        def build_training_session(self, train_loader, **kwargs):
+            session = super().build_training_session(train_loader, **kwargs)
+            self._session = session
+            trainer = session.trainer
+            trainer.config = type(
+                "FakeTrainerConfig",
+                (),
+                {
+                    "evaluation_require_ood_for_gate": True,
+                    "evaluation_emit_ood_gate": True,
+                    "ood_primary_score_method": "auto",
+                },
+            )()
+            trainer.ood_detector = type("FakeOOD", (), {"primary_score_method": "ensemble"})()
+            return session
+
+        def save_adapter(self, output_dir):
+            trainer = getattr(getattr(self, "_session", None), "trainer", None)
+            if trainer is not None:
+                saved_methods.append(
+                    {
+                        "config": getattr(getattr(trainer, "config", None), "ood_primary_score_method", ""),
+                        "detector": getattr(getattr(trainer, "ood_detector", None), "primary_score_method", ""),
+                    }
+                )
+            return super().save_adapter(output_dir)
+
+    RealOodDevAdapter.last_export_metadata = None
+
+    monkeypatch.setattr(
+        "src.workflows.training.create_training_loaders",
+        lambda **kwargs: {
+            "train": FakeLoader(["healthy", "disease_a"], split_name="train"),
+            "val": FakeLoader(["healthy", "disease_a"], split_name="val"),
+            "test": FakeLoader(["healthy", "disease_a"], split_name="test"),
+            "ood_dev": FakeLoader(["unknown"], split_name="ood_dev"),
+            "ood": FakeLoader(["unknown"], split_name="ood"),
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.IndependentCropAdapter", RealOodDevAdapter)
+    monkeypatch.setattr(
+        "src.workflows.training.evaluate_model_with_artifact_metrics",
+        lambda trainer, loader, *, ood_loader=None: _fake_evaluation_result(include_ood=ood_loader is not None),
+    )
+    monkeypatch.setattr(
+        "src.workflows.training.build_real_ood_dev_selection",
+        lambda evaluation, *, fallback, target_fpr: {
+            "selection_source": "real_ood_dev",
+            "selected_primary_score_method": "knn",
+            "selected_threshold": 0.123,
+            "target_fpr": float(target_fpr),
+            "dev_metrics": {"ood_auroc": 0.95, "ood_false_positive_rate": 0.02},
+            "method_metrics": {"knn": {"ood_auroc": 0.95, "ood_false_positive_rate": 0.02}},
+        },
+    )
+    monkeypatch.setattr("src.workflows.training.run_leave_one_class_out_benchmark", lambda **kwargs: {})
+
+    workflow = TrainingWorkflow(
+        config={
+            "training": {
+                "continual": {
+                    "backbone": {"model_name": "fake"},
+                    "batch_size": 2,
+                    "seed": 7,
+                    "ood": {"primary_score_method": "auto", "real_dev_selection_enabled": True},
+                    "data": {"target_size": 224, "cache_size": 10, "loader_error_policy": "tolerant"},
+                    "evaluation": {"require_ood_for_gate": True},
+                }
+            },
+            "colab": {"training": {"num_workers": 0, "pin_memory": False}},
+        },
+        device="cpu",
+    )
+
+    result = workflow.run(
+        crop_name="tomato",
+        data_dir=tmp_path / "runtime_data",
+        output_dir=tmp_path / "outputs",
+    )
+
+    assert result.production_readiness["context"]["ood_requested_primary_score_method"] == "auto"
+    assert result.production_readiness["context"]["ood_primary_score_method"] == "knn"
+    assert result.production_readiness["context"]["ood_primary_score_selection_source"] == "real_ood_dev"
+    assert result.production_readiness["context"]["ood_primary_score_selection"]["selected_primary_score_method"] == "knn"
+    assert RealOodDevAdapter.last_export_metadata["ood_calibration"]["primary_score_method"] == "knn"
+    assert saved_methods == [{"config": "knn", "detector": "knn"}]
+
+
 def test_training_workflow_records_export_metadata_for_adapter(monkeypatch, tmp_path: Path):
     FakeAdapter.last_export_metadata = None
     monkeypatch.setattr(
