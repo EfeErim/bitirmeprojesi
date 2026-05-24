@@ -1,0 +1,1365 @@
+{
+  "created_at_utc": "2026-05-24T13:25:07.847087Z",
+  "placements": [
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0176012_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0176012_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0176012_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265082_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265082_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265082_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265085_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265085_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265085_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077048_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077048_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077048_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077049_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077049_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5077049_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5265047_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5265047_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5265047_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411467_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411467_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411467_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411489_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411489_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5411489_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5551691_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5551691_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5551691_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5558708_tomato_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\ood\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5558708_tomato_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5558708_tomato_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "tomato_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5266020_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5266020_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5266020_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1243100_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1243100_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1243100_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436107_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436107_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436107_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573604_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573604_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573604_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5076083_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5076083_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5076083_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5333075_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5333075_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5333075_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5402929_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5402929_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5402929_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475186_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475186_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475186_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475187_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475187_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475187_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475190_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475190_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5475190_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543247_tomato_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\tomato__fruit\\ood\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543247_tomato_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\tomato_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543247_tomato_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "tomato_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436090_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436090_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1436090_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1496539_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1496539_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1496539_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573009_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573009_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_1573009_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369108_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369108_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369108_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369114_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369114_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369114_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369115_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369115_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5369115_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5505623_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5505623_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5505623_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543241_strawberry_leaf_unsupported.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__leaf\\ood\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543241_strawberry_leaf_unsupported.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_leaf_unsupported\\20260520_targeted_quality_ood_oe_candidates_bugwood_5543241_strawberry_leaf_unsupported.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "strawberry_leaf_unsupported"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605474_strawberry_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605474_strawberry_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605474_strawberry_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "slice_name": "strawberry_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605487_strawberry_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605487_strawberry_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5605487_strawberry_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "slice_name": "strawberry_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5630937_strawberry_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\ood\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5630937_strawberry_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5630937_strawberry_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "slice_name": "strawberry_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5618244_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\strawberry__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5618244_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5618244_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454063_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454063_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454063_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454070_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454070_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_0454070_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512037_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512037_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512037_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512038_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512038_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_2512038_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561559_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561559_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561559_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561560_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561560_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5561560_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608070_grape_leaf_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\ood\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608070_grape_leaf_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_leaf_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608070_grape_leaf_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "grape_leaf_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263069_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263069_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263069_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263070_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263070_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_1263070_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502917_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502917_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502917_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502918_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__leaf\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502918_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5502918_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608050_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608050_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608050_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608051_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608051_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608051_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608052_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608052_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608052_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608055_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608055_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608055_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608056_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608056_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608056_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608057_grape_fruit_failure_cases.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608057_grape_fruit_failure_cases.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_failure_cases\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608057_grape_fruit_failure_cases.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459200_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459200_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459200_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459201_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459201_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459201_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459202_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459202_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459202_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459203_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459203_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459203_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459204_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459204_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459204_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459205_grape_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\ood\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459205_grape_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5459205_grape_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5407864_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5407864_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5407864_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608058_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608058_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608058_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608059_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608059_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608059_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608060_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608060_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608060_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608061_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608061_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608061_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608062_unsupported_same_crop.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608062_unsupported_same_crop.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_bugwood_5608062_unsupported_same_crop.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14598291909_.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14598291909_.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14598291909_.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14782597254_.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\grape__fruit\\oe\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14782597254_.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\20260520_targeted_quality_ood_oe_candidates_commons_File_American_grape_growing_and_wine_making_1880_14782597254_.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0660083_prunus_leaf_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0660083_prunus_leaf_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0660083_prunus_leaf_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265111_prunus_leaf_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265111_prunus_leaf_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1265111_prunus_leaf_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1492100_prunus_leaf_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1492100_prunus_leaf_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_1492100_prunus_leaf_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609975_prunus_leaf_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609975_prunus_leaf_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609975_prunus_leaf_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5610500_prunus_leaf_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\ood\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5610500_prunus_leaf_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5610500_prunus_leaf_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\oe\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365897_prunus_leaf_aux_negatives.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\oe\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365897_prunus_leaf_aux_negatives.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365897_prunus_leaf_aux_negatives.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_aux_negatives"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\oe\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365898_prunus_leaf_aux_negatives.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__leaf\\oe\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365898_prunus_leaf_aux_negatives.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_leaf_aux_negatives\\20260520_targeted_quality_ood_oe_candidates_bugwood_5365898_prunus_leaf_aux_negatives.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__leaf",
+      "dataset_key": "apricot__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_aux_negatives"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0177025_prunus_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0177025_prunus_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_0177025_prunus_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "prunus_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5359237_prunus_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5359237_prunus_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5359237_prunus_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "prunus_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5492261_prunus_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5492261_prunus_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5492261_prunus_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "prunus_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609963_prunus_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609963_prunus_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609963_prunus_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "prunus_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609969_prunus_fruit_unknowns.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260520_targeted_quality_ood_oe_final\\apricot__fruit\\ood\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609969_prunus_fruit_unknowns.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\prunus_fruit_unknowns\\20260520_targeted_quality_ood_oe_candidates_bugwood_5609969_prunus_fruit_unknowns.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "prunus_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_1263093_tomato_bacterial_canker_fruit_d5ce06c48a.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_1263093_tomato_bacterial_canker_fruit_d5ce06c48a.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\bugwood_1263093_tomato_bacterial_canker_fruit_d5ce06c48a.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_1263094_tomato_bacterial_canker_fruit_23cc01e237.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_1263094_tomato_bacterial_canker_fruit_23cc01e237.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\bugwood_1263094_tomato_bacterial_canker_fruit_23cc01e237.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_5333075_tomato_bacterial_canker_fruit_9c9e6f4b4a.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_5333075_tomato_bacterial_canker_fruit_9c9e6f4b4a.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\bugwood_5333075_tomato_bacterial_canker_fruit_9c9e6f4b4a.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_5598512_tomato_russet_mite_fruit_585246ebd9.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\tomato__fruit\\unsupported_same_crop\\bugwood_5598512_tomato_russet_mite_fruit_585246ebd9.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\bugwood_5598512_tomato_russet_mite_fruit_585246ebd9.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_0176030_grape_black_rot_fruit_992ca2f788.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_0176030_grape_black_rot_fruit_992ca2f788.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_0176030_grape_black_rot_fruit_992ca2f788.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_1495048_grape_black_rot_fruit_51d09fd36b.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_1495048_grape_black_rot_fruit_51d09fd36b.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_1495048_grape_black_rot_fruit_51d09fd36b.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_1495063_grape_black_rot_fruit_e0b5448939.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_1495063_grape_black_rot_fruit_e0b5448939.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_1495063_grape_black_rot_fruit_e0b5448939.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5492804_grape_black_rot_fruit_a14168d0f9.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5492804_grape_black_rot_fruit_a14168d0f9.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_5492804_grape_black_rot_fruit_a14168d0f9.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5511718_grape_black_rot_fruit_f4a388a778.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5511718_grape_black_rot_fruit_f4a388a778.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_5511718_grape_black_rot_fruit_f4a388a778.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5511720_grape_black_rot_fruit_1b97102498.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\grape__fruit\\same_crop_unsupported_unknowns\\bugwood_5511720_grape_black_rot_fruit_1b97102498.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_5511720_grape_black_rot_fruit_1b97102498.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1436079_stonefruit_bacterial_spot_peach_b30364d4ea.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1436079_stonefruit_bacterial_spot_peach_b30364d4ea.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\near_id_prunus_fruit_disease\\bugwood_1436079_stonefruit_bacterial_spot_peach_b30364d4ea.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "ood",
+      "slice_name": "near_id_prunus_fruit_disease"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492036_stonefruit_brown_rot_peach_8eb16d9f22.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492036_stonefruit_brown_rot_peach_8eb16d9f22.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\near_id_prunus_fruit_disease\\bugwood_1492036_stonefruit_brown_rot_peach_8eb16d9f22.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "ood",
+      "slice_name": "near_id_prunus_fruit_disease"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492099_stonefruit_bacterial_spot_peach_e579bb0c33.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492099_stonefruit_bacterial_spot_peach_e579bb0c33.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\near_id_prunus_fruit_disease\\bugwood_1492099_stonefruit_bacterial_spot_peach_e579bb0c33.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "ood",
+      "slice_name": "near_id_prunus_fruit_disease"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492101_stonefruit_bacterial_spot_peach_f14994b6ff.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_1492101_stonefruit_bacterial_spot_peach_f14994b6ff.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\near_id_prunus_fruit_disease\\bugwood_1492101_stonefruit_bacterial_spot_peach_f14994b6ff.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "ood",
+      "slice_name": "near_id_prunus_fruit_disease"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_5555284_stonefruit_brown_rot_peach_c315a59b3c.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\near_id_prunus_fruit_disease\\bugwood_5555284_stonefruit_brown_rot_peach_c315a59b3c.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\near_id_prunus_fruit_disease\\bugwood_5555284_stonefruit_brown_rot_peach_c315a59b3c.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "ood",
+      "slice_name": "near_id_prunus_fruit_disease"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\same_crop_unsupported_unknowns\\bugwood_5609963_apricot_brown_rot_fruit_24c9022142.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260514_oe_takviye\\apricot__fruit\\same_crop_unsupported_unknowns\\bugwood_5609963_apricot_brown_rot_fruit_24c9022142.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\apricot__fruit\\oe\\auto_unused_placement_manifest_20260524T132507Z\\same_crop_unsupported_unknowns\\bugwood_5609963_apricot_brown_rot_fruit_24c9022142.jpg",
+      "sha256": null,
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "same_crop_unsupported_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_leaf.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_leaf.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\tomato_failure_cases\\wikimedia_Tomato_leaf.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "tomato_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_01.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_01.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_01.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "tomato_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_02.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_02.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\tomato_failure_cases\\wikimedia_Tomato_Plant_Leaves_02.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "tomato_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-absoluta-i.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-absoluta-i.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-absoluta-i.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__leaf\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_tomato_unknowns\\wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "unsupported_tomato_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_Cat_face_of_tomato.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_Cat_face_of_tomato.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_failure_cases\\wikimedia_Cat_face_of_tomato.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_Vivipary_in_tomato.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_Vivipary_in_tomato.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_failure_cases\\wikimedia_Vivipary_in_tomato.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_You_say_potato_i_say_tomato_6150193295_.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\fruit_failure_cases\\wikimedia_You_say_potato_i_say_tomato_6150193295_.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_failure_cases\\wikimedia_You_say_potato_i_say_tomato_6150193295_.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2015-09-14_radial_cracking.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2015-09-14_radial_cracking.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\wikimedia_2015-09-14_radial_cracking.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_A.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\wikimedia_2_x_Cracked_tomato_2017_B.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_Tomaten_Platzer-1.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\tomato__fruit\\unsupported_same_crop\\wikimedia_Tomaten_Platzer-1.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\unsupported_same_crop\\wikimedia_Tomaten_Platzer-1.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "unsupported_same_crop"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_failure_cases\\wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "ood",
+      "slice_name": "strawberry_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_failure_cases\\wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "ood",
+      "slice_name": "strawberry_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__leaf\\strawberry_failure_cases\\wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\strawberry_failure_cases\\wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "ood",
+      "slice_name": "strawberry_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_failure_cases\\wikimedia_Ripe_Strawberry.JPG.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_failure_cases\\wikimedia_Ripe_Strawberry.JPG.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_failure_cases\\wikimedia_Ripe_Strawberry.JPG.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_failure_cases"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Erdbeere_Strawberry_malformed_IMG_8875.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Moldy_Strawberries.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Moldy_Strawberries.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Moldy_Strawberries.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Rotting_strawberry.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Rotting_strawberry.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Rotting_strawberry.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Rot_strawberry.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Rot_strawberry.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Rot_strawberry.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Strawberry_form_defect.JPG.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Strawberry_form_defect.JPG.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Strawberry_form_defect.JPG.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Strawberry_mold.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\strawberry__fruit\\fruit_specific_unknowns\\wikimedia_Strawberry_mold.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\fruit_specific_unknowns\\wikimedia_Strawberry_mold.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "fruit_specific_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\grape__fruit\\grape_fruit_unknowns\\wikimedia_Black_rot_on_grape.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\grape__fruit\\grape_fruit_unknowns\\wikimedia_Black_rot_on_grape.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\wikimedia_Black_rot_on_grape.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "ood",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\grape__fruit\\grape_fruit_unknowns\\wikimedia_Guignardia_bidwellii_black_rot_on_grape_4.jpg.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260510\\phase1_ood_candidates\\grape__fruit\\grape_fruit_unknowns\\wikimedia_Guignardia_bidwellii_black_rot_on_grape_4.jpg.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\grape_fruit_unknowns\\wikimedia_Guignardia_bidwellii_black_rot_on_grape_4.jpg.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "ood",
+      "slice_name": "grape_fruit_unknowns"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\oe_candidates\\strawberry_leaf\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\auto_unused_placement_manifest_20260524T132507Z\\off_crop_secondary_fruit_rot\\wikimedia_strawberry_fruit_rot.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "off_crop_secondary_fruit_rot"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\early_blight_leaf\\bugwood_1234124_tomato_early_blight_leaf.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "early_blight_leaf"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\early_blight_leaf\\bugwood_5632425_tomato_early_blight_leaf.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "early_blight_leaf"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_leaf\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\late_blight_leaf\\bugwood_5333061_tomato_late_blight_leaf.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__leaf",
+      "dataset_key": "tomato__leaf",
+      "target_role": "ood",
+      "slice_name": "late_blight_leaf"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\blossom_end_rot\\wikimedia_blossom_end_rot.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "blossom_end_rot"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\blossom_end_rot\\wikimedia_blossom_end_rot_tomato_2017_cc0.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "blossom_end_rot"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\late_blight_fruit\\wikimedia_tomato_late_blight_fruit_rot.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "late_blight_fruit"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\spotted_wilt\\bugwood_1243053_tomato_spotted_wilt.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "spotted_wilt"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\tomato_fruit\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\spotted_wilt\\bugwood_5622695_tomato_spotted_wilt.jpg",
+      "sha256": null,
+      "adapter_key": "tomato__fruit",
+      "dataset_key": "tomato__fruit",
+      "target_role": "ood",
+      "slice_name": "spotted_wilt"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\anthracnose_fruit\\bugwood_1572815_strawberry_anthracnose_fruit.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "anthracnose_fruit"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\anthracnose_fruit\\bugwood_1572819_strawberry_anthracnose_fruit.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "anthracnose_fruit"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\anthracnose_fruit\\bugwood_1572820_strawberry_anthracnose_fruit.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "anthracnose_fruit"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\powdery_mildew_fruit_or_plant\\bugwood_5631933_strawberry_powdery_mildew.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "powdery_mildew_fruit_or_plant"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\strawberry_fruit\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\powdery_mildew_fruit_or_plant\\wikimedia_oidium_du_fraisier.jpg",
+      "sha256": null,
+      "adapter_key": "strawberry__fruit",
+      "dataset_key": "strawberry__fruit",
+      "target_role": "ood",
+      "slice_name": "powdery_mildew_fruit_or_plant"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\grape_leaf\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__leaf\\ood\\auto_unused_placement_manifest_20260524T132507Z\\anthracnose_leaf_or_cluster\\bugwood_1235040_grape_anthracnose.jpg",
+      "sha256": null,
+      "adapter_key": "grape__leaf",
+      "dataset_key": "grape__leaf",
+      "target_role": "ood",
+      "slice_name": "anthracnose_leaf_or_cluster"
+    },
+    {
+      "candidate_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "source_path": "D:\\bitirme projesi\\data\\internet_image_candidates\\20260506\\id_candidates\\grape_fruit\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "target_path": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\grape__fruit\\ood\\auto_unused_placement_manifest_20260524T132507Z\\powdery_mildew_fruit\\wikimedia_uncinula_necator_on_grapes.jpg",
+      "sha256": null,
+      "adapter_key": "grape__fruit",
+      "dataset_key": "grape__fruit",
+      "target_role": "ood",
+      "slice_name": "powdery_mildew_fruit"
+    }
+  ]
+}

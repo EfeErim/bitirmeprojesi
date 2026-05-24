@@ -1,0 +1,5 @@
+Total candidates: 1100
+Used via manifest references: 1100
+Used via prepared copy (by filename match): 0
+Unused candidates: 0
+

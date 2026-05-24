@@ -1,0 +1,109 @@
+{
+  "created_at_utc": "2026-05-24T09:56:52.840483+00:00",
+  "placements": [
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_01.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_01.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\apricot__fruit\\oe\\prompt_link_selection\\unsupported_same_crop\\apricot__fruit_oe_01.jpg",
+      "sha256": "58398af294df549e16b3a658e8c685b5d9e6a580a5a4b7f188d921b026657c6e",
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5357634.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5357634",
+      "license": "Bugwood/Invasive.org source page; review page license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_02.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_02.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\apricot__fruit\\oe\\prompt_link_selection\\unsupported_same_crop\\apricot__fruit_oe_02.jpg",
+      "sha256": "504dc64647d0168a5363f72af742966a29f07275f86aaeb7fb7ee258d2f271d7",
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5473713.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5473713",
+      "license": "Bugwood/Invasive.org source page; review page license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_03.png",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_03.png",
+      "target_path": "data\\prepared_runtime_datasets\\apricot__fruit\\oe\\prompt_link_selection\\unsupported_same_crop\\apricot__fruit_oe_03.png",
+      "sha256": "34b526537ba6052d1194c1ba518f913dc69548da2f9bd7bad1fdaa575f737de7",
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://extension.umd.edu/sites/extension.umd.edu/files/styles/optimized/public/2021-02/Stinkbug%20injury%20to%20grape%20tomatoes%2C%20white%20when.png?itok=IUF4qvFK",
+      "source_page": "https://extension.umd.edu/resource/stinkbug-damage-found-tomato-fields",
+      "license": "University of Maryland Extension source page; review page terms before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_04.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\apricot__fruit\\oe\\unsupported_same_crop\\apricot__fruit_oe_04.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\apricot__fruit\\oe\\prompt_link_selection\\unsupported_same_crop\\apricot__fruit_oe_04.jpg",
+      "sha256": "6f9266359d5f9f5097ecc52bba51275f363a37f28d8f1286d7b7914ec1a0e417",
+      "adapter_key": "apricot__fruit",
+      "dataset_key": "apricot__fruit",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5608058.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5608058",
+      "license": "Bugwood/Invasive.org source page; review exact page license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_01.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_01.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\prompt_link_selection\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_01.jpg",
+      "sha256": "0cb205548b8a3c86ebc253a50a5f3751f5a49c4b006572dccc9e21740444da12",
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_aux_negatives",
+      "source_url": "https://raw.githubusercontent.com/pratikkayal/PlantDoc-Dataset/master/train/Peach%20leaf/0052.jpg",
+      "source_page": "https://github.com/pratikkayal/PlantDoc-Dataset",
+      "license": "PlantDoc-Dataset GitHub; review repository license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\unsupported_same_crop\\strawberry__leaf_oe_02.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\unsupported_same_crop\\strawberry__leaf_oe_02.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\prompt_link_selection\\unsupported_same_crop\\strawberry__leaf_oe_02.jpg",
+      "sha256": "3b7e2ad428033189152e64e04d359f079ae943d75bb851dc6438f3e54c0159f2",
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://raw.githubusercontent.com/pratikkayal/PlantDoc-Dataset/master/train/grape%20leaf%20black%20rot/black-rot-leaves.jpg",
+      "source_page": "https://github.com/pratikkayal/PlantDoc-Dataset",
+      "license": "PlantDoc-Dataset GitHub; review repository license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\unsupported_same_crop\\strawberry__leaf_oe_03.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\unsupported_same_crop\\strawberry__leaf_oe_03.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\prompt_link_selection\\unsupported_same_crop\\strawberry__leaf_oe_03.jpg",
+      "sha256": "b350ccb7a2eeb6bf71b5049f99d0eafd64ea0b92bc02cda7332923ee197daa6b",
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "unsupported_same_crop",
+      "source_url": "https://raw.githubusercontent.com/pratikkayal/PlantDoc-Dataset/master/train/Tomato%20mold%20leaf/leafmoldtomato2.jpg",
+      "source_page": "https://github.com/pratikkayal/PlantDoc-Dataset",
+      "license": "PlantDoc-Dataset GitHub; review repository license before publication"
+    },
+    {
+      "candidate_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_04.jpg",
+      "source_path": "data\\internet_image_candidates\\20260524_prompt_link_selection\\strawberry__leaf\\oe\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_04.jpg",
+      "target_path": "data\\prepared_runtime_datasets\\strawberry__leaf\\oe\\prompt_link_selection\\prunus_leaf_aux_negatives\\strawberry__leaf_oe_04.jpg",
+      "sha256": "bf80227790a6bc9df02e25cb9e0ef24142c25d12665f6da216b7b26bb2781ff6",
+      "adapter_key": "strawberry__leaf",
+      "dataset_key": "strawberry__leaf",
+      "target_role": "oe",
+      "slice_name": "prunus_leaf_aux_negatives",
+      "source_url": "https://raw.githubusercontent.com/gabrieldgf4/PlantVillage-Dataset/master/Peach___Bacterial_spot/00130039-8425-42e9-9dd9-15aead7271ff___Rut._Bact.S%203421.JPG",
+      "source_page": "https://github.com/gabrieldgf4/PlantVillage-Dataset",
+      "license": "PlantVillage-Dataset GitHub mirror; review repository license before publication"
+    }
+  ]
+}

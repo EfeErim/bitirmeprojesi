@@ -1,0 +1,33 @@
+{
+  "run": "20260524_split_takviye",
+  "selected_count": 14,
+  "skipped_count": 1,
+  "counts_by_adapter_role": {
+    "apricot__fruit": {
+      "ood": 3,
+      "oe": 1
+    },
+    "grape__fruit": {
+      "ood": 3,
+      "oe": 1
+    },
+    "grape__leaf": {
+      "ood": 3,
+      "oe": 3
+    }
+  },
+  "skipped": [
+    {
+      "adapter": "apricot__fruit",
+      "split": "ood",
+      "slice": "prunus_fruit_unknowns",
+      "source_name": "Bugwood/Invasive.org",
+      "imgnum": "5609963",
+      "reason": "Apricot brown rot fruit symptom; strengthens same-crop Prunus fruit unknown OOD.",
+      "source_url": "https://bugwoodcloud.org/images/768x512/5609963.jpg",
+      "source_page": "https://www.invasive.org/browse/detail.cfm?imgnum=5609963",
+      "sha256": "24c9022142d594edfbf7a052e5bbcfc7db1d44d869526b71f1608fcf9c7759bc",
+      "reason_skipped": "hash_already_in_target_runtime_dataset"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "run": "20260524_bulk_ood_oe_takviye_v3",
+  "selected_count": 200,
+  "skipped_count": 215,
+  "retargeted_after_visual_review": 19,
+  "counts_by_adapter_role": {
+    "apricot__fruit": {
+      "ood": 6,
+      "oe": 64
+    },
+    "grape__fruit": {
+      "ood": 25,
+      "oe": 40
+    },
+    "grape__leaf": {
+      "ood": 25,
+      "oe": 40
+    }
+  },
+  "counts_by_target": {
+    "apricot__fruit|oe|bulk_other_crop_negatives": 39,
+    "apricot__fruit|oe|near_id_prunus_fruit_disease": 25,
+    "apricot__fruit|ood|prunus_fruit_unknowns": 6,
+    "grape__fruit|oe|bulk_other_crop_negatives": 15,
+    "grape__fruit|oe|unsupported_same_crop": 25,
+    "grape__fruit|ood|grape_fruit_failure_cases": 25,
+    "grape__leaf|oe|bulk_other_crop_negatives": 15,
+    "grape__leaf|oe|unsupported_same_crop": 25,
+    "grape__leaf|ood|grape_leaf_failure_cases": 25
+  },
+  "quality_note": "After contact-sheet review, apricot fruit leaf/off-crop records were retargeted to OE-only bulk_other_crop_negatives instead of final OOD evidence."
+}

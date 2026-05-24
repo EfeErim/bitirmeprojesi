@@ -14,12 +14,6 @@
       "slice": "non_plant_misc",
       "split": "test"
     },
-    "non_plant_misc/images (22).jpg": {
-      "sha256": "277c2fb3f94162ad03574d3b957ead1c6cd9d5487445a3338bf0241a07946e0e",
-      "size_bytes": 13088,
-      "slice": "non_plant_misc",
-      "split": "test"
-    },
     "non_plant_misc/images (23).jpg": {
       "sha256": "3a94f1cd522bcd6c117d478ba768f612ad4ab85b4f69790886186c4ff9a67165",
       "size_bytes": 10321,
@@ -44,22 +38,10 @@
       "slice": "non_plant_misc",
       "split": "test"
     },
-    "non_plant_misc/images (28).jpg": {
-      "sha256": "8d8760a5c0956b65ea6fedceb7a0e0921e340e4d68d652b75c6f9f061cdeac6a",
-      "size_bytes": 13753,
-      "slice": "non_plant_misc",
-      "split": "test"
-    },
     "non_plant_misc/New folder (2)_kayisi_11.jpg": {
       "sha256": "2d07482bc0b47350a1804b9c8236359a8ff23c6bbd16cd241443a776beb7cbb2",
       "size_bytes": 650934,
       "slice": "non_plant_misc",
-      "split": "dev"
-    },
-    "off_crop_secondary/takviye_20260514_anthracnose_fruit_rot_22_jpg_adlı_dosyanın_kopyası_57a3d674cb45.jpg": {
-      "sha256": "57a3d674cb4538fc3603b50c57a1a8f154c1a417246f611335cc35eeaa77c7ef",
-      "size_bytes": 155898,
-      "slice": "off_crop_secondary",
       "split": "dev"
     },
     "off_crop_secondary/takviye_20260514_internet_20260509_bugwood_5598512_tomato_russet_mite_sym_585246ebd9d0.jpg": {
@@ -248,12 +230,6 @@
       "slice": "off_crop_secondary",
       "split": "test"
     },
-    "off_crop_secondary/takviye_20260514_scene_context_leak_check__cikartmalar_bir_traktor_ile_uz_ad24850a9c70.jpg": {
-      "sha256": "ad24850a9c70ea19627dedb1be982b9291962168f4ce2835784cea33b2bbb178",
-      "size_bytes": 157359,
-      "slice": "off_crop_secondary",
-      "split": "test"
-    },
     "off_crop_secondary/takviye_20260514_unsupported_same_crop__psikolojik_leaf_roll_not_harmful_c4c3fc828bd3.png": {
       "sha256": "c4c3fc828bd33ffec0c68ff0281759ad752ef347626fbd09d82b5b7a119f94a8",
       "size_bytes": 956693,
@@ -361,12 +337,6 @@
       "size_bytes": 198780,
       "slice": "other_crop_disease",
       "split": "dev"
-    },
-    "other_crop_disease/743.jpg adlı dosyanın kopyası.jpg": {
-      "sha256": "0ae84f707be457b565f8e6e7501dca3417429cdd9cf4a9c5403b575348861e62",
-      "size_bytes": 182955,
-      "slice": "other_crop_disease",
-      "split": "test"
     },
     "other_crop_disease/759.jpg adlı dosyanın kopyası.jpg": {
       "sha256": "425b57acfcc0bd6869314701690d6eb8ce9e7d6ba6917f6f528c0eacd30aae21",
@@ -583,12 +553,6 @@
       "size_bytes": 17698,
       "slice": "other_crop_disease",
       "split": "test"
-    },
-    "other_crop_disease/Strawberry___Leaf_scorch_44.jpg adlı dosyanın kopyası.jpg": {
-      "sha256": "7a5bc52d3c4e4ad8824cd869452a113dce78efedbe868ac7e99770121f7fa38c",
-      "size_bytes": 18136,
-      "slice": "other_crop_disease",
-      "split": "dev"
     },
     "other_crop_disease/Strawberry___Leaf_scorch_45.jpg adlı dosyanın kopyası.jpg": {
       "sha256": "f1e0c2b682520f645bd239f4fd17f048ae5aa8708a03f79241d8749e0aa85e4c",
@@ -962,12 +926,6 @@
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
     },
-    "same_crop_unsupported_unknowns/takviye_20260514_12_51a6d7c247c3.jpeg": {
-      "sha256": "51a6d7c247c34c18b1b27193be899a6dece0fe0ea028e74989d5369596ff8fab",
-      "size_bytes": 204962,
-      "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
-    },
     "same_crop_unsupported_unknowns/takviye_20260514_138_36b36634acd9.jpeg": {
       "sha256": "36b36634acd93cc85912c8f1a78af18462eea17d8ccc6e89920e095dae685c49",
       "size_bytes": 273257,
@@ -1003,12 +961,6 @@
       "size_bytes": 359400,
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
-    },
-    "same_crop_unsupported_unknowns/takviye_20260514_151_2cc762cc72d4.jpg": {
-      "sha256": "2cc762cc72d45f8eed74aea69b309c057c61f5d053b9c16428ffe7678599d283",
-      "size_bytes": 507265,
-      "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
     },
     "same_crop_unsupported_unknowns/takviye_20260514_151_2eb1ec20375e.jpeg": {
       "sha256": "2eb1ec20375ef6ad828216988a2b0acf8953814c906254b6b7b5c0175b87e59c",
@@ -1073,12 +1025,6 @@
     "same_crop_unsupported_unknowns/takviye_20260514_39_7401b27a2d2f.jpeg": {
       "sha256": "7401b27a2d2fe569e08d6a64e3b2b523deb7e999a4b42135d2a8b1e121615161",
       "size_bytes": 533913,
-      "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
-    },
-    "same_crop_unsupported_unknowns/takviye_20260514_40_22db17b1f8ed.jpg": {
-      "sha256": "22db17b1f8edda83c9811751ae78244ccf8b4e75a05bc847b3dc157e63ca95b8",
-      "size_bytes": 198122,
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
     },
@@ -1171,12 +1117,6 @@
       "size_bytes": 148187,
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
-    },
-    "same_crop_unsupported_unknowns/takviye_20260514_91_d181105ea7c1.jpg": {
-      "sha256": "d181105ea7c1b605676ed4b1fd18315800a61b84aa0a8a19e8352d47a59e3baa",
-      "size_bytes": 496792,
-      "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
     },
     "same_crop_unsupported_unknowns/takviye_20260514_93_c2c718442dea.jpg": {
       "sha256": "c2c718442deabd6769335322e1333e11298a937eb1c84b8c2e3be6cc72de4e99",

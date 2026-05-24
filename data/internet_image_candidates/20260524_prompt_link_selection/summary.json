@@ -1,0 +1,13 @@
+{
+  "run": "20260524_prompt_link_selection",
+  "selected_count": 8,
+  "counts_by_adapter_role": {
+    "apricot__fruit": {
+      "oe": 4
+    },
+    "strawberry__leaf": {
+      "oe": 4
+    }
+  },
+  "note": "Other prompt roles had no quality repo-local linked candidates left after excluding hashes already present in their target runtime datasets."
+}
