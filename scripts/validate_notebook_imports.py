@@ -80,12 +80,15 @@ def _load_notebook_sources_from_path(notebook_path: Path) -> NotebookSources:
     cell_runner_pattern = re.compile(r"run_cell_script\((['\"])(?P<name>[^'\"]+)\1,\s*globals\(\)\)")
 
     def _expand_cell_source(source: str) -> str:
-        match = cell_runner_pattern.search(source)
-        if not match:
+        matches = tuple(cell_runner_pattern.finditer(source))
+        if not matches:
             return source
-        script_path = ROOT / "scripts" / "notebook_cells" / match.group("name")
-        assert script_path.is_file(), f"Notebook cell script was not found: {script_path}"
-        return source + "\n" + script_path.read_text(encoding="utf-8")
+        expanded_parts = [source]
+        for match in matches:
+            script_path = ROOT / "scripts" / "notebook_cells" / match.group("name")
+            assert script_path.is_file(), f"Notebook cell script was not found: {script_path}"
+            expanded_parts.append(script_path.read_text(encoding="utf-8"))
+        return "\n".join(expanded_parts)
 
     code_cells = tuple(
         _expand_cell_source("".join(cell.get("source", [])))
@@ -400,6 +403,27 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction",
         "Notebook 8 should use the maintained auto router-adapter helper: {snippet}",
     )
+    full_prediction_cell = _find_code_cell_source(
+        sources,
+        "router_result = result",
+        "Notebook 8 should have a full prediction cell that keeps the router result.",
+    )
+    _assert_contains(
+        full_prediction_cell,
+        "run_cell_script('nb1_cell04_analysis.py', globals())",
+        "Notebook 8 full prediction cell should run Notebook 1 router analysis first: {snippet}",
+    )
+    _assert_contains(
+        full_prediction_cell,
+        "run_cell_script('nb8_cell05_adapter_prediction.py', globals())",
+        "Notebook 8 full prediction cell should immediately load the adapter and predict: {snippet}",
+    )
+    assert full_prediction_cell.index("run_cell_script('nb1_cell04_analysis.py', globals())") < full_prediction_cell.index(
+        "run_cell_script('nb8_cell05_adapter_prediction.py', globals())"
+    ), "Notebook 8 should run router analysis before adapter prediction in the same cell"
+    assert full_prediction_cell.index("run_cell_script('nb8_cell05_adapter_prediction.py', globals())") < full_prediction_cell.index(
+        "auto_result"
+    ), "Notebook 8 should return the adapter prediction result, not only the router target"
     _assert_contains(
         helper_source,
         "workflow_factory: WorkflowFactory = InferenceWorkflow",
