@@ -1,0 +1,9 @@
+{
+  "name": "ckpt_e24_s500_20260524_143520_780967",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/apricot_fruit_2026-05-24_14-32-10/checkpoints/ckpt_e24_s500_20260524_143520_780967/training_checkpoint",
+  "created_at": "2026-05-24T14:35:22.540749+00:00",
+  "global_step": 500,
+  "epoch": 24,
+  "reason": "batch_250",
+  "is_best": false
+}
