@@ -1,0 +1,57 @@
+{
+  "domates_antraknoz_meyve": {
+    "precision": 0.8571428571428571,
+    "recall": 1.0,
+    "f1-score": 0.9230769230769231,
+    "support": 12.0
+  },
+  "domates_bacterial_spot_and_speck_meyve": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 3.0
+  },
+  "domates_blossom_end_rot_meyve": {
+    "precision": 0.6470588235294118,
+    "recall": 1.0,
+    "f1-score": 0.7857142857142857,
+    "support": 11.0
+  },
+  "domates_gray_mold_meyve": {
+    "precision": 1.0,
+    "recall": 0.8478260869565217,
+    "f1-score": 0.9176470588235294,
+    "support": 46.0
+  },
+  "domates_late_blight_meyve": {
+    "precision": 0.967741935483871,
+    "recall": 0.8823529411764706,
+    "f1-score": 0.9230769230769231,
+    "support": 34.0
+  },
+  "domates_sağlıklı_meyve": {
+    "precision": 0.7142857142857143,
+    "recall": 0.5555555555555556,
+    "f1-score": 0.625,
+    "support": 9.0
+  },
+  "domates_spotted_wilt_meyve": {
+    "precision": 0.5,
+    "recall": 1.0,
+    "f1-score": 0.6666666666666666,
+    "support": 4.0
+  },
+  "accuracy": 0.8739495798319328,
+  "macro avg": {
+    "precision": 0.8123184757774078,
+    "recall": 0.8979620833840782,
+    "f1-score": 0.8344545510511897,
+    "support": 119.0
+  },
+  "weighted avg": {
+    "precision": 0.9053374670551333,
+    "recall": 0.8739495798319328,
+    "f1-score": 0.8790573695541565,
+    "support": 119.0
+  }
+}

@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 9: Final Evaluation
+run_id=tomato_fruit_2026-05-25_17-31-02
+started_at=2026-05-25T17:40:05.199202+00:00
+finished_at=2026-05-25T17:40:15.000475+00:00
+duration_sec=9.801
+
+[DOGRULAMA (referans)] ornek=119 sinif=7 accuracy=0.8992 ood_auroc=0.9059 sure_ds_f1=0.6173 conformal_cov=0.9580
+[TEST (ayrilmis)] ornek=119 sinif=7 accuracy=0.8739 ood_auroc=0.8115 sure_ds_f1=0.5811 conformal_cov=0.9748
+[OOD] kanit=real_ood_split durum=failed gecti=False
+[DONE] Dogrulama ve held-out test artefaktlari kaydedildi.

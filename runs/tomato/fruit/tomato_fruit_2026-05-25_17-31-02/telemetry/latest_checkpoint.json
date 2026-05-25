@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e30_s1050_20260525_174001_440689",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/tomato_fruit_2026-05-25_17-31-02/checkpoints/ckpt_e30_s1050_20260525_174001_440689/training_checkpoint",
+  "created_at": "2026-05-25T17:40:03.017995+00:00",
+  "global_step": 1050,
+  "epoch": 30,
+  "reason": "epoch_end",
+  "is_best": false,
+  "val_loss": 0.3520200788473883
+}
