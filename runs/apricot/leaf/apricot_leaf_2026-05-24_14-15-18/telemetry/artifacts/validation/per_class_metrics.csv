@@ -1,4 +1,0 @@
-class,precision,recall,f1-score,support
-kayısı_şarka_virüsü_yaprak_206,0.76,1.0,0.8636363636363636,38.0
-kayısı_sağlıklı_yaprak_302,0.9736842105263158,0.6981132075471698,0.8131868131868132,53.0
-kayısı_yaprak_delen_çil_hastalığı_yaprak_300,0.8548387096774194,0.8983050847457628,0.8760330578512396,59.0

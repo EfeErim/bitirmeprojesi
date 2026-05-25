@@ -1,12 +1,67 @@
 {
-  "created_at": "2026-05-10T21:25:26.868059+00:00",
+  "assignment_policy": "slice_stratified_dev_test",
+  "created_at": "2026-05-25T08:33:40.666732+00:00",
   "dev_fraction": 0.4,
   "entries": {
+    "auto_unused_placement_manifest_20260524T132507Z/strawberry_failure_cases/wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg": {
+      "sha256": "790429cfabc73a05d8922de2d69337538ed5e50fbdd315128d1aa20bed60f05a",
+      "size_bytes": 291390,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/strawberry_failure_cases/wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg": {
+      "sha256": "9b680b07d6b72333b6fada56bb2fcd4dc6b850840aa7c681f80019f33ad1a1e9",
+      "size_bytes": 366372,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/strawberry_failure_cases/wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg": {
+      "sha256": "8c4986b995535b0d47f0352f63f275ced530fc2c7c59eeaa7fdca02efcf0134d",
+      "size_bytes": 327245,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "non_plant_misc/internet_20260517_webtrace_Exploring_alternatives_to_plastic_mulch.jpg": {
+      "sha256": "53665e955aabddd67506b26dcc8ac778cb8b57c335da695980d47d299b2afbc3",
+      "size_bytes": 993138,
+      "slice": "non_plant_misc",
+      "split": "test"
+    },
+    "non_plant_misc/internet_20260517_webtrace_Four_years_of_tillage_research_wraps_up.jpg": {
+      "sha256": "539bfe1393e7de5f3b10a0aad7c7de01f1f9af0d450e9529d3d2c53549e7c2c7",
+      "size_bytes": 666687,
+      "slice": "non_plant_misc",
+      "split": "test"
+    },
+    "non_plant_misc/internet_20260517_webtrace_How_much_topsoil_loss_is_enough.jpg": {
+      "sha256": "01f4aee35c3d5a82ef3d1dcebf2c5be9d7c226690984be71200b7b3dbc2ace22",
+      "size_bytes": 100574,
+      "slice": "non_plant_misc",
+      "split": "dev"
+    },
+    "non_plant_misc/internet_20260517_webtrace_Preventing_plant_diseases_in_the_garden_UMN_Extension.jpg": {
+      "sha256": "492161de15e3433e4113080df705fc4bf6e14729d5f73f08e7c9e986e29b3829",
+      "size_bytes": 96983,
+      "slice": "non_plant_misc",
+      "split": "test"
+    },
+    "non_plant_misc/internet_20260517_webtrace_Yard_and_garden_checklist_-_November_UMN_Extension.jpg": {
+      "sha256": "3723cbac51340fa347215872d094b72bd044618294a1de2414f6cab445c9ead5",
+      "size_bytes": 414510,
+      "slice": "non_plant_misc",
+      "split": "test"
+    },
+    "non_plant_misc/internet_20260520_webtrace_Promote_healthy_soil_in_your_garden_UMN_Extension.jpg": {
+      "sha256": "3c907b7e19964c8733eaf2a445fa739e2d935d83fac42332a66aabec8ff77360",
+      "size_bytes": 1763442,
+      "slice": "non_plant_misc",
+      "split": "test"
+    },
     "non_plant_misc/non_plant_misc__Bakteriyel_Kanser_ve_Zamklanma_1.jpg": {
       "sha256": "123a9ae84ba74507decad58ce8aaa2a89b0dae8353fe21349e7a2bed77ea2a67",
       "size_bytes": 24814,
       "slice": "non_plant_misc",
-      "split": "test"
+      "split": "dev"
     },
     "non_plant_misc/non_plant_misc__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195623.png": {
       "sha256": "20045d61f38de016b78990e9ebcf706b9497783466e70d328b032cd3fa6e27ce",
@@ -48,13 +103,13 @@
       "sha256": "1b407b22602a9644a91af323ca63cc3f74b936c158e35fc7a8bf1d5664935add",
       "size_bytes": 142875,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__Mgg.png": {
       "sha256": "065db50890729ec7b933df5a05f24f84b3c65db27df1201bb89ac69f6b893ef0",
       "size_bytes": 136362,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__angular_leafspot_1.jpg": {
       "sha256": "1d72e31d4943d9b3368f88eab813335ca65c2bfa67cb13657aaff044f8828672",
@@ -78,7 +133,7 @@
       "sha256": "0c14711425d018642ca76acb6b32277499c0f10079c07bf3febd4d19afa94181",
       "size_bytes": 157665,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__angular_leafspot_50.jpg": {
       "sha256": "1aff6c1a61d74e2c7756848d7f073f847bc13d19e9d1675ddeba6353290e4cb1",
@@ -96,7 +151,7 @@
       "sha256": "0096766b9ece114c58084928e66c5647263f641bfa71601bc393c21fbcb9a409",
       "size_bytes": 158175,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__angular_leafspot_83.jpg": {
       "sha256": "1714797ba57c22a0947aa475beee3512843d3ff0c6ae2f0ca43552a433f992cd",
@@ -108,7 +163,7 @@
       "sha256": "1db4ade1d2d6a7e17ce7d487c2ff2ea1641d6b5519a01f238e38d7b33b33a2b3",
       "size_bytes": 162097,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__blossom_blight_19.jpg": {
       "sha256": "08f96a1b2fc227190e186ea36b9a5f83b5e775e4fcf98b2a63a32fd9d1f1d54e",
@@ -138,7 +193,7 @@
       "sha256": "037ba7e09cc4782daf5074d9f563c5f9f9cad22fbac8b7ded0a40866177c0cda",
       "size_bytes": 3937760,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__calciumdeficiency_34.jpg": {
       "sha256": "0d8cab14408e5ba57bfa867a95b75913e9d3f1a3342bb90d2cb9c0254520240b",
@@ -156,13 +211,13 @@
       "sha256": "12a48ecce8193bb166e6a7a94a71cd70c56e5ba55834656fb7740e012c48eab1",
       "size_bytes": 5944832,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__calciumdeficiency_53.jpg": {
       "sha256": "05680d09d9792ed988fa369f326e20557fa9c3fe23779cbfe877cc1ffba60eab",
       "size_bytes": 3418578,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__calciumdeficiency_66.jpg": {
       "sha256": "0229c5740b697c83c513a28a295ab8ce6137b26d1cce4849ea426f47cff26455",
@@ -174,19 +229,331 @@
       "sha256": "0bc23dc98cdb29beeed5fa10ad5f62699d7cd497207ba0c33574b68b3ef76eda",
       "size_bytes": 75892,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__\u00c7ilek_Ca2.png": {
       "sha256": "23632d5a44d775ebd5ff82984e21b45dee14eabad635592b986ab2e2cea550e0",
       "size_bytes": 187399,
       "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/web_off_crop_secondary_881f916f28aa.jpg": {
+      "sha256": "881f916f28aafe95966332c944ac3e36d792dc5b7e941066dc17b88bea5b5d8f",
+      "size_bytes": 122061,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/web_off_crop_secondary_a7382c819d88.jpg": {
+      "sha256": "a7382c819d880ca8e3938209b299869b9c3448b0bc653a3a07d9d95d34340dcb",
+      "size_bytes": 271196,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_bugwood_1234124_tomato_early_blight_leaf.jpg": {
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "size_bytes": 495274,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_bugwood_1235040_grape_anthracnose.jpg": {
+      "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
+      "size_bytes": 569975,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260506_bugwood_1243053_tomato_spotted_wilt.jpg": {
+      "sha256": "3d3d2b9b40453ac365c9ce1ae44d8e0b7f5ebe7163750d36c0bb5653e3c7aef8",
+      "size_bytes": 219333,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5333061_tomato_late_blight_leaf.jpg": {
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "size_bytes": 250695,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5622695_tomato_spotted_wilt.jpg": {
+      "sha256": "eb0087ea8babbfee0739dfa50616d2b9cfe73775b2a64f4fb6deacc005805c24",
+      "size_bytes": 481274,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_bugwood_5632425_tomato_early_blight_leaf.jpg": {
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "size_bytes": 277846,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_blossom_end_rot.jpg": {
+      "sha256": "3cc6ba887e2b5de6d1f8db6ecc1950fd55512b17646c7e5b868067505c7e7fc9",
+      "size_bytes": 146956,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_blossom_end_rot_tomato_2017_cc0.jpg": {
+      "sha256": "15ce6f9a3dd3630a5f5c21193ad71cbbf91f019b299fb3661e693b0761c270a8",
+      "size_bytes": 155501,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_tomato_late_blight_fruit_rot.jpg": {
+      "sha256": "8b8014cde61e4d2f6c1a8e081343b007d6cebfdd6ad5d9c61605b54970fe9caf",
+      "size_bytes": 213805,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260506_wikimedia_uncinula_necator_on_grapes.jpg": {
+      "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
+      "size_bytes": 191433,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_00c.jpg.jpg": {
+      "sha256": "a8953ce392e5abac59118335b72f78f16da1bef8a53cf771dee7ec8fcd99cd8b",
+      "size_bytes": 372970,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_011.jpg.jpg": {
+      "sha256": "bd60bdb08e206e38c319eb87ca74d240be3796a57e68c55246c558847ea49250",
+      "size_bytes": 58466,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_01c.jpg.jpg": {
+      "sha256": "351febb01a29a3b953b0f59d56b9878f292245f5f4249bf7f242871526b4a0f3",
+      "size_bytes": 67103,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_02.JPG.jpg.jpg": {
+      "sha256": "2f6e70b736435edc598a16b0bef6cbb8972527f48595406a2c3739910a0e8b57",
+      "size_bytes": 26371,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_022.jpg.jpg": {
+      "sha256": "4a94729561c4072cc20bd5eefb523d094297cfede4662ef6cc4b4d0a0c0f6902",
+      "size_bytes": 38069,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_03c.jpg.jpg": {
+      "sha256": "5fead7eb53228ab43831ca399a6db220e440291f6d3da5df709b8bf2c6011ebb",
+      "size_bytes": 22292,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_04c.jpg.jpg": {
+      "sha256": "0824326d71a477130d5412664807b3ade1552c12332790eeb7517742845eb97e",
+      "size_bytes": 348672,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_05c.jpg.jpg": {
+      "sha256": "ac577169323167bcdaa47ab3d33b42b4ab642651010deba18d1a1d117ae7f205",
+      "size_bytes": 151614,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_06c.jpg.jpg": {
+      "sha256": "0d24d3485ba1ebd0549ea5fd0310fcc65f8816555176e7d4117fe465c8142944",
+      "size_bytes": 58086,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_0796.33anthracn.jpg.jpg": {
+      "sha256": "9e07695e7c428d02fb2c8d0efb700a073bd491163c55c8993ef91f94bd4dbca0",
+      "size_bytes": 32794,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_0805Fig3400.jpg.jpg": {
+      "sha256": "a7ea9078e7d9603d21d0e68ee212edcc224aa02cb50e4e74de786850a4099b2e",
+      "size_bytes": 24040,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_09c.jpg.jpg": {
+      "sha256": "bd0535cdb71c769f700a14a822e8081febce14c3e3478b60219740e457fa9f61",
+      "size_bytes": 101222,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_1-495x400.jpg.jpg": {
+      "sha256": "781844def7393bce84e4697419a90ad3d35f395d96175927b9544d4b6dec2295",
+      "size_bytes": 71571,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_1200px-Northern_corn_leaf_blight.JPG.jpg.jpg": {
+      "sha256": "6b06c8aa1cb6e92291d0d8bd2bd3a92195717e870e6d1366c0d57fcc4c234469",
+      "size_bytes": 306753,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260517_plantdoc_plantdoc_train_Corn_leaf_blight_186116-325x209-Northern-Corn-Leaf-Blight-Chilvers.jpg.jpg": {
+      "sha256": "9d4b4c895bc3d2739487ce288a269ec1a706d5c6d6d5e3252333ad793fba92f0",
+      "size_bytes": 12708,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_00009.jpg.jpg": {
+      "sha256": "277201bacd26529175733458740c1181de800c7199dbb250a61bd361a34d078c",
+      "size_bytes": 82942,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_0042241.jpg.jpg": {
+      "sha256": "f1b93ce7dede615c0a3e9638e86650a56c5b593d82a3d230b715b056d356ab5d",
+      "size_bytes": 131826,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_0061.jpg.jpg": {
+      "sha256": "dabdd2b332d328f67178173e5b0106bbbb0410bdd4f2111708050e4b52c8ecf1",
+      "size_bytes": 41602,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_1024_x_576_-_alternaria_early_infection_symptoms_spreading.j.jpg": {
+      "sha256": "3eda2dadcc702184ce3f15001aafc996e6b1bb214da671fa373459a1c9489c66",
+      "size_bytes": 411608,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_1200px-Late_blight_on_potato_leaf_2.jpg.jpg": {
+      "sha256": "e1df8209b89fd2c1bedbe907188aaca7f165fb7d7b873e3dcaba1cd4e089ae53",
+      "size_bytes": 118885,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_1421_0.jpeg_itok_FMtmgePj.jpg.jpg": {
+      "sha256": "c53ad8d40c38debfbc0b79a87d0f3649c20b933a65f5b78a6931f59d06aad498",
+      "size_bytes": 59758,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_14321627273_58d893c3e2_potato-plant.jpg.jpg": {
+      "sha256": "9ed101561e6c03eff8eb46223dd423da83a9ccd74050e1dbf867374924b9d84b",
+      "size_bytes": 103582,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_1573852-Early-Blight-e1515624612559.jpg.jpg": {
+      "sha256": "4caf285642d0f1b45811a41fd595c145403373720bb9c05980e8a541ea9952f0",
+      "size_bytes": 34038,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_15hrt15a1f1.jpg.jpg": {
+      "sha256": "e8b5d2f224ccdbba1094528560f9d0afbc9f58540b8a6b2c5230f6a824ac4cff",
+      "size_bytes": 128819,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_18028_1.jpg.jpg": {
+      "sha256": "e5f14a70fc7a687a5846749d5499872c7c3320e81aea1358e481f7100b7ba242",
+      "size_bytes": 216600,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_20100816earlyblight.jpg.jpg": {
+      "sha256": "187bd18367544702713d98b7ace2818588726651373f37ad88b99f4f174d38cb",
+      "size_bytes": 127956,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_27013702151_95bd415ba9_o.jpg.jpg": {
+      "sha256": "4f1a8dec3cf61808c258c33437e394949db2a7eb7e5c556fa789c5132231bf01",
+      "size_bytes": 122734,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_2D1A9552.jpg.jpg": {
+      "sha256": "3f6885cc3a00a1f79836a833d04f7b8c3de0de67eab2aa076e73a001955192e1",
+      "size_bytes": 94340,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_2OBH_29_Gardening_early_blight.jpg.jpg": {
+      "sha256": "f748f35d0801ab88be6644598876bfc173fe281b0f01e2d12439eb53f9bde818",
+      "size_bytes": 36887,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_36-early-blight-concentric-rings.jpg.jpg": {
+      "sha256": "3491d3cbff6a350106d4d1bc21766378d5d64825246cb1b416d69795d001042d",
+      "size_bytes": 234067,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_3785483636_d888419c98_o.jpg.jpg": {
+      "sha256": "e2e59ad81dc4691fbe579e65b0ecafeed2f1d9a537383c8eee701dfb2ad53451",
+      "size_bytes": 167854,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_45035_1.jpg.jpg": {
+      "sha256": "adaee93874d17252870b7d4a49e8941af36309a0d1889afabd67aaf80fc0a261",
+      "size_bytes": 116797,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_500px-Tomato_Early_Blight_Leaf.jpg.jpg": {
+      "sha256": "ba58718f18314d0f17b0185a95f05643cf807a20067a95c24b208c7ee23a6464",
+      "size_bytes": 48453,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_5688742112_147f33b89d_Phytophthora-Infestans.jpg.jpg": {
+      "sha256": "86d499067dd5d2e237424658ee36b238a09eb082088142a4e610e6979b468048",
+      "size_bytes": 109345,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_5816740026_d42ef24413_Phytophthora-Infestans.jpg.jpg": {
+      "sha256": "a981ee59e5e1dcafd0d225f74369a05969200352c17743318c31987083ab6f4c",
+      "size_bytes": 98347,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_80109626.jpg.jpg": {
+      "sha256": "8341af059ffb70b73bebb119a3943d5c96e3ee621437e3cca8b176aa81d563b4",
+      "size_bytes": 238785,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_87A_Pot_Early.jpg.jpg": {
+      "sha256": "d6031dd60efad84167f6cba8ca253d211c0615720bb802c53833b7ef234a21d5",
+      "size_bytes": 18518,
+      "slice": "other_crop_disease",
+      "split": "test"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_AF_news_p4_p5_p6_Blight.jpg.jpg": {
+      "sha256": "a10d18383acf24fc659ef606a4df9d97e8fcd5427a9244162f46975a561e7d24",
+      "size_bytes": 73900,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_AGS-154646-S-5801.jpg.jpg": {
+      "sha256": "572e7706e2008ab58703883916e427934826cee4513efdcd46044ae737a944df",
+      "size_bytes": 48245,
+      "slice": "other_crop_disease",
+      "split": "dev"
+    },
+    "other_crop_disease/internet_20260520_plantdoc_plantdoc_train_Potato_leaf_early_blight_B2650214-Potato_leaf_blight-SPL.jpg.jpg": {
+      "sha256": "18a91f30ec4c438806cdf5c8ae3d6d8be85870e7d05ea5bce0cc78023bfce5a9",
+      "size_bytes": 200198,
+      "slice": "other_crop_disease",
       "split": "test"
     },
     "other_crop_disease/other_crop_disease__61.jpg": {
       "sha256": "06547ebf343096404e233bbde7ea1f632e6903cbf471ea461b3cd67b99e94f94",
       "size_bytes": 171033,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011f_k\u00fcllemesi_4.jpg": {
       "sha256": "08bbfc0fdac5e6ed6b1ea4d4102b451f12ab5ff92071a35035c11b95ff9f4570",
@@ -198,25 +565,25 @@
       "sha256": "02b08e0a047cd83a7c4eed3c93e94e6a4495f0a098569762375b66b97c3cf977",
       "size_bytes": 13494,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "other_crop_disease/other_crop_disease__Ba\u011fda_\u00f6l\u00fc_kol_8.jpg": {
       "sha256": "0434c21f8142786a723f39b3504c176a6928aa9b7aa8690e69ac9f12c82eba2b",
       "size_bytes": 11394,
       "slice": "other_crop_disease",
-      "split": "dev"
+      "split": "test"
     },
     "other_crop_disease/other_crop_disease__Kaggle_test_L_blight_25_jpg_rf_c2e6433b9b0354b0ccf5a7cae3177354.jpg": {
       "sha256": "01cd176c2df792781fbd70f3f80365df24c0d95ffe08ebc4218df2b0500abadd",
       "size_bytes": 52158,
       "slice": "other_crop_disease",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/internet_20260509_bugwood_5629370_strawberry_twospotted_spider_mite_webbing.jpg": {
       "sha256": "0f6f8bea73f28a78ed2aa8f2a05bf0ad16ccb0300e78dd1670a9a191120f5c55",
       "size_bytes": 141937,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/internet_20260509_bugwood_5629372_strawberry_twospotted_spider_mite_webbing.jpg": {
       "sha256": "ff4ae313ed822fb17618c25feba77ab25e5b8060631298b9aed423e5862c66c2",
@@ -228,7 +595,7 @@
       "sha256": "c2ec9014a22cc476ecf21d0de6934116b595d876fe22f48b42bd3924fe1e35e9",
       "size_bytes": 119086,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_108.jpg": {
       "sha256": "464514a9916820fc4f17b1ac834356ebb9b3d341afe4942d324aa3f72fcdc87f",
@@ -240,7 +607,7 @@
       "sha256": "b9b72ecce2465db4cac02fe40716de61f29ec0320e2f3c6f1ab0d686c3785c76",
       "size_bytes": 149705,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_11.jpg": {
       "sha256": "266dbe0ebdab125d837458f0bf1b1e862b87f80ce8c4863e5eb7fdf6825d11f8",
@@ -252,7 +619,7 @@
       "sha256": "b0f4f973ac5a93a7355f8507cad2c1036db6fbedbef0943bc2d270630a3bade8",
       "size_bytes": 114031,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_113.jpg": {
       "sha256": "21ac0c848fa208d150cce5cb3970d2564a072005a786175f59d6ad7b518c02ee",
@@ -270,31 +637,31 @@
       "sha256": "3224e0a30201e1a533d25e325e97cd80938c0cecd698a4c8925e693f4b1512a3",
       "size_bytes": 143188,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_119.jpg": {
       "sha256": "253327559084b97ea91d1484013a48638597711593e027267374bd892f6b66bc",
       "size_bytes": 175072,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_12.jpg": {
       "sha256": "645a96d7fbf385d9a8fd3872e1d14da144b596dc89c0c9c1b9c48216fcaab4c7",
       "size_bytes": 153046,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_121.jpg": {
       "sha256": "fc1c0157dff41a0a8f4371b68c4d7767dea1e47375484c745466b4778ab6f085",
       "size_bytes": 116237,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_123.jpg": {
       "sha256": "306c07db45720b6f6c9179d8741f3bca34e3d62deaec43495302acb9eba76ac2",
       "size_bytes": 155683,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_124.jpg": {
       "sha256": "93a837341b24ac173be1323d6d9c9c7a3dbbc0a1736b0aca2c5f6c1e59dabae4",
@@ -312,25 +679,25 @@
       "sha256": "a296a4c687c858beeaa6fbe2be1483ba3522b30affae26f0ca9e5e717bc1fd24",
       "size_bytes": 154188,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_134.jpg": {
       "sha256": "9d1f6eacbab736a80e9516dfb9430fa83dbb3dc48d5bc82379ac058833aa6990",
       "size_bytes": 188360,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_135.jpg": {
       "sha256": "eb27f0af5b51948a3aab66fcc8efae75525034b007cd50e77e02d0b02a5c1c7f",
       "size_bytes": 148363,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_138.jpg": {
       "sha256": "5a45ed77ea6df6e5a0fda252ec7c1d03cf2e1c8f0a35e22f464f53c9b2b29439",
       "size_bytes": 161982,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_139.jpg": {
       "sha256": "6073e742d5d3adfa9005225f88582e0cb98ee50a2c5e849f9a7846fa7a2128b3",
@@ -348,7 +715,7 @@
       "sha256": "5dc221a8dce491038b952f90bd8b7035136c7f571ac4b6f31d7ac38e78976c84",
       "size_bytes": 170762,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_144.jpg": {
       "sha256": "1832b05001f6945e203ce5c2b10223fb61d4845e59087331520bb726620f67ce",
@@ -360,7 +727,7 @@
       "sha256": "2e5829f5f8c1a0df8b37b64c54dfd8ad7928e029ce7ec530a095850e981ed037",
       "size_bytes": 178908,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_148.jpg": {
       "sha256": "7acf9a411194a6ffefaf9f662f73cf8c03455a8441d835501e13227bba12ae8c",
@@ -372,7 +739,7 @@
       "sha256": "0834f8663cd3c339d882962860ebd91755420982684f381096049c793815824d",
       "size_bytes": 152110,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_151.jpg": {
       "sha256": "1bcec6c0d9db9775dca114a7e632db43d9e19799134682876b44198c35777d0d",
@@ -396,13 +763,13 @@
       "sha256": "40ace8c09380e23302e1008ae156c892638fb685eb7ae2892dc971e2320cc702",
       "size_bytes": 157736,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_163.jpg": {
       "sha256": "666dc0dd1169b11611b1f0d6d4322d449b03ea4706b47caf05a008179dc6c555",
       "size_bytes": 157385,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_164.jpg": {
       "sha256": "0b3615b9ec975e27454c5cb4f31c7165a5b9bcafddd355416807341ab2e37571",
@@ -420,31 +787,31 @@
       "sha256": "95e57af7cf1d22f4149090358b9c43d2d7000998e28c7b694d2b64f8d516f93c",
       "size_bytes": 165860,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_168.jpg": {
       "sha256": "8d4c547ad2898c9d764b4645b7a6c8f6408497f01a60b761cda175348ae672f0",
       "size_bytes": 195220,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_169.jpg": {
       "sha256": "98ea5684b2fb70a7d9edd413c621d54240c4c95b298222be167d66fd35ad43ab",
       "size_bytes": 150119,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_170.jpg": {
       "sha256": "b208b2e348e8145094a6fa1be3847d353f2fb3342f345753c35c3835187204da",
       "size_bytes": 202314,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_171.jpg": {
       "sha256": "4ca6efec5759e7187f36946c530ced04738bd88303f79cf58a425ff24ab0f964",
       "size_bytes": 120168,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_179.jpg": {
       "sha256": "37137864c8bd5ba23b8d466923ef2c12dd19b5c8550144d61a74c3c876793ce1",
@@ -498,25 +865,25 @@
       "sha256": "41692e57796b89ab47402190a0e47f6e056fd48604cf1ed87b272bcffbda155a",
       "size_bytes": 171952,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_197.jpg": {
       "sha256": "d314682235e1d80ce897263c2d58c28e44bae6127a4baa28b75137df7664bac1",
       "size_bytes": 139910,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_199.jpg": {
       "sha256": "ec4b5d5b99c2c5bad1373f4fe7a948f75101d6837ff679b7beed68400678819b",
       "size_bytes": 126075,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_205.jpg": {
       "sha256": "ce6d6529198ac8f166a55eeb427939ce0a8ae0fd413f895711d55030f0177475",
       "size_bytes": 160916,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_207.jpg": {
       "sha256": "b4b1624cb32a093c4a9ab0efa0b0b22f33d012e942f46fce459d7eea6e4e4756",
@@ -534,7 +901,7 @@
       "sha256": "13391c39c8fd60fe626f877a05e228d8e51f050a20287f4ee11e143c8d70c3a5",
       "size_bytes": 144308,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_210.jpg": {
       "sha256": "c4d4ded334b76838087c6320257bbe189cfbe4dd81021ce6b7bc04185540192f",
@@ -552,7 +919,7 @@
       "sha256": "cc616d9c1942c914b8e56fa62da72950a7fe56846ac39d83b3ab693d9439e050",
       "size_bytes": 160739,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_218.jpg": {
       "sha256": "020286b0155fbe81cd8aad1e6e652e2586d03b56a252f1569ce5b066699780fe",
@@ -570,13 +937,13 @@
       "sha256": "5efd7d9ebba4c1726e378e111b1bed35f976743dbb7af9a2483e639ee2b0b875",
       "size_bytes": 158839,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_222.jpg": {
       "sha256": "9d0dd2331ec2f3c61e5a5afbb86abc99446d98724e3ffd94125d21ed6f759717",
       "size_bytes": 153902,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_225.jpg": {
       "sha256": "8e1a5d1b746d0da2339e23d44f79737af4cc45d595a31e6b2a59d5e653b79da5",
@@ -588,7 +955,7 @@
       "sha256": "914e2960c1fe24f8186320377f453e657743db4fbc926cb9f24675eab25913fe",
       "size_bytes": 138703,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_231.jpg": {
       "sha256": "b14d79e5d4776aa6e6b9a9d0115eb6e944b1909a0027df1cc90a62dce1482bb8",
@@ -600,13 +967,13 @@
       "sha256": "863f0875bf91f5cea01d810fa2d61539d29b578916b36bb2c0e3fa59dd0f57c6",
       "size_bytes": 147805,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_235.jpg": {
       "sha256": "79c2af0195fa011c45aee077a75335bbba458d0e54b25ee5f493f3e51ca1de9f",
       "size_bytes": 167759,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_236.jpg": {
       "sha256": "054b381b3f3534453e03c0d12a8910655bda20e5ed9dd75737980b1ace0e50f2",
@@ -630,19 +997,19 @@
       "sha256": "aa9068b70db5351002c343ecff407335d5ec3e8f2ee2fb4101748e98b76bb67f",
       "size_bytes": 171311,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_240.jpg": {
       "sha256": "1ad23e4a60c1fee62d05294749d730535e8823fd3392fd15064981d6d1b960a8",
       "size_bytes": 157631,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_242.jpg": {
       "sha256": "957e8125bfe678e5ca30abeb7cb57dc9a6f593e037e93efe1db089c573f149c2",
       "size_bytes": 161571,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_243.jpg": {
       "sha256": "408f02cebdaf920448dc6485f9183aca3790ae919da2c99d0bd28323a5674f08",
@@ -660,19 +1027,19 @@
       "sha256": "c64769e94641e4f54715706c026dca2d35641fae621586a99f069c6e3b9bc246",
       "size_bytes": 162203,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_247.jpg": {
       "sha256": "47913af037a1565b25d1d28c8a65e38e2fbf523f3191675d178f95c29127c0ee",
       "size_bytes": 213800,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_255.jpg": {
       "sha256": "44cafdef07081386543fed1f5b2717d050e84db74fa7e7bbda95a0831d392058",
       "size_bytes": 146154,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_257.jpg": {
       "sha256": "afe69da6e9998dfa16c778a779644064142e1a4a16a7857337f39bd096bfb78e",
@@ -696,7 +1063,7 @@
       "sha256": "5faaf37f0a3a4041de0e75dc042c5bdef9dc1e444fd0119c3d212d2da5ef5405",
       "size_bytes": 166000,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_267.jpg": {
       "sha256": "afc6b72f9cf292fd0346d3121af4f6e5da528378923b90da7cafe69411152853",
@@ -708,13 +1075,13 @@
       "sha256": "b96e2b537ef0f20b744ddae811a78e3dec8574ace84b80cd667251d516be78cd",
       "size_bytes": 153683,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_270.jpg": {
       "sha256": "5027c503422fcf77bac556c80f9303830155f9523c19fead3df7bfdb063e7374",
       "size_bytes": 151454,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_271.jpg": {
       "sha256": "4de83a746853b9aee5b4f6fe7d62db038d1fbbd71e07cff8f87cea5bf4d9c016",
@@ -732,7 +1099,7 @@
       "sha256": "084341e400e3fe106ea74a39d7c869e8619ce338e7618bb9818f186ac6b2a8b7",
       "size_bytes": 185831,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_290.jpg": {
       "sha256": "78132ff114bc4884444f17ab2b1f8ec2f904831294487999490a2531a685afb6",
@@ -744,7 +1111,7 @@
       "sha256": "4637c7bc1619afed73633e9cca72ca1d5a866ef17cd758d62062ae13b2353224",
       "size_bytes": 138888,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_293.jpg": {
       "sha256": "2a0388ac47929d4a95b1bbfe2ec9effec16aa0437e3264bd722d4f1fa65708c4",
@@ -762,7 +1129,7 @@
       "sha256": "73700feef39fc06d474ea5406044aed642f57d50a2288e061e07f80d01a62c66",
       "size_bytes": 139827,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_30.jpg": {
       "sha256": "914e1d1d2949cc25778d31d465f0b157c59191382f9784c9a64bb0b8fe47b601",
@@ -774,7 +1141,7 @@
       "sha256": "2cb72957ad72b90d7902245d51e4c6fdb5e0b898ef3f2daa5874023af6f7c419",
       "size_bytes": 155085,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_309.jpg": {
       "sha256": "641d8fbb5983988278cc75bfd569ade5272afabbc60dbfbe5b7b1c3ef5ab4285",
@@ -792,7 +1159,7 @@
       "sha256": "e56d8b7098426684d93dc687a6e2f19081e0654d9aceee0decdbec642cbc82a7",
       "size_bytes": 146810,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_313.jpg": {
       "sha256": "e9ebd55140e9ae65461455e11f4db39e1bb00dccb0fdba5ed8955a895dc71a5f",
@@ -822,25 +1189,25 @@
       "sha256": "e6bb8a8c59049bef0518ba10e407e2d828378d3f50d4d3e5af3ec844ad7584af",
       "size_bytes": 154652,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_319.jpg": {
       "sha256": "312607db886a09586fb06bb31c2ac81213dc2c5214ff620fa5167a7ac81aa958",
       "size_bytes": 163908,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_32.jpg": {
       "sha256": "9903e3f1ceac007dcd7cfbc4bb79f3b496065c5de772d036e5a602cf75e26be3",
       "size_bytes": 145532,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_320.jpg": {
       "sha256": "aa2d9257605ea0743265d22e9ecaa03aa4c94558d153b0d0a57d155887e5e58d",
       "size_bytes": 151411,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_321.jpg": {
       "sha256": "443d77817c1f911b7cd8d11ad830c0d2debe607ac7cbb05f9880fd6d1ef39275",
@@ -852,7 +1219,7 @@
       "sha256": "7347365f388c318789c7632a9497cc8d1b3b91c9d6dda954cf1f2504f384bed1",
       "size_bytes": 156237,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_323.jpg": {
       "sha256": "8e38a60096de9562e8b8581793b32c6d048e57e3412443dbc0f0cd40fb2a0aab",
@@ -870,7 +1237,7 @@
       "sha256": "eb88660f6fefaeb3afae69fb674f20212c9b16311fc05eadee911533d0c9efa7",
       "size_bytes": 165031,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_326.jpg": {
       "sha256": "0c8eff431f3dcfbc1532047e849c6075e1de9d50b11b1aac72d4ae79f2d2f7b0",
@@ -882,31 +1249,31 @@
       "sha256": "3fdb8d31c9738d239aa9c3b0901b5211c3161c2682ed258a0b2bf6dd659a9b61",
       "size_bytes": 173718,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_328.jpg": {
       "sha256": "2ec43d78bdbd0f1e9a51adfd2b14541e37d6b3be8e2b44df1b10dce35a368e72",
       "size_bytes": 154926,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_329.jpg": {
       "sha256": "073ef56f84554da26f985e2da9e6d9c1fb108b5f79d620e79e0e56bfce05f058",
       "size_bytes": 175481,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_330.jpg": {
       "sha256": "83057c099a9ef3d633d0a089bc3773e115cfe61b58c6ea26593bc3279ebcb405",
       "size_bytes": 146560,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_331.jpg": {
       "sha256": "7ff9571296d6ddbaa8549105211184f2a4a8872edd76e3fac22f832088ce6c68",
       "size_bytes": 123574,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_333.jpg": {
       "sha256": "d308b8439bbfbdd5ca93ed0e38753d57dae6e3465760fc807cb765525cade8a3",
@@ -924,7 +1291,7 @@
       "sha256": "5e986ab9ce533e35aae3d9f0f77002789126fb9634da6a6517f119e039c84e7c",
       "size_bytes": 160491,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_336.jpg": {
       "sha256": "d1020df62f401bf2df7114c522ab0e05284ee3058c47fccb747697253a98e8ed",
@@ -936,7 +1303,7 @@
       "sha256": "79c7a5020649199c98647c974ed01381395895996405a4406fb24e41ecffbb8c",
       "size_bytes": 143635,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_338.jpg": {
       "sha256": "224c1de2b0c61534e69a8660e6fb0b9ae543bc2e3e6c7c02e0a9f7ecba865302",
@@ -948,7 +1315,7 @@
       "sha256": "dd8e78fc98196462f4f3d74f190711aa26891e3d0bd5b7696e3db72d7a10b6ca",
       "size_bytes": 153750,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_340.jpg": {
       "sha256": "dae4c7982719eff6821377cc4020a09cec59e7a6fd449d749b2b102d1da25764",
@@ -960,37 +1327,37 @@
       "sha256": "02003bd6a6908eaf1eef39a35b2720adf0cf1c1d75d9a9c2bf4bd84137fd66d0",
       "size_bytes": 159537,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_342.jpg": {
       "sha256": "d194a06627b2a4dbd7601d8a4c7aaa21181c108b84cacbd235ed0a08a33a57c6",
       "size_bytes": 176025,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_343.jpg": {
       "sha256": "2dbaf09a30e3370291f614a88e6ebdfda7d77b7c5a57936e18c7d53e5ad4ec4e",
       "size_bytes": 140240,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_345.jpg": {
       "sha256": "318790588ed7ed0a9e9ff9f0a2e3a47cb1d8e207403ac4d1dec48b8643517c8e",
       "size_bytes": 188802,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_347.jpg": {
       "sha256": "244843b2c6c69c679f22a33a55c3ab09305221baaae86c32a715ec663cef0c93",
       "size_bytes": 151272,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_348.jpg": {
       "sha256": "31a234c8df35332a01bc172f80e4df26a6f8c37b5c6664871c42a755a831e239",
       "size_bytes": 171103,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_349.jpg": {
       "sha256": "bb418c7a3bfb2cc088b47efe38de426e9e6edbd7b3d89f67ccca75b2a32c6d75",
@@ -1008,7 +1375,7 @@
       "sha256": "84bb351d41210b3c9c651168eb6b4e1a2fa420c2d32cdd22c8a49d0bac9d9f40",
       "size_bytes": 171167,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_352.jpg": {
       "sha256": "a1f8f86bf3d36ccc8ced91b56135fe47b74c809b711e2c386b7a51a866f2dcec",
@@ -1026,13 +1393,13 @@
       "sha256": "4adf0446d3a1ad2dc3f86c1baf63051cd8ed1becd15d2376fbdca7cedc16499c",
       "size_bytes": 148675,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_355.jpg": {
       "sha256": "607167c5523c9f8a0999d6e891c791b75cc209d27da67f5a35bc6715f7bcb482",
       "size_bytes": 150605,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_356.jpg": {
       "sha256": "74a76f46f2323f3c0d5bb292611f00f3992f38ad3338e309329355b4424fec72",
@@ -1050,31 +1417,31 @@
       "sha256": "b133dceccbe8e51dcf2d84974774bef488d73121f70610a57e595e919f27f6dc",
       "size_bytes": 159762,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_359.jpg": {
       "sha256": "c1f2a435c6eb62f3a7859fb5be2300605a8263956c60c6de3856071af2d6ebcc",
       "size_bytes": 127559,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_360.jpg": {
       "sha256": "7aa967f5c44a95d2133a0d476006286aa9a607d3b8782037c9a1f9bfedda875e",
       "size_bytes": 132604,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_361.jpg": {
       "sha256": "530a6063a05456fa843cf4620678ca2f3ba1df8588445d2696c5e338a7e2e400",
       "size_bytes": 153981,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_362.jpg": {
       "sha256": "bafa572dff50e42784a33ff0803ce0defec3c40b325fda005ae7888581669d96",
       "size_bytes": 153716,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_363.jpg": {
       "sha256": "a622734839b79ef25803b5d9d98b1015aa7bda913c2428966338cf04b5c67a24",
@@ -1098,13 +1465,13 @@
       "sha256": "2164e2cd869acd14a3a8887a2fd1ccef373afc6238f99ecd09454cc3eca55c8c",
       "size_bytes": 151809,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_367.jpg": {
       "sha256": "dd5064e409e5a1d972806356f5b455890e35d3c71f423030a27fd2fdc63cff87",
       "size_bytes": 145229,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_368.jpg": {
       "sha256": "b3b1b1a00603852629bdf3bf05c8301eb8547e090453977a88ff381242856576",
@@ -1116,25 +1483,25 @@
       "sha256": "74749ab67bb55340125b73efbfc33d76a563fc576f89c014effa8cac964bffa9",
       "size_bytes": 141213,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_370.jpg": {
       "sha256": "5c642537e857eac09d8a8c860dd2a2c66b3215c2b775830027a7425d29366d54",
       "size_bytes": 147538,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_371.jpg": {
       "sha256": "d092a5cb72c8ef2fba7a2be335ccf65384a5108898fdcbc8259267428dc52aad",
       "size_bytes": 72819,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_372.jpg": {
       "sha256": "4f72df651091c5e5f4d1d9755eb0cfaa9c4ee7a47eec2d30318ec3ab3b6a8e5a",
       "size_bytes": 136491,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_373.jpg": {
       "sha256": "142bc5b9fa49fb3f0e692986ab304fa0186c17bdc966980faeaaa126b19ae494",
@@ -1146,19 +1513,19 @@
       "sha256": "b6a7a9b094beb4d373b8c1d3a3d7a8bd837b517da853979292495ee3450b0ae6",
       "size_bytes": 156167,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_375.jpg": {
       "sha256": "80dff3020cab9fb2515ce1ec4e1da52f4b4b9e6feeee7f2a4c2c2086a849ea44",
       "size_bytes": 147582,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_376.jpg": {
       "sha256": "e237bfbe0ae23413192a32ee564638588370a674be80057fa98fe58594e17afa",
       "size_bytes": 153395,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_377.jpg": {
       "sha256": "2bcfa7e53fdf86a007df6ff7cdae7ca0c9db2ac8aef60dd156a9fce1012b71bc",
@@ -1170,25 +1537,25 @@
       "sha256": "f5e28b68274c679f1b6146546c903e314195d76a09d49778f3b21f69aedd4245",
       "size_bytes": 174374,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_379.jpg": {
       "sha256": "c38c1bcaf6b580225287c802319bf30471452d50863aa3cc746182f74bffa120",
       "size_bytes": 106896,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_380.jpg": {
       "sha256": "39ba24dd4a304a6bd4833d6ab922c8607c067185bd0f669431c36c9543d4dbab",
       "size_bytes": 142851,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_381.jpg": {
       "sha256": "1d4239cf1d5ffba6ebeac3c47c2b86a91c0f53ad31edd039ac8044b47f1aa67f",
       "size_bytes": 167691,
       "slice": "same_crop_unsupported_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "same_crop_unsupported_unknowns/rebalanced_20260510_strawberry_unknown_angular_leafspot_382.jpg": {
       "sha256": "865db32ee1c15e7faddc077511c483de7a8e10609bc9ff5b6c8e8f581ae3ef82",
@@ -1202,21 +1569,165 @@
       "slice": "same_crop_unsupported_unknowns",
       "split": "test"
     },
+    "same_crop_unsupported_unknowns/web_same_crop_unsupported_unknowns_40e688a998d8.jpg": {
+      "sha256": "40e688a998d8d4a6ffc2f1e542d5db7ed7fec4899f6ecc04379cb55eff068136",
+      "size_bytes": 736738,
+      "slice": "same_crop_unsupported_unknowns",
+      "split": "test"
+    },
+    "same_crop_unsupported_unknowns/web_same_crop_unsupported_unknowns_f78878f27780.jpg": {
+      "sha256": "f78878f277801f67803cdbb710048493caa93d9a4f6793aebc0dcccd16611641",
+      "size_bytes": 195690,
+      "slice": "same_crop_unsupported_unknowns",
+      "split": "test"
+    },
     "strawberry_failure_cases/internet_20260510_wikimedia_2013-365-239_Shadow_of_the_Butterfly_9613170636_.jpg.jpg": {
       "sha256": "790429cfabc73a05d8922de2d69337538ed5e50fbdd315128d1aa20bed60f05a",
       "size_bytes": 291390,
       "slice": "strawberry_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
     "strawberry_failure_cases/internet_20260510_wikimedia_Guttation_on_a_strawberry_leaf.jpg.jpg": {
       "sha256": "9b680b07d6b72333b6fada56bb2fcd4dc6b850840aa7c681f80019f33ad1a1e9",
       "size_bytes": 366372,
       "slice": "strawberry_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
     "strawberry_failure_cases/internet_20260510_wikimedia_Guttation_on_strawberry_leaves_01.jpg.jpg": {
       "sha256": "8c4986b995535b0d47f0352f63f275ced530fc2c7c59eeaa7fdca02efcf0134d",
       "size_bytes": 327245,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_0008003-strawberry-leaf-veiner-large.jpg.jpg": {
+      "sha256": "6549f6c7bc6c5742fd2618708c5793e6216e571826e1c0969032a89c0b3a6fbd",
+      "size_bytes": 262144,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_102_0829.JPG.jpg.jpg": {
+      "sha256": "1e5a93bc24a6f212e605586d24c2128a213fca93f72438f6922cbfab51316097",
+      "size_bytes": 211350,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_13400strawberry_leaves.jpg.jpg": {
+      "sha256": "ec1e573d81e48b3fa54bf861a9cd3019b669ad5c90bb70446bde8c1c81c6d803",
+      "size_bytes": 65492,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_1534854-a-green-strawberry-leaf-isolated-on-a-white-backgro.jpg": {
+      "sha256": "255531c21ffead6e806d488034154f05b279352fe8dfb7118ead4fc6e5c101d8",
+      "size_bytes": 110038,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_1788724-spring-leaves-of-garden-strawberry-macro-background.jpg": {
+      "sha256": "1ea5ab43df5f7345359a8cabd26bd1ebf20efeaa9d8d2e4100ee08b81127915d",
+      "size_bytes": 104031,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_18423_original.jpg.jpg": {
+      "sha256": "7ea488bbc2a7973787da502379506df0e8346a79e5ad258c5ff75fc22aafe08b",
+      "size_bytes": 3626902,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_270412tglr-wild-strawberry-leaf.jpg.jpg": {
+      "sha256": "e1b0780544504d99d6e6373ce14c81d912a7d728be4c48dc659dba7f6b9dd8df",
+      "size_bytes": 183171,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_344d1150577229-strange-strawberry-leaves-unhealthy-maxim.jp.jpg": {
+      "sha256": "260bc99c9328374f2ddd99ec880a2800b7d9779ea0c955cf902062514e782bcf",
+      "size_bytes": 88192,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_41.jpg.jpg": {
+      "sha256": "480997d5fc583d8c412f70b10b4bda35640dd85f13608826a968cc418bf30e66",
+      "size_bytes": 352160,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260517_plantdoc_plantdoc_train_Strawberry_leaf_4719232-strawberry-with-green-leaves-and-flower-isolated-on.jpg": {
+      "sha256": "fd5e2fbef550c39a8d88607824de193fb51eb8bfee1d185623b2e47f017ad33e",
+      "size_bytes": 80918,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaf--stock-photo-1431216.jpg.jpg": {
+      "sha256": "2b1e04fb0167cda6984a1f168ec887d6898551642686e63935cc533069c0ab9e",
+      "size_bytes": 266072,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaf-22360816.jpg.jpg": {
+      "sha256": "cdef75f85823e13c782ab13417945edafd68f2253f13e1f35d7b86116cca3bcc",
+      "size_bytes": 171605,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaves-collection-white-background-36684676.jpg.jpg": {
+      "sha256": "fd8e2d007ab7d6895f447cb48ae48db10c7bab6d6c18134df241fb6f9f945f23",
+      "size_bytes": 76062,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaves-isolated-white-17473157.jpg.jpg": {
+      "sha256": "aea238ab644bf26dfde18e6c62abedcb90ed03af78df7f5dc0751b6fe58dfc42",
+      "size_bytes": 178753,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaves-isolated-white-34722259.jpg.jpg": {
+      "sha256": "71fe6863521c8342592f98ab3c43ac349dd17263efa11bc528e41010557f2244",
+      "size_bytes": 164539,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaves-stock-image-948674.jpg.jpg": {
+      "sha256": "55c83b9af55c51d9fe59e6a4d76a46bcc11dbf29cca5425cdd5444c2ee8073ae",
+      "size_bytes": 223162,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_strawberry-leaves-stock-picture-948708.jpg.jpg": {
+      "sha256": "3d4dc882286ba25f66c6adb5d8066cdbbf31a377277699c1b35efe652fee93e0",
+      "size_bytes": 159264,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_test_Strawberry_leaf_wild-strawberry-leaf-top-view-rotated-KTBXCY.jpg.jpg": {
+      "sha256": "f9143045c9180ab7ae754421d4f5400971995ae7c92a81cabbedb8f4cbfd7366",
+      "size_bytes": 137542,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_train_Strawberry_leaf_5787ab74428a5fdc70e3defda7f00f0a4623876d.jpeg.jpg.jpg": {
+      "sha256": "925ecd0108d578be6c667766fb395e6d82cfb537a3d085cc64a0e63be2eb0600",
+      "size_bytes": 1917642,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_train_Strawberry_leaf_7.jpg.jpg": {
+      "sha256": "1946fdff0fe94a3f7da1ffdd97a3a5e40c84cc38411193b2d08bfc7c629d83b4",
+      "size_bytes": 387438,
+      "slice": "strawberry_failure_cases",
+      "split": "test"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_train_Strawberry_leaf_7065201-strawberry-leaf.jpg.jpg": {
+      "sha256": "97aa784590eaab9b8a6eb4b3a6f03cb205cc29083a32f0a48a787b911e465d9b",
+      "size_bytes": 107106,
+      "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_failure_cases/internet_20260520_plantdoc_plantdoc_train_Strawberry_leaf_DSCN5936.JPG.jpg.jpg": {
+      "sha256": "fb329de8c55464be24cc63493bebbdc66f5ee5758f865f328ea8737d82801d95",
+      "size_bytes": 270917,
       "slice": "strawberry_failure_cases",
       "split": "dev"
     },
@@ -1230,7 +1741,7 @@
       "sha256": "b4c1008f911ea9fdd52545666354bdadd62e2ce5d7dc4cc681e871f57bf9c211",
       "size_bytes": 1222077,
       "slice": "strawberry_failure_cases",
-      "split": "test"
+      "split": "dev"
     },
     "strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-14_195810.png": {
       "sha256": "cb699c69417802b5f7786452113f1786733f91b3b94d0e1b0dc05130c92f0df8",
@@ -1248,7 +1759,7 @@
       "sha256": "a1d5b857248d61370c5fe30aa67c1eda0d7328f682c5901b45db615625a2082b",
       "size_bytes": 587089,
       "slice": "strawberry_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
     "strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_Ekran_g_r_nt_s_2026-03-15_143125.png": {
       "sha256": "5d75b2b7bae804afbedbc616d600ccf598f43ef7e8598d52af11924e47ff116a",
@@ -1272,53 +1783,205 @@
       "sha256": "e69021515d598983673fe0980c89be521def79ac8b347f00390ea56fa62956ac",
       "size_bytes": 279554,
       "slice": "strawberry_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
     "strawberry_failure_cases/rebalanced_20260510_zip_strawberry_failure_figure4-25.png": {
       "sha256": "91ae1c9b314380e5c42843bef50d8c3d1b919bd0a450f2e4497c5b05aae70336",
       "size_bytes": 30780,
       "slice": "strawberry_failure_cases",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_1436090_strawberry_leaf_unsupported.jpg": {
+      "sha256": "21bd732936d27a5ce2fe5a70b39a6237192cc5cecb78c0dd1f08f23e269f8470",
+      "size_bytes": 146173,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_1496539_strawberry_leaf_unsupported.jpg": {
+      "sha256": "4efcba4adeb96fdfda0e68045226d2e5d2c613e6148f6e21023766b3f93a5302",
+      "size_bytes": 97000,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_1573009_strawberry_leaf_unsupported.jpg": {
+      "sha256": "5650ab59c042622e7e98a186faa41413d7df5d595d739067708c8fde2fa41b52",
+      "size_bytes": 91846,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5369108_strawberry_leaf_unsupported.jpg": {
+      "sha256": "c95823a936b979075956cd855eb48e03766e78acf294cbcd99026dd9c641758b",
+      "size_bytes": 105277,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5369114_strawberry_leaf_unsupported.jpg": {
+      "sha256": "b0eccbc5428809e4333c538ea3939ed4946ff3f58c704c5e4bfd12b5a40dc2f5",
+      "size_bytes": 70472,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5369115_strawberry_leaf_unsupported.jpg": {
+      "sha256": "68e9363d32b85d7fe2e3c47d55c54bea03e800af06385ce86ac4390c8462b96a",
+      "size_bytes": 34702,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5505623_strawberry_leaf_unsupported.jpg": {
+      "sha256": "2a36c16c38fefe7983a8268a961714a85cdd1d35f76744d2052648d4859079a5",
+      "size_bytes": 88192,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5543241_strawberry_leaf_unsupported.jpg": {
+      "sha256": "9642cce05b3cc2fdad95977fe92cc26e447e7375e3ef9c82e91d4ca5ef35a4c8",
+      "size_bytes": 63683,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaf-22360816.jpg": {
+      "sha256": "264491808bde0e7acb43314c72b6b9508170df33448655755bcc0fd27ea18015",
+      "size_bytes": 208693,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaves-collection-white-background-36684676.jpg": {
+      "sha256": "d3078c7815f6d46ef33bbe676bdcda5341bf277382f5bbfbf071912e776b41cd",
+      "size_bytes": 76432,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaves-isolated-white-17473157.jpg": {
+      "sha256": "7491a93e879e7251063a20fbb914f8f2581c1d928bc3d542c971824ca72927ab",
+      "size_bytes": 219082,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaves-isolated-white-34722259.jpg": {
+      "sha256": "6e1a961e9a27301a857ef8566937047723ba4f312f2b4d118f762ab81af0014b",
+      "size_bytes": 202266,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaves-stock-image-948674.jpg": {
+      "sha256": "f65850507c56b8d8930e3838ec6fce9e82222dc5598de069b2ccfc9e4fd689a7",
+      "size_bytes": 258972,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_strawberry-leaves-stock-picture-948708.jpg": {
+      "sha256": "b56a915801f8d708e973be532d338660bbea810ed8c54706885297f52ad4b022",
+      "size_bytes": 182718,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_candidates_v2_plantdoc_wild-strawberry-leaf-top-view-rotated-KTBXCY.jpg": {
+      "sha256": "0aeaed77fae9d6f419f611045ec1ab2948dd94869c67db3c2dacba6e317dfcc6",
+      "size_bytes": 160158,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_1436090_strawberry_leaf_unsupported.jpg": {
+      "sha256": "4e4f93f93c0e4021cab9f023121cc12644074730a85aabc43e2c9dcc983b7683",
+      "size_bytes": 145386,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_1496539_strawberry_leaf_unsupported.jpg": {
+      "sha256": "60a13bf456f3e455074d9566c8cb80e9555a3001ecacba65539dc250dbc00c16",
+      "size_bytes": 97141,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_1573009_strawberry_leaf_unsupported.jpg": {
+      "sha256": "418aa45f6138f2e8c832074b6ec60dbebc47801db4834be03192fde4875101e7",
+      "size_bytes": 91977,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5369108_strawberry_leaf_unsupported.jpg": {
+      "sha256": "cbf5c18d85d5036d59e04bf4e4689c29ea9f19768e66391b19d7c8873d421369",
+      "size_bytes": 105342,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "dev"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5369114_strawberry_leaf_unsupported.jpg": {
+      "sha256": "4a7db937d069110692efc867ddc99b45b42cb73e7cab73b2e2658d28cbe4e5d8",
+      "size_bytes": 70851,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5369115_strawberry_leaf_unsupported.jpg": {
+      "sha256": "b5e1fa06ed36e9c5726c5f106ff4d4bbe312dc63f215ef106fbea3ae8fd60a2f",
+      "size_bytes": 35803,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5505623_strawberry_leaf_unsupported.jpg": {
+      "sha256": "c10b6c6f7d4f42294b0fe6c2758f4c31b8217d823ef9ccfc3dcc59a5c3efa46f",
+      "size_bytes": 88214,
+      "slice": "strawberry_leaf_unsupported",
+      "split": "test"
+    },
+    "strawberry_leaf_unsupported/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5543241_strawberry_leaf_unsupported.jpg": {
+      "sha256": "840f6cb0ca461fb55aeb8a532c3d65ad4043f4bd623cb465a2365a2f026027ea",
+      "size_bytes": 64010,
+      "slice": "strawberry_leaf_unsupported",
       "split": "test"
     }
   },
   "min_per_slice": 2,
+  "min_total_for_dev_test": 30,
   "schema_version": "v1_real_ood_split_manifest",
   "seed": 42,
   "slice_summaries": {
-    "non_plant_misc": {
-      "dev": 2,
+    "auto_unused_placement_manifest_20260524T132507Z": {
+      "dev": 1,
       "split_policy": "slice_stratified",
-      "test": 3,
-      "total": 5
+      "test": 2,
+      "total": 3
+    },
+    "non_plant_misc": {
+      "dev": 4,
+      "split_policy": "slice_stratified",
+      "test": 7,
+      "total": 11
     },
     "off_crop_secondary": {
-      "dev": 10,
+      "dev": 11,
       "split_policy": "slice_stratified",
-      "test": 15,
-      "total": 25
+      "test": 16,
+      "total": 27
     },
     "other_crop_disease": {
-      "dev": 2,
+      "dev": 22,
       "split_policy": "slice_stratified",
-      "test": 3,
-      "total": 5
+      "test": 33,
+      "total": 55
     },
     "same_crop_unsupported_unknowns": {
-      "dev": 66,
+      "dev": 67,
       "split_policy": "slice_stratified",
-      "test": 99,
-      "total": 165
+      "test": 100,
+      "total": 167
     },
     "strawberry_failure_cases": {
-      "dev": 5,
+      "dev": 14,
       "split_policy": "slice_stratified",
-      "test": 8,
-      "total": 13
+      "test": 21,
+      "total": 35
+    },
+    "strawberry_leaf_unsupported": {
+      "dev": 9,
+      "split_policy": "slice_stratified",
+      "test": 14,
+      "total": 23
     }
   },
   "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__leaf\\ood",
   "split_counts": {
-    "dev": 85,
-    "test": 128
-  }
+    "dev": 128,
+    "test": 193
+  },
+  "split_policy": "phase1_real_ood_dev_test_if_large_enough"
 }

@@ -1,8 +1,0 @@
-class,precision,recall,f1-score,support
-domates_antraknoz_meyve,0.9230769230769231,1.0,0.96,12.0
-domates_bacterial_spot_and_speck_meyve,1.0,1.0,1.0,3.0
-domates_blossom_end_rot_meyve,0.6111111111111112,1.0,0.7586206896551724,11.0
-domates_gray_mold_meyve,1.0,0.9130434782608695,0.9545454545454546,46.0
-domates_late_blight_meyve,0.9655172413793104,0.8235294117647058,0.8888888888888888,34.0
-domates_sağlıklı_meyve,0.8571428571428571,0.6666666666666666,0.75,9.0
-domates_spotted_wilt_meyve,0.5714285714285714,1.0,0.7272727272727273,4.0

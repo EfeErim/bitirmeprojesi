@@ -1,6 +1,6 @@
 {
   "assignment_policy": "slice_stratified_dev_test",
-  "created_at": "2026-05-25T08:53:09.897339+00:00",
+  "created_at": "2026-05-25T08:53:10.557334+00:00",
   "dev_fraction": 0.4,
   "entries": {
     "fruit_failure_cases/internet_20260510_wikimedia_Ripe_Strawberry.JPG.jpg": {
@@ -610,7 +610,7 @@
       "total": 42
     }
   },
-  "source_root": "D:\\bitirme projesi\\data\\ood_dataset\\final\\strawberry__fruit_ood_final",
+  "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\strawberry__fruit\\ood",
   "split_counts": {
     "dev": 37,
     "test": 58

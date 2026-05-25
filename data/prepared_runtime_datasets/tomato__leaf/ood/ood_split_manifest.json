@@ -1,12 +1,85 @@
 {
-  "created_at": "2026-05-14T10:28:58.188412+00:00",
+  "assignment_policy": "slice_stratified_dev_test",
+  "created_at": "2026-05-25T08:33:47.698970+00:00",
   "dev_fraction": 0.4,
   "entries": {
+    "auto_unused_placement_manifest_20260524T132507Z/early_blight_leaf/bugwood_1234124_tomato_early_blight_leaf.jpg": {
+      "sha256": "8069dad2e7954b8eaf40e3716203c1ecbd2c4c8383a75e63c1ed74fcbf201e90",
+      "size_bytes": 495274,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/early_blight_leaf/bugwood_5632425_tomato_early_blight_leaf.jpg": {
+      "sha256": "fc13aeec8f4ade7c947c533f07c38ed318ad52beebf319c08620d814ceb37c69",
+      "size_bytes": 277846,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/late_blight_leaf/bugwood_5333061_tomato_late_blight_leaf.jpg": {
+      "sha256": "caedb06d8f66237af78259ad530cb2bc1127ba4dc387eb93c054468440b794cd",
+      "size_bytes": 250695,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/tomato_failure_cases/wikimedia_Tomato_Plant_Leaves_01.jpg.jpg": {
+      "sha256": "0dd4f4bfa02577e3b3fe66e96de4206d9c6c15bfb2edde88245206683758d063",
+      "size_bytes": 1077444,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/tomato_failure_cases/wikimedia_Tomato_Plant_Leaves_02.jpg.jpg": {
+      "sha256": "bb2251ad8fff9475bab6f2bc3545f861cf0e331db9392092a426484f4d0cc4a6",
+      "size_bytes": 243143,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/tomato_failure_cases/wikimedia_Tomato_leaf.jpg.jpg": {
+      "sha256": "12cab97b2bb5789bd3050f0d2395c82fe2d38d75d651a235e52f18993b3df465",
+      "size_bytes": 337949,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Fig5-Leaf-damages-between-upper-and-lower-epidermis-of-a-leaf-by-Tuta-absoluta-i.jpg": {
+      "sha256": "50cd8e551672a03ea4e406080ed97a70c77c956e68063acd83e5369a87543afa",
+      "size_bytes": 56927,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Fig6-Enormous-tomato-losses-caused-by-Tuta-absoluta-in-Ngabobo-village.jpg.jpg": {
+      "sha256": "9adc74e87457a8df1129dbfba65a792b107fa326b9d16e4062cc678ed6496625",
+      "size_bytes": 165108,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg": {
+      "sha256": "88cfcfba3072d1f7a0c02bedf39db9adfbea136c916a2b8d606b63c49c43a492",
+      "size_bytes": 325413,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg": {
+      "sha256": "1a4954cc902cb6ea03b0025f838f4565ca52d12a2b45476b9419d6f3350ba2cc",
+      "size_bytes": 48893,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "dev"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Tuta_absoluta.jpg.jpg": {
+      "sha256": "a1991c2edd7d66ca402c2ec6d22f7f08a265393c5872beb5f68c60d3dde173ba",
+      "size_bytes": 238347,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
+    "auto_unused_placement_manifest_20260524T132507Z/unsupported_tomato_unknowns/wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg": {
+      "sha256": "b650ce349888e54a73fc73827d2b669a977e36d95ed12ce348e5f1c797186200",
+      "size_bytes": 209724,
+      "slice": "auto_unused_placement_manifest_20260524T132507Z",
+      "split": "test"
+    },
     "off_crop_secondary/internet_20260506_bugwood_1235040_grape_anthracnose.jpg": {
       "sha256": "1003be07e0d10c5c059b30d1a9deb74b49e8d5bbb98e55600cb29ec689bc97ab",
       "size_bytes": 569975,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/internet_20260506_bugwood_1572815_strawberry_anthracnose_fruit.jpg": {
       "sha256": "864f8506b159b0ea357d825a6be40d8fa9738d50e06337a6b0fdc0be0d07634c",
@@ -36,7 +109,7 @@
       "sha256": "10abaa2fa0c46f5c4747e9cf766b6f09c91a89478ba03d58d80e1b5239f62302",
       "size_bytes": 1372694,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/internet_20260506_wikimedia_strawberry_fruit_rot.jpg": {
       "sha256": "39543b2b2820f6a5147cc8f885b2dbab3aa8edd0decbfcd585d9078306101800",
@@ -48,47 +121,59 @@
       "sha256": "22cf267f0a24dc8f94cbeffbdc3ea1760e906ac13a8fff1c5b0fe3d58a5a5a4a",
       "size_bytes": 191433,
       "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_001701.png": {
+      "sha256": "0cf4a1c5e73f43ef465e1ccedf84cad05e34d70eedd29125f3f3bb0552ddd4f1",
+      "size_bytes": 200149,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-04_002619.png": {
+      "sha256": "ee7647b90606356cc270e35b944d44e56ab2edecf1288fb54db1877e7e2486e1",
+      "size_bytes": 110860,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_1101.jpg": {
+      "sha256": "f23c3349e91589c5962de53652c2fb6586c2c7ebe78361d60b2c4050f0d9b225",
+      "size_bytes": 20813,
+      "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "off_crop_secondary/off_crop_secondary__Strawberry___healthy_447.jpg": {
+      "sha256": "3b83962ebb0e8dada091cc477978dfaf4152127728121b9154fe976d8817aaa9",
+      "size_bytes": 19249,
+      "slice": "off_crop_secondary",
       "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__apple_mosaic_virus_43.jpg": {
       "sha256": "a124974d6c2db935cd3b546b4eacfad15b8305e6b8fd71e288a7d59704bb92c4",
       "size_bytes": 85717,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__bell_pepper_bacterial_spot_Bing_0005.jpg": {
       "sha256": "32fb76a6b00c8254cdb33fab391e08b6dd42abfbc8525babc6056d43764e2f6a",
       "size_bytes": 141502,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__biber.png": {
       "sha256": "a084be74b1f64de6af2150594fedb20efc26428a670b6bcb0cd3140b0cd77f72",
       "size_bytes": 263947,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/off_crop_secondary__biber2.png": {
       "sha256": "d23dcb4749fe29b3da4a9934da668674f3c29a0e7debb3d0be00762bdda66f1b",
       "size_bytes": 396811,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__cucumber_angular_leaf_spot_175.jpg": {
       "sha256": "6556ac4ab9d46239fd01a99aa33a61c77304c24a14f1d051733f48d59d55107b",
       "size_bytes": 34686,
-      "slice": "off_crop_secondary",
-      "split": "test"
-    },
-    "off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_001701.png": {
-      "sha256": "0cf4a1c5e73f43ef465e1ccedf84cad05e34d70eedd29125f3f3bb0552ddd4f1",
-      "size_bytes": 200149,
-      "slice": "off_crop_secondary",
-      "split": "dev"
-    },
-    "off_crop_secondary/off_crop_secondary__Ekran_görüntüsü_2026-03-04_002619.png": {
-      "sha256": "ee7647b90606356cc270e35b944d44e56ab2edecf1288fb54db1877e7e2486e1",
-      "size_bytes": 110860,
       "slice": "off_crop_secondary",
       "split": "test"
     },
@@ -102,33 +187,33 @@
       "sha256": "b2844c7153f5fb53228080935eb0e373849f23a2b3056f78380761b5cef93437",
       "size_bytes": 98774,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/off_crop_secondary__potato_late_blight_20.jpg": {
       "sha256": "30f08b838baa71daded60b8c443fb6edc41889a00c8eacac62c6f88c4482cbab",
       "size_bytes": 35558,
       "slice": "off_crop_secondary",
-      "split": "test"
-    },
-    "off_crop_secondary/off_crop_secondary__Strawberry___healthy_447.jpg": {
-      "sha256": "3b83962ebb0e8dada091cc477978dfaf4152127728121b9154fe976d8817aaa9",
-      "size_bytes": 19249,
-      "slice": "off_crop_secondary",
       "split": "dev"
     },
-    "off_crop_secondary/off_crop_secondary__Strawberry___Leaf_scorch_1101.jpg": {
-      "sha256": "f23c3349e91589c5962de53652c2fb6586c2c7ebe78361d60b2c4050f0d9b225",
-      "size_bytes": 20813,
-      "slice": "off_crop_secondary",
-      "split": "test"
-    },
-    "off_crop_secondary/takviye_20260514_567_jpg_adlı_dosyanın_kopyası_63faa7427461.jpg": {
+    "off_crop_secondary/takviye_20260514_567_jpg_adl\u0131_dosyan\u0131n_kopyas\u0131_63faa7427461.jpg": {
       "sha256": "63faa742746182b6f95ca82729759b167ea7b2a97e820ab2644381e87dc61f99",
       "size_bytes": 189402,
       "slice": "off_crop_secondary",
       "split": "dev"
     },
-    "off_crop_secondary/takviye_20260514_anthracnose_fruit_rot_53_jpg_adlı_dosyanın_kopyası_bbf3d5546afd.jpg": {
+    "off_crop_secondary/takviye_20260514_Strawberry___Leaf_scorch_45_jpg_adl\u0131_dosyan\u0131n_kopyas\u0131_f1e0c2b68252.jpg": {
+      "sha256": "f1e0c2b682520f645bd239f4fd17f048ae5aa8708a03f79241d8749e0aa85e4c",
+      "size_bytes": 21067,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/takviye_20260514_Strawberry___Leaf_scorch_49_jpg_adl\u0131_dosyan\u0131n_kopyas\u0131_d713f9859f78.jpg": {
+      "sha256": "d713f9859f78f4d157d607d2f04cb064ee2d92195f98113b695f10fda3064d6b",
+      "size_bytes": 18361,
+      "slice": "off_crop_secondary",
+      "split": "test"
+    },
+    "off_crop_secondary/takviye_20260514_anthracnose_fruit_rot_53_jpg_adl\u0131_dosyan\u0131n_kopyas\u0131_bbf3d5546afd.jpg": {
       "sha256": "bbf3d5546afd5023b85dfe64c5aa1c33567316602aaf4b1ead76b733fcc894ac",
       "size_bytes": 175797,
       "slice": "off_crop_secondary",
@@ -156,7 +241,7 @@
       "sha256": "6330dd3dc2f3f15bfa6d6bd876aa7111fc3c2e2ed76f475d572d934bb19bff47",
       "size_bytes": 147818,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/takviye_20260514_off_crop_or_root_disease__478_6e1d015dd349.jpg": {
       "sha256": "6e1d015dd349173ebad078fe2ab6e8d147a0291d0b38f12a48c29c90098294f7",
@@ -164,7 +249,7 @@
       "slice": "off_crop_secondary",
       "split": "test"
     },
-    "off_crop_secondary/takviye_20260514_off_crop_or_root_disease__bağ_mildiyösü_467_e58207c5882f.jpg": {
+    "off_crop_secondary/takviye_20260514_off_crop_or_root_disease__ba\u011f_mildiy\u00f6s\u00fc_467_e58207c5882f.jpg": {
       "sha256": "e58207c5882f4ca2c013b9c2d1fcb9a207474b50577d041fcdac393b8dfa21b6",
       "size_bytes": 87554,
       "slice": "off_crop_secondary",
@@ -174,9 +259,9 @@
       "sha256": "a8c5a9b93edef0a82e7b5b02818d6ee5dd39f0463224343c09901d918498cd60",
       "size_bytes": 38594,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
-    "off_crop_secondary/takviye_20260514_off_crop_secondary__Ekran_görüntüsü_2026_03_04_235902_ce78ad36d1d7.png": {
+    "off_crop_secondary/takviye_20260514_off_crop_secondary__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026_03_04_235902_ce78ad36d1d7.png": {
       "sha256": "ce78ad36d1d74b130e0d51d70f50ca50e33bc09c711d6a3713a2d5c363524621",
       "size_bytes": 474906,
       "slice": "off_crop_secondary",
@@ -192,7 +277,7 @@
       "sha256": "a610fb44185239ab689bcb8686cfcf4c8abdbffba544fcca0df9a18ca7086586",
       "size_bytes": 140463,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/takviye_20260514_rebalanced_20260510_oe_to_ood_strawberry_unknown_angular_2b3117a07509.jpg": {
       "sha256": "2b3117a0750925f69f4d92cc2b46d2d49556d4d29315498758dc8e1204e1b135",
@@ -210,7 +295,7 @@
       "sha256": "79c7a5020649199c98647c974ed01381395895996405a4406fb24e41ecffbb8c",
       "size_bytes": 143635,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/takviye_20260514_rebalanced_20260510_oe_to_ood_strawberry_unknown_angular_b0f4f973ac5a.jpg": {
       "sha256": "b0f4f973ac5a93a7355f8507cad2c1036db6fbedbef0943bc2d270630a3bade8",
@@ -222,7 +307,7 @@
       "sha256": "8462c5b02bedae131ab64efa68efde84eddd4d591761f00a5f8bb1a676abc0ef",
       "size_bytes": 40138,
       "slice": "off_crop_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "off_crop_secondary/takviye_20260514_scene_context_leak_check__sulama_sistemi_2ebca4c64fea.png": {
       "sha256": "2ebca4c64fea0b90f5766dbc2d88f051e905e2ff9ffabf9ddd3e7e07b0a48cea",
@@ -230,28 +315,88 @@
       "slice": "off_crop_secondary",
       "split": "test"
     },
-    "off_crop_secondary/takviye_20260514_Strawberry___Leaf_scorch_45_jpg_adlı_dosyanın_kopyası_f1e0c2b68252.jpg": {
-      "sha256": "f1e0c2b682520f645bd239f4fd17f048ae5aa8708a03f79241d8749e0aa85e4c",
-      "size_bytes": 21067,
-      "slice": "off_crop_secondary",
-      "split": "dev"
-    },
-    "off_crop_secondary/takviye_20260514_Strawberry___Leaf_scorch_49_jpg_adlı_dosyanın_kopyası_d713f9859f78.jpg": {
-      "sha256": "d713f9859f78f4d157d607d2f04cb064ee2d92195f98113b695f10fda3064d6b",
-      "size_bytes": 18361,
-      "slice": "off_crop_secondary",
-      "split": "test"
-    },
     "off_crop_secondary/web_off_crop_secondary_0fbd5a1ff1a6.jpg": {
       "sha256": "0fbd5a1ff1a61be8cff5043578ab7276b585218d8868a321a4dbc94a826dff49",
       "size_bytes": 70099,
       "slice": "off_crop_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "off_crop_secondary/web_off_crop_secondary_1c65d4aca56e.jpg": {
       "sha256": "1c65d4aca56e25683b27e0a1e535944cc5a0ca0d393a4a6113cfc97d1f5d5f39",
       "size_bytes": 1129410,
       "slice": "off_crop_secondary",
+      "split": "dev"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195623.png": {
+      "sha256": "20045d61f38de016b78990e9ebcf706b9497783466e70d328b032cd3fa6e27ce",
+      "size_bytes": 282604,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195712.png": {
+      "sha256": "5edead66bc421499bf3ae02061fc6ab2ba992ab5d454c70ff9710846623a895b",
+      "size_bytes": 531262,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195810.png": {
+      "sha256": "cb699c69417802b5f7786452113f1786733f91b3b94d0e1b0dc05130c92f0df8",
+      "size_bytes": 258798,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_195957.png": {
+      "sha256": "c1eadd46d90b4fc52f9fcea2c65e1566853e98d2381160967c432d07a10833ac",
+      "size_bytes": 236353,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200011.png": {
+      "sha256": "a1d5b857248d61370c5fe30aa67c1eda0d7328f682c5901b45db615625a2082b",
+      "size_bytes": 587089,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200029.png": {
+      "sha256": "676daf44ba1ddddcb908ba21705c4e60171d4d0218df4f669c18ef466bfcc7ab",
+      "size_bytes": 64322,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200053.png": {
+      "sha256": "2239d9e0cd684a50333bc7e65e3a211cf53d27f7297bed840fc0ccaaead612af",
+      "size_bytes": 194689,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200117.png": {
+      "sha256": "c99b38a7874e87fe387a8a9ee83a41670ba436a4d3ea22fd277dca43e8c7fc20",
+      "size_bytes": 283293,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_200331.png": {
+      "sha256": "0b2360a80512ecb834803d6410eba435374c51b3378f27002943289c8e6cc960",
+      "size_bytes": 232703,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_232736.png": {
+      "sha256": "3b40aafaac9847299bd708d671c855ca6fa566149367c66a729ac5e9a3cc5bab",
+      "size_bytes": 372816,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_234747.png": {
+      "sha256": "c270bdcbcf04bf5772a26f36503d2281920336abfa6eee3aadd9d6af73505610",
+      "size_bytes": 112637,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/scene_context_leak_check__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-14_235706.png": {
+      "sha256": "9915531d4d261e5e7611557b0ba828a33ec0072882fc6e1a8dcda0f1b4fe58f1",
+      "size_bytes": 54814,
+      "slice": "scene_context_leak_check",
       "split": "test"
     },
     "scene_context_leak_check/scene_context_leak_check__damping_off.png": {
@@ -260,85 +405,13 @@
       "slice": "scene_context_leak_check",
       "split": "dev"
     },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_195623.png": {
-      "sha256": "20045d61f38de016b78990e9ebcf706b9497783466e70d328b032cd3fa6e27ce",
-      "size_bytes": 282604,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_195712.png": {
-      "sha256": "5edead66bc421499bf3ae02061fc6ab2ba992ab5d454c70ff9710846623a895b",
-      "size_bytes": 531262,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_195810.png": {
-      "sha256": "cb699c69417802b5f7786452113f1786733f91b3b94d0e1b0dc05130c92f0df8",
-      "size_bytes": 258798,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_195957.png": {
-      "sha256": "c1eadd46d90b4fc52f9fcea2c65e1566853e98d2381160967c432d07a10833ac",
-      "size_bytes": 236353,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_200011.png": {
-      "sha256": "a1d5b857248d61370c5fe30aa67c1eda0d7328f682c5901b45db615625a2082b",
-      "size_bytes": 587089,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_200029.png": {
-      "sha256": "676daf44ba1ddddcb908ba21705c4e60171d4d0218df4f669c18ef466bfcc7ab",
-      "size_bytes": 64322,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_200053.png": {
-      "sha256": "2239d9e0cd684a50333bc7e65e3a211cf53d27f7297bed840fc0ccaaead612af",
-      "size_bytes": 194689,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_200117.png": {
-      "sha256": "c99b38a7874e87fe387a8a9ee83a41670ba436a4d3ea22fd277dca43e8c7fc20",
-      "size_bytes": 283293,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_200331.png": {
-      "sha256": "0b2360a80512ecb834803d6410eba435374c51b3378f27002943289c8e6cc960",
-      "size_bytes": 232703,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_232736.png": {
-      "sha256": "3b40aafaac9847299bd708d671c855ca6fa566149367c66a729ac5e9a3cc5bab",
-      "size_bytes": 372816,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_234747.png": {
-      "sha256": "c270bdcbcf04bf5772a26f36503d2281920336abfa6eee3aadd9d6af73505610",
-      "size_bytes": 112637,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/scene_context_leak_check__Ekran_görüntüsü_2026-03-14_235706.png": {
-      "sha256": "9915531d4d261e5e7611557b0ba828a33ec0072882fc6e1a8dcda0f1b4fe58f1",
-      "size_bytes": 54814,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_blur_or_occlusion__Ekran_görüntüsü_2026_03_15_144002_0ee3a2fe6d0c.png": {
+    "scene_context_leak_check/takviye_20260514_blur_or_occlusion__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026_03_15_144002_0ee3a2fe6d0c.png": {
       "sha256": "0ee3a2fe6d0c8adcb38b214570e76be1b170018985a2475a77ef77cfca3e1336",
       "size_bytes": 52279,
       "slice": "scene_context_leak_check",
       "split": "dev"
     },
-    "scene_context_leak_check/takviye_20260514_blur_or_occlusion__Ekran_görüntüsü_2026_03_15_144124_97923084d92b.png": {
+    "scene_context_leak_check/takviye_20260514_blur_or_occlusion__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026_03_15_144124_97923084d92b.png": {
       "sha256": "97923084d92b505b0afa7712da904f5c166432cdb586e6e9b07684473b2cd931",
       "size_bytes": 57158,
       "slice": "scene_context_leak_check",
@@ -354,59 +427,11 @@
       "sha256": "41191829679b0358f54efc2c740b591c6edc358bc9f42154521d8ef18cd50dfa",
       "size_bytes": 398060,
       "slice": "scene_context_leak_check",
-      "split": "test"
+      "split": "dev"
     },
     "scene_context_leak_check/takviye_20260514_scene_context_leak_check__8268_sanat_calismasini_animsat_a449cda06313.jpg": {
       "sha256": "a449cda06313391286272b5545999f1e419e66217a3f0c2079351b4865f0749d",
       "size_bytes": 126030,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alaaksızzz_424809deae69.jpg": {
-      "sha256": "424809deae694ddf68b3387bacc934791d88cc4974cf294efd5ae666e2781ad2",
-      "size_bytes": 126903,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alakasizz_3e9382245d76.jpg": {
-      "sha256": "3e9382245d76e5f8f707bb32f0d5b8d9bb4fe5964a1169e467d7d882e482949d",
-      "size_bytes": 98541,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alakasız_b3c7c75e8f05.jpg": {
-      "sha256": "b3c7c75e8f05095f55ba7838707604cd23081c138cd64c0a1e613dd7bae163ba",
-      "size_bytes": 74907,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__bc6c4749_f6bc_423c_a1e5_350052_31202e938c1e.png": {
-      "sha256": "31202e938c1e7a2a8e9c1376ca9796cdff507f487a8b12a61740bf741f2f4c5c",
-      "size_bytes": 1979966,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__depositphotos_354116492_stock_baedf678bf9f.jpg": {
-      "sha256": "baedf678bf9fdf491c2076c037d9f1f0954b0746bd7a6dbc094d667db1176b08",
-      "size_bytes": 81530,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__depositphotos_653331092_stock_150b5816aea5.jpg": {
-      "sha256": "150b5816aea54360f1de88551e8443806d0b94a723a5865eff9d97fd33800c77",
-      "size_bytes": 40966,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__duvar_resimleri_traktor_kimyas_16a0ff6f2277.jpg": {
-      "sha256": "16a0ff6f2277459747a27fa989d12a08557496d582d019ce0b6159b243a50321",
-      "size_bytes": 117697,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__duvarsistemi_üzüm_41dc921320cd.jpg": {
-      "sha256": "41dc921320cd5fed266f2e4b7ea036a5ff9a4cd9fe0cd817df4bc17e8d915510",
-      "size_bytes": 15935,
       "slice": "scene_context_leak_check",
       "split": "dev"
     },
@@ -414,49 +439,13 @@
       "sha256": "b0075d52f5fb284a8a6f24155500b4560b6ec0a4c67d7ce8c217c9d23b1cca8b",
       "size_bytes": 430938,
       "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_1273537439_612x612_02604383b523.jpg": {
-      "sha256": "02604383b52391b0523a4ba5b8c47591dce078fc4e6c477341f0290f3a824cc6",
-      "size_bytes": 42758,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_1341464834_612x612_3f96e62a5972.jpg": {
-      "sha256": "3f96e62a5972ceed6ea5403c3080efa1db3bf4ea546173a36032846e64af9b04",
-      "size_bytes": 48224,
-      "slice": "scene_context_leak_check",
       "split": "dev"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_2207200692_612x612_76b9d9329444.jpg": {
-      "sha256": "76b9d9329444ae72350f844e0d60537f3fb2c7e67f8864c49a1d57442cc00a5b",
-      "size_bytes": 72724,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__köpek_7cc1ad33547f.webp": {
-      "sha256": "7cc1ad33547f965b5619d0de0dbef7b353c2f4124e70e3650e7c3b9d929da2fd",
-      "size_bytes": 24588,
-      "slice": "scene_context_leak_check",
-      "split": "dev"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__köpekkk_df438f33198c.jpeg": {
-      "sha256": "df438f33198c3448d74d25cb610546b22131599b8542369e438e5bd2acc7fd07",
-      "size_bytes": 63078,
-      "slice": "scene_context_leak_check",
-      "split": "test"
-    },
-    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__sulama_sistemi_2_632e99f6f835.png": {
-      "sha256": "632e99f6f8357cc4c5038dace59a4c6fecf14f6b3907b4b6cd155ac9429e2560",
-      "size_bytes": 494710,
-      "slice": "scene_context_leak_check",
-      "split": "test"
     },
     "scene_context_leak_check/takviye_20260514_scene_context_leak_check__Traveling_Long_Distance_300m_4_e4d3e22f2d1c.png": {
       "sha256": "e4d3e22f2d1c2c33c637fd66a8fe87419fcdbc473d20f1fd2c559010ac3dd5bb",
       "size_bytes": 153428,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/takviye_20260514_scene_context_leak_check__Tripsy_na_vinogradnykh_listyak_44f96abd721e.jpg": {
       "sha256": "44f96abd721e01620ede207892d304161a013a0684f660df3468c3367e31c1b7",
@@ -476,6 +465,90 @@
       "slice": "scene_context_leak_check",
       "split": "test"
     },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alaaks\u0131zzz_424809deae69.jpg": {
+      "sha256": "424809deae694ddf68b3387bacc934791d88cc4974cf294efd5ae666e2781ad2",
+      "size_bytes": 126903,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alakasizz_3e9382245d76.jpg": {
+      "sha256": "3e9382245d76e5f8f707bb32f0d5b8d9bb4fe5964a1169e467d7d882e482949d",
+      "size_bytes": 98541,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__alakas\u0131z_b3c7c75e8f05.jpg": {
+      "sha256": "b3c7c75e8f05095f55ba7838707604cd23081c138cd64c0a1e613dd7bae163ba",
+      "size_bytes": 74907,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__bc6c4749_f6bc_423c_a1e5_350052_31202e938c1e.png": {
+      "sha256": "31202e938c1e7a2a8e9c1376ca9796cdff507f487a8b12a61740bf741f2f4c5c",
+      "size_bytes": 1979966,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__depositphotos_354116492_stock_baedf678bf9f.jpg": {
+      "sha256": "baedf678bf9fdf491c2076c037d9f1f0954b0746bd7a6dbc094d667db1176b08",
+      "size_bytes": 81530,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__depositphotos_653331092_stock_150b5816aea5.jpg": {
+      "sha256": "150b5816aea54360f1de88551e8443806d0b94a723a5865eff9d97fd33800c77",
+      "size_bytes": 40966,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__duvar_resimleri_traktor_kimyas_16a0ff6f2277.jpg": {
+      "sha256": "16a0ff6f2277459747a27fa989d12a08557496d582d019ce0b6159b243a50321",
+      "size_bytes": 117697,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__duvarsistemi_\u00fcz\u00fcm_41dc921320cd.jpg": {
+      "sha256": "41dc921320cd5fed266f2e4b7ea036a5ff9a4cd9fe0cd817df4bc17e8d915510",
+      "size_bytes": 15935,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_1273537439_612x612_02604383b523.jpg": {
+      "sha256": "02604383b52391b0523a4ba5b8c47591dce078fc4e6c477341f0290f3a824cc6",
+      "size_bytes": 42758,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_1341464834_612x612_3f96e62a5972.jpg": {
+      "sha256": "3f96e62a5972ceed6ea5403c3080efa1db3bf4ea546173a36032846e64af9b04",
+      "size_bytes": 48224,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__istockphoto_2207200692_612x612_76b9d9329444.jpg": {
+      "sha256": "76b9d9329444ae72350f844e0d60537f3fb2c7e67f8864c49a1d57442cc00a5b",
+      "size_bytes": 72724,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__k\u00f6pek_7cc1ad33547f.webp": {
+      "sha256": "7cc1ad33547f965b5619d0de0dbef7b353c2f4124e70e3650e7c3b9d929da2fd",
+      "size_bytes": 24588,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__k\u00f6pekkk_df438f33198c.jpeg": {
+      "sha256": "df438f33198c3448d74d25cb610546b22131599b8542369e438e5bd2acc7fd07",
+      "size_bytes": 63078,
+      "slice": "scene_context_leak_check",
+      "split": "test"
+    },
+    "scene_context_leak_check/takviye_20260514_scene_context_leak_check__sulama_sistemi_2_632e99f6f835.png": {
+      "sha256": "632e99f6f8357cc4c5038dace59a4c6fecf14f6b3907b4b6cd155ac9429e2560",
+      "size_bytes": 494710,
+      "slice": "scene_context_leak_check",
+      "split": "dev"
+    },
     "scene_context_leak_check/takviye_20260514_web_blur_or_occlusion_84b54c6fcfb6_84b54c6fcfb6.jpg": {
       "sha256": "84b54c6fcfb6a9b95ffe0f8c8da1d1516143a7450c0de9f081067222a1950a00",
       "size_bytes": 632663,
@@ -486,7 +559,7 @@
       "sha256": "375ade6017cdbf860803f4836e8699c4b26b1ac2280c887527035c2e34c88fa2",
       "size_bytes": 59828,
       "slice": "scene_context_leak_check",
-      "split": "dev"
+      "split": "test"
     },
     "scene_context_leak_check/web_scene_context_leak_check_e2cee729822e.jpg": {
       "sha256": "e2cee729822ea43e39e1565212c0470085597222960efc2e2f54d3382d38a083",
@@ -494,21 +567,357 @@
       "slice": "scene_context_leak_check",
       "split": "test"
     },
+    "tomato_failure_cases/internet_20260510_wikimedia_Tomato_Plant_Leaves_01.jpg.jpg": {
+      "sha256": "0dd4f4bfa02577e3b3fe66e96de4206d9c6c15bfb2edde88245206683758d063",
+      "size_bytes": 1077444,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260510_wikimedia_Tomato_Plant_Leaves_02.jpg.jpg": {
+      "sha256": "bb2251ad8fff9475bab6f2bc3545f861cf0e331db9392092a426484f4d0cc4a6",
+      "size_bytes": 243143,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
     "tomato_failure_cases/internet_20260510_wikimedia_Tomato_leaf.jpg.jpg": {
       "sha256": "12cab97b2bb5789bd3050f0d2395c82fe2d38d75d651a235e52f18993b3df465",
       "size_bytes": 337949,
       "slice": "tomato_failure_cases",
       "split": "dev"
     },
-    "tomato_failure_cases/internet_20260510_wikimedia_Tomato_Plant_Leaves_01.jpg.jpg": {
-      "sha256": "0dd4f4bfa02577e3b3fe66e96de4206d9c6c15bfb2edde88245206683758d063",
-      "size_bytes": 1077444,
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_003.JPG.jpg.jpg": {
+      "sha256": "b070fe8ff66dc8071997ee06f13d31ff5bf7c5348eab09a9f5ef39b76861b50f",
+      "size_bytes": 317946,
       "slice": "tomato_failure_cases",
       "split": "test"
     },
-    "tomato_failure_cases/internet_20260510_wikimedia_Tomato_Plant_Leaves_02.jpg.jpg": {
-      "sha256": "bb2251ad8fff9475bab6f2bc3545f861cf0e331db9392092a426484f4d0cc4a6",
-      "size_bytes": 243143,
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_009-e1373768789869.jpg.jpg": {
+      "sha256": "81c48f1873998fb9ea1f5262bbecf6271dc142c5fe668fa4af7c5df4b5186710",
+      "size_bytes": 219260,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_100_8283.jpg.jpg": {
+      "sha256": "2e6dc8d894d71a2b75362f3edacf4f0caf9e27ce68bb85508f4e4f86511970d7",
+      "size_bytes": 1816775,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_15481477375.jpg.jpg": {
+      "sha256": "c0edbf21a0c7ab349f0b801f886d1e4e090476e06b3926f18d23bd17ed1ddd49",
+      "size_bytes": 173046,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_1686.jpg.jpg": {
+      "sha256": "3edba79d624245191fc0036f231358ea60b2cc8e35645b2c54cc891892073027",
+      "size_bytes": 293399,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_1688.jpg.jpg": {
+      "sha256": "9f0ee97e32949978c323ff62e2e70788b3c6ab7a2248762328a46099bb7519d5",
+      "size_bytes": 139906,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_17371378-tomato-leaf.jpg.jpg": {
+      "sha256": "da315866780e76ac36b5cee1dab4d5d3c2432f8d4f9cd3c93410dfd6ef46044f",
+      "size_bytes": 71699,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_2013-08-20-03.jpg.jpg": {
+      "sha256": "5e2472f415aeb8e7cc254db1f17b2d14a4f2daae70b685ee8a70a29f0f99308a",
+      "size_bytes": 163165,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_2013-08-20-04.jpg.jpg": {
+      "sha256": "50e8f7928017878f7f020bb8f52b61f99d74f3db1d20c80d41a612e04695d32d",
+      "size_bytes": 205485,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_20130609_151253_zpsc7d93f62.jpg.jpg": {
+      "sha256": "887ceedf22efce49400c63d57e1512418f874ad3409548cc41a64508e4a5abef",
+      "size_bytes": 267742,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_20140818-tomato-sauce-vicky-wasik-1.jpg.jpg": {
+      "sha256": "b841720c688db5f8a1989394b8f5aaf59c1a9ce5a855d66ad843be928db7c41a",
+      "size_bytes": 153154,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_2015-09-17-01.jpg.jpg": {
+      "sha256": "1c73f9e07e567ca8d697f013806b9fdafad0520bc096967218fc6cecd417caf4",
+      "size_bytes": 176737,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_9bfac1dea7f401e3b379dab33f535bb4.jpg.jpg": {
+      "sha256": "d069fbe08ea07926e4213ab277f528888d1e6288a838231283e830c1c606a3de",
+      "size_bytes": 126198,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_Bacterial-leaf-spot-transplants1.jpg.jpg": {
+      "sha256": "d1b2bfca29dfba94c27127b2f7f0dc7ef73a753d36d565ca6c55d49d21ca2364",
+      "size_bytes": 82917,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_CTG514794.jpg.jpg": {
+      "sha256": "02b4ea0990e9f4aa7fc87781695d40a5d42a38e3c8461790bb65764c0e74d03e",
+      "size_bytes": 144020,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_DSCN1016.JPG.jpg.jpg": {
+      "sha256": "8d84fa7ef2daea720ba5121a277f493208167bdd76e2dc0718968be6d9b7dfb0",
+      "size_bytes": 251834,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_Fig-2.jpg.jpg": {
+      "sha256": "75bcfcb736bcdabbf38a590620688985893c366548978ce1cee9e77d62e881a9",
+      "size_bytes": 779321,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_IMG_2061.JPG.jpg.jpg": {
+      "sha256": "3939bedbdd597ee39fc74bf1a76772765082e4586ca4029a3169feadee1506a5",
+      "size_bytes": 316343,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_IMG_3011.jpg.jpg": {
+      "sha256": "a07add095885e0cb5193781fe287542029fdbfca1d73ab3f5acfb2532a3a4eaa",
+      "size_bytes": 614011,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_IMG_3192.JPG.jpg.jpg": {
+      "sha256": "0fe6f9b56e0bfadf748293f8dc6e9328027e736b8198f4c543ff5f878196e11a",
+      "size_bytes": 568283,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_L.peruv-assort.jpg.jpg": {
+      "sha256": "22d3021cc9be391aad356bb3c4dc0de6239e6210da8b1d615776cefbaa73a02f",
+      "size_bytes": 37185,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_PxWBE.jpg.jpg": {
+      "sha256": "4b85bc7f2190422db15545e957571a2565341a932f7359eb02064b7b845b394d",
+      "size_bytes": 695837,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_curling-issues.jpg.jpg": {
+      "sha256": "3497d19ccb856dd22150a590b6ea43bb3eba0207243e1893bd1e704ffc27aeb0",
+      "size_bytes": 2468465,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_depositphotos_120361722-stock-photo-tomato-leaf-closeup.jpg.jpg": {
+      "sha256": "db5f8daa4219ec01e73c7e9fc3bad8a67258d6e7d2fce16cd36d6297a070d411",
+      "size_bytes": 76344,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_depositphotos_143371585-stock-photo-tomato-leaf-closeup-isolate.jpg": {
+      "sha256": "e9fafd192f2d98d467fcf9615637f6163a5b6603c22f050e9d3223b29fc00184",
+      "size_bytes": 162791,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_depositphotos_7182856-stock-photo-tomato-leaf.jpg.jpg": {
+      "sha256": "8f1cab1969de06a57c663fffe5464aeb75ed3b38d7ee737783e98aab07a6dbc6",
+      "size_bytes": 76313,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_flies.jpg.jpg": {
+      "sha256": "9065172ad0176788c4341230bbd34e13434039e41fdca01da77cc962dea8f128",
+      "size_bytes": 3234767,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_fpls-08-01602-g001.jpg.jpg": {
+      "sha256": "7de4d88e344f8f72f5b21472721f7c4df25deb57039a83e18ebe45c93a62955b",
+      "size_bytes": 59728,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_happier-inside.jpg.jpg": {
+      "sha256": "1a460f7033ec027d766a9758cb20df96eeac417d3dd9bcc63759286f2252ef94",
+      "size_bytes": 4667346,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_img_1028.jpg.jpg": {
+      "sha256": "f6443987dc175b21fd7f3864129e37980208ac2f5b64c33148b3e9b9e43a8b48",
+      "size_bytes": 1502957,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_img_6635.jpg.jpg": {
+      "sha256": "1dd93dc7abcf3b05cc0f68d372573886450c49a03c324eb4cf8539bb97f6a2ae",
+      "size_bytes": 4450384,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_late_blight_tomato_leaf4x1200.jpg.jpg": {
+      "sha256": "7ed2e67e726be123b973849cea4620092f35573c5156c779c1c5fef87d9ccaec",
+      "size_bytes": 372237,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_p1011399.jpg.jpg": {
+      "sha256": "5ef0155f9cf25443d13bc35d71c659d0c7dbdfdad02d1d12573142dc2ce95c67",
+      "size_bytes": 1971822,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_russian-2-319-dt-2010-leaves-high-tunnel-9-29-2014-c.jpg.jpg": {
+      "sha256": "67fee2ee91add5373f3bdd4c52f92adb15277864c2f8f416c53be446f30ead2e",
+      "size_bytes": 2419933,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_single-a-green-leaf-of-tomato-picture-id496662675_k_6_m_4966626.jpg": {
+      "sha256": "91a7140dcd6cf50ee2e7e89095b4b10da2554276c751bef20363a543e60172a7",
+      "size_bytes": 39972,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_stock-photo-leaves-of-tomato-plant-isolated-on-white-12085288.j.jpg": {
+      "sha256": "d74f68edff7e6422ce148d1a574044649cb95c86bda82f951406d812682b6718",
+      "size_bytes": 410719,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_stock-photo-tomato-leaves-close-up-macro-shot-isolated-on-white.jpg": {
+      "sha256": "1f4c83af039d3ffa8d0e40c482b09502d280265e5f3d8fad32f681679e2300b7",
+      "size_bytes": 46339,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_stock-vector-set-of-vector-elements-for-your-design-red-ripe-to.jpg": {
+      "sha256": "66f230d72907366fb6f4955def968a131228ddbfd974a3f91d1dd06698a3975a",
+      "size_bytes": 53307,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-20728368.jpg.jpg": {
+      "sha256": "2cbbe5c2398deec190a81edb0f5c3ee63e483586a0ecdf6d39d74e34cd703e4c",
+      "size_bytes": 125011,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260517_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-26180166.jpg.jpg": {
+      "sha256": "0107bd4cb932f1ab7e56701dcd5d8de0a8bf59dacca6332d6245ff42832702e1",
+      "size_bytes": 93598,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_1684.jpg.jpg": {
+      "sha256": "bc0ec6abdabe070a8e98749360809fc8cca196e21661f93a038d75b45e13b18d",
+      "size_bytes": 34789,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_2013-08-20-06.jpg.jpg": {
+      "sha256": "f462b769606f79703c44a2c595f57269924bb41ea335b94cbff099bc5c2525a2",
+      "size_bytes": 250402,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_90e2c0.jpg.jpg": {
+      "sha256": "e990d6c955434857b52b7904fdcc48893ff0b0cebcbc839db143bc301ec7b191",
+      "size_bytes": 152951,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_DSCN1015.JPG.jpg.jpg": {
+      "sha256": "66e581feb1714e0cfd3e2afdc8f90dcf0394b897886233aa515b7dea1390da1a",
+      "size_bytes": 329457,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_IMG_1246.jpg.jpg": {
+      "sha256": "d119deb0673b049551857318a686c6ecab5c2aa2607fc349ac25424d4ce636c2",
+      "size_bytes": 527789,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_Tomato59.JPG.jpg.jpg": {
+      "sha256": "36d4cf67739d3d7b079eed20331535674781886f75abbf7f010999a45b00980f",
+      "size_bytes": 293562,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_Tomato_leaf.jpg.jpg": {
+      "sha256": "9cffe92d5f898fa2bb96e78f63ef46059b710a0f2d97054f1e534a5619778b13",
+      "size_bytes": 1708931,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_test_Tomato_leaf_main-qimg-d9c2a93f60568485c989670d9bbf703b.jpg.jpg": {
+      "sha256": "66d8d18b9bf9c8d83efd3a0cf09c53fbbd575795a518b57a66bc338c11c07069",
+      "size_bytes": 70973,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-6291945.jpg.jpg": {
+      "sha256": "19a4c21f943ad7cd4748ddc3e5a095e7920188033c65b7312e1d38904ff45284",
+      "size_bytes": 97213,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-6424287.jpg.jpg": {
+      "sha256": "ea9330cbbc2ad244f89a7484e5516abf711425aa2002916ac8222415fa48792b",
+      "size_bytes": 87129,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-close-up.jpg.jpg": {
+      "sha256": "83ba49f39d83eb903b9fdec333503d8f1fee102ba20da4e6c931990517f39a05",
+      "size_bytes": 2294298,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf-isolated-white-34309524.jpg.jpg": {
+      "sha256": "b5719cc0600fb92d4884f2d2b38edb05b37006203af26a740ba5b2498b46af0b",
+      "size_bytes": 82922,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaf.jpg.jpg": {
+      "sha256": "2395bf9a596792fab2c36473e68a899531bcaee99af03ffd5664db8b083338ba",
+      "size_bytes": 91103,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaves-17427786.jpg.jpg": {
+      "sha256": "d32b8374e798fb701fb46a06b2744062d853b9b5077884811ac208123c18e14f",
+      "size_bytes": 162895,
+      "slice": "tomato_failure_cases",
+      "split": "test"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaves-9025906.jpg.jpg": {
+      "sha256": "dcdedb1003e4f57fbf236ee2009af392bb08ef2fe049db1c83d307a49e9f6251",
+      "size_bytes": 98881,
+      "slice": "tomato_failure_cases",
+      "split": "dev"
+    },
+    "tomato_failure_cases/internet_20260520_plantdoc_plantdoc_train_Tomato_leaf_tomato-leaves.jpg.jpg": {
+      "sha256": "d18871798c866d452749fc1b54a53eff916e997ccd663622f17077fc375d480b",
+      "size_bytes": 3587732,
       "slice": "tomato_failure_cases",
       "split": "test"
     },
@@ -524,13 +933,13 @@
       "slice": "tomato_failure_cases",
       "split": "test"
     },
-    "tomato_failure_cases/tomato_failure_cases__Ekran_görüntüsü_2026-03-15_003032.png": {
+    "tomato_failure_cases/tomato_failure_cases__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-15_003032.png": {
       "sha256": "cc835b1727744e1fb22c6f235d8826d0dbf3e7346a5113f66186ca0be911281d",
       "size_bytes": 112288,
       "slice": "tomato_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
-    "tomato_failure_cases/tomato_failure_cases__karanlık_domates_fotoğrafı.png": {
+    "tomato_failure_cases/tomato_failure_cases__karanl\u0131k_domates_foto\u011fraf\u0131.png": {
       "sha256": "8f19582dd29c7fb1a98444413b30c4b7017acae164d618f6272a7c7571c9a82b",
       "size_bytes": 60111,
       "slice": "tomato_failure_cases",
@@ -542,7 +951,7 @@
       "slice": "tomato_failure_cases",
       "split": "test"
     },
-    "tomato_failure_cases/tomato_failure_cases__odak_sorunu_yaşar.png": {
+    "tomato_failure_cases/tomato_failure_cases__odak_sorunu_ya\u015far.png": {
       "sha256": "325dc2521ff8399512afc76430f6a4c1d88549422fd5d1e29f741d559f0a2180",
       "size_bytes": 307298,
       "slice": "tomato_failure_cases",
@@ -554,11 +963,11 @@
       "slice": "tomato_failure_cases",
       "split": "test"
     },
-    "tomato_failure_cases/tomato_failure_cases__yarısı_yok_yenmiş.png": {
+    "tomato_failure_cases/tomato_failure_cases__yar\u0131s\u0131_yok_yenmi\u015f.png": {
       "sha256": "a88f1bcd05ec3cb73f3dd4880fe07ae25422378c5a3a57f2555d1f29eb3e5952",
       "size_bytes": 568796,
       "slice": "tomato_failure_cases",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_failure_cases/web_tomato_failure_cases_7aa327771d69.jpg": {
       "sha256": "7aa327771d69477d0cbd10b275ede7217f72ead3665c85503a6af2b249486e98",
@@ -572,6 +981,126 @@
       "slice": "tomato_failure_cases",
       "split": "test"
     },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_0176012_tomato_leaf_failure_cases.jpg": {
+      "sha256": "0df63f9df8f143e3a85f68a940293075ea9079f56875931b39004cb3dcb10828",
+      "size_bytes": 63024,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_1265082_tomato_leaf_failure_cases.jpg": {
+      "sha256": "bfda0022e91dc4f555749c49bc7217790a64ab9e7afd28d8539c449f03cc0a67",
+      "size_bytes": 155239,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_1265085_tomato_leaf_failure_cases.jpg": {
+      "sha256": "e2cfde46b84f86828cf1967cc8cdd23fe4a63822f4eadbf0e369c550281ec8d2",
+      "size_bytes": 119232,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5077048_tomato_leaf_failure_cases.jpg": {
+      "sha256": "e0951925090bd41ab05e39cf3d51c6c4ed1630ed97bed159c66846979950b6b9",
+      "size_bytes": 153193,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5077049_tomato_leaf_failure_cases.jpg": {
+      "sha256": "b73913657d4b0220960711c6ad78cc816287373a46d56e17151b2e1de2728bac",
+      "size_bytes": 141352,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5265047_tomato_leaf_failure_cases.jpg": {
+      "sha256": "3823a2c59e9269d8f3025a6ae065de18dcbd58d237a8b530264e14617922a7cf",
+      "size_bytes": 99230,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5411467_tomato_leaf_failure_cases.jpg": {
+      "sha256": "579556e18507b1241549f1d7a32d3064ec14e15b08b583946a2e575d4862f155",
+      "size_bytes": 127660,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5411489_tomato_leaf_failure_cases.jpg": {
+      "sha256": "aa0e4349ebadc7dbddb22d09327a363c8f19fa20cde888e37704351b65639110",
+      "size_bytes": 152165,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5551691_tomato_leaf_failure_cases.jpg": {
+      "sha256": "0d36ee775460cf30cb1f7fd653c853865fcb12e7ec50b01350cc967cd03d420c",
+      "size_bytes": 147784,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_candidates_bugwood_5558708_tomato_leaf_failure_cases.jpg": {
+      "sha256": "7679024cb473276dc145edfb3292d2cae952214103bc84be6ccd87c39aec5671",
+      "size_bytes": 145201,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_0176012_tomato_leaf_failure_cases.jpg": {
+      "sha256": "b0a961f2abd32f154cf17efcdd268425d0ccbaddfbb4d218d8c1f20f7aba76fd",
+      "size_bytes": 63205,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_1265082_tomato_leaf_failure_cases.jpg": {
+      "sha256": "77695e3e0e19d39020e7c403422fe4255b699c6318ebe20211321b8c8db6d7c9",
+      "size_bytes": 154927,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_1265085_tomato_leaf_failure_cases.jpg": {
+      "sha256": "d90fa38d1fcec5d13e508c33981d8943c34f51495355786bb881c9d4ca8eb039",
+      "size_bytes": 119195,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5077048_tomato_leaf_failure_cases.jpg": {
+      "sha256": "9e2fd6d63c4c694efba820a86a724cc2c99c3dde8e81fd18120d9b53f82a84a5",
+      "size_bytes": 153070,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5077049_tomato_leaf_failure_cases.jpg": {
+      "sha256": "d94e6a64c0de60b119e4e88fb0407188c62253c8d14692af952392c4deb216e6",
+      "size_bytes": 141299,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5265047_tomato_leaf_failure_cases.jpg": {
+      "sha256": "9446e83f35e08b70a6f37ea53af2603b42e6956bbff4a171f9b3827644898372",
+      "size_bytes": 99136,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "dev"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5411467_tomato_leaf_failure_cases.jpg": {
+      "sha256": "11122b2d70c96e8c25e5ea9f3600cdd4798d3c5a56838e680c90d3463f3b6951",
+      "size_bytes": 127771,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5411489_tomato_leaf_failure_cases.jpg": {
+      "sha256": "2159c85131ce660b1eacb8796b9459862f753f7c0b3e0a4c10376799ec364b2a",
+      "size_bytes": 152250,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5551691_tomato_leaf_failure_cases.jpg": {
+      "sha256": "435ee4e1c217084ae56095f61bbfa32f680e72ccc3c2feab2d7717c10c5dd01d",
+      "size_bytes": 147588,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
+    "tomato_leaf_failure_cases/internet_20260520_targeted_quality_ood_oe_final_20260520_targeted_quality_oo_bugwood_5558708_tomato_leaf_failure_cases.jpg": {
+      "sha256": "5d21177f18c09b3104b2533f568925cee82b135cdd2c8f771f6c4e16e230b0a8",
+      "size_bytes": 145200,
+      "slice": "tomato_leaf_failure_cases",
+      "split": "test"
+    },
     "tomato_off_coverage_secondary/internet_20260510_wikimedia_Tomato-seedlings-3805.jpg.jpg": {
       "sha256": "45c60315a672d853b8cafcf489b32844d4b7abaf2a1a20eea89f7e04e2345b82",
       "size_bytes": 275590,
@@ -582,19 +1111,19 @@
       "sha256": "a39b7bc6d8b7c3dea490310039f7060246ed272d49c3738972b4c78f3517eda4",
       "size_bytes": 702546,
       "slice": "tomato_off_coverage_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "tomato_off_coverage_secondary/internet_20260510_wikimedia_Tomato_seedlings_464355129_.jpg.jpg": {
       "sha256": "24ff5358753accd2d37158ae25675b2229977e2b4b63a91fd454405f5f0fb52b",
       "size_bytes": 283113,
       "slice": "tomato_off_coverage_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "tomato_off_coverage_secondary/internet_20260510_wikimedia_Tomatoseedlings.jpg.jpg": {
       "sha256": "3c784598108cb2432af145f724e2fad2a9dd3260faf7b52032264ad663a13890",
       "size_bytes": 194225,
       "slice": "tomato_off_coverage_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__catfacing.png": {
       "sha256": "23a55e5320845a8f7768a8f3b0e0721b827c57874a3af5b7929013bd4f4fddc6",
@@ -606,31 +1135,31 @@
       "sha256": "8c730e1352a4af9aef2bab119da23ea18d6af06cc4eaa2e977399cdacb3988a8",
       "size_bytes": 125736,
       "slice": "tomato_off_coverage_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__catfacing3.png": {
       "sha256": "aa24bfb55f1a2e81a4387949436cf5d5f241c73c3d379f10aa8b9cd4289862b3",
       "size_bytes": 524823,
       "slice": "tomato_off_coverage_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__catfacing4.png": {
       "sha256": "283ced924c8a6bea240f113baa7a7bce42b4aca5722e1ae1b8e9ddf5cedebe96",
       "size_bytes": 179587,
       "slice": "tomato_off_coverage_secondary",
-      "split": "test"
+      "split": "dev"
     },
-    "tomato_off_coverage_secondary/tomato_off_coverage_secondary__dolu_hasarı.png": {
+    "tomato_off_coverage_secondary/tomato_off_coverage_secondary__dolu_hasar\u0131.png": {
       "sha256": "a6771a8ed33f3458162f210a30ffb102b208d85f60cbf2bb0d7b46ef3f9a101a",
       "size_bytes": 303971,
       "slice": "tomato_off_coverage_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__sunburn.png": {
       "sha256": "7cd8e352fbd560bb3c74324e31bf16e023ed74b161db12ebe77b7d08a9901348",
       "size_bytes": 265539,
       "slice": "tomato_off_coverage_secondary",
-      "split": "test"
+      "split": "dev"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__sunscald.png": {
       "sha256": "462c7d85b093fb617eeb0f9cbef0f70f3c6a09aba7ff53a3f48ea1b33abcce30",
@@ -654,7 +1183,7 @@
       "sha256": "5f21d0d6fe75dba3c6831e1968aec9d4586fda067e6dd4cc081de8fe6a555dda",
       "size_bytes": 330763,
       "slice": "tomato_off_coverage_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__sunsclad5.png": {
       "sha256": "a44ad95b34f436758fe537e2d3b140e45ddbc8ddde64cce5da9c2daa579f2a76",
@@ -666,7 +1195,7 @@
       "sha256": "6567ffb7b3b3955de6777678cbf72f49a65002d00c8ee112213c7d0ee1da3b0e",
       "size_bytes": 329833,
       "slice": "tomato_off_coverage_secondary",
-      "split": "dev"
+      "split": "test"
     },
     "tomato_off_coverage_secondary/tomato_off_coverage_secondary__tomato_yellowshoulder.png": {
       "sha256": "e4cfe0b5dd89faa8df721e06d5c379becef941a2e02d73d846b65594bb89589a",
@@ -714,7 +1243,7 @@
       "sha256": "09246876d415e5db5367906ea9b2f00edcefb2e5d3c5bcd1c9c57660d54fb00c",
       "size_bytes": 134201,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/internet_20260509_bugwood_5598509_tomato_russet_mite_symptoms.jpg": {
       "sha256": "8f1b0b92814dd03243de6c87d697d67ce8ebe5faf1d2b2c44feeafe60eb89c83",
@@ -726,19 +1255,19 @@
       "sha256": "585246ebd9d05e627ebf0373692780339d857774d29c64a25f41c57a2d8ebe13",
       "size_bytes": 194116,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/internet_20260509_bugwood_5598513_tomato_russet_mite_symptoms.jpg": {
       "sha256": "dc1e7431b3ce791c3080ea4b8508c71ae88a087e73a6a4ae7a8986fa6952bae4",
       "size_bytes": 136316,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/internet_20260509_bugwood_5598514_tomato_russet_mite_symptoms.jpg": {
       "sha256": "c1da1156a5600aec593b237c0bae4a0748634665ddd0bc4994cc0eb7f66258d3",
       "size_bytes": 96233,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/internet_20260509_bugwood_5598516_tomato_russet_mite_symptoms.jpg": {
       "sha256": "e7081178cc5ebc6829c119db2d3bc1be2401863ffc50fe8ff1986d0171a40256",
@@ -750,17 +1279,17 @@
       "sha256": "07f7ef8531ca87b0f0dce3598a5b117848ce91fa5445fdf31f132c6ef7fedcbc",
       "size_bytes": 203345,
       "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_SpotSpeckBlightMite-1l4v879.jpg.jpg": {
+      "sha256": "7a39980b4f6448958db22a28da7b409e74834a820592f7302b5547703ab61578",
+      "size_bytes": 113860,
+      "slice": "unsupported_tomato_unknowns",
       "split": "test"
     },
     "unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_comparing-diseases-4-canker-tomato-1y51ejs.jpg.jpg": {
       "sha256": "2c59025109d5e9a2cfba879cfde943fa3d238a4dbaf2e44763b986d6bef5c22d",
       "size_bytes": 125378,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/internet_20260509_plantdoc_train_Tomato_two_spotted_spider_mites_leaf_SpotSpeckBlightMite-1l4v879.jpg.jpg": {
-      "sha256": "7a39980b4f6448958db22a28da7b409e74834a820592f7302b5547703ab61578",
-      "size_bytes": 113860,
       "slice": "unsupported_tomato_unknowns",
       "split": "dev"
     },
@@ -774,13 +1303,13 @@
       "sha256": "9adc74e87457a8df1129dbfba65a792b107fa326b9d16e4062cc678ed6496625",
       "size_bytes": 165108,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/internet_20260510_wikimedia_Tomate_Blatt_Kalimangel.jpg.jpg": {
       "sha256": "88cfcfba3072d1f7a0c02bedf39db9adfbea136c916a2b8d606b63c49c43a492",
       "size_bytes": 325413,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/internet_20260510_wikimedia_Tomatoes_damaged_by_Tuta_absoluta.jpg.jpg": {
       "sha256": "1a4954cc902cb6ea03b0025f838f4565ca52d12a2b45476b9419d6f3350ba2cc",
@@ -792,7 +1321,7 @@
       "sha256": "a1991c2edd7d66ca402c2ec6d22f7f08a265393c5872beb5f68c60d3dde173ba",
       "size_bytes": 238347,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/internet_20260510_wikimedia_Tuta_absoluta_Tomato_loss.jpg.jpg": {
       "sha256": "b650ce349888e54a73fc73827d2b669a977e36d95ed12ce348e5f1c797186200",
@@ -804,7 +1333,7 @@
       "sha256": "b78732c52e390ea1d4d41d4a29fb6d6ebddf1c87bfb96ebb7d2072af7ffb9c45",
       "size_bytes": 95100,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_010.jpg": {
       "sha256": "d4014353097ebf2b0bcbbaa6bb781402a57c40dea1d4abdd4f86b662b2584b1e",
@@ -822,7 +1351,7 @@
       "sha256": "00d84375dd0c533fa1d93b196262a78cdff4e2b62f48ec68e05b3d590b0a64a1",
       "size_bytes": 105886,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_022.jpg": {
       "sha256": "7462db8d0245125b5d0043f4a32beb05dcdfb8705a0b0720b5c4f4f5293abe7d",
@@ -834,25 +1363,25 @@
       "sha256": "20678ef0a9d5cee651386157854a075692afb3b1fd2df023c7c2f5132510e11f",
       "size_bytes": 87459,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_032.jpg": {
       "sha256": "fc12b62ab98bc5ab006547fe527b4cfbd231dde3b8f72083b5aac3d65dd17d66",
       "size_bytes": 84300,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_033.jpg": {
       "sha256": "e318abb591f6a28363a01b4c94b0b40609c2a12d59b750f7ea586ef29036fb6e",
       "size_bytes": 181862,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_038.jpg": {
       "sha256": "4ddaef2d4a9879fb50f0b12cfc22b2871c93aed3ae783c476720abbc0f598ee7",
       "size_bytes": 105991,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_042.jpg": {
       "sha256": "c19f2ae8b86e9f8508bf18fccc3c4fa4128120aedb9f83656027d1cf4a05a7cd",
@@ -864,13 +1393,13 @@
       "sha256": "b9fdccced5088f356caed70b6f16e04e151c4130aa6c1d064b58d3a1f0909f5a",
       "size_bytes": 205462,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_054.jpg": {
       "sha256": "290bafaa728b538e981e484288ab80694285ebbe866052e13ad1eb0e523132b1",
       "size_bytes": 89329,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_058.jpg": {
       "sha256": "72cc46658519e632008da30287844bf78e3b46bd44cf67d889777c0be25926f8",
@@ -888,13 +1417,13 @@
       "sha256": "cbe80bd5dfd610eb874387bd237144079e7a30a503810d5dd9cdc4ad509c8dae",
       "size_bytes": 85832,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_070.jpg": {
       "sha256": "631b00217be6d8b6990ccbd08ef8e297a0f2dac2afb538db2bf6321990937201",
       "size_bytes": 178106,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_074.jpg": {
       "sha256": "5defdb0f4efa918a64faa5d6e043057fbc81871f0ea20269f09c1e2dfc8321c4",
@@ -912,19 +1441,19 @@
       "sha256": "73cc35b555be256cf0bca4e6befa916e2b4058781ea99e89b9a41e57b4a92097",
       "size_bytes": 88082,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_086.jpg": {
       "sha256": "7eb873bdb61ac9bc46112f9f70679254a4bba316b77242dd22277e25f26236a6",
       "size_bytes": 87371,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_090.jpg": {
       "sha256": "6424d31f19b70b12143bbefbfed7560f6a74619bdff7560f9a14c1f4afff08d5",
       "size_bytes": 85038,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_096.jpg": {
       "sha256": "ae1df4105053c25940b07505788080fa4433573ea1239dc4f105fc959a0e2c95",
@@ -936,7 +1465,7 @@
       "sha256": "b837cb07b786c1effb936343bf3ba359b8debce6ed9f15cea8161fbc97c7b890",
       "size_bytes": 199810,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1002.jpg": {
       "sha256": "90740d87595461af5ef157c6ab607264424ad21d4e858ce0c3890a2b5932bfcb",
@@ -954,13 +1483,13 @@
       "sha256": "d7fac48530e752c6b59308e05633c92dd14a62421a024bea2783e3192e50f55b",
       "size_bytes": 85009,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1018.jpg": {
       "sha256": "3cbfbb7ac4d6640102ca195264ef3509465fac6a15bc35d3037d69432f5f2819",
       "size_bytes": 84451,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_102.jpg": {
       "sha256": "61614f162cfb906e2316464bf44a39610c3db4b3623da88f1db7654397ae69e2",
@@ -1002,7 +1531,7 @@
       "sha256": "b9717c9ad2ad6ab21ce2150a79d29cb158263f598bae2f4c1a07e0c3e08d5c77",
       "size_bytes": 70207,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1057.jpg": {
       "sha256": "41fb8828476b0f8eb8d67d17898984b096af834f22ea769714272309cf14464b",
@@ -1020,7 +1549,7 @@
       "sha256": "2a6dd17728b2c2c42f9df1cb6302f8df1ecf93c8b01ae14d1740ee70d5fb6683",
       "size_bytes": 105688,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1066.jpg": {
       "sha256": "6caf12ae72e0434b7aaa9ae28a111cad1664f9d5fa05da2b0a7b50789033e4ff",
@@ -1044,7 +1573,7 @@
       "sha256": "4e04ee4bcfd000d8146b56661758fa9e2035b02478e89d39452fa2dcec8a2d62",
       "size_bytes": 92868,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1089.jpg": {
       "sha256": "539ffd581015bbb3045dda3b9b8ec5cc16e1c0c53c84919c77471fef8d0acf41",
@@ -1056,25 +1585,25 @@
       "sha256": "42d81b0a968f4fc99e5db7d6c9d471e3e8f82be8b4a48f3c436f3b6972bb20d0",
       "size_bytes": 218930,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1098.jpg": {
       "sha256": "0d15b7357e3c286dd49771e6962c8f68b6db0a69ddc6830c1ac83e077feeefda",
       "size_bytes": 168851,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1105.jpg": {
       "sha256": "27b2694a7b281c8985fc5b9ae644357149162cb6dc854dabbf5dbd6e4d18daa3",
       "size_bytes": 195993,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1110.jpg": {
       "sha256": "af016559cd23cd77f33b0677368f9c578632afebac5d9e9b5a390a52dc0c68f5",
       "size_bytes": 87909,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1114.jpg": {
       "sha256": "e984b006c8fd83a318ca3f7c2690f1a4f5095163f34747735c24f3bed7b6eba2",
@@ -1092,7 +1621,7 @@
       "sha256": "90e542adeaa727aa77bda2001379fc8fedc05bafafea4976ff57bfdd7365f154",
       "size_bytes": 63148,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1126.jpg": {
       "sha256": "4b78e4ed7cacef966e8362f0112a1be98e7ffd1817cc5afc6b1c8c0282c85b47",
@@ -1122,13 +1651,13 @@
       "sha256": "16f8bbafca0937a96dc6c90a7e2500a1bd584c55cfbb28d82d03a26d8cd8e548",
       "size_bytes": 74598,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1146.jpg": {
       "sha256": "924bc56bf11a68a20dd8681b3d6fb864b23f5b5b5c083c46d1e9354289e4539f",
       "size_bytes": 75083,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1153.jpg": {
       "sha256": "e2b39ce00174e65e3b230a3558847c599425c743bdd8a353dd08d38e89d20cb6",
@@ -1152,19 +1681,19 @@
       "sha256": "3680efd23d18667881f4ea35cd893732cea8bfee1a5abe56565934204a6c469e",
       "size_bytes": 256381,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1174.jpg": {
       "sha256": "be19841656aaf5d2d9dffc4a2497b2a1d79b37e5c49d345c995f6a8ee21dc71e",
       "size_bytes": 83416,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1178.jpg": {
       "sha256": "587a37514301121627f52c2a8ea34d8a8cae272d7add2642e30cf1399d67fa75",
       "size_bytes": 91069,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_118.jpg": {
       "sha256": "d03336516e45d75b64e0aa967437a93ffdff42f2044e53953d666b10dec01e40",
@@ -1176,7 +1705,7 @@
       "sha256": "5e1bde340cf40570f55c31de81ef0e9aa90e0e68c22981a5f57b01f748ea3ca3",
       "size_bytes": 81196,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1190.jpg": {
       "sha256": "621d205e197a6f39f3b44ec541afa595929a6ca3f833b35388346e675f26471b",
@@ -1194,19 +1723,19 @@
       "sha256": "5e21174153cd5a2722f96482ca70c0c3ea4f3b65b1a1f9066e59268d7c3794cd",
       "size_bytes": 72504,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1206.jpg": {
       "sha256": "854d9ff262840d886488cc48f30b9f5a97aa35456ddf8dd1d5a58756f4576d87",
       "size_bytes": 73539,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1210.jpg": {
       "sha256": "ed2cea01305120f64a888d2c933cc029e0b1956eb3bcfec2209c30f3ff2316d3",
       "size_bytes": 210842,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1217.jpg": {
       "sha256": "9098529d0a86730b7e0e4915ccecae7513f02b298c7005ed95e81af84cce7eea",
@@ -1236,7 +1765,7 @@
       "sha256": "99dcf09e411d2a65f6a6726ee858a7f53cf0ba5e4fe55ea67ba733eeb0061bc9",
       "size_bytes": 240902,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1238.jpg": {
       "sha256": "c3a96d178b459d02f174205dc42a7152dfb413a5ddc0d0fd7c9be86ac6427f61",
@@ -1248,25 +1777,25 @@
       "sha256": "243bee217536b4774839ecb0f9040cb53e96a2893dbd00a5c983b36e3d266df1",
       "size_bytes": 71861,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1249.jpg": {
       "sha256": "69174eef21ea76d30383232513525fd39f479873f3b726122982fd1c1788dd2a",
       "size_bytes": 79689,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1254.jpg": {
       "sha256": "5ec747166b93785d42b2495780bf000d81de182e5d4dff64b077c0b0fdbe614e",
       "size_bytes": 89881,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1258.jpg": {
       "sha256": "815324a42e38c536814528ced2ca80496ead3758ec50bbc2fc78207b05dd3266",
       "size_bytes": 89039,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1265.jpg": {
       "sha256": "e9efc7dfb091cbe17e6fe2abcee6f6a1f3281c306876940b750bc10928c9ae63",
@@ -1278,7 +1807,7 @@
       "sha256": "264e3ab4479fef7ed30da0fd25fa2c0e4348a9d8aeb235ee10ec31aa7141e363",
       "size_bytes": 180712,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1274.jpg": {
       "sha256": "8f6ab89ea692fb26e81ded371ca87222478f9517ac6052701fc3dd2e2fabafca",
@@ -1332,7 +1861,7 @@
       "sha256": "b8ffa8f27ee2122df3ef0bfa22ff84f47f8bad36eb99b68fb7f21df1cdddacf4",
       "size_bytes": 240844,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_oe_leaf_unknown_unsupported_same_crop__tomato_1318.jpg": {
       "sha256": "42b871fdb80787100afe843f6bc048445a28720661a62a8bc010df92cb876c47",
@@ -1344,13 +1873,13 @@
       "sha256": "85d3a1cc346df019324623f8021aed93122086d704ecc25b7fa467b945e84bd0",
       "size_bytes": 14828,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Cu-def.jpg": {
       "sha256": "6e1afb5566c7dde309e4be30a888068526f23c320bbf26a8fd3ae6abcd3ca7e7",
       "size_bytes": 30214,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Cu-def1.jpg": {
       "sha256": "6cc94251501686bc0fd5386556afb74bd5141f2a90d65053fd3e5bfcbc6559a7",
@@ -1362,25 +1891,109 @@
       "sha256": "10b2611e1e6d6613e76021baa66924877ec23b9976b67269b4475b988b806f12",
       "size_bytes": 22450,
       "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K-def.jpg": {
+      "sha256": "c103038ff49f2cd19350a945635c9f8871f41a83e22acc52f0a6a89004a90c28",
+      "size_bytes": 26831,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K-def1.jpg": {
+      "sha256": "cd9f77ed61891a612ac229da600171379631ee103706e0834ab52083bed43c20",
+      "size_bytes": 28806,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-1.png": {
+      "sha256": "618c0e27e7eb7f4fffbeff247b765474df76cd6b0ef7127eabb2fe51588fdbc4",
+      "size_bytes": 224284,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-2.png": {
+      "sha256": "fc0536528ec11261d475a02fb64b4feaf0683e0c159de2075b1edce7f801d86f",
+      "size_bytes": 628320,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-3.png": {
+      "sha256": "68acfbc75a3dc8927986c00453da57e0f2280078e5aab1bf56a5279e6fe1a348",
+      "size_bytes": 548107,
+      "slice": "unsupported_tomato_unknowns",
       "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-4.png": {
+      "sha256": "06e3d82c446ff0444d99b7206f90d72667d6a6d25ed470e30b75758fa9808478",
+      "size_bytes": 552866,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Magnezyum-Eksikli_i-1.png": {
+      "sha256": "43c83bb84ab4754d0375177ebc6a51d20f448cc46dcc216c0c31f2dc10c00987",
+      "size_bytes": 752526,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Magnezyum-Eksikli_i-2.png": {
+      "sha256": "a642bfc8cc2bb5d45ec956c43a0781ad6a47aac4e891b6e0d3ceae1fc629755a",
+      "size_bytes": 687973,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Mn-def1.jpg": {
+      "sha256": "b59c56ea2b641a5bc8620b066132f813bab1f74b719b2dc35f37080397a47229",
+      "size_bytes": 24570,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_N-def.jpg": {
+      "sha256": "326dfb4c201f0aed7a9b5e4bcf9c77bf2a9742c7a43d116ae21040fa8d43645e",
+      "size_bytes": 17319,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_N-def1.jpg": {
+      "sha256": "e3e08b939b8bfcb97b6dffff74e3c3a48d34748821dc381d92d640d522c98c19",
+      "size_bytes": 31210,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_P-def.jpg": {
+      "sha256": "fefc5265473271383a4624ec0e3b3854e38d30c4ede51e603f6137748629004f",
+      "size_bytes": 20583,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_P-def1.jpg": {
+      "sha256": "a53f70b52a13450f46906e8f8100d20452d208f096cfa2fa870a9711d9fbef52",
+      "size_bytes": 36025,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_S-def.jpg": {
+      "sha256": "22d4fdc976186ad73cfa8ed0012723de5ffc333a1764c076d8f97c2a2b41e841",
+      "size_bytes": 22595,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0001_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "9f709021e0bbae36947a5dea3fe0e1e310233cec21008348387917fb42e38d12",
       "size_bytes": 228724,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0012_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "86f042265309880ba617d03194054449bbb01d3f3718175168d70fe75f988a7a",
       "size_bytes": 219364,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0016_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "5e0ae84ce5e14603b7f6340e47ee5c1782f71807906eea1fe9a030aef90c1a77",
       "size_bytes": 228470,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0017_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "91aef73a71a7abfeb442f1601987fbb49d815e985e2cc3222cc1f8ac12b3e870",
@@ -1392,7 +2005,7 @@
       "sha256": "3301e623a4279462ae95aebf9d16f0acc29812ed46ef0b89ef3ca8cf676baa03",
       "size_bytes": 238641,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0032_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "f37a1f252d44ef6b54b6d7bce30394e99d1bba7fe0893e63f931ac97219e19b3",
@@ -1422,7 +2035,7 @@
       "sha256": "5b734b9d4acca0a6b0ea07c0f7bc699b5a8454c5be89ae9e9f0a3e28bc239512",
       "size_bytes": 232297,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0060_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "66952485ec6a619da78817a99ee5d433b4314565401d0d594d335f8b6c502721",
@@ -1452,7 +2065,7 @@
       "sha256": "66b2f377a50f0b7fc101d99e034e2a895cd7720036fd5a2021ad4aba19148d26",
       "size_bytes": 232366,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0081_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "6e794de6d035025ed49aafeaad5d08bc7bf66f4b7f88a8daefc5b23e1c07c4c3",
@@ -1470,31 +2083,31 @@
       "sha256": "124b80253c5e083bf65d3d2386ba529af0a225d479b064cb4234f5d70eab9b09",
       "size_bytes": 232912,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0097_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "fbce1b65a33dc67e87d4da2340340a199759d7e1073a07d09527ddc1efab4b46",
       "size_bytes": 232054,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0108_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "3db55030f16580aa283f936ad85cdf5df3d0cbf1db25f61804b6e38db6d002a8",
       "size_bytes": 217809,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0112_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "128de9b30a8ce055b76cb9f0e373aaa8eea4f30cae3e2fb9d3d4ca6ed3006e42",
       "size_bytes": 216315,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0113_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "941c3cdbfe757f5a2525c046cc46a333779d5352923345f16abf938c51b33051",
       "size_bytes": 215321,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0124_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "7a8a9c602168ebd55034155a78ea4b1bcdc94503a1d18a5f14fa9173c05524c8",
@@ -1506,13 +2119,13 @@
       "sha256": "d9763107253b6588ff6f21ef6440cb9970ec8ba7fb220764c0e4a1301b99b8dc",
       "size_bytes": 216130,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0129_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "8ac185c68bbaca4e27cf71b74f793e3ad01bb837454c193e945bab90438a57f8",
       "size_bytes": 223685,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0140_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "eee9a8c01f657b4cf97b629033da3aa835a8295df0c4e37e769b848a191b5b0d",
@@ -1524,13 +2137,13 @@
       "sha256": "afc776c756beaff35e62cabdbffd3ed93501d8842bbc66bedc3df255f408512d",
       "size_bytes": 207775,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0145_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "c3667657057ee08d2abb87c14d28694d378cbf5907c3fd04e9972e9547d672c6",
       "size_bytes": 210118,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0156_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "d592f5083ad9e149dc31a27ea36021f8de0544151c72b5f3c13224620519c453",
@@ -1542,25 +2155,25 @@
       "sha256": "b9ecf29828cbf885c3d2fc9f2ff1c95837de4d654e37ff08ab4fea2443a6d2e0",
       "size_bytes": 209014,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0161_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "8055be847b559f7250fc876a0b3f39a58a64ad873c145b1fa192ba69e0d66478",
       "size_bytes": 195253,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0172_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "1f53d3450ab0abf09b22ba2c26b25cbd301fe66e18e68a5e29ddc841b09c71da",
       "size_bytes": 218416,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0176_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "208eb7d23ecbb5571109e7f7f03f983d3637d871c258512b13f15f53be12de5e",
       "size_bytes": 213813,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0177_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "e8c6db0af8241f2d7cc1dcc8aebbd1a3cba17048683ae6f02c69b1e7db95bdee",
@@ -1578,7 +2191,7 @@
       "sha256": "447a6ea2c981abfd9e5f42ac6ca5edbeb7e7fb8a8dc8f9dd58e29e55716420ba",
       "size_bytes": 235555,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0193_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "264199ca2d49a9e14af3464f16cfee82c698266fe900469c0e2476e347283c40",
@@ -1602,7 +2215,7 @@
       "sha256": "18189848e0a1e115e9b16d208c2b0c0eaf621f67dbf7a7bbe425c454f54f7042",
       "size_bytes": 228276,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0220_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "b5d4273804ffca91b3f99bc46502ba24c23f119c307c86d56afcfd7e0aa7396e",
@@ -1614,19 +2227,19 @@
       "sha256": "33cfdbfbaa80fab7a070a26264f6064899fcacd476e0aa89279035298a35312b",
       "size_bytes": 225043,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0225_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "0d41ef0a0cb6d8cdc826840080f86c5e2a4215db0ce539e37491c34faac1d52d",
       "size_bytes": 225398,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0236_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "26fb3bc5b725c6ef2282dbf11ae9694823a7251fedfca3e56d6a08f13178ecc8",
       "size_bytes": 235830,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0240_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "a3e749db6fe67688e674370752808dd038ad6baba633db16e1f4f2cc4957d964",
@@ -1638,7 +2251,7 @@
       "sha256": "a02308d93bedfefbed8cf8e698f5af08cdadecfd05bb1551cdca90d0ceb94177",
       "size_bytes": 239122,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0252_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "8c391a18fdbd15e1bd12b092bd824392a8030cc0989627c0b6ff55e77eabf020",
@@ -1662,7 +2275,7 @@
       "sha256": "20518a10d37c05032997aadb5dde02d2549f702c09315581f634af043cc9e91a",
       "size_bytes": 226190,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0272_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "2afe2bf4188167c49029decc36ff0e93fb35f9cce711a863b056d5394dbc9094",
@@ -1692,19 +2305,19 @@
       "sha256": "d9d910598ad08b16a2ace5cdf3c75436bf6bf6f71c77b987f5922a336d988b9b",
       "size_bytes": 210818,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0300_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "ebf460f5e7d45a4d7439d7b4e51ca920ccdcf6d4bfe5594c5b47153d1ed8d0ba",
       "size_bytes": 230737,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0304_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "978003d03382a6a8a3242982410c41c10b4712a276783b66b129cde911b4a32e",
       "size_bytes": 243728,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0305_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "2a932f0130d274089384debe54e2b8de87939a7c76453f27585cdb1112a4275b",
@@ -1722,13 +2335,13 @@
       "sha256": "3114c1979ef730fe6ce5e2230ffe08fb02ae3eb0211a97590689148679bdd07f",
       "size_bytes": 223273,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0321_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "15fbfc0d6aab46ccfb8a60fe91e070db574eeaa93fbe1b7fe3d9b6916a65156e",
       "size_bytes": 219833,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0332_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "a78c50e3e9ca92857f90e59b8984998d74ff4edc44dcbef33e2ae7c2abe8cb8c",
@@ -1752,13 +2365,13 @@
       "sha256": "fd17d89c778a2d0a30471390251ecaec257a7d4cdf5b6f1483e3e0408c63cdd0",
       "size_bytes": 277796,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0352_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "eb29f01c203c12ff362f3a5efedd28b7f5781f032e30e1e35a4ca4f9c7f6bf5a",
       "size_bytes": 278517,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0353_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "b39c799d10e6496dc9d1aa57f7c141362227c6079d7c6e550c0b3e0bcd7a139c",
@@ -1770,25 +2383,25 @@
       "sha256": "1160d8f1d82d809aea8890c72807e171354ee2c735bfaf7cc9c5fb39e1b014aa",
       "size_bytes": 259223,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0368_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "9b6e83310f47d1bf63cbe9be1ec8ed55933325e65842ce09a5b1610df6567801",
       "size_bytes": 271135,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0369_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "1ca690be8f8cfdc8499adf2bcb3200b934e9fc6d2a6912f14cbe7e078e12b09e",
       "size_bytes": 292472,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0380_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "c803eb855207212bfbc4b1e5240cc11af02bc666dc17eb417f6e70d737403905",
       "size_bytes": 236962,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0384_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "43852e4067eb632040b61f5a401ac1b8b53f4ba7494f1c38df9c442a58c36ae3",
@@ -1824,7 +2437,7 @@
       "sha256": "53879fcdf12bc64a2c5bc2c6af169f7d6a2bb21c0b96aeb55752573a650cf56e",
       "size_bytes": 221677,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0416_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "52be074b435c4a14b2315b607b290309f9a6e33e73969cba8b0c1dd63bada156",
@@ -1836,31 +2449,31 @@
       "sha256": "6001db9c9c869513daab562bcac4710588f0797383babc29b1f4a12c76f34a54",
       "size_bytes": 170732,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0428_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "260a85633074a708a91be623b8ac1b862cc568f331ca4e2933ceb129c402eed0",
       "size_bytes": 212842,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0432_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "533e4f4d08ce73ea6f6282e05e590a9f8a467ad5b3f12123387158efe0f5037e",
       "size_bytes": 215200,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0433_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "ed587756a8e335952d69e24334ab500afd5c32ea83be64fa02a195d9698aae3d",
       "size_bytes": 203533,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0444_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "7c1d0af9508f523ce73fbad8cf2959591ea18ae99d543636a1b0d37897d945f9",
       "size_bytes": 203738,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0448_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "f7b25d4040e93d439ec95fc2c4577024808b78511b28d793a9f9883e372f31d5",
@@ -1878,13 +2491,13 @@
       "sha256": "3373758899245be3db17c1617c9c3772342d64ef413798ede145e053b323bcf2",
       "size_bytes": 228798,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0464_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "677a1a1ee0e092992ea1babff653cd3cbe772dc968099955939616e03c3f38fc",
       "size_bytes": 236141,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0465_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "def665d7505ce4a9e5703218cd7822ef9b1e5fe99cb21d0dcf437db666af0ea3",
@@ -1896,7 +2509,7 @@
       "sha256": "19aa647ad4d633f78c8f73387da8be01f2992620701f1c69c0eaa39715af2b48",
       "size_bytes": 226614,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0480_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "9fc911ff3b8df532410821873861d941de2c44c4efc4b11c307d9bbee16bbb27",
@@ -1914,13 +2527,13 @@
       "sha256": "b3ade387f021a0273b9748518a972f88e8f8292e2c5c35a8865f1b304179836e",
       "size_bytes": 212216,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0496_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "7dd7cf0441072ebcdda6c9e0fb6bf0ff98afb14dcf7f552254255ba5e9b20dd3",
       "size_bytes": 223293,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_image_0497_domates_outlier_Domates_al_ms_C_celik_Vir_s_Tomato_Bushy_Stunt_Virus_-_TBSV.png": {
       "sha256": "87acfbeabf37b67a1204d2749de0c8045b4f82d973e61655d88814100711396d",
@@ -1928,125 +2541,41 @@
       "slice": "unsupported_tomato_unknowns",
       "split": "test"
     },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K-def.jpg": {
-      "sha256": "c103038ff49f2cd19350a945635c9f8871f41a83e22acc52f0a6a89004a90c28",
-      "size_bytes": 26831,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K-def1.jpg": {
-      "sha256": "cd9f77ed61891a612ac229da600171379631ee103706e0834ab52083bed43c20",
-      "size_bytes": 28806,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-1.png": {
-      "sha256": "618c0e27e7eb7f4fffbeff247b765474df76cd6b0ef7127eabb2fe51588fdbc4",
-      "size_bytes": 224284,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-2.png": {
-      "sha256": "fc0536528ec11261d475a02fb64b4feaf0683e0c159de2075b1edce7f801d86f",
-      "size_bytes": 628320,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-3.png": {
-      "sha256": "68acfbc75a3dc8927986c00453da57e0f2280078e5aab1bf56a5279e6fe1a348",
-      "size_bytes": 548107,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_K_k-Yaprak-4.png": {
-      "sha256": "06e3d82c446ff0444d99b7206f90d72667d6a6d25ed470e30b75758fa9808478",
-      "size_bytes": 552866,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Magnezyum-Eksikli_i-1.png": {
-      "sha256": "43c83bb84ab4754d0375177ebc6a51d20f448cc46dcc216c0c31f2dc10c00987",
-      "size_bytes": 752526,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Magnezyum-Eksikli_i-2.png": {
-      "sha256": "a642bfc8cc2bb5d45ec956c43a0781ad6a47aac4e891b6e0d3ceae1fc629755a",
-      "size_bytes": 687973,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_Mn-def1.jpg": {
-      "sha256": "b59c56ea2b641a5bc8620b066132f813bab1f74b719b2dc35f37080397a47229",
-      "size_bytes": 24570,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_N-def.jpg": {
-      "sha256": "326dfb4c201f0aed7a9b5e4bcf9c77bf2a9742c7a43d116ae21040fa8d43645e",
-      "size_bytes": 17319,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_N-def1.jpg": {
-      "sha256": "e3e08b939b8bfcb97b6dffff74e3c3a48d34748821dc381d92d640d522c98c19",
-      "size_bytes": 31210,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_P-def.jpg": {
-      "sha256": "fefc5265473271383a4624ec0e3b3854e38d30c4ede51e603f6137748629004f",
-      "size_bytes": 20583,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_P-def1.jpg": {
-      "sha256": "a53f70b52a13450f46906e8f8100d20452d208f096cfa2fa870a9711d9fbef52",
-      "size_bytes": 36025,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_photo-1-initial-symptoms-of-glyphosate-herbicide-e1522175855247-331x324.jpeg": {
       "sha256": "7489216db88a9250108e7bf3264b87edad81f9ae8317bc85b2e97f22c5efa677",
       "size_bytes": 38929,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_S-def.jpg": {
-      "sha256": "22d4fdc976186ad73cfa8ed0012723de5ffc333a1764c076d8f97c2a2b41e841",
-      "size_bytes": 22595,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_001_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "9d79eb8d3941920162c519320449cf162637b4d6850dfa015432d21cc44f23bd",
       "size_bytes": 94553,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_001_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "a4f24ede37c197c3a3fd8f6f82085e361caf0bf787d5a356cdd0d322ab09a38e",
       "size_bytes": 179695,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_013_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "2dfa4b00cbb0836d03237b6522361ef0d299957c91d2d102de05eefcb321314e",
       "size_bytes": 171002,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_017_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "958fd103379a69875f0878f2f44611df0ef869b71bafa1b81fed6f9f0e5189e8",
       "size_bytes": 168873,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_033_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "89d2e29d4083368584d573c50286989e0ecac14204487a56ac7273f5badd2a12",
       "size_bytes": 168053,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_045_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "b876526a804ba9706c4267d8317278ca1fdd78683ed113e5aff907f018ef3edd",
@@ -2058,13 +2587,13 @@
       "sha256": "5af4a19126e22c4c7a62495d3434a404b7b442f7e92fed7ff00a9f45f8a35642",
       "size_bytes": 106028,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_049_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "7f46c9825b9d76539e8d92c02685f45160f6a30f7981dd31b6901ee39b465e80",
       "size_bytes": 175433,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_065_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "865da6c6fd0dd8343d05bbd3b6510a4e2ef88bd2520ed503c421614478aee9d9",
@@ -2082,13 +2611,13 @@
       "sha256": "fd607e7315e839d7e49b78f10c8592e7139a06726bc741933fd8f2c461b6026a",
       "size_bytes": 139986,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_113_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "6be99c3a42c84ddfc0b5365f43e36074388fcbae12fc3f3bdea99b4baa6c277b",
       "size_bytes": 162274,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_129_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "dea8051fc564cac156cc297065c2a690d1633173a5c4773acb6231f0bf17d328",
@@ -2112,19 +2641,19 @@
       "sha256": "17b21ed516d61da42bb22acee888b4266190edec34ffbf3625978fff11b17e1c",
       "size_bytes": 231247,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_145_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "ebcd0876219e01700d9de1c62bf806a39737013f6c9a98307b4e3e74c3f7ca56",
       "size_bytes": 188973,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_157_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "9738603d8f69a9459cac389c8aed43339f5f1632f3dbdd2850fb53b50dbae573",
       "size_bytes": 194486,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_161_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "34eba090b717c0074c13883e32c6cfd16d6b20bb3164294fe6a50cb682274ea8",
@@ -2142,7 +2671,7 @@
       "sha256": "9fddf892671225f7412abe0a8f7a61088cae2cae299dbf22348f14105b6a5cb9",
       "size_bytes": 193596,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_177_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "fc561dc3f7f156f10586c6113ebd9db7f8d291ae146a58a174d952bb4fb37b0f",
@@ -2154,13 +2683,13 @@
       "sha256": "bdc9b5bd4e8d28589f033499780f7d5e65ea9c00f5811ecc26b02594b93f791d",
       "size_bytes": 142428,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_189_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "429c4b46356d6295d5e4727d7c3ec20a28db2acec2717a85ea135a3e628482e6",
       "size_bytes": 163394,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_193_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "63b4180de8793b4ef65589a020baf8edb78edd0d0063e9a8dc4b9229bf1f0afc",
@@ -2172,13 +2701,13 @@
       "sha256": "6898c7a9c419b7370e3f3ecc13e5cbe713b0d146d6bcb0a4f7bc55a9edc81fe3",
       "size_bytes": 152990,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_205_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "aef1ec6f341ab512ccb177b3de56d7abc3a16a17546392a3b7d6cdc29cc632c7",
       "size_bytes": 175024,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_209_domates_outlier_Domates_Leaf_Miner_Yaprak.jpg": {
       "sha256": "3a01f8f93814d1f9ea57b1502a6328b514e2f2439f03ca0c4c1c50c4a64d463c",
@@ -2189,6 +2718,24 @@
     "unsupported_tomato_unknowns/rebalanced_20260510_zip_leaf_unknown_tomato_209_domates_outlier_Domates_Spider_Mites_Yaprak.jpg": {
       "sha256": "8a5d184d472bb4cd04568ba0c6244dc38617a3f8c871fbbde274db7c3626768e",
       "size_bytes": 185774,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "dev"
+    },
+    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__Ekran_g\u00f6r\u00fcnt\u00fcs\u00fc_2026-03-15_140851.png": {
+      "sha256": "30b208c0c7e904f979247e5d1ab5f4d23ccddabd62b12e3613d02ced8d2ea9f6",
+      "size_bytes": 275549,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__IMG20220323182943_1.jpg": {
+      "sha256": "fc80a216f50f3505602fce33eaab8bb45413431e9f8e2fd91636be8b80c8d4c5",
+      "size_bytes": 9624,
+      "slice": "unsupported_tomato_unknowns",
+      "split": "test"
+    },
+    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__IMG20220324110015_7.jpg": {
+      "sha256": "ffae204ae24635b8312076c9ddfc99c9bb21dbe61b4ef56cda882cc863fc3735",
+      "size_bytes": 8292,
       "slice": "unsupported_tomato_unknowns",
       "split": "test"
     },
@@ -2202,23 +2749,17 @@
       "sha256": "f7082799521f4f5e61f287ad15af7e16a642a8519fdca140f6093a644200c7d6",
       "size_bytes": 524618,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__cold_soil.png": {
       "sha256": "b91af7117cdd065e0e0681c300ed312e3e04b73200e78b45298c75620f40d57f",
       "size_bytes": 288316,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
-    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__demir_eksikliği_yaprak.png": {
-      "sha256": "f702735f366a960feb9e0c3346cd3f35090cae23f302f7d502f9177c7c4cbf23",
-      "size_bytes": 747632,
-      "slice": "unsupported_tomato_unknowns",
       "split": "dev"
     },
-    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__Ekran_görüntüsü_2026-03-15_140851.png": {
-      "sha256": "30b208c0c7e904f979247e5d1ab5f4d23ccddabd62b12e3613d02ced8d2ea9f6",
-      "size_bytes": 275549,
+    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__demir_eksikli\u011fi_yaprak.png": {
+      "sha256": "f702735f366a960feb9e0c3346cd3f35090cae23f302f7d502f9177c7c4cbf23",
+      "size_bytes": 747632,
       "slice": "unsupported_tomato_unknowns",
       "split": "test"
     },
@@ -2240,29 +2781,17 @@
       "slice": "unsupported_tomato_unknowns",
       "split": "test"
     },
-    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__IMG20220323182943_1.jpg": {
-      "sha256": "fc80a216f50f3505602fce33eaab8bb45413431e9f8e2fd91636be8b80c8d4c5",
-      "size_bytes": 9624,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
-    },
-    "unsupported_tomato_unknowns/unsupported_tomato_unknowns__IMG20220324110015_7.jpg": {
-      "sha256": "ffae204ae24635b8312076c9ddfc99c9bb21dbe61b4ef56cda882cc863fc3735",
-      "size_bytes": 8292,
-      "slice": "unsupported_tomato_unknowns",
-      "split": "test"
-    },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__psikolojik_leaf_roll_not_harmful_.png": {
       "sha256": "c4c3fc828bd33ffec0c68ff0281759ad752ef347626fbd09d82b5b7a119f94a8",
       "size_bytes": 956693,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__sunburn_leaf.png": {
       "sha256": "048f61ffdbd096ac4d9f91a976d19a43b01cd0b032af99ea27267d02e9a5d33c",
       "size_bytes": 164126,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/unsupported_tomato_unknowns__uzaktan_yaprak.png": {
       "sha256": "bc96fa8f49524a34a804868545d28472eb9b7184952d968e8a4e75d2ddb86cdc",
@@ -2274,13 +2803,67 @@
       "sha256": "9a477e2ef4a4b789eef91825c7c65e5ccbbd67cb0630c0ce4f4548e365163ca2",
       "size_bytes": 334470,
       "slice": "unsupported_tomato_unknowns",
-      "split": "dev"
+      "split": "test"
     },
     "unsupported_tomato_unknowns/web_unsupported_tomato_unknowns_c4dbee8de21e.jpg": {
       "sha256": "c4dbee8de21e091dbdd902e9b223990ce69d36e0d9419e2c0506c849632536ba",
       "size_bytes": 1414479,
       "slice": "unsupported_tomato_unknowns",
-      "split": "test"
+      "split": "dev"
     }
-  }
+  },
+  "min_per_slice": 2,
+  "min_total_for_dev_test": 30,
+  "schema_version": "v1_real_ood_split_manifest",
+  "seed": 42,
+  "slice_summaries": {
+    "auto_unused_placement_manifest_20260524T132507Z": {
+      "dev": 5,
+      "split_policy": "slice_stratified",
+      "test": 7,
+      "total": 12
+    },
+    "off_crop_secondary": {
+      "dev": 17,
+      "split_policy": "slice_stratified",
+      "test": 25,
+      "total": 42
+    },
+    "scene_context_leak_check": {
+      "dev": 16,
+      "split_policy": "slice_stratified",
+      "test": 24,
+      "total": 40
+    },
+    "tomato_failure_cases": {
+      "dev": 28,
+      "split_policy": "slice_stratified",
+      "test": 41,
+      "total": 69
+    },
+    "tomato_leaf_failure_cases": {
+      "dev": 8,
+      "split_policy": "slice_stratified",
+      "test": 12,
+      "total": 20
+    },
+    "tomato_off_coverage_secondary": {
+      "dev": 9,
+      "split_policy": "slice_stratified",
+      "test": 14,
+      "total": 23
+    },
+    "unsupported_tomato_unknowns": {
+      "dev": 105,
+      "split_policy": "slice_stratified",
+      "test": 157,
+      "total": 262
+    }
+  },
+  "source_root": "D:\\bitirme projesi\\data\\prepared_runtime_datasets\\tomato__leaf\\ood",
+  "split_counts": {
+    "dev": 188,
+    "test": 280
+  },
+  "split_policy": "phase1_real_ood_dev_test_if_large_enough"
 }
