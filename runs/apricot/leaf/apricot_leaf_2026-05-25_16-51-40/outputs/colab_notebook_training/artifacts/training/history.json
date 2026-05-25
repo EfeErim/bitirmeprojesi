@@ -1,0 +1,847 @@
+{
+  "train_loss": [
+    1.1124106380674574,
+    1.0874472988976374,
+    1.077277143796285,
+    1.049938930405511,
+    0.9480476909213595,
+    0.8933911853366427,
+    0.8426934745576646,
+    0.7977955010202196,
+    0.7565858496559991,
+    0.7348122000694275,
+    0.7153974639044868,
+    0.7020830578274198,
+    0.6973178254233466,
+    0.6645744840304056,
+    0.6453230447239346,
+    0.6645214690102471,
+    0.6643904050191244,
+    0.6491008069780138,
+    0.6256851885053847,
+    0.6367556055386862,
+    0.6312013334698148,
+    0.6317430403497484,
+    0.6318157447708977,
+    0.6233447657691108
+  ],
+  "val_loss": [
+    1.0895163249969482,
+    1.0361866529782613,
+    1.0359140348434448,
+    0.9854060586293538,
+    0.9713662544886271,
+    0.8394306580225627,
+    0.8847138341267904,
+    0.8164665305614471,
+    0.7694089567661285,
+    0.8438119709491729,
+    0.7270502106348673,
+    0.6972285465399424,
+    0.6358670254548391,
+    0.7159816940625509,
+    0.6403649934132893,
+    0.6749666619300843,
+    0.6168126384417216,
+    0.6085710442066192,
+    0.6179639703035354,
+    0.6117393575112025,
+    0.5936040526628494,
+    0.5910068358977636,
+    0.5950960332155227,
+    0.5952774409453074
+  ],
+  "val_accuracy": [
+    0.3933333333333333,
+    0.44,
+    0.4533333333333333,
+    0.48,
+    0.5,
+    0.56,
+    0.56,
+    0.64,
+    0.6933333333333334,
+    0.6466666666666666,
+    0.7266666666666667,
+    0.7466666666666667,
+    0.76,
+    0.7333333333333333,
+    0.78,
+    0.7933333333333333,
+    0.76,
+    0.8133333333333334,
+    0.7933333333333333,
+    0.78,
+    0.8,
+    0.8,
+    0.8066666666666666,
+    0.8133333333333334
+  ],
+  "macro_precision": [
+    0.13199104368686676,
+    0.29729729890823364,
+    0.48989900946617126,
+    0.45820364356040955,
+    0.5019536018371582,
+    0.5922088623046875,
+    0.6500988602638245,
+    0.6987578272819519,
+    0.7462229132652283,
+    0.7265552878379822,
+    0.7470040917396545,
+    0.7683591246604919,
+    0.7686201930046082,
+    0.7646464705467224,
+    0.8001289367675781,
+    0.823246955871582,
+    0.7758480906486511,
+    0.8353099226951599,
+    0.8140187859535217,
+    0.7957620024681091,
+    0.8120415806770325,
+    0.8120415806770325,
+    0.8198574185371399,
+    0.8280062079429626
+  ],
+  "macro_recall": [
+    0.3333333432674408,
+    0.3946274220943451,
+    0.4835277497768402,
+    0.534680962562561,
+    0.5579503178596497,
+    0.6081581711769104,
+    0.61248379945755,
+    0.6827630400657654,
+    0.7292399406433105,
+    0.6884127259254456,
+    0.7542905807495117,
+    0.774437665939331,
+    0.7850975394248962,
+    0.7631382346153259,
+    0.8020467162132263,
+    0.8133461475372314,
+    0.7863767147064209,
+    0.8309348225593567,
+    0.8146252632141113,
+    0.803325891494751,
+    0.8202750086784363,
+    0.8202750086784363,
+    0.8259246945381165,
+    0.8315744400024414
+  ],
+  "macro_f1": [
+    0.18910254538059235,
+    0.33887866139411926,
+    0.4049271047115326,
+    0.4315044581890106,
+    0.4234605133533478,
+    0.5315031409263611,
+    0.532921314239502,
+    0.6350865364074707,
+    0.6921961307525635,
+    0.6439996361732483,
+    0.725102961063385,
+    0.7466138005256653,
+    0.7600309252738953,
+    0.7334365844726562,
+    0.7786285877227783,
+    0.7917819023132324,
+    0.7600720524787903,
+    0.8110209107398987,
+    0.7924469113349915,
+    0.7794656157493591,
+    0.7987673878669739,
+    0.7987673878669739,
+    0.8050881028175354,
+    0.8114041686058044
+  ],
+  "weighted_f1": [
+    0.22314102172851563,
+    0.3784595235188802,
+    0.3890191141764323,
+    0.40131813049316406,
+    0.38983479817708333,
+    0.5078189086914062,
+    0.5158624267578125,
+    0.6285939534505208,
+    0.6903767395019531,
+    0.6409381612141927,
+    0.7227194213867187,
+    0.7459670003255209,
+    0.7568364461263021,
+    0.7334568277994792,
+    0.7808721923828125,
+    0.7964419555664063,
+    0.7587135823567709,
+    0.8153139241536458,
+    0.7961232503255208,
+    0.7806824747721354,
+    0.8005543009440104,
+    0.8005543009440104,
+    0.8076812744140625,
+    0.8147956339518229
+  ],
+  "balanced_accuracy": [
+    0.3333333432674408,
+    0.3946274220943451,
+    0.4835277497768402,
+    0.534680962562561,
+    0.5579503178596497,
+    0.6081581711769104,
+    0.61248379945755,
+    0.6827630400657654,
+    0.7292399406433105,
+    0.6884127259254456,
+    0.7542905807495117,
+    0.774437665939331,
+    0.7850975394248962,
+    0.7631382346153259,
+    0.8020467162132263,
+    0.8133461475372314,
+    0.7863767147064209,
+    0.8309348225593567,
+    0.8146252632141113,
+    0.803325891494751,
+    0.8202750086784363,
+    0.8202750086784363,
+    0.8259246945381165,
+    0.8315744400024414
+  ],
+  "generalization_gap": [
+    -0.022894313070509265,
+    -0.05126064591937607,
+    -0.04136310895284012,
+    -0.06453287177615707,
+    0.02331856356726758,
+    -0.053960527314080076,
+    0.042020359569125754,
+    0.01867102954122757,
+    0.012823107110129461,
+    0.10899977087974544,
+    0.011652746730380525,
+    -0.004854511287477381,
+    -0.06145079996850755,
+    0.05140721003214521,
+    -0.004958051310645306,
+    0.010445192919837143,
+    -0.04757776657740276,
+    -0.04052976277139453,
+    -0.007721218201849234,
+    -0.0250162480274837,
+    -0.03759728080696534,
+    -0.04073620445198478,
+    -0.03671971155537501,
+    -0.028067324823803363
+  ],
+  "per_class_accuracy": [
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.0,
+      "kayısı_sağlıklı_yaprak_302": 0.0,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 1.0
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6415094137191772,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.5423728823661804
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.8157894611358643,
+      "kayısı_sağlıklı_yaprak_302": 0.07547169923782349,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.5593220591545105
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.8947368264198303,
+      "kayısı_sağlıklı_yaprak_302": 0.6415094137191772,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.06779661029577255
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.9210526347160339,
+      "kayısı_sağlıklı_yaprak_302": 0.7358490824699402,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.016949152573943138
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.9210526347160339,
+      "kayısı_sağlıklı_yaprak_302": 0.7169811129570007,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.18644067645072937
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 0.9736841917037964,
+      "kayısı_sağlıklı_yaprak_302": 0.6603773832321167,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.20338982343673706
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6415094137191772,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.4067796468734741
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6792452931404114,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.508474588394165
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6415094137191772,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.4237288236618042
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.5849056839942932,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.6779661178588867
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6792452931404114,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.6440678238868713
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6603773832321167,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.694915235042572
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6792452931404114,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.6101694703102112
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6603773832321167,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7457627058029175
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6603773832321167,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7796609997749329
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.6610169410705566
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.6792452931404114,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.8135592937469482
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7457627058029175
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7118644118309021
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7627118825912476
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7627118825912476
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7796609997749329
+    },
+    {
+      "kayısı_şarka_virüsü_yaprak_206": 1.0,
+      "kayısı_sağlıklı_yaprak_302": 0.698113203048706,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 0.7966101765632629
+    }
+  ],
+  "worst_classes": [
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.0,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 38
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 1.0,
+        "support": 59
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.0,
+        "support": 38
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.5423728823661804,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6415094137191772,
+        "support": 53
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.07547169923782349,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.5593220591545105,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8157894611358643,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.06779661029577255,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6415094137191772,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.8947368264198303,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.016949152573943138,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.7358490824699402,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9210526347160339,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.18644067645072937,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.7169811129570007,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9210526347160339,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.20338982343673706,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6603773832321167,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 0.9736841917037964,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.4067796468734741,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6415094137191772,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.508474588394165,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6792452931404114,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.4237288236618042,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6415094137191772,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.5849056839942932,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6779661178588867,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6440678238868713,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6792452931404114,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6603773832321167,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.694915235042572,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6101694703102112,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6792452931404114,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6603773832321167,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7457627058029175,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6603773832321167,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7796609997749329,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.6610169410705566,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.6792452931404114,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.8135592937469482,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7457627058029175,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7118644118309021,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7627118825912476,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7627118825912476,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7796609997749329,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ],
+    [
+      {
+        "class_name": "kayısı_sağlıklı_yaprak_302",
+        "class_index": 1,
+        "accuracy": 0.698113203048706,
+        "support": 53
+      },
+      {
+        "class_name": "kayısı_yaprak_delen_çil_hastalığı_yaprak_300",
+        "class_index": 2,
+        "accuracy": 0.7966101765632629,
+        "support": 59
+      },
+      {
+        "class_name": "kayısı_şarka_virüsü_yaprak_206",
+        "class_index": 0,
+        "accuracy": 1.0,
+        "support": 38
+      }
+    ]
+  ],
+  "stopped_early": false,
+  "global_step": 216,
+  "optimizer_steps": 216,
+  "resume_start_epoch": 0,
+  "best_metric_name": "val_loss",
+  "best_epoch": 22,
+  "best_metric_value": 0.5910068358977636
+}
