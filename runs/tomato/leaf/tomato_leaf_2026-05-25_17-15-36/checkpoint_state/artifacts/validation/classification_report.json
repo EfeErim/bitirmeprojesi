@@ -1,0 +1,75 @@
+{
+  "domates_bacterial_spot_and_speck_yaprak": {
+    "precision": 0.9056603773584906,
+    "recall": 0.8674698795180723,
+    "f1-score": 0.8861538461538462,
+    "support": 166.0
+  },
+  "domates_early_blight_yaprak": {
+    "precision": 0.8828125,
+    "recall": 0.7902097902097902,
+    "f1-score": 0.8339483394833949,
+    "support": 143.0
+  },
+  "domates_late_blight_yaprak": {
+    "precision": 0.8475609756097561,
+    "recall": 0.8633540372670807,
+    "f1-score": 0.8553846153846154,
+    "support": 161.0
+  },
+  "domates_leaf_mold_yaprak": {
+    "precision": 0.9230769230769231,
+    "recall": 0.9504950495049505,
+    "f1-score": 0.9365853658536586,
+    "support": 101.0
+  },
+  "domates_mosaic_virüs_yaprak": {
+    "precision": 1.0,
+    "recall": 0.8245614035087719,
+    "f1-score": 0.9038461538461539,
+    "support": 114.0
+  },
+  "domates_powdery_mildew_yaprak": {
+    "precision": 0.7142857142857143,
+    "recall": 0.9433962264150944,
+    "f1-score": 0.8130081300813008,
+    "support": 53.0
+  },
+  "domates_sağlıklı_yaprak": {
+    "precision": 0.8870967741935484,
+    "recall": 0.9734513274336283,
+    "f1-score": 0.9282700421940928,
+    "support": 113.0
+  },
+  "domates_septoria_leaf_spot_yaprak": {
+    "precision": 0.8863636363636364,
+    "recall": 0.8796992481203008,
+    "f1-score": 0.8830188679245283,
+    "support": 133.0
+  },
+  "domates_spotted_wilt_yaprak": {
+    "precision": 0.9438202247191011,
+    "recall": 1.0,
+    "f1-score": 0.9710982658959537,
+    "support": 84.0
+  },
+  "domates_yellow_leaf_curl_yaprak": {
+    "precision": 0.9367088607594937,
+    "recall": 0.961038961038961,
+    "f1-score": 0.9487179487179487,
+    "support": 154.0
+  },
+  "accuracy": 0.8960720130932897,
+  "macro avg": {
+    "precision": 0.8927385986366664,
+    "recall": 0.905367592301665,
+    "f1-score": 0.8960031575535494,
+    "support": 1222.0
+  },
+  "weighted avg": {
+    "precision": 0.8999913272145608,
+    "recall": 0.8960720130932897,
+    "f1-score": 0.8959140189102258,
+    "support": 1222.0
+  }
+}
