@@ -1,5 +1,0 @@
-class,precision,recall,f1-score,support
-strawberry_anthracnose_fruit,0.8666666666666667,0.7647058823529411,0.8125,17.0
-strawberry_gray_mold_fruit,0.8690476190476191,0.9240506329113924,0.8957055214723927,79.0
-strawberry_healthy_fruit,1.0,1.0,1.0,104.0
-strawberry_powdery_mildew_fruit,0.8,0.6956521739130435,0.7441860465116279,23.0

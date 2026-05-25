@@ -1,4 +1,0 @@
-class,precision,recall,f1-score,support
-kayısı_s_arka_viru_su_yaprak_206,0.96,0.9056603773584906,0.9320388349514563,53.0
-kayısı_sag_lıklı_yaprak_302,0.8636363636363636,1.0,0.926829268292683,38.0
-kayısı_yaprak_delen_c_il_hastalıg_ı_yaprak_300,0.9642857142857143,0.9152542372881356,0.9391304347826087,59.0

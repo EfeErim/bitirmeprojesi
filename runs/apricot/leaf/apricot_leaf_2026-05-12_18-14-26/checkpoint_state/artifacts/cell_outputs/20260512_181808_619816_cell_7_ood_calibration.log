@@ -1,7 +1,0 @@
-[CELL_CAPTURE] cell=Cell 7: OOD Calibration
-run_id=apricot_leaf_2026-05-12_18-14-26
-started_at=2026-05-12T18:18:08.619840+00:00
-finished_at=2026-05-12T18:18:09.430497+00:00
-duration_sec=0.811
-
-[OOD] Kalibrasyon tamamlandi. classes=3 version=1
