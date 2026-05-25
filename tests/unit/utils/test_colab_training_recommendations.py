@@ -4,6 +4,7 @@ from scripts.colab_training_recommendations import (
     inspect_runtime_dataset,
     resolve_notebook_params,
 )
+from scripts.notebook_helpers.adapter_recommendations import get_adapter_recs
 
 
 def _write_images(root: Path, split_name: str, class_name: str, count: int) -> None:
@@ -195,3 +196,12 @@ def test_resolve_notebook_params_honors_manual_overrides_without_recommendations
     assert resolved["EPOCHS"] == 12
     assert resolved["BATCH_SIZE"] == 20
     assert resolved["PIN_MEMORY"] is False
+
+
+def test_strawberry_fruit_recommendation_uses_canonical_ood_oe_roots():
+    rec = get_adapter_recs()["strawberry__fruit"]
+
+    assert rec["ood"] == "data/ood_dataset/final/strawberry__fruit_ood_final"
+    assert rec["oe"] == "data/oe_dataset/strawberry_fruit_oe_candidates"
+    assert "prepared_runtime_datasets/strawberry__fruit/ood" not in rec["ood"]
+    assert "prepared_runtime_datasets/strawberry__fruit/oe" not in rec["oe"]
