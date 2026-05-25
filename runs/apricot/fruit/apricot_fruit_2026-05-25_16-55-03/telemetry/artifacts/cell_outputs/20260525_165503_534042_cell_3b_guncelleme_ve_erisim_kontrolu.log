@@ -1,0 +1,10 @@
+[CELL_CAPTURE] cell=Cell 3b: Guncelleme ve Erisim Kontrolu
+run_id=apricot_fruit_2026-05-25_16-55-03
+started_at=2026-05-25T16:55:03.534066+00:00
+finished_at=2026-05-25T16:55:04.295628+00:00
+duration_sec=0.762
+
+[KONTROL] Repo guncel gorunuyor.
+[KONTROL] GitHub okuma erisimi public; clone/pull icin ekstra token gerekmiyor.
+[KONTROL] GitHub push icin kimlik bilgisi hazir.
+[KONTROL] Gerekli Hugging Face modelleri anonim erisimle aciliyor.

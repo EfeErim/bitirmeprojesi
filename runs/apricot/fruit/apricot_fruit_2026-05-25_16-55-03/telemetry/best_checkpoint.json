@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e22_s462_20260525_165757_730210",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/apricot_fruit_2026-05-25_16-55-03/checkpoints/ckpt_e22_s462_20260525_165757_730210/training_checkpoint",
+  "created_at": "2026-05-25T16:57:59.160434+00:00",
+  "global_step": 462,
+  "epoch": 22,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.2174066986689078
+}
