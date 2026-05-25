@@ -147,11 +147,20 @@ def _drive_destination_parent(DATASET_ROOT: str | Path, ROOT: Path) -> Path:
     return ROOT / "data" / "imported_from_drive"
 
 
+def _read_gitignore_lines(path: str | Path) -> tuple[list[str], str]:
+    for encoding in ("utf-8-sig", "utf-8", "cp1254", "latin-1"):
+        try:
+            with open(path, "r", encoding=encoding) as f:
+                return f.readlines(), encoding
+        except UnicodeDecodeError:
+            continue
+    raise UnicodeDecodeError("utf-8", b"", 0, 1, "unsupported .gitignore encoding")
+
+
 def fix_gitignore(ROOT: Path) -> None:
     gitignore_file = str(ROOT / ".gitignore")
     try:
-        with open(gitignore_file, "r") as f:
-            lines = f.readlines()
+        lines, gitignore_encoding = _read_gitignore_lines(gitignore_file)
         new_lines = []
         i = 0
         while i < len(lines):
@@ -164,7 +173,7 @@ def fix_gitignore(ROOT: Path) -> None:
                     new_lines.append("!data/prepared_runtime_datasets/*/\n")
                     new_lines.append("!data/prepared_runtime_datasets/**/*\n")
             i += 1
-        with open(gitignore_file, "w") as f:
+        with open(gitignore_file, "w", encoding=gitignore_encoding) as f:
             f.writelines(new_lines)
         print("[PREP] .gitignore fixed")
     except Exception as e:

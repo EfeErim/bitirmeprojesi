@@ -68,3 +68,38 @@ def test_runtime_materialization_uses_copy_for_portable_prepared_dataset(tmp_pat
     assert calls[0]["materialization_strategy"] == "copy"
     assert state["runtime_dataset_root"] == tmp_path / "data" / "prepared_runtime_datasets"
     assert telemetry.closed_payloads[-1]["materialized"] is True
+
+
+def test_fix_gitignore_handles_legacy_turkish_encoding(tmp_path: Path):
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_bytes(
+        b"# legacy cp1254 comment: \xc7ilek\n"
+        b"data/prepared_runtime_datasets/*\n"
+        b"!data/prepared_runtime_datasets/.gitkeep\n"
+    )
+
+    nb0.fix_gitignore(tmp_path)
+
+    text = gitignore.read_text(encoding="cp1254")
+    assert "# legacy cp1254 comment: Cilek" not in text
+    assert "# legacy cp1254 comment: \u00c7ilek" in text
+    assert "!data/prepared_runtime_datasets/*/" in text
+    assert "!data/prepared_runtime_datasets/**/*" in text
+
+
+def test_nb0_cell09_gitignore_fix_handles_legacy_turkish_encoding(tmp_path: Path):
+    gitignore = tmp_path / ".gitignore"
+    gitignore.write_bytes(
+        b"# legacy cp1254 comment: \xc7ilek\n"
+        b"data/prepared_runtime_datasets/*\n"
+        b"!data/prepared_runtime_datasets/.gitkeep\n"
+    )
+    script_path = Path("scripts/notebook_cells/nb0_cell09_gitignore_fix.py")
+    namespace = {"ROOT": tmp_path}
+
+    exec(compile(script_path.read_text(encoding="utf-8"), str(script_path), "exec"), namespace)
+
+    text = gitignore.read_text(encoding="cp1254")
+    assert "# legacy cp1254 comment: \u00c7ilek" in text
+    assert "!data/prepared_runtime_datasets/*/" in text
+    assert "!data/prepared_runtime_datasets/**/*" in text

@@ -1,10 +1,20 @@
 # Auto-extracted from colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb cell 9.
 # Keep notebook execute-only cells thin; edit behavior here.
 
+
+def _read_gitignore_lines(path):
+    for encoding in ("utf-8-sig", "utf-8", "cp1254", "latin-1"):
+        try:
+            with open(path, "r", encoding=encoding) as f:
+                return f.readlines(), encoding
+        except UnicodeDecodeError:
+            continue
+    raise UnicodeDecodeError("utf-8", b"", 0, 1, "unsupported .gitignore encoding")
+
+
 # Fix .gitignore for prepared_runtime_datasets
 gitignore_file = str(ROOT / ".gitignore")
-with open(gitignore_file, "r") as f:
-    lines = f.readlines()
+lines, gitignore_encoding = _read_gitignore_lines(gitignore_file)
 
 # Find the line with "data/prepared_runtime_datasets/*"
 new_lines = []
@@ -23,7 +33,7 @@ while i < len(lines):
     i += 1
 
 # Write back
-with open(gitignore_file, "w") as f:
+with open(gitignore_file, "w", encoding=gitignore_encoding) as f:
     f.writelines(new_lines)
 
 print("OK: .gitignore fixed")
