@@ -638,48 +638,22 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-23T08:06:10Z`
+Generated: `2026-05-25T06:28:09Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
 Candidate scan could not query all configured sources:
 
-- `out-of-distribution detection`: network access blocked by local permissions
-- `energy based ood`: network access blocked by local permissions
-- `mahalanobis ood`: network access blocked by local permissions
-- `logitnorm`: network access blocked by local permissions
-- `selective prediction`: network access blocked by local permissions
-- `segment anything`: network access blocked by local permissions
-- `sam segmentation`: network access blocked by local permissions
-- `bioclip`: network access blocked by local permissions
-- `router calibration`: network access blocked by local permissions
-- `conformal prediction`: network access blocked by local permissions
-
-Manual web fallback checked on 2026-05-23 because the local arXiv API call was blocked. These are not accepted repo guidance until a maintainer promotes them into the Literature Anchors table above.
-
-##### Selecting Informative Conformal Prediction Sets with an Optimized FCR-Controlled Approach
-
-- Query: `conformal prediction`
-- Published: `2026-05-21`
-- Authors: Israela Solomon, Etienne Roquain, Saharon Rosset, Ruth Heller
-- Link: https://arxiv.org/abs/2605.22004
-- Review note: Relevant to selective prediction because it studies informative conformal sets and FCR control after selection; consider only as a reviewer candidate for future abstention/risk-coverage work.
-
-##### Conformal Selective Prediction with General Risk Control
-
-- Query: `selective prediction`
-- Published: `2026-03-25`
-- Authors: Tian Bai, Ying Jin
-- Link: https://arxiv.org/abs/2603.24704
-- Review note: Relevant to trust/abstain decisions because it frames selective decisions with finite-sample risk control; review before any implementation claim.
-
-##### Multi-Variable Conformal Prediction: Optimizing Prediction Sets without Data Splitting
-
-- Query: `conformal prediction`
-- Published: `2026-05-12`
-- Authors: Laura Lutzow, Simone Garatti, Marco C. Campi, Lars Lindemann, Matthias Althoff
-- Link: https://arxiv.org/abs/2605.12341
-- Review note: Relevant as a calibration-method candidate, but not directly repo policy until evaluated against AADS router/adapter constraints.
+- `out-of-distribution detection`: query timed out
+- `energy based ood`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aenergy+based+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `mahalanobis ood`: query timed out
+- `logitnorm`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Alogitnorm&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `selective prediction`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aselective+prediction&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `segment anything`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asegment+anything&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `sam segmentation`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asam+segmentation&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `bioclip`: query timed out
+- `router calibration`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Arouter+calibration&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `conformal prediction`: query timed out
 
 
 #### Repo Bug / Weak Point / Improvement Scan
