@@ -1,11 +1,11 @@
 {
   "schema_version": "v1_training_run_registry",
-  "generated_at": "2026-05-25T09:10:45.731963+00:00",
+  "generated_at": "2026-05-25T18:02:45.858862+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "bayesian_optimization_enabled": true,
-  "trial_count": 27,
+  "trial_count": 34,
   "canonical_count": 0,
-  "backfilled_count": 27,
+  "backfilled_count": 34,
   "cohort_count": 8,
   "paths": {
     "trials_jsonl": "D:\\bitirme projesi\\runs\\_index\\trials.jsonl",
@@ -19,7 +19,7 @@
   "cohorts": [
     {
       "cohort_key": "apricot__fruit::apricot::fruit::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "apricot__fruit",
         "crop_name": "apricot",
@@ -31,7 +31,7 @@
     },
     {
       "cohort_key": "apricot__leaf::apricot::leaf::continual_sd_lora",
-      "run_count": 4,
+      "run_count": 5,
       "comparability": {
         "dataset_lineage_key": "apricot__leaf",
         "crop_name": "apricot",
@@ -43,7 +43,7 @@
     },
     {
       "cohort_key": "grape__fruit::grape::fruit::continual_sd_lora",
-      "run_count": 3,
+      "run_count": 4,
       "comparability": {
         "dataset_lineage_key": "grape__fruit",
         "crop_name": "grape",
@@ -55,7 +55,7 @@
     },
     {
       "cohort_key": "grape__leaf::grape::leaf::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "grape__leaf",
         "crop_name": "grape",
@@ -79,7 +79,7 @@
     },
     {
       "cohort_key": "strawberry__leaf::strawberry::leaf::continual_sd_lora",
-      "run_count": 2,
+      "run_count": 3,
       "comparability": {
         "dataset_lineage_key": "strawberry__leaf",
         "crop_name": "strawberry",
@@ -91,7 +91,7 @@
     },
     {
       "cohort_key": "tomato__fruit::tomato::fruit::continual_sd_lora",
-      "run_count": 5,
+      "run_count": 6,
       "comparability": {
         "dataset_lineage_key": "tomato__fruit",
         "crop_name": "tomato",
@@ -103,7 +103,7 @@
     },
     {
       "cohort_key": "tomato__leaf::tomato::leaf::continual_sd_lora",
-      "run_count": 3,
+      "run_count": 4,
       "comparability": {
         "dataset_lineage_key": "tomato__leaf",
         "crop_name": "tomato",

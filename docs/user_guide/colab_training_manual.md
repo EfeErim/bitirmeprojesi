@@ -18,6 +18,13 @@ The repo also tracks one auxiliary notebook:
 
 Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts. Notebook 8 is a thin single-image wrapper over Notebook 1's router cells plus the canonical inference workflow.
 
+Two additional notebook surfaces are kept for maintenance and regression checks:
+
+- Notebook 6: `colab_notebooks/6_train_all_continual_sd_lora_adapters.ipynb`
+- Notebook 7: `colab_notebooks/7_ood_oe_quality.ipynb`
+
+Notebook 6 exercises the maintained Notebook 2 training cell contract across multiple adapters. Notebook 7 audits prepared-runtime OOD/OE quality and review decisions. Neither is a primary user entrypoint, but both are intentionally kept because tests and maintenance flows rely on them.
+
 If you are brand new to the repo, read [../../README.md](../../README.md) first.
 
 ## What You Will Do In These Notebooks

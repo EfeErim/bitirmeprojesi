@@ -143,13 +143,22 @@ a plant part held for inspection
 At runtime, append configured crop names from `router.crop_mapping` and taxonomy:
 
 ```text
+a wheat plant
+a maize plant
+a barley plant
+a sugar beet plant
+a sunflower plant
+a cotton plant
 a tomato plant
 a tomato leaf
 a tomato fruit
 a potato plant
 a potato leaf
-a wheat plant
-a wheat leaf
+a grape plant
+a strawberry plant
+a apricot plant
+a hazelnut plant
+a apple plant
 ```
 
 Do not hard-code only these examples. Generate the crop prompts from the repo taxonomy/config so future crops inherit the guard.

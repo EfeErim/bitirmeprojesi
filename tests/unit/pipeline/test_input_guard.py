@@ -2,10 +2,32 @@ import pytest
 from PIL import Image
 
 from src.pipeline import input_guard
+from src.pipeline.input_guard import SUPPORTED_CROP_PROMPT_CROPS
 
 
 class FakeRuntime:
     crop_labels = ["pepper"]
+
+
+def test_supported_crop_prompts_include_turkey_priority_top_10(monkeypatch):
+    def _fake_score(runtime, image, labels, *, label_type="generic", num_prompts=None):
+        del runtime, image, label_type, num_prompts
+        return labels[0], 0.05, {labels[0]: 0.05}
+
+    monkeypatch.setattr(input_guard.clip_runtime, "clip_score_labels_ensemble", _fake_score)
+
+    prompts = input_guard._build_supported_crop_prompts(
+        FakeRuntime(),
+        {"router": {"crop_mapping": {"pepper": {"parts": ["leaf"]}}}},
+    )
+
+    for crop_name in SUPPORTED_CROP_PROMPT_CROPS:
+        assert f"a {crop_name} plant" in prompts
+        assert f"a {crop_name} leaf" in prompts
+        assert f"a {crop_name} fruit" in prompts
+    assert "a hazelnut fruit cluster" in prompts
+    assert "a apricot fruit" in prompts
+    assert "a strawberry fruit" in prompts
 
 
 def test_plantness_guard_rejects_when_negative_prompt_margin_dominates(monkeypatch):

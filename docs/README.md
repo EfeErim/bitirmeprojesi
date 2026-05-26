@@ -25,6 +25,7 @@ Use this file as the routing index. If you are new, start with [../README.md](..
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
 - Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
+- Validation-only notebook surfaces: `colab_notebooks/6_train_all_continual_sd_lora_adapters.ipynb`, `colab_notebooks/7_ood_oe_quality.ipynb`
 - Optional plantness input guard config: `inference.input_guard`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`
@@ -38,6 +39,10 @@ Optimizer status note:
 
 - Notebook 2 enables adapter/cohort-scoped Bayesian recommendations by default with `ENABLE_BAYESIAN_OPTIMIZATION=True`.
 - The standalone registry and optimizer CLIs still require an explicit Bayesian flag before writing `bayesian_recommendations.json`.
+
+Generated / local-only surfaces:
+
+- `runs/`, `models/adapters/`, `outputs/`, `data/prepared_runtime_datasets/`, and `.runtime_tmp/` are generated or local-working directories and should not be treated as canonical source.
 
 Dataset formats:
 

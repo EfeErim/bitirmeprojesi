@@ -7,10 +7,23 @@ from typing import Any, Dict, Iterable, List, Optional
 from PIL import Image
 
 from src.router import clip_runtime
+from src.router.prompt_clip_utils import (
+    TURKEY_PRIORITY_CROP_PARTS,
+    TURKEY_PRIORITY_TOP_10_CROPS,
+    canonicalize_crop_prompt_label,
+    crop_prompt_aliases,
+)
 from src.router.runtime_surface import coerce_bool, coerce_float
 from src.shared.contracts import InputGuardAnalysis
 
 METHOD_NAME = "bioclip_prompt_plantness"
+
+SUPPORTED_CROP_PROMPT_CROPS = (
+    *TURKEY_PRIORITY_TOP_10_CROPS,
+    "hazelnut",
+    "apricot",
+    "strawberry",
+)
 
 POSITIVE_PROMPT_GROUPS: Dict[str, List[str]] = {
     "generic_plant": [
@@ -260,13 +273,29 @@ def _build_supported_crop_prompts(runtime: Any, config: Dict[str, Any]) -> List[
         [
             *list(getattr(runtime, "crop_labels", []) or []),
             *_configured_crop_names(config),
+            *list(SUPPORTED_CROP_PROMPT_CROPS),
         ]
     )
+    aliases = crop_prompt_aliases()
     prompts: List[str] = []
     for crop_name in crop_names:
-        prompts.append(f"a {crop_name} plant")
-        prompts.append(f"a {crop_name} leaf")
-        prompts.append(f"a {crop_name} fruit")
+        canonical_crop = canonicalize_crop_prompt_label(crop_name)
+        alias_terms = aliases.get(canonical_crop, aliases.get(str(crop_name).strip().lower(), [crop_name]))
+        crop_terms = _unique_terms([crop_name, canonical_crop, *alias_terms])
+        parts = _unique_terms(
+            [
+                "plant",
+                *list(TURKEY_PRIORITY_CROP_PARTS.get(canonical_crop or str(crop_name).strip().lower(), [])),
+                "leaf",
+                "fruit",
+                "flower",
+                "stem",
+                "whole plant",
+            ]
+        )
+        for term in crop_terms:
+            for part in parts:
+                prompts.append(f"a {term} {part}")
     return _unique_terms(prompts)
 
 

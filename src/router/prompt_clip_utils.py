@@ -16,7 +16,21 @@ TURKEY_PRIORITY_CROP_ALIASES: Dict[str, List[str]] = {
     'olive': ['olive', 'olive tree', 'Olea europaea'],
     'sunflower': ['sunflower', 'Helianthus annuus'],
     'cotton': ['cotton', 'Gossypium'],
+    'apple': ['apple', 'apple tree', 'Malus domestica'],
 }
+
+TURKEY_PRIORITY_TOP_10_CROPS: Tuple[str, ...] = (
+    'wheat',
+    'maize',
+    'barley',
+    'sugar beet',
+    'sunflower',
+    'cotton',
+    'tomato',
+    'potato',
+    'grape',
+    'apple',
+)
 
 TURKEY_PRIORITY_CROP_PARTS: Dict[str, List[str]] = {
     'wheat': ['leaf', 'stem', 'root', 'grain', 'ear', 'spike', 'kernel', 'seedling', 'whole plant'],
@@ -37,6 +51,41 @@ TURKEY_PRIORITY_CROP_PARTS: Dict[str, List[str]] = {
     'olive': ['leaf', 'fruit', 'flower', 'branch', 'stem', 'bark', 'trunk', 'seed', 'whole plant'],
     'sunflower': ['leaf', 'flower', 'head', 'stem', 'seed', 'root', 'bud', 'seedling', 'whole plant'],
     'cotton': ['leaf', 'flower', 'boll', 'stem', 'root', 'seed', 'bud', 'branch', 'whole plant'],
+    'apple': ['leaf', 'fruit', 'flower', 'branch', 'bark', 'stem', 'whole plant', 'bud', 'seed'],
+}
+
+TURKEY_PRIORITY_PART_ALIASES: Dict[str, List[str]] = {
+    'leaf': ['leaf', 'leaves', 'plant leaf', 'plant leaves', 'crop leaf', 'crop leaves'],
+    'fruit': ['fruit', 'fruits', 'plant fruit', 'plant fruits', 'crop fruit', 'crop fruits'],
+    'stem': ['stem', 'stems', 'plant stem', 'crop stem', 'shoot'],
+    'flower': ['flower', 'flowers', 'plant flower', 'crop flower', 'bloom', 'blossom'],
+    'root': ['root', 'roots', 'plant root', 'crop root'],
+    'tuber': ['tuber', 'tubers', 'plant tuber', 'crop tuber'],
+    'ear': ['ear', 'ears', 'grain ear', 'seed head'],
+    'spike': ['spike', 'spikes', 'plant spike', 'grain spike'],
+    'grain': ['grain', 'grains', 'seed', 'seeds', 'kernel', 'kernels'],
+    'seed': ['seed', 'seeds', 'kernel', 'kernels', 'grain'],
+    'berry': ['berry', 'berries', 'fruit berry'],
+    'boll': ['boll', 'bolls', 'cotton boll'],
+    'bud': ['bud', 'buds', 'flower bud', 'shoot bud'],
+    'branch': ['branch', 'branches', 'twig'],
+    'bark': ['bark', 'tree bark'],
+    'whole plant': ['whole plant', 'whole', 'entire plant', 'plant'],
+    'plant': ['plant', 'whole plant', 'entire plant'],
+    'cob': ['cob', 'corn cob', 'maize cob'],
+    'head': ['head', 'flower head', 'seed head'],
+    'husk': ['husk', 'husks'],
+    'shell': ['shell', 'shells'],
+    'pod': ['pod', 'pods'],
+    'crown': ['crown', 'plant crown'],
+    'bulb': ['bulb', 'bulbs'],
+    'catkin': ['catkin', 'catkins'],
+    'kernel': ['kernel', 'kernels'],
+    'tendril': ['tendril', 'tendrils'],
+    'vine': ['vine', 'vines', 'grapevine'],
+    'trunk': ['trunk', 'tree trunk'],
+    'shoot': ['shoot', 'shoots', 'sprout'],
+    'seedling': ['seedling', 'seedlings', 'young plant'],
 }
 
 
@@ -44,16 +93,39 @@ def _crop_key(label: str) -> str:
     return str(label or '').strip().lower()
 
 
+def _crop_alias_to_canonical() -> Dict[str, str]:
+    canonical_by_alias: Dict[str, str] = {}
+    for canonical_label, aliases in TURKEY_PRIORITY_CROP_ALIASES.items():
+        canonical_key = _crop_key(canonical_label)
+        if canonical_key:
+            canonical_by_alias[canonical_key] = canonical_key
+        for alias in aliases:
+            alias_key = _crop_key(alias)
+            if alias_key:
+                canonical_by_alias[alias_key] = canonical_key
+    return canonical_by_alias
+
+
+def canonicalize_crop_prompt_label(label: str) -> str:
+    """Resolve crop aliases to a maintained canonical label for prompt generation."""
+    label_key = _crop_key(label)
+    if not label_key:
+        return ""
+    return _crop_alias_to_canonical().get(label_key, label_key)
+
+
 def default_prompt_templates_for_type(label_type: str) -> List[str]:
     """Return built-in prompt templates for a semantic label type."""
     if label_type == 'part':
         return [
-            "a photo of a plant {term}",
-            "a close-up photo of a plant {term}",
-            "a macro photo of a plant {term}",
+            "a photo of a {term}",
+            "a close-up photo of a {term}",
+            "a macro photo of a {term}",
+            "a detailed photo of a {term}",
+            "a {term} on a plant",
+            "a healthy {term}",
+            "a diseased {term}",
             "a {term} with damage",
-            "a {term} with disease",
-            "a diseased plant {term}",
         ]
     if label_type == 'crop':
         return [
@@ -75,6 +147,16 @@ def _crop_part_prompt_variants(term: str, part: str) -> List[str]:
         f"a close-up photo of a {term} {part}",
         f"a diseased {term} {part}",
     ]
+
+
+def _part_key(label: str) -> str:
+    return str(label or '').strip().lower()
+
+
+def part_prompt_aliases() -> Dict[str, List[str]]:
+    """Return part prompt aliases used to broaden zero-shot organ coverage."""
+    aliases = dict(TURKEY_PRIORITY_PART_ALIASES)
+    return aliases
 
 
 def get_prompt_templates_for_type(vlm_config: Dict[str, Any], label_type: str) -> List[str]:
@@ -107,17 +189,29 @@ def build_prompt_ensemble(label: str, label_type: str, vlm_config: Dict[str, Any
     custom_templates = prompt_templates_cfg.get(label_type, []) if isinstance(prompt_templates_cfg, dict) else []
 
     if label_type == 'part':
-        templates = custom_templates if custom_templates else default_prompt_templates_for_type(label_type)
-        base_terms = [label_text]
-    else:
-        aliases = crop_prompt_aliases()
-        alias_terms = aliases.get(label_text.lower(), [label_text])
+        aliases = part_prompt_aliases()
+        alias_terms = aliases.get(_part_key(label_text), [label_text])
         base_terms = [term for term in [label_text, *alias_terms] if isinstance(term, str) and term.strip()]
+        templates = custom_templates if custom_templates else default_prompt_templates_for_type(label_type)
+    else:
+        canonical_label = canonicalize_crop_prompt_label(label_text)
+        aliases = crop_prompt_aliases()
+        alias_terms = aliases.get(canonical_label, aliases.get(label_text.lower(), [label_text]))
+        base_terms = [term for term in [canonical_label, label_text, *alias_terms] if isinstance(term, str) and term.strip()]
 
         templates = custom_templates if custom_templates else default_prompt_templates_for_type(label_type)
 
     prompts: List[str] = []
     seen = set()
+    if label_type == 'crop' and not custom_templates:
+        canonical_crop = canonicalize_crop_prompt_label(label_text)
+        for part_name in TURKEY_PRIORITY_CROP_PARTS.get(canonical_crop or _crop_key(label_text), []):
+            for prompt in _crop_part_prompt_variants(canonical_crop or label_text, part_name):
+                key = prompt.lower()
+                if key not in seen:
+                    seen.add(key)
+                    prompts.append(prompt)
+
     for term in base_terms:
         clean_term = term.strip()
         for template in templates:
@@ -126,13 +220,6 @@ def build_prompt_ensemble(label: str, label_type: str, vlm_config: Dict[str, Any
             if key not in seen:
                 seen.add(key)
                 prompts.append(prompt)
-        if label_type == 'crop' and not custom_templates:
-            for part_name in TURKEY_PRIORITY_CROP_PARTS.get(_crop_key(label_text), []):
-                for prompt in _crop_part_prompt_variants(clean_term, part_name):
-                    key = prompt.lower()
-                    if key not in seen:
-                        seen.add(key)
-                        prompts.append(prompt)
     return prompts
 
 

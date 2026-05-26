@@ -1,6 +1,6 @@
 {
   "schema_version": "v1_training_pareto_frontiers",
-  "generated_at": "2026-05-25T09:10:45.733651+00:00",
+  "generated_at": "2026-05-25T18:02:45.861177+00:00",
   "optimization_profile": "accuracy_plus_ood",
   "objective_names": [
     "classification.macro_f1",
@@ -29,12 +29,13 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 2,
+      "eligible_run_count": 3,
       "excluded_run_count": 0,
-      "frontier_count": 2,
+      "frontier_count": 3,
       "frontier_run_ids": [
         "apricot_fruit_2026-05-14_08-45-33",
-        "apricot_fruit_2026-05-24_14-32-10"
+        "apricot_fruit_2026-05-24_14-32-10",
+        "apricot_fruit_2026-05-25_16-55-03"
       ],
       "frontier_runs": [
         {
@@ -122,6 +123,49 @@
             "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\apricot\\fruit\\apricot_fruit_2026-05-24_14-32-10\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "apricot_fruit_2026-05-25_16-55-03",
+          "run_label": "apricot_fruit_2026-05-25_16-55-03",
+          "created_at": "2026-05-25T16:58:49.939408+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.949999988079071,
+            "classification.balanced_accuracy": 0.9038479130931961,
+            "classification.macro_f1": 0.8960733645385964,
+            "classification.weighted_f1": 0.9504366094263791,
+            "classification.classification_samples": 280,
+            "ood.ood_auroc": 0.9179723502304147,
+            "ood.ood_false_positive_rate": 0.3357142857142857,
+            "ood.sure_ds_f1": 0.41530782029950086,
+            "ood.conformal_empirical_coverage": 0.9642857142857143,
+            "ood.conformal_avg_set_size": 1.0571428571428572,
+            "ood.ood_samples": 62,
+            "ood.in_distribution_samples": 280
+          },
+          "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 36,
+            "training.batch_size": 40,
+            "training.adapter.lora_r": 20,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 2.25,
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.enforce_oe_disjoint": true,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "D:\\bitirme projesi\\runs\\apricot\\fruit\\apricot_fruit_2026-05-25_16-55-03\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -146,7 +190,7 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 4,
+      "eligible_run_count": 5,
       "excluded_run_count": 0,
       "frontier_count": 4,
       "frontier_run_ids": [
@@ -351,7 +395,7 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 3,
+      "eligible_run_count": 4,
       "excluded_run_count": 0,
       "frontier_count": 3,
       "frontier_run_ids": [
@@ -512,12 +556,13 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 2,
+      "eligible_run_count": 3,
       "excluded_run_count": 0,
-      "frontier_count": 2,
+      "frontier_count": 3,
       "frontier_run_ids": [
         "grape_leaf_2026-05-13_17-55-48",
-        "grape_leaf_2026-05-14_11-30-59"
+        "grape_leaf_2026-05-14_11-30-59",
+        "grape_leaf_2026-05-25_17-03-59"
       ],
       "frontier_runs": [
         {
@@ -605,6 +650,49 @@
             "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\grape\\leaf\\grape_leaf_2026-05-14_11-30-59\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "grape_leaf_2026-05-25_17-03-59",
+          "run_label": "grape_leaf_2026-05-25_17-03-59",
+          "created_at": "2026-05-25T17:09:26.149299+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.8765432238578796,
+            "classification.balanced_accuracy": 0.8670017581083156,
+            "classification.macro_f1": 0.8572165870597542,
+            "classification.weighted_f1": 0.8762660925035582,
+            "classification.classification_samples": 324,
+            "ood.ood_auroc": 0.8229256388171117,
+            "ood.ood_false_positive_rate": 0.5246913580246914,
+            "ood.sure_ds_f1": 0.3140638481449526,
+            "ood.conformal_empirical_coverage": 0.9753086419753086,
+            "ood.conformal_avg_set_size": 2.1481481481481484,
+            "ood.ood_samples": 258,
+            "ood.in_distribution_samples": 324
+          },
+          "parameters": {
+            "training.learning_rate": 0.0001,
+            "training.num_epochs": 30,
+            "training.batch_size": 56,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 3.5,
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.enforce_oe_disjoint": true,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "D:\\bitirme projesi\\runs\\grape\\leaf\\grape_leaf_2026-05-25_17-03-59\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -922,12 +1010,13 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 2,
+      "eligible_run_count": 3,
       "excluded_run_count": 0,
-      "frontier_count": 2,
+      "frontier_count": 3,
       "frontier_run_ids": [
         "strawberry_leaf_2026-05-13_17-47-58",
-        "strawberry_leaf_2026-05-24_14-36-38"
+        "strawberry_leaf_2026-05-24_14-36-38",
+        "strawberry_leaf_2026-05-25_16-59-18"
       ],
       "frontier_runs": [
         {
@@ -1015,6 +1104,49 @@
             "training.classifier_rebalance.enabled": false
           },
           "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\leaf\\strawberry_leaf_2026-05-24_14-36-38\\outputs\\colab_notebook_training\\artifacts"
+        },
+        {
+          "run_id": "strawberry_leaf_2026-05-25_16-59-18",
+          "run_label": "strawberry_leaf_2026-05-25_16-59-18",
+          "created_at": "2026-05-25T17:03:03.655987+00:00",
+          "record_quality": "backfilled",
+          "status": {
+            "readiness_status": "failed",
+            "readiness_passed": false,
+            "authoritative_split": "test",
+            "ood_evidence_source": "real_ood_split"
+          },
+          "objectives": {
+            "classification.accuracy": 0.9979633688926697,
+            "classification.balanced_accuracy": 0.9977272727272728,
+            "classification.macro_f1": 0.997535696165833,
+            "classification.weighted_f1": 0.9979640782028975,
+            "classification.classification_samples": 491,
+            "ood.ood_auroc": 0.9619257750622313,
+            "ood.ood_false_positive_rate": 0.109979633401222,
+            "ood.sure_ds_f1": 0.6181061394380855,
+            "ood.conformal_empirical_coverage": 0.9979633401221996,
+            "ood.conformal_avg_set_size": 1.0,
+            "ood.ood_samples": 36,
+            "ood.in_distribution_samples": 491
+          },
+          "parameters": {
+            "training.learning_rate": 0.00012,
+            "training.num_epochs": 24,
+            "training.batch_size": 88,
+            "training.adapter.lora_r": 24,
+            "training.optimization.mixed_precision": "bf16",
+            "training.ood.threshold_factor": 2.0,
+            "training.ood.react_enabled": false,
+            "training.ood.oe_enabled": false,
+            "training.ood.radial_l2_enabled": false,
+            "training.ood.real_split_enabled": false,
+            "training.ood.enforce_oe_disjoint": true,
+            "training.ood.sure_enabled": false,
+            "training.ood.conformal_enabled": false,
+            "training.classifier_rebalance.enabled": false
+          },
+          "artifact_root": "D:\\bitirme projesi\\runs\\strawberry\\leaf\\strawberry_leaf_2026-05-25_16-59-18\\outputs\\colab_notebook_training\\artifacts"
         }
       ],
       "excluded_runs": []
@@ -1039,7 +1171,7 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 5,
+      "eligible_run_count": 6,
       "excluded_run_count": 0,
       "frontier_count": 5,
       "frontier_run_ids": [
@@ -1288,7 +1420,7 @@
         "ood.ood_auroc": "maximize",
         "ood.ood_false_positive_rate": "minimize"
       },
-      "eligible_run_count": 3,
+      "eligible_run_count": 4,
       "excluded_run_count": 0,
       "frontier_count": 3,
       "frontier_run_ids": [

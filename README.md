@@ -19,7 +19,7 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 - Training workflow: [src/workflows/training.py](src/workflows/training.py)
 - Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
 
-Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
+Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 6 is a batch-training regression surface used to exercise the maintained Notebook 2 cell contract, and Notebook 7 is a prepared-runtime OOD/OE quality audit surface. Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
 
 ## What the repo covers
 
@@ -28,6 +28,7 @@ Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It
 - OOD calibration and readiness reporting
 - Router-driven inference with adapter lookup
 - Direct adapter validation and router calibration notebooks
+- Validation-only notebook surfaces used by tests and maintenance checks
 
 ## Core concepts
 
