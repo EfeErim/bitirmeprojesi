@@ -26,17 +26,18 @@ class CalibrationIssue:
     message: str
 
 
+from scripts.utils.reporting import read_json, write_json
+
+
 def _read_json(path: Path) -> dict[str, Any]:
-    with path.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+    payload = read_json(path)
     if not isinstance(payload, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return payload
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_json(path, payload)
 
 
 def _metric(payload: dict[str, Any], key: str, default: float = 0.0) -> float:

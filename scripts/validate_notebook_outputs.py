@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 from datetime import datetime, timezone
+from scripts.utils.reporting import write_json
 from pathlib import Path
 from typing import Any
 
@@ -97,8 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     report = build_report(args.output_root, args.dataset_root)
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+    write_json(args.output, report)
     print(
         f"notebook_outputs status={report['status']} checked={report['checked_count']} "
         f"failures={report['fail_count']} output={args.output}"

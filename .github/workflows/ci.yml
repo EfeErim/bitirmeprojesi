@@ -75,6 +75,14 @@ jobs:
       - name: Validate router calibration stability
         run: python scripts/validate_router_calibration_stability.py --router-eval-root data/router_eval --output .runtime_tmp/router_calibration_stability_report.json
 
+      - name: Calibrate router handoff smoke (if eval data present)
+        run: |
+          if [ -d "data/router_eval" ]; then
+            python -m scripts.calibrate_router_handoff --router-eval-root data/router_eval --run-baseline --baseline-output .runtime_tmp/router_eval.json || true
+          else
+            echo "No router_eval data; skipping calibrate_router_handoff smoke"
+          fi
+
       - name: Validate adapter smoke contracts
         run: python scripts/colab_adapter_smoke_test.py --adapter-root models/adapters --output .runtime_tmp/adapter_smoke_test.json --strict
 
@@ -84,6 +92,7 @@ jobs:
       - name: Monitor dataset integrity
         run: python scripts/monitor_dataset_integrity.py --root data/prepared_runtime_datasets --output .runtime_tmp/dataset_integrity.json
 
+                 src/pipeline/adapter_discovery.py
       - name: Validate notebook outputs
         run: python scripts/validate_notebook_outputs.py --output .runtime_tmp/notebook_output_validation.json
 
@@ -95,6 +104,7 @@ jobs:
             echo "No prepared runtime datasets found, skipping validation"
           fi
 
+                 src/pipeline/adapter_discovery.py
       - name: Run static checks
         run: |
           ruff check \

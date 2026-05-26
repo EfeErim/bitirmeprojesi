@@ -1,6 +1,0 @@
-class,precision,recall,f1-score,support
-kayısı_sağlıklı_meyve_800,1.0,0.9811320754716981,0.9904761904761905,159.0
-kayısıda_çiçek_monilyası_meyve_40,1.0,1.0,1.0,8.0
-kayısıda_şarka_virüsü_meyve_230,0.9090909090909091,0.9090909090909091,0.9090909090909091,44.0
-kayısıda_şeftali_karalekesi_meyve_232,0.9148936170212766,0.9555555555555556,0.9347826086956522,45.0
-kayısıda_yaprak_delen_çil_hastalığı_meyve_128,0.72,0.75,0.7346938775510204,24.0

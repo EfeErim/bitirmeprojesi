@@ -14,7 +14,6 @@ from PIL import Image
 from src.router.confidence_utils import build_open_set_rejection_reasons
 from src.router.prompt_clip_utils import (
     aggregate_prompt_logits,
-    build_prompt_batch,
     build_prompt_ensemble,
     get_clip_logit_scale,
     get_prompt_templates_for_type,

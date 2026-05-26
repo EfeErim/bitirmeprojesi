@@ -13,6 +13,7 @@ from PIL import Image
 from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.transforms import preprocess_image
+from src.pipeline.adapter_discovery import adapter_meta_state, resolve_adapter_dir
 from src.pipeline.inference_payloads import (
     build_adapter_unavailable_result,
     build_non_plant_rejected_result,
@@ -25,12 +26,9 @@ from src.pipeline.inference_payloads import (
 )
 from src.pipeline.input_guard import evaluate_plantness_input_guard, input_guard_enabled
 from src.shared.adapter_paths import (
-    ADAPTER_BUNDLE_DIR_NAME,
     normalize_adapter_name,
-    resolve_adapter_bundle_dir,
 )
 from src.shared.contracts import InferenceResult, InputGuardAnalysis, RouterAnalysisResult
-from src.shared.json_utils import read_json_dict
 from src.training.services.runtime import resolve_runtime_device
 
 logger = logging.getLogger(__name__)
@@ -132,107 +130,18 @@ class RouterAdapterRuntime:
         part_name: Optional[str] = None,
         adapter_dir: Optional[str | Path] = None,
     ) -> Path:
-        def _discover_fallback_adapter_dir(search_root: Path, *, allow_cross_part: bool) -> Optional[Path]:
-            def _infer_path_metadata(adapter_bundle_dir: Path) -> tuple[str, str]:
-                try:
-                    relative_parts = adapter_bundle_dir.relative_to(search_root).parts
-                except ValueError:
-                    return "", ""
-                if len(relative_parts) >= 3 and relative_parts[-1] == ADAPTER_BUNDLE_DIR_NAME:
-                    return (
-                        normalize_adapter_name(relative_parts[0], default=""),
-                        normalize_adapter_name(relative_parts[1], default=""),
-                    )
-                return "", ""
-
-            if not search_root.exists() or not search_root.is_dir():
-                return None
-
-            crop_key = normalize_adapter_name(crop_name)
-            requested_part = normalize_adapter_name(part_name) if part_name else ""
-            ranked_candidates: list[tuple[int, Path]] = []
-            for meta_path in sorted(search_root.rglob("adapter_meta.json")):
-                adapter_bundle_dir = meta_path.parent
-                if adapter_bundle_dir.name != "continual_sd_lora_adapter":
-                    continue
-                try:
-                    meta = read_json_dict(meta_path)
-                except Exception as exc:
-                    logger.debug(
-                        f"Failed to read adapter metadata from {meta_path}; skipping this adapter bundle",
-                        exc_info=exc,
-                    )
-                    continue
-                path_crop, path_part = _infer_path_metadata(adapter_bundle_dir)
-                meta_crop = normalize_adapter_name(meta.get("crop_name"), default="") if meta.get("crop_name") else ""
-                resolved_crop = meta_crop or path_crop
-                if not resolved_crop:
-                    continue
-                if resolved_crop != crop_key:
-                    continue
-                meta_part = normalize_adapter_name(meta.get("part_name"), default="") if meta.get("part_name") else ""
-                resolved_part = meta_part or path_part
-                if requested_part and resolved_part == requested_part:
-                    ranked_candidates.append((0, adapter_bundle_dir))
-                elif requested_part and not allow_cross_part:
-                    continue
-                elif not requested_part and (not resolved_part or resolved_part == "unspecified"):
-                    ranked_candidates.append((1, adapter_bundle_dir))
-                elif not requested_part:
-                    ranked_candidates.append((2, adapter_bundle_dir))
-                elif resolved_part in {"", "unspecified"}:
-                    ranked_candidates.append((1, adapter_bundle_dir))
-                else:
-                    ranked_candidates.append((2, adapter_bundle_dir))
-            if not ranked_candidates:
-                return None
-            ranked_candidates.sort(key=lambda item: (item[0], str(item[1])))
-            return ranked_candidates[0][1]
-
-        if adapter_dir is not None:
-            root = Path(adapter_dir)
-            try:
-                return resolve_adapter_bundle_dir(root, crop_name=crop_name, part_name=part_name)
-            except FileNotFoundError as exc:
-                fallback = _discover_fallback_adapter_dir(
-                    root,
-                    allow_cross_part=self.allow_cross_part_adapter_fallback,
-                )
-                if fallback is not None:
-                    return fallback
-                raise FileNotFoundError(f"Could not resolve adapter bundle from {root}") from exc
-        try:
-            return resolve_adapter_bundle_dir(self.adapter_root, crop_name=crop_name, part_name=part_name)
-        except FileNotFoundError as exc:
-            fallback = _discover_fallback_adapter_dir(
-                self.adapter_root,
-                allow_cross_part=self.allow_cross_part_adapter_fallback,
-            )
-            if fallback is not None:
-                return fallback
-            expected_part = normalize_adapter_name(part_name) if part_name else "unspecified"
-            raise FileNotFoundError(
-                f"Adapter not found for crop '{crop_name}' part '{expected_part}' under {self.adapter_root}"
-            ) from exc
+        # Delegate discovery to shared adapter_discovery helpers
+        return resolve_adapter_dir(
+            adapter_root=self.adapter_root,
+            crop_name=crop_name,
+            part_name=part_name,
+            allow_cross_part=self.allow_cross_part_adapter_fallback,
+            adapter_dir_override=Path(adapter_dir) if adapter_dir is not None else None,
+        )
 
     @staticmethod
     def _adapter_meta_state(adapter_dir: Path) -> tuple[Path, str, int, int]:
-        resolved_dir = adapter_dir.resolve()
-        meta_path = resolved_dir / "adapter_meta.json"
-        try:
-            meta_stat = meta_path.stat()
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"No adapter assets found under {resolved_dir}") from exc
-
-        # Adapter export rewrites adapter_meta.json after bundle assets are persisted,
-        # so metadata freshness is the maintained reload marker for runtime caching.
-        meta = read_json_dict(meta_path)
-        return (
-            resolved_dir,
-            normalize_adapter_name(meta.get("part_name")) if meta.get("part_name") else "unspecified",
-            int(meta_stat.st_mtime_ns),
-            int(meta_stat.st_size),
-        )
+        return adapter_meta_state(adapter_dir)
 
     def load_adapter(
         self,
