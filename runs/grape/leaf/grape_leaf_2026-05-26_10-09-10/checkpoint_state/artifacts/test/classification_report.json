@@ -1,0 +1,57 @@
+{
+  "üzüm_antraknoz_yaprak": {
+    "precision": 0.8636363636363636,
+    "recall": 0.76,
+    "f1-score": 0.8085106382978723,
+    "support": 50.0
+  },
+  "üzüm_kav_esca_yaprak": {
+    "precision": 0.9019607843137255,
+    "recall": 0.9583333333333334,
+    "f1-score": 0.9292929292929293,
+    "support": 48.0
+  },
+  "üzüm_külleme_yaprak": {
+    "precision": 0.7142857142857143,
+    "recall": 0.75,
+    "f1-score": 0.7317073170731707,
+    "support": 20.0
+  },
+  "üzüm_leafroll_virüs_yaprak": {
+    "precision": 0.9803921568627451,
+    "recall": 0.9259259259259259,
+    "f1-score": 0.9523809523809523,
+    "support": 54.0
+  },
+  "üzüm_mildiyö_yaprak": {
+    "precision": 0.8596491228070176,
+    "recall": 0.8032786885245902,
+    "f1-score": 0.8305084745762712,
+    "support": 61.0
+  },
+  "üzüm_sağlıklı_yaprak": {
+    "precision": 0.9264705882352942,
+    "recall": 0.9692307692307692,
+    "f1-score": 0.9473684210526315,
+    "support": 65.0
+  },
+  "üzüm_yelpaze_virüsü_yaprak": {
+    "precision": 0.75,
+    "recall": 0.9230769230769231,
+    "f1-score": 0.8275862068965517,
+    "support": 26.0
+  },
+  "accuracy": 0.8796296296296297,
+  "macro avg": {
+    "precision": 0.8566278185915516,
+    "recall": 0.869977948584506,
+    "f1-score": 0.8610507056529114,
+    "support": 324.0
+  },
+  "weighted avg": {
+    "precision": 0.8822901583694498,
+    "recall": 0.8796296296296297,
+    "f1-score": 0.8791713456415833,
+    "support": 324.0
+  }
+}

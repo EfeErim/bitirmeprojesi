@@ -1,0 +1,13 @@
+                                precision    recall  f1-score   support
+
+       üzüm_antraknoz_yaprak       0.84      0.76      0.80        50
+        üzüm_kav_esca_yaprak       0.90      0.92      0.91        48
+        üzüm_külleme_yaprak       0.48      0.65      0.55        20
+ üzüm_leafroll_virüs_yaprak       0.98      0.83      0.90        54
+        üzüm_mildiyö_yaprak       0.82      0.75      0.79        61
+       üzüm_sağlıklı_yaprak       0.94      0.95      0.95        65
+üzüm_yelpaze_virüsü_yaprak       0.66      0.88      0.75        26
+
+                      accuracy                           0.84       324
+                     macro avg       0.80      0.82      0.81       324
+                  weighted avg       0.85      0.84      0.84       324
