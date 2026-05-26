@@ -433,6 +433,73 @@ def calibrate_router_surface(
     return result
 
 
+def validate_router_candidate_overrides(
+    root: Path,
+    *,
+    candidate_overrides: Sequence[JsonDict],
+    config_env: str | None = "colab",
+    device: str = "cuda",
+    target_negative_false_accept_rate: float = 0.05,
+    max_crop_accuracy_drop: float = 0.02,
+    max_part_precision_drop: float = 0.02,
+    max_part_recall_drop: float = 0.02,
+    max_wrong_part_rejection_drop: float = 0.02,
+    max_p95_latency_regression: float = 0.25,
+    include_samples: bool = False,
+) -> JsonDict:
+    """Evaluate selected dev-set calibration candidates on an independent root."""
+    dataset = discover_eval_samples(root)
+    if not dataset:
+        raise RuntimeError(f"No router eval images found under {root}")
+
+    base_config = get_config(environment=config_env)
+    router = RouterPipeline(config=base_config, device=device)
+    router.load_models()
+    if not router.is_ready():
+        raise RuntimeError(
+            "Router models failed to become ready for inference. "
+            "Check router.vlm.enabled, model availability, and router dependency installation."
+        )
+
+    baseline = evaluate_variant(router, dataset, config=base_config, overrides={})
+    variants: List[JsonDict] = []
+    seen: set[str] = set()
+    for overrides in candidate_overrides:
+        normalized = dict(overrides or {})
+        if not normalized:
+            continue
+        key = json.dumps(normalized, sort_keys=True, default=str)
+        if key in seen:
+            continue
+        seen.add(key)
+        variant_config = apply_overrides(base_config, normalized)
+        variants.append(evaluate_variant(router, dataset, config=variant_config, overrides=normalized))
+
+    ranked = annotate_and_rank_variants(
+        [baseline, *variants],
+        baseline=baseline,
+        target_negative_false_accept_rate=target_negative_false_accept_rate,
+        max_crop_accuracy_drop=max_crop_accuracy_drop,
+        max_part_precision_drop=max_part_precision_drop,
+        max_part_recall_drop=max_part_recall_drop,
+        max_wrong_part_rejection_drop=max_wrong_part_rejection_drop,
+        max_p95_latency_regression=max_p95_latency_regression,
+    )
+    accepted = [row for row in ranked if row.get("variant_id") != "baseline" and row.get("eligible")]
+
+    return {
+        "dataset_root": str(root),
+        "sample_count": len(dataset),
+        "config_env": config_env,
+        "device": device,
+        "candidate_count": len(variants),
+        "baseline": baseline if include_samples else _strip_samples(baseline),
+        "variants": ranked if include_samples else [_strip_samples(row) for row in ranked],
+        "accepted": accepted if include_samples else [_strip_samples(row) for row in accepted],
+        "recommended": (accepted[0] if accepted else {}) if include_samples else (_strip_samples(accepted[0]) if accepted else {}),
+    }
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
