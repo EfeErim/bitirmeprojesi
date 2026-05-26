@@ -1,0 +1,7 @@
+[CELL_CAPTURE] cell=Cell 7: OOD Calibration
+run_id=grape_fruit_2026-05-26_10-15-43
+started_at=2026-05-26T10:19:39.677524+00:00
+finished_at=2026-05-26T10:19:40.530436+00:00
+duration_sec=0.853
+
+[OOD] Kalibrasyon tamamlandi. classes=5 version=1

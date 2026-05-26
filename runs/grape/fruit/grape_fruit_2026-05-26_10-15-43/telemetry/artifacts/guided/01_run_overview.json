@@ -1,0 +1,128 @@
+{
+  "schema_version": "v1_guided_run_overview",
+  "overview_kind": "training",
+  "catalog_base": "/content/bitirmeprojesi/outputs/colab_notebook_training/artifacts",
+  "primary_files": {
+    "start_here": "guided/00_start_here.md",
+    "run_overview": "guided/01_run_overview.json",
+    "file_catalog": "guided/02_file_catalog.json",
+    "training_summary": "training/summary.json",
+    "production_readiness": "production_readiness.json",
+    "test_metric_gate": "test/metric_gate.json"
+  },
+  "run_id": "grape_fruit_2026-05-26_10-15-43",
+  "run_label": "grape_fruit_2026-05-26_10-15-43",
+  "crop_name": "grape",
+  "part_name": "fruit",
+  "readiness_status": "failed",
+  "readiness_passed": false,
+  "ood_evidence_source": "real_ood_split",
+  "recommendation": {
+    "decision": "bootstrap_pending",
+    "change_count": 0,
+    "manual_overrides": {
+      "EPOCHS": 32,
+      "BATCH_SIZE": 48,
+      "LEARNING_RATE": 0.0001,
+      "LORA_R": 24,
+      "LORA_ALPHA": 24,
+      "LORA_DROPOUT": 0.16,
+      "OOD_FACTOR": 3.0,
+      "LABEL_SMOOTHING": 0.1,
+      "OE_LOSS_WEIGHT": 0.24,
+      "REACT_ENABLED": true,
+      "REACT_PERCENTILE": 0.985,
+      "FUSION_DROPOUT": 0.14,
+      "CLASSIFIER_REBALANCE_ENABLED": true,
+      "CLASSIFIER_REBALANCE_LOGIT_ADJUSTMENT_TAU": 1.2,
+      "AUTO_DISCONNECT_RUNTIME": false,
+      "AUTO_PUSH_TO_GITHUB": true,
+      "WEIGHT_DECAY": 0.01,
+      "LOSS_NAME": "logitnorm",
+      "LOGITNORM_TAU": 1.0,
+      "MIXED_PRECISION": "bf16",
+      "GRAD_ACCUM_STEPS": 1,
+      "VALIDATION_EVERY_N_EPOCHS": 1,
+      "EARLY_STOPPING_PATIENCE": 6,
+      "RANDAUGMENT_NUM_OPS": 2,
+      "RANDAUGMENT_MAGNITUDE": 7,
+      "NUM_WORKERS": 12,
+      "PREFETCH": 8,
+      "CACHE_TRAIN_SPLIT": true,
+      "ENABLE_BAYESIAN_OPTIMIZATION": true
+    }
+  },
+  "notebook_surface": "2_train_continual_sd_lora_adapter.ipynb",
+  "dataset_roots": {
+    "runtime_dataset_root": "data/prepared_runtime_datasets",
+    "runtime_dataset_key": "grape__fruit",
+    "selected_dataset_name": "grape__fruit",
+    "selected_runtime_dataset_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/grape__fruit",
+    "resolved_ood_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets/grape__fruit/ood",
+    "resolved_runtime_dataset_root": "/content/bitirmeprojesi/data/prepared_runtime_datasets"
+  },
+  "notebook_parameters": {
+    "epochs": 32,
+    "batch_size": 48,
+    "learning_rate": 0.0001,
+    "lora_r": 24,
+    "ood_factor": 3.0,
+    "mixed_precision": "bf16",
+    "num_workers": 12,
+    "checkpoint_every_n_steps": 250,
+    "enable_bayesian_optimization": true
+  },
+  "export_paths": {
+    "repo_run_dir": "/content/bitirmeprojesi/runs/grape/fruit/grape_fruit_2026-05-26_10-15-43",
+    "repo_output_dir": "/content/bitirmeprojesi/runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/outputs/colab_notebook_training",
+    "repo_telemetry_dir": "/content/bitirmeprojesi/runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/telemetry",
+    "repo_checkpoint_state_dir": "/content/bitirmeprojesi/runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/checkpoint_state",
+    "executed_notebook_path": "/content/bitirmeprojesi/runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/notebooks/6_train_all_continual_sd_lora_adapters.executed.ipynb",
+    "adapter_export_dir": "/content/bitirmeprojesi/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter"
+  },
+  "access_check": {
+    "github": {
+      "status": "ok",
+      "repo_url": "https://github.com/EfeErim/bitirmeprojesi.git",
+      "token_present": true,
+      "read_access_mode": "public",
+      "anonymous_read_access": true,
+      "token_read_access": true,
+      "push_requires_auth": true,
+      "push_ready": true,
+      "detail": "e65fa53bcd6305bdc369a87c93db34922f804f2d\tHEAD"
+    },
+    "repo_updates": {
+      "status": "ok",
+      "branch": "master",
+      "local_head": "e65fa53bcd6305bdc369a87c93db34922f804f2d",
+      "remote_head": "e65fa53bcd6305bdc369a87c93db34922f804f2d",
+      "update_available": false,
+      "relation": "up_to_date"
+    },
+    "huggingface": {
+      "status": "ok",
+      "model_ids": [
+        "facebook/dinov3-vitl16-pretrain-lvd1689m"
+      ],
+      "token_present": true,
+      "access_mode": "public",
+      "requires_token_for_any": false,
+      "per_model": [
+        {
+          "model_id": "facebook/dinov3-vitl16-pretrain-lvd1689m",
+          "access_mode": "public",
+          "anonymous_ok": true,
+          "token_ok": true,
+          "detail": ""
+        }
+      ]
+    }
+  },
+  "readiness_summary": {
+    "status": "failed",
+    "passed": false,
+    "ood_evidence_source": "real_ood_split"
+  },
+  "created_at": "2026-05-26T10:19:53.245436+00:00"
+}

@@ -1,0 +1,10 @@
+{
+  "name": "ckpt_e26_s390_20260526_101906_254612",
+  "path": "/content/bitirmeprojesi/outputs/colab_notebook_training/telemetry_runtime/telemetry/grape_fruit_2026-05-26_10-15-43/checkpoints/ckpt_e26_s390_20260526_101906_254612/training_checkpoint",
+  "created_at": "2026-05-26T10:19:07.735267+00:00",
+  "global_step": 390,
+  "epoch": 26,
+  "reason": "epoch_end",
+  "is_best": true,
+  "val_loss": 0.29824675147518004
+}

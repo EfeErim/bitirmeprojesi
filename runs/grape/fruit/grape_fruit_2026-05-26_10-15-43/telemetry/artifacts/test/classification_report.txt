@@ -1,0 +1,11 @@
+                               precision    recall  f1-score   support
+
+       üzüm_antraknoz_meyve       0.96      1.00      0.98        23
+üzüm_botrytis_cinerea_meyve       0.98      0.86      0.91        49
+        üzüm_külleme_meyve       0.64      0.78      0.70         9
+        üzüm_mildiyö_meyve       0.83      0.76      0.79        25
+       üzüm_sağlıklı_meyve       0.92      0.99      0.95        68
+
+                     accuracy                           0.91       174
+                    macro avg       0.86      0.88      0.87       174
+                 weighted avg       0.91      0.91      0.91       174
