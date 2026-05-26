@@ -1,0 +1,94 @@
+{
+  "schema_version": "v1_ood_method_comparison",
+  "split_name": "validation",
+  "requested_primary_score_method": "",
+  "selected_primary_score_method": "ensemble",
+  "selection_source": "",
+  "ood_type_count": 5,
+  "methods": {
+    "ensemble": {
+      "pooled_metrics": {
+        "accuracy": 0.9959266781806946,
+        "balanced_accuracy": 0.9954545454545455,
+        "macro_f1": 0.9950748430709803,
+        "ood_auroc": 0.9672437202987102,
+        "ood_false_positive_rate": 0.1079429735234216,
+        "classification_samples": 491,
+        "ood_samples": 36,
+        "in_distribution_samples": 491,
+        "sure_ds_f1": 0.6252749111825409,
+        "conformal_empirical_coverage": 0.9959266802443992,
+        "conformal_avg_set_size": 1.0
+      },
+      "pooled_gate_eligible": false,
+      "worst_slice": {
+        "slice_name": "same_crop_unsupported_unknowns",
+        "sample_count": 1,
+        "ood_false_positive_rate": 0.15682281059063136,
+        "ood_auroc": 0.8431771894093687,
+        "metrics": {
+          "ood_false_positive_rate": 0.15682281059063136,
+          "ood_auroc": 0.8431771894093687,
+          "ood_samples": 1,
+          "in_distribution_samples": 491
+        }
+      }
+    },
+    "energy": {
+      "pooled_metrics": {
+        "accuracy": 0.9959266781806946,
+        "balanced_accuracy": 0.9954545454545455,
+        "macro_f1": 0.9950748430709803,
+        "ood_auroc": 0.927642000452591,
+        "ood_false_positive_rate": 0.6639511201629328,
+        "classification_samples": 491,
+        "ood_samples": 36,
+        "in_distribution_samples": 491,
+        "sure_ds_f1": 0.6252749111825409,
+        "conformal_empirical_coverage": 0.9959266802443992,
+        "conformal_avg_set_size": 1.0
+      },
+      "pooled_gate_eligible": false,
+      "worst_slice": {
+        "slice_name": "strawberry_leaf_unsupported",
+        "sample_count": 14,
+        "ood_false_positive_rate": 0.6639511201629328,
+        "ood_auroc": 0.9058772185045098,
+        "metrics": {
+          "ood_false_positive_rate": 0.6639511201629328,
+          "ood_auroc": 0.9058772185045098,
+          "ood_samples": 14,
+          "in_distribution_samples": 491
+        }
+      }
+    },
+    "knn": {
+      "pooled_metrics": {
+        "accuracy": 0.9959266781806946,
+        "balanced_accuracy": 0.9954545454545455,
+        "macro_f1": 0.9950748430709803,
+        "ood_auroc": 0.9889115184430867,
+        "ood_false_positive_rate": 0.03054989816700611,
+        "classification_samples": 491,
+        "ood_samples": 36,
+        "in_distribution_samples": 491,
+        "sure_ds_f1": 0.6252749111825409,
+        "conformal_empirical_coverage": 0.9959266802443992,
+        "conformal_avg_set_size": 1.0
+      },
+      "pooled_gate_eligible": true,
+      "worst_slice": {
+        "slice_name": "off_crop_secondary",
+        "sample_count": 15,
+        "ood_false_positive_rate": 0.1670061099796334,
+        "ood_auroc": 0.9839782756279701,
+        "metrics": {
+          "ood_false_positive_rate": 0.1670061099796334,
+          "ood_auroc": 0.9839782756279701,
+          "ood_samples": 15,
+          "in_distribution_samples": 491
+        }
+      }
+    }
+  }
+}
