@@ -31,7 +31,29 @@ if PUBLISH_RESULTS_TO_GIT:
     print(json.dumps(copied, indent=2))
 
     if AUTO_COMMIT_PUSH_RESULTS:
-        subprocess.run(['git', 'add', str(target_dir)], check=True)
+        sparse_add = subprocess.run(
+            ['git', 'sparse-checkout', 'add', 'runs/_index/router_calibration'],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        if sparse_add.returncode not in (0, 128):
+            print(f'[PUBLISH] sparse-checkout add returncode={sparse_add.returncode}')
+            if sparse_add.stderr:
+                print(sparse_add.stderr)
+        add = subprocess.run(
+            ['git', 'add', '-f', str(target_dir)],
+            check=False,
+            text=True,
+            capture_output=True,
+        )
+        if add.returncode != 0:
+            print(f'[PUBLISH] git add failed returncode={add.returncode}')
+            if add.stdout:
+                print(add.stdout)
+            if add.stderr:
+                print(add.stderr)
+            raise RuntimeError('Notebook 5 publish failed while staging router calibration results.')
         commit_message = f'Add router calibration results {stamp}'
         commit = subprocess.run(['git', 'commit', '-m', commit_message], check=False)
         if commit.returncode == 0:
