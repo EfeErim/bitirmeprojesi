@@ -18,8 +18,8 @@ if RUN_CALIBRATION:
         max_p95_latency_regression=MAX_P95_LATENCY_REGRESSION,
         include_samples=INCLUDE_SAMPLES_IN_OUTPUT,
         strategy=(CALIBRATION_STRATEGY or 'adaptive'),
-        adaptive_top_k=8,
-        adaptive_n_per_group=8,
+        adaptive_top_k=12,
+        adaptive_n_per_group=12,
         progress_every=PROGRESS_EVERY,
         collect_input_guard_scores=COLLECT_INPUT_GUARD_SCORES,
     )
