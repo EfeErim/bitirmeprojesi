@@ -5,9 +5,9 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from PIL import Image
-from typing import Any
 
 
 def _build_parser() -> argparse.ArgumentParser:

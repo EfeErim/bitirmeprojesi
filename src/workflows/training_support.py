@@ -19,7 +19,6 @@ from src.utils.training_helpers import (
     _resolve_loader_sampler_runtime,
     build_loader_sizes,
     loader_batch_count,
-    loader_size,
     stringify_paths,
 )
 

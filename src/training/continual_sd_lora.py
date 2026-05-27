@@ -6,7 +6,6 @@ from __future__ import annotations
 import inspect
 import logging
 import os
-import types
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, Iterator, List, Optional, Sequence, cast
@@ -785,8 +784,8 @@ class ContinualSDLoRATrainer:
                 # codegen and fail if `cl` is missing. Detect that situation and
                 # skip compile to keep tests and lightweight runs stable.
                 try:
-                    import shutil
                     import platform
+                    import shutil
 
                     if platform.system().lower().startswith("windows") and shutil.which("cl") is None:
                         logger.debug("MSVC cl compiler not found; skipping torch.compile to avoid inductor build errors")

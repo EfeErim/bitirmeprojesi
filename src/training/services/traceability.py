@@ -9,6 +9,7 @@ from typing import Any, Dict, Mapping, Optional
 
 from src.guided_artifacts import refresh_training_guided_artifacts
 from src.shared.artifacts import ArtifactStore
+from src.shared.dict_utils import nested_dict as _nested_dict
 from src.shared.json_utils import read_json
 
 JsonDict = Dict[str, Any]
@@ -98,13 +99,7 @@ def _try_refresh_run_registry(
     }
 
 
-def _nested_dict(source: Mapping[str, Any] | None, *keys: str) -> JsonDict:
-    current: Any = dict(source or {})
-    for key in keys:
-        if not isinstance(current, Mapping):
-            return {}
-        current = current.get(key, {})
-    return dict(current) if isinstance(current, Mapping) else {}
+
 
 
 def _value_from_candidates(*values: Any) -> Any:

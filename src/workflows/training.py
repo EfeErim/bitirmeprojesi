@@ -17,6 +17,7 @@ from src.adapter.independent_crop_adapter import IndependentCropAdapter
 from src.core.config_manager import get_config
 from src.data.loaders import create_training_loaders
 from src.shared.adapter_paths import build_adapter_bundle_root
+from src.shared.dict_utils import nested_dict as _nested_dict
 from src.shared.hash_utils import sha256_file
 from src.shared.json_utils import read_json
 from src.training.services.ood_benchmark import run_leave_one_class_out_benchmark
@@ -65,11 +66,12 @@ from src.workflows.training_readiness import (
 )
 from src.workflows.training_support import (
     build_artifact_payload,
-    loader_size,
     prepare_training_run,
     select_calibration_source,
     stringify_paths,
 )
+from src.utils.training_helpers import loader_size
+from src.shared.telemetry import emit_event as _emit_event, update_latest as _update_latest
 
 logger = logging.getLogger(__name__)
 
@@ -263,13 +265,7 @@ def _normalize_part_name(part_name: Optional[str]) -> str:
     return normalized or "unspecified"
 
 
-def _nested_dict(source: JsonDict, *keys: str) -> JsonDict:
-    current: Any = source
-    for key in keys:
-        if not isinstance(current, dict):
-            return {}
-        current = current.get(key, {})
-    return dict(current) if isinstance(current, dict) else {}
+
 
 
 def _resolve_ood_method_comparison_from_artifacts(artifacts: JsonDict) -> JsonDict:
@@ -440,12 +436,7 @@ class TrainingWorkflow:
         phase: str,
         force_sync: Optional[bool] = None,
     ) -> None:
-        if telemetry is None:
-            return
-        if force_sync is None:
-            telemetry.emit_event(event_type, payload, phase=phase)
-            return
-        telemetry.emit_event(event_type, payload, phase=phase, force_sync=force_sync)
+        _emit_event(telemetry, event_type, payload, phase=phase, force_sync=force_sync)
 
     def _build_workflow_observer(
         self,
@@ -473,7 +464,6 @@ class TrainingWorkflow:
             )
             if (
                 telemetry is not None
-                and hasattr(telemetry, "update_latest")
                 and event_type
                 in {
                     "batch_end",
@@ -482,7 +472,7 @@ class TrainingWorkflow:
                     "training_completed",
                 }
             ):
-                telemetry.update_latest({"event_type": event_type, **payload})
+                _update_latest(telemetry, {"event_type": event_type, **payload})
 
             if checkpoint_manager is None or event_type != "checkpoint_requested":
                 return
