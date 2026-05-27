@@ -453,20 +453,21 @@ def _persist_benchmark_progress(
     progress_path = ArtifactStore(progress_dir).write_json("progress.json", progress_payload)
     if telemetry is not None and hasattr(telemetry, "copy_artifact_file"):
         telemetry.copy_artifact_file(progress_path, "ood_benchmark/progress.json")
-    if telemetry is not None and hasattr(telemetry, "update_latest"):
-        telemetry.update_latest(
-            {
-                "phase": "ood_benchmark",
-                "status": progress_payload.get("status"),
-                "stage": progress_payload.get("stage"),
-                "fold_index": progress_payload.get("fold_index"),
-                "fold_total": progress_payload.get("fold_total"),
-                "held_out_class": progress_payload.get("held_out_class"),
-                "completed_folds": progress_payload.get("completed_folds"),
-                "failed_folds": progress_payload.get("failed_folds"),
-                "last_error": progress_payload.get("last_error"),
-            }
-        )
+    from src.shared.telemetry import update_latest as _update_latest
+    _update_latest(
+        telemetry,
+        {
+            "phase": "ood_benchmark",
+            "status": progress_payload.get("status"),
+            "stage": progress_payload.get("stage"),
+            "fold_index": progress_payload.get("fold_index"),
+            "fold_total": progress_payload.get("fold_total"),
+            "held_out_class": progress_payload.get("held_out_class"),
+            "completed_folds": progress_payload.get("completed_folds"),
+            "failed_folds": progress_payload.get("failed_folds"),
+            "last_error": progress_payload.get("last_error"),
+        },
+    )
     return progress_payload
 
 
