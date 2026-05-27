@@ -893,6 +893,7 @@ def test_router_calibration_notebook_contract() -> None:
     assert "CALIBRATION_PRESET = 'handoff'" in sources.full_source
     assert "Notebook 5 first cell started." in sources.full_source
     assert "['git', 'clone', '--depth', '1', '--progress'" in sources.full_source
+    assert "ensure_router_dependencies_nb5" in sources.full_source
     assert "validate_router_candidate_overrides" in sources.full_source
     assert "run_cell_script('nb5_cell06_holdout_validation.py', globals())" in sources.full_source
     assert "target_negative_false_accept_rate=TARGET_NEGATIVE_FALSE_ACCEPT_RATE" in sources.full_source
