@@ -10,10 +10,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from datetime import datetime, timezone
-from scripts.utils.reporting import write_json
 from pathlib import Path
 from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from scripts.utils.reporting import write_json
 
 
 def _check_path(path: Path, label: str, errors: list[str], present: list[str]) -> None:
