@@ -19,6 +19,7 @@ if RUN_CALIBRATION:
         include_samples=INCLUDE_SAMPLES_IN_OUTPUT,
         strategy=CALIBRATION_STRATEGY,
         progress_every=PROGRESS_EVERY,
+        collect_input_guard_scores=COLLECT_INPUT_GUARD_SCORES,
     )
     _write_json(CALIBRATION_OUTPUT, calibration_result)
 

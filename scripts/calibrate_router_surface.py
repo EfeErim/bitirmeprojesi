@@ -25,6 +25,7 @@ from scripts.evaluate_router_surface import (
     summarize_predictions,
 )
 from src.core.config_manager import get_config
+from src.pipeline.input_guard import evaluate_plantness_input_guard
 from src.router.policy_taxonomy_utils import resolve_requested_profile
 from src.router.router_pipeline import RouterPipeline
 from src.router.vlm_stages import build_pipeline_surface_config
@@ -33,6 +34,9 @@ JsonDict = Dict[str, Any]
 REPLAY_SAFE_PARAMETERS = {
     "inference.router_min_confidence",
     "inference.router_min_margin",
+    "inference.input_guard.enabled",
+    "inference.input_guard.plant_min_score",
+    "inference.input_guard.negative_margin",
 }
 
 SUPPORTED_PARAMETERS: Dict[str, str] = {
@@ -47,6 +51,9 @@ SUPPORTED_PARAMETERS: Dict[str, str] = {
     "crop_num_prompts": "router.vlm.policy_graph.crop_evidence.crop_num_prompts",
     "part_num_prompts": "router.vlm.policy_graph.part_evidence.part_num_prompts",
     "max_rois_for_classification": "router.vlm.policy_graph.roi_filter.max_rois_for_classification",
+    "input_guard_enabled": "inference.input_guard.enabled",
+    "input_guard_plant_min_score": "inference.input_guard.plant_min_score",
+    "input_guard_negative_margin": "inference.input_guard.negative_margin",
 }
 
 INTEGER_PARAMETERS = {
@@ -54,6 +61,9 @@ INTEGER_PARAMETERS = {
     "router.vlm.policy_graph.crop_evidence.crop_num_prompts",
     "router.vlm.policy_graph.part_evidence.part_num_prompts",
     "router.vlm.policy_graph.roi_filter.max_rois_for_classification",
+}
+BOOL_PARAMETERS = {
+    "inference.input_guard.enabled",
 }
 
 PRESET_SWEEPS: Dict[str, Dict[str, List[Any]]] = {
@@ -94,6 +104,13 @@ def _canonical_parameter_name(raw_name: str) -> str:
 
 
 def _coerce_parameter_value(parameter: str, raw_value: Any) -> Any:
+    if parameter in BOOL_PARAMETERS:
+        value = str(raw_value).strip().lower()
+        if value in {"1", "true", "yes", "y", "on"}:
+            return True
+        if value in {"0", "false", "no", "n", "off"}:
+            return False
+        raise ValueError(f"Boolean sweep value for {parameter} must be true/false, got {raw_value!r}")
     if parameter in INTEGER_PARAMETERS:
         return int(raw_value)
     return float(raw_value)
@@ -229,8 +246,12 @@ def evaluate_variant(
     overrides: JsonDict,
     progress_label: str = "",
     progress_every: int = 25,
+    collect_input_guard_scores: bool = False,
 ) -> JsonDict:
     _apply_config_to_loaded_router(router, config)
+    guard_score_config = copy.deepcopy(config)
+    guard_score_config = _set_nested_value(guard_score_config, "inference.input_guard.enabled", True)
+    guard_score_config = _set_nested_value(guard_score_config, "inference.input_guard.debug_scores", False)
 
     samples: List[JsonDict] = []
     started_variant = time.perf_counter()
@@ -240,14 +261,21 @@ def evaluate_variant(
         started = time.perf_counter()
         analysis = router.analyze_image_result(image)
         latency_ms = (time.perf_counter() - started) * 1000.0
-        samples.append(
-            sample_from_analysis(
-                item=item,
-                analysis=analysis,
-                latency_ms=latency_ms,
-                config=config,
-            )
+        sample = sample_from_analysis(
+            item=item,
+            analysis=analysis,
+            latency_ms=latency_ms,
+            config=config,
         )
+        if collect_input_guard_scores:
+            guard = evaluate_plantness_input_guard(
+                router,
+                image,
+                guard_score_config,
+                requested_part=str(item.get("expected_part") or ""),
+            )
+            sample["input_guard"] = guard.to_dict()
+        samples.append(sample)
         if progress_label and (index == 1 or index == total or index % max(1, int(progress_every)) == 0):
             elapsed = time.perf_counter() - started_variant
             _print_progress(f"[{progress_label}] {index}/{total} samples elapsed={elapsed:.1f}s")
@@ -269,6 +297,9 @@ def _is_replay_safe_overrides(overrides: JsonDict) -> bool:
 def _with_replayed_thresholds(samples: Sequence[JsonDict], overrides: JsonDict) -> List[JsonDict]:
     min_confidence = overrides.get("inference.router_min_confidence")
     min_margin = overrides.get("inference.router_min_margin")
+    guard_enabled = overrides.get("inference.input_guard.enabled")
+    guard_plant_min_score = overrides.get("inference.input_guard.plant_min_score")
+    guard_negative_margin = overrides.get("inference.input_guard.negative_margin")
     replayed: List[JsonDict] = []
     for sample in samples:
         row = dict(sample)
@@ -284,6 +315,16 @@ def _with_replayed_thresholds(samples: Sequence[JsonDict], overrides: JsonDict) 
             and float(routing_margin) < float(min_margin)
         ):
             gate_reasons.append("router_min_margin")
+        guard_payload = dict(row.get("input_guard") or {})
+        if raw_handoff and bool(guard_enabled) and guard_payload:
+            plant_score = float(guard_payload.get("plant_score", 0.0) or 0.0)
+            non_plant_score = float(guard_payload.get("non_plant_score", 0.0) or 0.0)
+            min_plant = 0.45 if guard_plant_min_score is None else float(guard_plant_min_score)
+            negative_margin = 0.10 if guard_negative_margin is None else float(guard_negative_margin)
+            if plant_score < min_plant:
+                gate_reasons.append("input_guard_plant_min_score")
+            elif non_plant_score - plant_score >= negative_margin:
+                gate_reasons.append("input_guard_negative_margin")
 
         handoff = raw_handoff and not gate_reasons
         row["handoff_crop"] = bool(handoff)
@@ -423,6 +464,7 @@ def calibrate_router_surface(
     include_samples: bool = False,
     strategy: str = "grid",
     progress_every: int = 25,
+    collect_input_guard_scores: bool = False,
 ) -> JsonDict:
     dataset = discover_eval_samples(root)
     if not dataset:
@@ -467,6 +509,7 @@ def calibrate_router_surface(
         overrides={},
         progress_label="BASELINE",
         progress_every=progress_every,
+        collect_input_guard_scores=collect_input_guard_scores,
     )
     variants: List[JsonDict] = []
     seen_variants = {json.dumps({}, sort_keys=True)}
@@ -493,6 +536,7 @@ def calibrate_router_surface(
                 overrides=overrides,
                 progress_label=f"VARIANT {index}",
                 progress_every=progress_every,
+                collect_input_guard_scores=collect_input_guard_scores,
             )
         )
 
@@ -515,6 +559,7 @@ def calibrate_router_surface(
         "config_env": config_env,
         "device": device,
         "strategy": resolved_strategy,
+        "input_guard_scores_cached": bool(collect_input_guard_scores),
         "preset": preset,
         "sweep_grid": grid,
         "variant_count": len(variants),
@@ -544,6 +589,7 @@ def validate_router_candidate_overrides(
     include_samples: bool = False,
     strategy: str = "grid",
     progress_every: int = 25,
+    collect_input_guard_scores: bool = False,
 ) -> JsonDict:
     """Evaluate selected dev-set calibration candidates on an independent root."""
     dataset = discover_eval_samples(root)
@@ -566,6 +612,7 @@ def validate_router_candidate_overrides(
         overrides={},
         progress_label="HOLDOUT BASELINE",
         progress_every=progress_every,
+        collect_input_guard_scores=collect_input_guard_scores,
     )
     variants: List[JsonDict] = []
     seen: set[str] = set()
@@ -591,6 +638,7 @@ def validate_router_candidate_overrides(
                     overrides=normalized,
                     progress_label="HOLDOUT VARIANT",
                     progress_every=progress_every,
+                    collect_input_guard_scores=collect_input_guard_scores,
                 )
             )
 
@@ -612,6 +660,7 @@ def validate_router_candidate_overrides(
         "config_env": config_env,
         "device": device,
         "strategy": resolved_strategy,
+        "input_guard_scores_cached": bool(collect_input_guard_scores),
         "candidate_count": len(variants),
         "baseline": baseline if include_samples else _strip_samples(baseline),
         "variants": ranked if include_samples else [_strip_samples(row) for row in ranked],
@@ -679,6 +728,11 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--include-samples", action="store_true", help="Include per-sample rows for every variant.")
     parser.add_argument("--progress-every", type=int, default=25, help="Print router progress every N samples.")
+    parser.add_argument(
+        "--collect-input-guard-scores",
+        action="store_true",
+        help="Cache plant/non-plant input-guard scores once so input guard thresholds can be replayed.",
+    )
     parser.add_argument("--output", type=Path, help="Optional JSON output path")
     return parser
 
@@ -702,6 +756,7 @@ def main() -> int:
         include_samples=args.include_samples,
         strategy=args.strategy,
         progress_every=args.progress_every,
+        collect_input_guard_scores=args.collect_input_guard_scores,
     )
     body = json.dumps(result, indent=2)
     # Try to write the requested output path; if that fails, write a fallback file

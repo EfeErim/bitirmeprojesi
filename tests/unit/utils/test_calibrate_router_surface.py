@@ -8,6 +8,13 @@ def test_parse_sweep_spec_accepts_alias_and_coerces_int_values():
     assert values == [4, 6]
 
 
+def test_parse_sweep_spec_accepts_boolean_input_guard_values():
+    parameter, values = calibrator.parse_sweep_spec("input_guard_enabled=false,true")
+
+    assert parameter == "inference.input_guard.enabled"
+    assert values == [False, True]
+
+
 def test_resolve_sweep_grid_includes_current_config_value():
     base_config = {
         "inference": {"router_min_confidence": 0.65},
@@ -91,6 +98,44 @@ def test_replay_variant_applies_confidence_and_margin_gates_without_model_rerun(
     assert rows[0]["predicted_part"] == "unknown"
     assert rows[1]["handoff_crop"] is True
     assert replayed["metrics"]["negative_false_accept_rate"] == 1.0
+
+
+def test_replay_variant_can_apply_cached_input_guard_rejection():
+    samples = [
+        {
+            "group": "non_plant",
+            "expected_crop": "unknown",
+            "expected_part": "unknown",
+            "predicted_crop": "tomato",
+            "predicted_part": "leaf",
+            "router_handoff_crop": True,
+            "handoff_crop": True,
+            "crop_confidence": 0.90,
+            "routing_margin": 0.40,
+            "crop_correct": False,
+            "part_correct": False,
+            "part_abstained": False,
+            "unsupported_part_emitted": False,
+            "latency_ms": 10.0,
+            "input_guard": {
+                "plant_score": 0.30,
+                "non_plant_score": 0.60,
+            },
+        }
+    ]
+
+    replayed = calibrator.replay_variant(
+        samples,
+        overrides={
+            "inference.input_guard.enabled": True,
+            "inference.input_guard.plant_min_score": 0.45,
+            "inference.input_guard.negative_margin": 0.10,
+        },
+    )
+
+    assert replayed["samples"][0]["handoff_crop"] is False
+    assert replayed["samples"][0]["runtime_gate_reasons"] == ["input_guard_plant_min_score"]
+    assert replayed["metrics"]["negative_false_accept_rate"] == 0.0
 
 
 def test_rank_variants_prefers_eligible_low_false_accept_config():

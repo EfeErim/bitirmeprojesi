@@ -891,11 +891,15 @@ def test_router_calibration_notebook_contract() -> None:
     assert "RUN_HOLDOUT_VALIDATION = True" in sources.full_source
     assert "CALIBRATION_STRATEGY = 'replay-thresholds'" in sources.full_source
     assert "CALIBRATION_PRESET = 'handoff'" in sources.full_source
+    assert "COLLECT_INPUT_GUARD_SCORES = True" in sources.full_source
+    assert "'input_guard_enabled=false,true'" in sources.full_source
     assert "Notebook 5 first cell started." in sources.full_source
     assert "['git', 'clone', '--depth', '1', '--progress'" in sources.full_source
     assert "ensure_router_dependencies_nb5" in sources.full_source
     assert "validate_router_candidate_overrides" in sources.full_source
     assert "run_cell_script('nb5_cell06_holdout_validation.py', globals())" in sources.full_source
+    assert "run_cell_script('nb5_cell07_publish_results.py', globals())" in sources.full_source
+    assert "PUBLISH_RESULTS_ROOT = 'runs/_index/router_calibration'" in sources.full_source
     assert "target_negative_false_accept_rate=TARGET_NEGATIVE_FALSE_ACCEPT_RATE" in sources.full_source
     assert "max_crop_accuracy_drop=MAX_CROP_ACCURACY_DROP" in sources.full_source
     assert "max_part_precision_drop=MAX_PART_PRECISION_DROP" in sources.full_source
