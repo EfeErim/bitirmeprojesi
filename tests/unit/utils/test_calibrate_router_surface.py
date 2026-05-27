@@ -1,4 +1,5 @@
 from scripts import calibrate_router_surface as calibrator
+from pathlib import Path
 
 
 def test_parse_sweep_spec_accepts_alias_and_coerces_int_values():
@@ -238,3 +239,143 @@ def test_rank_variants_rejects_safety_metric_regressions():
         "wrong_part_rejection_drop",
         "p95_latency_regression",
     ]
+
+
+def test_select_recommendation_returns_best_rejected_when_no_eligible_candidate():
+    ranked = [
+        {"variant_id": "baseline", "eligible": False},
+        {
+            "variant_id": "rejected_a",
+            "eligible": False,
+            "metrics": {"negative_false_accept_rate": 0.20},
+        },
+        {
+            "variant_id": "rejected_b",
+            "eligible": False,
+            "metrics": {"negative_false_accept_rate": 0.10},
+        },
+    ]
+
+    selection = calibrator.select_recommendation(ranked)
+
+    assert selection["recommended"] == {}
+    assert selection["best_rejected"]["variant_id"] == "rejected_a"
+    assert selection["selection_summary"]["has_eligible_recommendation"] is False
+    assert selection["selection_summary"]["best_rejected_variant_id"] == "rejected_a"
+
+
+def test_build_failure_analysis_summarizes_false_accepts_and_false_rejects():
+    analysis = calibrator.build_failure_analysis(
+        [
+            {
+                "group": "non_plant",
+                "expected_handoff": False,
+                "handoff_crop": True,
+                "predicted_crop": "tomato",
+                "predicted_part": "leaf",
+                "crop_confidence": 0.91,
+                "routing_margin": 0.05,
+                "crop_confidence_margin": 0.08,
+                "runtime_gate_reasons": [],
+                "input_guard": {"plant_score": 0.30, "non_plant_score": 0.70},
+                "image_path": "d:/sample-1.png",
+            },
+            {
+                "group": "id",
+                "expected_handoff": True,
+                "handoff_crop": False,
+                "predicted_crop": "tomato",
+                "predicted_part": "unknown",
+                "crop_confidence": 0.60,
+                "routing_margin": 0.12,
+                "crop_confidence_margin": 0.03,
+                "runtime_gate_reasons": ["input_guard_plant_min_score"],
+                "image_path": "d:/sample-2.png",
+            },
+        ]
+    )
+
+    assert analysis["false_accept_count"] == 1
+    assert analysis["false_accept_counts_by_group"]["non_plant"] == 1
+    assert analysis["hardest_false_accept_examples"][0]["image_path"] == "d:/sample-1.png"
+    assert any(
+        item["cause"] == "input_guard_not_separating_negatives" for item in analysis["false_accept_failure_causes"]
+    )
+    assert analysis["false_reject_count"] == 1
+    assert any(item["cause"] == "guard_too_aggressive" for item in analysis["false_reject_failure_causes"])
+
+
+def test_adaptive_strategy_runs_on_synthetic_router_eval(tmp_path: Path, monkeypatch):
+    # Create minimal router eval layout with one id and one negative
+    id_dir = tmp_path / "id" / "tomato" / "leaf"
+    id_dir.mkdir(parents=True)
+    from PIL import Image as PILImage
+    img1 = id_dir / "a.jpg"
+    PILImage.new('RGB', (8, 8), color=(255, 0, 0)).save(img1)
+    neg_dir = tmp_path / "negatives" / "off_crop" / "bg"
+    neg_dir.mkdir(parents=True)
+    img2 = neg_dir / "b.jpg"
+    PILImage.new('RGB', (8, 8), color=(0, 255, 0)).save(img2)
+
+    # Stub RouterPipeline to avoid heavy model deps
+    class DummyDetection:
+        def __init__(self):
+            self.crop = 'tomato'
+            self.part = 'leaf'
+            self.crop_confidence = 0.9
+            self.part_confidence = 0.9
+            self.quality_score = None
+
+        def to_dict(self):
+            return {
+                'crop': self.crop,
+                'part': self.part,
+                'crop_confidence': self.crop_confidence,
+                'part_confidence': self.part_confidence,
+            }
+
+    class DummyAnalysis:
+        def __init__(self):
+            self.primary_detection = DummyDetection()
+            self.detections = [DummyDetection()]
+            self.detections_count = 1
+            self.message = ''
+            self.status = 'ok'
+            self.processing_time_ms = 10.0
+
+    class DummyRouter:
+        def __init__(self, *args, **kwargs):
+            self.config = {}
+            self.vlm_config = {}
+            self._base_vlm_config = {}
+
+        def load_models(self):
+            return None
+
+        def is_ready(self):
+            return True
+
+        def analyze_image_result(self, image):
+            return DummyAnalysis()
+        def set_runtime_profile(self, *args, **kwargs):
+            return None
+
+    monkeypatch.setattr('scripts.calibrate_router_surface.RouterPipeline', DummyRouter)
+
+    # Run adaptive calibration with a tiny preset (handoff)
+    from scripts.calibrate_router_surface import calibrate_router_surface
+
+    res = calibrate_router_surface(
+        tmp_path,
+        config_env='colab',
+        device='cpu',
+        preset='handoff',
+        include_current=True,
+        max_variants=128,
+        strategy='adaptive',
+        progress_every=1,
+        collect_input_guard_scores=False,
+    )
+
+    assert isinstance(res, dict)
+    assert 'selection_summary' in res

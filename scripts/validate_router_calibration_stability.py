@@ -83,6 +83,7 @@ def validate_calibration_payload(
 
     baseline = payload.get("baseline")
     recommended = payload.get("recommended")
+    best_rejected = payload.get("best_rejected")
     if not isinstance(baseline, dict):
         issues.append(
             CalibrationIssue(
@@ -93,13 +94,22 @@ def validate_calibration_payload(
         )
         baseline = {}
     if not isinstance(recommended, dict):
-        issues.append(
-            CalibrationIssue(
-                severity="error",
-                code="recommended_missing",
-                message="calibration report must include a recommended variant",
+        if isinstance(best_rejected, dict) and best_rejected:
+            issues.append(
+                CalibrationIssue(
+                    severity="error",
+                    code="no_eligible_recommendation",
+                    message="calibration report did not produce an eligible recommendation",
+                )
             )
-        )
+        else:
+            issues.append(
+                CalibrationIssue(
+                    severity="error",
+                    code="recommended_missing",
+                    message="calibration report must include a recommended variant",
+                )
+            )
         recommended = {}
 
     if not recommended:

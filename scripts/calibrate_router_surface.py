@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+from collections import Counter
 import hashlib
 import itertools
 import json
@@ -446,6 +447,163 @@ def _strip_samples(variant: JsonDict) -> JsonDict:
     return slim
 
 
+def _sorted_numeric_summary(values: Sequence[Any]) -> JsonDict:
+    cleaned = [float(value) for value in values if value is not None]
+    if not cleaned:
+        return {"count": 0, "min": None, "median": None, "mean": None, "p95": None, "max": None}
+
+    ordered = sorted(cleaned)
+    p95_index = max(0, min(len(ordered) - 1, int(round((len(ordered) - 1) * 0.95))))
+    return {
+        "count": len(ordered),
+        "min": round(min(ordered), 4),
+        "median": round(statistics.median(ordered), 4),
+        "mean": round(statistics.fmean(ordered), 4),
+        "p95": round(ordered[p95_index], 4),
+        "max": round(max(ordered), 4),
+    }
+
+
+def _top_counts(values: Iterable[Any], *, limit: int = 5) -> List[JsonDict]:
+    counts = Counter()
+    for value in values:
+        if value is None:
+            continue
+        normalized = str(value).strip()
+        if not normalized:
+            continue
+        counts[normalized] += 1
+    return [
+        {"value": value, "count": count}
+        for value, count in counts.most_common(max(1, int(limit)))
+    ]
+
+
+def _variant_failure_causes(sample: JsonDict) -> List[str]:
+    causes: List[str] = []
+    group = str(sample.get("group", "") or "").strip().lower()
+    handoff = bool(sample.get("handoff_crop", False))
+    gate_reasons = [str(reason) for reason in (sample.get("runtime_gate_reasons") or []) if str(reason).strip()]
+
+    if group in {"off_crop", "non_plant", "ambiguous"} and handoff:
+        guard = sample.get("input_guard") if isinstance(sample.get("input_guard"), dict) else {}
+        plant_score = float(guard.get("plant_score", 0.0) or 0.0) if guard else 0.0
+        non_plant_score = float(guard.get("non_plant_score", 0.0) or 0.0) if guard else 0.0
+        if guard and non_plant_score >= plant_score:
+            causes.append("input_guard_not_separating_negatives")
+        if float(sample.get("routing_margin", 0.0) or 0.0) <= 0.10:
+            causes.append("router_margin_too_small")
+        if float(sample.get("crop_confidence", 0.0) or 0.0) <= 0.75:
+            causes.append("router_min_confidence_too_low")
+
+    if group == "wrong_part" and handoff:
+        if bool(sample.get("unsupported_part_emitted", False)):
+            causes.append("unsupported_part_emitted")
+        if bool(sample.get("part_abstained", False)):
+            causes.append("part_open_set_too_aggressive")
+        else:
+            causes.append("part_open_set_threshold_too_low")
+
+    if not handoff and bool(sample.get("expected_handoff", False)):
+        if any(reason.startswith("input_guard_") for reason in gate_reasons):
+            causes.append("guard_too_aggressive")
+        if any(reason.startswith("router_min_") for reason in gate_reasons):
+            causes.append("router_thresholds_too_aggressive")
+
+    return sorted(dict.fromkeys(causes))
+
+
+def build_failure_analysis(samples: Sequence[JsonDict], *, limit: int = 5) -> JsonDict:
+    rows = [dict(sample) for sample in samples]
+    false_accepts = [
+        row
+        for row in rows
+        if str(row.get("group", "")).strip().lower() in {"off_crop", "non_plant", "ambiguous", "wrong_part"}
+        and bool(row.get("handoff_crop", False))
+    ]
+    false_rejects = [row for row in rows if bool(row.get("expected_handoff", False)) and not bool(row.get("handoff_crop", False))]
+    hardest_false_accepts = sorted(
+        false_accepts,
+        key=lambda row: (
+            -float(row.get("crop_confidence", 0.0) or 0.0),
+            -float(row.get("routing_margin", 0.0) or 0.0),
+            str(row.get("image_path", "")),
+        ),
+    )[: max(1, int(limit))]
+
+    false_accept_causes = Counter()
+    false_reject_causes = Counter()
+    for row in false_accepts:
+        false_accept_causes.update(_variant_failure_causes(row))
+    for row in false_rejects:
+        false_reject_causes.update(_variant_failure_causes(row))
+
+    input_guard_rows = [row for row in false_accepts if isinstance(row.get("input_guard"), dict) and row.get("input_guard")]
+    return {
+        "false_accept_count": len(false_accepts),
+        "false_accept_counts_by_group": {
+            group: sum(1 for row in false_accepts if str(row.get("group", "")).strip().lower() == group)
+            for group in ("off_crop", "non_plant", "ambiguous", "wrong_part")
+        },
+        "false_accept_top_predicted_crops": _top_counts(row.get("predicted_crop") for row in false_accepts),
+        "false_accept_top_predicted_parts": _top_counts(row.get("predicted_part") for row in false_accepts),
+        "false_accept_confidence_distribution": _sorted_numeric_summary(row.get("crop_confidence") for row in false_accepts),
+        "false_accept_margin_distribution": _sorted_numeric_summary(row.get("routing_margin") for row in false_accepts),
+        "false_accept_crop_confidence_margin_distribution": _sorted_numeric_summary(
+            row.get("crop_confidence_margin") for row in false_accepts
+        ),
+        "false_accept_input_guard_plant_score_distribution": _sorted_numeric_summary(
+            (row.get("input_guard") or {}).get("plant_score") for row in input_guard_rows
+        ),
+        "false_accept_input_guard_non_plant_score_distribution": _sorted_numeric_summary(
+            (row.get("input_guard") or {}).get("non_plant_score") for row in input_guard_rows
+        ),
+        "hardest_false_accept_examples": [
+            {
+                "image_path": row.get("image_path"),
+                "group": row.get("group"),
+                "predicted_crop": row.get("predicted_crop"),
+                "predicted_part": row.get("predicted_part"),
+                "crop_confidence": row.get("crop_confidence"),
+                "routing_margin": row.get("routing_margin"),
+                "crop_confidence_margin": row.get("crop_confidence_margin"),
+                "rejection_reason": row.get("rejection_reason"),
+                "runtime_gate_reasons": row.get("runtime_gate_reasons"),
+            }
+            for row in hardest_false_accepts
+        ],
+        "false_accept_failure_causes": [
+            {"cause": cause, "count": count}
+            for cause, count in false_accept_causes.most_common()
+        ],
+        "false_reject_count": len(false_rejects),
+        "false_reject_failure_causes": [
+            {"cause": cause, "count": count}
+            for cause, count in false_reject_causes.most_common()
+        ],
+    }
+
+
+def select_recommendation(ranked_variants: Sequence[JsonDict]) -> JsonDict:
+    eligible = [row for row in ranked_variants if row.get("variant_id") != "baseline" and bool(row.get("eligible", False))]
+    rejected = [row for row in ranked_variants if row.get("variant_id") != "baseline" and not bool(row.get("eligible", False))]
+    recommended = eligible[0] if eligible else {}
+    best_rejected = rejected[0] if rejected else {}
+    return {
+        "eligible_variants": eligible,
+        "rejected_variants": rejected,
+        "recommended": recommended,
+        "best_rejected": best_rejected,
+        "selection_summary": {
+            "eligible_variant_count": len(eligible),
+            "rejected_variant_count": len(rejected),
+            "has_eligible_recommendation": bool(eligible),
+            "recommended_variant_id": recommended.get("variant_id") if recommended else None,
+            "best_rejected_variant_id": best_rejected.get("variant_id") if best_rejected else None,
+        },
+    }
+
+
 def calibrate_router_surface(
     root: Path,
     *,
@@ -465,6 +623,8 @@ def calibrate_router_surface(
     strategy: str = "grid",
     progress_every: int = 25,
     collect_input_guard_scores: bool = False,
+    adaptive_top_k: int = 10,
+    adaptive_n_per_group: int = 5,
 ) -> JsonDict:
     dataset = discover_eval_samples(root)
     if not dataset:
@@ -484,8 +644,8 @@ def calibrate_router_surface(
             "Use a smaller preset, fewer --sweep values, or raise --max-variants intentionally."
         )
     resolved_strategy = str(strategy or "grid").strip().lower()
-    if resolved_strategy not in {"grid", "replay-thresholds"}:
-        raise ValueError("strategy must be one of: grid, replay-thresholds")
+    if resolved_strategy not in {"grid", "replay-thresholds", "adaptive"}:
+        raise ValueError("strategy must be one of: grid, replay-thresholds, adaptive")
     if resolved_strategy == "replay-thresholds":
         unsafe = sorted(parameter for parameter in grid if parameter not in REPLAY_SAFE_PARAMETERS)
         if unsafe:
@@ -540,6 +700,59 @@ def calibrate_router_surface(
             )
         )
 
+    # Adaptive successive-halving strategy: evaluate many candidates on a small
+    # balanced subset first, promote top candidates to full eval, then rank.
+    if resolved_strategy == "adaptive":
+        # build full candidate list but do not evaluate yet
+        grid_variants = list(iter_sweep_overrides(grid))
+        # small balanced subset: sample up to N_PER_GROUP images per group
+        N_PER_GROUP = int(adaptive_n_per_group)
+        groups = {}
+        for row in baseline_samples:
+            g = str(row.get("group") or "")
+            groups.setdefault(g, []).append(row)
+        small_subset = []
+        for g, rows in groups.items():
+            small_subset.extend(rows[:N_PER_GROUP])
+
+        quick_results: List[JsonDict] = []
+        for overrides in grid_variants:
+            variant_config = apply_overrides(base_config, overrides)
+            # reuse router without reloading models
+            quick = evaluate_variant(
+                router,
+                small_subset,
+                config=variant_config,
+                overrides=overrides,
+                progress_label="ADAPTIVE_QUICK",
+                progress_every=max(1, progress_every),
+                collect_input_guard_scores=collect_input_guard_scores,
+            )
+            quick_results.append(quick)
+
+        # Promote top-K by negative FAR then abstention, keep reasonable cap
+        top_k = int(adaptive_top_k)
+        promoted = sorted(
+            quick_results,
+            key=lambda r: (float(r.get("metrics", {}).get("negative_false_accept_rate", 1.0)), float(r.get("metrics", {}).get("abstention_rate", 1.0)))
+        )[: min(top_k, max(1, len(quick_results)))]
+
+        # Full evaluation for promoted
+        variants = []
+        for promo in promoted:
+            overrides = promo.get("overrides") or {}
+            variant_config = apply_overrides(base_config, overrides)
+            full = evaluate_variant(
+                router,
+                dataset,
+                config=variant_config,
+                overrides=overrides,
+                progress_label="ADAPTIVE_FULL",
+                progress_every=progress_every,
+                collect_input_guard_scores=collect_input_guard_scores,
+            )
+            variants.append(full)
+
     ranked = annotate_and_rank_variants(
         [baseline, *variants],
         baseline=baseline,
@@ -550,7 +763,10 @@ def calibrate_router_surface(
         max_wrong_part_rejection_drop=max_wrong_part_rejection_drop,
         max_p95_latency_regression=max_p95_latency_regression,
     )
-    recommended = ranked[0] if ranked else baseline
+    selection = select_recommendation(ranked)
+    recommended = selection["recommended"]
+    best_rejected = selection["best_rejected"]
+    failure_analysis_source = recommended or best_rejected or baseline
     variant_times = [float(row.get("metrics", {}).get("variant_wall_time_ms", 0.0)) for row in variants]
 
     result = {
@@ -565,7 +781,12 @@ def calibrate_router_surface(
         "variant_count": len(variants),
         "baseline": baseline if include_samples else _strip_samples(baseline),
         "recommended": recommended if include_samples else _strip_samples(recommended),
+        "best_rejected": best_rejected if include_samples else _strip_samples(best_rejected),
+        "selection_summary": selection["selection_summary"],
+        "failure_analysis": build_failure_analysis(failure_analysis_source.get("samples") or []),
         "variants": ranked if include_samples else [_strip_samples(row) for row in ranked],
+        "eligible_variants": selection["eligible_variants"] if include_samples else [_strip_samples(row) for row in selection["eligible_variants"]],
+        "rejected_variants": selection["rejected_variants"] if include_samples else [_strip_samples(row) for row in selection["rejected_variants"]],
         "runtime_summary": {
             "mean_variant_wall_time_ms": 0.0 if not variant_times else round(statistics.fmean(variant_times), 4),
             "max_variant_wall_time_ms": 0.0 if not variant_times else round(max(variant_times), 4),
@@ -652,7 +873,8 @@ def validate_router_candidate_overrides(
         max_wrong_part_rejection_drop=max_wrong_part_rejection_drop,
         max_p95_latency_regression=max_p95_latency_regression,
     )
-    accepted = [row for row in ranked if row.get("variant_id") != "baseline" and row.get("eligible")]
+    selection = select_recommendation(ranked)
+    accepted = selection["eligible_variants"]
 
     return {
         "dataset_root": str(root),
@@ -665,7 +887,9 @@ def validate_router_candidate_overrides(
         "baseline": baseline if include_samples else _strip_samples(baseline),
         "variants": ranked if include_samples else [_strip_samples(row) for row in ranked],
         "accepted": accepted if include_samples else [_strip_samples(row) for row in accepted],
-        "recommended": (accepted[0] if accepted else {}) if include_samples else (_strip_samples(accepted[0]) if accepted else {}),
+        "recommended": selection["recommended"] if include_samples else _strip_samples(selection["recommended"]),
+        "best_rejected": selection["best_rejected"] if include_samples else _strip_samples(selection["best_rejected"]),
+        "selection_summary": selection["selection_summary"],
     }
 
 
@@ -733,6 +957,18 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Cache plant/non-plant input-guard scores once so input guard thresholds can be replayed.",
     )
+    parser.add_argument(
+        "--adaptive-top-k",
+        type=int,
+        default=10,
+        help="Number of top quick-eval candidates to promote to full evaluation in adaptive strategy.",
+    )
+    parser.add_argument(
+        "--adaptive-n-per-group",
+        type=int,
+        default=5,
+        help="Number of per-group samples to use for quick adaptive evaluation.",
+    )
     parser.add_argument("--output", type=Path, help="Optional JSON output path")
     return parser
 
@@ -757,6 +993,8 @@ def main() -> int:
         strategy=args.strategy,
         progress_every=args.progress_every,
         collect_input_guard_scores=args.collect_input_guard_scores,
+        adaptive_top_k=args.adaptive_top_k,
+        adaptive_n_per_group=args.adaptive_n_per_group,
     )
     body = json.dumps(result, indent=2)
     # Try to write the requested output path; if that fails, write a fallback file

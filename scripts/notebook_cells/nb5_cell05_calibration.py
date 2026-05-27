@@ -17,7 +17,9 @@ if RUN_CALIBRATION:
         max_wrong_part_rejection_drop=MAX_WRONG_PART_REJECTION_DROP,
         max_p95_latency_regression=MAX_P95_LATENCY_REGRESSION,
         include_samples=INCLUDE_SAMPLES_IN_OUTPUT,
-        strategy=CALIBRATION_STRATEGY,
+        strategy=(CALIBRATION_STRATEGY or 'adaptive'),
+        adaptive_top_k=8,
+        adaptive_n_per_group=8,
         progress_every=PROGRESS_EVERY,
         collect_input_guard_scores=COLLECT_INPUT_GUARD_SCORES,
     )

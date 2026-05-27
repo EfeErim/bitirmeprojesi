@@ -76,3 +76,27 @@ def test_validate_calibration_payload_flags_unstable_recommendation():
         "part_precision_drop",
         "recommended_variant_ineligible",
     }
+
+
+def test_validate_calibration_payload_reports_no_eligible_recommendation():
+    payload = {
+        "sample_count": 3,
+        "baseline": _variant(crop_accuracy=0.95, part_non_unknown_precision=0.95),
+        "best_rejected": _variant(
+            crop_accuracy=0.90,
+            part_non_unknown_precision=0.88,
+            negative_false_accept_rate=0.14,
+            abstention_rate=0.25,
+        ),
+    }
+
+    issues = validator.validate_calibration_payload(
+        payload,
+        target_negative_far=0.05,
+        max_crop_accuracy_drop=0.02,
+        max_part_precision_drop=0.02,
+        max_abstention_rate=0.30,
+        min_samples=1,
+    )
+
+    assert [issue.code for issue in issues] == ["no_eligible_recommendation"]

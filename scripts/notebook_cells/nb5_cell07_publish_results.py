@@ -19,6 +19,20 @@ if PUBLISH_RESULTS_TO_GIT:
             shutil.copy2(source_path, destination)
             copied.append(str(destination))
 
+    # Also include failure analysis and selection summary if present
+    dev_result = (globals().get('calibration_result') or {})
+    if dev_result:
+        if dev_result.get('failure_analysis'):
+            (target_dir / 'dev_failure_analysis.json').write_text(
+                json.dumps(dev_result.get('failure_analysis'), indent=2), encoding='utf-8'
+            )
+            copied.append(str(target_dir / 'dev_failure_analysis.json'))
+        # archive eligible/rejected lists
+        (target_dir / 'dev_selection_summary.json').write_text(
+            json.dumps(dev_result.get('selection_summary') or {}, indent=2), encoding='utf-8'
+        )
+        copied.append(str(target_dir / 'dev_selection_summary.json'))
+
     summary = {
         'created_at': stamp,
         'copied': copied,
