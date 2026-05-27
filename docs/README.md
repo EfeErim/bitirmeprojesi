@@ -96,6 +96,7 @@ Supporting references:
 - [architecture/augmentation_implementation_guide.md](architecture/augmentation_implementation_guide.md)
 - [architecture/router_performance_literature_review.md](architecture/router_performance_literature_review.md)
 - [architecture/notebook8_router_performance_plan.md](architecture/notebook8_router_performance_plan.md)
+- [architecture/router_calibration_recovery_plan.md](architecture/router_calibration_recovery_plan.md)
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)
 - [architecture/plantness_input_guard_prompt_groups.md](architecture/plantness_input_guard_prompt_groups.md)
