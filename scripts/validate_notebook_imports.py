@@ -886,16 +886,18 @@ def test_router_calibration_notebook_contract() -> None:
     assert "from scripts.calibrate_router_surface import calibrate_router_surface" in sources.full_source
     assert "ROUTER_EVAL_ROOT = 'data/router_eval'" in sources.full_source
     assert "HOLDOUT_EVAL_ROOT = 'data/router_eval_holdout'" in sources.full_source
-    assert "RUN_BASELINE_EVAL = True" in sources.full_source
+    assert "RUN_BASELINE_EVAL = False" in sources.full_source
     assert "RUN_CALIBRATION = True" in sources.full_source
     assert "RUN_HOLDOUT_VALIDATION = True" in sources.full_source
-    assert "CALIBRATION_PRESET = 'quick'" in sources.full_source
+    assert "CALIBRATION_STRATEGY = 'replay-thresholds'" in sources.full_source
+    assert "CALIBRATION_PRESET = 'handoff'" in sources.full_source
     assert "validate_router_candidate_overrides" in sources.full_source
     assert "run_cell_script('nb5_cell06_holdout_validation.py', globals())" in sources.full_source
     assert "target_negative_false_accept_rate=TARGET_NEGATIVE_FALSE_ACCEPT_RATE" in sources.full_source
     assert "max_crop_accuracy_drop=MAX_CROP_ACCURACY_DROP" in sources.full_source
     assert "max_part_precision_drop=MAX_PART_PRECISION_DROP" in sources.full_source
     assert "max_wrong_part_rejection_drop=MAX_WRONG_PART_REJECTION_DROP" in sources.full_source
+    assert "strategy=CALIBRATION_STRATEGY" in sources.full_source
 
 
 def test_ood_oe_quality_notebook_contract() -> None:

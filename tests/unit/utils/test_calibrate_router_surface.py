@@ -41,6 +41,58 @@ def test_apply_overrides_mirrors_vlm_values_into_active_profile():
     assert base_config["router"]["vlm"]["profiles"]["balanced"]["sam3_prompt_limit"] == 6
 
 
+def test_replay_variant_applies_confidence_and_margin_gates_without_model_rerun():
+    samples = [
+        {
+            "group": "id",
+            "expected_crop": "tomato",
+            "expected_part": "leaf",
+            "predicted_crop": "tomato",
+            "predicted_part": "leaf",
+            "router_handoff_crop": True,
+            "handoff_crop": True,
+            "crop_confidence": 0.70,
+            "routing_margin": 0.04,
+            "crop_correct": True,
+            "part_correct": True,
+            "part_abstained": False,
+            "unsupported_part_emitted": False,
+            "latency_ms": 10.0,
+        },
+        {
+            "group": "off_crop",
+            "expected_crop": "unknown",
+            "expected_part": "unknown",
+            "predicted_crop": "tomato",
+            "predicted_part": "leaf",
+            "router_handoff_crop": True,
+            "handoff_crop": True,
+            "crop_confidence": 0.66,
+            "routing_margin": 0.20,
+            "crop_correct": False,
+            "part_correct": False,
+            "part_abstained": False,
+            "unsupported_part_emitted": False,
+            "latency_ms": 10.0,
+        },
+    ]
+
+    replayed = calibrator.replay_variant(
+        samples,
+        overrides={
+            "inference.router_min_confidence": 0.65,
+            "inference.router_min_margin": 0.10,
+        },
+    )
+
+    rows = replayed["samples"]
+    assert rows[0]["handoff_crop"] is False
+    assert rows[0]["runtime_gate_reasons"] == ["router_min_margin"]
+    assert rows[0]["predicted_part"] == "unknown"
+    assert rows[1]["handoff_crop"] is True
+    assert replayed["metrics"]["negative_false_accept_rate"] == 1.0
+
+
 def test_rank_variants_prefers_eligible_low_false_accept_config():
     baseline = {
         "metrics": {

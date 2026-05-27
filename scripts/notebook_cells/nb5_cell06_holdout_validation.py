@@ -25,6 +25,8 @@ if RUN_HOLDOUT_VALIDATION:
             max_wrong_part_rejection_drop=MAX_WRONG_PART_REJECTION_DROP,
             max_p95_latency_regression=MAX_P95_LATENCY_REGRESSION,
             include_samples=INCLUDE_SAMPLES_IN_OUTPUT,
+            strategy=CALIBRATION_STRATEGY,
+            progress_every=PROGRESS_EVERY,
         )
         _write_json(HOLDOUT_VALIDATION_OUTPUT, holdout_result)
 

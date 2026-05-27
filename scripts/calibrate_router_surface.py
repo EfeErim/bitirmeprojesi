@@ -30,6 +30,10 @@ from src.router.router_pipeline import RouterPipeline
 from src.router.vlm_stages import build_pipeline_surface_config
 
 JsonDict = Dict[str, Any]
+REPLAY_SAFE_PARAMETERS = {
+    "inference.router_min_confidence",
+    "inference.router_min_margin",
+}
 
 SUPPORTED_PARAMETERS: Dict[str, str] = {
     "router_min_confidence": "inference.router_min_confidence",
@@ -213,18 +217,25 @@ def _variant_id(overrides: JsonDict) -> str:
     return hashlib.sha1(body.encode("utf-8")).hexdigest()[:12]
 
 
+def _print_progress(message: str) -> None:
+    print(message, flush=True)
+
+
 def evaluate_variant(
     router: RouterPipeline,
     dataset: Sequence[JsonDict],
     *,
     config: JsonDict,
     overrides: JsonDict,
+    progress_label: str = "",
+    progress_every: int = 25,
 ) -> JsonDict:
     _apply_config_to_loaded_router(router, config)
 
     samples: List[JsonDict] = []
     started_variant = time.perf_counter()
-    for item in dataset:
+    total = len(dataset)
+    for index, item in enumerate(dataset, start=1):
         image = Image.open(item["image_path"]).convert("RGB")
         started = time.perf_counter()
         analysis = router.analyze_image_result(image)
@@ -237,6 +248,9 @@ def evaluate_variant(
                 config=config,
             )
         )
+        if progress_label and (index == 1 or index == total or index % max(1, int(progress_every)) == 0):
+            elapsed = time.perf_counter() - started_variant
+            _print_progress(f"[{progress_label}] {index}/{total} samples elapsed={elapsed:.1f}s")
 
     metrics = summarize_predictions(samples)
     metrics["variant_wall_time_ms"] = round((time.perf_counter() - started_variant) * 1000.0, 4)
@@ -245,6 +259,55 @@ def evaluate_variant(
         "overrides": copy.deepcopy(overrides),
         "metrics": metrics,
         "samples": samples,
+    }
+
+
+def _is_replay_safe_overrides(overrides: JsonDict) -> bool:
+    return set((overrides or {}).keys()).issubset(REPLAY_SAFE_PARAMETERS)
+
+
+def _with_replayed_thresholds(samples: Sequence[JsonDict], overrides: JsonDict) -> List[JsonDict]:
+    min_confidence = overrides.get("inference.router_min_confidence")
+    min_margin = overrides.get("inference.router_min_margin")
+    replayed: List[JsonDict] = []
+    for sample in samples:
+        row = dict(sample)
+        raw_handoff = bool(row.get("router_handoff_crop", row.get("handoff_crop", False)))
+        gate_reasons: List[str] = []
+        if raw_handoff and min_confidence is not None and float(row.get("crop_confidence", 0.0) or 0.0) < float(min_confidence):
+            gate_reasons.append("router_min_confidence")
+        routing_margin = row.get("routing_margin")
+        if (
+            raw_handoff
+            and min_margin is not None
+            and routing_margin is not None
+            and float(routing_margin) < float(min_margin)
+        ):
+            gate_reasons.append("router_min_margin")
+
+        handoff = raw_handoff and not gate_reasons
+        row["handoff_crop"] = bool(handoff)
+        row["runtime_gate_rejected"] = bool(gate_reasons)
+        row["runtime_gate_reasons"] = gate_reasons
+        if not handoff:
+            row["predicted_part"] = "unknown"
+            row["part_abstained"] = True
+            row["part_correct"] = False
+            row["unsupported_part_emitted"] = False
+        replayed.append(row)
+    return replayed
+
+
+def replay_variant(samples: Sequence[JsonDict], *, overrides: JsonDict) -> JsonDict:
+    started = time.perf_counter()
+    replayed = _with_replayed_thresholds(samples, overrides)
+    metrics = summarize_predictions(replayed)
+    metrics["variant_wall_time_ms"] = round((time.perf_counter() - started) * 1000.0, 4)
+    return {
+        "variant_id": "baseline" if not overrides else _variant_id(overrides),
+        "overrides": copy.deepcopy(overrides),
+        "metrics": metrics,
+        "samples": replayed,
     }
 
 
@@ -358,6 +421,8 @@ def calibrate_router_surface(
     max_wrong_part_rejection_drop: float = 0.02,
     max_p95_latency_regression: float = 0.25,
     include_samples: bool = False,
+    strategy: str = "grid",
+    progress_every: int = 25,
 ) -> JsonDict:
     dataset = discover_eval_samples(root)
     if not dataset:
@@ -376,6 +441,16 @@ def calibrate_router_surface(
             f"Sweep expands to {total_variants} variants, above --max-variants={max_variants}. "
             "Use a smaller preset, fewer --sweep values, or raise --max-variants intentionally."
         )
+    resolved_strategy = str(strategy or "grid").strip().lower()
+    if resolved_strategy not in {"grid", "replay-thresholds"}:
+        raise ValueError("strategy must be one of: grid, replay-thresholds")
+    if resolved_strategy == "replay-thresholds":
+        unsafe = sorted(parameter for parameter in grid if parameter not in REPLAY_SAFE_PARAMETERS)
+        if unsafe:
+            raise RuntimeError(
+                "replay-thresholds can only replay cached runtime threshold gates. "
+                f"Move these parameters to grid mode or remove them: {', '.join(unsafe)}"
+            )
 
     router = RouterPipeline(config=base_config, device=device)
     router.load_models()
@@ -385,11 +460,19 @@ def calibrate_router_surface(
             "Check router.vlm.enabled, model availability, and router dependency installation."
         )
 
-    baseline = evaluate_variant(router, dataset, config=base_config, overrides={})
+    baseline = evaluate_variant(
+        router,
+        dataset,
+        config=base_config,
+        overrides={},
+        progress_label="BASELINE",
+        progress_every=progress_every,
+    )
     variants: List[JsonDict] = []
     seen_variants = {json.dumps({}, sort_keys=True)}
     seen_configs = {json.dumps(base_config, sort_keys=True, default=str)}
-    for overrides in iter_sweep_overrides(grid):
+    baseline_samples = list(baseline.get("samples") or [])
+    for index, overrides in enumerate(iter_sweep_overrides(grid), start=1):
         key = json.dumps(overrides, sort_keys=True)
         if key in seen_variants:
             continue
@@ -399,7 +482,19 @@ def calibrate_router_surface(
         if config_key in seen_configs:
             continue
         seen_configs.add(config_key)
-        variants.append(evaluate_variant(router, dataset, config=variant_config, overrides=overrides))
+        if resolved_strategy == "replay-thresholds" and _is_replay_safe_overrides(overrides):
+            variants.append(replay_variant(baseline_samples, overrides=overrides))
+            continue
+        variants.append(
+            evaluate_variant(
+                router,
+                dataset,
+                config=variant_config,
+                overrides=overrides,
+                progress_label=f"VARIANT {index}",
+                progress_every=progress_every,
+            )
+        )
 
     ranked = annotate_and_rank_variants(
         [baseline, *variants],
@@ -419,6 +514,7 @@ def calibrate_router_surface(
         "sample_count": len(dataset),
         "config_env": config_env,
         "device": device,
+        "strategy": resolved_strategy,
         "preset": preset,
         "sweep_grid": grid,
         "variant_count": len(variants),
@@ -446,6 +542,8 @@ def validate_router_candidate_overrides(
     max_wrong_part_rejection_drop: float = 0.02,
     max_p95_latency_regression: float = 0.25,
     include_samples: bool = False,
+    strategy: str = "grid",
+    progress_every: int = 25,
 ) -> JsonDict:
     """Evaluate selected dev-set calibration candidates on an independent root."""
     dataset = discover_eval_samples(root)
@@ -461,9 +559,18 @@ def validate_router_candidate_overrides(
             "Check router.vlm.enabled, model availability, and router dependency installation."
         )
 
-    baseline = evaluate_variant(router, dataset, config=base_config, overrides={})
+    baseline = evaluate_variant(
+        router,
+        dataset,
+        config=base_config,
+        overrides={},
+        progress_label="HOLDOUT BASELINE",
+        progress_every=progress_every,
+    )
     variants: List[JsonDict] = []
     seen: set[str] = set()
+    resolved_strategy = str(strategy or "grid").strip().lower()
+    baseline_samples = list(baseline.get("samples") or [])
     for overrides in candidate_overrides:
         normalized = dict(overrides or {})
         if not normalized:
@@ -473,7 +580,19 @@ def validate_router_candidate_overrides(
             continue
         seen.add(key)
         variant_config = apply_overrides(base_config, normalized)
-        variants.append(evaluate_variant(router, dataset, config=variant_config, overrides=normalized))
+        if resolved_strategy == "replay-thresholds" and _is_replay_safe_overrides(normalized):
+            variants.append(replay_variant(baseline_samples, overrides=normalized))
+        else:
+            variants.append(
+                evaluate_variant(
+                    router,
+                    dataset,
+                    config=variant_config,
+                    overrides=normalized,
+                    progress_label="HOLDOUT VARIANT",
+                    progress_every=progress_every,
+                )
+            )
 
     ranked = annotate_and_rank_variants(
         [baseline, *variants],
@@ -492,6 +611,7 @@ def validate_router_candidate_overrides(
         "sample_count": len(dataset),
         "config_env": config_env,
         "device": device,
+        "strategy": resolved_strategy,
         "candidate_count": len(variants),
         "baseline": baseline if include_samples else _strip_samples(baseline),
         "variants": ranked if include_samples else [_strip_samples(row) for row in ranked],
@@ -515,6 +635,15 @@ def _build_parser() -> argparse.ArgumentParser:
         choices=["none", *sorted(PRESET_SWEEPS.keys())],
         default="quick",
         help="Built-in sweep grid. Use 'none' with explicit --sweep entries.",
+    )
+    parser.add_argument(
+        "--strategy",
+        choices=["grid", "replay-thresholds"],
+        default="grid",
+        help=(
+            "grid re-runs router inference for every variant. replay-thresholds runs router inference once "
+            "and replays router_min_confidence/router_min_margin gates from cached evidence."
+        ),
     )
     parser.add_argument(
         "--sweep",
@@ -549,6 +678,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Maximum allowed p95 latency increase vs baseline as a fraction (default: 0.25).",
     )
     parser.add_argument("--include-samples", action="store_true", help="Include per-sample rows for every variant.")
+    parser.add_argument("--progress-every", type=int, default=25, help="Print router progress every N samples.")
     parser.add_argument("--output", type=Path, help="Optional JSON output path")
     return parser
 
@@ -570,6 +700,8 @@ def main() -> int:
         max_wrong_part_rejection_drop=args.max_wrong_part_rejection_drop,
         max_p95_latency_regression=args.max_p95_latency_regression,
         include_samples=args.include_samples,
+        strategy=args.strategy,
+        progress_every=args.progress_every,
     )
     body = json.dumps(result, indent=2)
     # Try to write the requested output path; if that fails, write a fallback file
