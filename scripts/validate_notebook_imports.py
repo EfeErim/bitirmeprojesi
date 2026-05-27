@@ -33,7 +33,7 @@ REPO_BOOTSTRAP_REQUIRED = (
     "from pathlib import Path",
     "CLONE_TARGET = Path('/content/bitirmeprojesi')",
     "REPO_URL = os.environ.get('AADS_REPO_URL'",
-    "['git', 'clone', '--depth', '1', clone_url, str(CLONE_TARGET)]",
+    "['git', 'clone', '--depth', '1'",
 )
 UPDATE_CHECK_REQUIRED = (
     "repo_root_for_update_check = _ensure_repo_root_for_update_check()",
@@ -891,6 +891,8 @@ def test_router_calibration_notebook_contract() -> None:
     assert "RUN_HOLDOUT_VALIDATION = True" in sources.full_source
     assert "CALIBRATION_STRATEGY = 'replay-thresholds'" in sources.full_source
     assert "CALIBRATION_PRESET = 'handoff'" in sources.full_source
+    assert "Notebook 5 first cell started." in sources.full_source
+    assert "['git', 'clone', '--depth', '1', '--progress'" in sources.full_source
     assert "validate_router_candidate_overrides" in sources.full_source
     assert "run_cell_script('nb5_cell06_holdout_validation.py', globals())" in sources.full_source
     assert "target_negative_false_accept_rate=TARGET_NEGATIVE_FALSE_ACCEPT_RATE" in sources.full_source

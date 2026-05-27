@@ -371,10 +371,12 @@ def bootstrap_notebook(
             colab_requirements = ROOT / "colab_notebooks" / "requirements_colab.txt"
             if colab_requirements.exists():
                 print(f"[BOOTSTRAP] Installing {colab_requirements.name}...")
-                subprocess.run(
-                    [sys.executable, "-m", "pip", "install", "-q", "-r", str(colab_requirements)],
+                print("[BOOTSTRAP] pip install may take several minutes on a fresh runtime.", flush=True)
+                completed = subprocess.run(
+                    [sys.executable, "-m", "pip", "install", "--progress-bar", "on", "-r", str(colab_requirements)],
                     check=False,
                 )
+                print(f"[BOOTSTRAP] pip install returncode={completed.returncode}", flush=True)
         
         result["bootstrap_status"] = "ok"
         print(f"[BOOTSTRAP] {notebook_name} bootstrap complete.")
