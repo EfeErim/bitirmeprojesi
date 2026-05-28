@@ -1,0 +1,6 @@
+# Example Codex config showing how to point the agent at the system prompt
+# Replace the path below with the relative path inside your repo if needed.
+model_instructions_file = ".codex/codex_base_instructions.md"
+
+# You can also set per-subagent instruction files using the same key in a
+# subagent config.

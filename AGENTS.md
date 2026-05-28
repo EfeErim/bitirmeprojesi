@@ -105,6 +105,28 @@ Use the smallest set that covers the task.
 - Use `aads-inference-runtime` plus `aads-repo-hygiene` for runtime bugfixes, adapter lookup regressions, or inference-facing docs and tests.
 - Use `aads-colab-notebooks` plus `aads-bugfix-debugging` for notebook wrapper failures, stale notebook state, dataset-materialization bugs, or notebook-only regressions.
 - Use `aads-bugfix-debugging` plus `aads-repo-hygiene` when the fix should add regression tests, validation commands, benchmark checks, or contributor-facing debugging guidance.
+
+## Command Output and Token Usage
+
+When agents run shell commands (search, build, test, or inspection), command
+output can be arbitrarily large and can drastically increase token consumption
+and pollute the model's context. For coding agents we recommend two pragmatic
+controls inspired by community best-practices:
+
+- Byte-cap unknown or potentially large command output. Example: pipe
+	commands through a byte-capper such as:
+
+	```bash
+	<COMMAND> 2>&1 | head -c 4000
+	```
+
+- Prefer summarized output for noisy tools (test suites, builds, linters). Only
+	present the agent with success/failure status and a short list of relevant
+	errors/warnings unless a deeper log review is explicitly requested.
+
+See `.codex/codex_base_instructions.md` for a recommended system prompt that
+enforces these rules, and use the `.codex/config_example.toml` entry to point
+Codex (or compatible agents) at the instruction file.
 - Use `aads-colab-notebooks` plus `aads-inference-runtime` for Notebook 1, Notebook 3, or Notebook 4 tasks that stay on inference and adapter-validation surfaces.
 - If a task spans training and inference through the saved adapter contract, anchor on the canonical workflow and runtime entrypoints rather than notebook-only behavior.
 
