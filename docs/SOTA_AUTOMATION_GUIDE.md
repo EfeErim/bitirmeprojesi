@@ -638,47 +638,22 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-05-27T08:20:43Z`
+Generated: `2026-06-01T06:53:47Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
 Candidate scan could not query all configured sources:
 
-- `out-of-distribution detection`: network access blocked by local permissions
-- `energy based ood`: network access blocked by local permissions
-- `mahalanobis ood`: network access blocked by local permissions
-- `logitnorm`: network access blocked by local permissions
-- `selective prediction`: network access blocked by local permissions
-- `segment anything`: network access blocked by local permissions
-- `sam segmentation`: network access blocked by local permissions
-- `bioclip`: network access blocked by local permissions
-- `router calibration`: network access blocked by local permissions
-- `conformal prediction`: network access blocked by local permissions
-
-#### Reviewer-Only Web Fallback Candidates
-
-Local arXiv API access was blocked in this environment, so these candidates were found through a manual web fallback on 2026-05-27. They are not accepted repo guidance until a maintainer reviews the primary source and promotes any durable finding into the Literature Anchors section.
-
-##### Sparsity as a Key: Unlocking New Insights from Latent Structures for Out-of-Distribution Detection
-
-- Query: `out-of-distribution detection vision 2026`
-- Published: `2026-04-29`
-- Source: https://arxiv.org/abs/2604.26409
-- Review note: Potential OOD-method candidate for future comparison work; only relevant if the repo evaluates ViT latent-feature OOD scoring beyond the current energy/Mahalanobis guards.
-
-##### Leveraging Data to Say No: Memory Augmented Plug-and-Play Selective Prediction
-
-- Query: `selective prediction calibration vision-language 2026`
-- Published: `2026-01-30`
-- Source: https://arxiv.org/abs/2601.22570
-- Review note: Relevant to router abstention and CLIP-like embedding calibration; treat as a candidate rationale for memory/retrieval-assisted selective prediction, not as current repo behavior.
-
-##### PromptSAMNet: A Memory-Enhanced Adaptive Prompting and Clustering-Augmented SAM 2.0 Framework for Multi-Leaf Plant Disease Diagnosis
-
-- Query: `segment anything plant disease 2026`
-- Published: `2026-05-14`
-- Source: https://doi.org/10.1016/j.asoc.2026.115447
-- Review note: Plant-disease SAM 2.0 adaptation candidate; useful as context for lesion-localization literature, but not a direct justification for changing the repo router without local evaluation.
+- `out-of-distribution detection`: query timed out
+- `energy based ood`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Aenergy+based+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `mahalanobis ood`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Amahalanobis+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `logitnorm`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Alogitnorm&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `selective prediction`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aselective+prediction&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `segment anything`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asegment+anything&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `sam segmentation`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asam+segmentation&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `bioclip`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Abioclip&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `router calibration`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Arouter+calibration&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `conformal prediction`: query timed out
 
 
 #### Repo Bug / Weak Point / Improvement Scan
