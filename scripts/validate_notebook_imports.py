@@ -493,6 +493,11 @@ def test_presentation_recording_notebook_contract() -> None:
         "clear_output(wait=True)",
         "Notebook 9 should clear upload and technical output before rendering the audience panel: {snippet}",
     )
+    _assert_contains(
+        sources.full_source,
+        "importlib.reload(presentation_demo_helpers)",
+        "Notebook 9 should reload presentation helpers after an in-place Colab git pull: {snippet}",
+    )
     assert sources.full_source.count("run_inference(") == 1, (
         "Notebook 9 should inherit Notebook 1 routing instead of adding a second router implementation"
     )

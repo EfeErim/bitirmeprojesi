@@ -115,7 +115,7 @@ def build_presentation_summary(
     final_status = _text(auto_result.get("status"), "unknown")
     final_message = _text(auto_result.get("message"), "")
     if diagnosis:
-        final_decision = f"{diagnosis} ({_float(auto_result.get('confidence')):.3f})"
+        final_decision = f"Model prediction: {diagnosis} ({_float(auto_result.get('confidence')):.3f})"
     elif final_message:
         final_decision = f"No disease prediction: {final_message}"
     else:
@@ -167,7 +167,7 @@ def build_presentation_flow_html(summary: Dict[str, Any]) -> str:
     ood_result = (
         "Input is outside the calibrated support."
         if summary["is_ood"]
-        else "Input is accepted within calibrated support."
+        else "Input is within calibrated support. This does not confirm that the predicted class is correct."
         if summary["ood_available"]
         else "No OOD assessment was produced because adapter inference did not run."
     )
@@ -217,8 +217,8 @@ def build_presentation_flow_html(summary: Dict[str, Any]) -> str:
         ),
         _flow_card(
             6,
-            "Disease + OOD Result",
-            "The specialist adapter predicts the disease class. Calibrated OOD checks whether the input fits the supported classes.",
+            "Adapter Output + OOD Check",
+            "The specialist adapter returns a model prediction. OOD checks calibrated support; it does not verify class correctness.",
             f"{summary['final_decision']} {ood_result}",
             badge="RESULT",
             tone=final_tone,
@@ -286,6 +286,8 @@ def render_presentation_demo(
         + build_presentation_flow_html(summary)
         + "<p class='note'><strong>Important:</strong> SAM3 boxes are not disease predictions. "
         "They mark candidate plant regions for BioCLIP-2.5 inspection.</p>"
+        + "<p class='note'><strong>Model limitation:</strong> The adapter output is a model prediction, not a verified diagnosis. "
+        "An in-distribution OOD result does not prove that the predicted class is correct.</p>"
         + "</div>"
     )
     display(HTML(header))
@@ -298,9 +300,10 @@ def render_presentation_demo(
         f"Plant part: {escape(summary['part'])}</div>"
         f"<div class='result-card'><strong>Safety decision</strong>{escape(summary['gate_status'])}<br>"
         f"Specialist adapter loaded: {_yes_no(summary['adapter_ran'])}</div>"
-        f"<div class='result-card'><strong>Disease prediction</strong>{escape(summary['final_decision'])}</div>"
+        f"<div class='result-card'><strong>Adapter model prediction (not a verified diagnosis)</strong>"
+        f"{escape(summary['final_decision'])}</div>"
         f"<div class='result-card'><strong>OOD assessment</strong>"
-        f"{'Out-of-distribution input' if summary['is_ood'] else 'Input accepted within calibrated support'}</div>"
+        f"{'Out-of-distribution input' if summary['is_ood'] else 'Within calibrated support; class correctness is not guaranteed'}</div>"
         "</div>"
         + "</div>"
     )

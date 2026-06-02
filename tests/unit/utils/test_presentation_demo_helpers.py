@@ -42,7 +42,7 @@ def test_build_presentation_summary_exposes_real_router_and_adapter_details() ->
     assert summary["pipeline_type"] == "sam3_bioclip25"
     assert summary["sam3_instances_raw"] == 4
     assert summary["adapter_ran"] is True
-    assert summary["final_decision"] == "late_blight (0.870)"
+    assert summary["final_decision"] == "Model prediction: late_blight (0.870)"
     assert summary["ood_available"] is True
 
 
@@ -81,7 +81,7 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
             "gate_reason": "Threshold checks passed.",
             "adapter_ran": True,
             "adapter_dir": "models/adapters/tomato/leaf",
-            "final_decision": "late_blight (0.870)",
+            "final_decision": "Model prediction: late_blight (0.870)",
             "ood_available": True,
             "ood_score": 0.12,
             "ood_threshold": 0.5,
@@ -93,7 +93,8 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
     assert "The boxes are not disease predictions" in html
     assert "BioCLIP-2.5 Router" in html
     assert "SD-LoRA Adapter" in html
-    assert "Disease + OOD Result" in html
+    assert "Adapter Output + OOD Check" in html
+    assert "it does not verify class correctness" in html
 
 
 def test_presentation_figure_labels_sam3_boxes_as_candidate_regions() -> None:
