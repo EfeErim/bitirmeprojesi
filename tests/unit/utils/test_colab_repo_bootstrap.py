@@ -253,6 +253,24 @@ def test_install_colab_requirements_raises_when_filtered_pip_install_fails(tmp_p
         raise AssertionError("Expected install_colab_requirements to raise on pip failure")
 
 
+def test_install_colab_requirements_prints_progress_for_successful_colab_install(tmp_path: Path, monkeypatch, capsys):
+    req = tmp_path / "requirements_colab.txt"
+    req.write_text("open-clip-torch~=3.2.0\n", encoding="utf-8")
+
+    def fake_run(command, check=False, stdout=None, stderr=None, text=None):
+        return subprocess.CompletedProcess(command, 0, stdout="")
+
+    monkeypatch.setattr(bootstrap.subprocess, "run", fake_run)
+    monkeypatch.setattr(bootstrap.time, "perf_counter", iter([10.0, 12.5]).__next__)
+
+    bootstrap.install_colab_requirements(req, in_colab=True)
+
+    assert capsys.readouterr().out.splitlines() == [
+        "[SETUP] Installing demo dependencies. A fresh Colab runtime may take several minutes...",
+        "[SETUP] Demo dependencies ready in 2.5s.",
+    ]
+
+
 def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
     monkeypatch.setattr(bootstrap, "resolve_hf_token", lambda: None)
     lines: list[str] = []
