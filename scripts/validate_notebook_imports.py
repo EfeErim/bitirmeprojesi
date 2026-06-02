@@ -448,6 +448,11 @@ def test_presentation_recording_notebook_contract() -> None:
         "run_cell_script('nb1_cell01_bootstrap.py', globals())",
         "Notebook 9 should reuse Notebook 1 bootstrap cell script: {snippet}",
     )
+    _assert_contains(
+        sources.first_code_source,
+        "os.environ['AADS_COLAB_REQUIREMENTS_FILE'] = 'requirements_presentation_colab.txt'",
+        "Notebook 9 should use the lightweight presentation dependency profile: {snippet}",
+    )
     for snippet in (
         "if CLONE_TARGET.exists():",
         "shutil.rmtree(CLONE_TARGET)",

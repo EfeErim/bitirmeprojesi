@@ -12,17 +12,17 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlsplit, urlunsplit
 
-
 # =============================================================================
 # Token Resolution
 # =============================================================================
+
 
 def _running_in_colab() -> bool:
     """Check if running in Google Colab."""
     try:
         import google.colab  # noqa: F401
         return True
-    except Exception as exc:
+    except Exception:
         import logging
         logging.exception('Unhandled exception')
         raise
@@ -36,7 +36,7 @@ def _resolve_colab_secret(secret_name: str) -> str:
     try:
         from google.colab import userdata
         return str(userdata.get(secret_name) or "").strip()
-    except Exception as exc:
+    except Exception:
         import logging
         logging.exception('Unhandled exception')
         raise
@@ -211,6 +211,7 @@ def setup_notebook_environment(
     repo_url: Optional[str] = None,
     install_requirements: bool = True,
     print_tokens: bool = True,
+    requirements_file: Optional[str | Path] = None,
 ) -> Path:
     """
     Complete notebook bootstrap: resolve repo, set sys.path, install requirements.
@@ -219,6 +220,7 @@ def setup_notebook_environment(
         repo_url: GitHub repo URL (optional, uses default if not provided)
         install_requirements: Whether to install Colab requirements
         print_tokens: Whether to print token resolution status
+        requirements_file: Repo-relative requirements file override
     
     Returns:
         Path to repo root
@@ -247,6 +249,15 @@ def setup_notebook_environment(
     # Install requirements in Colab if needed
     if install_requirements and _running_in_colab():
         from scripts.colab_repo_bootstrap import install_colab_requirements
-        install_colab_requirements(repo_root / "requirements_colab.txt", in_colab=True)
+        relative_requirements = Path(
+            requirements_file or os.environ.get("AADS_COLAB_REQUIREMENTS_FILE", "requirements_colab.txt")
+        )
+        requirements_path = (repo_root / relative_requirements).resolve()
+        try:
+            requirements_path.relative_to(repo_root.resolve())
+        except ValueError as exc:
+            raise ValueError(f"Colab requirements file must stay under the repo root: {relative_requirements}") from exc
+        print(f"[SETUP] Dependency profile: {relative_requirements}")
+        install_colab_requirements(requirements_path, in_colab=True)
     
     return repo_root

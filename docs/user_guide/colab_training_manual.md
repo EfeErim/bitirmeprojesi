@@ -974,6 +974,8 @@ Keep these out of git:
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
 
+Notebook 9 uses the narrower root `requirements_presentation_colab.txt` profile. It installs only the additional router-to-adapter presentation inference packages and avoids reinstalling training, notebook UI, and utility packages already unnecessary for the recording demo.
+
 
 
 

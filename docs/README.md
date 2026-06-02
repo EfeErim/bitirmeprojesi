@@ -114,5 +114,6 @@ Tracked-vs-generated boundaries and validation commands:
 Path confusion reminders:
 
 - `requirements_colab.txt` at repo root is the canonical Colab dependency list.
+- `requirements_presentation_colab.txt` is the lightweight Notebook 9 inference-only bootstrap profile.
 - `colab_notebooks/requirements_colab.txt` is a wrapper used by notebook-local bootstrap.
 - Notebook 2 telemetry export path: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
