@@ -448,6 +448,17 @@ def test_presentation_recording_notebook_contract() -> None:
         "run_cell_script('nb1_cell01_bootstrap.py', globals())",
         "Notebook 9 should reuse Notebook 1 bootstrap cell script: {snippet}",
     )
+    for snippet in (
+        "if CLONE_TARGET.exists():",
+        "shutil.rmtree(CLONE_TARGET)",
+        "repo_root = CLONE_TARGET.resolve()",
+        "raise FileNotFoundError",
+    ):
+        _assert_contains(
+            sources.first_code_source,
+            snippet,
+            "Notebook 9 should recover an incomplete Colab checkout before importing scripts: {snippet}",
+        )
     for script_name in (
         "nb1_cell02_access_check.py",
         "nb1_cell03_runtime_setup.py",
