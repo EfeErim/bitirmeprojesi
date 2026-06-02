@@ -80,8 +80,11 @@ def _flow_card(
     )
 
 
-def _proposal_label(index: int) -> str:
-    return f"Candidate region {index}"
+MAX_PRESENTATION_BOXES = 3
+
+
+def _select_presentation_detections(detections: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
+    return detections[:MAX_PRESENTATION_BOXES]
 
 
 def build_presentation_summary(
@@ -240,7 +243,8 @@ def _render_router_figure(summary: Dict[str, Any]) -> None:
     draw = ImageDraw.Draw(annotated)
     width, height = annotated.size
 
-    for index, detection in enumerate(summary["detections"], start=1):
+    visible_detections = _select_presentation_detections(summary["detections"])
+    for detection in visible_detections:
         bbox = _as_list(detection.get("bbox"))
         if len(bbox) < 4:
             continue
@@ -254,15 +258,12 @@ def _render_router_figure(summary: Dict[str, Any]) -> None:
             continue
         color = (66, 133, 244)
         draw.rectangle((x1, y1, x2, y2), outline=color, width=5)
-        label = _proposal_label(index)
-        draw.rectangle((x1, max(0.0, y1 - 24), min(width - 1.0, x1 + 280), y1), fill=(0, 0, 0))
-        draw.text((x1 + 4, max(0.0, y1 - 20)), label, fill=(255, 255, 255))
 
     fig, axes = plt.subplots(1, 2, figsize=(16, 7))
     axes[0].imshow(image)
     axes[0].set_title("1. Uploaded input image")
     axes[1].imshow(annotated)
-    axes[1].set_title("2. SAM3 region proposals for inspection")
+    axes[1].set_title(f"2. SAM3 candidate regions for inspection (showing {len(visible_detections)})")
     for axis in axes:
         axis.axis("off")
     plt.tight_layout()

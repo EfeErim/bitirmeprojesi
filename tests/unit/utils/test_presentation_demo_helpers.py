@@ -1,5 +1,5 @@
 from scripts.notebook_helpers.presentation_demo_helpers import (
-    _proposal_label,
+    _select_presentation_detections,
     build_presentation_flow_html,
     build_presentation_summary,
 )
@@ -97,5 +97,7 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
     assert "it does not verify class correctness" in html
 
 
-def test_presentation_figure_labels_sam3_boxes_as_candidate_regions() -> None:
-    assert _proposal_label(3) == "Candidate region 3"
+def test_presentation_figure_caps_visible_sam3_boxes() -> None:
+    detections = [{"bbox": [0, 0, 10, 10], "index": index} for index in range(12)]
+
+    assert _select_presentation_detections(detections) == detections[:3]
