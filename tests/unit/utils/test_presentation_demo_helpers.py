@@ -89,12 +89,13 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
         }
     )
 
-    assert "SAM3 Region Proposal" in html
-    assert "The boxes are not disease predictions" in html
-    assert "BioCLIP-2.5 Router" in html
-    assert "SD-LoRA Adapter" in html
-    assert "Adapter Output + OOD Check" in html
-    assert "it does not verify class correctness" in html
+    assert "SAM3 regions" in html
+    assert "2 retained from 4 proposals" in html
+    assert "BioCLIP route" in html
+    assert "tomato / leaf (0.920)" in html
+    assert "SD-LoRA adapter" in html
+    assert "Prediction + OOD" in html
+    assert "Within support; class not verified." in html
 
 
 def test_presentation_figure_caps_visible_sam3_boxes() -> None:

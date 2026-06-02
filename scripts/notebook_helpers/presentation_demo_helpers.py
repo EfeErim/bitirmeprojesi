@@ -9,18 +9,13 @@ PRESENTATION_STYLES = """
   .aads-demo {font-family: Arial, sans-serif; color: #102c40;}
   .aads-demo h2 {background: #071b2c; color: white; padding: 12px 16px; border-radius: 10px;}
   .aads-demo h3 {color: #12364d; margin-top: 22px;}
-  .aads-demo .flow {font-size: 17px; font-weight: 700; color: #12364d; padding: 12px; background: #e8f7f5;}
-  .aads-demo .flow-grid {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 14px 0 18px;}
-  .aads-demo .stage-card {padding: 12px; border: 2px solid #58a99f; border-radius: 12px; background: #f5fbfb;}
-  .aads-demo .stage-card.success {border-color: #3a9d68; background: #f2fbf6;}
-  .aads-demo .stage-card.warning {border-color: #e59b43; background: #fff9ef;}
-  .aads-demo .stage-number {font-size: 20px; color: #58a99f; font-weight: 700;}
-  .aads-demo .stage-title {font-size: 17px; color: #12364d; font-weight: 700; margin: 4px 0 7px;}
-  .aads-demo .stage-purpose {font-size: 13px; min-height: 83px; margin: 9px 0;}
-  .aads-demo .stage-output {font-size: 13px; border-top: 1px solid #c6d7df; padding-top: 8px;}
-  .aads-demo .badge {display: inline-block; color: white; background: #2b7c75; padding: 3px 7px; border-radius: 10px; font-size: 11px; font-weight: 700;}
-  .aads-demo .badge.success {background: #3a9d68;}
-  .aads-demo .badge.warning {background: #d2852f;}
+  .aads-demo .pipeline-strip {display: flex; align-items: stretch; gap: 5px; margin: 10px 0;}
+  .aads-demo .pipeline-step {flex: 1; min-width: 0; padding: 8px 9px; border: 2px solid #58a99f; border-radius: 9px; background: #f5fbfb;}
+  .aads-demo .pipeline-step.success {border-color: #3a9d68; background: #f2fbf6;}
+  .aads-demo .pipeline-step.warning {border-color: #e59b43; background: #fff9ef;}
+  .aads-demo .pipeline-arrow {align-self: center; color: #2b7c75; font-size: 20px; font-weight: 700;}
+  .aads-demo .step-title {font-size: 13px; color: #12364d; font-weight: 700; margin-bottom: 5px;}
+  .aads-demo .step-result {font-size: 12px; line-height: 1.25;}
   .aads-demo .result-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0;}
   .aads-demo .result-card {padding: 14px; border-radius: 12px; background: #edf5f7; border-left: 5px solid #2b7c75;}
   .aads-demo .result-card strong {display: block; color: #12364d; margin-bottom: 5px;}
@@ -56,26 +51,17 @@ def _yes_no(value: Any) -> str:
     return "Yes" if bool(value) else "No"
 
 
-def _badge(label: str, *, tone: str = "info") -> str:
-    return f"<span class='badge {escape(tone)}'>{escape(label)}</span>"
-
-
-def _flow_card(
+def _flow_step(
     number: int,
     title: str,
-    purpose: str,
     output: str,
     *,
-    badge: str,
     tone: str = "info",
 ) -> str:
     return (
-        f"<div class='stage-card {escape(tone)}'>"
-        f"<div class='stage-number'>{number:02d}</div>"
-        f"<div class='stage-title'>{escape(title)}</div>"
-        f"{_badge(badge, tone=tone)}"
-        f"<div class='stage-purpose'>{escape(purpose)}</div>"
-        f"<div class='stage-output'><strong>Result for this image:</strong><br>{escape(output)}</div>"
+        f"<div class='pipeline-step {escape(tone)}'>"
+        f"<div class='step-title'>{number:02d}. {escape(title)}</div>"
+        f"<div class='step-result'>{escape(output)}</div>"
         "</div>"
     )
 
@@ -168,70 +154,51 @@ def build_presentation_flow_html(summary: Dict[str, Any]) -> str:
     adapter_tone = "success" if summary["adapter_ran"] else "warning"
     final_tone = "success" if summary["adapter_ran"] and not summary["is_ood"] else "warning"
     ood_result = (
-        "Input is outside the calibrated support."
+        "Outside calibrated support."
         if summary["is_ood"]
-        else "Input is within calibrated support. This does not confirm that the predicted class is correct."
+        else "Within support; class not verified."
         if summary["ood_available"]
-        else "No OOD assessment was produced because adapter inference did not run."
+        else "OOD check unavailable."
     )
-    cards = (
-        _flow_card(
+    steps = (
+        _flow_step(
             1,
-            "Input Image",
-            "The system receives the single plant image uploaded by the user.",
-            Path(summary["image_path"]).name,
-            badge="INPUT",
+            "Input",
+            "Uploaded image",
         ),
-        _flow_card(
+        _flow_step(
             2,
-            "SAM3 Region Proposal",
-            "SAM3 proposes plant regions to inspect. The boxes are not disease predictions.",
+            "SAM3 regions",
             (
-                f"{summary['sam3_instances_raw']} raw regions found; "
-                f"{summary['sam3_instances_retained']} regions retained after filtering."
+                f"{summary['sam3_instances_retained']} retained "
+                f"from {summary['sam3_instances_raw']} proposals"
             ),
-            badge="ROI PROPOSALS",
         ),
-        _flow_card(
+        _flow_step(
             3,
-            "BioCLIP-2.5 Router",
-            "BioCLIP-2.5 scores crop and plant-part evidence from the full image and proposed regions.",
-            (
-                f"Selected route: crop={summary['crop']}, part={summary['part']}, "
-                f"crop confidence={summary['router_confidence']:.3f}."
-            ),
-            badge="CROP + PART",
+            "BioCLIP route",
+            f"{summary['crop']} / {summary['part']} ({summary['router_confidence']:.3f})",
         ),
-        _flow_card(
+        _flow_step(
             4,
-            "Safety Gate",
-            "If evidence is weak or conflicting, the system abstains instead of loading an adapter.",
-        summary["gate_status"],
-            badge=summary["gate_status"].upper(),
+            "Safety gate",
+            summary["gate_status"],
             tone="success" if summary["gate_status"] == "Accepted" else "warning",
         ),
-        _flow_card(
+        _flow_step(
             5,
-            "SD-LoRA Adapter",
-            "After an accepted route, the system loads the specialist disease adapter trained for the selected crop and part.",
-            f"Specialist adapter loaded={_yes_no(summary['adapter_ran'])}.",
-            badge="LOADED" if summary["adapter_ran"] else "SKIPPED",
+            "SD-LoRA adapter",
+            "Loaded" if summary["adapter_ran"] else "Skipped",
             tone=adapter_tone,
         ),
-        _flow_card(
+        _flow_step(
             6,
-            "Adapter Output + OOD Check",
-            "The specialist adapter returns a model prediction. OOD checks calibrated support; it does not verify class correctness.",
+            "Prediction + OOD",
             f"{summary['final_decision']} {ood_result}",
-            badge="RESULT",
             tone=final_tone,
         ),
     )
-    return (
-        "<div class='flow-grid'>"
-        + "".join(cards)
-        + "</div>"
-    )
+    return "<div class='pipeline-strip'>" + "<div class='pipeline-arrow'>&rarr;</div>".join(steps) + "</div>"
 
 
 def _render_router_figure(summary: Dict[str, Any]) -> None:
@@ -282,8 +249,6 @@ def render_presentation_demo(
     summary = build_presentation_summary(image_path, router_result=router_result, auto_result=auto_result)
     header = (
         f"{PRESENTATION_STYLES}<div class='aads-demo'><h2>AADS v6 - Detailed Router-to-Adapter Demo</h2>"
-        "<div class='flow'>Input image &rarr; SAM3 region proposals &rarr; BioCLIP-2.5 routing "
-        "&rarr; safety gate &rarr; specialist SD-LoRA adapter &rarr; disease + OOD result</div>"
         + build_presentation_flow_html(summary)
         + "<p class='note'><strong>Important:</strong> SAM3 boxes are not disease predictions. "
         "They mark candidate plant regions for BioCLIP-2.5 inspection.</p>"
