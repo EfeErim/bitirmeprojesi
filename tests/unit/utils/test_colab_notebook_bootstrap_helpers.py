@@ -3,6 +3,13 @@ from pathlib import Path
 from scripts import colab_notebook_bootstrap_helpers as bootstrap_helpers
 
 
+def test_presentation_colab_profile_keeps_peft_compatible_torchao_pin():
+    repo_root = Path(__file__).resolve().parents[3]
+    requirements = (repo_root / "requirements_presentation_colab.txt").read_text(encoding="utf-8").splitlines()
+
+    assert "torchao==0.17.0" in requirements
+
+
 def test_setup_notebook_environment_uses_repo_relative_requirements_override(tmp_path: Path, monkeypatch, capsys):
     requirements_path = tmp_path / "requirements_presentation_colab.txt"
     requirements_path.write_text("open-clip-torch~=3.2.0\n", encoding="utf-8")

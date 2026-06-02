@@ -256,7 +256,7 @@ def _check_runtime_dependencies() -> None:
     for module_name in required:
         try:
             __import__(module_name)
-        except Exception as exc:
+        except Exception:
             import logging
             logging.exception('Unhandled exception')
             raise
@@ -342,9 +342,9 @@ def test_adapter_surface() -> None:
 
 
 def test_runtime_surface() -> None:
+    from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction
     from src.pipeline.router_adapter_runtime import RouterAdapterRuntime
     from src.workflows.inference import InferenceWorkflow
-    from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction
 
     runtime = RouterAdapterRuntime(
         config={
@@ -463,6 +463,7 @@ def test_presentation_recording_notebook_contract() -> None:
         "if CLONE_TARGET.exists():",
         "shutil.rmtree(CLONE_TARGET)",
         "repo_root = CLONE_TARGET.resolve()",
+        "subprocess.run(['git', '-C', str(repo_root), 'pull', '--ff-only'], check=True)",
         "raise FileNotFoundError",
     ):
         _assert_contains(

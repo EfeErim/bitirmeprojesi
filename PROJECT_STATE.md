@@ -9,6 +9,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Canonical workflows live in `src/workflows/training.py` and `src/workflows/inference.py`.
 - Maintained notebook surfaces are 0, 1, 2, 3, 5, and 8; Notebook 4 is a convenience wrapper, and Notebooks 6/7 are validation surfaces.
 - Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. It renders real router and adapter payload details without changing canonical inference behavior.
+- Notebook 9 uses `requirements_presentation_colab.txt`; keep `torchao==0.17.0` in that lightweight profile because Colab's older preinstalled torchao can break PEFT adapter loading during warm-up.
 - The repo is pip-based and uses `./scripts/python.cmd` on Windows so the local `.venv` is preferred.
 - CI already covers notebook/import validation, config schema checks, OOD evidence consistency, router calibration stability, adapter smoke tests, metadata completeness, dataset integrity, notebook outputs, and benchmark capture.
 
