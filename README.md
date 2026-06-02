@@ -16,10 +16,13 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 - Notebook 3: [colab_notebooks/3_validate_exported_adapter_directly.ipynb](colab_notebooks/3_validate_exported_adapter_directly.ipynb)
 - Notebook 5: [colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb)
 - Notebook 8: [colab_notebooks/8_auto_router_adapter_prediction.ipynb](colab_notebooks/8_auto_router_adapter_prediction.ipynb)
+- Notebook 9 presentation demo: [colab_notebooks/9_presentation_recording_demo.ipynb](colab_notebooks/9_presentation_recording_demo.ipynb)
 - Training workflow: [src/workflows/training.py](src/workflows/training.py)
 - Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
 
 Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 6 is a batch-training regression surface used to exercise the maintained Notebook 2 cell contract, and Notebook 7 is a prepared-runtime OOD/OE quality audit surface. Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
+
+Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. It keeps the same canonical inference path, suppresses technical logs, and renders an audience-facing visual explanation of SAM3 region proposals, BioCLIP-2.5 routing, the safety gate, specialist adapter loading, the disease result, and the OOD assessment.
 
 ## What the repo covers
 

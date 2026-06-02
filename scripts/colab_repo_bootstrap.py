@@ -1069,34 +1069,34 @@ def print_notebook_access_report(
 
     relation = str(updates.get("relation", "unknown"))
     if relation == "up_to_date":
-        emit("[KONTROL] Repo guncel gorunuyor.")
+        emit("[CHECK] Repository appears up to date.")
     elif relation == "update_available":
-        emit(f"[KONTROL] Repo icin guncelleme var. Branch={updates.get('branch', '')}")
+        emit(f"[CHECK] Repository update available. Branch={updates.get('branch', '')}")
     else:
-        emit(f"[KONTROL] Repo guncelleme durumu okunamadi: {updates.get('message', 'bilgi yok')}")
+        emit(f"[CHECK] Repository update status could not be read: {updates.get('message', 'no details')}")
 
     read_access_mode = str(github.get("read_access_mode", "unavailable"))
     if read_access_mode == "public":
-        emit("[KONTROL] GitHub okuma erisimi public; clone/pull icin ekstra token gerekmiyor.")
+        emit("[CHECK] GitHub read access is public; clone and pull do not require an additional token.")
     elif read_access_mode == "token_required":
-        emit("[KONTROL] GitHub okuma erisimi token istiyor; private repo icin GH_TOKEN gerekli.")
+        emit("[CHECK] GitHub read access requires a token; set GH_TOKEN for a private repository.")
     else:
-        emit("[KONTROL] GitHub okuma erisimi dogrulanamadi.")
+        emit("[CHECK] GitHub read access could not be verified.")
 
     if bool(github.get("push_ready")):
-        emit("[KONTROL] GitHub push icin kimlik bilgisi hazir.")
+        emit("[CHECK] GitHub push credentials are available.")
     else:
-        emit("[KONTROL] GitHub push icin ek auth gerekli.")
+        emit("[CHECK] GitHub push requires additional authentication.")
 
     hf_mode = str(huggingface.get("access_mode", "not_checked"))
     if hf_mode == "public":
-        emit("[KONTROL] Gerekli Hugging Face modelleri anonim erisimle aciliyor.")
+        emit("[CHECK] Required Hugging Face models are available with anonymous access.")
     elif hf_mode == "token_required":
-        emit("[KONTROL] En az bir Hugging Face modeli token istiyor; Colab secret kullanin.")
+        emit("[CHECK] At least one Hugging Face model requires a token; use a Colab secret.")
     elif hf_mode == "not_checked":
-        emit("[KONTROL] Hugging Face model erisimi bu notebook icin ayrica kontrol edilmedi.")
+        emit("[CHECK] Hugging Face model access was not checked separately for this notebook.")
     else:
-        emit("[KONTROL] Hugging Face model erisimi dogrulanamadi.")
+        emit("[CHECK] Hugging Face model access could not be verified.")
 
 
 def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None) -> bool:
@@ -1105,15 +1105,15 @@ def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None
     token = resolve_hf_token()
     if not token:
         emit(
-            "[HF] Token bulunamadi. Inference veya egitimden once "
-            "HF_TOKEN adli Colab secret ya da env var tanimlayin."
+            "[HF] Token not found. Before inference or training, define HF_TOKEN "
+            "as a Colab secret or environment variable."
         )
         return False
 
     try:
         from huggingface_hub import HfApi, login
     except Exception as exc:
-        emit(f"[HF] huggingface_hub import edilemedi: {exc}")
+        emit(f"[HF] huggingface_hub could not be imported: {exc}")
         return False
 
     try:
@@ -1126,8 +1126,8 @@ def login_and_check_hf_token(*, print_fn: Optional[Callable[[str], None]] = None
             or profile.get("user")
             or "authenticated user"
         )
-        emit(f"[HF] Kimlik dogrulandi: {username}")
+        emit(f"[HF] Identity verified: {username}")
         return True
     except Exception as exc:
-        emit(f"[HF] Kimlik dogrulama kontrolu basarisiz: {exc}")
+        emit(f"[HF] Identity verification failed: {exc}")
         return False

@@ -10,15 +10,15 @@ UPLOAD_NEW_IMAGE = ANALYSIS_IMAGE_PATH is None and FORCE_UPLOAD_IF_NO_IMAGE
 
 if ANALYSIS_IMAGE_PATH is None and UPLOAD_NEW_IMAGE:
     if not running_in_colab():
-        raise ValueError('Colab disinda calisiyorsaniz ANALYSIS_IMAGE_PATH degerini elle verin.')
+        raise ValueError('Set ANALYSIS_IMAGE_PATH manually when running outside Colab.')
     from google.colab import files
     uploaded = files.upload()
     ANALYSIS_IMAGE_PATH = next(iter(uploaded.keys()))
 
 if ANALYSIS_IMAGE_PATH is None:
-    raise ValueError('Yukleme kapaliyken ANALYSIS_IMAGE_PATH zorunludur.')
+    raise ValueError('ANALYSIS_IMAGE_PATH is required when upload is disabled.')
 
-# Router cache kullanildigi icin farkli bir goruntu denemek icin bu hucreyi tekrar calistirmaniz yeterlidir.
+# Router models are cached, so rerun this cell to try another image.
 result = run_inference(
     ANALYSIS_IMAGE_PATH,
     config_env=CONFIG_ENV,
@@ -40,7 +40,7 @@ if runtime_profile:
 adapter_target = dict(result.get('adapter_target') or {})
 if INCLUDE_ADAPTER_TARGET and adapter_target.get('crop'):
     print(
-        f"[ADAPTER] hedef_crop={adapter_target.get('crop')} "
+        f"[ADAPTER] target_crop={adapter_target.get('crop')} "
         f"adapter_dir={adapter_target.get('adapter_dir')} "
         f"exists={bool(adapter_target.get('exists', False))}"
     )
@@ -48,7 +48,7 @@ if INCLUDE_ADAPTER_TARGET and adapter_target.get('crop'):
 diagnostics = dict(result.get('diagnostics') or {})
 top_candidates = list(diagnostics.get('top_crop_candidates') or [])
 if top_candidates:
-    print('[TANISAL] En iyi crop adaylari:')
+    print('[DIAGNOSTICS] Top crop candidates:')
     for index, candidate in enumerate(top_candidates, start=1):
         crop_name = str(candidate.get('crop', 'unknown') or 'unknown')
         part_name = str(candidate.get('part', 'unknown') or 'unknown')
@@ -61,14 +61,14 @@ if top_candidates:
 
 if diagnostics:
     print(
-        f"[TANISAL] crop_margin={float(diagnostics.get('crop_confidence_margin', 0.0) or 0.0):.3f} "
+        f"[DIAGNOSTICS] crop_margin={float(diagnostics.get('crop_confidence_margin', 0.0) or 0.0):.3f} "
         f"raw_part_label={str(diagnostics.get('raw_part_label', '') or '')} "
         f"raw_part_conf={float(diagnostics.get('raw_part_confidence', 0.0) or 0.0):.3f} "
         f"unknown_conf={float(diagnostics.get('part_unknown_confidence', 0.0) or 0.0):.3f}"
     )
     rejection_reason = str(diagnostics.get('part_rejection_reason', '') or '').strip()
     if rejection_reason:
-        print(f'[TANISAL] part_rejection_reason={rejection_reason}')
+        print(f'[DIAGNOSTICS] part_rejection_reason={rejection_reason}')
 
 primary_crop_conf = float(result.get('router_confidence', 0.0) or 0.0)
 runner_up_crop_conf = None
@@ -152,7 +152,7 @@ if RENDER_ROUTER_VISUALIZATION:
         draw.text((text_x, text_y), label, fill=(255, 255, 255))
 
     if box_count <= 0:
-        print('[TANISAL] Router detection bbox bulunamadi; sadece ham goruntu gosteriliyor.')
+        print('[DIAGNOSTICS] No router detection boxes were found; showing only the raw image.')
 
     # Defer matplotlib import until visualization is needed.
     import matplotlib.pyplot as plt
@@ -171,7 +171,7 @@ if RENDER_ROUTER_VISUALIZATION:
         axes.axis('off')
     plt.tight_layout()
 else:
-    print('[HIZ] RENDER_ROUTER_VISUALIZATION=False oldugu icin kutu cizimi ve matplotlib gosterimi atlandi.')
+    print('[SPEED] Skipped box drawing and matplotlib rendering because RENDER_ROUTER_VISUALIZATION=False.')
 
 if PRINT_JSON_RESULT:
     print(json.dumps(result, indent=2))

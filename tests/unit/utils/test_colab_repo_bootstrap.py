@@ -259,7 +259,7 @@ def test_login_and_check_hf_token_warns_when_missing(monkeypatch):
 
     assert bootstrap.login_and_check_hf_token(print_fn=lines.append) is False
     assert lines == [
-        "[HF] Token bulunamadi. Inference veya egitimden once HF_TOKEN adli Colab secret ya da env var tanimlayin."
+        "[HF] Token not found. Before inference or training, define HF_TOKEN as a Colab secret or environment variable."
     ]
 
 
@@ -288,7 +288,7 @@ def test_login_and_check_hf_token_validates_identity(monkeypatch):
     assert bootstrap.login_and_check_hf_token(print_fn=lines.append) is True
     assert calls["login"] == ("hf-secret", False)
     assert calls["api_token"] == "hf-secret"
-    assert lines == ["[HF] Kimlik dogrulandi: tester"]
+    assert lines == ["[HF] Identity verified: tester"]
 
 
 def test_mirror_checkpoint_state_to_repo_copies_only_best_checkpoint(tmp_path: Path):

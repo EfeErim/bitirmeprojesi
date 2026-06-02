@@ -16,7 +16,7 @@ INFERENCE_PROFILES = {
         'CROP_HINT': None,
         'PART_HINT': None,
         'FORCE_UPLOAD_IF_NO_IMAGE': True,
-        # Diseased goruntulerde daha guvenli crop secimi icin balanced onerilir.
+        # Balanced is recommended for safer crop selection on diseased images.
         'ROUTER_RUNTIME_PROFILE': 'balanced',
     },
     'cpu_debug': {
@@ -62,24 +62,24 @@ DEVICE = 'cuda'
 REQUIRE_HF_LOGIN = False
 CROP_HINT = None
 PART_HINT = None
-IMAGE_PATH = None  # Opsiyonel varsayilan goruntu yolu
+IMAGE_PATH = None  # Optional default image path
 FORCE_UPLOAD_IF_NO_IMAGE = True
 PRELOAD_ROUTER = True
 RESET_ROUTER_CACHE = False
 ROUTER_RUNTIME_PROFILE = 'balanced'
 
-# Router karar kalitesini izlemek icin tanisal cikti (onerilir: True).
+# Diagnostic output for monitoring router decision quality (recommended: True).
 SHOW_ROUTER_DIAGNOSTICS = True
 TOP_CROP_CANDIDATES = 3
 PRINT_JSON_RESULT = False
 
-# Hiz ayarlari
+# Speed settings
 MAX_IMAGE_SIDE_FOR_ROUTER = None  # Ornek: 1280 veya 1600
 RENDER_ROUTER_VISUALIZATION = True
 MAX_RENDERED_BOXES = 0  # 0 = sinirsiz
 INCLUDE_ADAPTER_TARGET = True
 
-# Notebook-ici guvenlik kapisi: router-only tahmini belirsizse sonucu uncertain/unknown yapar.
+# Notebook safety gate: uncertain router-only predictions become uncertain/unknown.
 ENFORCE_NOTEBOOK_ROUTER_GATE = True
 ROUTER_RESULT_MIN_CONFIDENCE = 0.65
 ROUTER_RESULT_MIN_MARGIN = 0.10
@@ -137,29 +137,29 @@ if INFERENCE_OVERRIDES:
     )
 
 print(
-    f'[AYAR] profil={NOTEBOOK_PROFILE} hiz_modu={NOTEBOOK_SPEED_MODE} env={CONFIG_ENV} device={DEVICE} '
+    f'[SETTINGS] profile={NOTEBOOK_PROFILE} speed_mode={NOTEBOOK_SPEED_MODE} env={CONFIG_ENV} device={DEVICE} '
     f'crop_hint={CROP_HINT} part_hint={PART_HINT} preload_router={PRELOAD_ROUTER} '
     f'router_runtime_profile={ROUTER_RUNTIME_PROFILE} diagnostics={SHOW_ROUTER_DIAGNOSTICS} top_candidates={TOP_CROP_CANDIDATES} '
     f'max_side={MAX_IMAGE_SIDE_FOR_ROUTER} render_visual={RENDER_ROUTER_VISUALIZATION} max_boxes={MAX_RENDERED_BOXES} '
     f'include_adapter_target={INCLUDE_ADAPTER_TARGET} '
     f'notebook_gate={ENFORCE_NOTEBOOK_ROUTER_GATE} min_conf={ROUTER_RESULT_MIN_CONFIDENCE:.2f} min_margin={ROUTER_RESULT_MIN_MARGIN:.2f}'
 )
-print('[SONRAKI] Router hazirlik bittikten sonra analiz hucresini calistirin; yeni goruntu icin sadece analiz hucresini tekrar calistirin.')
+print('[NEXT] After router setup completes, run the analysis cell. For a new image, rerun only the analysis cell.')
 
 HF_READY = False
 if REQUIRE_HF_LOGIN:
     HF_READY = login_and_check_hf_token(print_fn=print)
     if not HF_READY:
-        raise RuntimeError('Notebook ayari HF login istiyor ama dogrulama basarisiz oldu.')
+        raise RuntimeError('Notebook settings require Hugging Face login, but authentication failed.')
 else:
-    print('[HF] Zorunlu login kapali. Gated model gerekiyorsa Colab secret ekleyin.')
+    print('[HF] Required login is disabled. Add a Colab secret if a gated model requires access.')
 
 if RESET_ROUTER_CACHE:
     clear_router_cache()
-    print('[ROUTER] Oturum cache temizlendi.')
+    print('[ROUTER] Session cache cleared.')
 
 if CROP_HINT:
-    print('[ROUTER] crop_hint verildi; router atlanacak, on-yukleme yapilmadi.')
+    print('[ROUTER] crop_hint provided; router will be skipped and preload was not requested.')
 elif PRELOAD_ROUTER:
     ensure_router_ready(
         config_env=CONFIG_ENV,
@@ -167,6 +167,6 @@ elif PRELOAD_ROUTER:
         status_printer=print,
         runtime_profile=ROUTER_RUNTIME_PROFILE,
     )
-    print('[NOTEBOOK] Router bu runtime icin hazir. Sonraki hucreyi yeni bir goruntu ile tekrar calistirabilirsiniz.')
+    print('[NOTEBOOK] Router is ready for this runtime. Rerun the next cell with a new image when needed.')
 else:
-    print('[NOTEBOOK] PRELOAD_ROUTER kapali. Ilk analiz cagrisi routeri bu sirada yukleyecek.')
+    print('[NOTEBOOK] PRELOAD_ROUTER is disabled. The first analysis call will load the router.')

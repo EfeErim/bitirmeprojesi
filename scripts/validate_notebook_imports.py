@@ -439,6 +439,54 @@ def test_auto_router_adapter_notebook_contract() -> None:
     )
 
 
+def test_presentation_recording_notebook_contract() -> None:
+    sources = _load_notebook_sources("9_presentation_recording_demo.ipynb")
+
+    _assert_code_cells_compile(sources, "Notebook 9")
+    _assert_contains(
+        sources.first_code_source,
+        "run_cell_script('nb1_cell01_bootstrap.py', globals())",
+        "Notebook 9 should reuse Notebook 1 bootstrap cell script: {snippet}",
+    )
+    for script_name in (
+        "nb1_cell02_access_check.py",
+        "nb1_cell03_runtime_setup.py",
+        "nb1_cell04_analysis.py",
+        "nb8_cell05_adapter_prediction.py",
+        "nb9_cell06_presentation_demo.py",
+    ):
+        _assert_contains(
+            sources.full_source,
+            f"run_cell_script('{script_name}', globals())",
+            "Notebook 9 should stay a thin presentation wrapper over maintained cell scripts: {snippet}",
+        )
+    recording_cell = _find_code_cell_source(
+        sources,
+        "run_cell_script('nb9_cell06_presentation_demo.py', globals())",
+        "Notebook 9 should render the recording panel after inference.",
+    )
+    ordered_scripts = (
+        "nb1_cell04_analysis.py",
+        "nb8_cell05_adapter_prediction.py",
+        "nb9_cell06_presentation_demo.py",
+    )
+    positions = [recording_cell.index(f"run_cell_script('{script_name}', globals())") for script_name in ordered_scripts]
+    assert positions == sorted(positions), "Notebook 9 should route, predict, then render the presentation panel"
+    _assert_contains(
+        recording_cell,
+        "with redirect_stdout(technical_output), redirect_stderr(technical_output):",
+        "Notebook 9 should suppress technical inference logs during screen recording: {snippet}",
+    )
+    _assert_contains(
+        recording_cell,
+        "clear_output(wait=True)",
+        "Notebook 9 should clear upload and technical output before rendering the audience panel: {snippet}",
+    )
+    assert sources.full_source.count("run_inference(") == 1, (
+        "Notebook 9 should inherit Notebook 1 routing instead of adding a second router implementation"
+    )
+
+
 def test_adapter_smoke_notebook_surface() -> None:
     from scripts.colab_adapter_smoke_test import (
         discover_adapter_candidates,
@@ -1053,6 +1101,15 @@ CHECKS = (
         success_message="Notebook 8 wraps Notebook 1 routing and canonical adapter inference",
         failure_prefix="Notebook 8 auto inference contract failed",
         callback=test_auto_router_adapter_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="Notebook 9 Presentation Demo",
+        step_id="NB9_PRESENTATION_DEMO",
+        description="Notebook 9 presentation-recording contract",
+        success_message="Notebook 9 wraps the canonical inference path with recording-friendly output",
+        failure_prefix="Notebook 9 presentation demo contract failed",
+        callback=test_presentation_recording_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
