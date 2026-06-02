@@ -95,7 +95,26 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
     assert "tomato / leaf (0.920)" in html
     assert "SD-LoRA adapter" in html
     assert "Prediction + OOD" in html
-    assert "Within support; class not verified." in html
+    assert "Known-type image: accepted for prediction." in html
+
+
+def test_build_presentation_flow_html_explains_rejected_ood_for_audience() -> None:
+    html = build_presentation_flow_html(
+        {
+            "sam3_instances_raw": 1,
+            "sam3_instances_retained": 1,
+            "crop": "tomato",
+            "part": "leaf",
+            "router_confidence": 0.92,
+            "gate_status": "Accepted",
+            "adapter_ran": True,
+            "final_decision": "No disease prediction",
+            "ood_available": True,
+            "is_ood": True,
+        }
+    )
+
+    assert "Unknown or unsupported image: prediction withheld." in html
 
 
 def test_presentation_figure_caps_visible_sam3_boxes() -> None:

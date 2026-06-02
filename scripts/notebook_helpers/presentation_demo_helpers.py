@@ -51,6 +51,14 @@ def _yes_no(value: Any) -> str:
     return "Yes" if bool(value) else "No"
 
 
+def _audience_ood_result(summary: Dict[str, Any]) -> str:
+    if not summary["ood_available"]:
+        return "OOD check unavailable."
+    if summary["is_ood"]:
+        return "Unknown or unsupported image: prediction withheld."
+    return "Known-type image: accepted for prediction."
+
+
 def _flow_step(
     number: int,
     title: str,
@@ -153,13 +161,7 @@ def build_presentation_flow_html(summary: Dict[str, Any]) -> str:
     """Build the top-level visual explanation for a non-technical audience."""
     adapter_tone = "success" if summary["adapter_ran"] else "warning"
     final_tone = "success" if summary["adapter_ran"] and not summary["is_ood"] else "warning"
-    ood_result = (
-        "Outside calibrated support."
-        if summary["is_ood"]
-        else "Within support; class not verified."
-        if summary["ood_available"]
-        else "OOD check unavailable."
-    )
+    ood_result = _audience_ood_result(summary)
     steps = (
         _flow_step(
             1,
@@ -268,8 +270,7 @@ def render_presentation_demo(
         f"Specialist adapter loaded: {_yes_no(summary['adapter_ran'])}</div>"
         f"<div class='result-card'><strong>Adapter model prediction (not a verified diagnosis)</strong>"
         f"{escape(summary['final_decision'])}</div>"
-        f"<div class='result-card'><strong>OOD assessment</strong>"
-        f"{'Out-of-distribution input' if summary['is_ood'] else 'Within calibrated support; class correctness is not guaranteed'}</div>"
+        f"<div class='result-card'><strong>OOD check</strong>{escape(_audience_ood_result(summary))}</div>"
         "</div>"
         + "</div>"
     )
