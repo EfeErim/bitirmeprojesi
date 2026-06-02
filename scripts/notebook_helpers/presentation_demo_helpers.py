@@ -80,6 +80,10 @@ def _flow_card(
     )
 
 
+def _proposal_label(index: int) -> str:
+    return f"Candidate region {index}"
+
+
 def build_presentation_summary(
     image_path: str | Path,
     *,
@@ -248,9 +252,9 @@ def _render_router_figure(summary: Dict[str, Any]) -> None:
         y1, y2 = max(0.0, y1), min(height - 1.0, y2)
         if x2 <= x1 or y2 <= y1:
             continue
-        color = (255, 99, 71) if index == 1 else (66, 133, 244)
+        color = (66, 133, 244)
         draw.rectangle((x1, y1, x2, y2), outline=color, width=5)
-        label = f"{index}: {_text(detection.get('crop'), 'unknown')} / {_text(detection.get('part'), 'unknown')}"
+        label = _proposal_label(index)
         draw.rectangle((x1, max(0.0, y1 - 24), min(width - 1.0, x1 + 280), y1), fill=(0, 0, 0))
         draw.text((x1 + 4, max(0.0, y1 - 20)), label, fill=(255, 255, 255))
 

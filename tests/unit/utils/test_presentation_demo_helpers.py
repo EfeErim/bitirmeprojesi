@@ -1,4 +1,5 @@
 from scripts.notebook_helpers.presentation_demo_helpers import (
+    _proposal_label,
     build_presentation_flow_html,
     build_presentation_summary,
 )
@@ -93,3 +94,7 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
     assert "BioCLIP-2.5 Router" in html
     assert "SD-LoRA Adapter" in html
     assert "Disease + OOD Result" in html
+
+
+def test_presentation_figure_labels_sam3_boxes_as_candidate_regions() -> None:
+    assert _proposal_label(3) == "Candidate region 3"
