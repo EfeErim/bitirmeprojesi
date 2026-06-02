@@ -83,6 +83,8 @@ def install_colab_requirements(req_path: Path, in_colab: bool) -> None:
     tmp_req = Path(tempfile.gettempdir()) / "aads_colab_requirements_no_torch.txt"
     tmp_req.parent.mkdir(parents=True, exist_ok=True)
     tmp_req.write_text("\n".join(filtered) + "\n", encoding="utf-8")
+    started_at = time.perf_counter()
+    print("[SETUP] Installing demo dependencies. A fresh Colab runtime may take several minutes...", flush=True)
     completed = subprocess.run(
         [sys.executable, "-m", "pip", "install", "-r", str(tmp_req)],
         check=False,
@@ -98,6 +100,8 @@ def install_colab_requirements(req_path: Path, in_colab: bool) -> None:
             "Colab dependency installation failed for the filtered requirements set. "
             "See pip output above for details."
         )
+    elapsed_seconds = time.perf_counter() - started_at
+    print(f"[SETUP] Demo dependencies ready in {elapsed_seconds:.1f}s.", flush=True)
 
 
 def _requirement_name(requirement_line: str) -> str:
