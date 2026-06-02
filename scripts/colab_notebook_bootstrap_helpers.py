@@ -171,14 +171,17 @@ def bootstrap_repo_root(
         clone_target = Path("/content/bitirmeprojesi")
     
     # Try to find existing repo
+    print("[SETUP] Checking repository checkout...", flush=True)
     repo_root = find_repo_root()
     if repo_root is not None:
+        print(f"[SETUP] Repository ready: {repo_root}", flush=True)
         return repo_root
     
     # Clone repo
     token = resolve_github_token() if use_github_token else None
     clone_url = _build_repo_access_url(repo_url, token)
     clone_target.parent.mkdir(parents=True, exist_ok=True)
+    print("[SETUP] Repository not found locally. Cloning the latest demo code...", flush=True)
     
     completed = subprocess.run(
         ["git", "clone", "--depth", "1", clone_url, str(clone_target)],
@@ -199,6 +202,7 @@ def bootstrap_repo_root(
     # Verify clone was successful
     repo_root = find_repo_root()
     if repo_root is not None:
+        print(f"[SETUP] Repository ready: {repo_root}", flush=True)
         return repo_root
     
     raise RuntimeError(
@@ -226,6 +230,8 @@ def setup_notebook_environment(
         Path to repo root
     """
     # Resolve tokens and print status
+    print("[SETUP] Starting notebook environment setup...", flush=True)
+    print("[SETUP] Checking Colab access tokens...", flush=True)
     gh_token = resolve_github_token()
     hf_token = resolve_huggingface_token()
     
@@ -259,5 +265,6 @@ def setup_notebook_environment(
             raise ValueError(f"Colab requirements file must stay under the repo root: {relative_requirements}") from exc
         print(f"[SETUP] Dependency profile: {relative_requirements}")
         install_colab_requirements(requirements_path, in_colab=True)
-    
+
+    print("[SETUP] Notebook environment ready.", flush=True)
     return repo_root

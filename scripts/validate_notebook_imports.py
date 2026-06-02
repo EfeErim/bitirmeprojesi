@@ -453,6 +453,12 @@ def test_presentation_recording_notebook_contract() -> None:
         "os.environ['AADS_COLAB_REQUIREMENTS_FILE'] = 'requirements_presentation_colab.txt'",
         "Notebook 9 should use the lightweight presentation dependency profile: {snippet}",
     )
+    _assert_contains(
+        sources.first_code_source,
+        "print('[SETUP] Presentation demo setup complete. Continue to the next cell.', flush=True)",
+        "Notebook 9 setup should leave a visible completion message: {snippet}",
+    )
+    assert "clear_output" not in sources.first_code_source, "Notebook 9 setup should keep progress output visible"
     for snippet in (
         "if CLONE_TARGET.exists():",
         "shutil.rmtree(CLONE_TARGET)",
