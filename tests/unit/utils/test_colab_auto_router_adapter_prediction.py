@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction
+import scripts.colab_auto_router_adapter_prediction as auto_prediction
+from scripts.colab_auto_router_adapter_prediction import (
+    clear_auto_prediction_workflow_cache,
+    run_auto_router_adapter_prediction,
+)
 
 
 class FakeWorkflow:
@@ -41,6 +45,17 @@ class FakeWorkflow:
                 "calibration_version": 1,
             },
         }
+
+
+class CacheableFakeWorkflow:
+    instances = []
+
+    def __init__(self, *, environment=None, device="cuda", adapter_root=None, status_callback=None):
+        self.environment = environment
+        self.device = device
+        self.adapter_root = adapter_root
+        self.runtime = type("Runtime", (), {"status_callback": status_callback, "router": None})()
+        self.instances.append(self)
 
 
 def _router_result(status="ok", crop="tomato", part="leaf"):
@@ -139,3 +154,31 @@ def test_auto_prediction_skips_adapter_when_part_is_unknown():
     assert result["message"] == "Router could not resolve a supported plant part."
     assert result["router_handoff"]["adapter_ran"] is False
     assert FakeWorkflow.calls == []
+
+
+def test_auto_prediction_reuses_default_workflow_and_ready_router(monkeypatch):
+    CacheableFakeWorkflow.instances.clear()
+    clear_auto_prediction_workflow_cache()
+    ready_router = object()
+    monkeypatch.setattr(auto_prediction, "InferenceWorkflow", CacheableFakeWorkflow)
+    monkeypatch.setattr(auto_prediction, "ensure_router_ready", lambda **_kwargs: ready_router)
+
+    first = auto_prediction._resolve_workflow(
+        config_env="colab",
+        device="cpu",
+        adapter_root=Path("models/adapters"),
+        status_printer=None,
+        workflow_factory=CacheableFakeWorkflow,
+    )
+    second = auto_prediction._resolve_workflow(
+        config_env="colab",
+        device="cpu",
+        adapter_root=Path("models/adapters"),
+        status_printer=print,
+        workflow_factory=CacheableFakeWorkflow,
+    )
+
+    assert first is second
+    assert len(CacheableFakeWorkflow.instances) == 1
+    assert second.runtime.router is ready_router
+    assert second.runtime.status_callback is print

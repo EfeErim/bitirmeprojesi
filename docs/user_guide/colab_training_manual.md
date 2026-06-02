@@ -63,13 +63,13 @@ If the router result is uncertain, unknown, rejected, or unavailable, Notebook 8
 
 ### Notebook 9
 
-Notebook 9 is the recommended surface for a presentation screen recording. Run the setup cells once, start the recording, then execute the final demo cell and upload one image. The output shows:
+Notebook 9 is the recommended surface for a presentation screen recording. Run the setup cells once, execute the Preview and Warm-up cell, and upload the final demo image. This runs the real router, adapter, and OOD flow before recording. Start the recording only after the preview is ready, then execute the final render-only cell. The output shows:
 
 - the uploaded image and real SAM3-derived region boxes
-- a six-stage visual explanation of what each component does
+- a compact six-step pipeline strip
 - the accepted BioCLIP-2.5 crop and plant-part route
 - the safety decision and whether the specialist adapter was loaded
-- the disease prediction and calibrated OOD assessment
+- the adapter model prediction and calibrated OOD assessment
 
 The maintained router payload does not export pixel masks, so Notebook 9 does not fabricate a segmentation overlay. It labels the visible boxes accurately as SAM3-derived region proposals.
 

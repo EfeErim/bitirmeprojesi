@@ -4,14 +4,17 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
+from scripts.colab_router_adapter_inference import ensure_router_ready
 from src.workflows.inference import InferenceWorkflow
 
 StatusPrinter = Callable[[str], None]
 WorkflowFactory = Callable[..., Any]
+WorkflowCacheKey = Tuple[str, str, str]
 
 _ADAPTER_ALLOWED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
+_WORKFLOW_SESSION_CACHE: Dict[WorkflowCacheKey, Any] = {}
 
 
 def _emit_status(status_printer: Optional[StatusPrinter], message: str) -> None:
@@ -46,6 +49,55 @@ def _resolve_router_handoff(router_result: Dict[str, Any]) -> Dict[str, Any]:
         "message": message,
         "router": router_payload,
     }
+
+
+def clear_auto_prediction_workflow_cache() -> None:
+    """Drop Notebook 8 workflow and adapter instances cached for this session."""
+    _WORKFLOW_SESSION_CACHE.clear()
+
+
+def _workflow_cache_key(*, config_env: Optional[str], device: str, adapter_root: Optional[str | Path]) -> WorkflowCacheKey:
+    return (
+        str(config_env or ""),
+        str(device or "cuda").strip().lower(),
+        str(Path(adapter_root).resolve()) if adapter_root is not None else "",
+    )
+
+
+def _resolve_workflow(
+    *,
+    config_env: Optional[str],
+    device: str,
+    adapter_root: Optional[str | Path],
+    status_printer: Optional[StatusPrinter],
+    workflow_factory: WorkflowFactory,
+) -> Any:
+    if workflow_factory is not InferenceWorkflow:
+        return workflow_factory(
+            environment=config_env,
+            device=device,
+            adapter_root=adapter_root,
+            status_callback=status_printer,
+        )
+
+    cache_key = _workflow_cache_key(config_env=config_env, device=device, adapter_root=adapter_root)
+    workflow = _WORKFLOW_SESSION_CACHE.get(cache_key)
+    if workflow is None:
+        workflow = workflow_factory(
+            environment=config_env,
+            device=device,
+            adapter_root=adapter_root,
+            status_callback=status_printer,
+        )
+        _WORKFLOW_SESSION_CACHE[cache_key] = workflow
+    workflow.runtime.status_callback = status_printer
+    if workflow.runtime.router is None:
+        workflow.runtime.router = ensure_router_ready(
+            config_env=config_env,
+            device=device,
+            status_printer=status_printer,
+        )
+    return workflow
 
 
 def run_auto_router_adapter_prediction(
@@ -112,11 +164,12 @@ def run_auto_router_adapter_prediction(
         status_printer,
         f"[AUTO] Router handoff accepted crop={crop} part={part or 'unknown'}; loading adapter.",
     )
-    workflow = workflow_factory(
-        environment=config_env,
+    workflow = _resolve_workflow(
+        config_env=config_env,
         device=device,
         adapter_root=adapter_root,
-        status_callback=status_printer,
+        status_printer=status_printer,
+        workflow_factory=workflow_factory,
     )
     payload = workflow.predict(
         image_path,
@@ -136,4 +189,4 @@ def run_auto_router_adapter_prediction(
     return combined
 
 
-__all__ = ["run_auto_router_adapter_prediction"]
+__all__ = ["clear_auto_prediction_workflow_cache", "run_auto_router_adapter_prediction"]

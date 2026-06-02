@@ -471,27 +471,33 @@ def test_presentation_recording_notebook_contract() -> None:
             f"run_cell_script('{script_name}', globals())",
             "Notebook 9 should stay a thin presentation wrapper over maintained cell scripts: {snippet}",
         )
+    warmup_cell = _find_code_cell_source(
+        sources,
+        "run_cell_script('nb8_cell05_adapter_prediction.py', globals())",
+        "Notebook 9 should run real inference before screen recording.",
+    )
     recording_cell = _find_code_cell_source(
         sources,
         "run_cell_script('nb9_cell06_presentation_demo.py', globals())",
-        "Notebook 9 should render the recording panel after inference.",
+        "Notebook 9 should render the warmed-up recording panel.",
     )
     ordered_scripts = (
         "nb1_cell04_analysis.py",
         "nb8_cell05_adapter_prediction.py",
-        "nb9_cell06_presentation_demo.py",
     )
-    positions = [recording_cell.index(f"run_cell_script('{script_name}', globals())") for script_name in ordered_scripts]
-    assert positions == sorted(positions), "Notebook 9 should route, predict, then render the presentation panel"
+    positions = [warmup_cell.index(f"run_cell_script('{script_name}', globals())") for script_name in ordered_scripts]
+    assert positions == sorted(positions), "Notebook 9 should route, then predict during warm-up"
     _assert_contains(
-        recording_cell,
+        warmup_cell,
         "with redirect_stdout(technical_output), redirect_stderr(technical_output):",
-        "Notebook 9 should suppress technical inference logs during screen recording: {snippet}",
+        "Notebook 9 should suppress technical inference logs during warm-up: {snippet}",
     )
+    assert "nb1_cell04_analysis.py" not in recording_cell
+    assert "nb8_cell05_adapter_prediction.py" not in recording_cell
     _assert_contains(
         recording_cell,
         "clear_output(wait=True)",
-        "Notebook 9 should clear upload and technical output before rendering the audience panel: {snippet}",
+        "Notebook 9 should clear stale output before rendering the audience panel: {snippet}",
     )
     _assert_contains(
         sources.full_source,
