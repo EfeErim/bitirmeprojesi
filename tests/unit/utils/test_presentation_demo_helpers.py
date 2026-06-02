@@ -1,8 +1,14 @@
 from scripts.notebook_helpers.presentation_demo_helpers import (
+    PRESENTATION_ROUTER_FIGSIZE,
     _select_presentation_detections,
     build_presentation_flow_html,
     build_presentation_summary,
 )
+
+
+def test_presentation_router_figure_stays_compact_for_screen_recording() -> None:
+    assert PRESENTATION_ROUTER_FIGSIZE[0] <= 12
+    assert PRESENTATION_ROUTER_FIGSIZE[1] <= 3.2
 
 
 def test_build_presentation_summary_exposes_real_router_and_adapter_details() -> None:

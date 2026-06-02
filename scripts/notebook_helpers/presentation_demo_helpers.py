@@ -7,22 +7,22 @@ from typing import Any, Dict
 PRESENTATION_STYLES = """
 <style>
   .aads-demo {font-family: Arial, sans-serif; color: #102c40;}
-  .aads-demo h2 {background: #071b2c; color: white; padding: 12px 16px; border-radius: 10px;}
-  .aads-demo h3 {color: #12364d; margin-top: 22px;}
-  .aads-demo .pipeline-strip {display: flex; align-items: stretch; gap: 5px; margin: 10px 0;}
-  .aads-demo .pipeline-step {flex: 1; min-width: 0; padding: 8px 9px; border: 2px solid #58a99f; border-radius: 9px; background: #f5fbfb;}
+  .aads-demo h2 {background: #071b2c; color: white; padding: 7px 11px; border-radius: 8px; font-size: 18px; margin: 0 0 7px;}
+  .aads-demo h3 {color: #12364d; margin: 8px 0 5px; font-size: 15px;}
+  .aads-demo .pipeline-strip {display: flex; align-items: stretch; gap: 4px; margin: 6px 0;}
+  .aads-demo .pipeline-step {flex: 1; min-width: 0; padding: 5px 6px; border: 2px solid #58a99f; border-radius: 7px; background: #f5fbfb;}
   .aads-demo .pipeline-step.success {border-color: #3a9d68; background: #f2fbf6;}
   .aads-demo .pipeline-step.warning {border-color: #e59b43; background: #fff9ef;}
-  .aads-demo .pipeline-arrow {align-self: center; color: #2b7c75; font-size: 20px; font-weight: 700;}
-  .aads-demo .step-title {font-size: 13px; color: #12364d; font-weight: 700; margin-bottom: 5px;}
-  .aads-demo .step-result {font-size: 12px; line-height: 1.25;}
-  .aads-demo .result-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 18px 0;}
-  .aads-demo .result-card {padding: 14px; border-radius: 12px; background: #edf5f7; border-left: 5px solid #2b7c75;}
-  .aads-demo .result-card strong {display: block; color: #12364d; margin-bottom: 5px;}
+  .aads-demo .pipeline-arrow {align-self: center; color: #2b7c75; font-size: 15px; font-weight: 700;}
+  .aads-demo .step-title {font-size: 11px; color: #12364d; font-weight: 700; margin-bottom: 3px;}
+  .aads-demo .step-result {font-size: 10px; line-height: 1.15;}
+  .aads-demo .result-grid {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 5px 0 7px;}
+  .aads-demo .result-card {padding: 7px 9px; border-radius: 8px; background: #edf5f7; border-left: 4px solid #2b7c75; font-size: 11px;}
+  .aads-demo .result-card strong {display: block; color: #12364d; margin-bottom: 3px;}
   .aads-demo table {border-collapse: collapse; width: 100%; margin: 8px 0 16px;}
   .aads-demo th, .aads-demo td {border: 1px solid #c6d7df; padding: 7px 9px; text-align: left;}
   .aads-demo th {background: #edf5f7; width: 32%;}
-  .aads-demo .note {background: #fff4df; padding: 10px 12px; border-left: 5px solid #f4a261;}
+  .aads-demo .note {background: #fff4df; padding: 6px 9px; border-left: 4px solid #f4a261; margin: 5px 0; font-size: 11px;}
 </style>
 """
 
@@ -75,6 +75,7 @@ def _flow_step(
 
 
 MAX_PRESENTATION_BOXES = 3
+PRESENTATION_ROUTER_FIGSIZE = (12, 3.15)
 
 
 def _select_presentation_detections(detections: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
@@ -228,14 +229,14 @@ def _render_router_figure(summary: Dict[str, Any]) -> None:
         color = (66, 133, 244)
         draw.rectangle((x1, y1, x2, y2), outline=color, width=5)
 
-    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
+    fig, axes = plt.subplots(1, 2, figsize=PRESENTATION_ROUTER_FIGSIZE)
     axes[0].imshow(image)
     axes[0].set_title("1. Uploaded input image")
     axes[1].imshow(annotated)
     axes[1].set_title(f"2. SAM3 candidate regions for inspection (showing {len(visible_detections)})")
     for axis in axes:
         axis.axis("off")
-    plt.tight_layout()
+    plt.tight_layout(pad=0.45)
     plt.show()
 
 
@@ -254,12 +255,9 @@ def render_presentation_demo(
         + build_presentation_flow_html(summary)
         + "<p class='note'><strong>Important:</strong> SAM3 boxes are not disease predictions. "
         "They mark candidate plant regions for BioCLIP-2.5 inspection.</p>"
-        + "<p class='note'><strong>Model limitation:</strong> The adapter output is a model prediction, not a verified diagnosis. "
-        "An in-distribution OOD result does not prove that the predicted class is correct.</p>"
         + "</div>"
     )
     display(HTML(header))
-    _render_router_figure(summary)
 
     remaining = (
         "<div class='aads-demo'><h3>Audience Summary</h3>"
@@ -275,11 +273,13 @@ def render_presentation_demo(
         + "</div>"
     )
     display(HTML(remaining))
+    _render_router_figure(summary)
     return summary
 
 
 __all__ = [
     "PRESENTATION_STYLES",
+    "PRESENTATION_ROUTER_FIGSIZE",
     "build_presentation_flow_html",
     "build_presentation_summary",
     "render_presentation_demo",

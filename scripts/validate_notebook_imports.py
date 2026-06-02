@@ -512,6 +512,11 @@ def test_presentation_recording_notebook_contract() -> None:
         "Notebook 9 should clear stale output before rendering the audience panel: {snippet}",
     )
     _assert_contains(
+        recording_cell,
+        "#@title Render audience panel",
+        "Notebook 9 recording cell should stay collapsed as a Colab form: {snippet}",
+    )
+    _assert_contains(
         sources.full_source,
         "importlib.reload(presentation_demo_helpers)",
         "Notebook 9 should reload presentation helpers after an in-place Colab git pull: {snippet}",
