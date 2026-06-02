@@ -6,17 +6,14 @@ from typing import Any, Dict
 
 PRESENTATION_STYLES = """
 <style>
-  .aads-demo {font-family: Arial, sans-serif; color: #102c40;}
+  .aads-demo {font-family: Arial, sans-serif; color: #102c40; max-width: 920px;}
   .aads-demo h2 {background: #071b2c; color: white; padding: 7px 11px; border-radius: 8px; font-size: 18px; margin: 0 0 7px;}
   .aads-demo h3 {color: #12364d; margin: 8px 0 5px; font-size: 15px;}
-  .aads-demo .pipeline-strip {display: flex; align-items: stretch; gap: 4px; margin: 6px 0;}
-  .aads-demo .pipeline-step {flex: 1; min-width: 0; padding: 5px 6px; border: 2px solid #58a99f; border-radius: 7px; background: #f5fbfb;}
-  .aads-demo .pipeline-step.success {border-color: #3a9d68; background: #f2fbf6;}
-  .aads-demo .pipeline-step.warning {border-color: #e59b43; background: #fff9ef;}
-  .aads-demo .pipeline-arrow {align-self: center; color: #2b7c75; font-size: 15px; font-weight: 700;}
-  .aads-demo .step-title {font-size: 11px; color: #12364d; font-weight: 700; margin-bottom: 3px;}
-  .aads-demo .step-result {font-size: 10px; line-height: 1.15;}
-  .aads-demo .result-grid {display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; margin: 5px 0 7px;}
+  .aads-demo .how-it-works {background: #f5fbfb; border-left: 4px solid #2b7c75; padding: 6px 10px; margin: 6px 0;}
+  .aads-demo .how-it-works strong {color: #12364d;}
+  .aads-demo .how-it-works ol {margin: 4px 0 2px; padding-left: 20px; columns: 2; column-gap: 24px;}
+  .aads-demo .how-it-works li {font-size: 11px; line-height: 1.25; margin: 0 0 4px; break-inside: avoid;}
+  .aads-demo .result-grid {display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; margin: 5px 0 7px;}
   .aads-demo .result-card {padding: 7px 9px; border-radius: 8px; background: #edf5f7; border-left: 4px solid #2b7c75; font-size: 11px;}
   .aads-demo .result-card strong {display: block; color: #12364d; margin-bottom: 3px;}
   .aads-demo table {border-collapse: collapse; width: 100%; margin: 8px 0 16px;}
@@ -59,23 +56,8 @@ def _audience_ood_result(summary: Dict[str, Any]) -> str:
     return "Known-type image: accepted for prediction."
 
 
-def _flow_step(
-    number: int,
-    title: str,
-    output: str,
-    *,
-    tone: str = "info",
-) -> str:
-    return (
-        f"<div class='pipeline-step {escape(tone)}'>"
-        f"<div class='step-title'>{number:02d}. {escape(title)}</div>"
-        f"<div class='step-result'>{escape(output)}</div>"
-        "</div>"
-    )
-
-
 MAX_PRESENTATION_BOXES = 3
-PRESENTATION_ROUTER_FIGSIZE = (12, 3.15)
+PRESENTATION_ROUTER_FIGSIZE = (8.6, 3.3)
 
 
 def _select_presentation_detections(detections: list[Dict[str, Any]]) -> list[Dict[str, Any]]:
@@ -160,48 +142,17 @@ def build_presentation_summary(
 
 def build_presentation_flow_html(summary: Dict[str, Any]) -> str:
     """Build the top-level visual explanation for a non-technical audience."""
-    adapter_tone = "success" if summary["adapter_ran"] else "warning"
-    final_tone = "success" if summary["adapter_ran"] and not summary["is_ood"] else "warning"
-    ood_result = _audience_ood_result(summary)
-    steps = (
-        _flow_step(
-            1,
-            "Input",
-            "Uploaded image",
-        ),
-        _flow_step(
-            2,
-            "SAM3 regions",
-            (
-                f"{summary['sam3_instances_retained']} retained "
-                f"from {summary['sam3_instances_raw']} proposals"
-            ),
-        ),
-        _flow_step(
-            3,
-            "BioCLIP route",
-            f"{summary['crop']} / {summary['part']} ({summary['router_confidence']:.3f})",
-        ),
-        _flow_step(
-            4,
-            "Safety gate",
-            summary["gate_status"],
-            tone="success" if summary["gate_status"] == "Accepted" else "warning",
-        ),
-        _flow_step(
-            5,
-            "SD-LoRA adapter",
-            "Loaded" if summary["adapter_ran"] else "Skipped",
-            tone=adapter_tone,
-        ),
-        _flow_step(
-            6,
-            "Prediction + OOD",
-            f"{summary['final_decision']} {ood_result}",
-            tone=final_tone,
-        ),
+    items = (
+        f"<li><strong>SAM3</strong> finds plant regions to inspect: "
+        f"{summary['sam3_instances_retained']} retained from {summary['sam3_instances_raw']} proposals.</li>",
+        f"<li><strong>BioCLIP-2.5</strong> identifies the crop and plant part: "
+        f"{escape(summary['crop'])} / {escape(summary['part'])} ({summary['router_confidence']:.3f}).</li>",
+        f"<li><strong>Safety gate</strong> decides whether a specialist adapter can be used: "
+        f"{escape(summary['gate_status'])}.</li>",
+        f"<li><strong>SD-LoRA adapter + OOD check</strong> returns the model prediction and rejects unsupported images: "
+        f"{escape(_audience_ood_result(summary))}</li>",
     )
-    return "<div class='pipeline-strip'>" + "<div class='pipeline-arrow'>&rarr;</div>".join(steps) + "</div>"
+    return "<div class='how-it-works'><strong>How the system reads this image</strong><ol>" + "".join(items) + "</ol></div>"
 
 
 def _render_router_figure(summary: Dict[str, Any]) -> None:

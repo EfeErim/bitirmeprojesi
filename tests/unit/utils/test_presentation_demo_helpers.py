@@ -7,8 +7,8 @@ from scripts.notebook_helpers.presentation_demo_helpers import (
 
 
 def test_presentation_router_figure_stays_compact_for_screen_recording() -> None:
-    assert PRESENTATION_ROUTER_FIGSIZE[0] <= 12
-    assert PRESENTATION_ROUTER_FIGSIZE[1] <= 3.2
+    assert PRESENTATION_ROUTER_FIGSIZE[0] <= 9
+    assert PRESENTATION_ROUTER_FIGSIZE[1] <= 3.4
 
 
 def test_build_presentation_summary_exposes_real_router_and_adapter_details() -> None:
@@ -95,12 +95,13 @@ def test_build_presentation_flow_html_explains_each_model_role() -> None:
         }
     )
 
-    assert "SAM3 regions" in html
+    assert "How the system reads this image" in html
+    assert "<strong>SAM3</strong> finds plant regions to inspect" in html
     assert "2 retained from 4 proposals" in html
-    assert "BioCLIP route" in html
+    assert "<strong>BioCLIP-2.5</strong> identifies the crop and plant part" in html
     assert "tomato / leaf (0.920)" in html
-    assert "SD-LoRA adapter" in html
-    assert "Prediction + OOD" in html
+    assert "<strong>Safety gate</strong> decides whether a specialist adapter can be used" in html
+    assert "<strong>SD-LoRA adapter + OOD check</strong>" in html
     assert "Known-type image: accepted for prediction." in html
 
 
