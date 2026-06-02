@@ -621,6 +621,7 @@ Bu dosya kullanilarak bir is tamamlandiginda, son adim olarak internette yeni ya
 - Purpose: keep the SOTA guidance and literature anchors fresh by surfacing recent, relevant papers for reviewer consideration, then updating this markdown directly.
 - Files:
    - `scripts/update_sota_references.py` queries arXiv for configured keywords, refreshes a managed candidate-scan section inside this guide, and adds a lightweight repo-local bug/weak-point/improvement scan for triage.
+   - If every configured arXiv query fails during a run, the updater preserves the previous managed candidate scan instead of replacing reviewer context with a transient outage report.
    - `.github/workflows/sota_auto_update.yml` runs weekly, runs the script, and pushes the resulting guide changes back to the current branch for review.
 - Trigger: weekly schedule (workflow cron), or manual `workflow_dispatch`.
 - Automatic push policy: the script itself does not push. The scheduled workflow may surface or commit changes for review, but it must not create a new branch, auto-merge, or bypass review before this guide is updated.
@@ -638,22 +639,25 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-01T06:53:47Z`
+Generated: `2026-06-02T10:37:08Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
-Candidate scan could not query all configured sources:
+##### A Closer Look at In-Distribution vs. Out-of-Distribution Accuracy for Open-Set Test-time Adaptation
 
-- `out-of-distribution detection`: query timed out
-- `energy based ood`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Aenergy+based+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `mahalanobis ood`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Amahalanobis+ood&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `logitnorm`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Alogitnorm&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `selective prediction`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aselective+prediction&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `segment anything`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asegment+anything&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `sam segmentation`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Asam+segmentation&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `bioclip`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Abioclip&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `router calibration`: 429 Client Error: Unknown Error for url: https://export.arxiv.org/api/query?search_query=all%3Arouter+calibration&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
-- `conformal prediction`: query timed out
+- Query: `mahalanobis ood`
+- Published: `2026-06-01T09:35:29Z`
+- Authors: Zefeng Li, Evan Shelhamer
+- Link: http://arxiv.org/abs/2606.01973v1
+- Review note: Open-set test-time adaptation (TTA) updates models on new data in the presence of input shifts and unknown output classes. While recent methods have made progress on improving in-distribution (InD) accuracy for known classes, their ability to accurately detect out-of-distribution (OOD) unknown classes remains underexplored. We benchmark robust and open-set TTA methods (SAR, OSTTA, UniEnt, and SoTTA) on the standard corruption benchmarks of CIFAR-10-C at the small scale and ImageNet-C at the large scale. For CIFAR-10-C, we use OOD data from SVHN and CIFAR-100 in their respective corrupted forms of SVHN-C and CIFAR-100-C. For ImageNet-C, we use OOD data from ImageNet-O and Textures in their respective corrupted forms of ImageNet-O-C and Textures-C. ImageNet-O is nearer to ImageNet, as unknown but related object classes (like ''garlic bread'' vs. ''hot dog'' for food, or ''highway'' vs. ''dam'' for infrastructure), while Textures is farther from ImageNet, as non-object patterns (like ''cracked'' mud, ''porous'' sponge, ''veined'' leaves). We evaluate the accuracy and confidence of TTA methods for InD vs. OOD recognition on CIFAR-10-C and ImageNet-C. We verify the accuracy of each method's own OOD detection technique on CIFAR-10-C. We also evaluate on ImageNet-C and report both accuracy and standard OOD detection metrics. We further examine more realistic settings, in which the proportions and rates of OOD data can vary. To explore the trade-off between InD recognition and OOD rejection, we propose a new baseline that replaces softmax/multi-class output with sigmoid/multi-label output. Our analysis shows for the first time that current open-set TTA methods struggle to balance InD and OOD accuracy and that they only imperfectly filter OOD data for their own adaptation updates.
+
+##### Self-Supervised Learning of Plant Image Representations
+
+- Query: `bioclip`
+- Published: `2026-04-30T07:41:49Z`
+- Authors: Ilyass Moummad, Kawtar Zaher, Hervé Goëau, Jean-Christophe Lombardo, Pierre Bonnet, Alexis Joly
+- Link: http://arxiv.org/abs/2604.27538v1
+- Review note: Automated plant recognition plays a crucial role in biodiversity monitoring and conservation, yet current approaches rely heavily on supervised learning, which is limited by the availability of expert-labeled data. Self-supervised learning (SSL) offers a scalable alternative, but existing methods and training protocols are largely designed for coarse-grained visual tasks and may not transfer well to fine-grained domains such as plant species recognition. In this work, we investigate SSL for plant image representation learning. We show that commonly used augmentations in SSL pipelines - such as Gaussian blur, grayscale conversion, and solarization - are detrimental in the context of plant images, as they remove subtle discriminative cues essential for fine-grained recognition. We instead identify alternative transformations, including affine and posterization, that are better suited to this domain. We further demonstrate that training SimDINOv2 on the iNaturalist 2021 Plantae subset yields significantly stronger representations than training on ImageNet-1K, highlighting the importance of domain-specific data for SSL. Our findings are consistent across both ViT-Base and ViT-Large architectures. Moreover, our models achieve competitive performance and sometimes outperform strong supervised baselines Pl@ntCLEF and BioCLIP on downstream plant recognition tasks in few-shot settings. Overall, our results highlight the critical importance of domain-adapted augmentation strategies and dataset selection in self-supervised learning, and provide practical guidelines for building scalable models for biodiversity monitoring.
 
 
 #### Repo Bug / Weak Point / Improvement Scan

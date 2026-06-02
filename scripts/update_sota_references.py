@@ -66,6 +66,31 @@ RELEVANCE_TERMS = (
     "selective prediction",
     "segment anything",
 )
+QUERY_RELEVANCE_TERMS = {
+    "out-of-distribution detection": ("out-of-distribution", "ood"),
+    "energy based ood": ("energy-based", "energy based", "energy score", "out-of-distribution", "ood"),
+    "mahalanobis ood": ("mahalanobis", "out-of-distribution", "ood"),
+    "logitnorm": ("logitnorm", "logit normalization", "out-of-distribution", "ood"),
+    "selective prediction": ("selective prediction", "risk-coverage", "abstention"),
+    "segment anything": ("segment anything", "sam 2", "sam2", "sam 3", "sam3"),
+    "sam segmentation": ("segment anything", "sam 2", "sam2", "sam 3", "sam3"),
+    "bioclip": ("bioclip",),
+    "router calibration": ("router calibration", "calibrated router", "router handoff"),
+    "conformal prediction": ("conformal prediction",),
+}
+TITLE_SCOPED_QUERIES = {
+    "out-of-distribution detection",
+    "energy based ood",
+    "mahalanobis ood",
+    "logitnorm",
+    "selective prediction",
+    "segment anything",
+    "sam segmentation",
+    "router calibration",
+    "conformal prediction",
+}
+VISUAL_CONTEXT_TERMS = ("image", "visual", "vision", "pixel", "segmentation", "plant", "crop", "leaf")
+BIOCLIP_CONTEXT_TERMS = ("plant", "crop", "leaf", "disease", "flora", "botanical", "vegetation")
 
 
 def query_arxiv(q, max_results=5):
@@ -108,15 +133,27 @@ def load_existing_titles(guide_path):
 
 
 def is_relevant_candidate(item):
-    text = " ".join([item.get("title", ""), item.get("summary", "")]).lower()
+    title = item.get("title", "").lower()
+    text = " ".join([title, item.get("summary", "")]).lower()
+    query = item.get("query", "")
+    query_terms = QUERY_RELEVANCE_TERMS.get(query)
+    if query_terms:
+        haystack = title if query in TITLE_SCOPED_QUERIES else text
+        if not any(_contains_term(haystack, term) for term in query_terms):
+            return False
+        if query == "bioclip":
+            return any(term in text for term in BIOCLIP_CONTEXT_TERMS)
+        return query == "router calibration" or any(term in text for term in VISUAL_CONTEXT_TERMS)
     for term in RELEVANCE_TERMS:
-        if term == "ood":
-            if re.search(r"\bood\b", text):
-                return True
-            continue
-        if term in text:
+        if _contains_term(text, term):
             return True
     return False
+
+
+def _contains_term(text, term):
+    if term == "ood":
+        return re.search(r"\bood\b", text) is not None
+    return term in text
 
 
 def summarize_query_error(error):
@@ -276,6 +313,11 @@ def update_guide_with_candidate_section(guide_text, candidate_section):
     return guide_text.rstrip() + "\n\n" + candidate_section + "\n"
 
 
+def should_preserve_existing_candidate_section(successful_query_count, query_errors):
+    """Keep the last reviewer scan when every configured source is temporarily unavailable."""
+    return successful_query_count == 0 and bool(query_errors)
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--output", default="docs/SOTA_AUTOMATION_GUIDE.md")
@@ -288,7 +330,9 @@ def main():
     existing = load_existing_titles(args.guide)
 
     found = []
+    found_titles = set()
     query_errors = []
+    successful_query_count = 0
     for q in QUERIES:
         try:
             items = query_arxiv(q, max_results=args.max_per_query)
@@ -296,14 +340,16 @@ def main():
             print(f"query failed for {q}: {e}")
             query_errors.append((q, str(e)))
             continue
+        successful_query_count += 1
         for it in items:
             key = it["title"].lower()
-            if key in existing:
+            if key in existing or key in found_titles:
                 continue
             candidate = {"query": q, **it}
             if not is_relevant_candidate(candidate):
                 continue
             found.append(candidate)
+            found_titles.add(key)
 
     now = datetime.datetime.now(datetime.UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
     output_path = Path(args.output)
@@ -316,6 +362,9 @@ def main():
 
     if output_path == guide_path:
         guide_text = guide_path.read_text(encoding="utf-8")
+        if should_preserve_existing_candidate_section(successful_query_count, query_errors):
+            print("Preserved existing SOTA candidate scan because all configured queries failed")
+            return
         output_text = update_guide_with_candidate_section(guide_text, candidate_section)
     else:
         output_text = candidate_section

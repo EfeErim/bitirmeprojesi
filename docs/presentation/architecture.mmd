@@ -1,0 +1,22 @@
+flowchart LR
+  subgraph Data
+    A[Raw images & metadata]
+  end
+  A --> B[Preprocessing]
+  B --> C[Dataset materialization]
+  C --> D[Training Workflow: TrainingWorkflow.run()]
+  D --> E[Continual SD-LoRA Adapter (adapter bundle)]
+  E --> F[Adapter Registry (/models/adapters)]
+  F --> G[Router: router_adapter_runtime]
+  G --> H[Inference Pipeline: vlm_pipeline / inference_payloads]
+  H --> I[Client / Notebook / Service]
+
+  %% Auxiliary
+  subgraph Notebooks & Scripts
+    NB[Colab notebooks / scripts]
+  end
+  NB --> C
+  NB --> H
+
+  classDef comp fill:#f9f,stroke:#333,stroke-width:1px;
+  class D,E,F,G,H comp;

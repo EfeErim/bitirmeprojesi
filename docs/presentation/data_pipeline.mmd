@@ -1,0 +1,33 @@
+flowchart LR
+  subgraph Sources
+    S1[Image repositories]
+    S2[Metadata / annotations]
+    S3[External web candidates]
+  end
+
+  S1 ---|ingest| I[Ingestion service]
+  S2 ---|ingest| I
+  S3 ---|crawl| I
+
+  I --> P[Preprocessing]
+  P --> Aug[Augmentation]
+  Aug --> Store[Feature store / Blob storage]
+  Store --> Split[Dataset split: train / val / OE / OOD]
+
+  Split --> Prep[Dataset materialization & caching]
+  Prep --> Training[Training pipeline: TrainingWorkflow.run()]
+  Training --> Checkpoint[Checkpoint & logs]
+  Checkpoint --> AdapterExport[Export adapter bundle (SD-LoRA)]
+  AdapterExport --> Registry[Adapter Registry (/models/adapters)]
+
+  Registry --> Router[Router calibration & runtime]
+  Router --> Inference[Inference pipeline (vlm_pipeline)]
+  Inference --> Client[Client / Notebook / Service]
+
+  %% Monitoring
+  Checkpoint --> Metrics[BER / OOD metrics / Eval]
+  Metrics -->|If fail| Training
+  Metrics -->|If pass| Deploy[Serve / Deploy adapters]
+
+  classDef io fill:#f3f4f6,stroke:#333,stroke-width:1px
+  class Store,Registry,Checkpoint io;

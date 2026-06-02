@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#58d6c7"/></marker></defs>
+  <rect width="1600" height="900" fill="#071b2c"/>
+  <text x="90" y="115" fill="#fff" font-family="Arial" font-size="48" font-weight="700">AADS v6 system process</text>
+  <text x="92" y="165" fill="#9fb5c8" font-family="Arial" font-size="24">From traceable images to a controlled field prediction</text>
+  <g font-family="Arial">
+    <g fill="#0d3147" stroke="#58d6c7" stroke-width="3">
+      <rect x="95" y="295" width="270" height="260" rx="28"/><rect x="485" y="295" width="270" height="260" rx="28"/>
+      <rect x="875" y="295" width="270" height="260" rx="28"/><rect x="1265" y="295" width="240" height="260" rx="28"/>
+    </g>
+    <g fill="#58d6c7" font-size="22" font-weight="700"><text x="125" y="345">01  PREPARATION</text><text x="515" y="345">02  TRAINING</text><text x="905" y="345">03  INFERENCE</text><text x="1295" y="345">04  DECISION</text></g>
+    <g fill="#fff" font-size="30" font-weight="700"><text x="125" y="405">Leakage-aware</text><text x="125" y="443">datasets</text><text x="515" y="405">Crop-specific</text><text x="515" y="443">SD-LoRA adapters</text><text x="905" y="405">Router-guided</text><text x="905" y="443">adapter selection</text><text x="1295" y="405">Predict or</text><text x="1295" y="443">abstain</text></g>
+    <g fill="#9fb5c8" font-size="20"><text x="125" y="495">Grouped splits + OOD evidence</text><text x="515" y="495">Frozen DINOv3 backbone</text><text x="905" y="495">Confidence gate first</text><text x="1295" y="495">No forced answer</text></g>
+    <g stroke="#58d6c7" stroke-width="7" marker-end="url(#a)"><path d="M380 425H455"/><path d="M770 425H845"/><path d="M1160 425H1235"/></g>
+    <rect x="95" y="660" width="1410" height="90" rx="22" fill="#102c40"/>
+    <text x="135" y="715" fill="#fff" font-size="25">Design principle:</text><text x="350" y="715" fill="#9fb5c8" font-size="25">reliable evidence matters more than returning a prediction for every image.</text>
+  </g>
+</svg>

@@ -5,6 +5,7 @@ from scripts.update_sota_references import (
     render_candidate_section,
     render_repo_opportunity_scan,
     scan_repo_opportunities,
+    should_preserve_existing_candidate_section,
     update_guide_with_candidate_section,
 )
 
@@ -75,6 +76,12 @@ def test_render_candidate_section_summarizes_permission_errors():
     assert "WinError" not in section
 
 
+def test_all_query_failures_preserve_existing_candidate_section():
+    assert should_preserve_existing_candidate_section(0, [("bioclip", "query timed out")])
+    assert not should_preserve_existing_candidate_section(1, [("bioclip", "query timed out")])
+    assert not should_preserve_existing_candidate_section(0, [])
+
+
 def test_candidate_section_can_embed_repo_opportunity_scan():
     section = render_candidate_section(
         [],
@@ -134,5 +141,47 @@ def test_is_relevant_candidate_filters_broad_arxiv_noise():
             "query": "out-of-distribution detection",
             "title": "Unveiling hidden Lyman alpha emitters",
             "summary": "A good Dark Energy spectroscopic survey model.",
+        }
+    )
+    assert not is_relevant_candidate(
+        {
+            "query": "router calibration",
+            "title": "Stable layers for image decomposition",
+            "summary": "A calibration step improves reinforcement learning rewards.",
+        }
+    )
+    assert not is_relevant_candidate(
+        {
+            "query": "conformal prediction",
+            "title": "Quiver approach to symmetry theories",
+            "summary": "This work studies conformal field theories.",
+        }
+    )
+    assert not is_relevant_candidate(
+        {
+            "query": "mahalanobis ood",
+            "title": "OOD-GraphLLM for drug synergy prediction",
+            "summary": "Out-of-distribution generalization for molecular graphs.",
+        }
+    )
+    assert is_relevant_candidate(
+        {
+            "query": "logitnorm",
+            "title": "Enhancing Out-of-Distribution Detection with Extended Logit Normalization",
+            "summary": "The method improves image classification under distribution shift.",
+        }
+    )
+    assert is_relevant_candidate(
+        {
+            "query": "bioclip",
+            "title": "Self-Supervised Learning of Plant Image Representations",
+            "summary": "Plant recognition models outperform BioCLIP on fine-grained leaf images.",
+        }
+    )
+    assert not is_relevant_candidate(
+        {
+            "query": "bioclip",
+            "title": "PRIMA: Boosting Animal Mesh Recovery with Biological Priors",
+            "summary": "BioCLIP embeddings improve quadruped mesh reconstruction.",
         }
     )

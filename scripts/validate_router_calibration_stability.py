@@ -31,7 +31,7 @@ class CalibrationIssue:
     message: str
 
 
-from scripts.utils.reporting import read_json, write_json
+from scripts.utils.reporting import read_json, write_json  # noqa: E402
 
 
 def _read_json(path: Path) -> dict[str, Any]:

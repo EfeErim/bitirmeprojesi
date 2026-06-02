@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#58d6c7"/></marker></defs>
+  <rect width="1600" height="900" fill="#071b2c"/>
+  <text x="90" y="110" fill="#fff" font-family="Arial" font-size="46" font-weight="700">Leakage-aware dataset preparation</text>
+  <text x="92" y="160" fill="#9fb5c8" font-family="Arial" font-size="23">Related images stay together before the 60 / 20 / 20 split</text>
+  <g font-family="Arial">
+    <g fill="#0d3147" stroke="#58d6c7" stroke-width="3"><rect x="90" y="260" width="290" height="240" rx="26"/><rect x="465" y="260" width="290" height="240" rx="26"/><rect x="840" y="260" width="290" height="240" rx="26"/><rect x="1215" y="260" width="290" height="240" rx="26"/></g>
+    <g fill="#58d6c7" font-size="21" font-weight="700"><text x="125" y="315">01  AUDIT</text><text x="500" y="315">02  GROUP</text><text x="875" y="315">03  SPLIT</text><text x="1250" y="315">04  MATERIALIZE</text></g>
+    <g fill="#fff" font-size="28" font-weight="700"><text x="125" y="375">Traceable source</text><text x="125" y="412">records</text><text x="500" y="375">Duplicate-aware</text><text x="500" y="412">image families</text><text x="875" y="375">Train / validation</text><text x="875" y="412">/ test</text><text x="1250" y="375">Runtime dataset</text><text x="1250" y="412">folders</text></g>
+    <g fill="#9fb5c8" font-size="19"><text x="125" y="465">Images + labels + metadata</text><text x="500" y="465">SHA-256, pHash, DINOv3, BioCLIP</text><text x="875" y="465">Families never cross boundaries</text><text x="1250" y="465">continual / val / test / ood / oe</text></g>
+    <g stroke="#58d6c7" stroke-width="7" marker-end="url(#a)"><path d="M395 380H435"/><path d="M770 380H810"/><path d="M1145 380H1185"/></g>
+    <rect x="90" y="620" width="1415" height="125" rx="22" fill="#102c40"/>
+    <text x="135" y="675" fill="#fff" font-size="24">Why this matters</text><text x="135" y="716" fill="#9fb5c8" font-size="22">Duplicates, near-duplicates and augmented variants must not inflate validation metrics.</text>
+  </g>
+</svg>

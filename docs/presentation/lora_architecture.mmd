@@ -1,0 +1,30 @@
+flowchart TB
+  subgraph Model
+    Base[Base generative model (e.g., UNet / Diffusion model)]
+  end
+
+  Base --> Layers[Selected layers (attention, MLP, conv)]
+  Layers --> LoRA[LoRA adapters inserted]
+
+  subgraph LoRA_adapter
+    A[Rank-r matrix A]
+    B[Rank-r matrix B]
+    A --> B
+    B --> Merge[Add to layer weight during forward]
+  end
+
+  LoRA --> Training[Train only A and B (low-rank) + adapter params]
+  Training --> Optim[Optimizer & scheduler]
+  Training --> Checkpoint[Save LoRA checkpoints (.pt / .safetensors)]
+
+  Checkpoint --> Export[Export adapter bundle (metadata + weights)]
+  Export --> Registry[Adapter Registry (/models/adapters)]
+
+  %% Inference merge
+  Merge --> Inference[Merge LoRA into base weights at runtime (optional)]
+  Inference --> Output[Generated samples / embeddings]
+
+  Note[Key points:\n- LoRA introduces O(d*r) params instead of O(d^2)\n- Fine-tune small adapter parameters only\n- Enables efficient continual/adaptive training]:::note
+
+  classDef note fill:#fff7cc,stroke:#b08900,stroke-width:1px
+  class Note note;

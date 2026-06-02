@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#58d6c7"/>
+    </marker>
+  </defs>
+  <rect width="1600" height="900" fill="#071b2c"/>
+  <text x="80" y="95" fill="#fff" font-family="Arial" font-size="45" font-weight="700">AADS v6 adapter architecture</text>
+  <text x="82" y="145" fill="#9fb5c8" font-family="Arial" font-size="22">Frozen visual backbone, lightweight adaptation, multi-scale fusion and calibrated rejection</text>
+  <g font-family="Arial">
+    <rect x="65" y="275" width="180" height="210" rx="24" fill="#12364d" stroke="#58d6c7" stroke-width="3"/>
+    <text x="98" y="330" fill="#58d6c7" font-size="18" font-weight="700">INPUT</text>
+    <text x="98" y="395" fill="#fff" font-size="27" font-weight="700">Plant</text>
+    <text x="98" y="430" fill="#fff" font-size="27" font-weight="700">image</text>
+
+    <rect x="330" y="235" width="310" height="290" rx="24" fill="#12364d" stroke="#58d6c7" stroke-width="3"/>
+    <text x="365" y="290" fill="#58d6c7" font-size="18" font-weight="700">FROZEN BACKBONE</text>
+    <text x="365" y="355" fill="#fff" font-size="30" font-weight="700">DINOv3</text>
+    <text x="365" y="395" fill="#fff" font-size="30" font-weight="700">visual encoder</text>
+    <rect x="365" y="435" width="235" height="52" rx="14" fill="#194c55"/>
+    <text x="389" y="468" fill="#fff" font-size="18" font-weight="700">SD-LoRA modules</text>
+    <text x="515" y="218" fill="#9fb5c8" font-size="16">Low-rank updates are injected into selected layers</text>
+
+    <rect x="735" y="235" width="315" height="290" rx="24" fill="#153f48" stroke="#58d6c7" stroke-width="3"/>
+    <text x="770" y="290" fill="#58d6c7" font-size="18" font-weight="700">TRAINABLE FUSION</text>
+    <text x="770" y="350" fill="#fff" font-size="28" font-weight="700">Multi-scale</text>
+    <text x="770" y="387" fill="#fff" font-size="28" font-weight="700">feature fusion</text>
+    <g fill="#0d3147" stroke="#58d6c7" stroke-width="2">
+      <rect x="770" y="430" width="52" height="42" rx="10"/><rect x="837" y="430" width="52" height="42" rx="10"/>
+      <rect x="904" y="430" width="52" height="42" rx="10"/><rect x="971" y="430" width="52" height="42" rx="10"/>
+    </g>
+    <g fill="#fff" font-size="17" font-weight="700"><text x="785" y="457">H1</text><text x="852" y="457">H2</text><text x="919" y="457">H3</text><text x="986" y="457">H4</text></g>
+    <text x="770" y="505" fill="#9fb5c8" font-size="17">pool > project > softmax merge</text>
+
+    <rect x="1145" y="275" width="235" height="210" rx="24" fill="#12364d" stroke="#58d6c7" stroke-width="3"/>
+    <text x="1180" y="330" fill="#58d6c7" font-size="18" font-weight="700">TRAINABLE HEAD</text>
+    <text x="1180" y="392" fill="#fff" font-size="27" font-weight="700">Crop-specific</text>
+    <text x="1180" y="430" fill="#fff" font-size="27" font-weight="700">classifier</text>
+
+    <rect x="1145" y="600" width="350" height="135" rx="24" fill="#4a3040" stroke="#f4a261" stroke-width="3"/>
+    <text x="1180" y="650" fill="#f4a261" font-size="18" font-weight="700">CALIBRATED OOD STATE</text>
+    <text x="1180" y="697" fill="#fff" font-size="25" font-weight="700">Predict or abstain safely</text>
+
+    <g stroke="#58d6c7" stroke-width="7" fill="none" marker-end="url(#arrow)">
+      <path d="M265 380H305"/><path d="M660 380H710"/><path d="M1070 380H1120"/><path d="M1260 505V570"/>
+    </g>
+
+    <rect x="65" y="620" width="930" height="115" rx="22" fill="#102c40"/>
+    <text x="105" y="665" fill="#fff" font-size="21" font-weight="700">What changes during training?</text>
+    <text x="105" y="705" fill="#9fb5c8" font-size="20">DINOv3 stays frozen. SD-LoRA parameters, fusion layers and the crop classifier learn the task.</text>
+
+    <g font-size="17" font-weight="700">
+      <circle cx="95" cy="800" r="10" fill="#12364d" stroke="#58d6c7" stroke-width="2"/><text x="118" y="806" fill="#9fb5c8">Frozen</text>
+      <circle cx="230" cy="800" r="10" fill="#153f48" stroke="#58d6c7" stroke-width="2"/><text x="253" y="806" fill="#9fb5c8">Trainable</text>
+      <circle cx="385" cy="800" r="10" fill="#4a3040" stroke="#f4a261" stroke-width="2"/><text x="408" y="806" fill="#9fb5c8">Calibrated after training</text>
+    </g>
+  </g>
+</svg>

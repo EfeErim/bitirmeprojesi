@@ -1,0 +1,23 @@
+flowchart TB
+  A[Dataset prep]
+  A --> B[Split: train / val / OE / OOD]
+  B --> C[Adapter training: continual SD-LoRA]
+  C --> D[BER & OOD calibration]
+  D --> E[Export adapter artifacts]
+  E --> F[Router handoff calibration]
+  F --> G[Inference: router selects adapter -> vlm_pipeline]
+  G --> H[Evaluation & metrics]
+
+  H -->|If fail| C
+  H -->|If pass| I[Deploy / Serving]
+
+  subgraph Iteration
+    C
+    D
+    F
+    H
+  end
+
+  style A fill:#eef,stroke:#333,stroke-width:1px
+  style C fill:#efe,stroke:#333,stroke-width:1px
+  style G fill:#fee,stroke:#333,stroke-width:1px

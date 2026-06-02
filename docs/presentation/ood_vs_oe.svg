@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <rect width="1600" height="900" fill="#071b2c"/>
+  <text x="90" y="110" fill="#fff" font-family="Arial" font-size="46" font-weight="700">OOD and OE have different roles</text>
+  <text x="92" y="160" fill="#9fb5c8" font-family="Arial" font-size="23">Unsupported images are separated by purpose</text>
+  <g font-family="Arial">
+    <rect x="110" y="260" width="620" height="390" rx="32" fill="#12364d" stroke="#58d6c7" stroke-width="3"/>
+    <rect x="870" y="260" width="620" height="390" rx="32" fill="#153f48" stroke="#58d6c7" stroke-width="3"/>
+    <text x="165" y="340" fill="#58d6c7" font-size="24" font-weight="700">OUTLIER EXPOSURE  |  OE</text>
+    <text x="925" y="340" fill="#58d6c7" font-size="24" font-weight="700">OUT-OF-DISTRIBUTION  |  OOD</text>
+    <text x="165" y="410" fill="#fff" font-size="34" font-weight="700">Supports training</text><text x="925" y="410" fill="#fff" font-size="34" font-weight="700">Measures readiness</text>
+    <g fill="#9fb5c8" font-size="23"><text x="165" y="480">Auxiliary unsupported images</text><text x="165" y="525">Improve uncertainty behavior</text><text x="165" y="570">Seen only during training</text><text x="925" y="480">Held-out unsupported images</text><text x="925" y="525">Test rejection behavior</text><text x="925" y="570">Never used as supported classes</text></g>
+    <circle cx="800" cy="455" r="52" fill="#58d6c7"/><text x="776" y="470" fill="#071b2c" font-size="42" font-weight="700">≠</text>
+    <rect x="110" y="710" width="1380" height="80" rx="20" fill="#102c40"/>
+    <text x="155" y="760" fill="#fff" font-size="24">Critical rule:</text><text x="305" y="760" fill="#9fb5c8" font-size="24">the same image must not appear in both pools.</text>
+  </g>
+</svg>

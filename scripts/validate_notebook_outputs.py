@@ -9,7 +9,6 @@ missing required manifest, guided, or adapter export artifacts are failures.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -19,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.utils.reporting import write_json
+from scripts.utils.reporting import write_json  # noqa: E402
 
 
 def _check_path(path: Path, label: str, errors: list[str], present: list[str]) -> None:

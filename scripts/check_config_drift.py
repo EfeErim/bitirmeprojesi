@@ -84,7 +84,7 @@ if __name__ == "__main__":
     colab_config = ROOT / "config" / "colab.json"
 
     if not base_config.exists() or not colab_config.exists():
-        print("❌ Config files not found", file=sys.stderr)
+        print("ERROR: Config files not found", file=sys.stderr)
         sys.exit(1)
 
     has_drift, warnings = check_config_drift(base_config, colab_config, None)
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         for warning in warnings:
             print(warning)
         print(
-            "\n📝 When updating config schema, ensure:"
+            "\nWhen updating config schema, ensure:"
             "\n  1. Both base.json and colab.json are in sync"
             "\n  2. config_schema_version is incremented if breaking"
             "\n  3. docs/README.md or docs/architecture/ are updated"
@@ -102,5 +102,5 @@ if __name__ == "__main__":
         )
         sys.exit(1 if has_drift else 0)
     else:
-        print("✅ Config schema appears consistent")
+        print("PASS: Config schema appears consistent")
         sys.exit(0)
