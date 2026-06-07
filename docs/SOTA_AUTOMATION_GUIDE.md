@@ -170,9 +170,9 @@ AADS v6 is a **production-oriented plant disease detection pipeline** that chain
 
 ---
 
-#### 1D. Code Quality & Bug-Fix Automation
+#### 1D. Code Quality, Bug-Fix, and Optimization Automation
 
-**Problem:** Style, type, and regression issues slip into training/inference code; slow detection causes flaky runs or silent failures.
+**Problem:** Style, type, regression, and performance issues slip into training/inference code; slow detection causes flaky runs, silent failures, and suboptimal implementation choices.
 
 **Automation:**
 
@@ -185,15 +185,24 @@ AADS v6 is a **production-oriented plant disease detection pipeline** that chain
       mypy --follow-imports skip src
       pytest tests/unit -q --maxfail=1
 
+# Add a lightweight optimization signal:
+- name: Performance and complexity checks
+  run: |
+   python scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json
+   ruff check src scripts tests --select C90
+
 # Recommended extras:
 # - Pre-commit hooks: ruff/black/isort/mypy
 # - Dependabot or scheduled GitHub Action for dependency updates
 # - Flaky-test detection (pytest-rerunfailures / flaky) to surface nondeterminism
 # - Runtime exception monitoring (Sentry) for deployed adapters
+# - Duplicate-code or dead-code review for repeated or unreachable logic
+# - Benchmark regression alerts for slow paths, excessive memory use, or unstable latency
+# - Cyclomatic-complexity / maintainability guardrails for high-risk modules
 ```
 
 **Trigger:** On every PR and push to main/master; scheduled dependency checks
-**Pass/Fail Criteria:** Lint/type checks pass; no new unit-test regressions; no new flaky-test alerts
+**Pass/Fail Criteria:** Lint/type checks pass; no new unit-test regressions; no new flaky-test alerts; benchmark and complexity thresholds stay within policy
 **Literature Anchor:** NIST SSDF (traceability) and CI/CD best practices
 
 ---
@@ -639,17 +648,15 @@ Note: the script only suggests candidates inside this guide; human review is req
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-02T10:37:08Z`
+Generated: `2026-06-06T08:14:27Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
-##### A Closer Look at In-Distribution vs. Out-of-Distribution Accuracy for Open-Set Test-time Adaptation
+Candidate scan could not query all configured sources:
 
-- Query: `mahalanobis ood`
-- Published: `2026-06-01T09:35:29Z`
-- Authors: Zefeng Li, Evan Shelhamer
-- Link: http://arxiv.org/abs/2606.01973v1
-- Review note: Open-set test-time adaptation (TTA) updates models on new data in the presence of input shifts and unknown output classes. While recent methods have made progress on improving in-distribution (InD) accuracy for known classes, their ability to accurately detect out-of-distribution (OOD) unknown classes remains underexplored. We benchmark robust and open-set TTA methods (SAR, OSTTA, UniEnt, and SoTTA) on the standard corruption benchmarks of CIFAR-10-C at the small scale and ImageNet-C at the large scale. For CIFAR-10-C, we use OOD data from SVHN and CIFAR-100 in their respective corrupted forms of SVHN-C and CIFAR-100-C. For ImageNet-C, we use OOD data from ImageNet-O and Textures in their respective corrupted forms of ImageNet-O-C and Textures-C. ImageNet-O is nearer to ImageNet, as unknown but related object classes (like ''garlic bread'' vs. ''hot dog'' for food, or ''highway'' vs. ''dam'' for infrastructure), while Textures is farther from ImageNet, as non-object patterns (like ''cracked'' mud, ''porous'' sponge, ''veined'' leaves). We evaluate the accuracy and confidence of TTA methods for InD vs. OOD recognition on CIFAR-10-C and ImageNet-C. We verify the accuracy of each method's own OOD detection technique on CIFAR-10-C. We also evaluate on ImageNet-C and report both accuracy and standard OOD detection metrics. We further examine more realistic settings, in which the proportions and rates of OOD data can vary. To explore the trade-off between InD recognition and OOD rejection, we propose a new baseline that replaces softmax/multi-class output with sigmoid/multi-label output. Our analysis shows for the first time that current open-set TTA methods struggle to balance InD and OOD accuracy and that they only imperfectly filter OOD data for their own adaptation updates.
+- `out-of-distribution detection`: 429 Client Error: Too Many Requests for url: https://export.arxiv.org/api/query?search_query=all%3Aout-of-distribution+detection&start=0&max_results=5&sortBy=submittedDate&sortOrder=descending
+- `energy based ood`: query timed out
+- `mahalanobis ood`: query timed out
 
 ##### Self-Supervised Learning of Plant Image Representations
 
