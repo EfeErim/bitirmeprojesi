@@ -165,6 +165,34 @@ def summarize_query_error(error):
     return error_text.splitlines()[0][:200]
 
 
+def infer_repo_action_hint(item):
+    """Map a literature candidate to a concrete review action for this repo."""
+    query = item.get("query", "").lower()
+    title = item.get("title", "").lower()
+    summary = item.get("summary", "").lower()
+    text = " ".join([query, title, summary])
+
+    if "fine-grained" in text and ("ood" in text or "out-of-distribution" in text):
+        return (
+            "Audit OOD readiness for near-OOD slices, background/style confounders, and feature-space detector "
+            "separation before adopting a new architecture."
+        )
+    if "bioclip" in text or ("plant" in text and "self-supervised" in text):
+        return (
+            "Review plant-domain representation and augmentation policy; avoid transformations that erase subtle "
+            "leaf/symptom cues unless a local ablation proves they help."
+        )
+    if "selective prediction" in text or "risk-coverage" in text:
+        return "Check router abstention with risk-coverage curves instead of relying on top-1 accuracy alone."
+    if "calibration" in text:
+        return "Route to router/OOD calibration checks and compare threshold recommendations against current artifacts."
+    if "conformal" in text:
+        return "Review exchangeability and split boundaries before promoting conformal guarantees into readiness policy."
+    if "segment anything" in text or "sam" in text:
+        return "Validate segmentation-assisted routing on current crop/part eval data before changing router prompts."
+    return "Review for a concrete change to ML method, evaluation policy, data curation, or guard behavior before promotion."
+
+
 def render_candidate_section(found, generated_at, query_errors=None, extra_sections=None):
     query_errors = query_errors or []
     extra_sections = extra_sections or []
@@ -194,6 +222,7 @@ def render_candidate_section(found, generated_at, query_errors=None, extra_secti
             out_lines.append(f"- Published: `{it['published']}`")
             out_lines.append(f"- Authors: {', '.join(it['authors'])}")
             out_lines.append(f"- Link: {it['link']}")
+            out_lines.append(f"- Repo action hint: {infer_repo_action_hint(it)}")
             out_lines.append(f"- Review note: {it['summary']}")
             out_lines.append("")
     for section in extra_sections:

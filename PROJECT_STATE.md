@@ -18,6 +18,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Latest commit added Codex instructions, a config example, and output-capping helpers, and refreshed `AGENTS.md`.
 - Recent notebook calibration work tuned Notebook 5 router calibration defaults to `12/12`, exposed adaptive hyperparameters, and published failure-analysis artifacts.
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
+- `docs/SOTA_AUTOMATION_GUIDE.md` is now an operating guide for the SOTA refresh loop: every pass should refresh machine evidence, run narrow guardrails, classify skips/failures, and select a concrete next repo action instead of maintaining a static wishlist.
 
 ## Important Decisions
 

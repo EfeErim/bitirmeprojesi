@@ -1,6 +1,7 @@
 from scripts.update_sota_references import (
     CANDIDATE_SECTION_BEGIN,
     CANDIDATE_SECTION_END,
+    infer_repo_action_hint,
     is_relevant_candidate,
     render_candidate_section,
     render_repo_opportunity_scan,
@@ -63,6 +64,38 @@ def test_render_candidate_section_reports_query_errors():
     assert "Candidate scan could not query all configured sources:" in section
     assert "`bioclip`: network unavailable" in section
     assert "No new papers found for configured queries." not in section
+
+
+def test_render_candidate_section_includes_repo_action_hint():
+    section = render_candidate_section(
+        [
+            {
+                "query": "mahalanobis ood",
+                "title": "Dual Feature Decoupling for Fine-Grained OOD Detection",
+                "summary": "Fine-grained out-of-distribution detection with background factors.",
+                "published": "2026-06-04T00:38:21Z",
+                "authors": ["Example Author"],
+                "link": "https://arxiv.org/abs/2606.05536",
+            }
+        ],
+        "2026-06-07T13:46:33Z",
+    )
+
+    assert "- Repo action hint:" in section
+    assert "near-OOD slices" in section
+
+
+def test_infer_repo_action_hint_maps_plant_ssl_to_augmentation_review():
+    hint = infer_repo_action_hint(
+        {
+            "query": "bioclip",
+            "title": "Self-Supervised Learning of Plant Image Representations",
+            "summary": "Plant SSL shows Gaussian blur and grayscale can erase fine-grained cues.",
+        }
+    )
+
+    assert "augmentation policy" in hint
+    assert "subtle leaf/symptom cues" in hint
 
 
 def test_render_candidate_section_summarizes_permission_errors():
