@@ -157,9 +157,18 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-07T13:48:14Z`
+Generated: `2026-06-08T06:40:50Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
+
+##### GP-Adapter: Gaussian Process CLIP-Adapter for Few-Shot Out-of-Distribution Detection
+
+- Query: `mahalanobis ood`
+- Published: `2026-06-05T09:53:30Z`
+- Authors: Taisei Saito, Koretaka Ogata, Takafumi Hiroi
+- Link: http://arxiv.org/abs/2606.07102v1
+- Repo action hint: Review for a concrete change to ML method, evaluation policy, data curation, or guard behavior before promotion.
+- Review note: We propose GP-Adapter, a training-free framework that augments CLIP (Contrastive Language-Image Pre-training) with Gaussian Process (GP) uncertainty modeling for few-shot classification and out-of-distribution (OOD) detection. While CLIP achieves strong zero-shot recognition, it yields deterministic similarity scores and offers limited uncertainty information, which is critical under distribution shift and data scarcity. GP-Adapter constructs modality-specific, class-wise one-class GPs on top of frozen CLIP embeddings using an RBF kernel for image features and a linear kernel for text prompts and fuses their predictive statistics to produce a variance-aware confidence score for OOD detection. The method requires no fine-tuning of the CLIP backbone and relies only on a small $K$-shot cache and lightweight hyperparameter selection, with memory cost scaling as $O(CK^2)$ for $C$ classes and $K$ shots. Experiments on ImageNet and multiple OOD benchmarks show that GP-Adapter provides competitive few-shot performance and consistently improves OOD detection when combined with prompt-learning baselines, highlighting the complementarity between GP-based uncertainty modeling and prompt learning. Overall, our results suggest that integrating probabilistic inference with large pre-trained vision-language models can improve reliability in low-data and distribution-shifted settings. Code is available at https://github.com/tms-byte/GP-Adapter
 
 ##### Dual Feature Decoupling for Fine-Grained OOD Detection
 
