@@ -50,6 +50,7 @@ class FakeWorkflow:
 
 
 def _write_image(path: Path) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (80, 60), color=(20, 120, 40)).save(path)
     return path
 
@@ -211,3 +212,29 @@ def test_roi_prediction_uses_cropped_pil_image_and_same_adapter_metadata(tmp_pat
     assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
     assert FakeWorkflow.calls[0]["part_hint"] == "leaf"
     assert FakeWorkflow.calls[0]["adapter_root"] == Path("models/adapters")
+
+
+def test_build_mixed_full_roi_dataset_writes_full_and_roi_training_view(tmp_path: Path):
+    source_root = tmp_path / "source"
+    dataset = source_root / "tomato__fruit"
+    _write_image(dataset / "continual" / "healthy" / "train_a.jpg")
+    _write_image(dataset / "val" / "healthy" / "val_a.jpg")
+    _write_image(dataset / "test" / "healthy" / "test_a.jpg")
+    _write_image(dataset / "ood" / "field" / "ood_a.jpg")
+
+    manifest = roi_ablation.build_mixed_full_roi_dataset(
+        source_root,
+        dataset_key="tomato__fruit",
+        output_root=tmp_path / "mixed",
+        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
+        status_printer=None,
+    )
+
+    target = tmp_path / "mixed" / "tomato__fruit"
+    assert len(list((target / "continual" / "healthy").glob("full__*.jpg"))) == 1
+    assert len(list((target / "continual" / "healthy").glob("roi__*.jpg"))) == 1
+    assert len(list((target / "val" / "healthy").glob("full__*.jpg"))) == 1
+    assert not list((target / "val" / "healthy").glob("roi__*.jpg"))
+    assert (target / "ood" / "field" / "ood_a.jpg").exists()
+    assert manifest["splits"]["continual"]["full_images"] == 1
+    assert manifest["splits"]["continual"]["roi_images"] == 1

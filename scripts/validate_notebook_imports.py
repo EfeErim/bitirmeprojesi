@@ -475,11 +475,17 @@ def test_roi_ablation_notebook_contract() -> None:
                 "run_ablation_folder(",
                 f"{notebook_name} should run the shared inference ablation helper: {{snippet}}",
             )
-        else:
+        elif ablation_name == "roi_trained_adapter":
             _assert_contains(
                 sources.full_source,
                 "describe_training_ablation_plan",
                 f"{notebook_name} should expose the standardized second-phase training plan: {{snippet}}",
+            )
+        else:
+            _assert_contains(
+                sources.full_source,
+                "run_mixed_full_roi_training_ablation(",
+                f"{notebook_name} should run the shared mixed training ablation helper: {{snippet}}",
             )
 
 

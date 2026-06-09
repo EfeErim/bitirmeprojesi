@@ -7,6 +7,7 @@ import argparse
 import csv
 import json
 import os
+import shutil
 import subprocess
 import time
 from collections import defaultdict
@@ -17,12 +18,16 @@ from urllib.parse import urlsplit, urlunsplit
 from PIL import Image
 
 from scripts.colab_router_adapter_inference import run_inference as run_router_inference
+from src.core.config_manager import get_config
 from src.router.roi_helpers import bbox_area_ratio, extract_roi, sanitize_bbox
+from src.shared.json_utils import deep_merge
 from src.workflows.inference import InferenceWorkflow
+from src.workflows.training import TrainingWorkflow
 
 StatusPrinter = Callable[[str], None]
 WorkflowFactory = Callable[..., Any]
 RouterRunner = Callable[..., Dict[str, Any]]
+TrainingWorkflowFactory = Callable[..., Any]
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 ADAPTER_ALLOWED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
@@ -600,6 +605,250 @@ def run_ablation_folder(
         )
     resolved_output_dir = output_dir or ABLATION_CONFIGS[ablation_name]["output_dir"]
     return write_report(rows, output_dir=resolved_output_dir, ablation_name=ablation_name)
+
+
+def _copy_image_file(source: Path, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        return
+    try:
+        os.link(source, destination)
+    except OSError:
+        shutil.copy2(source, destination)
+
+
+def _safe_stem(path: Path) -> str:
+    return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in path.stem)
+
+
+def build_mixed_full_roi_dataset(
+    source_dataset_root: str | Path,
+    *,
+    dataset_key: str = "tomato__fruit",
+    output_root: str | Path,
+    roi_splits: Iterable[str] = ("continual",),
+    pad_ratio: float = 0.08,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    router_runner: RouterRunner = run_router_inference,
+    status_printer: Optional[StatusPrinter] = print,
+) -> Dict[str, Any]:
+    """Create a research-only dataset view with full-image samples plus router ROI crops.
+
+    The returned root follows the runtime dataset layout expected by TrainingWorkflow:
+    ``<output_root>/<dataset_key>/continual|val|test|ood|oe``. In-distribution splits
+    are copied as full images; splits listed in ``roi_splits`` also receive ROI crops
+    when the router provides a valid primary bbox.
+    """
+    source_root = Path(source_dataset_root)
+    source_dataset = source_root / dataset_key
+    if not source_dataset.is_dir():
+        raise FileNotFoundError(f"source dataset not found: {source_dataset}")
+
+    target_root = Path(output_root)
+    target_dataset = target_root / dataset_key
+    if target_dataset.exists():
+        shutil.rmtree(target_dataset)
+    roi_split_names = {str(split).strip().lower() for split in roi_splits}
+    manifest: Dict[str, Any] = {
+        "dataset_key": dataset_key,
+        "source_dataset": str(source_dataset),
+        "target_dataset": str(target_dataset),
+        "roi_splits": sorted(roi_split_names),
+        "pad_ratio": float(pad_ratio),
+        "splits": {},
+    }
+
+    for split in ("continual", "val", "test"):
+        source_split = source_dataset / split
+        if not source_split.is_dir():
+            continue
+        split_stats = {
+            "full_images": 0,
+            "roi_images": 0,
+            "roi_missing": 0,
+            "classes": {},
+        }
+        for class_dir in sorted(path for path in source_split.iterdir() if path.is_dir()):
+            class_stats = {"full_images": 0, "roi_images": 0, "roi_missing": 0}
+            for image_path in discover_images(class_dir):
+                full_name = f"full__{_safe_stem(image_path)}{image_path.suffix.lower()}"
+                _copy_image_file(image_path, target_dataset / split / class_dir.name / full_name)
+                split_stats["full_images"] += 1
+                class_stats["full_images"] += 1
+
+                if split.lower() not in roi_split_names:
+                    continue
+                with Image.open(image_path) as opened:
+                    image = opened.convert("RGB")
+                    router_result = router_runner(
+                        image_path,
+                        config_env=config_env,
+                        device=device,
+                        return_ood=False,
+                        status_printer=status_printer,
+                    )
+                    handoff = resolve_router_handoff(router_result)
+                    roi, _bbox, _area_ratio = prepare_primary_roi(image, handoff["bbox"], pad_ratio=pad_ratio)
+                    if roi is None:
+                        split_stats["roi_missing"] += 1
+                        class_stats["roi_missing"] += 1
+                        continue
+                    roi_name = f"roi__{_safe_stem(image_path)}.jpg"
+                    roi.save(target_dataset / split / class_dir.name / roi_name, quality=95)
+                    split_stats["roi_images"] += 1
+                    class_stats["roi_images"] += 1
+            split_stats["classes"][class_dir.name] = class_stats
+        manifest["splits"][split] = split_stats
+
+    for split in ("ood", "oe"):
+        source_split = source_dataset / split
+        if not source_split.is_dir():
+            continue
+        copied = 0
+        for image_path in discover_images(source_split):
+            relative = image_path.relative_to(source_split)
+            _copy_image_file(image_path, target_dataset / split / relative)
+            copied += 1
+        manifest["splits"][split] = {"full_images": copied, "roi_images": 0, "roi_missing": 0}
+
+    manifest_path = target_dataset / "mixed_full_roi_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
+
+
+def _training_config_for_ablation(
+    *,
+    environment: Optional[str],
+    dataset_root: Path,
+    dataset_key: str,
+    overrides: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    config = get_config(environment=environment)
+    config = deep_merge(config, overrides or {})
+    continual = config.setdefault("training", {}).setdefault("continual", {})
+    ood_cfg = continual.setdefault("ood", {})
+    data_cfg = continual.setdefault("data", {})
+    dataset_dir = dataset_root / dataset_key
+    ood_dir = dataset_dir / "ood"
+    oe_dir = dataset_dir / "oe"
+    if ood_dir.is_dir():
+        ood_cfg["ood_root"] = str(ood_dir)
+    if oe_dir.is_dir():
+        ood_cfg["oe_root"] = str(oe_dir)
+        ood_cfg["oe_enabled"] = True
+    else:
+        ood_cfg["oe_enabled"] = False
+        ood_cfg["oe_root"] = ""
+    data_cfg["allow_under_min_training"] = True
+    return config
+
+
+def run_mixed_full_roi_training_ablation(
+    *,
+    source_dataset_root: str | Path,
+    output_dir: str | Path,
+    runtime_root: str | Path,
+    dataset_key: str = "tomato__fruit",
+    crop_name: str = "tomato",
+    part_name: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    num_epochs: Optional[int] = None,
+    batch_size: Optional[int] = None,
+    learning_rate: Optional[float] = None,
+    num_workers: Optional[int] = None,
+    pin_memory: Optional[bool] = None,
+    training_config_overrides: Optional[Dict[str, Any]] = None,
+    return_ood: bool = True,
+    status_printer: Optional[StatusPrinter] = print,
+    training_workflow_factory: TrainingWorkflowFactory = TrainingWorkflow,
+) -> Dict[str, Any]:
+    """Run Notebook 14 end to end: mixed dataset, training, and three inference reports."""
+    docs_output_dir = Path(output_dir)
+    work_root = Path(runtime_root)
+    dataset_root = work_root / "mixed_dataset"
+    training_output_root = work_root / "training_outputs"
+    manifest = build_mixed_full_roi_dataset(
+        source_dataset_root,
+        dataset_key=dataset_key,
+        output_root=dataset_root,
+        config_env=config_env,
+        device=device,
+        status_printer=status_printer,
+    )
+
+    config_overrides = dict(training_config_overrides or {})
+    continual_overrides: Dict[str, Any] = {}
+    if batch_size is not None:
+        continual_overrides["batch_size"] = int(batch_size)
+    if learning_rate is not None:
+        continual_overrides["learning_rate"] = float(learning_rate)
+    if continual_overrides:
+        config_overrides = deep_merge(config_overrides, {"training": {"continual": continual_overrides}})
+    config = _training_config_for_ablation(
+        environment=config_env,
+        dataset_root=dataset_root,
+        dataset_key=dataset_key,
+        overrides=config_overrides,
+    )
+    training = training_workflow_factory(config=config, environment=None, device=device)
+    _emit_status(status_printer, "[ABLATION14] training mixed full+ROI adapter")
+    result = training.run(
+        crop_name=crop_name,
+        part_name=part_name,
+        data_dir=dataset_root,
+        output_dir=training_output_root,
+        num_epochs=num_epochs,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        run_id=f"{dataset_key}_mixed_full_roi",
+    )
+    result_payload = result.to_dict() if hasattr(result, "to_dict") else dict(result)
+    adapter_dir = Path(str(result_payload.get("adapter_dir") or getattr(result, "adapter_dir")))
+
+    image_dir = Path(source_dataset_root) / dataset_key / "test"
+    inference_reports: Dict[str, Any] = {}
+    for report_name, ablation_name in {
+        "full_image": "full_image_baseline",
+        "primary_roi": "primary_roi_inference",
+        "hybrid": "hybrid_roi_fallback",
+    }.items():
+        inference_reports[report_name] = run_ablation_folder(
+            image_dir,
+            ablation_name=ablation_name,
+            output_dir=docs_output_dir / report_name,
+            label_from_parent=True,
+            adapter_crop=crop_name,
+            adapter_part=part_name,
+            config_env=config_env,
+            device=device,
+            adapter_root=adapter_dir,
+            return_ood=return_ood,
+            status_printer=status_printer,
+        )
+
+    summary = {
+        "ablation_name": "mixed_full_roi_training",
+        "dataset_key": dataset_key,
+        "crop_name": crop_name,
+        "part_name": part_name,
+        "runtime_root": str(work_root),
+        "mixed_dataset_manifest": manifest,
+        "training_result": result_payload,
+        "adapter_dir": str(adapter_dir),
+        "inference_summaries": {
+            name: dict(report.get("summary", {}))
+            for name, report in inference_reports.items()
+        },
+    }
+    docs_output_dir.mkdir(parents=True, exist_ok=True)
+    (docs_output_dir / "mixed_training_summary.json").write_text(
+        json.dumps(summary, indent=2),
+        encoding="utf-8",
+    )
+    return summary
 
 
 def describe_training_ablation_plan(ablation_name: str) -> Dict[str, Any]:
