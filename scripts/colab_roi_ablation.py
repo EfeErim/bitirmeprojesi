@@ -685,7 +685,7 @@ def build_mixed_full_roi_dataset(
                         image_path,
                         config_env=config_env,
                         device=device,
-                        return_ood=False,
+                        include_adapter_target=False,
                         status_printer=status_printer,
                     )
                     handoff = resolve_router_handoff(router_result)

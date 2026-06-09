@@ -222,11 +222,26 @@ def test_build_mixed_full_roi_dataset_writes_full_and_roi_training_view(tmp_path
     _write_image(dataset / "test" / "healthy" / "test_a.jpg")
     _write_image(dataset / "ood" / "field" / "ood_a.jpg")
 
+    def strict_router_runner(
+        image_path,
+        *,
+        config_env="colab",
+        device="cuda",
+        include_adapter_target=True,
+        status_printer=None,
+    ):
+        assert image_path.name == "train_a.jpg"
+        assert config_env == "colab"
+        assert device == "cuda"
+        assert include_adapter_target is False
+        assert status_printer is None
+        return _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40])
+
     manifest = roi_ablation.build_mixed_full_roi_dataset(
         source_root,
         dataset_key="tomato__fruit",
         output_root=tmp_path / "mixed",
-        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
+        router_runner=strict_router_runner,
         status_printer=None,
     )
 
