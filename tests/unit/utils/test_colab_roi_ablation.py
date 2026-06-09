@@ -130,6 +130,51 @@ def test_hybrid_ablation_falls_back_to_full_image_when_bbox_missing(tmp_path: Pa
     assert FakeWorkflow.calls[0]["trust_crop_hint"] is True
 
 
+def test_full_image_baseline_uses_fixed_adapter_without_router(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    def fail_router(*args, **kwargs):
+        raise AssertionError("full-image fixed-adapter baseline should not call the router")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="full_image_baseline",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=fail_router,
+    )
+
+    assert rows[0]["status"] == "success"
+    assert rows[0]["crop"] == "tomato"
+    assert rows[0]["part"] == "fruit"
+    assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
+    assert FakeWorkflow.calls[0]["part_hint"] == "fruit"
+    assert FakeWorkflow.calls[0]["trust_crop_hint"] is True
+
+
+def test_fixed_adapter_roi_ignores_wrong_router_crop_for_adapter_selection(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="primary_roi_inference",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+    )
+
+    assert rows[0]["status"] == "success"
+    assert rows[0]["crop"] == "tomato"
+    assert rows[0]["part"] == "fruit"
+    assert rows[0]["router_status"] == "ok"
+    assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
+    assert FakeWorkflow.calls[0]["part_hint"] == "fruit"
+
+
 def test_part_unknown_skips_adapter_load(tmp_path: Path):
     FakeWorkflow.calls.clear()
     image_path = _write_image(tmp_path / "leaf.jpg")

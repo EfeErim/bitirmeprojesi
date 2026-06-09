@@ -198,12 +198,15 @@ def run_ablation_image(
     *,
     ablation_name: str,
     expected_label: Optional[str] = None,
+    adapter_crop: Optional[str] = None,
+    adapter_part: Optional[str] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
     status_printer: Optional[StatusPrinter] = None,
     workflow_factory: WorkflowFactory = InferenceWorkflow,
+    workflow: Optional[Any] = None,
     router_runner: RouterRunner = run_router_inference,
 ) -> list[Dict[str, Any]]:
     """Run one ablation condition for a single image and return flat report rows."""
@@ -214,7 +217,9 @@ def run_ablation_image(
         raise ValueError(f"{ablation_name} is a training-phase ablation; use describe_training_ablation_plan().")
 
     image_ref = Path(image_path)
-    workflow = _resolve_workflow(
+    adapter_crop_name = _normalize_text(adapter_crop) or None
+    adapter_part_name = _normalize_text(adapter_part) or None
+    workflow = workflow or _resolve_workflow(
         workflow_factory=workflow_factory,
         config_env=config_env,
         device=device,
@@ -224,9 +229,17 @@ def run_ablation_image(
 
     if config["input_policy"] == "full_image":
         started = time.perf_counter()
-        payload = workflow.predict(image_ref, return_ood=return_ood)
+        payload = workflow.predict(
+            image_ref,
+            crop_hint=adapter_crop_name,
+            part_hint=adapter_part_name,
+            return_ood=return_ood,
+            trust_crop_hint=bool(adapter_crop_name),
+        )
         latency_ms = (time.perf_counter() - started) * 1000.0
         handoff = resolve_router_handoff(payload)
+        crop = adapter_crop_name or payload.get("crop") or handoff["crop"]
+        part = adapter_part_name or payload.get("part") or handoff["part"]
         return [
             _prediction_to_row(
                 ablation_name=ablation_name,
@@ -234,8 +247,8 @@ def run_ablation_image(
                 expected_label=expected_label,
                 input_view="full_image",
                 status=str(payload.get("status", "unknown")),
-                crop=payload.get("crop") or handoff["crop"],
-                part=payload.get("part") or handoff["part"],
+                crop=crop,
+                part=part,
                 router_status=handoff["status"],
                 router_confidence=handoff["router_confidence"],
                 bbox=handoff["bbox"] if isinstance(handoff["bbox"], list) else None,
@@ -254,9 +267,10 @@ def run_ablation_image(
         include_adapter_target=True,
     )
     handoff = resolve_router_handoff(router_result)
-    crop = str(handoff["crop"] or "")
-    part = str(handoff["part"] or "")
-    if not handoff["adapter_allowed"]:
+    crop = str(adapter_crop_name or handoff["crop"] or "")
+    part = str(adapter_part_name or handoff["part"] or "")
+    adapter_allowed = bool(adapter_crop_name and adapter_part_name) or bool(handoff["adapter_allowed"])
+    if not adapter_allowed:
         return [
             _prediction_to_row(
                 ablation_name=ablation_name,
@@ -264,8 +278,8 @@ def run_ablation_image(
                 expected_label=expected_label,
                 input_view=str(config["input_policy"]),
                 status="adapter_skipped",
-                crop=handoff["crop"],
-                part=handoff["part"],
+                crop=crop or handoff["crop"],
+                part=part or handoff["part"],
                 router_status=handoff["status"],
                 router_confidence=handoff["router_confidence"],
                 bbox=handoff["bbox"] if isinstance(handoff["bbox"], list) else None,
@@ -549,6 +563,8 @@ def run_ablation_folder(
     ablation_name: str,
     output_dir: Optional[str | Path] = None,
     label_from_parent: bool = True,
+    adapter_crop: Optional[str] = None,
+    adapter_part: Optional[str] = None,
     config_env: Optional[str] = "colab",
     device: str = "cuda",
     adapter_root: Optional[str | Path] = None,
@@ -558,6 +574,13 @@ def run_ablation_folder(
     rows: list[Dict[str, Any]] = []
     images = discover_images(image_dir)
     _emit_status(status_printer, f"[ABLATION] {ablation_name} images={len(images)}")
+    workflow = _resolve_workflow(
+        workflow_factory=InferenceWorkflow,
+        config_env=config_env,
+        device=device,
+        adapter_root=adapter_root,
+        status_printer=status_printer,
+    )
     for index, image_path in enumerate(images, start=1):
         _emit_status(status_printer, f"[ABLATION] {index}/{len(images)} {image_path.name}")
         rows.extend(
@@ -565,11 +588,14 @@ def run_ablation_folder(
                 image_path,
                 ablation_name=ablation_name,
                 expected_label=_infer_expected_label(image_path, label_from_parent=label_from_parent),
+                adapter_crop=adapter_crop,
+                adapter_part=adapter_part,
                 config_env=config_env,
                 device=device,
                 adapter_root=adapter_root,
                 return_ood=return_ood,
                 status_printer=status_printer,
+                workflow=workflow,
             )
         )
     resolved_output_dir = output_dir or ABLATION_CONFIGS[ablation_name]["output_dir"]
