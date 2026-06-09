@@ -16,10 +16,13 @@ The repo also tracks one auxiliary notebook:
 - Notebook 5: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
 - Notebook 8: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 - Notebook 9: `colab_notebooks/9_presentation_recording_demo.ipynb`
+- Notebooks 10-14: `colab_notebooks/10_ablation_full_image_baseline.ipynb` through `colab_notebooks/14_ablation_mixed_full_roi_training.ipynb`
 
 Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts. Notebook 8 is a thin single-image wrapper over Notebook 1's router cells plus the canonical inference workflow.
 
 Notebook 9 is the screen-recording demo surface. It runs the same Notebook 1 and Notebook 8 path, suppresses technical logs, then renders an audience-facing presentation panel without changing inference behavior.
+
+Notebooks 10-14 are part-aware SAM box ROI ablation surfaces. Notebooks 10-12 run inference-only comparisons over full image, router primary ROI crop, and hybrid ROI fallback behavior. Notebooks 13-14 document the second-phase ROI-trained and mixed full+ROI training ablation contracts; they do not silently change the maintained Notebook 2 training path.
 
 Two additional notebook surfaces are kept for maintenance and regression checks:
 
@@ -72,6 +75,16 @@ Notebook 9 is the recommended surface for a presentation screen recording. Run t
 - the adapter model prediction and calibrated OOD assessment
 
 The maintained router payload does not export pixel masks, so Notebook 9 does not fabricate a segmentation overlay. It labels the visible boxes accurately as SAM3-derived region proposals.
+
+### Notebooks 10-14
+
+Notebooks 10-12 use `scripts/colab_roi_ablation.py` to evaluate existing whole-image-trained adapters without changing production inference. They write reports under `docs/ablation_results/<condition>/` so Colab results land in a repo-visible path:
+
+- Notebook 10 writes the full-image baseline report.
+- Notebook 11 crops the adapter input to the router primary SAM3-derived `bbox`; missing boxes are reported as `roi_missing` without fallback.
+- Notebook 12 uses the same ROI crop when available and records explicit `fallback_full_image` rows when an adapter-eligible image has no valid ROI box.
+
+Notebooks 13-14 are second-phase training-ablation wrappers. They standardize the ROI-trained and mixed full+ROI training plan outputs, but any adapter trained under those policies still needs fresh OOD calibration and a new `production_readiness.json` before readiness claims.
 
 ## Important Terms
 

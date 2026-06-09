@@ -9,6 +9,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Canonical workflows live in `src/workflows/training.py` and `src/workflows/inference.py`.
 - Maintained notebook surfaces are 0, 1, 2, 3, 5, and 8; Notebook 4 is a convenience wrapper, and Notebooks 6/7 are validation surfaces.
 - Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. It renders real router and adapter payload details without changing canonical inference behavior.
+- Notebooks 10-14 are part-aware SAM box ROI ablation surfaces. Notebooks 10-12 run inference-only full-image, primary-ROI, and hybrid fallback comparisons through `scripts/colab_roi_ablation.py`; Notebooks 13-14 reserve second-phase ROI-training ablation contracts without changing the maintained Notebook 2 training path. Ablation reports write under `docs/ablation_results/<condition>/`.
 - Notebook 9 uses `requirements_presentation_colab.txt`; keep `torchao==0.17.0` in that lightweight profile because Colab's older preinstalled torchao can break PEFT adapter loading during warm-up.
 - The repo is pip-based and uses `./scripts/python.cmd` on Windows so the local `.venv` is preferred.
 - CI already covers notebook/import validation, config schema checks, OOD evidence consistency, router calibration stability, adapter smoke tests, metadata completeness, dataset integrity, notebook outputs, and benchmark capture.
@@ -19,6 +20,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Recent notebook calibration work tuned Notebook 5 router calibration defaults to `12/12`, exposed adaptive hyperparameters, and published failure-analysis artifacts.
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
 - `docs/SOTA_AUTOMATION_GUIDE.md` is now an operating guide for the SOTA refresh loop: every pass should refresh machine evidence, run narrow guardrails, classify skips/failures, and select a concrete next repo action instead of maintaining a static wishlist.
+- Added part-aware SAM box ROI ablation helper and Notebook 10-14 wrappers. Production inference remains unchanged; ROI ablation reports write under `docs/ablation_results/<condition>/`.
 
 ## Important Decisions
 

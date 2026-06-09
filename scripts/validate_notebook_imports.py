@@ -439,6 +439,50 @@ def test_auto_router_adapter_notebook_contract() -> None:
     )
 
 
+def test_roi_ablation_notebook_contract() -> None:
+    from scripts.colab_roi_ablation import ABLATION_CONFIGS
+
+    expected = {
+        "10_ablation_full_image_baseline.ipynb": "full_image_baseline",
+        "11_ablation_primary_roi_inference.ipynb": "primary_roi_inference",
+        "12_ablation_hybrid_roi_fallback.ipynb": "hybrid_roi_fallback",
+        "13_ablation_roi_trained_adapter.ipynb": "roi_trained_adapter",
+        "14_ablation_mixed_full_roi_training.ipynb": "mixed_full_roi_training",
+    }
+    assert set(expected.values()).issubset(ABLATION_CONFIGS), "ROI ablation configs are missing notebook keys"
+
+    for notebook_name, ablation_name in expected.items():
+        sources = _load_notebook_sources(notebook_name)
+        _assert_code_cells_compile(sources, notebook_name)
+        _assert_contains(
+            sources.first_code_source,
+            "def _ensure_aads_repo_on_path():",
+            f"{notebook_name} should bootstrap the repo before importing helpers: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            f"ABLATION_NAME = '{ablation_name}'",
+            f"{notebook_name} should pin exactly one ablation condition: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "commit_and_push_ablation_results",
+            f"{notebook_name} should commit and push its repo-visible output folder: {{snippet}}",
+        )
+        if ablation_name in {"full_image_baseline", "primary_roi_inference", "hybrid_roi_fallback"}:
+            _assert_contains(
+                sources.full_source,
+                "run_ablation_folder(",
+                f"{notebook_name} should run the shared inference ablation helper: {{snippet}}",
+            )
+        else:
+            _assert_contains(
+                sources.full_source,
+                "describe_training_ablation_plan",
+                f"{notebook_name} should expose the standardized second-phase training plan: {{snippet}}",
+            )
+
+
 def test_presentation_recording_notebook_contract() -> None:
     sources = _load_notebook_sources("9_presentation_recording_demo.ipynb")
 
@@ -1140,6 +1184,15 @@ CHECKS = (
         success_message="Notebook 8 wraps Notebook 1 routing and canonical adapter inference",
         failure_prefix="Notebook 8 auto inference contract failed",
         callback=test_auto_router_adapter_notebook_contract,
+        requires_runtime_dependencies=False,
+    ),
+    ValidationCheck(
+        result_name="ROI Ablation Notebooks",
+        step_id="NB10_14_ROI_ABLATION",
+        description="Notebooks 10-14 part-aware SAM box ROI ablation contract",
+        success_message="ROI ablation notebooks wrap the shared helper surfaces",
+        failure_prefix="ROI ablation notebook contract failed",
+        callback=test_roi_ablation_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(

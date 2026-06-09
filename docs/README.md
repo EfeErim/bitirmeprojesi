@@ -26,6 +26,8 @@ Use this file as the routing index. If you are new, start with [../README.md](..
 - Router payload contract: `src/shared/contracts.py`
 - Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 - Presentation recording demo: `colab_notebooks/9_presentation_recording_demo.ipynb`
+- ROI ablation notebooks: `colab_notebooks/10_ablation_full_image_baseline.ipynb` through `colab_notebooks/14_ablation_mixed_full_roi_training.ipynb`
+- ROI ablation reports: `docs/ablation_results/<condition>/`
 - Validation-only notebook surfaces: `colab_notebooks/6_train_all_continual_sd_lora_adapters.ipynb`, `colab_notebooks/7_ood_oe_quality.ipynb`
 - Optional plantness input guard config: `inference.input_guard`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
