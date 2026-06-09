@@ -1,0 +1,10 @@
+{
+  "ablation_name": "mixed_full_roi_training",
+  "notebook": "14_ablation_mixed_full_roi_training.ipynb",
+  "output_dir": "docs/ablation_results/mixed_full_roi_training",
+  "phase": "training_research",
+  "input_policy": "train_full_image_plus_router_primary_roi",
+  "status": "planned_second_phase",
+  "implementation_note": "Run inference-only notebooks 11 and 12 first. If ROI improves or reduces failures, add a research-only training dataset view that applies the same ROI policy to train, val, test, and OOD.",
+  "readiness_note": "Any ROI-trained adapter must recalibrate OOD and write a fresh production_readiness.json."
+}
