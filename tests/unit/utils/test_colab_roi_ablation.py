@@ -87,6 +87,14 @@ def test_prepare_primary_roi_sanitizes_valid_and_invalid_bbox():
     assert area_ratio == 0.0
 
 
+def test_tokenized_git_remote_url_uses_github_token(monkeypatch):
+    monkeypatch.setenv("GH_TOKEN", "secret-token")
+
+    push_url = roi_ablation._tokenized_git_remote_url("https://github.com/EfeErim/bitirmeprojesi.git")
+
+    assert push_url == "https://x-access-token:secret-token@github.com/EfeErim/bitirmeprojesi.git"
+
+
 def test_primary_roi_ablation_skips_without_fallback_when_bbox_missing(tmp_path: Path):
     FakeWorkflow.calls.clear()
     image_path = _write_image(tmp_path / "leaf.jpg")

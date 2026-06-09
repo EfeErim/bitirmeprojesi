@@ -6,11 +6,13 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import subprocess
 import time
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Optional
+from urllib.parse import urlsplit, urlunsplit
 
 from PIL import Image
 
@@ -459,6 +461,26 @@ def _run_git(args: list[str], *, cwd: Path, check: bool = True) -> subprocess.Co
     )
 
 
+def _tokenized_git_remote_url(remote_url: str) -> Optional[str]:
+    token = str(os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN") or "").strip()
+    if not token:
+        return None
+    parsed = urlsplit(str(remote_url or "").strip())
+    if parsed.scheme != "https" or "github.com" not in parsed.netloc:
+        return None
+    netloc = parsed.netloc.split("@", 1)[-1]
+    return urlunsplit((parsed.scheme, f"x-access-token:{token}@{netloc}", parsed.path, parsed.query, parsed.fragment))
+
+
+def _configure_tokenized_push_url(*, cwd: Path) -> None:
+    remote = _run_git(["remote", "get-url", "origin"], cwd=cwd, check=False)
+    if remote.returncode != 0:
+        return
+    push_url = _tokenized_git_remote_url(remote.stdout.strip())
+    if push_url:
+        _run_git(["remote", "set-url", "--push", "origin", push_url], cwd=cwd, check=False)
+
+
 def commit_and_push_ablation_results(
     output_dir: str | Path,
     *,
@@ -484,6 +506,7 @@ def commit_and_push_ablation_results(
     status = _run_git(["status", "--porcelain", "--", str(relative_output).replace("\\", "/")], cwd=root)
     if not status.stdout.strip():
         if push:
+            _configure_tokenized_push_url(cwd=root)
             push_result = _run_git(["push"], cwd=root, check=False)
             return {
                 "status": "nothing_to_commit",
@@ -505,6 +528,7 @@ def commit_and_push_ablation_results(
         "commit_stderr": commit.stderr,
     }
     if push:
+        _configure_tokenized_push_url(cwd=root)
         push_result = _run_git(["push"], cwd=root, check=False)
         payload.update(
             {
