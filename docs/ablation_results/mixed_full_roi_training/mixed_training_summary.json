@@ -1,0 +1,1337 @@
+{
+  "ablation_name": "mixed_full_roi_training",
+  "dataset_key": "tomato__fruit",
+  "crop_name": "tomato",
+  "part_name": "fruit",
+  "runtime_root": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training",
+  "mixed_dataset_manifest": {
+    "dataset_key": "tomato__fruit",
+    "source_dataset": "/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__fruit",
+    "target_dataset": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/mixed_dataset/tomato__fruit",
+    "roi_splits": [
+      "continual"
+    ],
+    "pad_ratio": 0.08,
+    "splits": {
+      "continual": {
+        "full_images": 2245,
+        "roi_images": 1866,
+        "roi_missing": 379,
+        "classes": {
+          "domates_antraknoz_meyve": {
+            "full_images": 345,
+            "roi_images": 283,
+            "roi_missing": 62
+          },
+          "domates_bacterial_spot_and_speck_meyve": {
+            "full_images": 396,
+            "roi_images": 372,
+            "roi_missing": 24
+          },
+          "domates_blossom_end_rot_meyve": {
+            "full_images": 384,
+            "roi_images": 345,
+            "roi_missing": 39
+          },
+          "domates_gray_mold_meyve": {
+            "full_images": 149,
+            "roi_images": 125,
+            "roi_missing": 24
+          },
+          "domates_late_blight_meyve": {
+            "full_images": 110,
+            "roi_images": 110,
+            "roi_missing": 0
+          },
+          "domates_sag\u0306l\u0131kl\u0131_meyve": {
+            "full_images": 427,
+            "roi_images": 217,
+            "roi_missing": 210
+          },
+          "domates_spotted_wilt_meyve": {
+            "full_images": 434,
+            "roi_images": 414,
+            "roi_missing": 20
+          }
+        }
+      },
+      "val": {
+        "full_images": 119,
+        "roi_images": 0,
+        "roi_missing": 0,
+        "classes": {
+          "domates_antraknoz_meyve": {
+            "full_images": 12,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_bacterial_spot_and_speck_meyve": {
+            "full_images": 3,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_blossom_end_rot_meyve": {
+            "full_images": 11,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_gray_mold_meyve": {
+            "full_images": 46,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_late_blight_meyve": {
+            "full_images": 34,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_sag\u0306l\u0131kl\u0131_meyve": {
+            "full_images": 9,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_spotted_wilt_meyve": {
+            "full_images": 4,
+            "roi_images": 0,
+            "roi_missing": 0
+          }
+        }
+      },
+      "test": {
+        "full_images": 119,
+        "roi_images": 0,
+        "roi_missing": 0,
+        "classes": {
+          "domates_antraknoz_meyve": {
+            "full_images": 12,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_bacterial_spot_and_speck_meyve": {
+            "full_images": 3,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_blossom_end_rot_meyve": {
+            "full_images": 11,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_gray_mold_meyve": {
+            "full_images": 46,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_late_blight_meyve": {
+            "full_images": 34,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_sag\u0306l\u0131kl\u0131_meyve": {
+            "full_images": 9,
+            "roi_images": 0,
+            "roi_missing": 0
+          },
+          "domates_spotted_wilt_meyve": {
+            "full_images": 4,
+            "roi_images": 0,
+            "roi_missing": 0
+          }
+        }
+      },
+      "ood": {
+        "full_images": 184,
+        "roi_images": 0,
+        "roi_missing": 0
+      },
+      "oe": {
+        "full_images": 1011,
+        "roi_images": 0,
+        "roi_missing": 0
+      }
+    }
+  },
+  "training_result": {
+    "run_id": "tomato__fruit_mixed_full_roi",
+    "crop_name": "tomato",
+    "part_name": "fruit",
+    "class_names": [
+      "domates_antraknoz_meyve",
+      "domates_bacterial_spot_and_speck_meyve",
+      "domates_blossom_end_rot_meyve",
+      "domates_gray_mold_meyve",
+      "domates_late_blight_meyve",
+      "domates_sag\u0306l\u0131kl\u0131_meyve",
+      "domates_spotted_wilt_meyve"
+    ],
+    "history": {
+      "train_loss": [
+        2.938988234847784,
+        2.8330266177654266,
+        2.6133319176733494,
+        2.4914915040135384,
+        2.414071660488844,
+        2.3779087737202644,
+        2.352766774594784,
+        2.3370819725096226,
+        2.3288786597549915,
+        2.3218795023858547,
+        2.3239127807319164,
+        2.318833712488413
+      ],
+      "val_loss": [
+        1.7312169575891574,
+        1.2102633143673425,
+        1.0538588932582311,
+        1.0372301861017692,
+        0.9846309142954209,
+        0.9929811333407875
+      ],
+      "val_accuracy": [
+        0.5210084033613446,
+        0.7394957983193278,
+        0.8067226890756303,
+        0.8487394957983193,
+        0.865546218487395,
+        0.8571428571428571
+      ],
+      "macro_precision": [
+        0.27639660239219666,
+        0.614888608455658,
+        0.8325102925300598,
+        0.8261904716491699,
+        0.8404762148857117,
+        0.8319264054298401
+      ],
+      "macro_recall": [
+        0.30203384160995483,
+        0.5908851027488708,
+        0.792324960231781,
+        0.8056607246398926,
+        0.8217533826828003,
+        0.8087663650512695
+      ],
+      "macro_f1": [
+        0.27509376406669617,
+        0.580978512763977,
+        0.7665541768074036,
+        0.7676998972892761,
+        0.7830924987792969,
+        0.7773979306221008
+      ],
+      "weighted_f1": [
+        0.49327587480304624,
+        0.7374872800682774,
+        0.7979268306443671,
+        0.8447170097286961,
+        0.8583217588793329,
+        0.8467979110589549
+      ],
+      "balanced_accuracy": [
+        0.30203384160995483,
+        0.5908851027488708,
+        0.792324960231781,
+        0.8056607246398926,
+        0.8217533826828003,
+        0.8087663650512695
+      ],
+      "generalization_gap": [
+        -1.1018096601762692,
+        -1.281228189646196,
+        -1.3240498804620333,
+        -1.2998517864078534,
+        -1.337248588090434,
+        -1.3258525791476252
+      ],
+      "per_class_accuracy": [
+        {
+          "domates_antraknoz_meyve": 0.4166666567325592,
+          "domates_bacterial_spot_and_speck_meyve": 0.0,
+          "domates_blossom_end_rot_meyve": 0.0,
+          "domates_gray_mold_meyve": 0.5652173757553101,
+          "domates_late_blight_meyve": 0.8823529481887817,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.0,
+          "domates_spotted_wilt_meyve": 0.25
+        },
+        {
+          "domates_antraknoz_meyve": 0.6666666865348816,
+          "domates_bacterial_spot_and_speck_meyve": 0.3333333432674408,
+          "domates_blossom_end_rot_meyve": 0.7272727489471436,
+          "domates_gray_mold_meyve": 0.804347813129425,
+          "domates_late_blight_meyve": 0.8823529481887817,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.2222222238779068,
+          "domates_spotted_wilt_meyve": 0.5
+        },
+        {
+          "domates_antraknoz_meyve": 1.0,
+          "domates_bacterial_spot_and_speck_meyve": 1.0,
+          "domates_blossom_end_rot_meyve": 0.9090909361839294,
+          "domates_gray_mold_meyve": 0.782608687877655,
+          "domates_late_blight_meyve": 0.8823529481887817,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.2222222238779068,
+          "domates_spotted_wilt_meyve": 0.75
+        },
+        {
+          "domates_antraknoz_meyve": 1.0,
+          "domates_bacterial_spot_and_speck_meyve": 1.0,
+          "domates_blossom_end_rot_meyve": 0.9090909361839294,
+          "domates_gray_mold_meyve": 0.9347826242446899,
+          "domates_late_blight_meyve": 0.8235294222831726,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.2222222238779068,
+          "domates_spotted_wilt_meyve": 0.75
+        },
+        {
+          "domates_antraknoz_meyve": 1.0,
+          "domates_bacterial_spot_and_speck_meyve": 1.0,
+          "domates_blossom_end_rot_meyve": 1.0,
+          "domates_gray_mold_meyve": 0.95652174949646,
+          "domates_late_blight_meyve": 0.8235294222831726,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.2222222238779068,
+          "domates_spotted_wilt_meyve": 0.75
+        },
+        {
+          "domates_antraknoz_meyve": 1.0,
+          "domates_bacterial_spot_and_speck_meyve": 1.0,
+          "domates_blossom_end_rot_meyve": 0.9090909361839294,
+          "domates_gray_mold_meyve": 0.95652174949646,
+          "domates_late_blight_meyve": 0.8235294222831726,
+          "domates_sag\u0306l\u0131kl\u0131_meyve": 0.2222222238779068,
+          "domates_spotted_wilt_meyve": 0.75
+        }
+      ],
+      "worst_classes": [
+        [
+          {
+            "class_name": "domates_blossom_end_rot_meyve",
+            "class_index": 2,
+            "accuracy": 0.0,
+            "support": 11
+          },
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.0,
+            "support": 9
+          },
+          {
+            "class_name": "domates_bacterial_spot_and_speck_meyve",
+            "class_index": 1,
+            "accuracy": 0.0,
+            "support": 3
+          }
+        ],
+        [
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.2222222238779068,
+            "support": 9
+          },
+          {
+            "class_name": "domates_bacterial_spot_and_speck_meyve",
+            "class_index": 1,
+            "accuracy": 0.3333333432674408,
+            "support": 3
+          },
+          {
+            "class_name": "domates_spotted_wilt_meyve",
+            "class_index": 6,
+            "accuracy": 0.5,
+            "support": 4
+          }
+        ],
+        [
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.2222222238779068,
+            "support": 9
+          },
+          {
+            "class_name": "domates_spotted_wilt_meyve",
+            "class_index": 6,
+            "accuracy": 0.75,
+            "support": 4
+          },
+          {
+            "class_name": "domates_gray_mold_meyve",
+            "class_index": 3,
+            "accuracy": 0.782608687877655,
+            "support": 46
+          }
+        ],
+        [
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.2222222238779068,
+            "support": 9
+          },
+          {
+            "class_name": "domates_spotted_wilt_meyve",
+            "class_index": 6,
+            "accuracy": 0.75,
+            "support": 4
+          },
+          {
+            "class_name": "domates_late_blight_meyve",
+            "class_index": 4,
+            "accuracy": 0.8235294222831726,
+            "support": 34
+          }
+        ],
+        [
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.2222222238779068,
+            "support": 9
+          },
+          {
+            "class_name": "domates_spotted_wilt_meyve",
+            "class_index": 6,
+            "accuracy": 0.75,
+            "support": 4
+          },
+          {
+            "class_name": "domates_late_blight_meyve",
+            "class_index": 4,
+            "accuracy": 0.8235294222831726,
+            "support": 34
+          }
+        ],
+        [
+          {
+            "class_name": "domates_sag\u0306l\u0131kl\u0131_meyve",
+            "class_index": 5,
+            "accuracy": 0.2222222238779068,
+            "support": 9
+          },
+          {
+            "class_name": "domates_spotted_wilt_meyve",
+            "class_index": 6,
+            "accuracy": 0.75,
+            "support": 4
+          },
+          {
+            "class_name": "domates_late_blight_meyve",
+            "class_index": 4,
+            "accuracy": 0.8235294222831726,
+            "support": 34
+          }
+        ]
+      ],
+      "stopped_early": false,
+      "global_step": 768,
+      "optimizer_steps": 768,
+      "resume_start_epoch": 0,
+      "best_metric_name": "val_loss",
+      "best_epoch": 10,
+      "best_metric_value": 0.9846309142954209
+    },
+    "loader_sizes": {
+      "train": 4111,
+      "val": 119,
+      "test": 119,
+      "ood_dev": 74,
+      "ood": 110,
+      "oe": 1011
+    },
+    "adapter_dir": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/continual_sd_lora_adapter",
+    "artifact_dir": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics",
+    "artifacts": {
+      "training": {
+        "history_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/history.json",
+        "results_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/results.csv",
+        "history_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/history.csv",
+        "batch_metrics_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/batch_metrics.csv",
+        "results_png": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/results.png",
+        "run_context_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/run_context.json",
+        "experiment_manifest_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/experiment_manifest.json",
+        "optimization_record_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/optimization_record.json",
+        "run_registry": {
+          "runs_root": "/content/bitirmeprojesi/runs",
+          "latest_registry_json": "/content/bitirmeprojesi/runs/_index/latest_registry.json",
+          "trials_jsonl": "/content/bitirmeprojesi/runs/_index/trials.jsonl",
+          "pareto_inputs_json": "/content/bitirmeprojesi/runs/_index/pareto_inputs.json",
+          "pareto_frontiers_json": "/content/bitirmeprojesi/runs/_index/pareto_frontiers.json",
+          "automatic_wins_markdown": "/content/bitirmeprojesi/runs/_index/automatic_wins.md",
+          "bayesian_recommendations_json": "/content/bitirmeprojesi/runs/_index/bayesian_recommendations.json"
+        }
+      },
+      "validation": {
+        "report_txt": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/classification_report.txt",
+        "report_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/classification_report.json",
+        "per_class_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/per_class_metrics.csv",
+        "cm_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/confusion_matrix.csv",
+        "cm_png": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/confusion_matrix.png",
+        "cm_norm_png": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/confusion_matrix_normalized.png",
+        "predictions_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/predictions.csv",
+        "hard_examples_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/hard_examples.csv",
+        "hard_examples_thumbnails_dir": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/hard_examples_thumbnails",
+        "ood_type_breakdown_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/ood_type_breakdown.json",
+        "ood_method_comparison_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/ood_method_comparison.json",
+        "ood_evidence_summary_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/ood_evidence_summary.json",
+        "metric_gate_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/validation/metric_gate.json"
+      },
+      "test": {
+        "report_txt": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/classification_report.txt",
+        "report_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/classification_report.json",
+        "per_class_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/per_class_metrics.csv",
+        "cm_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/confusion_matrix.csv",
+        "cm_png": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/confusion_matrix.png",
+        "cm_norm_png": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/confusion_matrix_normalized.png",
+        "predictions_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/predictions.csv",
+        "hard_examples_csv": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/hard_examples.csv",
+        "hard_examples_thumbnails_dir": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/hard_examples_thumbnails",
+        "ood_type_breakdown_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/ood_type_breakdown.json",
+        "ood_method_comparison_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/ood_method_comparison.json",
+        "ood_evidence_summary_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/ood_evidence_summary.json",
+        "metric_gate_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/test/metric_gate.json"
+      },
+      "ood_benchmark": {},
+      "production_readiness": {
+        "readiness_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/production_readiness.json"
+      },
+      "summary": {
+        "summary_json": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/training_metrics/training/summary.json"
+      }
+    },
+    "ood_calibration": {
+      "status": "calibrated",
+      "ood_calibration": {
+        "version": 1,
+        "num_classes": 7,
+        "requested_primary_score_method": "auto",
+        "primary_score_method": "ensemble",
+        "selection_source": "real_ood_dev",
+        "selection_metadata": {
+          "selection_source": "real_ood_dev",
+          "selected_primary_score_method": "ensemble",
+          "selected_threshold": 3.339371681213379,
+          "target_fpr": 0.05,
+          "dev_metrics": {
+            "accuracy": 0.8655462265014648,
+            "balanced_accuracy": 0.8217533390167661,
+            "macro_f1": 0.7830924451892194,
+            "ood_auroc": 0.8723597547126959,
+            "ood_false_positive_rate": 0.4117647058823529,
+            "classification_samples": 119,
+            "ood_samples": 74,
+            "in_distribution_samples": 119,
+            "sure_ds_f1": 0.5074971164936563,
+            "conformal_empirical_coverage": 0.957983193277311,
+            "conformal_avg_set_size": 2.0504201680672267
+          },
+          "threshold_selection": {
+            "threshold": 3.339371681213379,
+            "target_fpr": 0.05,
+            "false_positive_rate": 0.04201680672268908,
+            "true_positive_rate": 0.2702702702702703,
+            "in_distribution_samples": 119,
+            "ood_samples": 74
+          },
+          "method_metrics": {
+            "ensemble": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.8723597547126959,
+              "ood_false_positive_rate": 0.4117647058823529,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            },
+            "energy": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.8162616397910516,
+              "ood_false_positive_rate": 0.8151260504201681,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            },
+            "knn": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.794912559618442,
+              "ood_false_positive_rate": 0.42857142857142855,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            }
+          }
+        },
+        "selected_threshold": 3.339371681213379,
+        "target_fpr": 0.05
+      }
+    },
+    "checkpoint_records": [],
+    "ood_evidence_source": "real_ood_split",
+    "ood_benchmark": {},
+    "production_readiness": {
+      "status": "failed",
+      "readiness_tier": "failed",
+      "passed": false,
+      "policy_passed": false,
+      "deployable": false,
+      "ood_evidence_source": "real_ood_split",
+      "classification_evidence": {
+        "split_name": "test",
+        "metrics": {
+          "accuracy": 0.8403361439704895,
+          "balanced_accuracy": 0.8197715186206235,
+          "macro_f1": 0.759341364955658,
+          "ood_auroc": 0.8101604278074866,
+          "ood_false_positive_rate": 0.4369747899159664,
+          "classification_samples": 119,
+          "ood_samples": 110,
+          "in_distribution_samples": 119,
+          "sure_ds_f1": 0.44940079893475365,
+          "conformal_empirical_coverage": 0.9243697478991597,
+          "conformal_avg_set_size": 2.0756302521008405
+        },
+        "evaluation": {
+          "checks": {
+            "accuracy": {
+              "value": 0.8403361439704895,
+              "target": 0.93,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "balanced_accuracy": {
+              "value": 0.8197715186206235,
+              "target": 0.9,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "macro_f1": {
+              "value": 0.759341364955658,
+              "target": 0.9,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            }
+          }
+        }
+      },
+      "ood_evidence": {
+        "source": "real_ood_split",
+        "metrics": {
+          "ood_auroc": 0.8101604278074866,
+          "ood_false_positive_rate": 0.4369747899159664,
+          "ood_samples": 110.0,
+          "in_distribution_samples": 119.0,
+          "sure_ds_f1": 0.44940079893475365,
+          "conformal_empirical_coverage": 0.9243697478991597,
+          "conformal_avg_set_size": 2.0756302521008405
+        },
+        "evaluation": {
+          "passed": false,
+          "require_ood": true,
+          "gate_auxiliary_ood_diagnostics": false,
+          "targets": {
+            "accuracy": 0.93,
+            "balanced_accuracy": 0.9,
+            "macro_f1": 0.9,
+            "ood_auroc": 0.92,
+            "ood_false_positive_rate": 0.05,
+            "ood_samples": 30.0,
+            "in_distribution_samples": 30.0,
+            "ood_samples_per_type": 5.0,
+            "sure_ds_f1": 0.9,
+            "conformal_empirical_coverage": 0.95,
+            "conformal_avg_set_size": 2.0
+          },
+          "checks": {
+            "ood_auroc": {
+              "value": 0.8101604278074866,
+              "target": 0.92,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "ood_false_positive_rate": {
+              "value": 0.4369747899159664,
+              "target": 0.05,
+              "operator": "<=",
+              "asserted": true,
+              "passed": false
+            },
+            "ood_samples": {
+              "value": 110.0,
+              "target": 30.0,
+              "operator": ">=",
+              "asserted": true,
+              "passed": true
+            },
+            "in_distribution_samples": {
+              "value": 119.0,
+              "target": 30.0,
+              "operator": ">=",
+              "asserted": true,
+              "passed": true
+            },
+            "sure_ds_f1": {
+              "value": 0.44940079893475365,
+              "target": 0.9,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "conformal_empirical_coverage": {
+              "value": 0.9243697478991597,
+              "target": 0.95,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "conformal_avg_set_size": {
+              "value": 2.0756302521008405,
+              "target": 2.0,
+              "operator": "<=",
+              "asserted": true,
+              "passed": false
+            }
+          },
+          "hard_checks": {
+            "ood_auroc": {
+              "value": 0.8101604278074866,
+              "target": 0.92,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "ood_false_positive_rate": {
+              "value": 0.4369747899159664,
+              "target": 0.05,
+              "operator": "<=",
+              "asserted": true,
+              "passed": false
+            },
+            "ood_samples": {
+              "value": 110.0,
+              "target": 30.0,
+              "operator": ">=",
+              "asserted": true,
+              "passed": true
+            },
+            "in_distribution_samples": {
+              "value": 119.0,
+              "target": 30.0,
+              "operator": ">=",
+              "asserted": true,
+              "passed": true
+            }
+          },
+          "auxiliary_checks": {
+            "sure_ds_f1": {
+              "value": 0.44940079893475365,
+              "target": 0.9,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "conformal_empirical_coverage": {
+              "value": 0.9243697478991597,
+              "target": 0.95,
+              "operator": ">=",
+              "asserted": true,
+              "passed": false
+            },
+            "conformal_avg_set_size": {
+              "value": 2.0756302521008405,
+              "target": 2.0,
+              "operator": "<=",
+              "asserted": true,
+              "passed": false
+            }
+          },
+          "gating": {
+            "status": "ready",
+            "reason": "all_required_metrics_present",
+            "missing_metrics": []
+          }
+        }
+      },
+      "auxiliary_checks": {
+        "sure_ds_f1": {
+          "value": 0.44940079893475365,
+          "target": 0.9,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "conformal_empirical_coverage": {
+          "value": 0.9243697478991597,
+          "target": 0.95,
+          "operator": ">=",
+          "asserted": true,
+          "passed": false
+        },
+        "conformal_avg_set_size": {
+          "value": 2.0756302521008405,
+          "target": 2.0,
+          "operator": "<=",
+          "asserted": true,
+          "passed": false
+        }
+      },
+      "ood_type_sample_checks": {
+        "blur_or_occlusion": {
+          "value": 14.0,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "non_plant_misc": {
+          "value": 12.0,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "off_crop_secondary": {
+          "value": 17.0,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "tomato_fruit_failure_cases": {
+          "value": 12.0,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        },
+        "unsupported_same_crop": {
+          "value": 55.0,
+          "target": 5.0,
+          "operator": ">=",
+          "asserted": true,
+          "passed": true
+        }
+      },
+      "missing_requirements": [
+        "accuracy",
+        "balanced_accuracy",
+        "macro_f1",
+        "ood_auroc",
+        "ood_false_positive_rate"
+      ],
+      "missing_deployment_requirements": [],
+      "targets": {
+        "accuracy": 0.93,
+        "balanced_accuracy": 0.9,
+        "macro_f1": 0.9,
+        "ood_auroc": 0.92,
+        "ood_false_positive_rate": 0.05,
+        "ood_samples": 30.0,
+        "in_distribution_samples": 30.0,
+        "ood_samples_per_type": 5.0,
+        "sure_ds_f1": 0.9,
+        "conformal_empirical_coverage": 0.95,
+        "conformal_avg_set_size": 2.0
+      },
+      "context": {
+        "run_id": "tomato__fruit_mixed_full_roi",
+        "crop_name": "tomato",
+        "split_name": "test",
+        "num_classes": 7,
+        "loader_sizes": {
+          "train": 4111,
+          "val": 119,
+          "test": 119,
+          "ood_dev": 74,
+          "ood": 110,
+          "oe": 1011
+        },
+        "conformal_eval_samples": 119,
+        "ood_eval_in_distribution_samples": 119,
+        "ood_eval_ood_samples": 110,
+        "ood_primary_score_method": "ensemble",
+        "ood_score_methods": [
+          "energy",
+          "ensemble",
+          "knn"
+        ],
+        "ood_types": [
+          "blur_or_occlusion",
+          "non_plant_misc",
+          "off_crop_secondary",
+          "tomato_fruit_failure_cases",
+          "unsupported_same_crop"
+        ],
+        "sure_semantic_f1": 0.7297297297297297,
+        "sure_confidence_f1": 0.32467532467532473,
+        "ood_requested_primary_score_method": "auto",
+        "ood_primary_score_selection_source": "real_ood_dev",
+        "ood_type_breakdown": {
+          "blur_or_occlusion": {
+            "ood_type": "blur_or_occlusion",
+            "sample_count": 14,
+            "primary_score_method": "ensemble",
+            "metrics": {
+              "ood_auroc": 0.8355342136854742,
+              "ood_false_positive_rate": 0.36134453781512604,
+              "ood_samples": 14,
+              "in_distribution_samples": 119
+            },
+            "method_metrics": {
+              "ensemble": {
+                "ood_auroc": 0.8355342136854742,
+                "ood_false_positive_rate": 0.36134453781512604,
+                "ood_samples": 14,
+                "in_distribution_samples": 119
+              },
+              "energy": {
+                "ood_auroc": 0.8739495798319328,
+                "ood_false_positive_rate": 0.46218487394957986,
+                "ood_samples": 14,
+                "in_distribution_samples": 119
+              },
+              "knn": {
+                "ood_auroc": 0.7334933973589436,
+                "ood_false_positive_rate": 0.5294117647058824,
+                "ood_samples": 14,
+                "in_distribution_samples": 119
+              }
+            }
+          },
+          "non_plant_misc": {
+            "ood_type": "non_plant_misc",
+            "sample_count": 12,
+            "primary_score_method": "ensemble",
+            "metrics": {
+              "ood_auroc": 0.8179271708683473,
+              "ood_false_positive_rate": 0.35294117647058826,
+              "ood_samples": 12,
+              "in_distribution_samples": 119
+            },
+            "method_metrics": {
+              "ensemble": {
+                "ood_auroc": 0.8179271708683473,
+                "ood_false_positive_rate": 0.35294117647058826,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              },
+              "energy": {
+                "ood_auroc": 0.9061624649859943,
+                "ood_false_positive_rate": 0.6722689075630253,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              },
+              "knn": {
+                "ood_auroc": 0.684173669467787,
+                "ood_false_positive_rate": 0.7983193277310925,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              }
+            }
+          },
+          "off_crop_secondary": {
+            "ood_type": "off_crop_secondary",
+            "sample_count": 17,
+            "primary_score_method": "ensemble",
+            "metrics": {
+              "ood_auroc": 0.8279782501235788,
+              "ood_false_positive_rate": 0.4369747899159664,
+              "ood_samples": 17,
+              "in_distribution_samples": 119
+            },
+            "method_metrics": {
+              "ensemble": {
+                "ood_auroc": 0.8279782501235788,
+                "ood_false_positive_rate": 0.4369747899159664,
+                "ood_samples": 17,
+                "in_distribution_samples": 119
+              },
+              "energy": {
+                "ood_auroc": 0.837864557587741,
+                "ood_false_positive_rate": 0.8403361344537815,
+                "ood_samples": 17,
+                "in_distribution_samples": 119
+              },
+              "knn": {
+                "ood_auroc": 0.8062283737024222,
+                "ood_false_positive_rate": 0.6218487394957983,
+                "ood_samples": 17,
+                "in_distribution_samples": 119
+              }
+            }
+          },
+          "tomato_fruit_failure_cases": {
+            "ood_type": "tomato_fruit_failure_cases",
+            "sample_count": 12,
+            "primary_score_method": "ensemble",
+            "metrics": {
+              "ood_auroc": 0.7990196078431373,
+              "ood_false_positive_rate": 0.3445378151260504,
+              "ood_samples": 12,
+              "in_distribution_samples": 119
+            },
+            "method_metrics": {
+              "ensemble": {
+                "ood_auroc": 0.7990196078431373,
+                "ood_false_positive_rate": 0.3445378151260504,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              },
+              "energy": {
+                "ood_auroc": 0.5455182072829131,
+                "ood_false_positive_rate": 0.9747899159663865,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              },
+              "knn": {
+                "ood_auroc": 0.7654061624649859,
+                "ood_false_positive_rate": 0.42857142857142855,
+                "ood_samples": 12,
+                "in_distribution_samples": 119
+              }
+            }
+          },
+          "unsupported_same_crop": {
+            "ood_type": "unsupported_same_crop",
+            "sample_count": 55,
+            "primary_score_method": "ensemble",
+            "metrics": {
+              "ood_auroc": 0.7989304812834225,
+              "ood_false_positive_rate": 0.48739495798319327,
+              "ood_samples": 55,
+              "in_distribution_samples": 119
+            },
+            "method_metrics": {
+              "ensemble": {
+                "ood_auroc": 0.7989304812834225,
+                "ood_false_positive_rate": 0.48739495798319327,
+                "ood_samples": 55,
+                "in_distribution_samples": 119
+              },
+              "energy": {
+                "ood_auroc": 0.7572192513368983,
+                "ood_false_positive_rate": 0.8319327731092437,
+                "ood_samples": 55,
+                "in_distribution_samples": 119
+              },
+              "knn": {
+                "ood_auroc": 0.7550802139037432,
+                "ood_false_positive_rate": 0.5546218487394958,
+                "ood_samples": 55,
+                "in_distribution_samples": 119
+              }
+            }
+          }
+        },
+        "ood_method_comparison": {
+          "requested_primary_score_method": "auto",
+          "selected_primary_score_method": "ensemble",
+          "selection_source": "real_ood_dev",
+          "split_name": "test",
+          "methods": {
+            "ensemble": {
+              "pooled_metrics": {
+                "accuracy": 0.8403361439704895,
+                "balanced_accuracy": 0.8197715186206235,
+                "macro_f1": 0.759341364955658,
+                "ood_auroc": 0.8101604278074866,
+                "ood_false_positive_rate": 0.4369747899159664,
+                "classification_samples": 119,
+                "ood_samples": 110,
+                "in_distribution_samples": 119,
+                "sure_ds_f1": 0.44940079893475365,
+                "conformal_empirical_coverage": 0.9243697478991597,
+                "conformal_avg_set_size": 2.0756302521008405
+              },
+              "pooled_gate_eligible": false,
+              "worst_slice": {
+                "slice_name": "unsupported_same_crop",
+                "sample_count": 55,
+                "ood_false_positive_rate": 0.48739495798319327,
+                "ood_auroc": 0.7989304812834225,
+                "metrics": {
+                  "ood_false_positive_rate": 0.48739495798319327,
+                  "ood_auroc": 0.7989304812834225,
+                  "ood_samples": 55,
+                  "in_distribution_samples": 119
+                }
+              }
+            },
+            "energy": {
+              "pooled_metrics": {
+                "accuracy": 0.8403361439704895,
+                "balanced_accuracy": 0.8197715186206235,
+                "macro_f1": 0.759341364955658,
+                "ood_auroc": 0.7776928953399541,
+                "ood_false_positive_rate": 0.8319327731092437,
+                "classification_samples": 119,
+                "ood_samples": 110,
+                "in_distribution_samples": 119,
+                "sure_ds_f1": 0.44940079893475365,
+                "conformal_empirical_coverage": 0.9243697478991597,
+                "conformal_avg_set_size": 2.0756302521008405
+              },
+              "pooled_gate_eligible": false,
+              "worst_slice": {
+                "slice_name": "tomato_fruit_failure_cases",
+                "sample_count": 12,
+                "ood_false_positive_rate": 0.9747899159663865,
+                "ood_auroc": 0.5455182072829131,
+                "metrics": {
+                  "ood_false_positive_rate": 0.9747899159663865,
+                  "ood_auroc": 0.5455182072829131,
+                  "ood_samples": 12,
+                  "in_distribution_samples": 119
+                }
+              }
+            },
+            "knn": {
+              "pooled_metrics": {
+                "accuracy": 0.8403361439704895,
+                "balanced_accuracy": 0.8197715186206235,
+                "macro_f1": 0.759341364955658,
+                "ood_auroc": 0.7536287242169595,
+                "ood_false_positive_rate": 0.5462184873949579,
+                "classification_samples": 119,
+                "ood_samples": 110,
+                "in_distribution_samples": 119,
+                "sure_ds_f1": 0.44940079893475365,
+                "conformal_empirical_coverage": 0.9243697478991597,
+                "conformal_avg_set_size": 2.0756302521008405
+              },
+              "pooled_gate_eligible": false,
+              "worst_slice": {
+                "slice_name": "non_plant_misc",
+                "sample_count": 12,
+                "ood_false_positive_rate": 0.7983193277310925,
+                "ood_auroc": 0.684173669467787,
+                "metrics": {
+                  "ood_false_positive_rate": 0.7983193277310925,
+                  "ood_auroc": 0.684173669467787,
+                  "ood_samples": 12,
+                  "in_distribution_samples": 119
+                }
+              }
+            }
+          }
+        },
+        "loader_batch_counts": {
+          "train": 64,
+          "val": 2,
+          "test": 2,
+          "ood_dev": 2,
+          "ood": 2,
+          "oe": 16
+        },
+        "split_class_counts": {
+          "train": {
+            "domates_antraknoz_meyve": 628,
+            "domates_bacterial_spot_and_speck_meyve": 768,
+            "domates_blossom_end_rot_meyve": 729,
+            "domates_gray_mold_meyve": 274,
+            "domates_late_blight_meyve": 220,
+            "domates_sag\u0306l\u0131kl\u0131_meyve": 644,
+            "domates_spotted_wilt_meyve": 848
+          },
+          "val": {
+            "domates_antraknoz_meyve": 12,
+            "domates_bacterial_spot_and_speck_meyve": 3,
+            "domates_blossom_end_rot_meyve": 11,
+            "domates_gray_mold_meyve": 46,
+            "domates_late_blight_meyve": 34,
+            "domates_sag\u0306l\u0131kl\u0131_meyve": 9,
+            "domates_spotted_wilt_meyve": 4
+          },
+          "test": {
+            "domates_antraknoz_meyve": 12,
+            "domates_bacterial_spot_and_speck_meyve": 3,
+            "domates_blossom_end_rot_meyve": 11,
+            "domates_gray_mold_meyve": 46,
+            "domates_late_blight_meyve": 34,
+            "domates_sag\u0306l\u0131kl\u0131_meyve": 9,
+            "domates_spotted_wilt_meyve": 4
+          }
+        },
+        "calibration_split_name": "val",
+        "best_state_restored": true,
+        "classification_split": "test",
+        "ood_primary_score_selection": {
+          "selection_source": "real_ood_dev",
+          "selected_primary_score_method": "ensemble",
+          "selected_threshold": 3.339371681213379,
+          "target_fpr": 0.05,
+          "dev_metrics": {
+            "accuracy": 0.8655462265014648,
+            "balanced_accuracy": 0.8217533390167661,
+            "macro_f1": 0.7830924451892194,
+            "ood_auroc": 0.8723597547126959,
+            "ood_false_positive_rate": 0.4117647058823529,
+            "classification_samples": 119,
+            "ood_samples": 74,
+            "in_distribution_samples": 119,
+            "sure_ds_f1": 0.5074971164936563,
+            "conformal_empirical_coverage": 0.957983193277311,
+            "conformal_avg_set_size": 2.0504201680672267
+          },
+          "threshold_selection": {
+            "threshold": 3.339371681213379,
+            "target_fpr": 0.05,
+            "false_positive_rate": 0.04201680672268908,
+            "true_positive_rate": 0.2702702702702703,
+            "in_distribution_samples": 119,
+            "ood_samples": 74
+          },
+          "method_metrics": {
+            "ensemble": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.8723597547126959,
+              "ood_false_positive_rate": 0.4117647058823529,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            },
+            "energy": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.8162616397910516,
+              "ood_false_positive_rate": 0.8151260504201681,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            },
+            "knn": {
+              "accuracy": 0.8655462265014648,
+              "balanced_accuracy": 0.8217533390167661,
+              "macro_f1": 0.7830924451892194,
+              "ood_auroc": 0.794912559618442,
+              "ood_false_positive_rate": 0.42857142857142855,
+              "classification_samples": 119,
+              "ood_samples": 74,
+              "in_distribution_samples": 119,
+              "sure_ds_f1": 0.5074971164936563,
+              "conformal_empirical_coverage": 0.957983193277311,
+              "conformal_avg_set_size": 2.0504201680672267
+            }
+          }
+        },
+        "ood_benchmark_status": null,
+        "ood_benchmark_passed": null,
+        "oe": {
+          "enabled": true,
+          "loss_weight": 0.5,
+          "target": "uniform",
+          "sample_count": 1011,
+          "source_root": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/mixed_dataset/tomato__fruit/oe"
+        },
+        "classifier_rebalance": {
+          "enabled": false,
+          "objective": "logit_adjusted_cross_entropy",
+          "sampler": "weighted",
+          "epochs": 3,
+          "pre_rebalance_metrics": {
+            "val": {
+              "val_loss": 0.9846309142954209,
+              "val_accuracy": 0.865546218487395,
+              "macro_precision": 0.8404762148857117,
+              "macro_recall": 0.8217533826828003,
+              "macro_f1": 0.7830924987792969,
+              "weighted_f1": 0.8583217588793329,
+              "balanced_accuracy": 0.8217533826828003
+            },
+            "test": {
+              "val_loss": 1.025517535810711,
+              "val_accuracy": 0.8403361344537815,
+              "macro_precision": 0.759739339351654,
+              "macro_recall": 0.8197714686393738,
+              "macro_f1": 0.7593413591384888,
+              "weighted_f1": 0.8377559886259192,
+              "balanced_accuracy": 0.8197714686393738
+            }
+          }
+        },
+        "gate_auxiliary_ood_diagnostics": false
+      }
+    }
+  },
+  "adapter_dir": "/content/bitirmeprojesi/outputs/ablation_runtime/mixed_full_roi_training/training_outputs/tomato/fruit/continual_sd_lora_adapter",
+  "inference_summaries": {
+    "full_image": {
+      "sample_count": 119,
+      "comparable_count": 119,
+      "accuracy": 0.8403361344537815,
+      "macro_f1": 0.759341364955658,
+      "roi_missing_rate": 0.0,
+      "fallback_rate": 0.0,
+      "ood_flip_rate": null,
+      "prediction_disagreement_rate": null,
+      "confidence_delta": null,
+      "per_crop_part": {
+        "tomato::fruit": {
+          "sample_count": 119,
+          "comparable_count": 119,
+          "accuracy": 0.8403361344537815
+        }
+      }
+    },
+    "primary_roi": {
+      "sample_count": 119,
+      "comparable_count": 105,
+      "accuracy": 0.7238095238095238,
+      "macro_f1": 0.6022263450834879,
+      "roi_missing_rate": 0.11764705882352941,
+      "fallback_rate": 0.0,
+      "ood_flip_rate": null,
+      "prediction_disagreement_rate": null,
+      "confidence_delta": null,
+      "per_crop_part": {
+        "tomato::fruit": {
+          "sample_count": 119,
+          "comparable_count": 105,
+          "accuracy": 0.7238095238095238
+        }
+      }
+    },
+    "hybrid": {
+      "sample_count": 119,
+      "comparable_count": 119,
+      "accuracy": 0.7563025210084033,
+      "macro_f1": 0.616295609152752,
+      "roi_missing_rate": 0.0,
+      "fallback_rate": 0.11764705882352941,
+      "ood_flip_rate": null,
+      "prediction_disagreement_rate": null,
+      "confidence_delta": null,
+      "per_crop_part": {
+        "tomato::fruit": {
+          "sample_count": 119,
+          "comparable_count": 119,
+          "accuracy": 0.7563025210084033
+        }
+      }
+    }
+  }
+}
