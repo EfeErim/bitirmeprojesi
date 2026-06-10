@@ -75,6 +75,12 @@ ABLATION_CONFIGS: Dict[str, Dict[str, Any]] = {
         "phase": "inference_only",
         "input_policy": "full_image_plus_router_primary_roi_score_fusion",
     },
+    "dual_view_trained_adapter": {
+        "notebook": "17_ablation_dual_view_trained_adapter.ipynb",
+        "output_dir": "docs/ablation_results/dual_view_trained_adapter",
+        "phase": "training_research",
+        "input_policy": "paired_full_image_plus_router_primary_roi_after_dual_view_gate",
+    },
 }
 
 
@@ -1371,9 +1377,27 @@ def run_roi_trained_adapter_ablation(
 
 def describe_training_ablation_plan(ablation_name: str) -> Dict[str, Any]:
     """Return the standardized second-phase training ablation contract."""
-    if ablation_name not in {"roi_trained_adapter", "mixed_full_roi_training"}:
-        raise ValueError("Training ablation plan is only defined for notebooks 13 and 14.")
+    if ablation_name not in {"roi_trained_adapter", "mixed_full_roi_training", "dual_view_trained_adapter"}:
+        raise ValueError("Training ablation plan is only defined for notebooks 13, 14, and 17.")
     config = ABLATION_CONFIGS[ablation_name]
+    if ablation_name == "dual_view_trained_adapter":
+        return {
+            "ablation_name": ablation_name,
+            "notebook": config["notebook"],
+            "output_dir": config["output_dir"],
+            "phase": config["phase"],
+            "input_policy": config["input_policy"],
+            "status": "planned_after_dual_view_gate",
+            "implementation_note": (
+                "Run Notebook 15 and Notebook 16 first. Only start paired dual-view training if the dual-view "
+                "inference report beats the full-image baseline on accuracy or macro-F1; otherwise the evidence "
+                "says the problem is ROI quality or fusion policy, not adapter training."
+            ),
+            "readiness_note": (
+                "A paired dual-view adapter would need fresh OOD calibration and production_readiness.json because "
+                "its inference contract differs from single-view adapters."
+            ),
+        }
     return {
         "ablation_name": ablation_name,
         "notebook": config["notebook"],
@@ -1387,6 +1411,105 @@ def describe_training_ablation_plan(ablation_name: str) -> Dict[str, Any]:
         ),
         "readiness_note": "Any ROI-trained adapter must recalibrate OOD and write a fresh production_readiness.json.",
     }
+
+
+def _load_report_summary(report_path: Path) -> Optional[Dict[str, Any]]:
+    if not report_path.is_file():
+        return None
+    payload = json.loads(report_path.read_text(encoding="utf-8"))
+    summary = payload.get("summary")
+    return dict(summary) if isinstance(summary, dict) else None
+
+
+def evaluate_dual_view_training_gate(
+    *,
+    repo_root: str | Path,
+    output_dir: str | Path | None = None,
+    baseline_report: str | Path | None = None,
+    dual_view_report: str | Path | None = None,
+    min_accuracy_delta: float = 0.0,
+    min_macro_f1_delta: float = 0.0,
+) -> Dict[str, Any]:
+    """Decide whether Notebook 17 should proceed to expensive paired dual-view training."""
+    root = Path(repo_root)
+    config = ABLATION_CONFIGS["dual_view_trained_adapter"]
+    output_root = Path(output_dir) if output_dir is not None else root / config["output_dir"]
+    baseline_path = (
+        Path(baseline_report)
+        if baseline_report is not None
+        else root / ABLATION_CONFIGS["full_image_baseline"]["output_dir"] / "report.json"
+    )
+    dual_view_path = (
+        Path(dual_view_report)
+        if dual_view_report is not None
+        else root / ABLATION_CONFIGS["dual_view_inference"]["output_dir"] / "report.json"
+    )
+
+    baseline_summary = _load_report_summary(baseline_path)
+    dual_view_summary = _load_report_summary(dual_view_path)
+    missing_reports = [
+        name
+        for name, summary in (
+            ("full_image_baseline", baseline_summary),
+            ("dual_view_inference", dual_view_summary),
+        )
+        if summary is None
+    ]
+
+    status = "blocked_until_dual_view_inference_results"
+    gate_passed = False
+    deltas: Dict[str, Optional[float]] = {"accuracy": None, "macro_f1": None}
+    next_action = (
+        "Run Notebooks 10 and 16, pull their committed reports, then rerun Notebook 17 to decide whether "
+        "paired dual-view training is justified."
+    )
+
+    if not missing_reports:
+        baseline_accuracy = baseline_summary.get("accuracy")
+        dual_accuracy = dual_view_summary.get("accuracy")
+        baseline_macro_f1 = baseline_summary.get("macro_f1")
+        dual_macro_f1 = dual_view_summary.get("macro_f1")
+        if baseline_accuracy is not None and dual_accuracy is not None:
+            deltas["accuracy"] = float(dual_accuracy) - float(baseline_accuracy)
+        if baseline_macro_f1 is not None and dual_macro_f1 is not None:
+            deltas["macro_f1"] = float(dual_macro_f1) - float(baseline_macro_f1)
+
+        accuracy_passed = deltas["accuracy"] is not None and deltas["accuracy"] >= float(min_accuracy_delta)
+        macro_f1_passed = deltas["macro_f1"] is not None and deltas["macro_f1"] >= float(min_macro_f1_delta)
+        gate_passed = bool(accuracy_passed or macro_f1_passed)
+        status = "ready_for_paired_dual_view_training" if gate_passed else "skipped_by_gate"
+        next_action = (
+            "Implement a paired full-image plus ROI training loader/trainer and recalibrate OOD for Notebook 17."
+            if gate_passed
+            else "Do not train a paired dual-view adapter yet; inspect ROI quality and fusion errors before adding "
+            "another training condition."
+        )
+
+    payload = {
+        "ablation_name": "dual_view_trained_adapter",
+        "config": config,
+        "status": status,
+        "gate_passed": gate_passed,
+        "missing_reports": missing_reports,
+        "thresholds": {
+            "min_accuracy_delta": float(min_accuracy_delta),
+            "min_macro_f1_delta": float(min_macro_f1_delta),
+        },
+        "reports": {
+            "baseline_report": str(baseline_path),
+            "dual_view_report": str(dual_view_path),
+        },
+        "baseline_summary": baseline_summary,
+        "dual_view_summary": dual_view_summary,
+        "deltas": deltas,
+        "next_action": next_action,
+    }
+    output_root.mkdir(parents=True, exist_ok=True)
+    (output_root / "dual_view_training_gate.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return payload
 
 
 def main() -> int:

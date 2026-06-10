@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from PIL import Image
@@ -106,6 +107,15 @@ def _router_result(*, status="ok", crop="tomato", part="leaf", bbox=None):
             },
         },
     }
+
+
+def _write_report(path: Path, *, accuracy: float, macro_f1: float) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps({"summary": {"sample_count": 3, "comparable_count": 3, "accuracy": accuracy, "macro_f1": macro_f1}}),
+        encoding="utf-8",
+    )
+    return path
 
 
 def test_prepare_primary_roi_sanitizes_valid_and_invalid_bbox():
@@ -390,3 +400,43 @@ def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path)
     assert row["diagnosis"] == "full_label"
     assert row["roi_diagnosis"] is None
     assert len(DualViewWorkflow.calls) == 1
+
+
+def test_dual_view_training_gate_blocks_until_required_reports_exist(tmp_path: Path):
+    payload = roi_ablation.evaluate_dual_view_training_gate(repo_root=tmp_path)
+
+    assert payload["status"] == "blocked_until_dual_view_inference_results"
+    assert payload["gate_passed"] is False
+    assert set(payload["missing_reports"]) == {"full_image_baseline", "dual_view_inference"}
+    assert (tmp_path / "docs" / "ablation_results" / "dual_view_trained_adapter" / "dual_view_training_gate.json").is_file()
+
+
+def test_dual_view_training_gate_skips_when_dual_view_underperforms(tmp_path: Path):
+    baseline = _write_report(tmp_path / "baseline.json", accuracy=0.90, macro_f1=0.88)
+    dual_view = _write_report(tmp_path / "dual_view.json", accuracy=0.82, macro_f1=0.80)
+
+    payload = roi_ablation.evaluate_dual_view_training_gate(
+        repo_root=tmp_path,
+        baseline_report=baseline,
+        dual_view_report=dual_view,
+    )
+
+    assert payload["status"] == "skipped_by_gate"
+    assert payload["gate_passed"] is False
+    assert payload["deltas"]["accuracy"] < 0
+    assert payload["deltas"]["macro_f1"] < 0
+
+
+def test_dual_view_training_gate_passes_when_dual_view_improves(tmp_path: Path):
+    baseline = _write_report(tmp_path / "baseline.json", accuracy=0.90, macro_f1=0.88)
+    dual_view = _write_report(tmp_path / "dual_view.json", accuracy=0.91, macro_f1=0.87)
+
+    payload = roi_ablation.evaluate_dual_view_training_gate(
+        repo_root=tmp_path,
+        baseline_report=baseline,
+        dual_view_report=dual_view,
+    )
+
+    assert payload["status"] == "ready_for_paired_dual_view_training"
+    assert payload["gate_passed"] is True
+    assert payload["deltas"]["accuracy"] > 0

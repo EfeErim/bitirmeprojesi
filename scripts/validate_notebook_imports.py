@@ -450,6 +450,7 @@ def test_roi_ablation_notebook_contract() -> None:
         "14_ablation_mixed_full_roi_training.ipynb": "mixed_full_roi_training",
         "15_ablation_roi_quality_audit.ipynb": "roi_quality_audit",
         "16_ablation_dual_view_inference.ipynb": "dual_view_inference",
+        "17_ablation_dual_view_trained_adapter.ipynb": "dual_view_trained_adapter",
     }
     assert set(expected.values()).issubset(ABLATION_CONFIGS), "ROI ablation configs are missing notebook keys"
 
@@ -488,6 +489,12 @@ def test_roi_ablation_notebook_contract() -> None:
                 sources.full_source,
                 "run_dual_view_inference_folder(",
                 f"{notebook_name} should run the shared dual-view inference helper: {{snippet}}",
+            )
+        elif ablation_name == "dual_view_trained_adapter":
+            _assert_contains(
+                sources.full_source,
+                "evaluate_dual_view_training_gate(",
+                f"{notebook_name} should run the shared dual-view training gate helper: {{snippet}}",
             )
         elif ablation_name == "roi_trained_adapter":
             _assert_contains(
@@ -1208,8 +1215,8 @@ CHECKS = (
     ),
     ValidationCheck(
         result_name="ROI Ablation Notebooks",
-        step_id="NB10_16_ROI_ABLATION",
-        description="Notebooks 10-16 part-aware SAM box ROI ablation contract",
+        step_id="NB10_17_ROI_ABLATION",
+        description="Notebooks 10-17 part-aware SAM box ROI ablation contract",
         success_message="ROI ablation notebooks wrap the shared helper surfaces",
         failure_prefix="ROI ablation notebook contract failed",
         callback=test_roi_ablation_notebook_contract,
