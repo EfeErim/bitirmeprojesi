@@ -1,0 +1,61 @@
+{
+  "ablation_name": "dual_view_trained_adapter",
+  "config": {
+    "notebook": "17_ablation_dual_view_trained_adapter.ipynb",
+    "output_dir": "docs/ablation_results/dual_view_trained_adapter",
+    "phase": "training_research",
+    "input_policy": "paired_full_image_plus_router_primary_roi_after_dual_view_gate"
+  },
+  "status": "skipped_by_gate",
+  "gate_passed": false,
+  "missing_reports": [],
+  "thresholds": {
+    "min_accuracy_delta": 0.0,
+    "min_macro_f1_delta": 0.0
+  },
+  "reports": {
+    "baseline_report": "/content/bitirmeprojesi/docs/ablation_results/full_image_baseline/report.json",
+    "dual_view_report": "/content/bitirmeprojesi/docs/ablation_results/dual_view_inference/report.json"
+  },
+  "baseline_summary": {
+    "sample_count": 119,
+    "comparable_count": 119,
+    "accuracy": 0.8991596638655462,
+    "macro_f1": 0.8753134413842389,
+    "roi_missing_rate": 0.0,
+    "fallback_rate": 0.0,
+    "ood_flip_rate": null,
+    "prediction_disagreement_rate": null,
+    "confidence_delta": null,
+    "per_crop_part": {
+      "tomato::fruit": {
+        "sample_count": 119,
+        "comparable_count": 119,
+        "accuracy": 0.8991596638655462
+      }
+    }
+  },
+  "dual_view_summary": {
+    "sample_count": 119,
+    "comparable_count": 119,
+    "accuracy": 0.8319327731092437,
+    "macro_f1": 0.7535271296847651,
+    "roi_missing_rate": 0.0,
+    "fallback_rate": 0.0,
+    "ood_flip_rate": null,
+    "prediction_disagreement_rate": null,
+    "confidence_delta": null,
+    "per_crop_part": {
+      "tomato::fruit": {
+        "sample_count": 119,
+        "comparable_count": 119,
+        "accuracy": 0.8319327731092437
+      }
+    }
+  },
+  "deltas": {
+    "accuracy": -0.0672268907563025,
+    "macro_f1": -0.12178631169947385
+  },
+  "next_action": "Do not train a paired dual-view adapter yet; inspect ROI quality and fusion errors before adding another training condition."
+}
