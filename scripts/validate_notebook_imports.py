@@ -478,8 +478,8 @@ def test_roi_ablation_notebook_contract() -> None:
         elif ablation_name == "roi_trained_adapter":
             _assert_contains(
                 sources.full_source,
-                "describe_training_ablation_plan",
-                f"{notebook_name} should expose the standardized second-phase training plan: {{snippet}}",
+                "run_roi_trained_adapter_ablation(",
+                f"{notebook_name} should run the shared ROI-only training ablation helper: {{snippet}}",
             )
         else:
             _assert_contains(

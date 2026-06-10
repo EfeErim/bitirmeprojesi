@@ -253,3 +253,34 @@ def test_build_mixed_full_roi_dataset_writes_full_and_roi_training_view(tmp_path
     assert (target / "ood" / "field" / "ood_a.jpg").exists()
     assert manifest["splits"]["continual"]["full_images"] == 1
     assert manifest["splits"]["continual"]["roi_images"] == 1
+
+
+def test_build_roi_only_dataset_skips_full_images_and_missing_roi(tmp_path: Path):
+    source_root = tmp_path / "source"
+    dataset = source_root / "tomato__fruit"
+    _write_image(dataset / "continual" / "healthy" / "train_a.jpg")
+    _write_image(dataset / "continual" / "healthy" / "train_b.jpg")
+    _write_image(dataset / "val" / "healthy" / "val_a.jpg")
+    _write_image(dataset / "test" / "healthy" / "test_a.jpg")
+
+    def router_runner(image_path, **kwargs):
+        if image_path.name == "train_b.jpg":
+            return _router_result(crop="tomato", part="fruit", bbox=None)
+        return _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40])
+
+    manifest = roi_ablation.build_roi_only_dataset(
+        source_root,
+        dataset_key="tomato__fruit",
+        output_root=tmp_path / "roi_only",
+        router_runner=router_runner,
+        status_printer=None,
+    )
+
+    target = tmp_path / "roi_only" / "tomato__fruit"
+    assert not list((target / "continual" / "healthy").glob("full__*.jpg"))
+    assert len(list((target / "continual" / "healthy").glob("roi__*.jpg"))) == 1
+    assert len(list((target / "val" / "healthy").glob("roi__*.jpg"))) == 1
+    assert len(list((target / "test" / "healthy").glob("roi__*.jpg"))) == 1
+    assert manifest["splits"]["continual"]["full_images"] == 0
+    assert manifest["splits"]["continual"]["roi_images"] == 1
+    assert manifest["splits"]["continual"]["roi_missing"] == 1

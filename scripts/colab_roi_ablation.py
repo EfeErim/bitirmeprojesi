@@ -695,7 +695,9 @@ def build_mixed_full_roi_dataset(
                         class_stats["roi_missing"] += 1
                         continue
                     roi_name = f"roi__{_safe_stem(image_path)}.jpg"
-                    roi.save(target_dataset / split / class_dir.name / roi_name, quality=95)
+                    roi_path = target_dataset / split / class_dir.name / roi_name
+                    roi_path.parent.mkdir(parents=True, exist_ok=True)
+                    roi.save(roi_path, quality=95)
                     split_stats["roi_images"] += 1
                     class_stats["roi_images"] += 1
             split_stats["classes"][class_dir.name] = class_stats
@@ -713,6 +715,94 @@ def build_mixed_full_roi_dataset(
         manifest["splits"][split] = {"full_images": copied, "roi_images": 0, "roi_missing": 0}
 
     manifest_path = target_dataset / "mixed_full_roi_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    return manifest
+
+
+def build_roi_only_dataset(
+    source_dataset_root: str | Path,
+    *,
+    dataset_key: str = "tomato__fruit",
+    output_root: str | Path,
+    roi_splits: Iterable[str] = ("continual", "val", "test"),
+    pad_ratio: float = 0.08,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    router_runner: RouterRunner = run_router_inference,
+    status_printer: Optional[StatusPrinter] = print,
+) -> Dict[str, Any]:
+    """Create a research-only dataset view containing only valid router ROI crops."""
+    source_root = Path(source_dataset_root)
+    source_dataset = source_root / dataset_key
+    if not source_dataset.is_dir():
+        raise FileNotFoundError(f"source dataset not found: {source_dataset}")
+
+    target_root = Path(output_root)
+    target_dataset = target_root / dataset_key
+    if target_dataset.exists():
+        shutil.rmtree(target_dataset)
+    roi_split_names = {str(split).strip().lower() for split in roi_splits}
+    manifest: Dict[str, Any] = {
+        "dataset_key": dataset_key,
+        "source_dataset": str(source_dataset),
+        "target_dataset": str(target_dataset),
+        "roi_splits": sorted(roi_split_names),
+        "pad_ratio": float(pad_ratio),
+        "splits": {},
+    }
+
+    for split in ("continual", "val", "test"):
+        source_split = source_dataset / split
+        if not source_split.is_dir():
+            continue
+        split_stats = {
+            "full_images": 0,
+            "roi_images": 0,
+            "roi_missing": 0,
+            "classes": {},
+        }
+        for class_dir in sorted(path for path in source_split.iterdir() if path.is_dir()):
+            class_stats = {"full_images": 0, "roi_images": 0, "roi_missing": 0}
+            for image_path in discover_images(class_dir):
+                if split.lower() not in roi_split_names:
+                    continue
+                with Image.open(image_path) as opened:
+                    image = opened.convert("RGB")
+                    router_result = router_runner(
+                        image_path,
+                        config_env=config_env,
+                        device=device,
+                        include_adapter_target=False,
+                        status_printer=status_printer,
+                    )
+                    handoff = resolve_router_handoff(router_result)
+                    roi, _bbox, _area_ratio = prepare_primary_roi(image, handoff["bbox"], pad_ratio=pad_ratio)
+                    if roi is None:
+                        split_stats["roi_missing"] += 1
+                        class_stats["roi_missing"] += 1
+                        continue
+                    roi_name = f"roi__{_safe_stem(image_path)}.jpg"
+                    roi_path = target_dataset / split / class_dir.name / roi_name
+                    roi_path.parent.mkdir(parents=True, exist_ok=True)
+                    roi.save(roi_path, quality=95)
+                    split_stats["roi_images"] += 1
+                    class_stats["roi_images"] += 1
+            split_stats["classes"][class_dir.name] = class_stats
+        manifest["splits"][split] = split_stats
+
+    for split in ("ood", "oe"):
+        source_split = source_dataset / split
+        if not source_split.is_dir():
+            continue
+        copied = 0
+        for image_path in discover_images(source_split):
+            relative = image_path.relative_to(source_split)
+            _copy_image_file(image_path, target_dataset / split / relative)
+            copied += 1
+        manifest["splits"][split] = {"full_images": copied, "roi_images": 0, "roi_missing": 0}
+
+    manifest_path = target_dataset / "roi_only_manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest
@@ -845,6 +935,105 @@ def run_mixed_full_roi_training_ablation(
     }
     docs_output_dir.mkdir(parents=True, exist_ok=True)
     (docs_output_dir / "mixed_training_summary.json").write_text(
+        json.dumps(summary, indent=2),
+        encoding="utf-8",
+    )
+    return summary
+
+
+def run_roi_trained_adapter_ablation(
+    *,
+    source_dataset_root: str | Path,
+    output_dir: str | Path,
+    runtime_root: str | Path,
+    dataset_key: str = "tomato__fruit",
+    crop_name: str = "tomato",
+    part_name: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    num_epochs: Optional[int] = None,
+    batch_size: Optional[int] = None,
+    learning_rate: Optional[float] = None,
+    num_workers: Optional[int] = None,
+    pin_memory: Optional[bool] = None,
+    training_config_overrides: Optional[Dict[str, Any]] = None,
+    return_ood: bool = True,
+    status_printer: Optional[StatusPrinter] = print,
+    training_workflow_factory: TrainingWorkflowFactory = TrainingWorkflow,
+) -> Dict[str, Any]:
+    """Run Notebook 13 end to end: ROI-only dataset, training, and ROI-only report."""
+    docs_output_dir = Path(output_dir)
+    work_root = Path(runtime_root)
+    dataset_root = work_root / "roi_only_dataset"
+    training_output_root = work_root / "training_outputs"
+    manifest = build_roi_only_dataset(
+        source_dataset_root,
+        dataset_key=dataset_key,
+        output_root=dataset_root,
+        config_env=config_env,
+        device=device,
+        status_printer=status_printer,
+    )
+
+    config_overrides = dict(training_config_overrides or {})
+    continual_overrides: Dict[str, Any] = {}
+    if batch_size is not None:
+        continual_overrides["batch_size"] = int(batch_size)
+    if learning_rate is not None:
+        continual_overrides["learning_rate"] = float(learning_rate)
+    if continual_overrides:
+        config_overrides = deep_merge(config_overrides, {"training": {"continual": continual_overrides}})
+    config = _training_config_for_ablation(
+        environment=config_env,
+        dataset_root=dataset_root,
+        dataset_key=dataset_key,
+        overrides=config_overrides,
+    )
+    training = training_workflow_factory(config=config, environment=None, device=device)
+    _emit_status(status_printer, "[ABLATION13] training ROI-only adapter")
+    result = training.run(
+        crop_name=crop_name,
+        part_name=part_name,
+        data_dir=dataset_root,
+        output_dir=training_output_root,
+        num_epochs=num_epochs,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+        run_id=f"{dataset_key}_roi_only",
+    )
+    result_payload = result.to_dict() if hasattr(result, "to_dict") else dict(result)
+    adapter_dir = Path(str(result_payload.get("adapter_dir") or getattr(result, "adapter_dir")))
+
+    image_dir = Path(source_dataset_root) / dataset_key / "test"
+    inference_report = run_ablation_folder(
+        image_dir,
+        ablation_name="primary_roi_inference",
+        output_dir=docs_output_dir / "primary_roi",
+        label_from_parent=True,
+        adapter_crop=crop_name,
+        adapter_part=part_name,
+        config_env=config_env,
+        device=device,
+        adapter_root=adapter_dir,
+        return_ood=return_ood,
+        status_printer=status_printer,
+    )
+
+    summary = {
+        "ablation_name": "roi_trained_adapter",
+        "dataset_key": dataset_key,
+        "crop_name": crop_name,
+        "part_name": part_name,
+        "runtime_root": str(work_root),
+        "roi_only_dataset_manifest": manifest,
+        "training_result": result_payload,
+        "adapter_dir": str(adapter_dir),
+        "inference_summaries": {
+            "primary_roi": dict(inference_report.get("summary", {})),
+        },
+    }
+    docs_output_dir.mkdir(parents=True, exist_ok=True)
+    (docs_output_dir / "roi_training_summary.json").write_text(
         json.dumps(summary, indent=2),
         encoding="utf-8",
     )
