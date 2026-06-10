@@ -49,6 +49,40 @@ class FakeWorkflow:
         }
 
 
+class DualViewWorkflow:
+    calls = []
+
+    def __init__(self, *, environment=None, device="cuda", adapter_root=None, status_callback=None):
+        self.environment = environment
+        self.device = device
+        self.adapter_root = adapter_root
+        self.status_callback = status_callback
+
+    def predict(self, image, *, crop_hint=None, part_hint=None, return_ood=True, trust_crop_hint=False):
+        is_roi = hasattr(image, "size")
+        payload = {
+            "status": "success",
+            "crop": crop_hint or "tomato",
+            "part": part_hint or "fruit",
+            "diagnosis": "roi_label" if is_roi else "full_label",
+            "confidence": 0.95 if is_roi else 0.70,
+            "router": {
+                "status": "trusted_hint_skipped",
+                "primary_detection": {
+                    "crop": crop_hint or "tomato",
+                    "part": part_hint or "fruit",
+                    "crop_confidence": 1.0,
+                },
+            },
+            "ood_analysis": {
+                "is_ood": False,
+                "primary_score": 0.10,
+            },
+        }
+        self.calls.append({"image": image, "payload": payload})
+        return payload
+
+
 def _write_image(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (80, 60), color=(20, 120, 40)).save(path)
@@ -86,6 +120,13 @@ def test_prepare_primary_roi_sanitizes_valid_and_invalid_bbox():
     assert roi is None
     assert bbox is None
     assert area_ratio == 0.0
+
+
+def test_classify_roi_quality_marks_missing_small_large_and_ok():
+    assert roi_ablation.classify_roi_quality(bbox=None, area_ratio=0.0) == "roi_missing"
+    assert roi_ablation.classify_roi_quality(bbox=[0, 0, 1, 1], area_ratio=0.01) == "roi_too_small"
+    assert roi_ablation.classify_roi_quality(bbox=[0, 0, 99, 99], area_ratio=0.95) == "roi_too_large"
+    assert roi_ablation.classify_roi_quality(bbox=[0, 0, 50, 40], area_ratio=0.25) == "roi_ok"
 
 
 def test_tokenized_git_remote_url_uses_github_token(monkeypatch):
@@ -284,3 +325,68 @@ def test_build_roi_only_dataset_skips_full_images_and_missing_roi(tmp_path: Path
     assert manifest["splits"]["continual"]["full_images"] == 0
     assert manifest["splits"]["continual"]["roi_images"] == 1
     assert manifest["splits"]["continual"]["roi_missing"] == 1
+
+
+def test_roi_quality_audit_reports_router_mismatch_and_missing_roi(tmp_path: Path):
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.audit_roi_quality_image(
+        image_path,
+        expected_label="class_a",
+        expected_crop="tomato",
+        expected_part="fruit",
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=None),
+        status_printer=None,
+    )
+    summary = roi_ablation.summarize_roi_quality_rows([row])
+
+    assert row["status"] == "roi_missing"
+    assert row["crop_matches_expected"] is False
+    assert row["part_matches_expected"] is False
+    assert summary["roi_missing_rate"] == 1.0
+    assert summary["crop_mismatch_rate"] == 1.0
+
+
+def test_dual_view_inference_selects_roi_only_when_margin_clears(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="roi_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["selected_view"] == "router_primary_roi"
+    assert row["diagnosis"] == "roi_label"
+    assert row["full_diagnosis"] == "full_label"
+    assert row["roi_diagnosis"] == "roi_label"
+    assert row["dual_view_disagreement"] is True
+    assert len(DualViewWorkflow.calls) == 2
+
+
+def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="full_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=None),
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["status"] == "fallback_full_image"
+    assert row["selected_view"] == "full_image"
+    assert row["diagnosis"] == "full_label"
+    assert row["roi_diagnosis"] is None
+    assert len(DualViewWorkflow.calls) == 1

@@ -63,6 +63,18 @@ ABLATION_CONFIGS: Dict[str, Dict[str, Any]] = {
         "phase": "training_research",
         "input_policy": "train_full_image_plus_router_primary_roi",
     },
+    "roi_quality_audit": {
+        "notebook": "15_ablation_roi_quality_audit.ipynb",
+        "output_dir": "docs/ablation_results/roi_quality_audit",
+        "phase": "audit_only",
+        "input_policy": "router_primary_roi_quality",
+    },
+    "dual_view_inference": {
+        "notebook": "16_ablation_dual_view_inference.ipynb",
+        "output_dir": "docs/ablation_results/dual_view_inference",
+        "phase": "inference_only",
+        "input_policy": "full_image_plus_router_primary_roi_score_fusion",
+    },
 }
 
 
@@ -121,6 +133,23 @@ def prepare_primary_roi(image: Image.Image, bbox: Any, *, pad_ratio: float = 0.0
     if sanitized is None:
         return None, None, 0.0
     return extract_roi(image, sanitized, pad_ratio=pad_ratio), sanitized, bbox_area_ratio(sanitized, width, height)
+
+
+def classify_roi_quality(
+    *,
+    bbox: Optional[list[float]],
+    area_ratio: float,
+    min_area_ratio: float = 0.02,
+    max_area_ratio: float = 0.90,
+) -> str:
+    """Classify whether a sanitized bbox is usable as an adapter ROI view."""
+    if bbox is None:
+        return "roi_missing"
+    if float(area_ratio) < float(min_area_ratio):
+        return "roi_too_small"
+    if float(area_ratio) > float(max_area_ratio):
+        return "roi_too_large"
+    return "roi_ok"
 
 
 def _prediction_to_row(
@@ -607,6 +636,306 @@ def run_ablation_folder(
     return write_report(rows, output_dir=resolved_output_dir, ablation_name=ablation_name)
 
 
+def audit_roi_quality_image(
+    image_path: str | Path,
+    *,
+    expected_label: Optional[str] = None,
+    expected_crop: str = "tomato",
+    expected_part: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    min_area_ratio: float = 0.02,
+    max_area_ratio: float = 0.90,
+    status_printer: Optional[StatusPrinter] = None,
+    router_runner: RouterRunner = run_router_inference,
+) -> Dict[str, Any]:
+    image_ref = Path(image_path)
+    started = time.perf_counter()
+    router_result = router_runner(
+        image_ref,
+        config_env=config_env,
+        device=device,
+        include_diagnostics=True,
+        include_adapter_target=False,
+        status_printer=status_printer,
+    )
+    latency_ms = (time.perf_counter() - started) * 1000.0
+    handoff = resolve_router_handoff(router_result)
+    with Image.open(image_ref) as opened:
+        image = opened.convert("RGB")
+        _roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
+    quality_status = classify_roi_quality(
+        bbox=sanitized_bbox,
+        area_ratio=area_ratio,
+        min_area_ratio=min_area_ratio,
+        max_area_ratio=max_area_ratio,
+    )
+    router_crop = str(handoff["crop"] or "")
+    router_part = str(handoff["part"] or "")
+    return {
+        "ablation_name": "roi_quality_audit",
+        "image_path": str(image_ref),
+        "expected_label": expected_label,
+        "expected_crop": expected_crop,
+        "expected_part": expected_part,
+        "router_crop": router_crop,
+        "router_part": router_part,
+        "router_status": handoff["status"],
+        "router_confidence": handoff["router_confidence"],
+        "crop_matches_expected": router_crop == str(expected_crop).strip().lower(),
+        "part_matches_expected": router_part == str(expected_part).strip().lower(),
+        "bbox": sanitized_bbox,
+        "bbox_area_ratio": float(area_ratio),
+        "roi_quality_status": quality_status,
+        "latency_ms": float(latency_ms),
+        "status": quality_status,
+    }
+
+
+def summarize_roi_quality_rows(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
+    rows_list = list(rows)
+    total = len(rows_list)
+    by_status = defaultdict(int)
+    by_label: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    crop_mismatch = 0
+    part_mismatch = 0
+    area_values: list[float] = []
+    for row in rows_list:
+        status = str(row.get("roi_quality_status") or row.get("status") or "unknown")
+        label = str(row.get("expected_label") or "unknown")
+        by_status[status] += 1
+        by_label[label][status] += 1
+        if row.get("crop_matches_expected") is False:
+            crop_mismatch += 1
+        if row.get("part_matches_expected") is False:
+            part_mismatch += 1
+        if row.get("bbox") is not None:
+            area_values.append(float(row.get("bbox_area_ratio", 0.0) or 0.0))
+    return {
+        "sample_count": total,
+        "roi_ok_count": int(by_status.get("roi_ok", 0)),
+        "roi_missing_count": int(by_status.get("roi_missing", 0)),
+        "roi_low_quality_count": int(by_status.get("roi_too_small", 0) + by_status.get("roi_too_large", 0)),
+        "roi_ok_rate": (float(by_status.get("roi_ok", 0)) / total) if total else 0.0,
+        "roi_missing_rate": (float(by_status.get("roi_missing", 0)) / total) if total else 0.0,
+        "crop_mismatch_rate": (float(crop_mismatch) / total) if total else 0.0,
+        "part_mismatch_rate": (float(part_mismatch) / total) if total else 0.0,
+        "mean_bbox_area_ratio": (sum(area_values) / len(area_values)) if area_values else None,
+        "status_counts": dict(sorted(by_status.items())),
+        "per_label_status": {
+            label: dict(sorted(statuses.items()))
+            for label, statuses in sorted(by_label.items())
+        },
+    }
+
+
+def write_roi_quality_report(rows: list[Dict[str, Any]], *, output_dir: str | Path) -> Dict[str, Any]:
+    output_root = Path(output_dir)
+    output_root.mkdir(parents=True, exist_ok=True)
+    summary = summarize_roi_quality_rows(rows)
+    payload = {
+        "ablation_name": "roi_quality_audit",
+        "config": ABLATION_CONFIGS["roi_quality_audit"],
+        "summary": summary,
+        "rows": rows,
+    }
+    (output_root / "report.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    if rows:
+        with (output_root / "rows.csv").open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+            writer.writeheader()
+            writer.writerows(rows)
+    return payload
+
+
+def run_roi_quality_audit_folder(
+    image_dir: str | Path,
+    *,
+    output_dir: Optional[str | Path] = None,
+    label_from_parent: bool = True,
+    expected_crop: str = "tomato",
+    expected_part: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = print,
+) -> Dict[str, Any]:
+    rows: list[Dict[str, Any]] = []
+    images = discover_images(image_dir)
+    _emit_status(status_printer, f"[ROI_AUDIT] images={len(images)}")
+    for index, image_path in enumerate(images, start=1):
+        _emit_status(status_printer, f"[ROI_AUDIT] {index}/{len(images)} {image_path.name}")
+        rows.append(
+            audit_roi_quality_image(
+                image_path,
+                expected_label=_infer_expected_label(image_path, label_from_parent=label_from_parent),
+                expected_crop=expected_crop,
+                expected_part=expected_part,
+                config_env=config_env,
+                device=device,
+                status_printer=status_printer,
+            )
+        )
+    return write_roi_quality_report(
+        rows,
+        output_dir=output_dir or ABLATION_CONFIGS["roi_quality_audit"]["output_dir"],
+    )
+
+
+def run_dual_view_inference_image(
+    image_path: str | Path,
+    *,
+    expected_label: Optional[str] = None,
+    adapter_crop: str = "tomato",
+    adapter_part: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    adapter_root: Optional[str | Path] = None,
+    return_ood: bool = True,
+    roi_confidence_margin: float = 0.10,
+    status_printer: Optional[StatusPrinter] = None,
+    workflow_factory: WorkflowFactory = InferenceWorkflow,
+    workflow: Optional[Any] = None,
+    router_runner: RouterRunner = run_router_inference,
+) -> Dict[str, Any]:
+    image_ref = Path(image_path)
+    crop = _normalize_text(adapter_crop)
+    part = _normalize_text(adapter_part)
+    workflow = workflow or _resolve_workflow(
+        workflow_factory=workflow_factory,
+        config_env=config_env,
+        device=device,
+        adapter_root=adapter_root,
+        status_printer=status_printer,
+    )
+    router_result = router_runner(
+        image_ref,
+        config_env=config_env,
+        device=device,
+        include_diagnostics=True,
+        include_adapter_target=False,
+        status_printer=status_printer,
+    )
+    handoff = resolve_router_handoff(router_result)
+    with Image.open(image_ref) as opened:
+        image = opened.convert("RGB")
+        roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
+    roi_quality_status = classify_roi_quality(bbox=sanitized_bbox, area_ratio=area_ratio)
+
+    full_prediction, full_latency_ms = _run_prediction(
+        workflow,
+        image_ref,
+        crop=crop,
+        part=part,
+        return_ood=return_ood,
+    )
+    roi_prediction: Optional[Dict[str, Any]] = None
+    roi_latency_ms = 0.0
+    if roi_quality_status == "roi_ok" and roi_image is not None:
+        roi_prediction, roi_latency_ms = _run_prediction(
+            workflow,
+            roi_image,
+            crop=crop,
+            part=part,
+            return_ood=return_ood,
+        )
+
+    full_confidence = float(full_prediction.get("confidence", 0.0) or 0.0)
+    roi_confidence = float((roi_prediction or {}).get("confidence", 0.0) or 0.0)
+    selected_view = "full_image"
+    selected_prediction = full_prediction
+    status = str(full_prediction.get("status", "success"))
+    if roi_prediction is not None and roi_confidence >= full_confidence + float(roi_confidence_margin):
+        selected_view = "router_primary_roi"
+        selected_prediction = roi_prediction
+        status = str(roi_prediction.get("status", "success"))
+    elif roi_prediction is None:
+        status = "fallback_full_image"
+
+    full_ood = dict(full_prediction.get("ood_analysis", {}) or {})
+    roi_ood = dict((roi_prediction or {}).get("ood_analysis", {}) or {})
+    selected_ood = dict(selected_prediction.get("ood_analysis", {}) or {})
+    full_diagnosis = full_prediction.get("diagnosis")
+    roi_diagnosis = (roi_prediction or {}).get("diagnosis")
+    return {
+        "ablation_name": "dual_view_inference",
+        "image_path": str(image_ref),
+        "expected_label": expected_label,
+        "crop": crop,
+        "part": part,
+        "router_status": handoff["status"],
+        "router_confidence": handoff["router_confidence"],
+        "router_crop": handoff["crop"],
+        "router_part": handoff["part"],
+        "bbox": sanitized_bbox,
+        "bbox_area_ratio": float(area_ratio),
+        "roi_quality_status": roi_quality_status,
+        "input_view": selected_view,
+        "selected_view": selected_view,
+        "diagnosis": selected_prediction.get("diagnosis"),
+        "confidence": float(selected_prediction.get("confidence", 0.0) or 0.0),
+        "ood_is_ood": selected_ood.get("is_ood"),
+        "ood_primary_score": selected_ood.get("primary_score"),
+        "full_diagnosis": full_diagnosis,
+        "full_confidence": full_confidence,
+        "full_ood_is_ood": full_ood.get("is_ood"),
+        "roi_diagnosis": roi_diagnosis,
+        "roi_confidence": roi_confidence if roi_prediction is not None else None,
+        "roi_ood_is_ood": roi_ood.get("is_ood") if roi_prediction is not None else None,
+        "dual_view_disagreement": bool(roi_prediction is not None and full_diagnosis != roi_diagnosis),
+        "confidence_delta_roi_minus_full": (roi_confidence - full_confidence) if roi_prediction is not None else None,
+        "latency_ms": float(full_latency_ms + roi_latency_ms),
+        "status": status,
+    }
+
+
+def run_dual_view_inference_folder(
+    image_dir: str | Path,
+    *,
+    output_dir: Optional[str | Path] = None,
+    label_from_parent: bool = True,
+    adapter_crop: str = "tomato",
+    adapter_part: str = "fruit",
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    adapter_root: Optional[str | Path] = None,
+    return_ood: bool = True,
+    roi_confidence_margin: float = 0.10,
+    status_printer: Optional[StatusPrinter] = print,
+) -> Dict[str, Any]:
+    rows: list[Dict[str, Any]] = []
+    images = discover_images(image_dir)
+    _emit_status(status_printer, f"[DUAL_VIEW] images={len(images)}")
+    workflow = _resolve_workflow(
+        workflow_factory=InferenceWorkflow,
+        config_env=config_env,
+        device=device,
+        adapter_root=adapter_root,
+        status_printer=status_printer,
+    )
+    for index, image_path in enumerate(images, start=1):
+        _emit_status(status_printer, f"[DUAL_VIEW] {index}/{len(images)} {image_path.name}")
+        rows.append(
+            run_dual_view_inference_image(
+                image_path,
+                expected_label=_infer_expected_label(image_path, label_from_parent=label_from_parent),
+                adapter_crop=adapter_crop,
+                adapter_part=adapter_part,
+                config_env=config_env,
+                device=device,
+                adapter_root=adapter_root,
+                return_ood=return_ood,
+                roi_confidence_margin=roi_confidence_margin,
+                status_printer=status_printer,
+                workflow=workflow,
+            )
+        )
+    return write_report(
+        rows,
+        output_dir=output_dir or ABLATION_CONFIGS["dual_view_inference"]["output_dir"],
+        ablation_name="dual_view_inference",
+    )
+
+
 def _copy_image_file(source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
@@ -1070,6 +1399,29 @@ def main() -> int:
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--no-label-from-parent", action="store_true")
     args = parser.parse_args()
+
+    if args.ablation_name == "roi_quality_audit":
+        payload = run_roi_quality_audit_folder(
+            args.image_dir,
+            output_dir=args.output_dir,
+            label_from_parent=not args.no_label_from_parent,
+            config_env=args.config_env,
+            device=args.device,
+        )
+        print(json.dumps(payload["summary"], indent=2))
+        return 0
+
+    if args.ablation_name == "dual_view_inference":
+        payload = run_dual_view_inference_folder(
+            args.image_dir,
+            output_dir=args.output_dir,
+            label_from_parent=not args.no_label_from_parent,
+            config_env=args.config_env,
+            device=args.device,
+            adapter_root=args.adapter_root,
+        )
+        print(json.dumps(payload["summary"], indent=2))
+        return 0
 
     if ABLATION_CONFIGS[args.ablation_name]["phase"] != "inference_only":
         print(json.dumps(describe_training_ablation_plan(args.ablation_name), indent=2))
