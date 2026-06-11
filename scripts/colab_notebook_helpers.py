@@ -541,12 +541,12 @@ def resolve_notebook_optimization_campaign(
     engine: str = "continual_sd_lora",
     objectives: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    from scripts.index_training_runs import build_run_registry
     from src.training.services.optimization import (
         build_bayesian_recommendations,
         build_pareto_frontiers,
         select_trials_for_cohort,
     )
+    from src.training.services.run_registry import build_run_registry
 
     requested_mode = str(mode or "").strip().lower()
     resolved_mode = requested_mode if requested_mode in {"continue", "stop"} else "disabled"
@@ -739,12 +739,12 @@ def finalize_notebook_optimization_campaign(
     run_id: str,
     telemetry: Any = None,
 ) -> Dict[str, Any]:
-    from scripts.index_training_runs import build_run_registry
     from src.training.services.optimization import (
         build_bayesian_recommendations,
         build_pareto_frontiers,
         select_trials_for_cohort,
     )
+    from src.training.services.run_registry import build_run_registry
 
     payload = dict(campaign or {})
     campaign_json = str(payload.get("campaign_json", "") or "")

@@ -17,12 +17,12 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.index_training_runs import build_run_registry
-from src.training.services.optimization import (
+from src.training.services.optimization import (  # noqa: E402
     DEFAULT_PARETO_OBJECTIVES,
     build_pareto_frontiers,
     resolve_single_cohort,
 )
+from src.training.services.run_registry import build_run_registry  # noqa: E402
 
 JsonDict = Dict[str, Any]
 

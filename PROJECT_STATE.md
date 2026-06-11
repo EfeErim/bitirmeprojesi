@@ -2,7 +2,7 @@
 
 ## Current Objective
 
-Keep the narrow plant-disease repo stable while supporting grouped dataset preparation, continual SD-LoRA adapter training, router-guided inference, and OOD/readiness checks.
+Keep the narrow plant-disease repo stable while supporting grouped dataset preparation, continual SD-LoRA adapter training, router-guided inference, OOD/readiness checks, and a clearer client handoff surface.
 
 ## Current Implementation Status
 
@@ -21,12 +21,15 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
 - `docs/SOTA_AUTOMATION_GUIDE.md` is now an operating guide for the SOTA refresh loop: every pass should refresh machine evidence, run narrow guardrails, classify skips/failures, and select a concrete next repo action instead of maintaining a static wishlist.
 - Added part-aware SAM box ROI ablation helper and Notebook 10-14 wrappers. Notebook 14 now performs the mixed full+ROI research training run instead of only writing a plan. Production inference remains unchanged; ROI ablation reports write under `docs/ablation_results/<condition>/`.
+- Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
+- Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
 
 ## Important Decisions
 
 - Use `requirements.txt` and `requirements-dev.txt` as the dependency source of truth.
 - Treat `runs/`, `models/adapters/`, `outputs/`, and `.runtime_tmp/` as generated or local-only surfaces.
 - Prefer narrow validation commands before broad test runs.
+- Keep durable logic in `src/`; scripts and notebook cells should orchestrate canonical helpers/workflows instead of becoming independent implementations.
 
 ## Known Issues / Risks
 
@@ -50,5 +53,6 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `pytest tests/unit tests/colab/test_smoke_training.py -q`
 - `pytest tests/integration -q --runintegration`
 - `./scripts/python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
+- `./scripts/python.cmd scripts/audit_code_organization.py`
 - `ruff check src scripts tests`
 - `mypy --follow-imports skip src/shared src/data src/training/continual_sd_lora.py src/router src/workflows src/pipeline/router_adapter_runtime.py src/pipeline/inference_payloads.py src/adapter src/core/config_manager.py scripts/benchmark_surfaces.py`

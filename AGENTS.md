@@ -3,8 +3,10 @@
 Keep this file short and stable. Future Codex sessions should always follow the rules below.
 
 - Before making changes, read `PROJECT_STATE.md`.
-- Use the repo docs as source of truth, especially `README.md`, `docs/README.md`, `docs/architecture/overview.md`, `docs/user_guide/colab_training_manual.md`, and `docs/user_guide/ood_readiness_guide.md`.
+- Use the repo docs as source of truth, especially `README.md`, `docs/README.md`, `docs/architecture/overview.md`, `docs/architecture/code_organization_map.md`, `docs/user_guide/colab_training_manual.md`, and `docs/user_guide/ood_readiness_guide.md`.
 - Keep diffs narrow and avoid editing generated outputs under `runs/`, `models/adapters/`, `outputs/`, or `.runtime_tmp/` unless explicitly asked.
+- Preserve the repo-wide shared-platform organization model: durable logic belongs in `src/`, while notebooks, notebook cells, and scripts should orchestrate canonical helpers/workflows instead of becoming independent implementations.
+- Before broad notebook/script refactors, run `./scripts/python.cmd scripts/audit_code_organization.py` and treat `src -> scripts` imports as boundary violations.
 - Prefer the repo launcher on Windows: `./scripts/python.cmd`.
 - Package management is pip-based: use `requirements.txt` for runtime and `requirements-dev.txt` for development; no alternate package manager is defined.
 - Python target is 3.11. Keep Ruff-compatible code style, with line length 120 and `E/F/I` linting. Mypy ignores missing imports.

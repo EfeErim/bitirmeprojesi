@@ -2,10 +2,17 @@
 
 Use this file as the routing index. If you are new, start with [../README.md](../README.md).
 
+This repo is intentionally narrow. The fastest handoff path is:
+
+1. [../README.md](../README.md)
+2. [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
+3. [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+4. [architecture/overview.md](architecture/overview.md)
+
 ## Quick Reading Paths
 
 1. Full picture: [../README.md](../README.md) -> [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md) -> [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md) -> [architecture/overview.md](architecture/overview.md)
-2. Colab training only: [../README.md](../README.md) -> [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md) -> [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
+2. Colab training only: [../README.md](../README.md) -> [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md)
 3. Deployment readiness only: [../README.md](../README.md) -> [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md)
 4. Code map only: [../README.md](../README.md) -> [architecture/overview.md](architecture/overview.md)
 
@@ -15,6 +22,7 @@ Use this file as the routing index. If you are new, start with [../README.md](..
 - [user_guide/colab_training_manual.md](user_guide/colab_training_manual.md): Notebook 0/2/3 flow, Notebook 4 relation, dataset materialization, notebook caveats
 - [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md): OOD and readiness policy, `metric_gate.json` vs `production_readiness.json`
 - [architecture/overview.md](architecture/overview.md): training and inference flow, config flow, artifact contracts, file responsibility map
+- [architecture/code_organization_map.md](architecture/code_organization_map.md): repo-wide source boundaries for `src/`, scripts, notebook helpers, tests, configs, and docs
 - [SOTA_AUTOMATION_GUIDE.md](SOTA_AUTOMATION_GUIDE.md): continuous automation strategy grounded in literature; recommended cascade by tier and ROI
 
 ## Fast Reference
@@ -32,6 +40,7 @@ Use this file as the routing index. If you are new, start with [../README.md](..
 - Optional plantness input guard config: `inference.input_guard`
 - Default adapter deployment path: `models/adapters/<crop>/<part>/continual_sd_lora_adapter/`
 - Local run registry path: `runs/_index/`
+- Repo-wide source-boundary audit: `.\scripts\python.cmd scripts/audit_code_organization.py`
 - Dataset-aware cohort command:
 
 ```powershell
@@ -43,9 +52,18 @@ Optimizer status note:
 - Notebook 2 enables adapter/cohort-scoped Bayesian recommendations by default with `ENABLE_BAYESIAN_OPTIMIZATION=True`.
 - The standalone registry and optimizer CLIs still require an explicit Bayesian flag before writing `bayesian_recommendations.json`.
 
-Generated / local-only surfaces:
+## Generated And Local-Only Surfaces
 
-- `runs/`, `models/adapters/`, `outputs/`, `data/prepared_runtime_datasets/`, and `.runtime_tmp/` are generated or local-working directories and should not be treated as canonical source.
+The following paths are generated, transient, or local-working directories and should not be treated as canonical source:
+
+- `runs/`
+- `models/adapters/`
+- `outputs/`
+- `data/prepared_runtime_datasets/`
+- `.runtime_tmp/`
+- `.codex/`
+- `.tmp.drivedownload/`
+- `.tmp.driveupload/`
 
 Dataset formats:
 
@@ -94,6 +112,7 @@ When docs, notes, and generated artifacts disagree, prefer:
 Supporting references:
 
 - [architecture/production_hardening_plan.md](architecture/production_hardening_plan.md)
+- [architecture/code_organization_map.md](architecture/code_organization_map.md)
 - [architecture/data_augmentation_leakage_prevention.md](architecture/data_augmentation_leakage_prevention.md)
 - [architecture/agricultural_augmentation_domain_guide.md](architecture/agricultural_augmentation_domain_guide.md)
 - [architecture/augmentation_implementation_guide.md](architecture/augmentation_implementation_guide.md)

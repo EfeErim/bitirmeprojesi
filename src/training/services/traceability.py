@@ -78,7 +78,7 @@ def _try_refresh_run_registry(
     if runs_root is None:
         return {}
     try:
-        from scripts.index_training_runs import build_run_registry
+        from src.training.services.run_registry import build_run_registry
 
         result = build_run_registry(
             runs_root=runs_root,
