@@ -500,6 +500,16 @@ def test_roi_ablation_notebook_contract() -> None:
                 "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
                 f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
             )
+            _assert_contains(
+                sources.full_source,
+                "GROUNDING_DINO_PROMPTS = ['tomato fruit.', 'a tomato fruit.'",
+                f"{notebook_name} should use Grounding DINO dot-terminated text prompts: {{snippet}}",
+            )
+            _assert_contains(
+                sources.full_source,
+                "GROUNDING_DINO_BOX_THRESHOLD = 0.15",
+                f"{notebook_name} should use the low-threshold detector sweep default: {{snippet}}",
+            )
         elif ablation_name == "dual_view_trained_adapter":
             _assert_contains(
                 sources.full_source,

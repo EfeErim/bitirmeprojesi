@@ -87,16 +87,23 @@ class DualViewWorkflow:
 class GroundingDinoMock:
     calls = []
     detections = []
+    status = "ok"
+    error = ""
 
     @classmethod
-    def reset(cls, detections=None):
+    def reset(cls, detections=None, *, status="ok", error=""):
         cls.calls = []
         cls.detections = list(detections or [])
+        cls.status = status
+        cls.error = error
 
     @classmethod
     def run(cls, image, **kwargs):
         cls.calls.append({"image": image, **kwargs})
-        return {"detections": list(cls.detections), "candidate_count": len(cls.detections), "status": "ok"}
+        payload = {"detections": list(cls.detections), "candidate_count": len(cls.detections), "status": cls.status}
+        if cls.error:
+            payload["error"] = cls.error
+        return payload
 
 
 def _write_image(path: Path) -> Path:
@@ -201,6 +208,12 @@ def test_grounding_dino_component_loader_reuses_session_cache(monkeypatch):
     assert first[0] is second[0]
     assert first[1] is second[1]
     assert calls == {"processor": 1, "model": 1}
+
+
+def test_grounding_dino_prompt_normalization_matches_transformers_contract():
+    prompts = roi_ablation._normalize_grounding_prompts([" Tomato Fruit ", "fruit on tomato plant.", "", None])
+
+    assert prompts == ("tomato fruit.", "fruit on tomato plant.")
 
 
 def test_primary_roi_ablation_skips_without_fallback_when_bbox_missing(tmp_path: Path):
@@ -378,6 +391,8 @@ def test_target_aware_roi_uses_grounding_dino_when_router_target_missing(tmp_pat
     assert rows[0]["target_prompt"] == "tomato fruit"
     assert rows[0]["target_detection_confidence"] == 0.77
     assert rows[0]["grounding_dino_candidate_count"] == 1
+    assert rows[0]["grounding_dino_status"] == "ok"
+    assert rows[0]["grounding_dino_error"] == ""
     assert len(GroundingDinoMock.calls) == 1
     assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
 
@@ -652,6 +667,8 @@ def test_dual_view_inference_uses_grounding_dino_when_router_target_missing(tmp_
     assert row["target_prompt"] == "tomato fruit"
     assert row["target_detection_confidence"] == 0.81
     assert row["grounding_dino_candidate_count"] == 1
+    assert row["grounding_dino_status"] == "ok"
+    assert row["grounding_dino_error"] == ""
     assert row["selected_view"] == "router_primary_roi"
     assert len(GroundingDinoMock.calls) == 1
     assert len(DualViewWorkflow.calls) == 2
@@ -659,7 +676,7 @@ def test_dual_view_inference_uses_grounding_dino_when_router_target_missing(tmp_
 
 def test_dual_view_inference_falls_back_when_grounding_dino_returns_no_candidates(tmp_path: Path):
     DualViewWorkflow.calls.clear()
-    GroundingDinoMock.reset(detections=[])
+    GroundingDinoMock.reset(detections=[], status="no_candidates")
     image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
 
     row = roi_ablation.run_dual_view_inference_image(
@@ -677,10 +694,35 @@ def test_dual_view_inference_falls_back_when_grounding_dino_returns_no_candidate
     assert row["status"] == "target_detection_missing_fallback"
     assert row["target_detection_found"] is False
     assert row["grounding_dino_candidate_count"] == 0
+    assert row["grounding_dino_status"] == "no_candidates"
     assert row["selected_view"] == "full_image"
     assert row["roi_diagnosis"] is None
     assert len(GroundingDinoMock.calls) == 1
     assert len(DualViewWorkflow.calls) == 1
+
+
+def test_dual_view_inference_reports_grounding_dino_error_status(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    GroundingDinoMock.reset(detections=[], status="error", error="bad processor call")
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="full_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[1, 1, 20, 20]),
+        grounding_dino_runner=GroundingDinoMock.run,
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["status"] == "target_detection_missing_fallback"
+    assert row["target_detection_found"] is False
+    assert row["grounding_dino_status"] == "error"
+    assert row["grounding_dino_error"] == "bad processor call"
+    assert row["selected_view"] == "full_image"
 
 
 def test_dual_view_inference_uses_target_detection_when_primary_is_wrong(tmp_path: Path):

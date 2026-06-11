@@ -21,6 +21,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
 - `docs/SOTA_AUTOMATION_GUIDE.md` is now an operating guide for the SOTA refresh loop: every pass should refresh machine evidence, run narrow guardrails, classify skips/failures, and select a concrete next repo action instead of maintaining a static wishlist.
 - Added part-aware SAM box ROI ablation helper and Notebook 10-14 wrappers. Notebook 14 now performs the mixed full+ROI research training run instead of only writing a plan. Production inference remains unchanged; ROI ablation reports write under `docs/ablation_results/<condition>/`.
+- Notebook 16 target-aware ROI fallback uses Grounding DINO prompts in the Hugging Face lowercase/dot-terminated text-query format and records `grounding_dino_status`/`grounding_dino_error` in ablation rows so detector failures are visible instead of silently becoming zero-candidate fallbacks.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
 

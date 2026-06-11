@@ -34,9 +34,16 @@ IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 ADAPTER_ALLOWED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
 DEFAULT_TARGET_ROI_BACKEND = "router_then_grounding_dino"
 DEFAULT_GROUNDING_DINO_MODEL_ID = "IDEA-Research/grounding-dino-tiny"
-DEFAULT_GROUNDING_DINO_PROMPTS = ("tomato fruit", "tomato fruit on plant", "tomato", "fruit")
-DEFAULT_GROUNDING_DINO_BOX_THRESHOLD = 0.25
-DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD = 0.20
+DEFAULT_GROUNDING_DINO_PROMPTS = (
+    "tomato fruit.",
+    "a tomato fruit.",
+    "tomato fruits.",
+    "fruit on tomato plant.",
+    "tomato on plant.",
+    "tomatoes.",
+)
+DEFAULT_GROUNDING_DINO_BOX_THRESHOLD = 0.15
+DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD = 0.10
 DEFAULT_GROUNDING_DINO_MAX_CANDIDATES = 5
 _GROUNDING_DINO_SESSION_CACHE: dict[tuple[str, str], tuple[Any, Any]] = {}
 
@@ -144,9 +151,71 @@ def _detection_sort_key(detection: Dict[str, Any]) -> tuple[float, float, float]
     )
 
 
+def _format_grounding_prompt(prompt: str) -> str:
+    formatted = " ".join(str(prompt or "").strip().lower().split())
+    if formatted and not formatted.endswith("."):
+        formatted = f"{formatted}."
+    return formatted
+
+
 def _normalize_grounding_prompts(prompts: Optional[Sequence[str]]) -> tuple[str, ...]:
-    normalized = tuple(str(prompt or "").strip() for prompt in (prompts or DEFAULT_GROUNDING_DINO_PROMPTS))
+    normalized = tuple(_format_grounding_prompt(prompt) for prompt in (prompts or DEFAULT_GROUNDING_DINO_PROMPTS))
     return tuple(prompt for prompt in normalized if prompt)
+
+
+def _batch_input_ids(inputs: Any) -> Any:
+    if hasattr(inputs, "input_ids"):
+        return inputs.input_ids
+    if isinstance(inputs, dict):
+        return inputs.get("input_ids")
+    return None
+
+
+def _to_device_batch(inputs: Any, device: str) -> Any:
+    if hasattr(inputs, "to"):
+        return inputs.to(device)
+    if isinstance(inputs, dict):
+        return {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
+    return inputs
+
+
+def _score_to_float(score: Any) -> float:
+    if hasattr(score, "detach"):
+        return float(score.detach().cpu().item())
+    return float(score)
+
+
+def _box_to_float_list(box: Any) -> list[float]:
+    if hasattr(box, "detach"):
+        box = box.detach().cpu().tolist()
+    return [float(value) for value in box]
+
+
+def _post_process_grounding_dino(
+    processor: Any,
+    outputs: Any,
+    *,
+    input_ids: Any,
+    box_threshold: float,
+    text_threshold: float,
+    target_sizes: list[tuple[int, int]],
+) -> Any:
+    try:
+        return processor.post_process_grounded_object_detection(
+            outputs,
+            input_ids,
+            box_threshold=float(box_threshold),
+            text_threshold=float(text_threshold),
+            target_sizes=target_sizes,
+        )
+    except TypeError:
+        return processor.post_process_grounded_object_detection(
+            outputs,
+            input_ids,
+            threshold=float(box_threshold),
+            text_threshold=float(text_threshold),
+            target_sizes=target_sizes,
+        )
 
 
 def _grounding_dino_cache_key(*, model_id: str, device: str) -> tuple[str, str]:
@@ -208,25 +277,25 @@ def run_grounding_dino_target_detection(
         detections: list[Dict[str, Any]] = []
         for prompt in prompt_list:
             inputs = processor(images=image, text=prompt, return_tensors="pt")
-            inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
+            inputs = _to_device_batch(inputs, device)
             with torch.no_grad():
                 outputs = model(**inputs)
-            target_sizes = torch.tensor([image.size[::-1]], device=device)
-            processed = processor.post_process_grounded_object_detection(
+            processed = _post_process_grounding_dino(
+                processor,
                 outputs,
-                input_ids=inputs.get("input_ids"),
+                input_ids=_batch_input_ids(inputs),
                 box_threshold=float(box_threshold),
                 text_threshold=float(text_threshold),
-                target_sizes=target_sizes,
+                target_sizes=[image.size[::-1]],
             )
             for item in list(processed or []):
                 boxes = item.get("boxes", [])
                 scores = item.get("scores", [])
                 labels = item.get("labels", [])
                 for index, box in enumerate(list(boxes)):
-                    score = float(scores[index].detach().cpu().item() if hasattr(scores[index], "detach") else scores[index])
+                    score = _score_to_float(scores[index])
                     label = str(labels[index] if index < len(labels) else prompt)
-                    bbox = [float(value) for value in box.detach().cpu().tolist()]
+                    bbox = _box_to_float_list(box)
                     detections.append(
                         {
                             "crop": "tomato",
@@ -241,7 +310,8 @@ def run_grounding_dino_target_detection(
                     )
         detections.sort(key=_detection_sort_key, reverse=True)
         kept = detections[: max(1, int(max_candidates))]
-        return {"detections": kept, "candidate_count": len(detections), "status": "ok"}
+        status = "ok" if detections else "no_candidates"
+        return {"detections": kept, "candidate_count": len(detections), "status": status}
     except Exception as exc:
         _emit_status(status_printer, f"[GROUNDING_DINO] skipped: {exc}")
         return {"detections": [], "candidate_count": 0, "status": "error", "error": str(exc)}
@@ -304,6 +374,8 @@ def resolve_target_router_handoff(
             "target_detection_confidence": None,
             "target_detection_source": "target_detection_missing",
             "grounding_dino_candidate_count": 0,
+            "grounding_dino_status": "",
+            "grounding_dino_error": "",
             "target_detection_found": False,
             "selected_detection_source": "primary_detection",
         }
@@ -339,6 +411,8 @@ def resolve_target_router_handoff(
                 if isinstance(item, dict)
             ]
             handoff["grounding_dino_candidate_count"] = int((grounding_payload or {}).get("candidate_count", 0) or 0)
+            handoff["grounding_dino_status"] = str((grounding_payload or {}).get("status") or "")
+            handoff["grounding_dino_error"] = str((grounding_payload or {}).get("error") or "")
             if grounding_detections:
                 selected = max(grounding_detections, key=_detection_sort_key)
                 selected_crop = normalized_crop
@@ -440,6 +514,8 @@ def _prediction_to_row(
     target_detection_confidence: Optional[float] = None,
     target_detection_source: str = "",
     grounding_dino_candidate_count: int = 0,
+    grounding_dino_status: str = "",
+    grounding_dino_error: str = "",
 ) -> Dict[str, Any]:
     prediction = dict(prediction or {})
     ood = prediction.get("ood_analysis")
@@ -461,6 +537,8 @@ def _prediction_to_row(
         "target_detection_confidence": target_detection_confidence,
         "target_detection_source": target_detection_source,
         "grounding_dino_candidate_count": int(grounding_dino_candidate_count),
+        "grounding_dino_status": grounding_dino_status,
+        "grounding_dino_error": grounding_dino_error,
         "input_view": input_view,
         "diagnosis": prediction.get("diagnosis"),
         "confidence": float(prediction.get("confidence", 0.0) or 0.0),
@@ -480,6 +558,8 @@ def _target_handoff_report_fields(handoff: Dict[str, Any]) -> Dict[str, Any]:
         "target_detection_confidence": handoff.get("target_detection_confidence"),
         "target_detection_source": str(handoff.get("target_detection_source") or ""),
         "grounding_dino_candidate_count": int(handoff.get("grounding_dino_candidate_count", 0) or 0),
+        "grounding_dino_status": str(handoff.get("grounding_dino_status") or ""),
+        "grounding_dino_error": str(handoff.get("grounding_dino_error") or ""),
     }
 
 
@@ -1228,6 +1308,8 @@ def run_dual_view_inference_image(
         "target_detection_confidence": handoff.get("target_detection_confidence"),
         "target_detection_source": str(handoff.get("target_detection_source") or ""),
         "grounding_dino_candidate_count": int(handoff.get("grounding_dino_candidate_count", 0) or 0),
+        "grounding_dino_status": str(handoff.get("grounding_dino_status") or ""),
+        "grounding_dino_error": str(handoff.get("grounding_dino_error") or ""),
         "input_view": selected_view,
         "selected_view": selected_view,
         "diagnosis": selected_prediction.get("diagnosis"),
