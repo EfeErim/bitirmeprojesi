@@ -88,7 +88,7 @@ ABLATION_CONFIGS: Dict[str, Dict[str, Any]] = {
         "notebook": "16_ablation_dual_view_inference.ipynb",
         "output_dir": "docs/ablation_results/dual_view_inference",
         "phase": "inference_only",
-        "input_policy": "full_image_plus_target_matched_router_roi_score_fusion",
+        "input_policy": "full_image_primary_with_target_roi_evidence",
     },
     "dual_view_trained_adapter": {
         "notebook": "17_ablation_dual_view_trained_adapter.ipynb",
@@ -815,6 +815,10 @@ def summarize_rows(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
 
     comparable = [row for row in rows_list if row.get("expected_label") and row.get("diagnosis")]
     correct = [row for row in comparable if str(row["expected_label"]).strip().lower() == str(row["diagnosis"]).strip().lower()]
+    incorrect = [row for row in comparable if str(row["expected_label"]).strip().lower() != str(row["diagnosis"]).strip().lower()]
+    review_rows = [row for row in rows_list if bool(row.get("requires_review"))]
+    correct_review_rows = [row for row in correct if bool(row.get("requires_review"))]
+    incorrect_review_rows = [row for row in incorrect if bool(row.get("requires_review"))]
     labels = sorted({str(row["expected_label"]).strip().lower() for row in comparable})
     f1_values: list[float] = []
     for label in labels:
@@ -873,6 +877,12 @@ def summarize_rows(rows: Iterable[Dict[str, Any]]) -> Dict[str, Any]:
         "ood_flip_rate": (ood_flip_count / len(paired_groups)) if paired_groups else None,
         "prediction_disagreement_rate": (disagreement_count / len(paired_groups)) if paired_groups else None,
         "confidence_delta": (sum(confidence_deltas) / len(confidence_deltas)) if confidence_deltas else None,
+        "requires_review_rate": (len(review_rows) / len(rows_list)) if rows_list else 0.0,
+        "roi_conflict_rate": (
+            sum(1 for row in rows_list if row.get("roi_evidence_status") == "conflicts_with_full") / len(rows_list)
+        ) if rows_list else 0.0,
+        "review_capture_rate_on_errors": (len(incorrect_review_rows) / len(incorrect)) if incorrect else None,
+        "review_false_positive_rate_on_correct": (len(correct_review_rows) / len(correct)) if correct else None,
         "per_crop_part": per_crop_part,
     }
 
@@ -1190,6 +1200,7 @@ def run_dual_view_inference_image(
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
+    full_confidence_review_threshold: float = 0.70,
     require_semantic_roi_match: bool = True,
     target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
     grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
@@ -1268,15 +1279,28 @@ def run_dual_view_inference_image(
     selected_view = "full_image"
     selected_prediction = full_prediction
     status = str(full_prediction.get("status", "success"))
-    if roi_prediction is not None and roi_confidence >= full_confidence + float(roi_confidence_margin):
-        selected_view = "router_primary_roi"
-        selected_prediction = roi_prediction
-        status = str(roi_prediction.get("status", "success"))
-    elif roi_prediction is None:
+    roi_evidence_status = "not_evaluated"
+    review_reasons: list[str] = []
+    if roi_prediction is None:
         if str(handoff.get("selected_detection_source") or "") == "target_detection_missing":
-            status = "target_detection_missing_fallback"
+            roi_evidence_status = "target_detection_missing"
+            review_reasons.append("target_detection_missing")
+        elif require_semantic_roi_match and not semantic_roi_match:
+            roi_evidence_status = "semantic_mismatch"
+            review_reasons.append("semantic_mismatch")
         else:
-            status = "semantic_mismatch_fallback" if require_semantic_roi_match and not semantic_roi_match else "fallback_full_image"
+            roi_evidence_status = roi_quality_status
+            if roi_quality_status != "roi_ok":
+                review_reasons.append(roi_quality_status)
+    if roi_prediction is not None and full_prediction.get("diagnosis") == roi_prediction.get("diagnosis"):
+        roi_evidence_status = "supports_full"
+    elif roi_prediction is not None:
+        roi_evidence_status = "conflicts_with_full"
+        review_reasons.append("roi_conflict")
+        if roi_confidence >= full_confidence + float(roi_confidence_margin):
+            review_reasons.append("roi_confidence_leads")
+    if full_confidence < float(full_confidence_review_threshold):
+        review_reasons.append("low_full_confidence")
 
     full_ood = dict(full_prediction.get("ood_analysis", {}) or {})
     roi_ood = dict((roi_prediction or {}).get("ood_analysis", {}) or {})
@@ -1301,6 +1325,12 @@ def run_dual_view_inference_image(
         "semantic_roi_match": semantic_roi_match,
         "require_semantic_roi_match": bool(require_semantic_roi_match),
         "roi_eligible": bool(roi_eligible),
+        "decision_policy": "full_image_primary_with_roi_evidence",
+        "final_view": selected_view,
+        "roi_evidence_status": roi_evidence_status,
+        "requires_review": bool(review_reasons),
+        "review_reasons": ";".join(dict.fromkeys(review_reasons)),
+        "full_confidence_review_threshold": float(full_confidence_review_threshold),
         "selected_detection_source": str(handoff.get("selected_detection_source") or ""),
         "target_detection_found": bool(handoff.get("target_detection_found")),
         "target_roi_backend": str(handoff.get("target_roi_backend") or ""),
@@ -1341,6 +1371,7 @@ def run_dual_view_inference_folder(
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
+    full_confidence_review_threshold: float = 0.70,
     require_semantic_roi_match: bool = True,
     target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
     grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
@@ -1374,6 +1405,7 @@ def run_dual_view_inference_folder(
                 adapter_root=adapter_root,
                 return_ood=return_ood,
                 roi_confidence_margin=roi_confidence_margin,
+                full_confidence_review_threshold=full_confidence_review_threshold,
                 require_semantic_roi_match=require_semantic_roi_match,
                 target_roi_backend=target_roi_backend,
                 grounding_dino_model_id=grounding_dino_model_id,
@@ -1973,6 +2005,7 @@ def main() -> int:
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--no-label-from-parent", action="store_true")
     parser.add_argument("--target-roi-backend", default=DEFAULT_TARGET_ROI_BACKEND)
+    parser.add_argument("--full-confidence-review-threshold", type=float, default=0.70)
     parser.add_argument("--grounding-dino-model-id", default=DEFAULT_GROUNDING_DINO_MODEL_ID)
     parser.add_argument("--grounding-dino-prompts", nargs="*", default=list(DEFAULT_GROUNDING_DINO_PROMPTS))
     parser.add_argument("--grounding-dino-box-threshold", type=float, default=DEFAULT_GROUNDING_DINO_BOX_THRESHOLD)
@@ -1999,6 +2032,7 @@ def main() -> int:
             config_env=args.config_env,
             device=args.device,
             adapter_root=args.adapter_root,
+            full_confidence_review_threshold=args.full_confidence_review_threshold,
             target_roi_backend=args.target_roi_backend,
             grounding_dino_model_id=args.grounding_dino_model_id,
             grounding_dino_prompts=args.grounding_dino_prompts,

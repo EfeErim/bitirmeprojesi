@@ -497,6 +497,11 @@ def test_roi_ablation_notebook_contract() -> None:
             )
             _assert_contains(
                 sources.full_source,
+                "FULL_CONFIDENCE_REVIEW_THRESHOLD = 0.70",
+                f"{notebook_name} should keep full image primary and use ROI as review evidence: {{snippet}}",
+            )
+            _assert_contains(
+                sources.full_source,
                 "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
                 f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
             )
