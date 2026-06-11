@@ -73,7 +73,7 @@ ABLATION_CONFIGS: Dict[str, Dict[str, Any]] = {
         "notebook": "16_ablation_dual_view_inference.ipynb",
         "output_dir": "docs/ablation_results/dual_view_inference",
         "phase": "inference_only",
-        "input_policy": "full_image_plus_router_primary_roi_score_fusion",
+        "input_policy": "full_image_plus_target_matched_router_roi_score_fusion",
     },
     "dual_view_trained_adapter": {
         "notebook": "17_ablation_dual_view_trained_adapter.ipynb",
@@ -109,6 +109,33 @@ def _primary_detection(router_result: Dict[str, Any]) -> Dict[str, Any]:
     return {}
 
 
+def _router_detections(router_result: Dict[str, Any]) -> list[Dict[str, Any]]:
+    details = router_result.get("router_details")
+    detections = details.get("detections") if isinstance(details, dict) else None
+    if not isinstance(detections, list):
+        router_payload = _router_payload(router_result)
+        detections = router_payload.get("detections")
+    normalized = [dict(item) for item in list(detections or []) if isinstance(item, dict)]
+    primary = _primary_detection(router_result)
+    if primary and not normalized:
+        normalized.append(primary)
+    return normalized
+
+
+def _detection_confidence(detection: Dict[str, Any]) -> float:
+    return float(detection.get("crop_confidence", detection.get("confidence", 0.0)) or 0.0)
+
+
+def _detection_sort_key(detection: Dict[str, Any]) -> tuple[float, float, float]:
+    quality = detection.get("quality_score")
+    quality_score = float("-inf") if quality is None else float(quality)
+    return (
+        quality_score,
+        _detection_confidence(detection),
+        float(detection.get("part_confidence", 0.0) or 0.0),
+    )
+
+
 def resolve_router_handoff(router_result: Dict[str, Any]) -> Dict[str, Any]:
     """Extract the adapter handoff fields from a router result."""
     primary = _primary_detection(router_result)
@@ -130,6 +157,70 @@ def resolve_router_handoff(router_result: Dict[str, Any]) -> Dict[str, Any]:
             and part != "unknown"
         ),
     }
+
+
+def resolve_target_router_handoff(
+    router_result: Dict[str, Any],
+    *,
+    target_crop: Optional[str],
+    target_part: Optional[str],
+) -> Dict[str, Any]:
+    """Prefer a router detection that matches the adapter target crop/part."""
+    handoff = resolve_router_handoff(router_result)
+    normalized_crop = _normalize_text(target_crop)
+    normalized_part = _normalize_text(target_part)
+    primary = dict(handoff.get("primary_detection") or {})
+    handoff.update(
+        {
+            "primary_crop": _normalize_text(primary.get("crop")) or handoff.get("crop"),
+            "primary_part": _normalize_text(primary.get("part")) or handoff.get("part"),
+            "primary_bbox": primary.get("bbox"),
+            "target_crop": normalized_crop or None,
+            "target_part": normalized_part or None,
+            "target_detection_found": False,
+            "selected_detection_source": "primary_detection",
+        }
+    )
+    if not normalized_crop:
+        return handoff
+
+    matches: list[Dict[str, Any]] = []
+    for detection in _router_detections(router_result):
+        detection_crop = _normalize_text(detection.get("crop"))
+        detection_part = _normalize_text(detection.get("part"))
+        if detection_crop != normalized_crop:
+            continue
+        if normalized_part and detection_part != normalized_part:
+            continue
+        matches.append(detection)
+    if not matches:
+        handoff.update(
+            {
+                "crop": normalized_crop,
+                "part": normalized_part or handoff.get("part"),
+                "bbox": None,
+                "adapter_allowed": bool(normalized_crop and normalized_part),
+                "selected_detection_source": "target_detection_missing",
+            }
+        )
+        return handoff
+
+    selected = max(matches, key=_detection_sort_key)
+    selected_crop = _normalize_text(selected.get("crop")) or normalized_crop
+    selected_part = _normalize_text(selected.get("part")) or normalized_part or None
+    handoff.update(
+        {
+            "crop": selected_crop,
+            "part": selected_part,
+            "router_confidence": _detection_confidence(selected),
+            "bbox": selected.get("bbox"),
+            "primary_detection": selected,
+            "adapter_allowed": bool(selected_crop and selected_part and selected_part != "unknown"),
+            "target_detection_found": True,
+            "selected_detection_source": "target_detection",
+        }
+    )
+    return handoff
 
 
 def prepare_primary_roi(image: Image.Image, bbox: Any, *, pad_ratio: float = 0.08) -> tuple[Optional[Image.Image], Optional[list[float]], float]:
@@ -173,6 +264,8 @@ def _prediction_to_row(
     area_ratio: float,
     prediction: Optional[Dict[str, Any]],
     latency_ms: float,
+    selected_detection_source: str = "",
+    target_detection_found: Optional[bool] = None,
 ) -> Dict[str, Any]:
     prediction = dict(prediction or {})
     ood = prediction.get("ood_analysis")
@@ -187,6 +280,8 @@ def _prediction_to_row(
         "router_confidence": float(router_confidence),
         "bbox": bbox,
         "bbox_area_ratio": float(area_ratio),
+        "selected_detection_source": selected_detection_source,
+        "target_detection_found": target_detection_found,
         "input_view": input_view,
         "diagnosis": prediction.get("diagnosis"),
         "confidence": float(prediction.get("confidence", 0.0) or 0.0),
@@ -306,7 +401,11 @@ def run_ablation_image(
         include_diagnostics=True,
         include_adapter_target=True,
     )
-    handoff = resolve_router_handoff(router_result)
+    handoff = resolve_target_router_handoff(
+        router_result,
+        target_crop=adapter_crop_name,
+        target_part=adapter_part_name,
+    )
     crop = str(adapter_crop_name or handoff["crop"] or "")
     part = str(adapter_part_name or handoff["part"] or "")
     adapter_allowed = bool(adapter_crop_name and adapter_part_name) or bool(handoff["adapter_allowed"])
@@ -326,6 +425,8 @@ def run_ablation_image(
                 area_ratio=0.0,
                 prediction=None,
                 latency_ms=0.0,
+                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
+                target_detection_found=bool(handoff.get("target_detection_found")),
             )
         ]
 
@@ -356,6 +457,8 @@ def run_ablation_image(
                 area_ratio=area_ratio,
                 prediction=prediction,
                 latency_ms=latency_ms,
+                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
+                target_detection_found=bool(handoff.get("target_detection_found")),
             )
         ]
 
@@ -375,6 +478,8 @@ def run_ablation_image(
                 area_ratio=0.0,
                 prediction=None,
                 latency_ms=0.0,
+                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
+                target_detection_found=bool(handoff.get("target_detection_found")),
             )
         ]
 
@@ -400,6 +505,8 @@ def run_ablation_image(
             area_ratio=0.0,
             prediction=prediction,
             latency_ms=latency_ms,
+            selected_detection_source=str(handoff.get("selected_detection_source") or ""),
+            target_detection_found=bool(handoff.get("target_detection_found")),
         )
     ]
 
@@ -822,12 +929,16 @@ def run_dual_view_inference_image(
         include_adapter_target=False,
         status_printer=status_printer,
     )
-    handoff = resolve_router_handoff(router_result)
+    handoff = resolve_target_router_handoff(
+        router_result,
+        target_crop=crop,
+        target_part=part,
+    )
     with Image.open(image_ref) as opened:
         image = opened.convert("RGB")
         roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
     roi_quality_status = classify_roi_quality(bbox=sanitized_bbox, area_ratio=area_ratio)
-    semantic_roi_match = handoff["crop"] == crop and handoff["part"] == part
+    semantic_roi_match = bool(handoff.get("target_detection_found")) and handoff["crop"] == crop and handoff["part"] == part
     roi_eligible = roi_quality_status == "roi_ok" and roi_image is not None
     if require_semantic_roi_match:
         roi_eligible = roi_eligible and semantic_roi_match
@@ -860,7 +971,10 @@ def run_dual_view_inference_image(
         selected_prediction = roi_prediction
         status = str(roi_prediction.get("status", "success"))
     elif roi_prediction is None:
-        status = "semantic_mismatch_fallback" if require_semantic_roi_match and not semantic_roi_match else "fallback_full_image"
+        if str(handoff.get("selected_detection_source") or "") == "target_detection_missing":
+            status = "target_detection_missing_fallback"
+        else:
+            status = "semantic_mismatch_fallback" if require_semantic_roi_match and not semantic_roi_match else "fallback_full_image"
 
     full_ood = dict(full_prediction.get("ood_analysis", {}) or {})
     roi_ood = dict((roi_prediction or {}).get("ood_analysis", {}) or {})
@@ -877,12 +991,16 @@ def run_dual_view_inference_image(
         "router_confidence": handoff["router_confidence"],
         "router_crop": handoff["crop"],
         "router_part": handoff["part"],
+        "router_primary_crop": handoff.get("primary_crop"),
+        "router_primary_part": handoff.get("primary_part"),
         "bbox": sanitized_bbox,
         "bbox_area_ratio": float(area_ratio),
         "roi_quality_status": roi_quality_status,
         "semantic_roi_match": semantic_roi_match,
         "require_semantic_roi_match": bool(require_semantic_roi_match),
         "roi_eligible": bool(roi_eligible),
+        "selected_detection_source": str(handoff.get("selected_detection_source") or ""),
+        "target_detection_found": bool(handoff.get("target_detection_found")),
         "input_view": selected_view,
         "selected_view": selected_view,
         "diagnosis": selected_prediction.get("diagnosis"),

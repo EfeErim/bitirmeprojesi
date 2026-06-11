@@ -90,7 +90,15 @@ def _write_image(path: Path) -> Path:
     return path
 
 
-def _router_result(*, status="ok", crop="tomato", part="leaf", bbox=None):
+def _router_result(*, status="ok", crop="tomato", part="leaf", bbox=None, detections=None):
+    primary = {
+        "crop": crop,
+        "part": part,
+        "crop_confidence": 0.93,
+        "part_confidence": 0.85,
+        "bbox": bbox,
+    }
+    detection_rows = list(detections) if detections is not None else [primary]
     return {
         "status": status,
         "crop": crop,
@@ -98,13 +106,12 @@ def _router_result(*, status="ok", crop="tomato", part="leaf", bbox=None):
         "router_confidence": 0.93,
         "router": {
             "status": status,
-            "primary_detection": {
-                "crop": crop,
-                "part": part,
-                "crop_confidence": 0.93,
-                "part_confidence": 0.85,
-                "bbox": bbox,
-            },
+            "primary_detection": primary,
+        },
+        "router_details": {
+            "status": status,
+            "primary_detection": primary,
+            "detections": detection_rows,
         },
     }
 
@@ -216,7 +223,7 @@ def test_fixed_adapter_roi_ignores_wrong_router_crop_for_adapter_selection(tmp_p
         adapter_crop="tomato",
         adapter_part="fruit",
         workflow_factory=FakeWorkflow,
-        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
     )
 
     assert rows[0]["status"] == "success"
@@ -225,6 +232,67 @@ def test_fixed_adapter_roi_ignores_wrong_router_crop_for_adapter_selection(tmp_p
     assert rows[0]["router_status"] == "ok"
     assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
     assert FakeWorkflow.calls[0]["part_hint"] == "fruit"
+
+
+def test_target_aware_roi_selects_matching_detection_instead_of_wrong_primary(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="primary_roi_inference",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(
+            crop="eggplant",
+            part="unknown",
+            bbox=[1, 1, 20, 20],
+            detections=[
+                {
+                    "crop": "eggplant",
+                    "part": "unknown",
+                    "crop_confidence": 0.95,
+                    "part_confidence": 0.0,
+                    "bbox": [1, 1, 20, 20],
+                },
+                {
+                    "crop": "tomato",
+                    "part": "fruit",
+                    "crop_confidence": 0.62,
+                    "part_confidence": 0.71,
+                    "bbox": [10, 10, 50, 40],
+                },
+            ],
+        ),
+    )
+
+    assert rows[0]["status"] == "success"
+    assert rows[0]["bbox"] == [10.0, 10.0, 50.0, 40.0]
+    assert rows[0]["selected_detection_source"] == "target_detection"
+    assert rows[0]["target_detection_found"] is True
+    assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
+    assert FakeWorkflow.calls[0]["part_hint"] == "fruit"
+
+
+def test_target_aware_roi_skips_wrong_primary_when_target_detection_missing(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="primary_roi_inference",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+    )
+
+    assert rows[0]["status"] == "roi_missing"
+    assert rows[0]["bbox"] is None
+    assert rows[0]["selected_detection_source"] == "target_detection_missing"
+    assert rows[0]["target_detection_found"] is False
+    assert FakeWorkflow.calls == []
 
 
 def test_part_unknown_skips_adapter_load(tmp_path: Path):
@@ -419,13 +487,61 @@ def test_dual_view_inference_rejects_semantic_mismatch_roi(tmp_path: Path):
         device="cpu",
     )
 
-    assert row["status"] == "semantic_mismatch_fallback"
+    assert row["status"] == "target_detection_missing_fallback"
     assert row["semantic_roi_match"] is False
     assert row["roi_eligible"] is False
+    assert row["selected_detection_source"] == "target_detection_missing"
+    assert row["target_detection_found"] is False
     assert row["selected_view"] == "full_image"
     assert row["diagnosis"] == "full_label"
     assert row["roi_diagnosis"] is None
     assert len(DualViewWorkflow.calls) == 1
+
+
+def test_dual_view_inference_uses_target_detection_when_primary_is_wrong(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="roi_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(
+            crop="eggplant",
+            part="unknown",
+            bbox=[1, 1, 20, 20],
+            detections=[
+                {
+                    "crop": "eggplant",
+                    "part": "unknown",
+                    "crop_confidence": 0.95,
+                    "part_confidence": 0.0,
+                    "bbox": [1, 1, 20, 20],
+                },
+                {
+                    "crop": "tomato",
+                    "part": "fruit",
+                    "crop_confidence": 0.62,
+                    "part_confidence": 0.71,
+                    "bbox": [10, 10, 50, 40],
+                },
+            ],
+        ),
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["router_primary_crop"] == "eggplant"
+    assert row["router_crop"] == "tomato"
+    assert row["router_part"] == "fruit"
+    assert row["bbox"] == [10.0, 10.0, 50.0, 40.0]
+    assert row["semantic_roi_match"] is True
+    assert row["target_detection_found"] is True
+    assert row["selected_detection_source"] == "target_detection"
+    assert row["selected_view"] == "router_primary_roi"
+    assert len(DualViewWorkflow.calls) == 2
 
 
 def test_dual_view_training_gate_blocks_until_required_reports_exist(tmp_path: Path):
