@@ -84,6 +84,21 @@ class DualViewWorkflow:
         return payload
 
 
+class GroundingDinoMock:
+    calls = []
+    detections = []
+
+    @classmethod
+    def reset(cls, detections=None):
+        cls.calls = []
+        cls.detections = list(detections or [])
+
+    @classmethod
+    def run(cls, image, **kwargs):
+        cls.calls.append({"image": image, **kwargs})
+        return {"detections": list(cls.detections), "candidate_count": len(cls.detections), "status": "ok"}
+
+
 def _write_image(path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (80, 60), color=(20, 120, 40)).save(path)
@@ -152,6 +167,40 @@ def test_tokenized_git_remote_url_uses_github_token(monkeypatch):
     push_url = roi_ablation._tokenized_git_remote_url("https://github.com/EfeErim/bitirmeprojesi.git")
 
     assert push_url == "https://x-access-token:secret-token@github.com/EfeErim/bitirmeprojesi.git"
+
+
+def test_grounding_dino_component_loader_reuses_session_cache(monkeypatch):
+    calls = {"processor": 0, "model": 0}
+    from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
+
+    class FakeProcessor:
+        pass
+
+    class FakeModel:
+        def to(self, device):
+            return self
+
+        def eval(self):
+            return self
+
+    def fake_processor_from_pretrained(*args, **kwargs):
+        calls["processor"] += 1
+        return FakeProcessor()
+
+    def fake_model_from_pretrained(*args, **kwargs):
+        calls["model"] += 1
+        return FakeModel()
+
+    roi_ablation.clear_grounding_dino_cache()
+    monkeypatch.setattr(AutoProcessor, "from_pretrained", fake_processor_from_pretrained)
+    monkeypatch.setattr(AutoModelForZeroShotObjectDetection, "from_pretrained", fake_model_from_pretrained)
+
+    first = roi_ablation._load_grounding_dino_components(model_id="fake-model", device="cpu", status_printer=None)
+    second = roi_ablation._load_grounding_dino_components(model_id="fake-model", device="cpu", status_printer=None)
+
+    assert first[0] is second[0]
+    assert first[1] is second[1]
+    assert calls == {"processor": 1, "model": 1}
 
 
 def test_primary_roi_ablation_skips_without_fallback_when_bbox_missing(tmp_path: Path):
@@ -269,7 +318,8 @@ def test_target_aware_roi_selects_matching_detection_instead_of_wrong_primary(tm
 
     assert rows[0]["status"] == "success"
     assert rows[0]["bbox"] == [10.0, 10.0, 50.0, 40.0]
-    assert rows[0]["selected_detection_source"] == "target_detection"
+    assert rows[0]["selected_detection_source"] == "router_detection"
+    assert rows[0]["target_detection_source"] == "router_detection"
     assert rows[0]["target_detection_found"] is True
     assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
     assert FakeWorkflow.calls[0]["part_hint"] == "fruit"
@@ -286,12 +336,80 @@ def test_target_aware_roi_skips_wrong_primary_when_target_detection_missing(tmp_
         adapter_part="fruit",
         workflow_factory=FakeWorkflow,
         router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        target_roi_backend="router_detections",
     )
 
     assert rows[0]["status"] == "roi_missing"
     assert rows[0]["bbox"] is None
     assert rows[0]["selected_detection_source"] == "target_detection_missing"
     assert rows[0]["target_detection_found"] is False
+    assert FakeWorkflow.calls == []
+
+
+def test_target_aware_roi_uses_grounding_dino_when_router_target_missing(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    GroundingDinoMock.reset(
+        detections=[
+            {
+                "crop_confidence": 0.77,
+                "part_confidence": 0.77,
+                "bbox": [10, 10, 50, 40],
+                "prompt": "tomato fruit",
+            }
+        ]
+    )
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="primary_roi_inference",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[1, 1, 20, 20]),
+        grounding_dino_runner=GroundingDinoMock.run,
+    )
+
+    assert rows[0]["status"] == "success"
+    assert rows[0]["bbox"] == [10.0, 10.0, 50.0, 40.0]
+    assert rows[0]["selected_detection_source"] == "grounding_dino"
+    assert rows[0]["target_detection_source"] == "grounding_dino"
+    assert rows[0]["target_detection_found"] is True
+    assert rows[0]["target_prompt"] == "tomato fruit"
+    assert rows[0]["target_detection_confidence"] == 0.77
+    assert rows[0]["grounding_dino_candidate_count"] == 1
+    assert len(GroundingDinoMock.calls) == 1
+    assert FakeWorkflow.calls[0]["crop_hint"] == "tomato"
+
+
+def test_target_aware_roi_skips_low_quality_grounding_dino_bbox(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    GroundingDinoMock.reset(
+        detections=[
+            {
+                "crop_confidence": 0.88,
+                "part_confidence": 0.88,
+                "bbox": [0, 0, 79, 59],
+                "prompt": "tomato",
+            }
+        ]
+    )
+    image_path = _write_image(tmp_path / "fruit.jpg")
+
+    rows = roi_ablation.run_ablation_image(
+        image_path,
+        ablation_name="primary_roi_inference",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=FakeWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[1, 1, 20, 20]),
+        grounding_dino_runner=GroundingDinoMock.run,
+    )
+
+    assert rows[0]["status"] == "roi_too_large"
+    assert rows[0]["target_detection_found"] is True
+    assert rows[0]["selected_detection_source"] == "grounding_dino"
+    assert rows[0]["bbox"] == [0.0, 0.0, 79.0, 59.0]
     assert FakeWorkflow.calls == []
 
 
@@ -427,6 +545,7 @@ def test_roi_quality_audit_reports_router_mismatch_and_missing_roi(tmp_path: Pat
 
 def test_dual_view_inference_selects_roi_only_when_margin_clears(tmp_path: Path):
     DualViewWorkflow.calls.clear()
+    GroundingDinoMock.reset()
     image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
 
     row = roi_ablation.run_dual_view_inference_image(
@@ -436,6 +555,7 @@ def test_dual_view_inference_selects_roi_only_when_margin_clears(tmp_path: Path)
         adapter_part="fruit",
         workflow_factory=DualViewWorkflow,
         router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
+        grounding_dino_runner=GroundingDinoMock.run,
         status_printer=None,
         device="cpu",
     )
@@ -448,6 +568,7 @@ def test_dual_view_inference_selects_roi_only_when_margin_clears(tmp_path: Path)
     assert row["roi_diagnosis"] == "roi_label"
     assert row["dual_view_disagreement"] is True
     assert len(DualViewWorkflow.calls) == 2
+    assert GroundingDinoMock.calls == []
 
 
 def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path):
@@ -483,6 +604,7 @@ def test_dual_view_inference_rejects_semantic_mismatch_roi(tmp_path: Path):
         adapter_part="fruit",
         workflow_factory=DualViewWorkflow,
         router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        target_roi_backend="router_detections",
         status_printer=None,
         device="cpu",
     )
@@ -495,6 +617,69 @@ def test_dual_view_inference_rejects_semantic_mismatch_roi(tmp_path: Path):
     assert row["selected_view"] == "full_image"
     assert row["diagnosis"] == "full_label"
     assert row["roi_diagnosis"] is None
+    assert len(DualViewWorkflow.calls) == 1
+
+
+def test_dual_view_inference_uses_grounding_dino_when_router_target_missing(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    GroundingDinoMock.reset(
+        detections=[
+            {
+                "crop_confidence": 0.81,
+                "part_confidence": 0.81,
+                "bbox": [10, 10, 50, 40],
+                "prompt": "tomato fruit",
+            }
+        ]
+    )
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="roi_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[1, 1, 20, 20]),
+        grounding_dino_runner=GroundingDinoMock.run,
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["target_detection_found"] is True
+    assert row["target_detection_source"] == "grounding_dino"
+    assert row["selected_detection_source"] == "grounding_dino"
+    assert row["target_prompt"] == "tomato fruit"
+    assert row["target_detection_confidence"] == 0.81
+    assert row["grounding_dino_candidate_count"] == 1
+    assert row["selected_view"] == "router_primary_roi"
+    assert len(GroundingDinoMock.calls) == 1
+    assert len(DualViewWorkflow.calls) == 2
+
+
+def test_dual_view_inference_falls_back_when_grounding_dino_returns_no_candidates(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    GroundingDinoMock.reset(detections=[])
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="full_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[1, 1, 20, 20]),
+        grounding_dino_runner=GroundingDinoMock.run,
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["status"] == "target_detection_missing_fallback"
+    assert row["target_detection_found"] is False
+    assert row["grounding_dino_candidate_count"] == 0
+    assert row["selected_view"] == "full_image"
+    assert row["roi_diagnosis"] is None
+    assert len(GroundingDinoMock.calls) == 1
     assert len(DualViewWorkflow.calls) == 1
 
 
@@ -539,7 +724,8 @@ def test_dual_view_inference_uses_target_detection_when_primary_is_wrong(tmp_pat
     assert row["bbox"] == [10.0, 10.0, 50.0, 40.0]
     assert row["semantic_roi_match"] is True
     assert row["target_detection_found"] is True
-    assert row["selected_detection_source"] == "target_detection"
+    assert row["selected_detection_source"] == "router_detection"
+    assert row["target_detection_source"] == "router_detection"
     assert row["selected_view"] == "router_primary_roi"
     assert len(DualViewWorkflow.calls) == 2
 

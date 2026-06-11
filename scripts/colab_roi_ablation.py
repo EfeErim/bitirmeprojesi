@@ -12,7 +12,7 @@ import subprocess
 import time
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional, Sequence
 from urllib.parse import urlsplit, urlunsplit
 
 from PIL import Image
@@ -28,9 +28,17 @@ StatusPrinter = Callable[[str], None]
 WorkflowFactory = Callable[..., Any]
 RouterRunner = Callable[..., Dict[str, Any]]
 TrainingWorkflowFactory = Callable[..., Any]
+GroundingDinoRunner = Callable[..., Dict[str, Any]]
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 ADAPTER_ALLOWED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
+DEFAULT_TARGET_ROI_BACKEND = "router_then_grounding_dino"
+DEFAULT_GROUNDING_DINO_MODEL_ID = "IDEA-Research/grounding-dino-tiny"
+DEFAULT_GROUNDING_DINO_PROMPTS = ("tomato fruit", "tomato fruit on plant", "tomato", "fruit")
+DEFAULT_GROUNDING_DINO_BOX_THRESHOLD = 0.25
+DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD = 0.20
+DEFAULT_GROUNDING_DINO_MAX_CANDIDATES = 5
+_GROUNDING_DINO_SESSION_CACHE: dict[tuple[str, str], tuple[Any, Any]] = {}
 
 ABLATION_CONFIGS: Dict[str, Dict[str, Any]] = {
     "full_image_baseline": {
@@ -136,6 +144,109 @@ def _detection_sort_key(detection: Dict[str, Any]) -> tuple[float, float, float]
     )
 
 
+def _normalize_grounding_prompts(prompts: Optional[Sequence[str]]) -> tuple[str, ...]:
+    normalized = tuple(str(prompt or "").strip() for prompt in (prompts or DEFAULT_GROUNDING_DINO_PROMPTS))
+    return tuple(prompt for prompt in normalized if prompt)
+
+
+def _grounding_dino_cache_key(*, model_id: str, device: str) -> tuple[str, str]:
+    return (str(model_id).strip(), str(device or "cuda").strip().lower())
+
+
+def clear_grounding_dino_cache() -> None:
+    """Drop cached Grounding DINO components for the current Python session."""
+    _GROUNDING_DINO_SESSION_CACHE.clear()
+
+
+def _load_grounding_dino_components(
+    *,
+    model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = None,
+) -> tuple[Any, Any]:
+    cache_key = _grounding_dino_cache_key(model_id=model_id, device=device)
+    cached = _GROUNDING_DINO_SESSION_CACHE.get(cache_key)
+    if cached is not None:
+        return cached
+
+    _emit_status(status_printer, f"[GROUNDING_DINO] Loading model={model_id} device={device}...")
+    from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
+
+    processor = AutoProcessor.from_pretrained(model_id)
+    model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id)
+    model.to(device)
+    model.eval()
+    _GROUNDING_DINO_SESSION_CACHE[cache_key] = (processor, model)
+    _emit_status(status_printer, "[GROUNDING_DINO] Ready.")
+    return processor, model
+
+
+def run_grounding_dino_target_detection(
+    image: Image.Image,
+    *,
+    prompts: Optional[Sequence[str]] = None,
+    model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    device: str = "cuda",
+    box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    status_printer: Optional[StatusPrinter] = None,
+) -> Dict[str, Any]:
+    """Return the best Grounding DINO bbox for target ROI retrieval."""
+    prompt_list = _normalize_grounding_prompts(prompts)
+    if not prompt_list:
+        return {"detections": [], "candidate_count": 0, "status": "no_prompts"}
+
+    try:
+        import torch
+
+        processor, model = _load_grounding_dino_components(
+            model_id=model_id,
+            device=device,
+            status_printer=status_printer,
+        )
+        detections: list[Dict[str, Any]] = []
+        for prompt in prompt_list:
+            inputs = processor(images=image, text=prompt, return_tensors="pt")
+            inputs = {key: value.to(device) if hasattr(value, "to") else value for key, value in inputs.items()}
+            with torch.no_grad():
+                outputs = model(**inputs)
+            target_sizes = torch.tensor([image.size[::-1]], device=device)
+            processed = processor.post_process_grounded_object_detection(
+                outputs,
+                input_ids=inputs.get("input_ids"),
+                box_threshold=float(box_threshold),
+                text_threshold=float(text_threshold),
+                target_sizes=target_sizes,
+            )
+            for item in list(processed or []):
+                boxes = item.get("boxes", [])
+                scores = item.get("scores", [])
+                labels = item.get("labels", [])
+                for index, box in enumerate(list(boxes)):
+                    score = float(scores[index].detach().cpu().item() if hasattr(scores[index], "detach") else scores[index])
+                    label = str(labels[index] if index < len(labels) else prompt)
+                    bbox = [float(value) for value in box.detach().cpu().tolist()]
+                    detections.append(
+                        {
+                            "crop": "tomato",
+                            "part": "fruit",
+                            "crop_confidence": score,
+                            "part_confidence": score,
+                            "bbox": bbox,
+                            "prompt": prompt,
+                            "label": label,
+                            "source": "grounding_dino",
+                        }
+                    )
+        detections.sort(key=_detection_sort_key, reverse=True)
+        kept = detections[: max(1, int(max_candidates))]
+        return {"detections": kept, "candidate_count": len(detections), "status": "ok"}
+    except Exception as exc:
+        _emit_status(status_printer, f"[GROUNDING_DINO] skipped: {exc}")
+        return {"detections": [], "candidate_count": 0, "status": "error", "error": str(exc)}
+
+
 def resolve_router_handoff(router_result: Dict[str, Any]) -> Dict[str, Any]:
     """Extract the adapter handoff fields from a router result."""
     primary = _primary_detection(router_result)
@@ -164,11 +275,22 @@ def resolve_target_router_handoff(
     *,
     target_crop: Optional[str],
     target_part: Optional[str],
+    image: Optional[Image.Image] = None,
+    target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
+    grounding_dino_runner: Optional[GroundingDinoRunner] = None,
+    grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    grounding_dino_prompts: Optional[Sequence[str]] = None,
+    grounding_dino_box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    grounding_dino_text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    grounding_dino_max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = None,
 ) -> Dict[str, Any]:
     """Prefer a router detection that matches the adapter target crop/part."""
     handoff = resolve_router_handoff(router_result)
     normalized_crop = _normalize_text(target_crop)
     normalized_part = _normalize_text(target_part)
+    normalized_backend = _normalize_text(target_roi_backend) or "router_detections"
     primary = dict(handoff.get("primary_detection") or {})
     handoff.update(
         {
@@ -177,6 +299,11 @@ def resolve_target_router_handoff(
             "primary_bbox": primary.get("bbox"),
             "target_crop": normalized_crop or None,
             "target_part": normalized_part or None,
+            "target_roi_backend": normalized_backend,
+            "target_prompt": None,
+            "target_detection_confidence": None,
+            "target_detection_source": "target_detection_missing",
+            "grounding_dino_candidate_count": 0,
             "target_detection_found": False,
             "selected_detection_source": "primary_detection",
         }
@@ -194,6 +321,45 @@ def resolve_target_router_handoff(
             continue
         matches.append(detection)
     if not matches:
+        if normalized_backend in {"grounding_dino", "router_then_grounding_dino"} and image is not None:
+            runner = grounding_dino_runner or run_grounding_dino_target_detection
+            grounding_payload = runner(
+                image,
+                prompts=grounding_dino_prompts,
+                model_id=grounding_dino_model_id,
+                device=device,
+                box_threshold=grounding_dino_box_threshold,
+                text_threshold=grounding_dino_text_threshold,
+                max_candidates=grounding_dino_max_candidates,
+                status_printer=status_printer,
+            )
+            grounding_detections = [
+                dict(item)
+                for item in list((grounding_payload or {}).get("detections") or [])
+                if isinstance(item, dict)
+            ]
+            handoff["grounding_dino_candidate_count"] = int((grounding_payload or {}).get("candidate_count", 0) or 0)
+            if grounding_detections:
+                selected = max(grounding_detections, key=_detection_sort_key)
+                selected_crop = normalized_crop
+                selected_part = normalized_part or _normalize_text(selected.get("part")) or None
+                confidence = _detection_confidence(selected)
+                handoff.update(
+                    {
+                        "crop": selected_crop,
+                        "part": selected_part,
+                        "router_confidence": confidence,
+                        "bbox": selected.get("bbox"),
+                        "primary_detection": selected,
+                        "adapter_allowed": bool(selected_crop and selected_part and selected_part != "unknown"),
+                        "target_prompt": selected.get("prompt"),
+                        "target_detection_confidence": confidence,
+                        "target_detection_source": "grounding_dino",
+                        "target_detection_found": True,
+                        "selected_detection_source": "grounding_dino",
+                    }
+                )
+                return handoff
         handoff.update(
             {
                 "crop": normalized_crop,
@@ -216,8 +382,11 @@ def resolve_target_router_handoff(
             "bbox": selected.get("bbox"),
             "primary_detection": selected,
             "adapter_allowed": bool(selected_crop and selected_part and selected_part != "unknown"),
+            "target_prompt": selected.get("prompt"),
+            "target_detection_confidence": _detection_confidence(selected),
+            "target_detection_source": "router_detection",
             "target_detection_found": True,
-            "selected_detection_source": "target_detection",
+            "selected_detection_source": "router_detection",
         }
     )
     return handoff
@@ -266,6 +435,11 @@ def _prediction_to_row(
     latency_ms: float,
     selected_detection_source: str = "",
     target_detection_found: Optional[bool] = None,
+    target_roi_backend: str = "",
+    target_prompt: Optional[str] = None,
+    target_detection_confidence: Optional[float] = None,
+    target_detection_source: str = "",
+    grounding_dino_candidate_count: int = 0,
 ) -> Dict[str, Any]:
     prediction = dict(prediction or {})
     ood = prediction.get("ood_analysis")
@@ -282,6 +456,11 @@ def _prediction_to_row(
         "bbox_area_ratio": float(area_ratio),
         "selected_detection_source": selected_detection_source,
         "target_detection_found": target_detection_found,
+        "target_roi_backend": target_roi_backend,
+        "target_prompt": target_prompt,
+        "target_detection_confidence": target_detection_confidence,
+        "target_detection_source": target_detection_source,
+        "grounding_dino_candidate_count": int(grounding_dino_candidate_count),
         "input_view": input_view,
         "diagnosis": prediction.get("diagnosis"),
         "confidence": float(prediction.get("confidence", 0.0) or 0.0),
@@ -289,6 +468,18 @@ def _prediction_to_row(
         "ood_primary_score": ood_payload.get("primary_score"),
         "latency_ms": float(latency_ms),
         "status": status,
+    }
+
+
+def _target_handoff_report_fields(handoff: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "selected_detection_source": str(handoff.get("selected_detection_source") or ""),
+        "target_detection_found": bool(handoff.get("target_detection_found")),
+        "target_roi_backend": str(handoff.get("target_roi_backend") or ""),
+        "target_prompt": handoff.get("target_prompt"),
+        "target_detection_confidence": handoff.get("target_detection_confidence"),
+        "target_detection_source": str(handoff.get("target_detection_source") or ""),
+        "grounding_dino_candidate_count": int(handoff.get("grounding_dino_candidate_count", 0) or 0),
     }
 
 
@@ -339,6 +530,13 @@ def run_ablation_image(
     device: str = "cuda",
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
+    target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
+    grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    grounding_dino_prompts: Optional[Sequence[str]] = None,
+    grounding_dino_box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    grounding_dino_text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    grounding_dino_max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    grounding_dino_runner: Optional[GroundingDinoRunner] = None,
     status_printer: Optional[StatusPrinter] = None,
     workflow_factory: WorkflowFactory = InferenceWorkflow,
     workflow: Optional[Any] = None,
@@ -401,10 +599,22 @@ def run_ablation_image(
         include_diagnostics=True,
         include_adapter_target=True,
     )
+    with Image.open(image_ref) as opened:
+        image = opened.convert("RGB")
     handoff = resolve_target_router_handoff(
         router_result,
         target_crop=adapter_crop_name,
         target_part=adapter_part_name,
+        image=image,
+        target_roi_backend=target_roi_backend,
+        grounding_dino_runner=grounding_dino_runner,
+        grounding_dino_model_id=grounding_dino_model_id,
+        grounding_dino_prompts=grounding_dino_prompts,
+        grounding_dino_box_threshold=grounding_dino_box_threshold,
+        grounding_dino_text_threshold=grounding_dino_text_threshold,
+        grounding_dino_max_candidates=grounding_dino_max_candidates,
+        device=device,
+        status_printer=status_printer,
     )
     crop = str(adapter_crop_name or handoff["crop"] or "")
     part = str(adapter_part_name or handoff["part"] or "")
@@ -425,16 +635,14 @@ def run_ablation_image(
                 area_ratio=0.0,
                 prediction=None,
                 latency_ms=0.0,
-                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
-                target_detection_found=bool(handoff.get("target_detection_found")),
+                **_target_handoff_report_fields(handoff),
             )
         ]
 
-    with Image.open(image_ref) as opened:
-        image = opened.convert("RGB")
-        roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
+    roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
 
-    if roi_image is not None:
+    roi_quality_status = classify_roi_quality(bbox=sanitized_bbox, area_ratio=area_ratio)
+    if roi_image is not None and roi_quality_status == "roi_ok":
         prediction, latency_ms = _run_prediction(
             workflow,
             roi_image,
@@ -457,8 +665,7 @@ def run_ablation_image(
                 area_ratio=area_ratio,
                 prediction=prediction,
                 latency_ms=latency_ms,
-                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
-                target_detection_found=bool(handoff.get("target_detection_found")),
+                **_target_handoff_report_fields(handoff),
             )
         ]
 
@@ -469,17 +676,16 @@ def run_ablation_image(
                 image_path=image_ref,
                 expected_label=expected_label,
                 input_view="router_primary_roi",
-                status="roi_missing",
+                status=roi_quality_status,
                 crop=crop,
                 part=part,
                 router_status=handoff["status"],
                 router_confidence=handoff["router_confidence"],
-                bbox=None,
-                area_ratio=0.0,
+                bbox=sanitized_bbox,
+                area_ratio=area_ratio,
                 prediction=None,
                 latency_ms=0.0,
-                selected_detection_source=str(handoff.get("selected_detection_source") or ""),
-                target_detection_found=bool(handoff.get("target_detection_found")),
+                **_target_handoff_report_fields(handoff),
             )
         ]
 
@@ -505,8 +711,7 @@ def run_ablation_image(
             area_ratio=0.0,
             prediction=prediction,
             latency_ms=latency_ms,
-            selected_detection_source=str(handoff.get("selected_detection_source") or ""),
-            target_detection_found=bool(handoff.get("target_detection_found")),
+            **_target_handoff_report_fields(handoff),
         )
     ]
 
@@ -906,6 +1111,13 @@ def run_dual_view_inference_image(
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
     require_semantic_roi_match: bool = True,
+    target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
+    grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    grounding_dino_prompts: Optional[Sequence[str]] = None,
+    grounding_dino_box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    grounding_dino_text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    grounding_dino_max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    grounding_dino_runner: Optional[GroundingDinoRunner] = None,
     status_printer: Optional[StatusPrinter] = None,
     workflow_factory: WorkflowFactory = InferenceWorkflow,
     workflow: Optional[Any] = None,
@@ -929,14 +1141,24 @@ def run_dual_view_inference_image(
         include_adapter_target=False,
         status_printer=status_printer,
     )
+    with Image.open(image_ref) as opened:
+        image = opened.convert("RGB")
     handoff = resolve_target_router_handoff(
         router_result,
         target_crop=crop,
         target_part=part,
+        image=image,
+        target_roi_backend=target_roi_backend,
+        grounding_dino_runner=grounding_dino_runner,
+        grounding_dino_model_id=grounding_dino_model_id,
+        grounding_dino_prompts=grounding_dino_prompts,
+        grounding_dino_box_threshold=grounding_dino_box_threshold,
+        grounding_dino_text_threshold=grounding_dino_text_threshold,
+        grounding_dino_max_candidates=grounding_dino_max_candidates,
+        device=device,
+        status_printer=status_printer,
     )
-    with Image.open(image_ref) as opened:
-        image = opened.convert("RGB")
-        roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
+    roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
     roi_quality_status = classify_roi_quality(bbox=sanitized_bbox, area_ratio=area_ratio)
     semantic_roi_match = bool(handoff.get("target_detection_found")) and handoff["crop"] == crop and handoff["part"] == part
     roi_eligible = roi_quality_status == "roi_ok" and roi_image is not None
@@ -1001,6 +1223,11 @@ def run_dual_view_inference_image(
         "roi_eligible": bool(roi_eligible),
         "selected_detection_source": str(handoff.get("selected_detection_source") or ""),
         "target_detection_found": bool(handoff.get("target_detection_found")),
+        "target_roi_backend": str(handoff.get("target_roi_backend") or ""),
+        "target_prompt": handoff.get("target_prompt"),
+        "target_detection_confidence": handoff.get("target_detection_confidence"),
+        "target_detection_source": str(handoff.get("target_detection_source") or ""),
+        "grounding_dino_candidate_count": int(handoff.get("grounding_dino_candidate_count", 0) or 0),
         "input_view": selected_view,
         "selected_view": selected_view,
         "diagnosis": selected_prediction.get("diagnosis"),
@@ -1033,6 +1260,13 @@ def run_dual_view_inference_folder(
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
     require_semantic_roi_match: bool = True,
+    target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
+    grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    grounding_dino_prompts: Optional[Sequence[str]] = None,
+    grounding_dino_box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    grounding_dino_text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    grounding_dino_max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    grounding_dino_runner: Optional[GroundingDinoRunner] = None,
     status_printer: Optional[StatusPrinter] = print,
 ) -> Dict[str, Any]:
     rows: list[Dict[str, Any]] = []
@@ -1059,6 +1293,13 @@ def run_dual_view_inference_folder(
                 return_ood=return_ood,
                 roi_confidence_margin=roi_confidence_margin,
                 require_semantic_roi_match=require_semantic_roi_match,
+                target_roi_backend=target_roi_backend,
+                grounding_dino_model_id=grounding_dino_model_id,
+                grounding_dino_prompts=grounding_dino_prompts,
+                grounding_dino_box_threshold=grounding_dino_box_threshold,
+                grounding_dino_text_threshold=grounding_dino_text_threshold,
+                grounding_dino_max_candidates=grounding_dino_max_candidates,
+                grounding_dino_runner=grounding_dino_runner,
                 status_printer=status_printer,
                 workflow=workflow,
             )
@@ -1649,6 +1890,12 @@ def main() -> int:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--adapter-root", type=Path)
     parser.add_argument("--no-label-from-parent", action="store_true")
+    parser.add_argument("--target-roi-backend", default=DEFAULT_TARGET_ROI_BACKEND)
+    parser.add_argument("--grounding-dino-model-id", default=DEFAULT_GROUNDING_DINO_MODEL_ID)
+    parser.add_argument("--grounding-dino-prompts", nargs="*", default=list(DEFAULT_GROUNDING_DINO_PROMPTS))
+    parser.add_argument("--grounding-dino-box-threshold", type=float, default=DEFAULT_GROUNDING_DINO_BOX_THRESHOLD)
+    parser.add_argument("--grounding-dino-text-threshold", type=float, default=DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD)
+    parser.add_argument("--grounding-dino-max-candidates", type=int, default=DEFAULT_GROUNDING_DINO_MAX_CANDIDATES)
     args = parser.parse_args()
 
     if args.ablation_name == "roi_quality_audit":
@@ -1670,6 +1917,12 @@ def main() -> int:
             config_env=args.config_env,
             device=args.device,
             adapter_root=args.adapter_root,
+            target_roi_backend=args.target_roi_backend,
+            grounding_dino_model_id=args.grounding_dino_model_id,
+            grounding_dino_prompts=args.grounding_dino_prompts,
+            grounding_dino_box_threshold=args.grounding_dino_box_threshold,
+            grounding_dino_text_threshold=args.grounding_dino_text_threshold,
+            grounding_dino_max_candidates=args.grounding_dino_max_candidates,
         )
         print(json.dumps(payload["summary"], indent=2))
         return 0

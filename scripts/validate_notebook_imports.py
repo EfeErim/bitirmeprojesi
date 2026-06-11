@@ -495,6 +495,11 @@ def test_roi_ablation_notebook_contract() -> None:
                 "REQUIRE_SEMANTIC_ROI_MATCH = True",
                 f"{notebook_name} should gate ROI by adapter crop/part semantics: {{snippet}}",
             )
+            _assert_contains(
+                sources.full_source,
+                "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
+                f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
+            )
         elif ablation_name == "dual_view_trained_adapter":
             _assert_contains(
                 sources.full_source,
