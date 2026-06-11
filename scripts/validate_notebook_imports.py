@@ -490,6 +490,11 @@ def test_roi_ablation_notebook_contract() -> None:
                 "run_dual_view_inference_folder(",
                 f"{notebook_name} should run the shared dual-view inference helper: {{snippet}}",
             )
+            _assert_contains(
+                sources.full_source,
+                "REQUIRE_SEMANTIC_ROI_MATCH = True",
+                f"{notebook_name} should gate ROI by adapter crop/part semantics: {{snippet}}",
+            )
         elif ablation_name == "dual_view_trained_adapter":
             _assert_contains(
                 sources.full_source,

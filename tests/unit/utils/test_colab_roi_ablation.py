@@ -367,11 +367,13 @@ def test_dual_view_inference_selects_roi_only_when_margin_clears(tmp_path: Path)
         adapter_crop="tomato",
         adapter_part="fruit",
         workflow_factory=DualViewWorkflow,
-        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
         status_printer=None,
         device="cpu",
     )
 
+    assert row["semantic_roi_match"] is True
+    assert row["roi_eligible"] is True
     assert row["selected_view"] == "router_primary_roi"
     assert row["diagnosis"] == "roi_label"
     assert row["full_diagnosis"] == "full_label"
@@ -396,6 +398,30 @@ def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path)
     )
 
     assert row["status"] == "fallback_full_image"
+    assert row["selected_view"] == "full_image"
+    assert row["diagnosis"] == "full_label"
+    assert row["roi_diagnosis"] is None
+    assert len(DualViewWorkflow.calls) == 1
+
+
+def test_dual_view_inference_rejects_semantic_mismatch_roi(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="full_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="eggplant", part="unknown", bbox=[10, 10, 50, 40]),
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["status"] == "semantic_mismatch_fallback"
+    assert row["semantic_roi_match"] is False
+    assert row["roi_eligible"] is False
     assert row["selected_view"] == "full_image"
     assert row["diagnosis"] == "full_label"
     assert row["roi_diagnosis"] is None

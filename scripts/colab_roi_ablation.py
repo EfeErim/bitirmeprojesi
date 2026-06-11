@@ -798,6 +798,7 @@ def run_dual_view_inference_image(
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
+    require_semantic_roi_match: bool = True,
     status_printer: Optional[StatusPrinter] = None,
     workflow_factory: WorkflowFactory = InferenceWorkflow,
     workflow: Optional[Any] = None,
@@ -826,6 +827,10 @@ def run_dual_view_inference_image(
         image = opened.convert("RGB")
         roi_image, sanitized_bbox, area_ratio = prepare_primary_roi(image, handoff["bbox"])
     roi_quality_status = classify_roi_quality(bbox=sanitized_bbox, area_ratio=area_ratio)
+    semantic_roi_match = handoff["crop"] == crop and handoff["part"] == part
+    roi_eligible = roi_quality_status == "roi_ok" and roi_image is not None
+    if require_semantic_roi_match:
+        roi_eligible = roi_eligible and semantic_roi_match
 
     full_prediction, full_latency_ms = _run_prediction(
         workflow,
@@ -836,7 +841,7 @@ def run_dual_view_inference_image(
     )
     roi_prediction: Optional[Dict[str, Any]] = None
     roi_latency_ms = 0.0
-    if roi_quality_status == "roi_ok" and roi_image is not None:
+    if roi_eligible:
         roi_prediction, roi_latency_ms = _run_prediction(
             workflow,
             roi_image,
@@ -855,7 +860,7 @@ def run_dual_view_inference_image(
         selected_prediction = roi_prediction
         status = str(roi_prediction.get("status", "success"))
     elif roi_prediction is None:
-        status = "fallback_full_image"
+        status = "semantic_mismatch_fallback" if require_semantic_roi_match and not semantic_roi_match else "fallback_full_image"
 
     full_ood = dict(full_prediction.get("ood_analysis", {}) or {})
     roi_ood = dict((roi_prediction or {}).get("ood_analysis", {}) or {})
@@ -875,6 +880,9 @@ def run_dual_view_inference_image(
         "bbox": sanitized_bbox,
         "bbox_area_ratio": float(area_ratio),
         "roi_quality_status": roi_quality_status,
+        "semantic_roi_match": semantic_roi_match,
+        "require_semantic_roi_match": bool(require_semantic_roi_match),
+        "roi_eligible": bool(roi_eligible),
         "input_view": selected_view,
         "selected_view": selected_view,
         "diagnosis": selected_prediction.get("diagnosis"),
@@ -906,6 +914,7 @@ def run_dual_view_inference_folder(
     adapter_root: Optional[str | Path] = None,
     return_ood: bool = True,
     roi_confidence_margin: float = 0.10,
+    require_semantic_roi_match: bool = True,
     status_printer: Optional[StatusPrinter] = print,
 ) -> Dict[str, Any]:
     rows: list[Dict[str, Any]] = []
@@ -931,6 +940,7 @@ def run_dual_view_inference_folder(
                 adapter_root=adapter_root,
                 return_ood=return_ood,
                 roi_confidence_margin=roi_confidence_margin,
+                require_semantic_roi_match=require_semantic_roi_match,
                 status_printer=status_printer,
                 workflow=workflow,
             )
