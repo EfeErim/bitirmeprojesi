@@ -16,7 +16,7 @@ Bu belge, part-aware ROI/bbox ablation hattinda ne denendigini, neyin calistigin
 
 ## Yapilanlar
 
-### Notebook 10-14 ROI Ablation Yuzeyi
+### Historical Notebook 10-14 ROI Ablation Yuzeyi
 
 - `10_ablation_full_image_baseline.ipynb`: full image baseline.
 - `11_ablation_primary_roi_inference.ipynb`: router primary bbox ile saf ROI inference.
@@ -25,6 +25,7 @@ Bu belge, part-aware ROI/bbox ablation hattinda ne denendigini, neyin calistigin
 - `14_ablation_mixed_full_roi_training.ipynb`: full + ROI mixed training deneyi.
 - Ortak mantik `scripts/colab_roi_ablation.py` icinde tutuldu.
 - Raporlar `docs/ablation_results/<condition>/` altina yaziliyor ve Colab'den repoya pushlanabiliyor.
+- Bu wrapper notebooklar sonradan silindi. Aktif ROI/bbox notebook yuzeyi yalnizca `16_ablation_dual_view_inference.ipynb`; eski rapor klasorleri historical evidence olarak tutuluyor.
 
 ### Grounding DINO Target-Aware ROI
 
@@ -182,7 +183,7 @@ Inference view policy de ayni view ailesini kullanmali:
 
 ### 4. Adapter Retrain Deneyi
 
-Notebook 17 veya yeni shared helper, gercek annotation manifesti ile su metrikleri uretmeli:
+Gelecekte eklenecek yeni shared helper/notebook, gercek annotation manifesti ile su metrikleri uretmeli:
 
 - full-only accuracy
 - ROI-only accuracy

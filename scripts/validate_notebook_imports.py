@@ -443,14 +443,7 @@ def test_roi_ablation_notebook_contract() -> None:
     from scripts.colab_roi_ablation import ABLATION_CONFIGS
 
     expected = {
-        "10_ablation_full_image_baseline.ipynb": "full_image_baseline",
-        "11_ablation_primary_roi_inference.ipynb": "primary_roi_inference",
-        "12_ablation_hybrid_roi_fallback.ipynb": "hybrid_roi_fallback",
-        "13_ablation_roi_trained_adapter.ipynb": "roi_trained_adapter",
-        "14_ablation_mixed_full_roi_training.ipynb": "mixed_full_roi_training",
-        "15_ablation_roi_quality_audit.ipynb": "roi_quality_audit",
         "16_ablation_dual_view_inference.ipynb": "dual_view_inference",
-        "17_ablation_dual_view_trained_adapter.ipynb": "dual_view_trained_adapter",
     }
     assert set(expected.values()).issubset(ABLATION_CONFIGS), "ROI ablation configs are missing notebook keys"
 
@@ -472,67 +465,36 @@ def test_roi_ablation_notebook_contract() -> None:
             "commit_and_push_ablation_results",
             f"{notebook_name} should commit and push its repo-visible output folder: {{snippet}}",
         )
-        if ablation_name in {"full_image_baseline", "primary_roi_inference", "hybrid_roi_fallback"}:
-            _assert_contains(
-                sources.full_source,
-                "run_ablation_folder(",
-                f"{notebook_name} should run the shared inference ablation helper: {{snippet}}",
-            )
-        elif ablation_name == "roi_quality_audit":
-            _assert_contains(
-                sources.full_source,
-                "run_roi_quality_audit_folder(",
-                f"{notebook_name} should run the shared ROI quality audit helper: {{snippet}}",
-            )
-        elif ablation_name == "dual_view_inference":
-            _assert_contains(
-                sources.full_source,
-                "run_dual_view_inference_folder(",
-                f"{notebook_name} should run the shared dual-view inference helper: {{snippet}}",
-            )
-            _assert_contains(
-                sources.full_source,
-                "REQUIRE_SEMANTIC_ROI_MATCH = True",
-                f"{notebook_name} should gate ROI by adapter crop/part semantics: {{snippet}}",
-            )
-            _assert_contains(
-                sources.full_source,
-                "FULL_CONFIDENCE_REVIEW_THRESHOLD = 0.70",
-                f"{notebook_name} should keep full image primary and use ROI as review evidence: {{snippet}}",
-            )
-            _assert_contains(
-                sources.full_source,
-                "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
-                f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
-            )
-            _assert_contains(
-                sources.full_source,
-                "GROUNDING_DINO_PROMPTS = ['tomato fruit.', 'a tomato fruit.'",
-                f"{notebook_name} should use Grounding DINO dot-terminated text prompts: {{snippet}}",
-            )
-            _assert_contains(
-                sources.full_source,
-                "GROUNDING_DINO_BOX_THRESHOLD = 0.15",
-                f"{notebook_name} should use the low-threshold detector sweep default: {{snippet}}",
-            )
-        elif ablation_name == "dual_view_trained_adapter":
-            _assert_contains(
-                sources.full_source,
-                "evaluate_dual_view_training_gate(",
-                f"{notebook_name} should run the shared dual-view training gate helper: {{snippet}}",
-            )
-        elif ablation_name == "roi_trained_adapter":
-            _assert_contains(
-                sources.full_source,
-                "run_roi_trained_adapter_ablation(",
-                f"{notebook_name} should run the shared ROI-only training ablation helper: {{snippet}}",
-            )
-        else:
-            _assert_contains(
-                sources.full_source,
-                "run_mixed_full_roi_training_ablation(",
-                f"{notebook_name} should run the shared mixed training ablation helper: {{snippet}}",
-            )
+        _assert_contains(
+            sources.full_source,
+            "run_dual_view_inference_folder(",
+            f"{notebook_name} should run the shared dual-view inference helper: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "REQUIRE_SEMANTIC_ROI_MATCH = True",
+            f"{notebook_name} should gate ROI by adapter crop/part semantics: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "FULL_CONFIDENCE_REVIEW_THRESHOLD = 0.70",
+            f"{notebook_name} should keep full image primary and use ROI as review evidence: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
+            f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "GROUNDING_DINO_PROMPTS = ['tomato fruit.', 'a tomato fruit.'",
+            f"{notebook_name} should use Grounding DINO dot-terminated text prompts: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "GROUNDING_DINO_BOX_THRESHOLD = 0.15",
+            f"{notebook_name} should use the low-threshold detector sweep default: {{snippet}}",
+        )
 
 
 def test_presentation_recording_notebook_contract() -> None:
@@ -1239,10 +1201,10 @@ CHECKS = (
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(
-        result_name="ROI Ablation Notebooks",
-        step_id="NB10_17_ROI_ABLATION",
-        description="Notebooks 10-17 part-aware SAM box ROI ablation contract",
-        success_message="ROI ablation notebooks wrap the shared helper surfaces",
+        result_name="ROI Evidence Notebook",
+        step_id="NB16_ROI_EVIDENCE",
+        description="Notebook 16 ROI/bbox evidence-gate contract",
+        success_message="Notebook 16 wraps the shared ROI evidence helper surface",
         failure_prefix="ROI ablation notebook contract failed",
         callback=test_roi_ablation_notebook_contract,
         requires_runtime_dependencies=False,

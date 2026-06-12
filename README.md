@@ -17,7 +17,7 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 - Notebook 5: [colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb)
 - Notebook 8: [colab_notebooks/8_auto_router_adapter_prediction.ipynb](colab_notebooks/8_auto_router_adapter_prediction.ipynb)
 - Notebook 9 presentation demo: [colab_notebooks/9_presentation_recording_demo.ipynb](colab_notebooks/9_presentation_recording_demo.ipynb)
-- Notebooks 10-14 ROI ablations: [colab_notebooks/10_ablation_full_image_baseline.ipynb](colab_notebooks/10_ablation_full_image_baseline.ipynb), [colab_notebooks/11_ablation_primary_roi_inference.ipynb](colab_notebooks/11_ablation_primary_roi_inference.ipynb), [colab_notebooks/12_ablation_hybrid_roi_fallback.ipynb](colab_notebooks/12_ablation_hybrid_roi_fallback.ipynb), [colab_notebooks/13_ablation_roi_trained_adapter.ipynb](colab_notebooks/13_ablation_roi_trained_adapter.ipynb), [colab_notebooks/14_ablation_mixed_full_roi_training.ipynb](colab_notebooks/14_ablation_mixed_full_roi_training.ipynb)
+- Notebook 16 ROI/bbox evidence gate: [colab_notebooks/16_ablation_dual_view_inference.ipynb](colab_notebooks/16_ablation_dual_view_inference.ipynb)
 - Training workflow: [src/workflows/training.py](src/workflows/training.py)
 - Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
 
@@ -25,7 +25,7 @@ Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It
 
 Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. Its preview cell runs the same canonical inference path once before recording, then its render-only recording cell immediately displays an audience-facing explanation of SAM3 region proposals, BioCLIP-2.5 routing, the safety gate, specialist adapter loading, the model prediction, and the OOD assessment.
 
-Notebooks 10-12 are inference-only part-aware SAM box ROI ablations. They compare full-image baseline, primary ROI crop, and hybrid ROI fallback behavior through `scripts/colab_roi_ablation.py` without changing production inference. Notebooks 13-14 reserve the second-phase ROI-training and mixed full+ROI training ablation contracts. Reports are written under `docs/ablation_results/<condition>/` so Colab-produced results can be committed and viewed on GitHub.
+Notebook 16 is the maintained ROI/bbox ablation surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. Historical ROI ablation reports remain under `docs/ablation_results/<condition>`.
 
 ## What the repo covers
 
