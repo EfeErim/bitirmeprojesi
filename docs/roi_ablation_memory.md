@@ -246,7 +246,7 @@ Kararlar:
 - Adapter final tahmini full image uzerinden verir.
 - ROI/bbox adapter sonucunu override etmez.
 - ROI sadece evidence/review sinyali olur.
-- Notebook 16 bu davranisin test yuzeyidir.
+- Notebook 16 bu davranisin test yuzeyidir ve tek `tomato__fruit` hedefe bagli degildir; matching prepared dataset + adapter export ciftlerini otomatik kesfedip coklu adapter hedefi olarak kosabilir.
 
 Basari kriteri:
 
@@ -417,7 +417,7 @@ Basari kriteri:
 ### Net Siralama
 
 1. Router eval set + router hata analizi.
-2. Notebook 16 evidence gate'i config-driven hale getirme.
+2. Notebook 16 multi-adapter sonuclarindan adapter-bazli evidence gate threshold analizi.
 3. Bbox annotation pilot manifest formati.
 4. Kucuk annotated bbox pilotu.
 5. Multi-view adapter retrain.

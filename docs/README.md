@@ -35,7 +35,7 @@ This repo is intentionally narrow. The fastest handoff path is:
 - Router payload contract: `src/shared/contracts.py`
 - Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 - Presentation recording demo: `colab_notebooks/9_presentation_recording_demo.ipynb`
-- ROI/bbox evidence notebook: `colab_notebooks/16_ablation_dual_view_inference.ipynb`
+- ROI/bbox evidence notebook: `colab_notebooks/16_ablation_dual_view_inference.ipynb` (multi-adapter target discovery)
 - ROI/bbox ablation memory: `docs/roi_ablation_memory.md`
 - ROI ablation reports: `docs/ablation_results/<condition>/`
 - Validation-only notebook surfaces: `colab_notebooks/6_train_all_continual_sd_lora_adapters.ipynb`, `colab_notebooks/7_ood_oe_quality.ipynb`

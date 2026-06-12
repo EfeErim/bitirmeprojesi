@@ -22,7 +22,7 @@ Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test h
 
 Notebook 9 is the screen-recording demo surface. It runs the same Notebook 1 and Notebook 8 path, suppresses technical logs, then renders an audience-facing presentation panel without changing inference behavior.
 
-Notebook 16 is the maintained ROI/bbox evidence-gate surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags.
+Notebook 16 is the maintained ROI/bbox evidence-gate surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. By default it discovers matching prepared runtime datasets and Colab adapter exports, so it can evaluate multiple crop/part adapters instead of only one hard-coded target.
 
 Two additional notebook surfaces are kept for maintenance and regression checks:
 
@@ -78,7 +78,7 @@ The maintained router payload does not export pixel masks, so Notebook 9 does no
 
 ### Notebook 16
 
-Notebook 16 is the maintained ROI/bbox evidence-gate ablation surface. It keeps the whole-image adapter prediction as the final decision, then uses router/Grounding DINO bbox evidence to write review fields such as `roi_evidence_status`, `requires_review`, and `review_reasons`.
+Notebook 16 is the maintained ROI/bbox evidence-gate ablation surface. It keeps the whole-image adapter prediction as the final decision, then uses router/Grounding DINO bbox evidence to write review fields such as `roi_evidence_status`, `requires_review`, and `review_reasons`. Its `TARGETS` list can be filled manually, or left empty to auto-discover matching `data/prepared_runtime_datasets/<crop>__<part>` and `runs/<crop>/<part>/*/outputs/colab_notebook_training` pairs.
 
 Historical ROI ablation reports remain under `docs/ablation_results/<condition>/`, but the older one-condition wrapper notebooks were removed to keep the Colab surface focused.
 

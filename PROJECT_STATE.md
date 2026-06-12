@@ -9,7 +9,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Canonical workflows live in `src/workflows/training.py` and `src/workflows/inference.py`.
 - Maintained notebook surfaces are 0, 1, 2, 3, 5, and 8; Notebook 4 is a convenience wrapper, and Notebooks 6/7 are validation surfaces.
 - Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. It renders real router and adapter payload details without changing canonical inference behavior.
-- Notebook 16 is the maintained ROI/bbox evidence-gate ablation surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. Historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
+- Notebook 16 is the maintained ROI/bbox evidence-gate ablation surface. It keeps full-image adapter prediction as the final decision, uses router/Grounding DINO bbox evidence only for review flags, and can auto-discover matching prepared datasets plus Colab adapter exports for multi-adapter evaluation. Historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
 - Notebook 9 uses `requirements_presentation_colab.txt`; keep `torchao==0.17.0` in that lightweight profile because Colab's older preinstalled torchao can break PEFT adapter loading during warm-up.
 - The repo is pip-based and uses `./scripts/python.cmd` on Windows so the local `.venv` is preferred.
 - CI already covers notebook/import validation, config schema checks, OOD evidence consistency, router calibration stability, adapter smoke tests, metadata completeness, dataset integrity, notebook outputs, and benchmark capture.
@@ -23,6 +23,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Removed the obsolete one-condition ROI wrapper notebooks and kept Notebook 16 as the single active ROI/bbox evidence-gate notebook. Production inference remains unchanged; historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
 - Notebook 16 target-aware ROI fallback uses Grounding DINO prompts in the Hugging Face lowercase/dot-terminated text-query format and records `grounding_dino_status`/`grounding_dino_error` in ablation rows so detector failures are visible instead of silently becoming zero-candidate fallbacks.
 - Notebook 16 now treats full-image adapter prediction as the final decision and uses router/Grounding DINO ROI only as evidence for review flags (`roi_evidence_status`, `requires_review`, `review_reasons`) after ROI scoring underperformed full-image scoring.
+- Notebook 16 is no longer tied to `tomato__fruit`; it can evaluate multiple crop/part adapters with target-specific Grounding DINO prompts generated from each target crop and part.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.

@@ -163,6 +163,28 @@ def _normalize_grounding_prompts(prompts: Optional[Sequence[str]]) -> tuple[str,
     return tuple(prompt for prompt in normalized if prompt)
 
 
+def build_grounding_dino_prompts(crop: str, part: str) -> tuple[str, ...]:
+    """Build lowercase, dot-terminated Grounding DINO prompts for one crop/part target."""
+    crop_name = _normalize_text(crop)
+    part_name = _normalize_text(part)
+    prompts: list[str] = []
+    if crop_name and part_name:
+        prompts.extend(
+            [
+                f"{crop_name} {part_name}",
+                f"a {crop_name} {part_name}",
+                f"{crop_name} {part_name}s",
+                f"{part_name} on {crop_name} plant",
+                f"{crop_name} plant {part_name}",
+            ]
+        )
+    if crop_name:
+        prompts.append(f"{crop_name} plant")
+    if part_name:
+        prompts.append(part_name)
+    return _normalize_grounding_prompts(prompts)
+
+
 def _batch_input_ids(inputs: Any) -> Any:
     if hasattr(inputs, "input_ids"):
         return inputs.input_ids
@@ -1437,6 +1459,210 @@ def run_dual_view_inference_folder(
         output_dir=output_dir or ABLATION_CONFIGS["dual_view_inference"]["output_dir"],
         ablation_name="dual_view_inference",
     )
+
+
+def _split_dataset_key(dataset_key: str) -> tuple[str, str]:
+    key = str(dataset_key or "").strip().lower()
+    if "__" in key:
+        crop_name, part_name = key.split("__", 1)
+        return crop_name, part_name
+    return key, ""
+
+
+def _target_id(target: Dict[str, Any]) -> str:
+    dataset_key = str(target.get("dataset_key") or "").strip()
+    if dataset_key:
+        return dataset_key
+    crop = _normalize_text(target.get("adapter_crop") or target.get("crop"))
+    part = _normalize_text(target.get("adapter_part") or target.get("part"))
+    return f"{crop}__{part}" if part else crop
+
+
+def _latest_colab_adapter_root(runs_root: Path, *, crop: str, part: str) -> Optional[Path]:
+    part_root = runs_root / _normalize_text(crop) / _normalize_text(part)
+    if not part_root.is_dir():
+        return None
+    candidates = [
+        path / "outputs" / "colab_notebook_training"
+        for path in part_root.iterdir()
+        if path.is_dir() and (path / "outputs" / "colab_notebook_training").is_dir()
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: (path.stat().st_mtime, path.as_posix()))
+
+
+def normalize_dual_view_target(
+    target: Dict[str, Any],
+    *,
+    repo_root: str | Path,
+    dataset_root: str | Path = "data/prepared_runtime_datasets",
+    runs_root: str | Path = "runs",
+) -> Dict[str, Any]:
+    """Resolve one Notebook 16 target into concrete dataset, adapter, and prompt fields."""
+    root = Path(repo_root)
+    dataset_key = str(target.get("dataset_key") or "").strip().lower()
+    crop = _normalize_text(target.get("adapter_crop") or target.get("crop"))
+    part = _normalize_text(target.get("adapter_part") or target.get("part"))
+    if dataset_key and (not crop or not part):
+        inferred_crop, inferred_part = _split_dataset_key(dataset_key)
+        crop = crop or inferred_crop
+        part = part or inferred_part
+    if not dataset_key and crop and part:
+        dataset_key = f"{crop}__{part}"
+    if not dataset_key or not crop or not part:
+        raise ValueError(f"Dual-view target must define dataset_key or crop/part: {target!r}")
+
+    image_dir = Path(target.get("image_dir") or root / dataset_root / dataset_key / "test")
+    adapter_root_value = target.get("adapter_root")
+    adapter_root = Path(adapter_root_value) if adapter_root_value else _latest_colab_adapter_root(root / runs_root, crop=crop, part=part)
+    prompts = tuple(target.get("grounding_dino_prompts") or target.get("prompts") or build_grounding_dino_prompts(crop, part))
+    return {
+        "target_id": str(target.get("target_id") or dataset_key),
+        "dataset_key": dataset_key,
+        "image_dir": image_dir,
+        "adapter_root": adapter_root,
+        "adapter_crop": crop,
+        "adapter_part": part,
+        "grounding_dino_prompts": prompts,
+    }
+
+
+def discover_dual_view_targets(
+    repo_root: str | Path,
+    *,
+    dataset_root: str | Path = "data/prepared_runtime_datasets",
+    runs_root: str | Path = "runs",
+    include_dataset_keys: Optional[Sequence[str]] = None,
+) -> list[Dict[str, Any]]:
+    """Discover prepared crop/part datasets that also have a matching Colab adapter export."""
+    root = Path(repo_root)
+    dataset_base = root / dataset_root
+    allowed = {str(key).strip().lower() for key in include_dataset_keys or [] if str(key).strip()}
+    targets: list[Dict[str, Any]] = []
+    if not dataset_base.is_dir():
+        return targets
+    for dataset_dir in sorted(path for path in dataset_base.iterdir() if path.is_dir()):
+        dataset_key = dataset_dir.name.strip().lower()
+        if "__" not in dataset_key:
+            continue
+        if allowed and dataset_key not in allowed:
+            continue
+        crop, part = _split_dataset_key(dataset_key)
+        image_dir = dataset_dir / "test"
+        adapter_root = _latest_colab_adapter_root(root / runs_root, crop=crop, part=part)
+        if not image_dir.is_dir() or adapter_root is None:
+            continue
+        targets.append(
+            {
+                "target_id": dataset_key,
+                "dataset_key": dataset_key,
+                "image_dir": image_dir,
+                "adapter_root": adapter_root,
+                "adapter_crop": crop,
+                "adapter_part": part,
+                "grounding_dino_prompts": build_grounding_dino_prompts(crop, part),
+            }
+        )
+    return targets
+
+
+DualViewFolderRunner = Callable[..., Dict[str, Any]]
+
+
+def run_dual_view_inference_targets(
+    *,
+    repo_root: str | Path,
+    targets: Optional[Sequence[Dict[str, Any]]] = None,
+    output_dir: Optional[str | Path] = None,
+    dataset_root: str | Path = "data/prepared_runtime_datasets",
+    runs_root: str | Path = "runs",
+    include_dataset_keys: Optional[Sequence[str]] = None,
+    max_targets: Optional[int] = None,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    return_ood: bool = True,
+    roi_confidence_margin: float = 0.10,
+    full_confidence_review_threshold: float = 0.70,
+    require_semantic_roi_match: bool = True,
+    target_roi_backend: str = DEFAULT_TARGET_ROI_BACKEND,
+    grounding_dino_model_id: str = DEFAULT_GROUNDING_DINO_MODEL_ID,
+    grounding_dino_box_threshold: float = DEFAULT_GROUNDING_DINO_BOX_THRESHOLD,
+    grounding_dino_text_threshold: float = DEFAULT_GROUNDING_DINO_TEXT_THRESHOLD,
+    grounding_dino_max_candidates: int = DEFAULT_GROUNDING_DINO_MAX_CANDIDATES,
+    grounding_dino_runner: Optional[GroundingDinoRunner] = None,
+    status_printer: Optional[StatusPrinter] = print,
+    folder_runner: DualViewFolderRunner = run_dual_view_inference_folder,
+) -> Dict[str, Any]:
+    """Run Notebook 16 policy for multiple crop/part adapters and write one aggregate report."""
+    root = Path(repo_root)
+    output_root = Path(output_dir or root / ABLATION_CONFIGS["dual_view_inference"]["output_dir"])
+    raw_targets = list(targets or discover_dual_view_targets(
+        root,
+        dataset_root=dataset_root,
+        runs_root=runs_root,
+        include_dataset_keys=include_dataset_keys,
+    ))
+    resolved_targets = [
+        normalize_dual_view_target(target, repo_root=root, dataset_root=dataset_root, runs_root=runs_root)
+        for target in raw_targets
+    ]
+    if max_targets is not None:
+        resolved_targets = resolved_targets[: max(0, int(max_targets))]
+    if not resolved_targets:
+        raise ValueError("No dual-view targets were found. Provide TARGETS or prepare matching datasets/adapters.")
+
+    aggregate_rows: list[Dict[str, Any]] = []
+    target_reports: list[Dict[str, Any]] = []
+    for index, target in enumerate(resolved_targets, start=1):
+        target_id = _target_id(target)
+        adapter_root = target.get("adapter_root")
+        if adapter_root is None:
+            raise FileNotFoundError(f"Adapter root not found for target={target_id}")
+        _emit_status(status_printer, f"[DUAL_VIEW_TARGET] {index}/{len(resolved_targets)} target={target_id}")
+        report = folder_runner(
+            target["image_dir"],
+            output_dir=output_root / target_id,
+            adapter_crop=target["adapter_crop"],
+            adapter_part=target["adapter_part"],
+            config_env=config_env,
+            device=device,
+            adapter_root=adapter_root,
+            return_ood=return_ood,
+            roi_confidence_margin=roi_confidence_margin,
+            full_confidence_review_threshold=full_confidence_review_threshold,
+            require_semantic_roi_match=require_semantic_roi_match,
+            target_roi_backend=target_roi_backend,
+            grounding_dino_model_id=grounding_dino_model_id,
+            grounding_dino_prompts=target["grounding_dino_prompts"],
+            grounding_dino_box_threshold=grounding_dino_box_threshold,
+            grounding_dino_text_threshold=grounding_dino_text_threshold,
+            grounding_dino_max_candidates=grounding_dino_max_candidates,
+            grounding_dino_runner=grounding_dino_runner,
+            status_printer=status_printer,
+        )
+        rows = [dict(row, target_id=target_id, dataset_key=target["dataset_key"], adapter_root=str(adapter_root)) for row in report.get("rows", [])]
+        aggregate_rows.extend(rows)
+        target_reports.append(
+            {
+                "target_id": target_id,
+                "dataset_key": target["dataset_key"],
+                "adapter_crop": target["adapter_crop"],
+                "adapter_part": target["adapter_part"],
+                "image_dir": str(target["image_dir"]),
+                "adapter_root": str(adapter_root),
+                "grounding_dino_prompts": list(target["grounding_dino_prompts"]),
+                "summary": report.get("summary", {}),
+            }
+        )
+
+    aggregate = write_report(aggregate_rows, output_dir=output_root, ablation_name="dual_view_inference")
+    aggregate["targets"] = target_reports
+    (output_root / "multi_target_report.json").write_text(
+        json.dumps(aggregate, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    return aggregate
 
 
 def _copy_image_file(source: Path, destination: Path) -> None:

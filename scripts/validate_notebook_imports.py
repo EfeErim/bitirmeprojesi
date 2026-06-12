@@ -467,8 +467,18 @@ def test_roi_ablation_notebook_contract() -> None:
         )
         _assert_contains(
             sources.full_source,
-            "run_dual_view_inference_folder(",
-            f"{notebook_name} should run the shared dual-view inference helper: {{snippet}}",
+            "run_dual_view_inference_targets(",
+            f"{notebook_name} should run the shared multi-target dual-view inference helper: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "discover_dual_view_targets(",
+            f"{notebook_name} should discover matching datasets/adapters instead of pinning tomato__fruit: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "TARGETS = []",
+            f"{notebook_name} should allow explicit multi-adapter target overrides: {{snippet}}",
         )
         _assert_contains(
             sources.full_source,
@@ -485,10 +495,10 @@ def test_roi_ablation_notebook_contract() -> None:
             "TARGET_ROI_BACKEND = 'router_then_grounding_dino'",
             f"{notebook_name} should enable target-aware Grounding DINO ROI fallback: {{snippet}}",
         )
-        _assert_contains(
+        _assert_not_contains(
             sources.full_source,
-            "GROUNDING_DINO_PROMPTS = ['tomato fruit.', 'a tomato fruit.'",
-            f"{notebook_name} should use Grounding DINO dot-terminated text prompts: {{snippet}}",
+            "GROUNDING_DINO_PROMPTS = ['tomato fruit.",
+            f"{notebook_name} should not hard-code tomato-only Grounding DINO prompts: {{snippet}}",
         )
         _assert_contains(
             sources.full_source,

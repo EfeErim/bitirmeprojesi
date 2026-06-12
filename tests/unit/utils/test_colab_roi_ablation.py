@@ -216,6 +216,69 @@ def test_grounding_dino_prompt_normalization_matches_transformers_contract():
     assert prompts == ("tomato fruit.", "fruit on tomato plant.")
 
 
+def test_grounding_dino_prompts_are_built_from_crop_and_part():
+    prompts = roi_ablation.build_grounding_dino_prompts("Grape", "Leaf")
+
+    assert prompts[:4] == ("grape leaf.", "a grape leaf.", "grape leafs.", "leaf on grape plant.")
+    assert "tomato fruit." not in prompts
+
+
+def test_discover_dual_view_targets_resolves_all_matching_dataset_adapter_pairs(tmp_path: Path):
+    for dataset_key in ("tomato__fruit", "grape__leaf"):
+        _write_image(tmp_path / "data" / "prepared_runtime_datasets" / dataset_key / "test" / "class_a" / "sample.jpg")
+    (tmp_path / "runs" / "tomato" / "fruit" / "old" / "outputs" / "colab_notebook_training").mkdir(parents=True)
+    latest = tmp_path / "runs" / "tomato" / "fruit" / "new" / "outputs" / "colab_notebook_training"
+    latest.mkdir(parents=True)
+    (tmp_path / "runs" / "grape" / "leaf" / "only" / "outputs" / "colab_notebook_training").mkdir(parents=True)
+
+    targets = roi_ablation.discover_dual_view_targets(tmp_path)
+
+    assert [target["dataset_key"] for target in targets] == ["grape__leaf", "tomato__fruit"]
+    tomato = next(target for target in targets if target["dataset_key"] == "tomato__fruit")
+    assert tomato["adapter_root"] == latest
+    assert tomato["adapter_crop"] == "tomato"
+    assert tomato["adapter_part"] == "fruit"
+    assert "tomato fruit." in tomato["grounding_dino_prompts"]
+
+
+def test_run_dual_view_inference_targets_writes_aggregate_report(tmp_path: Path):
+    _write_image(tmp_path / "data" / "prepared_runtime_datasets" / "tomato__fruit" / "test" / "class_a" / "sample.jpg")
+    adapter_root = tmp_path / "runs" / "tomato" / "fruit" / "run" / "outputs" / "colab_notebook_training"
+    adapter_root.mkdir(parents=True)
+    calls = []
+
+    def fake_folder_runner(image_dir, **kwargs):
+        calls.append({"image_dir": image_dir, **kwargs})
+        row = {
+            "ablation_name": "dual_view_inference",
+            "image_path": str(Path(image_dir) / "class_a" / "sample.jpg"),
+            "expected_label": "class_a",
+            "crop": kwargs["adapter_crop"],
+            "part": kwargs["adapter_part"],
+            "diagnosis": "class_a",
+            "status": "success",
+        }
+        return {
+            "summary": {"sample_count": 1, "comparable_count": 1, "accuracy": 1.0, "macro_f1": 1.0},
+            "rows": [row],
+        }
+
+    report = roi_ablation.run_dual_view_inference_targets(
+        repo_root=tmp_path,
+        output_dir=tmp_path / "reports",
+        status_printer=None,
+        folder_runner=fake_folder_runner,
+    )
+
+    assert len(calls) == 1
+    assert calls[0]["adapter_crop"] == "tomato"
+    assert calls[0]["adapter_part"] == "fruit"
+    assert calls[0]["grounding_dino_prompts"][0] == "tomato fruit."
+    assert report["summary"]["accuracy"] == 1.0
+    assert report["rows"][0]["dataset_key"] == "tomato__fruit"
+    assert (tmp_path / "reports" / "multi_target_report.json").is_file()
+
+
 def test_primary_roi_ablation_skips_without_fallback_when_bbox_missing(tmp_path: Path):
     FakeWorkflow.calls.clear()
     image_path = _write_image(tmp_path / "leaf.jpg")
