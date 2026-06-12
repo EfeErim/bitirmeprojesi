@@ -222,3 +222,221 @@ Bu hattin dogru yonu:
 Ana prensip:
 
 Inference'da adaptere hangi view gosterilecekse, training'de de ayni view ailesi gosterilecek. Aksi halde tekrar ayni domain shift problemi yasanir.
+
+## Sistemi Calistirmaya Goturen Roadmap
+
+Bu roadmap rapor/sunum odakli degil, sistemin gercek kullanimda daha guvenilir calismasi icindir.
+
+### 1. Current Best Pipeline'i Sabitle
+
+Su an production'a en yakin aday:
+
+```text
+image
+-> router crop/part
+-> adapter full-image prediction
+-> router/Grounding DINO bbox evidence
+-> review gate
+-> OOD/readiness gate
+-> final response
+```
+
+Kararlar:
+
+- Adapter final tahmini full image uzerinden verir.
+- ROI/bbox adapter sonucunu override etmez.
+- ROI sadece evidence/review sinyali olur.
+- Notebook 16 bu davranisin test yuzeyidir.
+
+Basari kriteri:
+
+- Full-image accuracy korunur.
+- Review rate makul kalir.
+- Yanlislarin anlamli kismi review'a duser.
+- Grounding DINO error uretmez.
+
+### 2. Router Dogrulugunu Artir
+
+Router yanlis bitki/parca ararsa adapter veya bbox kalitesi tek basina sistemi kurtarmaz.
+
+Yapilacaklar:
+
+- Router eval set olustur:
+  - `image_path`
+  - `expected_crop`
+  - `expected_part`
+  - `target_object_present`
+- Router metrikleri:
+  - crop accuracy
+  - part accuracy
+  - target bbox found rate
+  - wrong crop rate
+  - unknown/abstain rate
+- Router yanlis crop verirse adapter cagrilmaz.
+- Crop dogru ama part belirsizse explicit fallback/abstain policy uygulanir.
+- Grounding DINO sadece target-aware fallback olarak kullanilir.
+
+Basari kriteri:
+
+- Wrong adapter load minimuma iner.
+- `part=unknown` sessizce adapter inference'a gitmez.
+- Router/Grounding DINO target-compatible bbox evidence uretir.
+
+### 3. Evidence Gate'i Kalibre Et
+
+Mevcut gate elle yazilmis konservatif policy'dir:
+
+- `low_full_confidence`
+- `target_detection_missing`
+- `grounding_dino_error`
+- `low_full_confidence + roi_conflict`
+- `low_full_confidence + roi_too_large`
+
+Yapilacaklar:
+
+- Validation set uzerinde threshold search:
+  - full confidence threshold
+  - OOD score threshold
+  - bbox area thresholds
+  - ROI/full disagreement threshold
+- Optimize edilecek hedef:
+  - yanlis tahmin yakalama orani yuksek
+  - gereksiz review orani dusuk
+- Threshold'lar config-driven olacak; hardcoded kalmayacak.
+
+Basari kriteri:
+
+- Review rate kontrollu.
+- Wrong capture rate yuksek.
+- Threshold'lar val/test ayrimiyla olculmus.
+
+### 4. Data/BBox Annotation Pilot
+
+Adapteri bbox'a gore egitmek isteniyorsa gercek annotation gerekir. Pseudo bbox ana training label'i gibi kullanilmayacak.
+
+Yapilacaklar:
+
+- Kucuk ama temiz bbox pilot set:
+  - sinif basina yaklasik 20-30 image
+  - split bilgisi korunmus train/val/test secimi
+- Annotation tipleri:
+  - `plant_part`
+  - `symptom_region`
+  - `whole_plant`
+- Annotation kalite alanlari:
+  - `ok`
+  - `uncertain`
+  - `occluded`
+  - `multi_object`
+  - `label_transfer_unsafe`
+
+Basari kriteri:
+
+- Bbox crop gercekten image label'ini tasiyor mu olculur.
+- Semptom gorunmeyen crop training'e sokulmaz veya `label_transfer_unsafe` olur.
+- Hangi bbox tipinin ise yaradigi anlasilir.
+
+### 5. Domain-Shift-Safe Adapter Retrain
+
+Tekrar egitim yapilacaksa kural:
+
+```text
+training view policy == inference view policy
+```
+
+Training view set:
+
+- full image
+- padded plant-part bbox
+- padded symptom bbox
+- context ROI
+
+Inference view set ayni aileyi kullanir:
+
+- full image prediction
+- bbox/context ROI prediction
+- evidence aggregation
+- review/OOD gate
+
+Ilk retrain stratejisi:
+
+- ROI-only degil.
+- Multi-view trained adapter.
+- Final karar baslangicta yine full-primary.
+- ROI prediction once calibrated evidence olarak denenir.
+
+Basari kriteri:
+
+- Full-only baseline dusmez.
+- Multi-view model full baseline'i gecer veya yanlislari daha iyi flagler.
+- OOD calibration yeniden yapilir.
+- `production_readiness.json` yeniden uretilir.
+
+### 6. OOD ve Readiness'i Yeniden Kalibre Et
+
+Pipeline veya adapter degistikce OOD davranisi da degisebilir.
+
+Yapilacaklar:
+
+- Her ciddi adapter/pipeline degisiminden sonra:
+  - OOD calibration
+  - OE check
+  - readiness report
+  - `production_readiness.json`
+- OOD sadece adapter confidence ile degil, router/evidence sinyalleriyle birlikte yorumlanir.
+
+Basari kriteri:
+
+- Known-class accuracy iyi.
+- Unknown/OOD rejection mantikli.
+- Readiness dosyasi yeni pipeline'a ait.
+
+### 7. Production Runtime'a Tasi
+
+Notebook sonucu iyi cikinca logic notebookta kalmayacak.
+
+Yapilacaklar:
+
+- Notebook 16 evidence gate logic'i canonical runtime'a tasinir:
+  - uygun `src/pipeline` veya workflow katmani
+- Notebook 16 sadece wrapper olur.
+- Test senaryolari:
+  - router wrong crop
+  - bbox missing
+  - Grounding DINO error
+  - low confidence
+  - ROI conflict
+  - OOD
+  - adapter missing
+
+Basari kriteri:
+
+- Colab notebook, CLI ve runtime ayni karari uretir.
+- Production inference davranisi testle korunur.
+
+### Net Siralama
+
+1. Router eval set + router hata analizi.
+2. Notebook 16 evidence gate'i config-driven hale getirme.
+3. Bbox annotation pilot manifest formati.
+4. Kucuk annotated bbox pilotu.
+5. Multi-view adapter retrain.
+6. OOD/readiness recalibration.
+7. Runtime entegrasyonu.
+
+### En Yakin Aksiyon
+
+Bir sonraki teknik is:
+
+```text
+Router + evidence gate evaluation analyzer
+```
+
+Yeni notebook acmadan once `scripts/colab_roi_ablation.py` icine aggregate analyzer eklemek daha temizdir. Notebook 16 sonucu uzerinden su ayrim yapilmalidir:
+
+- router hatasi mi?
+- bbox hatasi mi?
+- adapter hatasi mi?
+- confidence/OOD hatasi mi?
+
+Bu ayrim yapilmadan retrain'e girilirse tekrar kor ilerlenir.
