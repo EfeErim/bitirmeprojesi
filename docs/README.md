@@ -24,6 +24,7 @@ This repo is intentionally narrow. The fastest handoff path is:
 - [architecture/overview.md](architecture/overview.md): training and inference flow, config flow, artifact contracts, file responsibility map
 - [architecture/code_organization_map.md](architecture/code_organization_map.md): repo-wide source boundaries for `src/`, scripts, notebook helpers, tests, configs, and docs
 - [SOTA_AUTOMATION_GUIDE.md](SOTA_AUTOMATION_GUIDE.md): continuous automation strategy grounded in literature; recommended cascade by tier and ROI
+- [roi_ablation_memory.md](roi_ablation_memory.md): current ROI/bbox/router/adapter ablation state, decisions, and next-step plan
 
 ## Fast Reference
 
@@ -35,6 +36,7 @@ This repo is intentionally narrow. The fastest handoff path is:
 - Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
 - Presentation recording demo: `colab_notebooks/9_presentation_recording_demo.ipynb`
 - ROI ablation notebooks: `colab_notebooks/10_ablation_full_image_baseline.ipynb` through `colab_notebooks/14_ablation_mixed_full_roi_training.ipynb`
+- ROI/bbox ablation memory: `docs/roi_ablation_memory.md`
 - ROI ablation reports: `docs/ablation_results/<condition>/`
 - Validation-only notebook surfaces: `colab_notebooks/6_train_all_continual_sd_lora_adapters.ipynb`, `colab_notebooks/7_ood_oe_quality.ipynb`
 - Optional plantness input guard config: `inference.input_guard`
