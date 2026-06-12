@@ -78,6 +78,7 @@ Yeni politika:
 - Final tahmin her zaman full-image adapter prediction.
 - ROI prediction varsa sadece evidence olarak raporlanir.
 - ROI ile full image celisirse sonuc degismez; `requires_review=True` yazilir.
+- Review policy sonradan sikilastirildi: `roi_too_large`, `roi_too_small`, `semantic_mismatch`, `roi_conflict` ve `roi_confidence_leads` tek basina review nedeni degildir. Bu sinyaller yalnizca `low_full_confidence` ile birlesince review reason olarak yazilir. `target_detection_missing` ve `grounding_dino_error` dogrudan review nedenidir.
 - Yeni alanlar:
   - `final_view`
   - `roi_evidence_status`

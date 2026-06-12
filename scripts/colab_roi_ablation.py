@@ -1281,26 +1281,40 @@ def run_dual_view_inference_image(
     status = str(full_prediction.get("status", "success"))
     roi_evidence_status = "not_evaluated"
     review_reasons: list[str] = []
+    target_detection_missing = False
+    semantic_mismatch = False
     if roi_prediction is None:
         if str(handoff.get("selected_detection_source") or "") == "target_detection_missing":
             roi_evidence_status = "target_detection_missing"
-            review_reasons.append("target_detection_missing")
+            target_detection_missing = True
         elif require_semantic_roi_match and not semantic_roi_match:
             roi_evidence_status = "semantic_mismatch"
-            review_reasons.append("semantic_mismatch")
+            semantic_mismatch = True
         else:
             roi_evidence_status = roi_quality_status
-            if roi_quality_status != "roi_ok":
-                review_reasons.append(roi_quality_status)
+    roi_conflicts_with_full = False
+    roi_confidence_leads = False
     if roi_prediction is not None and full_prediction.get("diagnosis") == roi_prediction.get("diagnosis"):
         roi_evidence_status = "supports_full"
     elif roi_prediction is not None:
         roi_evidence_status = "conflicts_with_full"
-        review_reasons.append("roi_conflict")
-        if roi_confidence >= full_confidence + float(roi_confidence_margin):
-            review_reasons.append("roi_confidence_leads")
-    if full_confidence < float(full_confidence_review_threshold):
+        roi_conflicts_with_full = True
+        roi_confidence_leads = roi_confidence >= full_confidence + float(roi_confidence_margin)
+    low_full_confidence = full_confidence < float(full_confidence_review_threshold)
+    if target_detection_missing:
+        review_reasons.append("target_detection_missing")
+    if str(handoff.get("grounding_dino_status") or "") == "error":
+        review_reasons.append("grounding_dino_error")
+    if low_full_confidence:
         review_reasons.append("low_full_confidence")
+        if roi_quality_status != "roi_ok":
+            review_reasons.append(roi_quality_status)
+        if semantic_mismatch:
+            review_reasons.append("semantic_mismatch")
+        if roi_conflicts_with_full:
+            review_reasons.append("roi_conflict")
+            if roi_confidence_leads:
+                review_reasons.append("roi_confidence_leads")
 
     full_ood = dict(full_prediction.get("ood_analysis", {}) or {})
     roi_ood = dict((roi_prediction or {}).get("ood_analysis", {}) or {})

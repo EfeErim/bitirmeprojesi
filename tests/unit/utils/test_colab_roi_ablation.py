@@ -558,7 +558,7 @@ def test_roi_quality_audit_reports_router_mismatch_and_missing_roi(tmp_path: Pat
     assert summary["crop_mismatch_rate"] == 1.0
 
 
-def test_dual_view_inference_keeps_full_image_primary_and_flags_roi_conflict(tmp_path: Path):
+def test_dual_view_inference_keeps_full_image_primary_without_review_for_roi_conflict_alone(tmp_path: Path):
     DualViewWorkflow.calls.clear()
     GroundingDinoMock.reset()
     image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
@@ -584,11 +584,35 @@ def test_dual_view_inference_keeps_full_image_primary_and_flags_roi_conflict(tmp
     assert row["full_diagnosis"] == "full_label"
     assert row["roi_diagnosis"] == "roi_label"
     assert row["roi_evidence_status"] == "conflicts_with_full"
-    assert row["requires_review"] is True
-    assert row["review_reasons"] == "roi_conflict;roi_confidence_leads"
+    assert row["requires_review"] is False
+    assert row["review_reasons"] == ""
     assert row["dual_view_disagreement"] is True
     assert len(DualViewWorkflow.calls) == 2
     assert GroundingDinoMock.calls == []
+
+
+def test_dual_view_inference_flags_roi_conflict_when_full_confidence_is_low(tmp_path: Path):
+    DualViewWorkflow.calls.clear()
+    GroundingDinoMock.reset()
+    image_path = _write_image(tmp_path / "class_a" / "sample.jpg")
+
+    row = roi_ablation.run_dual_view_inference_image(
+        image_path,
+        expected_label="roi_label",
+        adapter_crop="tomato",
+        adapter_part="fruit",
+        workflow_factory=DualViewWorkflow,
+        router_runner=lambda *args, **kwargs: _router_result(crop="tomato", part="fruit", bbox=[10, 10, 50, 40]),
+        grounding_dino_runner=GroundingDinoMock.run,
+        full_confidence_review_threshold=0.80,
+        status_printer=None,
+        device="cpu",
+    )
+
+    assert row["selected_view"] == "full_image"
+    assert row["roi_evidence_status"] == "conflicts_with_full"
+    assert row["requires_review"] is True
+    assert row["review_reasons"] == "low_full_confidence;roi_conflict;roi_confidence_leads"
 
 
 def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path):
@@ -609,8 +633,8 @@ def test_dual_view_inference_falls_back_to_full_when_roi_missing(tmp_path: Path)
     assert row["status"] == "success"
     assert row["selected_view"] == "full_image"
     assert row["roi_evidence_status"] == "roi_missing"
-    assert row["requires_review"] is True
-    assert row["review_reasons"] == "roi_missing"
+    assert row["requires_review"] is False
+    assert row["review_reasons"] == ""
     assert row["diagnosis"] == "full_label"
     assert row["roi_diagnosis"] is None
     assert len(DualViewWorkflow.calls) == 1
@@ -683,7 +707,8 @@ def test_dual_view_inference_uses_grounding_dino_when_router_target_missing(tmp_
     assert row["selected_view"] == "full_image"
     assert row["diagnosis"] == "full_label"
     assert row["roi_evidence_status"] == "conflicts_with_full"
-    assert row["requires_review"] is True
+    assert row["requires_review"] is False
+    assert row["review_reasons"] == ""
     assert len(GroundingDinoMock.calls) == 1
     assert len(DualViewWorkflow.calls) == 2
 
@@ -740,6 +765,7 @@ def test_dual_view_inference_reports_grounding_dino_error_status(tmp_path: Path)
     assert row["grounding_dino_error"] == "bad processor call"
     assert row["roi_evidence_status"] == "target_detection_missing"
     assert row["requires_review"] is True
+    assert row["review_reasons"] == "target_detection_missing;grounding_dino_error"
     assert row["selected_view"] == "full_image"
 
 
@@ -789,7 +815,8 @@ def test_dual_view_inference_uses_target_detection_when_primary_is_wrong(tmp_pat
     assert row["selected_view"] == "full_image"
     assert row["diagnosis"] == "full_label"
     assert row["roi_evidence_status"] == "conflicts_with_full"
-    assert row["requires_review"] is True
+    assert row["requires_review"] is False
+    assert row["review_reasons"] == ""
     assert len(DualViewWorkflow.calls) == 2
 
 
