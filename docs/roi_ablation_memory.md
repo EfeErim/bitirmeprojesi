@@ -426,13 +426,13 @@ Basari kriteri:
 
 ### En Yakin Aksiyon
 
-Bir sonraki teknik is:
+Tamamlanan son teknik is:
 
 ```text
 Router + evidence gate evaluation analyzer
 ```
 
-Yeni notebook acmadan once `scripts/colab_roi_ablation.py` icine aggregate analyzer eklemek daha temizdir. Notebook 16 sonucu uzerinden su ayrim yapilmalidir:
+Yeni notebook acmadan once analiz cekirdegi `src/pipeline/roi_evidence_analysis.py` altina eklendi ve `scripts/colab_roi_ablation.py` dual-view raporlarina `failure_analysis` alanini yazacak sekilde baglandi. Notebook 16 sonucu uzerinden su ayrim artik JSON raporundan okunabilir:
 
 - router hatasi mi?
 - bbox hatasi mi?
@@ -440,3 +440,5 @@ Yeni notebook acmadan once `scripts/colab_roi_ablation.py` icine aggregate analy
 - confidence/OOD hatasi mi?
 
 Bu ayrim yapilmadan retrain'e girilirse tekrar kor ilerlenir.
+
+Bir sonraki teknik is, yeni Notebook 16 multi-adapter kosusundan gelen `failure_analysis` alanlarini adapter-bazli okuyup threshold/review-gate kalibrasyonu icin hangi hata tiplerinin baskin oldugunu raporlamaktir.

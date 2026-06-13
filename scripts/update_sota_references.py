@@ -49,6 +49,7 @@ TEXT_FILE_SUFFIXES = {
 }
 SKIP_DIRS = {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", ".runtime_tmp", ".venv", "__pycache__"}
 IMPROVEMENT_MARKER_PATTERN = re.compile(r"\b(?P<tag>TODO|FIXME|HACK|XXX|BUG)\b\s*[:\-]\s*(?P<detail>.*)")
+SRC_TO_SCRIPTS_IMPORT_PATTERN = re.compile(r"^\s*(?:from\s+scripts(?:\.|\s+import\b)|import\s+scripts(?:\.|\s|$))")
 RELEVANCE_TERMS = (
     "adapter",
     "bioclip",
@@ -143,7 +144,7 @@ def is_relevant_candidate(item):
             return False
         if query == "bioclip":
             return any(term in text for term in BIOCLIP_CONTEXT_TERMS)
-        return query == "router calibration" or any(term in text for term in VISUAL_CONTEXT_TERMS)
+        return query == "router calibration" or any(_contains_term(text, term) for term in VISUAL_CONTEXT_TERMS)
     for term in RELEVANCE_TERMS:
         if _contains_term(text, term):
             return True
@@ -153,7 +154,8 @@ def is_relevant_candidate(item):
 def _contains_term(text, term):
     if term == "ood":
         return re.search(r"\bood\b", text) is not None
-    return term in text
+    pattern = rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])"
+    return re.search(pattern, text) is not None
 
 
 def summarize_query_error(error):
@@ -254,7 +256,7 @@ def _relative_posix(path, repo_root):
 
 
 def scan_repo_opportunities(repo_root, max_items=25, roots=DEFAULT_OPPORTUNITY_ROOTS):
-    """Find lightweight repo-local bug, weak-point, and improvement signals."""
+    """Find lightweight repo-local bug, weak-point, and suboptimal-code signals."""
     repo_root = Path(repo_root)
     opportunities = []
 
@@ -291,6 +293,12 @@ def scan_repo_opportunities(repo_root, max_items=25, roots=DEFAULT_OPPORTUNITY_R
         except OSError:
             continue
         for line_number, line in enumerate(lines, start=1):
+            if len(opportunities) >= max_items:
+                break
+            if path.suffix.lower() == ".py":
+                opportunities.extend(_scan_python_line_for_code_quality(rel_path, line_number, line))
+                if len(opportunities) >= max_items:
+                    break
             if path.suffix.lower() == ".py" and not line.lstrip().startswith("#"):
                 continue
             marker = IMPROVEMENT_MARKER_PATTERN.search(line)
@@ -314,10 +322,41 @@ def scan_repo_opportunities(repo_root, max_items=25, roots=DEFAULT_OPPORTUNITY_R
     return opportunities[:max_items]
 
 
+def _scan_python_line_for_code_quality(rel_path, line_number, line):
+    """Return high-signal code-quality opportunities for one Python line."""
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+        return []
+
+    opportunities = []
+    if rel_path.startswith("src/") and SRC_TO_SCRIPTS_IMPORT_PATTERN.search(line):
+        opportunities.append(
+            {
+                "kind": "bug",
+                "file": rel_path,
+                "line": line_number,
+                "summary": "src imports scripts; durable logic must not depend on orchestration surfaces",
+            }
+        )
+    if re.search(r"\bexcept\s+(?:Exception|BaseException)\s*:\s*pass(?:\s*#.*)?$", line) or re.search(
+        r"\bexcept\s*:\s*pass(?:\s*#.*)?$",
+        line,
+    ):
+        opportunities.append(
+            {
+                "kind": "weak_point",
+                "file": rel_path,
+                "line": line_number,
+                "summary": "broad exception is swallowed with pass; preserve error context or narrow the exception",
+            }
+        )
+    return opportunities
+
+
 def render_repo_opportunity_scan(opportunities):
-    out_lines = ["#### Repo Bug / Weak Point / Improvement Scan", ""]
+    out_lines = ["#### Repo Bug / Weak Point / Suboptimal Code Scan", ""]
     if not opportunities:
-        out_lines.append("No lightweight repo-local improvement signals found in the configured roots.")
+        out_lines.append("No lightweight repo-local bug, weak-point, or suboptimal-code signals found in the configured roots.")
         return "\n".join(out_lines)
 
     out_lines.append("Machine-collected candidates for triage. Review before treating any item as a confirmed defect.")

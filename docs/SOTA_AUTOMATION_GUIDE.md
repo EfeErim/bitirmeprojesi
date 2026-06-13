@@ -43,6 +43,7 @@ Run this loop whenever the user asks to apply the SOTA automation guide or when 
 
    - If every configured literature query fails and the script prints `Preserved existing SOTA candidate scan because all configured queries failed`, treat the pass as an evidence-preserving no-op, not as a successful literature refresh.
    - If at least one query succeeds, review the managed candidate block for repo relevance before promoting anything into accepted guidance.
+   - Every default updater run also performs a lightweight repo-local bug, weak-point, and suboptimal-code scan over the configured source/documentation roots. Treat those results as triage candidates, then confirm before changing code.
 
 3. **Run the narrow guard set**
    - Prefer the narrowest checks that match the touched or questioned surface.
@@ -100,7 +101,7 @@ The updater queries external sources and can hit arXiv rate limits or timeouts. 
 
 - **All queries failed**: preserve the existing managed candidate block and report a no-op refresh.
 - **Some queries succeeded**: accept the partial scan as fresh machine evidence, keep source-failure notes visible, and review surviving candidates normally.
-- **No new relevant papers**: keep the guide unchanged unless the repo opportunity scan finds a real local issue.
+- **No new relevant papers**: keep the guide unchanged unless the repo bug/weak-point/suboptimal-code scan finds a real local issue.
 
 ### Guard Skip Handling
 
@@ -157,27 +158,9 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-08T06:40:50Z`
+Generated: `2026-06-13T08:31:36Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
-
-##### GP-Adapter: Gaussian Process CLIP-Adapter for Few-Shot Out-of-Distribution Detection
-
-- Query: `mahalanobis ood`
-- Published: `2026-06-05T09:53:30Z`
-- Authors: Taisei Saito, Koretaka Ogata, Takafumi Hiroi
-- Link: http://arxiv.org/abs/2606.07102v1
-- Repo action hint: Review for a concrete change to ML method, evaluation policy, data curation, or guard behavior before promotion.
-- Review note: We propose GP-Adapter, a training-free framework that augments CLIP (Contrastive Language-Image Pre-training) with Gaussian Process (GP) uncertainty modeling for few-shot classification and out-of-distribution (OOD) detection. While CLIP achieves strong zero-shot recognition, it yields deterministic similarity scores and offers limited uncertainty information, which is critical under distribution shift and data scarcity. GP-Adapter constructs modality-specific, class-wise one-class GPs on top of frozen CLIP embeddings using an RBF kernel for image features and a linear kernel for text prompts and fuses their predictive statistics to produce a variance-aware confidence score for OOD detection. The method requires no fine-tuning of the CLIP backbone and relies only on a small $K$-shot cache and lightweight hyperparameter selection, with memory cost scaling as $O(CK^2)$ for $C$ classes and $K$ shots. Experiments on ImageNet and multiple OOD benchmarks show that GP-Adapter provides competitive few-shot performance and consistently improves OOD detection when combined with prompt-learning baselines, highlighting the complementarity between GP-based uncertainty modeling and prompt learning. Overall, our results suggest that integrating probabilistic inference with large pre-trained vision-language models can improve reliability in low-data and distribution-shifted settings. Code is available at https://github.com/tms-byte/GP-Adapter
-
-##### Dual Feature Decoupling for Fine-Grained OOD Detection
-
-- Query: `mahalanobis ood`
-- Published: `2026-06-04T00:38:21Z`
-- Authors: Xiaokun Li, Yaping Huang, Qingji Guan
-- Link: http://arxiv.org/abs/2606.05536v1
-- Repo action hint: Audit OOD readiness for near-OOD slices, background/style confounders, and feature-space detector separation before adopting a new architecture.
-- Review note: Out-of-distribution detection (OOD) is an indispensable technique when applying machine learning models to real-world scenarios. Most existing OOD detection methods have been developed under the idealized assumption of large inter-class distributional differences, while largely overlooking fine-grained tasks characterized by subtle variations, such as medical image classification and vehicle recognition. The high visual similarity among fine-grained subcategories, together with the interference of background factors, makes OOD detection extremely challenging. To tackle this problem, we propose a novel Dual Feature Decoupling Network (DFDNet), which addresses fine-grained OOD detection from the perspective of feature disentanglement. The proposed DFDNet comprises two key components: a spatial-frequency decoupling module and a reconstruction-guided decoupling module. The spatial-frequency decoupling module is designed to preserve content features that are discriminative for classification while suppressing task-irrelevant style information. On the other hand, the reconstruction-guided decoupling module introduces a novel pixel-level adversarial reconstruction task to further remove low-level, non-discriminative information and enhance category-specific high-level semantic representations. Extensive experiments demonstrate that our method achieves competitive performance improvements on multiple datasets.
 
 ##### Self-Supervised Learning of Plant Image Representations
 
@@ -189,9 +172,9 @@ These are machine-collected literature candidates for human review. They are not
 - Review note: Automated plant recognition plays a crucial role in biodiversity monitoring and conservation, yet current approaches rely heavily on supervised learning, which is limited by the availability of expert-labeled data. Self-supervised learning (SSL) offers a scalable alternative, but existing methods and training protocols are largely designed for coarse-grained visual tasks and may not transfer well to fine-grained domains such as plant species recognition. In this work, we investigate SSL for plant image representation learning. We show that commonly used augmentations in SSL pipelines - such as Gaussian blur, grayscale conversion, and solarization - are detrimental in the context of plant images, as they remove subtle discriminative cues essential for fine-grained recognition. We instead identify alternative transformations, including affine and posterization, that are better suited to this domain. We further demonstrate that training SimDINOv2 on the iNaturalist 2021 Plantae subset yields significantly stronger representations than training on ImageNet-1K, highlighting the importance of domain-specific data for SSL. Our findings are consistent across both ViT-Base and ViT-Large architectures. Moreover, our models achieve competitive performance and sometimes outperform strong supervised baselines Pl@ntCLEF and BioCLIP on downstream plant recognition tasks in few-shot settings. Overall, our results highlight the critical importance of domain-adapted augmentation strategies and dataset selection in self-supervised learning, and provide practical guidelines for building scalable models for biodiversity monitoring.
 
 
-#### Repo Bug / Weak Point / Improvement Scan
+#### Repo Bug / Weak Point / Suboptimal Code Scan
 
-No lightweight repo-local improvement signals found in the configured roots.
+No lightweight repo-local bug, weak-point, or suboptimal-code signals found in the configured roots.
 
 <!-- END SOTA AUTOMATION CANDIDATES -->
 

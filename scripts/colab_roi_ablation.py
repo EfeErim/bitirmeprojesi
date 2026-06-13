@@ -19,6 +19,7 @@ from PIL import Image
 
 from scripts.colab_router_adapter_inference import run_inference as run_router_inference
 from src.core.config_manager import get_config
+from src.pipeline.roi_evidence_analysis import analyze_dual_view_evidence_rows
 from src.router.roi_helpers import bbox_area_ratio, extract_roi, sanitize_bbox
 from src.shared.json_utils import deep_merge
 from src.workflows.inference import InferenceWorkflow
@@ -919,6 +920,8 @@ def write_report(rows: list[Dict[str, Any]], *, output_dir: str | Path, ablation
         "summary": summary,
         "rows": rows,
     }
+    if ablation_name == "dual_view_inference":
+        payload["failure_analysis"] = analyze_dual_view_evidence_rows(rows)
     (output_root / "report.json").write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     if rows:
         fieldnames = list(rows[0].keys())

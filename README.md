@@ -1,33 +1,37 @@
 # AADS v6
 
-AADS v6 is a narrow plant-disease training and inference repository. It focuses on three maintained surfaces:
+AADS v6 is a narrow plant-disease training and inference repository. The handoff surface is intentionally small:
 
-1. Preparing grouped datasets for training
-2. Training crop-specific SD-LoRA adapters
-3. Running router-guided inference and readiness checks
+1. Prepare grouped datasets for training
+2. Train crop-specific SD-LoRA adapters
+3. Run router-guided inference and readiness checks
 
 If you are new to the project, start with [docs/README.md](docs/README.md), then read [docs/user_guide/colab_training_manual.md](docs/user_guide/colab_training_manual.md) and [docs/user_guide/ood_readiness_guide.md](docs/user_guide/ood_readiness_guide.md) as needed.
 
-## Maintained entry points
+## Canonical Surfaces
 
-- Notebook 0: [colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb](colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb)
-- Notebook 1: [colab_notebooks/1_identify_crop_part_with_router.ipynb](colab_notebooks/1_identify_crop_part_with_router.ipynb)
-- Notebook 2: [colab_notebooks/2_train_continual_sd_lora_adapter.ipynb](colab_notebooks/2_train_continual_sd_lora_adapter.ipynb)
-- Notebook 3: [colab_notebooks/3_validate_exported_adapter_directly.ipynb](colab_notebooks/3_validate_exported_adapter_directly.ipynb)
-- Notebook 5: [colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb)
-- Notebook 8: [colab_notebooks/8_auto_router_adapter_prediction.ipynb](colab_notebooks/8_auto_router_adapter_prediction.ipynb)
-- Notebook 9 presentation demo: [colab_notebooks/9_presentation_recording_demo.ipynb](colab_notebooks/9_presentation_recording_demo.ipynb)
-- Notebook 16 ROI/bbox evidence gate: [colab_notebooks/16_ablation_dual_view_inference.ipynb](colab_notebooks/16_ablation_dual_view_inference.ipynb)
-- Training workflow: [src/workflows/training.py](src/workflows/training.py)
-- Inference workflow: [src/workflows/inference.py](src/workflows/inference.py)
+| Surface | Purpose |
+|---|---|
+| [Notebook 0](colab_notebooks/0_prepare_grouped_dataset_for_training.ipynb) | Grouped dataset preparation |
+| [Notebook 1](colab_notebooks/1_identify_crop_part_with_router.ipynb) | Router crop and part identification |
+| [Notebook 2](colab_notebooks/2_train_continual_sd_lora_adapter.ipynb) | Continual SD-LoRA training |
+| [Notebook 3](colab_notebooks/3_validate_exported_adapter_directly.ipynb) | Direct adapter validation |
+| [Notebook 5](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb) | Router calibration |
+| [Notebook 8](colab_notebooks/8_auto_router_adapter_prediction.ipynb) | Router-to-adapter inference |
+| [Notebook 9](colab_notebooks/9_presentation_recording_demo.ipynb) | Presentation-only demo wrapper |
+| [Notebook 16](colab_notebooks/16_ablation_dual_view_inference.ipynb) | ROI/bbox evidence-gate ablation |
+| [Training workflow](src/workflows/training.py) | Canonical training entrypoint |
+| [Inference workflow](src/workflows/inference.py) | Canonical inference entrypoint |
 
-Notebook 4 is kept as a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 6 is a batch-training regression surface used to exercise the maintained Notebook 2 cell contract, and Notebook 7 is a prepared-runtime OOD/OE quality audit surface. Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
+Notebook 4 is a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 6 is a batch-training regression surface used to exercise the maintained Notebook 2 cell contract, and Notebook 7 is a prepared-runtime OOD/OE quality audit surface.
 
-Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. Its preview cell runs the same canonical inference path once before recording, then its render-only recording cell immediately displays an audience-facing explanation of SAM3 region proposals, BioCLIP-2.5 routing, the safety gate, specialist adapter loading, the model prediction, and the OOD assessment.
+Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
 
-Notebook 16 is the maintained ROI/bbox ablation surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. Historical ROI ablation reports remain under `docs/ablation_results/<condition>`.
+Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. Its preview cell runs the same canonical inference path once before recording, then its render-only recording cell displays an audience-facing explanation of SAM3 region proposals, BioCLIP-2.5 routing, the safety gate, specialist adapter loading, the model prediction, and the OOD assessment.
 
-## What the repo covers
+Notebook 16 is the maintained ROI/bbox ablation surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. Historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
+
+## What The Repo Covers
 
 - Dataset auditing and materialization for Notebook 0
 - Continual adapter training for one crop at a time
@@ -121,6 +125,18 @@ models/adapters/<crop>/<part>/continual_sd_lora_adapter/
 
 Workflow and notebook runs may also export adapters under `runs/` and `outputs/`. Those locations are for generated artifacts, not maintained source.
 
+## Handoff Boundaries
+
+The following paths are generated or local-only surfaces and should not be treated as client-facing source:
+
+- `runs/`
+- `models/adapters/`
+- `outputs/`
+- `data/prepared_runtime_datasets/`
+- `.runtime_tmp/`
+
+The repo root may also contain exported plots or analysis files. Treat those as reports or evidence artifacts unless a file is explicitly called out as canonical documentation.
+
 ## Repository layout
 
 - `src/`: workflow, pipeline, and runtime code
@@ -129,7 +145,7 @@ Workflow and notebook runs may also export adapters under `runs/` and `outputs/`
 - `docs/`: maintained documentation
 - `colab_notebooks/`: maintained notebook surfaces
 - `tests/`: unit, integration, and smoke coverage
-- `data/`: tracked examples and local staging roots
+- `data/`: tracked examples and local staging roots; prepared runtime datasets are generated locally
 
 ## Read next
 

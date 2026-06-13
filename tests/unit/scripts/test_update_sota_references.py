@@ -122,7 +122,7 @@ def test_candidate_section_can_embed_repo_opportunity_scan():
         extra_sections=[render_repo_opportunity_scan([{"kind": "bug", "file": "scripts/x.py", "line": 7, "summary": "FIXME marker"}])],
     )
 
-    assert section.index("#### Repo Bug / Weak Point / Improvement Scan") < section.index(CANDIDATE_SECTION_END)
+    assert section.index("#### Repo Bug / Weak Point / Suboptimal Code Scan") < section.index(CANDIDATE_SECTION_END)
     assert "`bug` [scripts/x.py:7]: FIXME marker" in section
 
 
@@ -144,7 +144,7 @@ def test_scan_repo_opportunities_finds_markers_and_canonical_guide_violations(tm
 def test_scan_repo_opportunities_ignores_plain_bug_words_without_marker_format(tmp_path):
     script = tmp_path / "scripts" / "example.py"
     script.parent.mkdir()
-    script.write_text('text = "Repo Bug / Weak Point / Improvement Scan"\n', encoding="utf-8")
+    script.write_text('text = "Repo Bug / Weak Point / Suboptimal Code Scan"\n', encoding="utf-8")
 
     opportunities = scan_repo_opportunities(tmp_path, max_items=5, roots=("scripts",))
 
@@ -159,6 +159,40 @@ def test_scan_repo_opportunities_ignores_markers_inside_python_strings(tmp_path)
     opportunities = scan_repo_opportunities(tmp_path, max_items=5, roots=("scripts",))
 
     assert opportunities == []
+
+
+def test_scan_repo_opportunities_flags_src_importing_scripts(tmp_path):
+    module = tmp_path / "src" / "package" / "runtime.py"
+    module.parent.mkdir(parents=True)
+    module.write_text("from scripts.audit_code_organization import main\n", encoding="utf-8")
+
+    opportunities = scan_repo_opportunities(tmp_path, max_items=5, roots=("src",))
+
+    assert opportunities == [
+        {
+            "kind": "bug",
+            "file": "src/package/runtime.py",
+            "line": 1,
+            "summary": "src imports scripts; durable logic must not depend on orchestration surfaces",
+        }
+    ]
+
+
+def test_scan_repo_opportunities_flags_swallowed_broad_exception(tmp_path):
+    script = tmp_path / "scripts" / "example.py"
+    script.parent.mkdir()
+    script.write_text("try:\n    risky()\nexcept Exception: pass\n", encoding="utf-8")
+
+    opportunities = scan_repo_opportunities(tmp_path, max_items=5, roots=("scripts",))
+
+    assert opportunities == [
+        {
+            "kind": "weak_point",
+            "file": "scripts/example.py",
+            "line": 3,
+            "summary": "broad exception is swallowed with pass; preserve error context or narrow the exception",
+        }
+    ]
 
 
 def test_is_relevant_candidate_filters_broad_arxiv_noise():
@@ -195,6 +229,13 @@ def test_is_relevant_candidate_filters_broad_arxiv_noise():
             "query": "mahalanobis ood",
             "title": "OOD-GraphLLM for drug synergy prediction",
             "summary": "Out-of-distribution generalization for molecular graphs.",
+        }
+    )
+    assert not is_relevant_candidate(
+        {
+            "query": "mahalanobis ood",
+            "title": "Physics-Aware Auxiliary Losses Improve Out-of-Distribution Generalization of a GNN Synthesizability Filter",
+            "summary": "Auxiliary supervision improves molecular graph generalization.",
         }
     )
     assert is_relevant_candidate(

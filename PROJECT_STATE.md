@@ -19,11 +19,14 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Latest commit added Codex instructions, a config example, and output-capping helpers, and refreshed `AGENTS.md`.
 - Recent notebook calibration work tuned Notebook 5 router calibration defaults to `12/12`, exposed adaptive hyperparameters, and published failure-analysis artifacts.
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
+- The SOTA literature updater now checks visual-context terms with token boundaries so words like "supervision" do not admit non-visual OOD candidates.
+- The SOTA literature updater's default run also performs a lightweight repo-local bug, weak-point, and suboptimal-code scan so every guide application surfaces triage candidates beyond papers.
 - `docs/SOTA_AUTOMATION_GUIDE.md` is now an operating guide for the SOTA refresh loop: every pass should refresh machine evidence, run narrow guardrails, classify skips/failures, and select a concrete next repo action instead of maintaining a static wishlist.
 - Removed the obsolete one-condition ROI wrapper notebooks and kept Notebook 16 as the single active ROI/bbox evidence-gate notebook. Production inference remains unchanged; historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
 - Notebook 16 target-aware ROI fallback uses Grounding DINO prompts in the Hugging Face lowercase/dot-terminated text-query format and records `grounding_dino_status`/`grounding_dino_error` in ablation rows so detector failures are visible instead of silently becoming zero-candidate fallbacks.
 - Notebook 16 now treats full-image adapter prediction as the final decision and uses router/Grounding DINO ROI only as evidence for review flags (`roi_evidence_status`, `requires_review`, `review_reasons`) after ROI scoring underperformed full-image scoring.
 - Notebook 16 is no longer tied to `tomato__fruit`; it can evaluate multiple crop/part adapters with target-specific Grounding DINO prompts generated from each target crop and part.
+- Notebook 16 reports now include `failure_analysis` from `src/pipeline/roi_evidence_analysis.py`, classifying router, bbox, adapter, confidence/OOD, and review-gate failure signals before retraining decisions.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.

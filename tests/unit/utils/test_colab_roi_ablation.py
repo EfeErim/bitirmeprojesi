@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 
 from PIL import Image
@@ -229,6 +230,12 @@ def test_discover_dual_view_targets_resolves_all_matching_dataset_adapter_pairs(
     (tmp_path / "runs" / "tomato" / "fruit" / "old" / "outputs" / "colab_notebook_training").mkdir(parents=True)
     latest = tmp_path / "runs" / "tomato" / "fruit" / "new" / "outputs" / "colab_notebook_training"
     latest.mkdir(parents=True)
+    old_run = tmp_path / "runs" / "tomato" / "fruit" / "old"
+    new_run = tmp_path / "runs" / "tomato" / "fruit" / "new"
+    os.utime(old_run, (1_700_000_000, 1_700_000_000))
+    os.utime(new_run, (1_700_000_100, 1_700_000_100))
+    os.utime(old_run / "outputs" / "colab_notebook_training", (1_700_000_000, 1_700_000_000))
+    os.utime(latest, (1_700_000_100, 1_700_000_100))
     (tmp_path / "runs" / "grape" / "leaf" / "only" / "outputs" / "colab_notebook_training").mkdir(parents=True)
 
     targets = roi_ablation.discover_dual_view_targets(tmp_path)
@@ -275,6 +282,7 @@ def test_run_dual_view_inference_targets_writes_aggregate_report(tmp_path: Path)
     assert calls[0]["adapter_part"] == "fruit"
     assert calls[0]["grounding_dino_prompts"][0] == "tomato fruit."
     assert report["summary"]["accuracy"] == 1.0
+    assert report["failure_analysis"]["schema_version"] == "v1_dual_view_evidence_failure_analysis"
     assert report["rows"][0]["dataset_key"] == "tomato__fruit"
     assert (tmp_path / "reports" / "multi_target_report.json").is_file()
 
