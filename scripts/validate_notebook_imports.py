@@ -505,6 +505,26 @@ def test_roi_ablation_notebook_contract() -> None:
             "GROUNDING_DINO_BOX_THRESHOLD = 0.15",
             f"{notebook_name} should use the low-threshold detector sweep default: {{snippet}}",
         )
+        _assert_contains(
+            sources.full_source,
+            "AUTO_DISCONNECT_RUNTIME = True",
+            f"{notebook_name} should auto-disconnect after successful report export and push: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "from scripts.colab_notebook_helpers import maybe_auto_disconnect_colab_runtime",
+            f"{notebook_name} should use the maintained Colab auto-disconnect helper: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "'git_push': push_ok",
+            f"{notebook_name} should require a successful push before auto-disconnect: {{snippet}}",
+        )
+        _assert_contains(
+            sources.full_source,
+            "maybe_auto_disconnect_colab_runtime(",
+            f"{notebook_name} should request Colab runtime disconnect at the end: {{snippet}}",
+        )
 
 
 def test_presentation_recording_notebook_contract() -> None:

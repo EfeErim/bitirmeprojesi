@@ -27,6 +27,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Notebook 16 now treats full-image adapter prediction as the final decision and uses router/Grounding DINO ROI only as evidence for review flags (`roi_evidence_status`, `requires_review`, `review_reasons`) after ROI scoring underperformed full-image scoring.
 - Notebook 16 is no longer tied to `tomato__fruit`; it can evaluate multiple crop/part adapters with target-specific Grounding DINO prompts generated from each target crop and part.
 - Notebook 16 reports now include `failure_analysis` from `src/pipeline/roi_evidence_analysis.py`, classifying router, bbox, adapter, confidence/OOD, and review-gate failure signals before retraining decisions.
+- Notebook 16 auto-disconnects the Colab runtime after the multi-target report exists and the ablation output push succeeds.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
