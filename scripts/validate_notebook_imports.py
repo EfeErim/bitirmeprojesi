@@ -527,93 +527,6 @@ def test_roi_ablation_notebook_contract() -> None:
         )
 
 
-def test_presentation_recording_notebook_contract() -> None:
-    sources = _load_notebook_sources("9_presentation_recording_demo.ipynb")
-
-    _assert_code_cells_compile(sources, "Notebook 9")
-    _assert_contains(
-        sources.first_code_source,
-        "run_cell_script('nb1_cell01_bootstrap.py', globals())",
-        "Notebook 9 should reuse Notebook 1 bootstrap cell script: {snippet}",
-    )
-    _assert_contains(
-        sources.first_code_source,
-        "os.environ['AADS_COLAB_REQUIREMENTS_FILE'] = 'requirements_presentation_colab.txt'",
-        "Notebook 9 should use the lightweight presentation dependency profile: {snippet}",
-    )
-    _assert_contains(
-        sources.first_code_source,
-        "print('[SETUP] Presentation demo setup complete. Continue to the next cell.', flush=True)",
-        "Notebook 9 setup should leave a visible completion message: {snippet}",
-    )
-    assert "clear_output" not in sources.first_code_source, "Notebook 9 setup should keep progress output visible"
-    for snippet in (
-        "if CLONE_TARGET.exists():",
-        "shutil.rmtree(CLONE_TARGET)",
-        "repo_root = CLONE_TARGET.resolve()",
-        "subprocess.run(['git', '-C', str(repo_root), 'pull', '--ff-only'], check=True)",
-        "raise FileNotFoundError",
-    ):
-        _assert_contains(
-            sources.first_code_source,
-            snippet,
-            "Notebook 9 should recover an incomplete Colab checkout before importing scripts: {snippet}",
-        )
-    for script_name in (
-        "nb1_cell02_access_check.py",
-        "nb1_cell03_runtime_setup.py",
-        "nb1_cell04_analysis.py",
-        "nb8_cell05_adapter_prediction.py",
-        "nb9_cell06_presentation_demo.py",
-    ):
-        _assert_contains(
-            sources.full_source,
-            f"run_cell_script('{script_name}', globals())",
-            "Notebook 9 should stay a thin presentation wrapper over maintained cell scripts: {snippet}",
-        )
-    warmup_cell = _find_code_cell_source(
-        sources,
-        "run_cell_script('nb8_cell05_adapter_prediction.py', globals())",
-        "Notebook 9 should run real inference before screen recording.",
-    )
-    recording_cell = _find_code_cell_source(
-        sources,
-        "run_cell_script('nb9_cell06_presentation_demo.py', globals())",
-        "Notebook 9 should render the warmed-up recording panel.",
-    )
-    ordered_scripts = (
-        "nb1_cell04_analysis.py",
-        "nb8_cell05_adapter_prediction.py",
-    )
-    positions = [warmup_cell.index(f"run_cell_script('{script_name}', globals())") for script_name in ordered_scripts]
-    assert positions == sorted(positions), "Notebook 9 should route, then predict during warm-up"
-    _assert_contains(
-        warmup_cell,
-        "with redirect_stdout(technical_output), redirect_stderr(technical_output):",
-        "Notebook 9 should suppress technical inference logs during warm-up: {snippet}",
-    )
-    assert "nb1_cell04_analysis.py" not in recording_cell
-    assert "nb8_cell05_adapter_prediction.py" not in recording_cell
-    _assert_contains(
-        recording_cell,
-        "clear_output(wait=True)",
-        "Notebook 9 should clear stale output before rendering the audience panel: {snippet}",
-    )
-    _assert_contains(
-        recording_cell,
-        "#@title Render audience panel",
-        "Notebook 9 recording cell should stay collapsed as a Colab form: {snippet}",
-    )
-    _assert_contains(
-        sources.full_source,
-        "importlib.reload(presentation_demo_helpers)",
-        "Notebook 9 should reload presentation helpers after an in-place Colab git pull: {snippet}",
-    )
-    assert sources.full_source.count("run_inference(") == 1, (
-        "Notebook 9 should inherit Notebook 1 routing instead of adding a second router implementation"
-    )
-
-
 def test_adapter_smoke_notebook_surface() -> None:
     from scripts.colab_adapter_smoke_test import (
         discover_adapter_candidates,
@@ -1237,15 +1150,6 @@ CHECKS = (
         success_message="Notebook 16 wraps the shared ROI evidence helper surface",
         failure_prefix="ROI ablation notebook contract failed",
         callback=test_roi_ablation_notebook_contract,
-        requires_runtime_dependencies=False,
-    ),
-    ValidationCheck(
-        result_name="Notebook 9 Presentation Demo",
-        step_id="NB9_PRESENTATION_DEMO",
-        description="Notebook 9 presentation-recording contract",
-        success_message="Notebook 9 wraps the canonical inference path with recording-friendly output",
-        failure_prefix="Notebook 9 presentation demo contract failed",
-        callback=test_presentation_recording_notebook_contract,
         requires_runtime_dependencies=False,
     ),
     ValidationCheck(

@@ -18,7 +18,6 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 | [Notebook 3](colab_notebooks/3_validate_exported_adapter_directly.ipynb) | Direct adapter validation |
 | [Notebook 5](colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb) | Router calibration |
 | [Notebook 8](colab_notebooks/8_auto_router_adapter_prediction.ipynb) | Router-to-adapter inference |
-| [Notebook 9](colab_notebooks/9_presentation_recording_demo.ipynb) | Presentation-only demo wrapper |
 | [Notebook 16](colab_notebooks/16_ablation_dual_view_inference.ipynb) | ROI/bbox evidence-gate ablation |
 | [Training workflow](src/workflows/training.py) | Canonical training entrypoint |
 | [Inference workflow](src/workflows/inference.py) | Canonical inference entrypoint |
@@ -26,8 +25,6 @@ If you are new to the project, start with [docs/README.md](docs/README.md), then
 Notebook 4 is a convenience wrapper for direct adapter smoke testing. It is not a separate canonical surface. Notebook 6 is a batch-training regression surface used to exercise the maintained Notebook 2 cell contract, and Notebook 7 is a prepared-runtime OOD/OE quality audit surface.
 
 Notebook 8 is a thin Colab wrapper over Notebook 1's router cells plus the canonical inference workflow for single-image router-to-adapter prediction.
-
-Notebook 9 is a recording-oriented presentation wrapper over Notebook 8. Its preview cell runs the same canonical inference path once before recording, then its render-only recording cell displays an audience-facing explanation of SAM3 region proposals, BioCLIP-2.5 routing, the safety gate, specialist adapter loading, the model prediction, and the OOD assessment.
 
 Notebook 16 is the maintained ROI/bbox ablation surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. Historical ROI ablation reports remain under `docs/ablation_results/<condition>/`.
 

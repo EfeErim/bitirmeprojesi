@@ -442,3 +442,40 @@ Yeni notebook acmadan once analiz cekirdegi `src/pipeline/roi_evidence_analysis.
 Bu ayrim yapilmadan retrain'e girilirse tekrar kor ilerlenir.
 
 Bir sonraki teknik is, yeni Notebook 16 multi-adapter kosusundan gelen `failure_analysis` alanlarini adapter-bazli okuyup threshold/review-gate kalibrasyonu icin hangi hata tiplerinin baskin oldugunu raporlamaktir.
+
+Bu is icin v1 kalibrasyon yuzu eklendi:
+
+- Core logic: `src/pipeline/evidence_gate_calibration.py`
+- CLI: `scripts/calibrate_evidence_gate.py`
+- Default artifact: `docs/ablation_results/dual_view_inference/evidence_gate_calibration.json`
+- Varsayilan kisitlarla (`min_capture=0.70`, `max_false_positive_rate=0.15`) global policy eligible degil.
+- Sadece `grape__leaf` target-specific policy buldu; diger hedefler `no_eligible_policy` olarak acik yaziliyor.
+- Bu artifact advisory'dir; Notebook 16 veya runtime final karar davranisini degistirmez.
+
+## 2026-06-13 Notebook 16 Multi-Adapter Durumu
+
+Son `docs/ablation_results/dual_view_inference/multi_target_report.json` sonucu:
+
+- Toplam ornek: `2946`
+- Accuracy: `0.8836`
+- Macro-F1: `0.8563`
+- Failure bucket sayilari:
+  - `router`: `0`
+  - `bbox`: `754`
+  - `adapter`: `681`
+  - `confidence_ood`: `413`
+  - `review_gate`: `352`
+- Review gate yanlislari yakalama orani: `0.3557`
+- Dogru tahminlerde gereksiz review orani: `0.0503`
+
+Yorum:
+
+- Bu kosuda router ana sorun degil; analyzer crop/part handoff tarafinda hata bucket'i uretmedi.
+- Bbox/ROI sinyali var ama final karar full-image adapterdan geldigi icin ana karar kalitesi adapter/data tarafina bagli.
+- En belirgin adapter/data problemi `strawberry__fruit`: `204` ornekte `112` hata, accuracy `0.4510`; saglikli cilek meyvesi cogunlukla `strawberry_unripe_fruit` ile karisiyor.
+- `tomato__leaf` daha buyuk hacimli ikinci inceleme alani: `1204` ornekte `121` hata, accuracy `0.8995`, review capture `0.3058`.
+- Adapter performansina daha sonra bakilacaksa, su an yapilacak adapter-disi isler:
+  1. Notebook 16 sonucunu kisa ozetleyen repo-facing analiz/rapor uretmek.
+  2. Evidence gate threshold denemelerini target-specific raporlamak; global agresif ROI kalite kuralina gecmemek.
+  3. `strawberry__fruit` icin daha sonra yapilacak veri/etiket/confusion incelemesini TODO olarak ayri tutmak.
+  4. OOD/readiness ve router calibration guardlarini mevcut haliyle izlemeye devam etmek.

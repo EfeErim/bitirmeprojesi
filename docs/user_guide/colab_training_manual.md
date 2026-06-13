@@ -15,12 +15,9 @@ The repo also tracks one auxiliary notebook:
 - Notebook 4: `colab_notebooks/4_simple_direct_adapter_test_ui.ipynb`
 - Notebook 5: `colab_notebooks/5_calibrate_router_handoff_thresholds.ipynb`
 - Notebook 8: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
-- Notebook 9: `colab_notebooks/9_presentation_recording_demo.ipynb`
 - Notebook 16: `colab_notebooks/16_ablation_dual_view_inference.ipynb`
 
 Notebook 4 is a minimal convenience UI over the same direct-adapter smoke-test helpers used by Notebook 3. Notebook 5 is a router calibration wrapper over the maintained router evaluation and calibration scripts. Notebook 8 is a thin single-image wrapper over Notebook 1's router cells plus the canonical inference workflow.
-
-Notebook 9 is the screen-recording demo surface. It runs the same Notebook 1 and Notebook 8 path, suppresses technical logs, then renders an audience-facing presentation panel without changing inference behavior.
 
 Notebook 16 is the maintained ROI/bbox evidence-gate surface. It keeps full-image adapter prediction as the final decision and uses router/Grounding DINO bbox evidence only for review flags. By default it discovers matching prepared runtime datasets and Colab adapter exports, so it can evaluate multiple crop/part adapters instead of only one hard-coded target.
 
@@ -63,18 +60,6 @@ Notebook 5 calibrates router crop/part handoff thresholds from a prepared `data/
 Notebook 8 runs the full single-image deployment path. It reuses Notebook 1's router bootstrap, setup, upload, cache, diagnostics, and analysis cells, then hands the accepted router crop/part to the canonical `InferenceWorkflow.predict(...)` path for adapter loading, disease prediction, and OOD output.
 
 If the router result is uncertain, unknown, rejected, or unavailable, Notebook 8 does not force adapter prediction.
-
-### Notebook 9
-
-Notebook 9 is the recommended surface for a presentation screen recording. Run the setup cells once, execute the Preview and Warm-up cell, and upload the final demo image. This runs the real router, adapter, and OOD flow before recording. Start the recording only after the preview is ready, then execute the final render-only cell. The output shows:
-
-- the uploaded image and real SAM3-derived region boxes
-- a compact six-step pipeline strip
-- the accepted BioCLIP-2.5 crop and plant-part route
-- the safety decision and whether the specialist adapter was loaded
-- the adapter model prediction and calibrated OOD assessment
-
-The maintained router payload does not export pixel masks, so Notebook 9 does not fabricate a segmentation overlay. It labels the visible boxes accurately as SAM3-derived region proposals.
 
 ### Notebook 16
 
@@ -982,8 +967,6 @@ Keep these out of git:
 - `outputs/`
 
 `colab_notebooks/requirements_colab.txt` should stay in the repo. It is a wrapper around the canonical root `requirements_colab.txt`.
-
-Notebook 9 uses the narrower root `requirements_presentation_colab.txt` profile. It installs only the additional router-to-adapter presentation inference packages, including the maintained `torchao==0.17.0` PEFT compatibility pin, and avoids reinstalling notebook UI and utility packages unnecessary for the recording demo.
 
 
 

@@ -1,0 +1,360 @@
+{
+  "constraints": {
+    "holdout_ratio": 0.3,
+    "max_false_positive_rate": 0.15,
+    "min_capture": 0.7,
+    "min_target_errors": 20,
+    "seed": 20260613
+  },
+  "global_policy": {
+    "best_rejected": {
+      "metrics": {
+        "accepted_count": 1052,
+        "comparable_count": 2041,
+        "correct_count": 1805,
+        "correct_reviewed_count": 797,
+        "coverage": 0.5154336109750123,
+        "false_positive_review_rate": 0.44155124653739614,
+        "review_count": 989,
+        "review_rate": 0.4845663890249878,
+        "sample_count": 2041,
+        "wrong_capture_rate": 0.8135593220338984,
+        "wrong_count": 236,
+        "wrong_missed_count": 44
+      },
+      "policy": {
+        "full_confidence_threshold": 0.9,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": true,
+        "review_on_roi_ood": true,
+        "review_on_roi_quality_bad": true
+      }
+    },
+    "calibration_metrics": {},
+    "holdout_metrics": {},
+    "policy": {},
+    "status": "no_eligible_policy"
+  },
+  "schema_version": "v1_evidence_gate_calibration",
+  "source_report": "docs/ablation_results/dual_view_inference/multi_target_report.json",
+  "target_policies": {
+    "apricot__fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_wrong_count_below_min_target_errors:14<20",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "apricot__leaf": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_selection_no_eligible_policy",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy",
+      "target_best_rejected": {
+        "metrics": {
+          "accepted_count": 57,
+          "comparable_count": 100,
+          "correct_count": 84,
+          "correct_reviewed_count": 29,
+          "coverage": 0.57,
+          "false_positive_review_rate": 0.34523809523809523,
+          "review_count": 43,
+          "review_rate": 0.43,
+          "sample_count": 100,
+          "wrong_capture_rate": 0.875,
+          "wrong_count": 16,
+          "wrong_missed_count": 2
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": false,
+          "review_on_roi_ood": false,
+          "review_on_roi_quality_bad": false
+        }
+      }
+    },
+    "grape__fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_wrong_count_below_min_target_errors:16<20",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "grape__leaf": {
+      "calibration_metrics": {
+        "accepted_count": 183,
+        "comparable_count": 229,
+        "correct_count": 201,
+        "correct_reviewed_count": 26,
+        "coverage": 0.7991266375545851,
+        "false_positive_review_rate": 0.12935323383084577,
+        "review_count": 46,
+        "review_rate": 0.20087336244541484,
+        "sample_count": 229,
+        "wrong_capture_rate": 0.7142857142857143,
+        "wrong_count": 28,
+        "wrong_missed_count": 8
+      },
+      "fallback_reason": "",
+      "holdout_metrics": {
+        "accepted_count": 73,
+        "comparable_count": 95,
+        "correct_count": 84,
+        "correct_reviewed_count": 15,
+        "coverage": 0.7684210526315789,
+        "false_positive_review_rate": 0.17857142857142858,
+        "review_count": 22,
+        "review_rate": 0.23157894736842105,
+        "sample_count": 95,
+        "wrong_capture_rate": 0.6363636363636364,
+        "wrong_count": 11,
+        "wrong_missed_count": 4
+      },
+      "policy": {
+        "full_confidence_threshold": 0.8,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "target_specific"
+    },
+    "strawberry__fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_selection_no_eligible_policy",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy",
+      "target_best_rejected": {
+        "metrics": {
+          "accepted_count": 29,
+          "comparable_count": 137,
+          "correct_count": 62,
+          "correct_reviewed_count": 52,
+          "coverage": 0.2116788321167883,
+          "false_positive_review_rate": 0.8387096774193549,
+          "review_count": 108,
+          "review_rate": 0.7883211678832117,
+          "sample_count": 137,
+          "wrong_capture_rate": 0.7466666666666667,
+          "wrong_count": 75,
+          "wrong_missed_count": 19
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": false,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      }
+    },
+    "strawberry__leaf": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_wrong_count_below_min_target_errors:1<20",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "tomato__fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_wrong_count_below_min_target_errors:12<20",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "tomato__leaf": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 1052,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 797,
+          "coverage": 0.5154336109750123,
+          "false_positive_review_rate": 0.44155124653739614,
+          "review_count": 989,
+          "review_rate": 0.4845663890249878,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_count": 236,
+          "wrong_missed_count": 44
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "fallback_reason": "target_selection_no_eligible_policy",
+      "holdout_metrics": {},
+      "policy": {},
+      "status": "no_eligible_policy",
+      "target_best_rejected": {
+        "metrics": {
+          "accepted_count": 455,
+          "comparable_count": 840,
+          "correct_count": 753,
+          "correct_reviewed_count": 316,
+          "coverage": 0.5416666666666666,
+          "false_positive_review_rate": 0.4196547144754316,
+          "review_count": 385,
+          "review_rate": 0.4583333333333333,
+          "sample_count": 840,
+          "wrong_capture_rate": 0.7931034482758621,
+          "wrong_count": 87,
+          "wrong_missed_count": 18
+        },
+        "policy": {
+          "full_confidence_threshold": 0.9,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": false,
+          "review_on_roi_quality_bad": true
+        }
+      }
+    }
+  }
+}

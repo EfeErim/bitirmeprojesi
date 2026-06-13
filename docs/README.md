@@ -34,7 +34,6 @@ This repo is intentionally narrow. The fastest handoff path is:
 - Config schema versioning: `config_schema_version` in `config/base.json` and `config/colab.json`; bump it when you make breaking config changes.
 - Router payload contract: `src/shared/contracts.py`
 - Auto router-to-adapter notebook: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
-- Presentation recording demo: `colab_notebooks/9_presentation_recording_demo.ipynb`
 - ROI/bbox evidence notebook: `colab_notebooks/16_ablation_dual_view_inference.ipynb` (multi-adapter target discovery)
 - ROI/bbox ablation memory: `docs/roi_ablation_memory.md`
 - ROI ablation reports: `docs/ablation_results/<condition>/`
@@ -137,6 +136,5 @@ Tracked-vs-generated boundaries and validation commands:
 Path confusion reminders:
 
 - `requirements_colab.txt` at repo root is the canonical Colab dependency list.
-- `requirements_presentation_colab.txt` is the lightweight Notebook 9 inference-only bootstrap profile.
 - `colab_notebooks/requirements_colab.txt` is a wrapper used by notebook-local bootstrap.
 - Notebook 2 telemetry export path: `outputs/colab_notebook_training/telemetry_runtime/telemetry/<RUN_ID>/artifacts/adapter_export/<crop>/<part>/continual_sd_lora_adapter/`.
