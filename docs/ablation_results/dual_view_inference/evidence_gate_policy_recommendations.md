@@ -23,6 +23,12 @@ Failure analysis artifact: `docs/ablation_results/dual_view_inference/notebook16
 | `tomato__fruit` | `report_only_candidate` | `group:tomato_targets` | `0.9500` | `0.7292` | `1.0000` | `0.3158` | `5` | `target_wrong_count_below_min_target_errors:12<20` |
 | `strawberry__leaf` | `report_only_candidate` | `group:leaf_targets` | `0.9500` | `0.7803` | `n/a` | `0.0000` | `1` | `target_wrong_count_below_min_target_errors:1<20` |
 
+## `tomato__leaf` Pilot Decision
+
+- Keep `tomato__leaf` as a report-only candidate; do not promote it into runtime inference in this step.
+- Use the selected `0.95` full-confidence threshold only for review-gate analysis and audit prioritization.
+- Current evidence: missed wrong `84`, calibration capture `0.7356`, holdout capture `0.6471`, holdout false-positive `0.1364`.
+
 ## Audit Required
 
 | Target | Reason | Wrong | Missed wrong | Calibration note |
@@ -32,6 +38,8 @@ Failure analysis artifact: `docs/ablation_results/dual_view_inference/notebook16
 
 ## Decision
 
+- `tomato__leaf` is the current report-only review-gate pilot candidate.
 - Treat this as report-only policy guidance.
+- Keep full-image adapter prediction as the final decision; use ROI/bbox and v2 calibration only as review/audit signals.
 - Do not hardcode per-adapter policy decisions manually.
 - Do not change runtime inference without a separate validation and promotion step.

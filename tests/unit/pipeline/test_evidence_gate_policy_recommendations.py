@@ -69,5 +69,7 @@ def test_render_policy_recommendations_markdown_separates_candidates_and_audits(
 
     assert "## Recommended Report-Only Candidates" in markdown
     assert "| `tomato__leaf` | `report_only_candidate`" in markdown
+    assert "## `tomato__leaf` Pilot Decision" in markdown
+    assert "Keep `tomato__leaf` as a report-only candidate" in markdown
     assert "## Audit Required" in markdown
     assert "| `strawberry__fruit` | `no_safe_target_group_or_global_policy`" in markdown

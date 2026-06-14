@@ -108,6 +108,9 @@ def render_policy_recommendations_markdown(payload: dict[str, Any]) -> str:
         if target.get("recommendation") == "audit_required":
             continue
         lines.append(_target_table_row(target_id, target))
+    pilot_lines = _tomato_leaf_pilot_lines(targets)
+    if pilot_lines:
+        lines.extend(["", "## `tomato__leaf` Pilot Decision", "", *pilot_lines])
     lines.extend(
         [
             "",
@@ -135,7 +138,9 @@ def render_policy_recommendations_markdown(payload: dict[str, Any]) -> str:
             "",
             "## Decision",
             "",
+            "- `tomato__leaf` is the current report-only review-gate pilot candidate.",
             "- Treat this as report-only policy guidance.",
+            "- Keep full-image adapter prediction as the final decision; use ROI/bbox and v2 calibration only as review/audit signals.",
             "- Do not hardcode per-adapter policy decisions manually.",
             "- Do not change runtime inference without a separate validation and promotion step.",
         ]
@@ -202,6 +207,23 @@ def _target_table_row(target_id: str, target: dict[str, Any]) -> str:
         missed=_format_optional_int(target.get("missed_wrong_count")),
         note=target.get("fallback_reason", ""),
     )
+
+
+def _tomato_leaf_pilot_lines(targets: dict[str, dict[str, Any]]) -> list[str]:
+    target = targets.get("tomato__leaf")
+    if not isinstance(target, dict) or target.get("recommendation") != "report_only_candidate":
+        return []
+    return [
+        "- Keep `tomato__leaf` as a report-only candidate; do not promote it into runtime inference in this step.",
+        "- Use the selected `0.95` full-confidence threshold only for review-gate analysis and audit prioritization.",
+        "- Current evidence: missed wrong `{missed}`, calibration capture `{calibration}`, holdout capture `{holdout}`, "
+        "holdout false-positive `{holdout_fp}`.".format(
+            missed=_format_optional_int(target.get("missed_wrong_count")),
+            calibration=_format_optional_float(target.get("calibration_wrong_capture_rate")),
+            holdout=_format_optional_float(target.get("holdout_wrong_capture_rate")),
+            holdout_fp=_format_optional_float(target.get("holdout_false_positive_review_rate")),
+        ),
+    ]
 
 
 def _ordered_targets(targets: dict[str, dict[str, Any]]) -> list[str]:

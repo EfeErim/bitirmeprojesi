@@ -23,6 +23,7 @@ This repo is intentionally narrow. The fastest handoff path is:
 - [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md): OOD and readiness policy, `metric_gate.json` vs `production_readiness.json`
 - [architecture/overview.md](architecture/overview.md): training and inference flow, config flow, artifact contracts, file responsibility map
 - [architecture/code_organization_map.md](architecture/code_organization_map.md): repo-wide source boundaries for `src/`, scripts, notebook helpers, tests, configs, and docs
+- [architecture/tomato_leaf_review_gate_promotion_validation.md](architecture/tomato_leaf_review_gate_promotion_validation.md): `tomato__leaf` report-only review-gate pilot and runtime promotion gates
 - [SOTA_AUTOMATION_GUIDE.md](SOTA_AUTOMATION_GUIDE.md): continuous automation strategy grounded in literature; recommended cascade by tier and ROI
 - [roi_ablation_memory.md](roi_ablation_memory.md): current ROI/bbox/router/adapter ablation state, decisions, and next-step plan
 
@@ -120,6 +121,7 @@ Supporting references:
 - [architecture/router_performance_literature_review.md](architecture/router_performance_literature_review.md)
 - [architecture/notebook8_router_performance_plan.md](architecture/notebook8_router_performance_plan.md)
 - [architecture/router_calibration_recovery_plan.md](architecture/router_calibration_recovery_plan.md)
+- [architecture/tomato_leaf_review_gate_promotion_validation.md](architecture/tomato_leaf_review_gate_promotion_validation.md)
 - [architecture/ood_recommendation.md](architecture/ood_recommendation.md)
 - [architecture/unknown_disease_rejection.md](architecture/unknown_disease_rejection.md)
 - [architecture/plantness_input_guard_prompt_groups.md](architecture/plantness_input_guard_prompt_groups.md)

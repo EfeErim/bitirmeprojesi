@@ -105,6 +105,8 @@ def render_notebook16_failure_markdown(payload: dict[str, Any]) -> str:
     ]
     if focus:
         lines.extend(_target_markdown_lines(focus))
+        if focus_target == DEFAULT_FOCUS_TARGET:
+            lines.extend(_focus_decision_lines(focus))
     else:
         lines.append("No rows found for this focus target.")
     lines.extend(
@@ -148,6 +150,7 @@ def render_notebook16_failure_markdown(payload: dict[str, Any]) -> str:
             "## Decision",
             "",
             "- Keep this as analysis/reporting only.",
+            f"- Treat `{focus_target}` as the review-gate focus target for this Notebook 16 pass.",
             "- Do not change Notebook 16 final-decision behavior from this artifact alone.",
             "- Do not promote v2 calibration policies into runtime without a separate validation decision.",
         ]
@@ -163,6 +166,40 @@ def write_analysis_outputs(payload: dict[str, Any], *, json_output: str | Path, 
     markdown_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
     markdown_path.write_text(render_notebook16_failure_markdown(payload), encoding="utf-8")
+
+
+def _focus_decision_lines(target: dict[str, Any]) -> list[str]:
+    threshold_095 = _threshold_sweep_entry(target, 0.95)
+    if not threshold_095:
+        return []
+    return [
+        "",
+        "Review-gate focus decision:",
+        "",
+        f"- `{target.get('target_id')}` stays report-only; it is not a runtime promotion.",
+        f"- missed wrong predictions: `{target.get('missed_wrong_count', 0)}`",
+        "- `0.95` confidence-threshold simulation: review capture `{capture}`, "
+        "false-positive review `{false_positive}`.".format(
+            capture=_format_rate(threshold_095.get("wrong_capture_rate")),
+            false_positive=_format_rate(threshold_095.get("false_positive_review_rate")),
+        ),
+    ]
+
+
+def _threshold_sweep_entry(target: dict[str, Any], threshold: float) -> dict[str, Any]:
+    sweep = target.get("confidence_threshold_sweep")
+    if not isinstance(sweep, list):
+        return {}
+    for entry in sweep:
+        if not isinstance(entry, dict):
+            continue
+        try:
+            entry_threshold = float(entry.get("threshold"))
+        except (TypeError, ValueError):
+            continue
+        if abs(entry_threshold - threshold) < 1e-9:
+            return entry
+    return {}
 
 
 def _target_summary(

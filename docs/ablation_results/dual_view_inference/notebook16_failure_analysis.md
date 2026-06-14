@@ -78,6 +78,12 @@ Top missed confusion examples:
 - `domates_late_blight_yaprak -> domates_powdery_mildew_yaprak`: `5` examples; `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_late_blight_yaprak/Kaggle_Lb43.JPG`, `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_late_blight_yaprak/Kaggle_Lb29.JPG`, `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_late_blight_yaprak/Kaggle_LB_ (278).JPG`
 - `domates_bacterial_spot_and_speck_yaprak -> domates_powdery_mildew_yaprak`: `4` examples; `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_bacterial_spot_and_speck_yaprak/Kaggle_Bs62.JPG`, `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_bacterial_spot_and_speck_yaprak/Kaggle_Bs30.JPG`, `/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/domates_bacterial_spot_and_speck_yaprak/Kaggle_Bs5.JPG`
 
+Review-gate focus decision:
+
+- `tomato__leaf` stays report-only; it is not a runtime promotion.
+- missed wrong predictions: `84`
+- `0.95` confidence-threshold simulation: review capture `0.7107`, false-positive review `0.1163`.
+
 ## All Targets
 
 | Target | Samples | Wrong | Accuracy | Review capture | Missed wrong | False-positive review | Calibration |
@@ -161,5 +167,6 @@ Top missed confusion examples:
 ## Decision
 
 - Keep this as analysis/reporting only.
+- Treat `tomato__leaf` as the review-gate focus target for this Notebook 16 pass.
 - Do not change Notebook 16 final-decision behavior from this artifact alone.
 - Do not promote v2 calibration policies into runtime without a separate validation decision.

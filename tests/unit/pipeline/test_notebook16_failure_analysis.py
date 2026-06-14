@@ -135,3 +135,6 @@ def test_render_markdown_includes_focus_and_all_target_sections():
     assert "## Data/Label Audit Target: `strawberry__fruit`" in markdown
     assert "### Missed-Wrong Drilldown" in markdown
     assert "Confidence threshold sweep over existing review decisions" in markdown
+    assert "Review-gate focus decision:" in markdown
+    assert "`tomato__leaf` stays report-only; it is not a runtime promotion." in markdown
+    assert "`0.95` confidence-threshold simulation: review capture `1.0000`" in markdown
