@@ -36,6 +36,9 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Added `docs/ablation_results/dual_view_inference/multi_target_failure_prioritization.md` to rank Notebook 16 failures across all targets; it keeps `strawberry__fruit` as a real outlier but identifies `tomato__leaf` review-gate miss volume and target-specific calibration as broader next priorities.
 - Added `docs/architecture/review_gate_failure_analysis_and_literature.md`; the review gate misses errors because many wrong full-image predictions are high-confidence, so the next solution direction is target-conditional selective prediction/risk-control rather than one global confidence or ROI rule.
 - Added `docs/architecture/evidence_gate_calibration_v2_literature_plan.md`, defining v2 as automated hierarchical report-only calibration with target/group/global fallback, risk-coverage curves, holdout stability checks, and an audit queue rather than manual per-adapter tuning.
+- Added the Notebook 16 failure analyzer in `src/pipeline/notebook16_failure_analysis.py` plus `scripts/analyze_notebook16_failures.py`; it regenerates `docs/ablation_results/dual_view_inference/notebook16_failure_analysis.json` and `.md`, with `tomato__leaf` as the review-gate focus target and `strawberry__fruit` as a separate data/label audit target.
+- The Notebook 16 failure analyzer now includes a `tomato__leaf` missed-wrong drilldown: missed-confidence bins, missed-only ROI/evidence distributions, top missed confusion examples, and `0.95/0.98/0.99` confidence-threshold simulations over existing review decisions.
+- Added automated report-only evidence-gate policy recommendations in `src/pipeline/evidence_gate_policy_recommendations.py` plus `scripts/recommend_evidence_gate_policies.py`; the current report has 2 target-specific candidates, 4 group-fallback candidates, 0 global fallbacks, and 2 audit-required targets without hardcoding per-adapter policies.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - `AGENTS.md` now codifies default Codex context discipline: targeted reads, capped noisy command output, and avoidance of high-token data/generated/notebook/report surfaces unless explicitly needed.
 - Added `scripts/summarize_large_report.py` as the default bounded JSON/CSV report summarizer so Codex can inspect metrics, statuses, and representative rows without loading large artifacts into context.
@@ -79,5 +82,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `./scripts/python.cmd scripts/summarize_large_report.py docs/ablation_results/dual_view_inference/multi_target_report.json`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py --schema-version v2`
+- `./scripts/python.cmd scripts/analyze_notebook16_failures.py`
+- `./scripts/python.cmd scripts/recommend_evidence_gate_policies.py`
 - `ruff check src scripts tests`
 - `mypy --follow-imports skip src/shared src/data src/training/continual_sd_lora.py src/router src/workflows src/pipeline/router_adapter_runtime.py src/pipeline/inference_payloads.py src/adapter src/core/config_manager.py scripts/benchmark_surfaces.py`

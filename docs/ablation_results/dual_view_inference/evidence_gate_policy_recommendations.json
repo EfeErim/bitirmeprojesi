@@ -1,0 +1,295 @@
+{
+  "audit_queue": [
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection",
+        "high_confidence_errors_dominate"
+      ],
+      "sample_count": 280,
+      "target_id": "apricot__fruit",
+      "wrong_count": 14
+    },
+    {
+      "policy_status": "no_eligible_policy",
+      "reasons": [
+        "no_calibration_policy_meets_constraints",
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 174,
+      "target_id": "grape__fruit",
+      "wrong_count": 16
+    },
+    {
+      "policy_status": "no_eligible_policy",
+      "reasons": [
+        "no_calibration_policy_meets_constraints",
+        "high_confidence_errors_dominate"
+      ],
+      "sample_count": 204,
+      "target_id": "strawberry__fruit",
+      "wrong_count": 112
+    },
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 491,
+      "target_id": "strawberry__leaf",
+      "wrong_count": 1
+    },
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 119,
+      "target_id": "tomato__fruit",
+      "wrong_count": 12
+    }
+  ],
+  "calibration_input": "docs/ablation_results/dual_view_inference/evidence_gate_calibration.json",
+  "calibration_schema_version": "v2_evidence_gate_calibration",
+  "categories": {
+    "global_fallback": [],
+    "group_fallback": [
+      "apricot__fruit",
+      "apricot__leaf",
+      "strawberry__leaf",
+      "tomato__fruit"
+    ],
+    "no_eligible_policy": [
+      "grape__fruit",
+      "strawberry__fruit"
+    ],
+    "target_specific": [
+      "grape__leaf",
+      "tomato__leaf"
+    ]
+  },
+  "constraints": {
+    "holdout_ratio": 0.3,
+    "max_false_positive_rate": 0.15,
+    "max_holdout_capture_drop": 0.15,
+    "max_holdout_fp_increase": 0.1,
+    "max_review_rate": 0.25,
+    "min_calibration_errors": 10,
+    "min_capture": 0.7,
+    "min_holdout_errors": 5,
+    "min_target_errors": 20,
+    "seed": 20260613
+  },
+  "failure_analysis_input": "docs/ablation_results/dual_view_inference/notebook16_failure_analysis.json",
+  "global_policy_status": "no_eligible_policy",
+  "runtime_recommendation": {
+    "reason": "not_runtime_validated",
+    "status": "advisory_only"
+  },
+  "schema_version": "v1_evidence_gate_policy_recommendations",
+  "summary": {
+    "global_fallback_count": 0,
+    "group_fallback_count": 4,
+    "no_eligible_policy_count": 2,
+    "target_count": 8,
+    "target_specific_count": 2
+  },
+  "targets": {
+    "apricot__fruit": {
+      "calibration_false_positive_review_rate": 0.12359550561797752,
+      "calibration_wrong_capture_rate": 0.7037037037037037,
+      "fallback_reason": "target_wrong_count_below_min_target_errors:14<20",
+      "false_positive_review_rate": 0.0037593984962406013,
+      "group_key": "apricot_targets",
+      "holdout_false_positive_review_rate": 0.024096385542168676,
+      "holdout_review_rate": 0.046511627906976744,
+      "holdout_wrong_capture_rate": 0.6666666666666666,
+      "missed_wrong_count": 12,
+      "policy": {
+        "full_confidence_threshold": 0.9,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.14285714285714285,
+      "source": "group:apricot_targets",
+      "status": "group_fallback",
+      "target_id": "apricot__fruit",
+      "threshold": 0.9,
+      "wrong_count": 14
+    },
+    "apricot__leaf": {
+      "calibration_false_positive_review_rate": 0.13953488372093023,
+      "calibration_wrong_capture_rate": 0.7803030303030303,
+      "fallback_reason": "target_selection_no_eligible_or_unstable_policy",
+      "false_positive_review_rate": 0.10655737704918032,
+      "group_key": "leaf_targets",
+      "holdout_false_positive_review_rate": 0.5,
+      "holdout_review_rate": 0.62,
+      "holdout_wrong_capture_rate": 1.0,
+      "missed_wrong_count": 13,
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.5357142857142857,
+      "source": "group:leaf_targets",
+      "status": "group_fallback",
+      "target_id": "apricot__leaf",
+      "threshold": 0.95,
+      "wrong_count": 28
+    },
+    "grape__fruit": {
+      "calibration_false_positive_review_rate": null,
+      "calibration_wrong_capture_rate": null,
+      "fallback_reason": "target_wrong_count_below_min_target_errors:16<20",
+      "false_positive_review_rate": 0.08227848101265822,
+      "group_key": "",
+      "holdout_false_positive_review_rate": null,
+      "holdout_review_rate": null,
+      "holdout_wrong_capture_rate": null,
+      "missed_wrong_count": 6,
+      "policy": {},
+      "reason": "no_safe_target_group_or_global_policy",
+      "recommendation": "audit_required",
+      "review_capture_rate": 0.625,
+      "source": "no_eligible_policy",
+      "status": "no_eligible_policy",
+      "target_id": "grape__fruit",
+      "threshold": null,
+      "wrong_count": 16
+    },
+    "grape__leaf": {
+      "calibration_false_positive_review_rate": 0.12935323383084577,
+      "calibration_wrong_capture_rate": 0.7142857142857143,
+      "fallback_reason": "",
+      "false_positive_review_rate": 0.06315789473684211,
+      "group_key": "",
+      "holdout_false_positive_review_rate": 0.17857142857142858,
+      "holdout_review_rate": 0.23157894736842105,
+      "holdout_wrong_capture_rate": 0.6363636363636364,
+      "missed_wrong_count": 16,
+      "policy": {
+        "full_confidence_threshold": 0.8,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.5897435897435898,
+      "source": "target_specific",
+      "status": "target_specific",
+      "target_id": "grape__leaf",
+      "threshold": 0.8,
+      "wrong_count": 39
+    },
+    "strawberry__fruit": {
+      "calibration_false_positive_review_rate": null,
+      "calibration_wrong_capture_rate": null,
+      "fallback_reason": "target_selection_no_eligible_or_unstable_policy",
+      "false_positive_review_rate": 0.31521739130434784,
+      "group_key": "",
+      "holdout_false_positive_review_rate": null,
+      "holdout_review_rate": null,
+      "holdout_wrong_capture_rate": null,
+      "missed_wrong_count": 84,
+      "policy": {},
+      "reason": "no_safe_target_group_or_global_policy",
+      "recommendation": "audit_required",
+      "review_capture_rate": 0.25,
+      "source": "no_eligible_policy",
+      "status": "no_eligible_policy",
+      "target_id": "strawberry__fruit",
+      "threshold": null,
+      "wrong_count": 112
+    },
+    "strawberry__leaf": {
+      "calibration_false_positive_review_rate": 0.13953488372093023,
+      "calibration_wrong_capture_rate": 0.7803030303030303,
+      "fallback_reason": "target_wrong_count_below_min_target_errors:1<20",
+      "false_positive_review_rate": 0.0,
+      "group_key": "leaf_targets",
+      "holdout_false_positive_review_rate": 0.0,
+      "holdout_review_rate": 0.0,
+      "holdout_wrong_capture_rate": null,
+      "missed_wrong_count": 1,
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.0,
+      "source": "group:leaf_targets",
+      "status": "group_fallback",
+      "target_id": "strawberry__leaf",
+      "threshold": 0.95,
+      "wrong_count": 1
+    },
+    "tomato__fruit": {
+      "calibration_false_positive_review_rate": 0.13381995133819952,
+      "calibration_wrong_capture_rate": 0.7291666666666666,
+      "fallback_reason": "target_wrong_count_below_min_target_errors:12<20",
+      "false_positive_review_rate": 0.11214953271028037,
+      "group_key": "tomato_targets",
+      "holdout_false_positive_review_rate": 0.3157894736842105,
+      "holdout_review_rate": 0.36585365853658536,
+      "holdout_wrong_capture_rate": 1.0,
+      "missed_wrong_count": 5,
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.5833333333333334,
+      "source": "group:tomato_targets",
+      "status": "group_fallback",
+      "target_id": "tomato__fruit",
+      "threshold": 0.95,
+      "wrong_count": 12
+    },
+    "tomato__leaf": {
+      "calibration_false_positive_review_rate": 0.10756972111553785,
+      "calibration_wrong_capture_rate": 0.735632183908046,
+      "fallback_reason": "",
+      "false_positive_review_rate": 0.04155124653739612,
+      "group_key": "",
+      "holdout_false_positive_review_rate": 0.13636363636363635,
+      "holdout_review_rate": 0.18406593406593408,
+      "holdout_wrong_capture_rate": 0.6470588235294118,
+      "missed_wrong_count": 84,
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "reason": "eligible_policy_available_but_not_runtime_validated",
+      "recommendation": "report_only_candidate",
+      "review_capture_rate": 0.30578512396694213,
+      "source": "target_specific",
+      "status": "target_specific",
+      "target_id": "tomato__leaf",
+      "threshold": 0.95,
+      "wrong_count": 121
+    }
+  }
+}
