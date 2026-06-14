@@ -38,6 +38,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Added `docs/architecture/evidence_gate_calibration_v2_literature_plan.md`, defining v2 as automated hierarchical report-only calibration with target/group/global fallback, risk-coverage curves, holdout stability checks, and an audit queue rather than manual per-adapter tuning.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - `AGENTS.md` now codifies default Codex context discipline: targeted reads, capped noisy command output, and avoidance of high-token data/generated/notebook/report surfaces unless explicitly needed.
+- Added `scripts/summarize_large_report.py` as the default bounded JSON/CSV report summarizer so Codex can inspect metrics, statuses, and representative rows without loading large artifacts into context.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
 
@@ -46,6 +47,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Use `requirements.txt` and `requirements-dev.txt` as the dependency source of truth.
 - Treat `runs/`, `models/adapters/`, `outputs/`, and `.runtime_tmp/` as generated or local-only surfaces.
 - Treat large datasets, notebooks, generated reports, and broad command output as high-token surfaces; use targeted extraction or summaries before loading them into Codex context.
+- Use `./scripts/python.cmd scripts/summarize_large_report.py <json-or-csv>` before inspecting large report artifacts directly.
 - Prefer narrow validation commands before broad test runs.
 - Keep durable logic in `src/`; scripts and notebook cells should orchestrate canonical helpers/workflows instead of becoming independent implementations.
 
@@ -74,6 +76,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `pytest tests/integration -q --runintegration`
 - `./scripts/python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 - `./scripts/python.cmd scripts/audit_code_organization.py`
+- `./scripts/python.cmd scripts/summarize_large_report.py docs/ablation_results/dual_view_inference/multi_target_report.json`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py --schema-version v2`
 - `ruff check src scripts tests`
