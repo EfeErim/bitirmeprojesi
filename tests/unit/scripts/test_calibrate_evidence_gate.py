@@ -63,3 +63,34 @@ def test_cli_includes_samples_when_requested(tmp_path):
     payload = json.loads(output.read_text(encoding="utf-8"))
     assert status == 0
     assert payload["samples"][0]["image_path"] == "sample.jpg"
+
+
+def test_cli_writes_v2_schema_when_requested(tmp_path):
+    report = tmp_path / "multi_target_report.json"
+    output = tmp_path / "evidence_gate_calibration.json"
+    rows = [
+        _row("wrong.jpg", diagnosis="blight", full_confidence=0.55),
+        _row("correct.jpg", full_confidence=0.95),
+    ]
+    report.write_text(json.dumps({"rows": rows}), encoding="utf-8")
+
+    status = main(
+        [
+            "--input",
+            str(report),
+            "--output",
+            str(output),
+            "--schema-version",
+            "v2",
+            "--min-calibration-errors",
+            "1",
+            "--min-holdout-errors",
+            "1",
+        ]
+    )
+
+    payload = json.loads(output.read_text(encoding="utf-8"))
+    assert status == 0
+    assert payload["schema_version"] == "v2_evidence_gate_calibration"
+    assert payload["runtime_recommendation"]["status"] == "advisory_only"
+    assert "audit_queue" in payload

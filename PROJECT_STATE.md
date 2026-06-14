@@ -29,10 +29,15 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Notebook 16 auto-disconnects the Colab runtime after the multi-target report exists and the ablation output push succeeds.
 - Latest Notebook 16 multi-target report covers 2,946 samples with 0.8836 accuracy and 0.8563 macro-F1. Its failure analysis shows router bucket count 0, so the next immediate problem is not router handoff; adapter/data quality is the main later investigation, especially `strawberry__fruit` at 0.4510 accuracy, while review-gate capture remains low at 0.3557.
 - `docs/architecture/evidence_gate_calibration_plan.md` now records the implementation plan for automated target-aware evidence-gate calibration so review thresholds are not tuned manually per adapter.
-- Added the advisory evidence-gate calibration workflow in `src/pipeline/evidence_gate_calibration.py` plus `scripts/calibrate_evidence_gate.py`; it reads Notebook 16 `multi_target_report.json`, searches the deterministic v1 policy grid, and writes `docs/ablation_results/dual_view_inference/evidence_gate_calibration.json` without changing runtime inference behavior.
-- The current default calibration run (`min_capture=0.70`, `max_false_positive_rate=0.15`) found no eligible global policy, found a target-specific policy only for `grape__leaf`, and explicitly marks the other 7 targets as `no_eligible_policy` rather than falling back to an unsafe global policy.
-- Added `docs/ablation_results/dual_view_inference/evidence_gate_calibration_summary.md` as the short repo-facing handoff for the current Notebook 16 calibration result.
+- Added the advisory evidence-gate calibration workflow in `src/pipeline/evidence_gate_calibration.py` plus `scripts/calibrate_evidence_gate.py`; it reads Notebook 16 `multi_target_report.json` and writes `docs/ablation_results/dual_view_inference/evidence_gate_calibration.json` without changing runtime inference behavior.
+- Evidence-gate calibration now supports `--schema-version v2`, extending v1 into automated report-only hierarchical calibration with wider confidence thresholds, target/group/global fallback, risk-coverage curves, holdout stability checks, and an audit queue.
+- The current default v2 calibration run still finds no eligible global policy. It finds target-specific advisory policies for `grape__leaf` and `tomato__leaf`, group fallback policies for `apricot__fruit`, `apricot__leaf`, `strawberry__leaf`, and `tomato__fruit`, and explicit `no_eligible_policy` outcomes for `grape__fruit` and `strawberry__fruit`.
+- Updated `docs/ablation_results/dual_view_inference/evidence_gate_calibration_summary.md` as the short repo-facing handoff for the current v2 Notebook 16 calibration result.
+- Added `docs/ablation_results/dual_view_inference/multi_target_failure_prioritization.md` to rank Notebook 16 failures across all targets; it keeps `strawberry__fruit` as a real outlier but identifies `tomato__leaf` review-gate miss volume and target-specific calibration as broader next priorities.
+- Added `docs/architecture/review_gate_failure_analysis_and_literature.md`; the review gate misses errors because many wrong full-image predictions are high-confidence, so the next solution direction is target-conditional selective prediction/risk-control rather than one global confidence or ROI rule.
+- Added `docs/architecture/evidence_gate_calibration_v2_literature_plan.md`, defining v2 as automated hierarchical report-only calibration with target/group/global fallback, risk-coverage curves, holdout stability checks, and an audit queue rather than manual per-adapter tuning.
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
+- `AGENTS.md` now codifies default Codex context discipline: targeted reads, capped noisy command output, and avoidance of high-token data/generated/notebook/report surfaces unless explicitly needed.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
 
@@ -40,6 +45,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 
 - Use `requirements.txt` and `requirements-dev.txt` as the dependency source of truth.
 - Treat `runs/`, `models/adapters/`, `outputs/`, and `.runtime_tmp/` as generated or local-only surfaces.
+- Treat large datasets, notebooks, generated reports, and broad command output as high-token surfaces; use targeted extraction or summaries before loading them into Codex context.
 - Prefer narrow validation commands before broad test runs.
 - Keep durable logic in `src/`; scripts and notebook cells should orchestrate canonical helpers/workflows instead of becoming independent implementations.
 
@@ -49,7 +55,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - Router calibration and OOD evidence can drift if evaluation data changes.
 - Notebook-exported artifacts should not be confused with canonical source code.
 - The current evidence gate catches only about 35.6% of wrong Notebook 16 full-image decisions; global aggressive ROI-quality rules would raise capture but create too many false positives, so any threshold work should be target-specific.
-- Evidence-gate calibration is advisory only; default constraints currently reject the global policy surface because false-positive review rate is too high even when wrong-capture improves.
+- Evidence-gate calibration is advisory only; v2 default constraints still reject the global policy surface, and selected target/group policies must not be promoted into runtime behavior without a separate validation decision.
 
 ## Next Recommended Steps
 
@@ -69,5 +75,6 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `./scripts/python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 - `./scripts/python.cmd scripts/audit_code_organization.py`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py`
+- `./scripts/python.cmd scripts/calibrate_evidence_gate.py --schema-version v2`
 - `ruff check src scripts tests`
 - `mypy --follow-imports skip src/shared src/data src/training/continual_sd_lora.py src/router src/workflows src/pipeline/router_adapter_runtime.py src/pipeline/inference_payloads.py src/adapter src/core/config_manager.py scripts/benchmark_surfaces.py`

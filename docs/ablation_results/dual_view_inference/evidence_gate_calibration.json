@@ -1,29 +1,229 @@
 {
+  "audit_queue": [
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection",
+        "high_confidence_errors_dominate"
+      ],
+      "sample_count": 280,
+      "target_id": "apricot__fruit",
+      "wrong_count": 14
+    },
+    {
+      "policy_status": "no_eligible_policy",
+      "reasons": [
+        "no_calibration_policy_meets_constraints",
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 174,
+      "target_id": "grape__fruit",
+      "wrong_count": 16
+    },
+    {
+      "policy_status": "no_eligible_policy",
+      "reasons": [
+        "no_calibration_policy_meets_constraints",
+        "high_confidence_errors_dominate"
+      ],
+      "sample_count": 204,
+      "target_id": "strawberry__fruit",
+      "wrong_count": 112
+    },
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 491,
+      "target_id": "strawberry__leaf",
+      "wrong_count": 1
+    },
+    {
+      "policy_status": "group_fallback",
+      "reasons": [
+        "target_error_count_too_small_for_reliable_policy_selection"
+      ],
+      "sample_count": 119,
+      "target_id": "tomato__fruit",
+      "wrong_count": 12
+    }
+  ],
+  "calibration_diagnostics": {
+    "apricot_targets": {
+      "comparable_count": 430,
+      "correct_count": 388,
+      "error_rate": 0.09767441860465116,
+      "high_confidence_wrong_count": 10,
+      "high_confidence_wrong_rate": 0.23809523809523808,
+      "mean_correct_confidence": 0.9562538945951413,
+      "mean_wrong_confidence": 0.7475864142179489,
+      "sample_count": 430,
+      "wrong_count": 42
+    },
+    "crop:apricot": {
+      "comparable_count": 430,
+      "correct_count": 388,
+      "error_rate": 0.09767441860465116,
+      "high_confidence_wrong_count": 10,
+      "high_confidence_wrong_rate": 0.23809523809523808,
+      "mean_correct_confidence": 0.9562538945951413,
+      "mean_wrong_confidence": 0.7475864142179489,
+      "sample_count": 430,
+      "wrong_count": 42
+    },
+    "crop:grape": {
+      "comparable_count": 498,
+      "correct_count": 443,
+      "error_rate": 0.11044176706827309,
+      "high_confidence_wrong_count": 12,
+      "high_confidence_wrong_rate": 0.21818181818181817,
+      "mean_correct_confidence": 0.937082616658566,
+      "mean_wrong_confidence": 0.6893299119039016,
+      "sample_count": 498,
+      "wrong_count": 55
+    },
+    "crop:strawberry": {
+      "comparable_count": 695,
+      "correct_count": 582,
+      "error_rate": 0.16258992805755396,
+      "high_confidence_wrong_count": 77,
+      "high_confidence_wrong_rate": 0.6814159292035398,
+      "mean_correct_confidence": 0.9643695997618318,
+      "mean_wrong_confidence": 0.848638005752479,
+      "sample_count": 695,
+      "wrong_count": 113
+    },
+    "crop:tomato": {
+      "comparable_count": 1323,
+      "correct_count": 1190,
+      "error_rate": 0.10052910052910052,
+      "high_confidence_wrong_count": 54,
+      "high_confidence_wrong_rate": 0.40601503759398494,
+      "mean_correct_confidence": 0.9631217922984051,
+      "mean_wrong_confidence": 0.78462143914592,
+      "sample_count": 1323,
+      "wrong_count": 133
+    },
+    "fruit_targets": {
+      "comparable_count": 777,
+      "correct_count": 623,
+      "error_rate": 0.1981981981981982,
+      "high_confidence_wrong_count": 91,
+      "high_confidence_wrong_rate": 0.5909090909090909,
+      "mean_correct_confidence": 0.9323680546750609,
+      "mean_wrong_confidence": 0.8221798163729829,
+      "sample_count": 777,
+      "wrong_count": 154
+    },
+    "global": {
+      "comparable_count": 2946,
+      "correct_count": 2603,
+      "error_rate": 0.11642905634758995,
+      "high_confidence_wrong_count": 153,
+      "high_confidence_wrong_rate": 0.446064139941691,
+      "mean_correct_confidence": 0.957945505255147,
+      "mean_wrong_confidence": 0.7858965615402506,
+      "sample_count": 2946,
+      "wrong_count": 343
+    },
+    "grape_targets": {
+      "comparable_count": 498,
+      "correct_count": 443,
+      "error_rate": 0.11044176706827309,
+      "high_confidence_wrong_count": 12,
+      "high_confidence_wrong_rate": 0.21818181818181817,
+      "mean_correct_confidence": 0.937082616658566,
+      "mean_wrong_confidence": 0.6893299119039016,
+      "sample_count": 498,
+      "wrong_count": 55
+    },
+    "leaf_targets": {
+      "comparable_count": 2169,
+      "correct_count": 1980,
+      "error_rate": 0.08713692946058091,
+      "high_confidence_wrong_count": 62,
+      "high_confidence_wrong_rate": 0.328042328042328,
+      "mean_correct_confidence": 0.9659933596548408,
+      "mean_wrong_confidence": 0.756332427972839,
+      "sample_count": 2169,
+      "wrong_count": 189
+    },
+    "part:fruit": {
+      "comparable_count": 777,
+      "correct_count": 623,
+      "error_rate": 0.1981981981981982,
+      "high_confidence_wrong_count": 91,
+      "high_confidence_wrong_rate": 0.5909090909090909,
+      "mean_correct_confidence": 0.9323680546750609,
+      "mean_wrong_confidence": 0.8221798163729829,
+      "sample_count": 777,
+      "wrong_count": 154
+    },
+    "part:leaf": {
+      "comparable_count": 2169,
+      "correct_count": 1980,
+      "error_rate": 0.08713692946058091,
+      "high_confidence_wrong_count": 62,
+      "high_confidence_wrong_rate": 0.328042328042328,
+      "mean_correct_confidence": 0.9659933596548408,
+      "mean_wrong_confidence": 0.756332427972839,
+      "sample_count": 2169,
+      "wrong_count": 189
+    },
+    "strawberry_targets": {
+      "comparable_count": 695,
+      "correct_count": 582,
+      "error_rate": 0.16258992805755396,
+      "high_confidence_wrong_count": 77,
+      "high_confidence_wrong_rate": 0.6814159292035398,
+      "mean_correct_confidence": 0.9643695997618318,
+      "mean_wrong_confidence": 0.848638005752479,
+      "sample_count": 695,
+      "wrong_count": 113
+    },
+    "tomato_targets": {
+      "comparable_count": 1323,
+      "correct_count": 1190,
+      "error_rate": 0.10052910052910052,
+      "high_confidence_wrong_count": 54,
+      "high_confidence_wrong_rate": 0.40601503759398494,
+      "mean_correct_confidence": 0.9631217922984051,
+      "mean_wrong_confidence": 0.78462143914592,
+      "sample_count": 1323,
+      "wrong_count": 133
+    }
+  },
   "constraints": {
     "holdout_ratio": 0.3,
     "max_false_positive_rate": 0.15,
+    "max_holdout_capture_drop": 0.15,
+    "max_holdout_fp_increase": 0.1,
+    "max_review_rate": 0.25,
+    "min_calibration_errors": 10,
     "min_capture": 0.7,
+    "min_holdout_errors": 5,
     "min_target_errors": 20,
     "seed": 20260613
   },
   "global_policy": {
     "best_rejected": {
       "metrics": {
-        "accepted_count": 1052,
+        "accepted_count": 863,
         "comparable_count": 2041,
         "correct_count": 1805,
-        "correct_reviewed_count": 797,
-        "coverage": 0.5154336109750123,
-        "false_positive_review_rate": 0.44155124653739614,
-        "review_count": 989,
-        "review_rate": 0.4845663890249878,
+        "correct_reviewed_count": 962,
+        "coverage": 0.42283194512493877,
+        "false_positive_review_rate": 0.5329639889196676,
+        "review_count": 1178,
+        "review_rate": 0.5771680548750613,
         "sample_count": 2041,
-        "wrong_capture_rate": 0.8135593220338984,
+        "wrong_capture_rate": 0.9152542372881356,
         "wrong_count": 236,
-        "wrong_missed_count": 44
+        "wrong_missed_count": 20
       },
       "policy": {
-        "full_confidence_threshold": 0.9,
+        "full_confidence_threshold": 0.99,
         "review_on_full_ood": false,
         "review_on_roi_conflict": true,
         "review_on_roi_ood": true,
@@ -32,113 +232,250 @@
     },
     "calibration_metrics": {},
     "holdout_metrics": {},
+    "holdout_stability": {
+      "reason": "no_eligible_calibration_policy",
+      "status": "not_evaluated"
+    },
     "policy": {},
     "status": "no_eligible_policy"
   },
-  "schema_version": "v1_evidence_gate_calibration",
-  "source_report": "docs/ablation_results/dual_view_inference/multi_target_report.json",
-  "target_policies": {
-    "apricot__fruit": {
-      "best_rejected": {
-        "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
+  "group_policies": {
+    "apricot_targets": {
+      "calibration_metrics": {
+        "accepted_count": 242,
+        "comparable_count": 294,
+        "correct_count": 267,
+        "correct_reviewed_count": 33,
+        "coverage": 0.8231292517006803,
+        "false_positive_review_rate": 0.12359550561797752,
+        "review_count": 52,
+        "review_rate": 0.17687074829931973,
+        "sample_count": 294,
+        "wrong_capture_rate": 0.7037037037037037,
+        "wrong_count": 27,
+        "wrong_missed_count": 8
       },
-      "calibration_metrics": {},
-      "fallback_reason": "target_wrong_count_below_min_target_errors:14<20",
-      "holdout_metrics": {},
-      "policy": {},
-      "status": "no_eligible_policy"
+      "holdout_metrics": {
+        "accepted_count": 111,
+        "comparable_count": 136,
+        "correct_count": 121,
+        "correct_reviewed_count": 12,
+        "coverage": 0.8161764705882353,
+        "false_positive_review_rate": 0.09917355371900827,
+        "review_count": 25,
+        "review_rate": 0.18382352941176472,
+        "sample_count": 136,
+        "wrong_capture_rate": 0.8666666666666667,
+        "wrong_count": 15,
+        "wrong_missed_count": 2
+      },
+      "holdout_stability": {
+        "capture_drop": -0.16296296296296298,
+        "false_positive_increase": -0.024421951898969257,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "apricot__fruit",
+        "apricot__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.9,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
     },
-    "apricot__leaf": {
+    "crop:apricot": {
+      "calibration_metrics": {
+        "accepted_count": 242,
+        "comparable_count": 294,
+        "correct_count": 267,
+        "correct_reviewed_count": 33,
+        "coverage": 0.8231292517006803,
+        "false_positive_review_rate": 0.12359550561797752,
+        "review_count": 52,
+        "review_rate": 0.17687074829931973,
+        "sample_count": 294,
+        "wrong_capture_rate": 0.7037037037037037,
+        "wrong_count": 27,
+        "wrong_missed_count": 8
+      },
+      "holdout_metrics": {
+        "accepted_count": 111,
+        "comparable_count": 136,
+        "correct_count": 121,
+        "correct_reviewed_count": 12,
+        "coverage": 0.8161764705882353,
+        "false_positive_review_rate": 0.09917355371900827,
+        "review_count": 25,
+        "review_rate": 0.18382352941176472,
+        "sample_count": 136,
+        "wrong_capture_rate": 0.8666666666666667,
+        "wrong_count": 15,
+        "wrong_missed_count": 2
+      },
+      "holdout_stability": {
+        "capture_drop": -0.16296296296296298,
+        "false_positive_increase": -0.024421951898969257,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "apricot__fruit",
+        "apricot__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.9,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
+    },
+    "crop:grape": {
       "best_rejected": {
         "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
+          "accepted_count": 182,
+          "comparable_count": 353,
+          "correct_count": 316,
+          "correct_reviewed_count": 135,
+          "coverage": 0.5155807365439093,
+          "false_positive_review_rate": 0.4272151898734177,
+          "review_count": 171,
+          "review_rate": 0.48441926345609065,
+          "sample_count": 353,
+          "wrong_capture_rate": 0.972972972972973,
+          "wrong_count": 37,
+          "wrong_missed_count": 1
         },
         "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
-      },
-      "calibration_metrics": {},
-      "fallback_reason": "target_selection_no_eligible_policy",
-      "holdout_metrics": {},
-      "policy": {},
-      "status": "no_eligible_policy",
-      "target_best_rejected": {
-        "metrics": {
-          "accepted_count": 57,
-          "comparable_count": 100,
-          "correct_count": 84,
-          "correct_reviewed_count": 29,
-          "coverage": 0.57,
-          "false_positive_review_rate": 0.34523809523809523,
-          "review_count": 43,
-          "review_rate": 0.43,
-          "sample_count": 100,
-          "wrong_capture_rate": 0.875,
-          "wrong_count": 16,
-          "wrong_missed_count": 2
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
+          "full_confidence_threshold": 0.99,
           "review_on_full_ood": false,
           "review_on_roi_conflict": false,
           "review_on_roi_ood": false,
           "review_on_roi_quality_bad": false
         }
-      }
+      },
+      "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "grape__fruit",
+        "grape__leaf"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
     },
-    "grape__fruit": {
+    "crop:strawberry": {
       "best_rejected": {
         "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
+          "accepted_count": 311,
+          "comparable_count": 476,
+          "correct_count": 400,
+          "correct_reviewed_count": 101,
+          "coverage": 0.6533613445378151,
+          "false_positive_review_rate": 0.2525,
+          "review_count": 165,
+          "review_rate": 0.34663865546218486,
+          "sample_count": 476,
+          "wrong_capture_rate": 0.8421052631578947,
+          "wrong_count": 76,
+          "wrong_missed_count": 12
         },
         "policy": {
-          "full_confidence_threshold": 0.9,
+          "full_confidence_threshold": 0.99,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": false,
+          "review_on_roi_ood": false,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "strawberry__fruit",
+        "strawberry__leaf"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "crop:tomato": {
+      "calibration_metrics": {
+        "accepted_count": 738,
+        "comparable_count": 918,
+        "correct_count": 822,
+        "correct_reviewed_count": 110,
+        "coverage": 0.803921568627451,
+        "false_positive_review_rate": 0.13381995133819952,
+        "review_count": 180,
+        "review_rate": 0.19607843137254902,
+        "sample_count": 918,
+        "wrong_capture_rate": 0.7291666666666666,
+        "wrong_count": 96,
+        "wrong_missed_count": 26
+      },
+      "holdout_metrics": {
+        "accepted_count": 323,
+        "comparable_count": 405,
+        "correct_count": 368,
+        "correct_reviewed_count": 57,
+        "coverage": 0.7975308641975308,
+        "false_positive_review_rate": 0.15489130434782608,
+        "review_count": 82,
+        "review_rate": 0.20246913580246914,
+        "sample_count": 405,
+        "wrong_capture_rate": 0.6756756756756757,
+        "wrong_count": 37,
+        "wrong_missed_count": 12
+      },
+      "holdout_stability": {
+        "capture_drop": 0.05349099099099097,
+        "false_positive_increase": 0.021071353009626564,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "tomato__fruit",
+        "tomato__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
+    },
+    "fruit_targets": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 166,
+          "comparable_count": 533,
+          "correct_count": 429,
+          "correct_reviewed_count": 276,
+          "coverage": 0.31144465290806755,
+          "false_positive_review_rate": 0.6433566433566433,
+          "review_count": 367,
+          "review_rate": 0.6885553470919324,
+          "sample_count": 533,
+          "wrong_capture_rate": 0.875,
+          "wrong_count": 104,
+          "wrong_missed_count": 13
+        },
+        "policy": {
+          "full_confidence_threshold": 0.99,
           "review_on_full_ood": false,
           "review_on_roi_conflict": true,
           "review_on_roi_ood": true,
@@ -146,8 +483,2035 @@
         }
       },
       "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "apricot__fruit",
+        "grape__fruit",
+        "strawberry__fruit",
+        "tomato__fruit"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "grape_targets": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 182,
+          "comparable_count": 353,
+          "correct_count": 316,
+          "correct_reviewed_count": 135,
+          "coverage": 0.5155807365439093,
+          "false_positive_review_rate": 0.4272151898734177,
+          "review_count": 171,
+          "review_rate": 0.48441926345609065,
+          "sample_count": 353,
+          "wrong_capture_rate": 0.972972972972973,
+          "wrong_count": 37,
+          "wrong_missed_count": 1
+        },
+        "policy": {
+          "full_confidence_threshold": 0.99,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": false,
+          "review_on_roi_ood": false,
+          "review_on_roi_quality_bad": false
+        }
+      },
+      "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "grape__fruit",
+        "grape__leaf"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "leaf_targets": {
+      "calibration_metrics": {
+        "accepted_count": 1213,
+        "comparable_count": 1508,
+        "correct_count": 1376,
+        "correct_reviewed_count": 192,
+        "coverage": 0.8043766578249337,
+        "false_positive_review_rate": 0.13953488372093023,
+        "review_count": 295,
+        "review_rate": 0.1956233421750663,
+        "sample_count": 1508,
+        "wrong_capture_rate": 0.7803030303030303,
+        "wrong_count": 132,
+        "wrong_missed_count": 29
+      },
+      "holdout_metrics": {
+        "accepted_count": 532,
+        "comparable_count": 661,
+        "correct_count": 604,
+        "correct_reviewed_count": 86,
+        "coverage": 0.8048411497730711,
+        "false_positive_review_rate": 0.1423841059602649,
+        "review_count": 129,
+        "review_rate": 0.1951588502269289,
+        "sample_count": 661,
+        "wrong_capture_rate": 0.7543859649122807,
+        "wrong_count": 57,
+        "wrong_missed_count": 14
+      },
+      "holdout_stability": {
+        "capture_drop": 0.02591706539074956,
+        "false_positive_increase": 0.0028492222393346756,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "apricot__leaf",
+        "grape__leaf",
+        "strawberry__leaf",
+        "tomato__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
+    },
+    "part:fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 166,
+          "comparable_count": 533,
+          "correct_count": 429,
+          "correct_reviewed_count": 276,
+          "coverage": 0.31144465290806755,
+          "false_positive_review_rate": 0.6433566433566433,
+          "review_count": 367,
+          "review_rate": 0.6885553470919324,
+          "sample_count": 533,
+          "wrong_capture_rate": 0.875,
+          "wrong_count": 104,
+          "wrong_missed_count": 13
+        },
+        "policy": {
+          "full_confidence_threshold": 0.99,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "apricot__fruit",
+        "grape__fruit",
+        "strawberry__fruit",
+        "tomato__fruit"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "part:leaf": {
+      "calibration_metrics": {
+        "accepted_count": 1213,
+        "comparable_count": 1508,
+        "correct_count": 1376,
+        "correct_reviewed_count": 192,
+        "coverage": 0.8043766578249337,
+        "false_positive_review_rate": 0.13953488372093023,
+        "review_count": 295,
+        "review_rate": 0.1956233421750663,
+        "sample_count": 1508,
+        "wrong_capture_rate": 0.7803030303030303,
+        "wrong_count": 132,
+        "wrong_missed_count": 29
+      },
+      "holdout_metrics": {
+        "accepted_count": 532,
+        "comparable_count": 661,
+        "correct_count": 604,
+        "correct_reviewed_count": 86,
+        "coverage": 0.8048411497730711,
+        "false_positive_review_rate": 0.1423841059602649,
+        "review_count": 129,
+        "review_rate": 0.1951588502269289,
+        "sample_count": 661,
+        "wrong_capture_rate": 0.7543859649122807,
+        "wrong_count": 57,
+        "wrong_missed_count": 14
+      },
+      "holdout_stability": {
+        "capture_drop": 0.02591706539074956,
+        "false_positive_increase": 0.0028492222393346756,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "apricot__leaf",
+        "grape__leaf",
+        "strawberry__leaf",
+        "tomato__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
+    },
+    "strawberry_targets": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 311,
+          "comparable_count": 476,
+          "correct_count": 400,
+          "correct_reviewed_count": 101,
+          "coverage": 0.6533613445378151,
+          "false_positive_review_rate": 0.2525,
+          "review_count": 165,
+          "review_rate": 0.34663865546218486,
+          "sample_count": 476,
+          "wrong_capture_rate": 0.8421052631578947,
+          "wrong_count": 76,
+          "wrong_missed_count": 12
+        },
+        "policy": {
+          "full_confidence_threshold": 0.99,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": false,
+          "review_on_roi_ood": false,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_eligible_calibration_policy",
+        "status": "not_evaluated"
+      },
+      "members": [
+        "strawberry__fruit",
+        "strawberry__leaf"
+      ],
+      "policy": {},
+      "status": "no_eligible_policy"
+    },
+    "tomato_targets": {
+      "calibration_metrics": {
+        "accepted_count": 738,
+        "comparable_count": 918,
+        "correct_count": 822,
+        "correct_reviewed_count": 110,
+        "coverage": 0.803921568627451,
+        "false_positive_review_rate": 0.13381995133819952,
+        "review_count": 180,
+        "review_rate": 0.19607843137254902,
+        "sample_count": 918,
+        "wrong_capture_rate": 0.7291666666666666,
+        "wrong_count": 96,
+        "wrong_missed_count": 26
+      },
+      "holdout_metrics": {
+        "accepted_count": 323,
+        "comparable_count": 405,
+        "correct_count": 368,
+        "correct_reviewed_count": 57,
+        "coverage": 0.7975308641975308,
+        "false_positive_review_rate": 0.15489130434782608,
+        "review_count": 82,
+        "review_rate": 0.20246913580246914,
+        "sample_count": 405,
+        "wrong_capture_rate": 0.6756756756756757,
+        "wrong_count": 37,
+        "wrong_missed_count": 12
+      },
+      "holdout_stability": {
+        "capture_drop": 0.05349099099099097,
+        "false_positive_increase": 0.021071353009626564,
+        "issues": [],
+        "status": "passed"
+      },
+      "members": [
+        "tomato__fruit",
+        "tomato__leaf"
+      ],
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "eligible"
+    }
+  },
+  "policy_families": {
+    "confidence_roi_ood_grid": {
+      "candidate_count": 128,
+      "description": "confidence thresholds combined with ROI conflict, ROI quality, full OOD, and ROI OOD gates"
+    },
+    "confidence_threshold_only": {
+      "description": "review when full_confidence is below threshold",
+      "thresholds": [
+        0.5,
+        0.6,
+        0.7,
+        0.8,
+        0.9,
+        0.95,
+        0.98,
+        0.99
+      ]
+    }
+  },
+  "risk_coverage_curves": {
+    "apricot_targets": [
+      {
+        "accepted_count": 421,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 4,
+        "coverage": 0.9790697674418605,
+        "false_positive_review_rate": 0.010309278350515464,
+        "review_count": 9,
+        "review_rate": 0.020930232558139535,
+        "sample_count": 430,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.11904761904761904,
+        "wrong_count": 42,
+        "wrong_missed_count": 37
+      },
+      {
+        "accepted_count": 410,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 10,
+        "coverage": 0.9534883720930233,
+        "false_positive_review_rate": 0.02577319587628866,
+        "review_count": 20,
+        "review_rate": 0.046511627906976744,
+        "sample_count": 430,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.23809523809523808,
+        "wrong_count": 42,
+        "wrong_missed_count": 32
+      },
+      {
+        "accepted_count": 399,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9279069767441861,
+        "false_positive_review_rate": 0.03608247422680412,
+        "review_count": 31,
+        "review_rate": 0.07209302325581396,
+        "sample_count": 430,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.40476190476190477,
+        "wrong_count": 42,
+        "wrong_missed_count": 25
+      },
+      {
+        "accepted_count": 386,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 23,
+        "coverage": 0.8976744186046511,
+        "false_positive_review_rate": 0.059278350515463915,
+        "review_count": 44,
+        "review_rate": 0.10232558139534884,
+        "sample_count": 430,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.5,
+        "wrong_count": 42,
+        "wrong_missed_count": 21
+      },
+      {
+        "accepted_count": 353,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 45,
+        "coverage": 0.8209302325581396,
+        "false_positive_review_rate": 0.11597938144329897,
+        "review_count": 77,
+        "review_rate": 0.17906976744186046,
+        "sample_count": 430,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.7619047619047619,
+        "wrong_count": 42,
+        "wrong_missed_count": 10
+      },
+      {
+        "accepted_count": 303,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 89,
+        "coverage": 0.7046511627906977,
+        "false_positive_review_rate": 0.22938144329896906,
+        "review_count": 127,
+        "review_rate": 0.29534883720930233,
+        "sample_count": 430,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.9047619047619048,
+        "wrong_count": 42,
+        "wrong_missed_count": 4
+      },
+      {
+        "accepted_count": 252,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 138,
+        "coverage": 0.586046511627907,
+        "false_positive_review_rate": 0.3556701030927835,
+        "review_count": 178,
+        "review_rate": 0.413953488372093,
+        "sample_count": 430,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.9523809523809523,
+        "wrong_count": 42,
+        "wrong_missed_count": 2
+      },
+      {
+        "accepted_count": 238,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 152,
+        "coverage": 0.5534883720930233,
+        "false_positive_review_rate": 0.3917525773195876,
+        "review_count": 192,
+        "review_rate": 0.44651162790697674,
+        "sample_count": 430,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9523809523809523,
+        "wrong_count": 42,
+        "wrong_missed_count": 2
+      }
+    ],
+    "crop:apricot": [
+      {
+        "accepted_count": 421,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 4,
+        "coverage": 0.9790697674418605,
+        "false_positive_review_rate": 0.010309278350515464,
+        "review_count": 9,
+        "review_rate": 0.020930232558139535,
+        "sample_count": 430,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.11904761904761904,
+        "wrong_count": 42,
+        "wrong_missed_count": 37
+      },
+      {
+        "accepted_count": 410,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 10,
+        "coverage": 0.9534883720930233,
+        "false_positive_review_rate": 0.02577319587628866,
+        "review_count": 20,
+        "review_rate": 0.046511627906976744,
+        "sample_count": 430,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.23809523809523808,
+        "wrong_count": 42,
+        "wrong_missed_count": 32
+      },
+      {
+        "accepted_count": 399,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9279069767441861,
+        "false_positive_review_rate": 0.03608247422680412,
+        "review_count": 31,
+        "review_rate": 0.07209302325581396,
+        "sample_count": 430,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.40476190476190477,
+        "wrong_count": 42,
+        "wrong_missed_count": 25
+      },
+      {
+        "accepted_count": 386,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 23,
+        "coverage": 0.8976744186046511,
+        "false_positive_review_rate": 0.059278350515463915,
+        "review_count": 44,
+        "review_rate": 0.10232558139534884,
+        "sample_count": 430,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.5,
+        "wrong_count": 42,
+        "wrong_missed_count": 21
+      },
+      {
+        "accepted_count": 353,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 45,
+        "coverage": 0.8209302325581396,
+        "false_positive_review_rate": 0.11597938144329897,
+        "review_count": 77,
+        "review_rate": 0.17906976744186046,
+        "sample_count": 430,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.7619047619047619,
+        "wrong_count": 42,
+        "wrong_missed_count": 10
+      },
+      {
+        "accepted_count": 303,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 89,
+        "coverage": 0.7046511627906977,
+        "false_positive_review_rate": 0.22938144329896906,
+        "review_count": 127,
+        "review_rate": 0.29534883720930233,
+        "sample_count": 430,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.9047619047619048,
+        "wrong_count": 42,
+        "wrong_missed_count": 4
+      },
+      {
+        "accepted_count": 252,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 138,
+        "coverage": 0.586046511627907,
+        "false_positive_review_rate": 0.3556701030927835,
+        "review_count": 178,
+        "review_rate": 0.413953488372093,
+        "sample_count": 430,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.9523809523809523,
+        "wrong_count": 42,
+        "wrong_missed_count": 2
+      },
+      {
+        "accepted_count": 238,
+        "comparable_count": 430,
+        "correct_count": 388,
+        "correct_reviewed_count": 152,
+        "coverage": 0.5534883720930233,
+        "false_positive_review_rate": 0.3917525773195876,
+        "review_count": 192,
+        "review_rate": 0.44651162790697674,
+        "sample_count": 430,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9523809523809523,
+        "wrong_count": 42,
+        "wrong_missed_count": 2
+      }
+    ],
+    "crop:grape": [
+      {
+        "accepted_count": 479,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 10,
+        "coverage": 0.9618473895582329,
+        "false_positive_review_rate": 0.022573363431151242,
+        "review_count": 19,
+        "review_rate": 0.03815261044176707,
+        "sample_count": 498,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.16363636363636364,
+        "wrong_count": 55,
+        "wrong_missed_count": 46
+      },
+      {
+        "accepted_count": 457,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 19,
+        "coverage": 0.9176706827309237,
+        "false_positive_review_rate": 0.04288939051918736,
+        "review_count": 41,
+        "review_rate": 0.0823293172690763,
+        "sample_count": 498,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.4,
+        "wrong_count": 55,
+        "wrong_missed_count": 33
+      },
+      {
+        "accepted_count": 434,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 31,
+        "coverage": 0.8714859437751004,
+        "false_positive_review_rate": 0.06997742663656885,
+        "review_count": 64,
+        "review_rate": 0.1285140562248996,
+        "sample_count": 498,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.6,
+        "wrong_count": 55,
+        "wrong_missed_count": 22
+      },
+      {
+        "accepted_count": 404,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 57,
+        "coverage": 0.8112449799196787,
+        "false_positive_review_rate": 0.12866817155756208,
+        "review_count": 94,
+        "review_rate": 0.18875502008032127,
+        "sample_count": 498,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.6727272727272727,
+        "wrong_count": 55,
+        "wrong_missed_count": 18
+      },
+      {
+        "accepted_count": 374,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 81,
+        "coverage": 0.751004016064257,
+        "false_positive_review_rate": 0.18284424379232506,
+        "review_count": 124,
+        "review_rate": 0.24899598393574296,
+        "sample_count": 498,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.7818181818181819,
+        "wrong_count": 55,
+        "wrong_missed_count": 12
+      },
+      {
+        "accepted_count": 344,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 108,
+        "coverage": 0.6907630522088354,
+        "false_positive_review_rate": 0.24379232505643342,
+        "review_count": 154,
+        "review_rate": 0.3092369477911647,
+        "sample_count": 498,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.8363636363636363,
+        "wrong_count": 55,
+        "wrong_missed_count": 9
+      },
+      {
+        "accepted_count": 297,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 151,
+        "coverage": 0.5963855421686747,
+        "false_positive_review_rate": 0.34085778781038373,
+        "review_count": 201,
+        "review_rate": 0.4036144578313253,
+        "sample_count": 498,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.9090909090909091,
+        "wrong_count": 55,
+        "wrong_missed_count": 5
+      },
+      {
+        "accepted_count": 260,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 185,
+        "coverage": 0.5220883534136547,
+        "false_positive_review_rate": 0.417607223476298,
+        "review_count": 238,
+        "review_rate": 0.4779116465863454,
+        "sample_count": 498,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9636363636363636,
+        "wrong_count": 55,
+        "wrong_missed_count": 2
+      }
+    ],
+    "crop:strawberry": [
+      {
+        "accepted_count": 672,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 9,
+        "coverage": 0.9669064748201439,
+        "false_positive_review_rate": 0.015463917525773196,
+        "review_count": 23,
+        "review_rate": 0.033093525179856115,
+        "sample_count": 695,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.12389380530973451,
+        "wrong_count": 113,
+        "wrong_missed_count": 99
+      },
+      {
+        "accepted_count": 657,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9453237410071943,
+        "false_positive_review_rate": 0.024054982817869417,
+        "review_count": 38,
+        "review_rate": 0.05467625899280575,
+        "sample_count": 695,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.21238938053097345,
+        "wrong_count": 113,
+        "wrong_missed_count": 89
+      },
+      {
+        "accepted_count": 638,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 29,
+        "coverage": 0.9179856115107914,
+        "false_positive_review_rate": 0.04982817869415808,
+        "review_count": 57,
+        "review_rate": 0.08201438848920864,
+        "sample_count": 695,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.24778761061946902,
+        "wrong_count": 113,
+        "wrong_missed_count": 85
+      },
+      {
+        "accepted_count": 618,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 44,
+        "coverage": 0.8892086330935252,
+        "false_positive_review_rate": 0.07560137457044673,
+        "review_count": 77,
+        "review_rate": 0.11079136690647481,
+        "sample_count": 695,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.2920353982300885,
+        "wrong_count": 113,
+        "wrong_missed_count": 80
+      },
+      {
+        "accepted_count": 590,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 69,
+        "coverage": 0.8489208633093526,
+        "false_positive_review_rate": 0.11855670103092783,
+        "review_count": 105,
+        "review_rate": 0.1510791366906475,
+        "sample_count": 695,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.3185840707964602,
+        "wrong_count": 113,
+        "wrong_missed_count": 77
+      },
+      {
+        "accepted_count": 575,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 78,
+        "coverage": 0.8273381294964028,
+        "false_positive_review_rate": 0.13402061855670103,
+        "review_count": 120,
+        "review_rate": 0.17266187050359713,
+        "sample_count": 695,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.37168141592920356,
+        "wrong_count": 113,
+        "wrong_missed_count": 71
+      },
+      {
+        "accepted_count": 558,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 87,
+        "coverage": 0.8028776978417266,
+        "false_positive_review_rate": 0.14948453608247422,
+        "review_count": 137,
+        "review_rate": 0.1971223021582734,
+        "sample_count": 695,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.4424778761061947,
+        "wrong_count": 113,
+        "wrong_missed_count": 63
+      },
+      {
+        "accepted_count": 527,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 95,
+        "coverage": 0.758273381294964,
+        "false_positive_review_rate": 0.16323024054982818,
+        "review_count": 168,
+        "review_rate": 0.24172661870503598,
+        "sample_count": 695,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.6460176991150443,
+        "wrong_count": 113,
+        "wrong_missed_count": 40
+      }
+    ],
+    "crop:tomato": [
+      {
+        "accepted_count": 1295,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9788359788359788,
+        "false_positive_review_rate": 0.011764705882352941,
+        "review_count": 28,
+        "review_rate": 0.021164021164021163,
+        "sample_count": 1323,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.10526315789473684,
+        "wrong_count": 133,
+        "wrong_missed_count": 119
+      },
+      {
+        "accepted_count": 1257,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 36,
+        "coverage": 0.9501133786848073,
+        "false_positive_review_rate": 0.030252100840336135,
+        "review_count": 66,
+        "review_rate": 0.049886621315192746,
+        "sample_count": 1323,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.22556390977443608,
+        "wrong_count": 133,
+        "wrong_missed_count": 103
+      },
+      {
+        "accepted_count": 1222,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 57,
+        "coverage": 0.9236583522297808,
+        "false_positive_review_rate": 0.04789915966386555,
+        "review_count": 101,
+        "review_rate": 0.07634164777021919,
+        "sample_count": 1323,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3308270676691729,
+        "wrong_count": 133,
+        "wrong_missed_count": 89
+      },
+      {
+        "accepted_count": 1186,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 78,
+        "coverage": 0.8964474678760394,
+        "false_positive_review_rate": 0.06554621848739496,
+        "review_count": 137,
+        "review_rate": 0.10355253212396069,
+        "sample_count": 1323,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.44360902255639095,
+        "wrong_count": 133,
+        "wrong_missed_count": 74
+      },
+      {
+        "accepted_count": 1125,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 119,
+        "coverage": 0.8503401360544217,
+        "false_positive_review_rate": 0.1,
+        "review_count": 198,
+        "review_rate": 0.14965986394557823,
+        "sample_count": 1323,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.5939849624060151,
+        "wrong_count": 133,
+        "wrong_missed_count": 54
+      },
+      {
+        "accepted_count": 1061,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 167,
+        "coverage": 0.8019652305366591,
+        "false_positive_review_rate": 0.1403361344537815,
+        "review_count": 262,
+        "review_rate": 0.1980347694633409,
+        "sample_count": 1323,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.7142857142857143,
+        "wrong_count": 133,
+        "wrong_missed_count": 38
+      },
+      {
+        "accepted_count": 971,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 245,
+        "coverage": 0.7339380196523053,
+        "false_positive_review_rate": 0.20588235294117646,
+        "review_count": 352,
+        "review_rate": 0.2660619803476946,
+        "sample_count": 1323,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.8045112781954887,
+        "wrong_count": 133,
+        "wrong_missed_count": 26
+      },
+      {
+        "accepted_count": 896,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 312,
+        "coverage": 0.6772486772486772,
+        "false_positive_review_rate": 0.26218487394957984,
+        "review_count": 427,
+        "review_rate": 0.32275132275132273,
+        "sample_count": 1323,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.8646616541353384,
+        "wrong_count": 133,
+        "wrong_missed_count": 18
+      }
+    ],
+    "fruit_targets": [
+      {
+        "accepted_count": 744,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 15,
+        "coverage": 0.9575289575289575,
+        "false_positive_review_rate": 0.024077046548956663,
+        "review_count": 33,
+        "review_rate": 0.04247104247104247,
+        "sample_count": 777,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.11688311688311688,
+        "wrong_count": 154,
+        "wrong_missed_count": 136
+      },
+      {
+        "accepted_count": 712,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 31,
+        "coverage": 0.9163449163449163,
+        "false_positive_review_rate": 0.04975922953451043,
+        "review_count": 65,
+        "review_rate": 0.08365508365508366,
+        "sample_count": 777,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.22077922077922077,
+        "wrong_count": 154,
+        "wrong_missed_count": 120
+      },
+      {
+        "accepted_count": 675,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 55,
+        "coverage": 0.8687258687258688,
+        "false_positive_review_rate": 0.08828250401284109,
+        "review_count": 102,
+        "review_rate": 0.13127413127413126,
+        "sample_count": 777,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3051948051948052,
+        "wrong_count": 154,
+        "wrong_missed_count": 107
+      },
+      {
+        "accepted_count": 643,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 79,
+        "coverage": 0.8275418275418276,
+        "false_positive_review_rate": 0.12680577849117175,
+        "review_count": 134,
+        "review_rate": 0.17245817245817247,
+        "sample_count": 777,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.35714285714285715,
+        "wrong_count": 154,
+        "wrong_missed_count": 99
+      },
+      {
+        "accepted_count": 585,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 129,
+        "coverage": 0.752895752895753,
+        "false_positive_review_rate": 0.20706260032102727,
+        "review_count": 192,
+        "review_rate": 0.2471042471042471,
+        "sample_count": 777,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.4090909090909091,
+        "wrong_count": 154,
+        "wrong_missed_count": 91
+      },
+      {
+        "accepted_count": 538,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 164,
+        "coverage": 0.6924066924066924,
+        "false_positive_review_rate": 0.26324237560192615,
+        "review_count": 239,
+        "review_rate": 0.3075933075933076,
+        "sample_count": 777,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.487012987012987,
+        "wrong_count": 154,
+        "wrong_missed_count": 79
+      },
+      {
+        "accepted_count": 478,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 215,
+        "coverage": 0.6151866151866152,
+        "false_positive_review_rate": 0.3451043338683788,
+        "review_count": 299,
+        "review_rate": 0.38481338481338484,
+        "sample_count": 777,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.5454545454545454,
+        "wrong_count": 154,
+        "wrong_missed_count": 70
+      },
+      {
+        "accepted_count": 409,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 258,
+        "coverage": 0.5263835263835264,
+        "false_positive_review_rate": 0.41412520064205455,
+        "review_count": 368,
+        "review_rate": 0.47361647361647363,
+        "sample_count": 777,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.7142857142857143,
+        "wrong_count": 154,
+        "wrong_missed_count": 44
+      }
+    ],
+    "global": [
+      {
+        "accepted_count": 2867,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 37,
+        "coverage": 0.973183978275628,
+        "false_positive_review_rate": 0.014214368036880523,
+        "review_count": 79,
+        "review_rate": 0.02681602172437203,
+        "sample_count": 2946,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.12244897959183673,
+        "wrong_count": 343,
+        "wrong_missed_count": 301
+      },
+      {
+        "accepted_count": 2781,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 79,
+        "coverage": 0.9439918533604889,
+        "false_positive_review_rate": 0.03034959661928544,
+        "review_count": 165,
+        "review_rate": 0.0560081466395112,
+        "sample_count": 2946,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.25072886297376096,
+        "wrong_count": 343,
+        "wrong_missed_count": 257
+      },
+      {
+        "accepted_count": 2693,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 131,
+        "coverage": 0.9141208418194161,
+        "false_positive_review_rate": 0.050326546292739145,
+        "review_count": 253,
+        "review_rate": 0.08587915818058384,
+        "sample_count": 2946,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3556851311953353,
+        "wrong_count": 343,
+        "wrong_missed_count": 221
+      },
+      {
+        "accepted_count": 2594,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 202,
+        "coverage": 0.8805159538357095,
+        "false_positive_review_rate": 0.07760276603918556,
+        "review_count": 352,
+        "review_rate": 0.11948404616429056,
+        "sample_count": 2946,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.43731778425655976,
+        "wrong_count": 343,
+        "wrong_missed_count": 193
+      },
+      {
+        "accepted_count": 2442,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 314,
+        "coverage": 0.8289205702647657,
+        "false_positive_review_rate": 0.12063004225893201,
+        "review_count": 504,
+        "review_rate": 0.1710794297352342,
+        "sample_count": 2946,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.5539358600583091,
+        "wrong_count": 343,
+        "wrong_missed_count": 153
+      },
+      {
+        "accepted_count": 2283,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 442,
+        "coverage": 0.774949083503055,
+        "false_positive_review_rate": 0.1698040722243565,
+        "review_count": 663,
+        "review_rate": 0.225050916496945,
+        "sample_count": 2946,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.6443148688046647,
+        "wrong_count": 343,
+        "wrong_missed_count": 122
+      },
+      {
+        "accepted_count": 2078,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 621,
+        "coverage": 0.7053632043448744,
+        "false_positive_review_rate": 0.23857087975412986,
+        "review_count": 868,
+        "review_rate": 0.29463679565512557,
+        "sample_count": 2946,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.7201166180758017,
+        "wrong_count": 343,
+        "wrong_missed_count": 96
+      },
+      {
+        "accepted_count": 1921,
+        "comparable_count": 2946,
+        "correct_count": 2603,
+        "correct_reviewed_count": 744,
+        "coverage": 0.6520706042090971,
+        "false_positive_review_rate": 0.28582404917403,
+        "review_count": 1025,
+        "review_rate": 0.34792939579090293,
+        "sample_count": 2946,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.8192419825072886,
+        "wrong_count": 343,
+        "wrong_missed_count": 62
+      }
+    ],
+    "grape_targets": [
+      {
+        "accepted_count": 479,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 10,
+        "coverage": 0.9618473895582329,
+        "false_positive_review_rate": 0.022573363431151242,
+        "review_count": 19,
+        "review_rate": 0.03815261044176707,
+        "sample_count": 498,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.16363636363636364,
+        "wrong_count": 55,
+        "wrong_missed_count": 46
+      },
+      {
+        "accepted_count": 457,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 19,
+        "coverage": 0.9176706827309237,
+        "false_positive_review_rate": 0.04288939051918736,
+        "review_count": 41,
+        "review_rate": 0.0823293172690763,
+        "sample_count": 498,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.4,
+        "wrong_count": 55,
+        "wrong_missed_count": 33
+      },
+      {
+        "accepted_count": 434,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 31,
+        "coverage": 0.8714859437751004,
+        "false_positive_review_rate": 0.06997742663656885,
+        "review_count": 64,
+        "review_rate": 0.1285140562248996,
+        "sample_count": 498,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.6,
+        "wrong_count": 55,
+        "wrong_missed_count": 22
+      },
+      {
+        "accepted_count": 404,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 57,
+        "coverage": 0.8112449799196787,
+        "false_positive_review_rate": 0.12866817155756208,
+        "review_count": 94,
+        "review_rate": 0.18875502008032127,
+        "sample_count": 498,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.6727272727272727,
+        "wrong_count": 55,
+        "wrong_missed_count": 18
+      },
+      {
+        "accepted_count": 374,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 81,
+        "coverage": 0.751004016064257,
+        "false_positive_review_rate": 0.18284424379232506,
+        "review_count": 124,
+        "review_rate": 0.24899598393574296,
+        "sample_count": 498,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.7818181818181819,
+        "wrong_count": 55,
+        "wrong_missed_count": 12
+      },
+      {
+        "accepted_count": 344,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 108,
+        "coverage": 0.6907630522088354,
+        "false_positive_review_rate": 0.24379232505643342,
+        "review_count": 154,
+        "review_rate": 0.3092369477911647,
+        "sample_count": 498,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.8363636363636363,
+        "wrong_count": 55,
+        "wrong_missed_count": 9
+      },
+      {
+        "accepted_count": 297,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 151,
+        "coverage": 0.5963855421686747,
+        "false_positive_review_rate": 0.34085778781038373,
+        "review_count": 201,
+        "review_rate": 0.4036144578313253,
+        "sample_count": 498,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.9090909090909091,
+        "wrong_count": 55,
+        "wrong_missed_count": 5
+      },
+      {
+        "accepted_count": 260,
+        "comparable_count": 498,
+        "correct_count": 443,
+        "correct_reviewed_count": 185,
+        "coverage": 0.5220883534136547,
+        "false_positive_review_rate": 0.417607223476298,
+        "review_count": 238,
+        "review_rate": 0.4779116465863454,
+        "sample_count": 498,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9636363636363636,
+        "wrong_count": 55,
+        "wrong_missed_count": 2
+      }
+    ],
+    "leaf_targets": [
+      {
+        "accepted_count": 2123,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 22,
+        "coverage": 0.9787920700783771,
+        "false_positive_review_rate": 0.011111111111111112,
+        "review_count": 46,
+        "review_rate": 0.02120792992162287,
+        "sample_count": 2169,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.12698412698412698,
+        "wrong_count": 189,
+        "wrong_missed_count": 165
+      },
+      {
+        "accepted_count": 2069,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 48,
+        "coverage": 0.9538958045182112,
+        "false_positive_review_rate": 0.024242424242424242,
+        "review_count": 100,
+        "review_rate": 0.046104195481788846,
+        "sample_count": 2169,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.2751322751322751,
+        "wrong_count": 189,
+        "wrong_missed_count": 137
+      },
+      {
+        "accepted_count": 2018,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 76,
+        "coverage": 0.9303826648224989,
+        "false_positive_review_rate": 0.03838383838383838,
+        "review_count": 151,
+        "review_rate": 0.06961733517750116,
+        "sample_count": 2169,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3968253968253968,
+        "wrong_count": 189,
+        "wrong_missed_count": 114
+      },
+      {
+        "accepted_count": 1951,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 123,
+        "coverage": 0.8994928538497003,
+        "false_positive_review_rate": 0.06212121212121212,
+        "review_count": 218,
+        "review_rate": 0.10050714615029968,
+        "sample_count": 2169,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.5026455026455027,
+        "wrong_count": 189,
+        "wrong_missed_count": 94
+      },
+      {
+        "accepted_count": 1857,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 185,
+        "coverage": 0.8561549100968188,
+        "false_positive_review_rate": 0.09343434343434344,
+        "review_count": 312,
+        "review_rate": 0.14384508990318118,
+        "sample_count": 2169,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.671957671957672,
+        "wrong_count": 189,
+        "wrong_missed_count": 62
+      },
+      {
+        "accepted_count": 1745,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 278,
+        "coverage": 0.8045182111572153,
+        "false_positive_review_rate": 0.1404040404040404,
+        "review_count": 424,
+        "review_rate": 0.1954817888427847,
+        "sample_count": 2169,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.7724867724867724,
+        "wrong_count": 189,
+        "wrong_missed_count": 43
+      },
+      {
+        "accepted_count": 1600,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 406,
+        "coverage": 0.7376671277086215,
+        "false_positive_review_rate": 0.20505050505050504,
+        "review_count": 569,
+        "review_rate": 0.2623328722913785,
+        "sample_count": 2169,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.8624338624338624,
+        "wrong_count": 189,
+        "wrong_missed_count": 26
+      },
+      {
+        "accepted_count": 1512,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 486,
+        "coverage": 0.6970954356846473,
+        "false_positive_review_rate": 0.24545454545454545,
+        "review_count": 657,
+        "review_rate": 0.3029045643153527,
+        "sample_count": 2169,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9047619047619048,
+        "wrong_count": 189,
+        "wrong_missed_count": 18
+      }
+    ],
+    "part:fruit": [
+      {
+        "accepted_count": 744,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 15,
+        "coverage": 0.9575289575289575,
+        "false_positive_review_rate": 0.024077046548956663,
+        "review_count": 33,
+        "review_rate": 0.04247104247104247,
+        "sample_count": 777,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.11688311688311688,
+        "wrong_count": 154,
+        "wrong_missed_count": 136
+      },
+      {
+        "accepted_count": 712,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 31,
+        "coverage": 0.9163449163449163,
+        "false_positive_review_rate": 0.04975922953451043,
+        "review_count": 65,
+        "review_rate": 0.08365508365508366,
+        "sample_count": 777,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.22077922077922077,
+        "wrong_count": 154,
+        "wrong_missed_count": 120
+      },
+      {
+        "accepted_count": 675,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 55,
+        "coverage": 0.8687258687258688,
+        "false_positive_review_rate": 0.08828250401284109,
+        "review_count": 102,
+        "review_rate": 0.13127413127413126,
+        "sample_count": 777,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3051948051948052,
+        "wrong_count": 154,
+        "wrong_missed_count": 107
+      },
+      {
+        "accepted_count": 643,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 79,
+        "coverage": 0.8275418275418276,
+        "false_positive_review_rate": 0.12680577849117175,
+        "review_count": 134,
+        "review_rate": 0.17245817245817247,
+        "sample_count": 777,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.35714285714285715,
+        "wrong_count": 154,
+        "wrong_missed_count": 99
+      },
+      {
+        "accepted_count": 585,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 129,
+        "coverage": 0.752895752895753,
+        "false_positive_review_rate": 0.20706260032102727,
+        "review_count": 192,
+        "review_rate": 0.2471042471042471,
+        "sample_count": 777,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.4090909090909091,
+        "wrong_count": 154,
+        "wrong_missed_count": 91
+      },
+      {
+        "accepted_count": 538,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 164,
+        "coverage": 0.6924066924066924,
+        "false_positive_review_rate": 0.26324237560192615,
+        "review_count": 239,
+        "review_rate": 0.3075933075933076,
+        "sample_count": 777,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.487012987012987,
+        "wrong_count": 154,
+        "wrong_missed_count": 79
+      },
+      {
+        "accepted_count": 478,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 215,
+        "coverage": 0.6151866151866152,
+        "false_positive_review_rate": 0.3451043338683788,
+        "review_count": 299,
+        "review_rate": 0.38481338481338484,
+        "sample_count": 777,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.5454545454545454,
+        "wrong_count": 154,
+        "wrong_missed_count": 70
+      },
+      {
+        "accepted_count": 409,
+        "comparable_count": 777,
+        "correct_count": 623,
+        "correct_reviewed_count": 258,
+        "coverage": 0.5263835263835264,
+        "false_positive_review_rate": 0.41412520064205455,
+        "review_count": 368,
+        "review_rate": 0.47361647361647363,
+        "sample_count": 777,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.7142857142857143,
+        "wrong_count": 154,
+        "wrong_missed_count": 44
+      }
+    ],
+    "part:leaf": [
+      {
+        "accepted_count": 2123,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 22,
+        "coverage": 0.9787920700783771,
+        "false_positive_review_rate": 0.011111111111111112,
+        "review_count": 46,
+        "review_rate": 0.02120792992162287,
+        "sample_count": 2169,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.12698412698412698,
+        "wrong_count": 189,
+        "wrong_missed_count": 165
+      },
+      {
+        "accepted_count": 2069,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 48,
+        "coverage": 0.9538958045182112,
+        "false_positive_review_rate": 0.024242424242424242,
+        "review_count": 100,
+        "review_rate": 0.046104195481788846,
+        "sample_count": 2169,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.2751322751322751,
+        "wrong_count": 189,
+        "wrong_missed_count": 137
+      },
+      {
+        "accepted_count": 2018,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 76,
+        "coverage": 0.9303826648224989,
+        "false_positive_review_rate": 0.03838383838383838,
+        "review_count": 151,
+        "review_rate": 0.06961733517750116,
+        "sample_count": 2169,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3968253968253968,
+        "wrong_count": 189,
+        "wrong_missed_count": 114
+      },
+      {
+        "accepted_count": 1951,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 123,
+        "coverage": 0.8994928538497003,
+        "false_positive_review_rate": 0.06212121212121212,
+        "review_count": 218,
+        "review_rate": 0.10050714615029968,
+        "sample_count": 2169,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.5026455026455027,
+        "wrong_count": 189,
+        "wrong_missed_count": 94
+      },
+      {
+        "accepted_count": 1857,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 185,
+        "coverage": 0.8561549100968188,
+        "false_positive_review_rate": 0.09343434343434344,
+        "review_count": 312,
+        "review_rate": 0.14384508990318118,
+        "sample_count": 2169,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.671957671957672,
+        "wrong_count": 189,
+        "wrong_missed_count": 62
+      },
+      {
+        "accepted_count": 1745,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 278,
+        "coverage": 0.8045182111572153,
+        "false_positive_review_rate": 0.1404040404040404,
+        "review_count": 424,
+        "review_rate": 0.1954817888427847,
+        "sample_count": 2169,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.7724867724867724,
+        "wrong_count": 189,
+        "wrong_missed_count": 43
+      },
+      {
+        "accepted_count": 1600,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 406,
+        "coverage": 0.7376671277086215,
+        "false_positive_review_rate": 0.20505050505050504,
+        "review_count": 569,
+        "review_rate": 0.2623328722913785,
+        "sample_count": 2169,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.8624338624338624,
+        "wrong_count": 189,
+        "wrong_missed_count": 26
+      },
+      {
+        "accepted_count": 1512,
+        "comparable_count": 2169,
+        "correct_count": 1980,
+        "correct_reviewed_count": 486,
+        "coverage": 0.6970954356846473,
+        "false_positive_review_rate": 0.24545454545454545,
+        "review_count": 657,
+        "review_rate": 0.3029045643153527,
+        "sample_count": 2169,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.9047619047619048,
+        "wrong_count": 189,
+        "wrong_missed_count": 18
+      }
+    ],
+    "strawberry_targets": [
+      {
+        "accepted_count": 672,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 9,
+        "coverage": 0.9669064748201439,
+        "false_positive_review_rate": 0.015463917525773196,
+        "review_count": 23,
+        "review_rate": 0.033093525179856115,
+        "sample_count": 695,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.12389380530973451,
+        "wrong_count": 113,
+        "wrong_missed_count": 99
+      },
+      {
+        "accepted_count": 657,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9453237410071943,
+        "false_positive_review_rate": 0.024054982817869417,
+        "review_count": 38,
+        "review_rate": 0.05467625899280575,
+        "sample_count": 695,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.21238938053097345,
+        "wrong_count": 113,
+        "wrong_missed_count": 89
+      },
+      {
+        "accepted_count": 638,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 29,
+        "coverage": 0.9179856115107914,
+        "false_positive_review_rate": 0.04982817869415808,
+        "review_count": 57,
+        "review_rate": 0.08201438848920864,
+        "sample_count": 695,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.24778761061946902,
+        "wrong_count": 113,
+        "wrong_missed_count": 85
+      },
+      {
+        "accepted_count": 618,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 44,
+        "coverage": 0.8892086330935252,
+        "false_positive_review_rate": 0.07560137457044673,
+        "review_count": 77,
+        "review_rate": 0.11079136690647481,
+        "sample_count": 695,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.2920353982300885,
+        "wrong_count": 113,
+        "wrong_missed_count": 80
+      },
+      {
+        "accepted_count": 590,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 69,
+        "coverage": 0.8489208633093526,
+        "false_positive_review_rate": 0.11855670103092783,
+        "review_count": 105,
+        "review_rate": 0.1510791366906475,
+        "sample_count": 695,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.3185840707964602,
+        "wrong_count": 113,
+        "wrong_missed_count": 77
+      },
+      {
+        "accepted_count": 575,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 78,
+        "coverage": 0.8273381294964028,
+        "false_positive_review_rate": 0.13402061855670103,
+        "review_count": 120,
+        "review_rate": 0.17266187050359713,
+        "sample_count": 695,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.37168141592920356,
+        "wrong_count": 113,
+        "wrong_missed_count": 71
+      },
+      {
+        "accepted_count": 558,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 87,
+        "coverage": 0.8028776978417266,
+        "false_positive_review_rate": 0.14948453608247422,
+        "review_count": 137,
+        "review_rate": 0.1971223021582734,
+        "sample_count": 695,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.4424778761061947,
+        "wrong_count": 113,
+        "wrong_missed_count": 63
+      },
+      {
+        "accepted_count": 527,
+        "comparable_count": 695,
+        "correct_count": 582,
+        "correct_reviewed_count": 95,
+        "coverage": 0.758273381294964,
+        "false_positive_review_rate": 0.16323024054982818,
+        "review_count": 168,
+        "review_rate": 0.24172661870503598,
+        "sample_count": 695,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.6460176991150443,
+        "wrong_count": 113,
+        "wrong_missed_count": 40
+      }
+    ],
+    "tomato_targets": [
+      {
+        "accepted_count": 1295,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 14,
+        "coverage": 0.9788359788359788,
+        "false_positive_review_rate": 0.011764705882352941,
+        "review_count": 28,
+        "review_rate": 0.021164021164021163,
+        "sample_count": 1323,
+        "threshold": 0.5,
+        "wrong_capture_rate": 0.10526315789473684,
+        "wrong_count": 133,
+        "wrong_missed_count": 119
+      },
+      {
+        "accepted_count": 1257,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 36,
+        "coverage": 0.9501133786848073,
+        "false_positive_review_rate": 0.030252100840336135,
+        "review_count": 66,
+        "review_rate": 0.049886621315192746,
+        "sample_count": 1323,
+        "threshold": 0.6,
+        "wrong_capture_rate": 0.22556390977443608,
+        "wrong_count": 133,
+        "wrong_missed_count": 103
+      },
+      {
+        "accepted_count": 1222,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 57,
+        "coverage": 0.9236583522297808,
+        "false_positive_review_rate": 0.04789915966386555,
+        "review_count": 101,
+        "review_rate": 0.07634164777021919,
+        "sample_count": 1323,
+        "threshold": 0.7,
+        "wrong_capture_rate": 0.3308270676691729,
+        "wrong_count": 133,
+        "wrong_missed_count": 89
+      },
+      {
+        "accepted_count": 1186,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 78,
+        "coverage": 0.8964474678760394,
+        "false_positive_review_rate": 0.06554621848739496,
+        "review_count": 137,
+        "review_rate": 0.10355253212396069,
+        "sample_count": 1323,
+        "threshold": 0.8,
+        "wrong_capture_rate": 0.44360902255639095,
+        "wrong_count": 133,
+        "wrong_missed_count": 74
+      },
+      {
+        "accepted_count": 1125,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 119,
+        "coverage": 0.8503401360544217,
+        "false_positive_review_rate": 0.1,
+        "review_count": 198,
+        "review_rate": 0.14965986394557823,
+        "sample_count": 1323,
+        "threshold": 0.9,
+        "wrong_capture_rate": 0.5939849624060151,
+        "wrong_count": 133,
+        "wrong_missed_count": 54
+      },
+      {
+        "accepted_count": 1061,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 167,
+        "coverage": 0.8019652305366591,
+        "false_positive_review_rate": 0.1403361344537815,
+        "review_count": 262,
+        "review_rate": 0.1980347694633409,
+        "sample_count": 1323,
+        "threshold": 0.95,
+        "wrong_capture_rate": 0.7142857142857143,
+        "wrong_count": 133,
+        "wrong_missed_count": 38
+      },
+      {
+        "accepted_count": 971,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 245,
+        "coverage": 0.7339380196523053,
+        "false_positive_review_rate": 0.20588235294117646,
+        "review_count": 352,
+        "review_rate": 0.2660619803476946,
+        "sample_count": 1323,
+        "threshold": 0.98,
+        "wrong_capture_rate": 0.8045112781954887,
+        "wrong_count": 133,
+        "wrong_missed_count": 26
+      },
+      {
+        "accepted_count": 896,
+        "comparable_count": 1323,
+        "correct_count": 1190,
+        "correct_reviewed_count": 312,
+        "coverage": 0.6772486772486772,
+        "false_positive_review_rate": 0.26218487394957984,
+        "review_count": 427,
+        "review_rate": 0.32275132275132273,
+        "sample_count": 1323,
+        "threshold": 0.99,
+        "wrong_capture_rate": 0.8646616541353384,
+        "wrong_count": 133,
+        "wrong_missed_count": 18
+      }
+    ]
+  },
+  "runtime_recommendation": {
+    "reason": "not_runtime_validated",
+    "status": "advisory_only"
+  },
+  "schema_version": "v2_evidence_gate_calibration",
+  "source_report": "docs/ablation_results/dual_view_inference/multi_target_report.json",
+  "target_policies": {
+    "apricot__fruit": {
+      "calibration_metrics": {
+        "accepted_count": 242,
+        "comparable_count": 294,
+        "correct_count": 267,
+        "correct_reviewed_count": 33,
+        "coverage": 0.8231292517006803,
+        "false_positive_review_rate": 0.12359550561797752,
+        "review_count": 52,
+        "review_rate": 0.17687074829931973,
+        "sample_count": 294,
+        "wrong_capture_rate": 0.7037037037037037,
+        "wrong_count": 27,
+        "wrong_missed_count": 8
+      },
+      "evidence_status": {
+        "calibration_wrong": 11,
+        "holdout_wrong": 3,
+        "total_wrong": 14
+      },
+      "fallback_reason": "target_wrong_count_below_min_target_errors:14<20",
+      "group_key": "apricot_targets",
+      "holdout_metrics": {
+        "accepted_count": 82,
+        "comparable_count": 86,
+        "correct_count": 83,
+        "correct_reviewed_count": 2,
+        "coverage": 0.9534883720930233,
+        "false_positive_review_rate": 0.024096385542168676,
+        "review_count": 4,
+        "review_rate": 0.046511627906976744,
+        "sample_count": 86,
+        "wrong_capture_rate": 0.6666666666666666,
+        "wrong_count": 3,
+        "wrong_missed_count": 1
+      },
+      "holdout_stability": {
+        "capture_drop": -0.16296296296296298,
+        "false_positive_increase": -0.024421951898969257,
+        "issues": [],
+        "status": "passed"
+      },
+      "policy": {
+        "full_confidence_threshold": 0.9,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "group_fallback"
+    },
+    "apricot__leaf": {
+      "calibration_metrics": {
+        "accepted_count": 1213,
+        "comparable_count": 1508,
+        "correct_count": 1376,
+        "correct_reviewed_count": 192,
+        "coverage": 0.8043766578249337,
+        "false_positive_review_rate": 0.13953488372093023,
+        "review_count": 295,
+        "review_rate": 0.1956233421750663,
+        "sample_count": 1508,
+        "wrong_capture_rate": 0.7803030303030303,
+        "wrong_count": 132,
+        "wrong_missed_count": 29
+      },
+      "evidence_status": {
+        "calibration_wrong": 16,
+        "holdout_wrong": 12,
+        "target_rejection_reason": "no_eligible_policy",
+        "total_wrong": 28
+      },
+      "fallback_reason": "target_selection_no_eligible_or_unstable_policy",
+      "group_key": "leaf_targets",
+      "holdout_metrics": {
+        "accepted_count": 19,
+        "comparable_count": 50,
+        "correct_count": 38,
+        "correct_reviewed_count": 19,
+        "coverage": 0.38,
+        "false_positive_review_rate": 0.5,
+        "review_count": 31,
+        "review_rate": 0.62,
+        "sample_count": 50,
+        "wrong_capture_rate": 1.0,
+        "wrong_count": 12,
+        "wrong_missed_count": 0
+      },
+      "holdout_stability": {
+        "capture_drop": 0.02591706539074956,
+        "false_positive_increase": 0.0028492222393346756,
+        "issues": [],
+        "status": "passed"
+      },
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "group_fallback"
+    },
+    "grape__fruit": {
+      "best_rejected": {
+        "metrics": {
+          "accepted_count": 863,
+          "comparable_count": 2041,
+          "correct_count": 1805,
+          "correct_reviewed_count": 962,
+          "coverage": 0.42283194512493877,
+          "false_positive_review_rate": 0.5329639889196676,
+          "review_count": 1178,
+          "review_rate": 0.5771680548750613,
+          "sample_count": 2041,
+          "wrong_capture_rate": 0.9152542372881356,
+          "wrong_count": 236,
+          "wrong_missed_count": 20
+        },
+        "policy": {
+          "full_confidence_threshold": 0.99,
+          "review_on_full_ood": false,
+          "review_on_roi_conflict": true,
+          "review_on_roi_ood": true,
+          "review_on_roi_quality_bad": true
+        }
+      },
+      "calibration_metrics": {},
+      "evidence_status": {
+        "calibration_wrong": 9,
+        "holdout_wrong": 7,
+        "total_wrong": 16
+      },
       "fallback_reason": "target_wrong_count_below_min_target_errors:16<20",
       "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_safe_target_group_or_global_policy",
+        "status": "not_evaluated"
+      },
       "policy": {},
       "status": "no_eligible_policy"
     },
@@ -166,6 +2530,11 @@
         "wrong_count": 28,
         "wrong_missed_count": 8
       },
+      "evidence_status": {
+        "calibration_wrong": 28,
+        "holdout_wrong": 11,
+        "total_wrong": 39
+      },
       "fallback_reason": "",
       "holdout_metrics": {
         "accepted_count": 73,
@@ -181,6 +2550,12 @@
         "wrong_count": 11,
         "wrong_missed_count": 4
       },
+      "holdout_stability": {
+        "capture_drop": 0.07792207792207795,
+        "false_positive_increase": 0.04921819474058281,
+        "issues": [],
+        "status": "passed"
+      },
       "policy": {
         "full_confidence_threshold": 0.8,
         "review_on_full_ood": false,
@@ -193,21 +2568,21 @@
     "strawberry__fruit": {
       "best_rejected": {
         "metrics": {
-          "accepted_count": 1052,
+          "accepted_count": 863,
           "comparable_count": 2041,
           "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
+          "correct_reviewed_count": 962,
+          "coverage": 0.42283194512493877,
+          "false_positive_review_rate": 0.5329639889196676,
+          "review_count": 1178,
+          "review_rate": 0.5771680548750613,
           "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
+          "wrong_capture_rate": 0.9152542372881356,
           "wrong_count": 236,
-          "wrong_missed_count": 44
+          "wrong_missed_count": 20
         },
         "policy": {
-          "full_confidence_threshold": 0.9,
+          "full_confidence_threshold": 0.99,
           "review_on_full_ood": false,
           "review_on_roi_conflict": true,
           "review_on_roi_ood": true,
@@ -215,146 +2590,172 @@
         }
       },
       "calibration_metrics": {},
-      "fallback_reason": "target_selection_no_eligible_policy",
+      "evidence_status": {
+        "calibration_wrong": 75,
+        "holdout_wrong": 37,
+        "target_rejection_reason": "no_eligible_policy",
+        "total_wrong": 112
+      },
+      "fallback_reason": "target_selection_no_eligible_or_unstable_policy",
       "holdout_metrics": {},
+      "holdout_stability": {
+        "reason": "no_safe_target_group_or_global_policy",
+        "status": "not_evaluated"
+      },
       "policy": {},
-      "status": "no_eligible_policy",
-      "target_best_rejected": {
-        "metrics": {
-          "accepted_count": 29,
-          "comparable_count": 137,
-          "correct_count": 62,
-          "correct_reviewed_count": 52,
-          "coverage": 0.2116788321167883,
-          "false_positive_review_rate": 0.8387096774193549,
-          "review_count": 108,
-          "review_rate": 0.7883211678832117,
-          "sample_count": 137,
-          "wrong_capture_rate": 0.7466666666666667,
-          "wrong_count": 75,
-          "wrong_missed_count": 19
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": false,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
-      }
+      "status": "no_eligible_policy"
     },
     "strawberry__leaf": {
-      "best_rejected": {
-        "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
+      "calibration_metrics": {
+        "accepted_count": 1213,
+        "comparable_count": 1508,
+        "correct_count": 1376,
+        "correct_reviewed_count": 192,
+        "coverage": 0.8043766578249337,
+        "false_positive_review_rate": 0.13953488372093023,
+        "review_count": 295,
+        "review_rate": 0.1956233421750663,
+        "sample_count": 1508,
+        "wrong_capture_rate": 0.7803030303030303,
+        "wrong_count": 132,
+        "wrong_missed_count": 29
       },
-      "calibration_metrics": {},
+      "evidence_status": {
+        "calibration_wrong": 1,
+        "holdout_wrong": 0,
+        "total_wrong": 1
+      },
       "fallback_reason": "target_wrong_count_below_min_target_errors:1<20",
-      "holdout_metrics": {},
-      "policy": {},
-      "status": "no_eligible_policy"
+      "group_key": "leaf_targets",
+      "holdout_metrics": {
+        "accepted_count": 152,
+        "comparable_count": 152,
+        "correct_count": 152,
+        "correct_reviewed_count": 0,
+        "coverage": 1.0,
+        "false_positive_review_rate": 0.0,
+        "review_count": 0,
+        "review_rate": 0.0,
+        "sample_count": 152,
+        "wrong_capture_rate": null,
+        "wrong_count": 0,
+        "wrong_missed_count": 0
+      },
+      "holdout_stability": {
+        "capture_drop": 0.02591706539074956,
+        "false_positive_increase": 0.0028492222393346756,
+        "issues": [],
+        "status": "passed"
+      },
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "group_fallback"
     },
     "tomato__fruit": {
-      "best_rejected": {
-        "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
+      "calibration_metrics": {
+        "accepted_count": 738,
+        "comparable_count": 918,
+        "correct_count": 822,
+        "correct_reviewed_count": 110,
+        "coverage": 0.803921568627451,
+        "false_positive_review_rate": 0.13381995133819952,
+        "review_count": 180,
+        "review_rate": 0.19607843137254902,
+        "sample_count": 918,
+        "wrong_capture_rate": 0.7291666666666666,
+        "wrong_count": 96,
+        "wrong_missed_count": 26
       },
-      "calibration_metrics": {},
+      "evidence_status": {
+        "calibration_wrong": 9,
+        "holdout_wrong": 3,
+        "total_wrong": 12
+      },
       "fallback_reason": "target_wrong_count_below_min_target_errors:12<20",
-      "holdout_metrics": {},
-      "policy": {},
-      "status": "no_eligible_policy"
+      "group_key": "tomato_targets",
+      "holdout_metrics": {
+        "accepted_count": 26,
+        "comparable_count": 41,
+        "correct_count": 38,
+        "correct_reviewed_count": 12,
+        "coverage": 0.6341463414634146,
+        "false_positive_review_rate": 0.3157894736842105,
+        "review_count": 15,
+        "review_rate": 0.36585365853658536,
+        "sample_count": 41,
+        "wrong_capture_rate": 1.0,
+        "wrong_count": 3,
+        "wrong_missed_count": 0
+      },
+      "holdout_stability": {
+        "capture_drop": 0.05349099099099097,
+        "false_positive_increase": 0.021071353009626564,
+        "issues": [],
+        "status": "passed"
+      },
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "group_fallback"
     },
     "tomato__leaf": {
-      "best_rejected": {
-        "metrics": {
-          "accepted_count": 1052,
-          "comparable_count": 2041,
-          "correct_count": 1805,
-          "correct_reviewed_count": 797,
-          "coverage": 0.5154336109750123,
-          "false_positive_review_rate": 0.44155124653739614,
-          "review_count": 989,
-          "review_rate": 0.4845663890249878,
-          "sample_count": 2041,
-          "wrong_capture_rate": 0.8135593220338984,
-          "wrong_count": 236,
-          "wrong_missed_count": 44
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": true,
-          "review_on_roi_quality_bad": true
-        }
+      "calibration_metrics": {
+        "accepted_count": 695,
+        "comparable_count": 840,
+        "correct_count": 753,
+        "correct_reviewed_count": 81,
+        "coverage": 0.8273809523809523,
+        "false_positive_review_rate": 0.10756972111553785,
+        "review_count": 145,
+        "review_rate": 0.17261904761904762,
+        "sample_count": 840,
+        "wrong_capture_rate": 0.735632183908046,
+        "wrong_count": 87,
+        "wrong_missed_count": 23
       },
-      "calibration_metrics": {},
-      "fallback_reason": "target_selection_no_eligible_policy",
-      "holdout_metrics": {},
-      "policy": {},
-      "status": "no_eligible_policy",
-      "target_best_rejected": {
-        "metrics": {
-          "accepted_count": 455,
-          "comparable_count": 840,
-          "correct_count": 753,
-          "correct_reviewed_count": 316,
-          "coverage": 0.5416666666666666,
-          "false_positive_review_rate": 0.4196547144754316,
-          "review_count": 385,
-          "review_rate": 0.4583333333333333,
-          "sample_count": 840,
-          "wrong_capture_rate": 0.7931034482758621,
-          "wrong_count": 87,
-          "wrong_missed_count": 18
-        },
-        "policy": {
-          "full_confidence_threshold": 0.9,
-          "review_on_full_ood": false,
-          "review_on_roi_conflict": true,
-          "review_on_roi_ood": false,
-          "review_on_roi_quality_bad": true
-        }
-      }
+      "evidence_status": {
+        "calibration_wrong": 87,
+        "holdout_wrong": 34,
+        "total_wrong": 121
+      },
+      "fallback_reason": "",
+      "holdout_metrics": {
+        "accepted_count": 297,
+        "comparable_count": 364,
+        "correct_count": 330,
+        "correct_reviewed_count": 45,
+        "coverage": 0.8159340659340659,
+        "false_positive_review_rate": 0.13636363636363635,
+        "review_count": 67,
+        "review_rate": 0.18406593406593408,
+        "sample_count": 364,
+        "wrong_capture_rate": 0.6470588235294118,
+        "wrong_count": 34,
+        "wrong_missed_count": 12
+      },
+      "holdout_stability": {
+        "capture_drop": 0.08857336037863417,
+        "false_positive_increase": 0.028793915248098503,
+        "issues": [],
+        "status": "passed"
+      },
+      "policy": {
+        "full_confidence_threshold": 0.95,
+        "review_on_full_ood": false,
+        "review_on_roi_conflict": false,
+        "review_on_roi_ood": false,
+        "review_on_roi_quality_bad": false
+      },
+      "status": "target_specific"
     }
   }
 }

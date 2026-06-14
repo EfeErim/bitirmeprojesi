@@ -7,60 +7,67 @@ Calibration artifact: `docs/ablation_results/dual_view_inference/evidence_gate_c
 
 ## Result
 
-The v1 calibration pass did not find a safe global evidence-gate policy under the default constraints:
+The calibration artifact now uses `v2_evidence_gate_calibration`. V2 keeps the calibration advisory-only and does not change Notebook 16 final decisions or production runtime inference behavior.
+
+The v2 pass still did not find a safe global evidence-gate policy under the default constraints:
 
 - minimum wrong-prediction capture: `0.70`
 - maximum false-positive review rate: `0.15`
+- maximum review rate: `0.25`
 - minimum target errors for target-specific selection: `20`
+- minimum calibration errors: `10`
+- minimum holdout errors: `5`
 
-The best rejected global policy captured many wrong predictions, but it would review too many correct predictions:
+This means the repo should still not switch to a global aggressive ROI-quality, ROI-conflict, OOD, or confidence review rule.
 
-- wrong capture rate: `0.8136`
-- false-positive review rate: `0.4416`
-- coverage: `0.5154`
+## Selected Policies
 
-This means the repo should not switch to a global aggressive ROI-quality or ROI-conflict review rule.
+V2 evaluates a wider confidence-threshold grid (`0.50`, `0.60`, `0.70`, `0.80`, `0.90`, `0.95`, `0.98`, `0.99`) plus ROI/OOD feature gates, then applies target/group/global fallback with holdout stability checks.
 
-## Target Policies
+Target-specific policies:
 
-Only `grape__leaf` produced an eligible target-specific calibration policy on the calibration split:
+- `grape__leaf`: `full_confidence_threshold=0.80`; calibration capture `0.7143`, calibration false-positive review `0.1294`, holdout capture `0.6364`, holdout false-positive review `0.1786`.
+- `tomato__leaf`: `full_confidence_threshold=0.95`; calibration capture `0.7356`, calibration false-positive review `0.1076`, holdout capture `0.6471`, holdout false-positive review `0.1364`.
 
-- policy: `full_confidence_threshold=0.80`
-- ROI conflict review: disabled
-- ROI quality review: disabled
-- full OOD review: disabled
-- ROI OOD review: disabled
-- calibration wrong capture rate: `0.7143`
-- calibration false-positive review rate: `0.1294`
-- holdout wrong capture rate: `0.6364`
-- holdout false-positive review rate: `0.1786`
+Group fallback policies:
 
-The holdout metrics are weaker than the calibration metrics, so this remains advisory evidence. It should not be promoted into runtime behavior without a separate validation step.
+- `apricot_targets`: `full_confidence_threshold=0.90`; calibration capture `0.7037`, calibration false-positive review `0.1236`, holdout capture `0.8667`, holdout false-positive review `0.0992`.
+- `leaf_targets`: `full_confidence_threshold=0.95`; calibration capture `0.7803`, calibration false-positive review `0.1395`, holdout capture `0.7544`, holdout false-positive review `0.1424`.
+- `tomato_targets`: `full_confidence_threshold=0.95`; calibration capture `0.7292`, calibration false-positive review `0.1338`, holdout capture `0.6757`, holdout false-positive review `0.1549`.
 
-All other targets are explicitly `no_eligible_policy`:
+Target outcomes:
 
-- `apricot__fruit`: too few target errors (`14 < 20`)
-- `apricot__leaf`: target-specific search failed the risk constraints
-- `grape__fruit`: too few target errors (`16 < 20`)
-- `strawberry__fruit`: target-specific search failed the risk constraints
-- `strawberry__leaf`: too few target errors (`1 < 20`)
-- `tomato__fruit`: too few target errors (`12 < 20`)
-- `tomato__leaf`: target-specific search failed the risk constraints
+- `apricot__fruit`: `group_fallback` via `apricot_targets`; target errors are sparse (`14 < 20`).
+- `apricot__leaf`: `group_fallback` via `leaf_targets`; target-specific selection was not safe/stable.
+- `grape__fruit`: `no_eligible_policy`; target errors are sparse (`16 < 20`) and no safe group/global fallback exists.
+- `grape__leaf`: `target_specific`.
+- `strawberry__fruit`: `no_eligible_policy`; target-specific selection was not safe/stable and no safe group/global fallback exists.
+- `strawberry__leaf`: `group_fallback` via `leaf_targets`; target errors are sparse (`1 < 20`).
+- `tomato__fruit`: `group_fallback` via `tomato_targets`; target errors are sparse (`12 < 20`).
+- `tomato__leaf`: `target_specific`.
+
+## Audit Queue
+
+V2 queues five targets for audit:
+
+- `apricot__fruit`: sparse target errors and high-confidence errors dominate.
+- `grape__fruit`: no eligible policy and sparse target errors.
+- `strawberry__fruit`: no eligible policy and high-confidence errors dominate.
+- `strawberry__leaf`: sparse target errors.
+- `tomato__fruit`: sparse target errors.
 
 ## Interpretation
 
-The current Notebook 16 result does not justify a router rewrite. The multi-target failure analysis reported `router=0`, while adapter/data, bbox/evidence, confidence/OOD, and review-gate buckets remain active.
+The v2 result strengthens the previous conclusion: calibration should stay target/group conditional and advisory. It finds useful report-only policies for leaf/tomato/apricot groups plus `grape__leaf` and `tomato__leaf`, but it still rejects a global runtime gate and explicitly leaves `grape__fruit` and `strawberry__fruit` as `no_eligible_policy`.
 
-The calibration artifact also does not justify a global runtime evidence-gate change. The global candidate that captures enough wrong predictions creates an unacceptable review burden on correct predictions.
-
-The next adapter/data investigation should stay separate from this calibration step. The obvious later TODO is `strawberry__fruit`, where the latest Notebook 16 summary recorded `204` samples, `112` errors, and frequent confusion between healthy strawberry fruit and `strawberry_unripe_fruit`.
+The next adapter/data investigation should stay separate from this calibration step. `strawberry__fruit` remains the clearest data/class-boundary issue because it has many errors and no safe calibration policy.
 
 ## Decision
 
-Keep v1 calibration advisory only:
+Keep v2 calibration advisory only:
 
 - do not change Notebook 16 final decision behavior;
 - do not change production runtime behavior;
 - keep full-image adapter prediction as the final decision;
-- use ROI/bbox evidence for reporting and review analysis only;
-- continue target-specific calibration experiments instead of applying a global aggressive gate.
+- use ROI/bbox evidence and v2 calibration for reporting, review analysis, and audit prioritization only;
+- continue target/group-specific calibration experiments instead of applying a global aggressive gate.
