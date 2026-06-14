@@ -1,0 +1,739 @@
+{
+  "dataset_root": "data/router_eval",
+  "sample_count": 580,
+  "config_env": "colab",
+  "device": "cuda",
+  "strategy": "replay-thresholds",
+  "input_guard_scores_cached": true,
+  "preset": "handoff",
+  "sweep_grid": {
+    "inference.router_min_confidence": [
+      0.65,
+      0.55,
+      0.75
+    ],
+    "inference.router_min_margin": [
+      0.1,
+      0.0,
+      0.15
+    ]
+  },
+  "variant_count": 8,
+  "baseline": {
+    "variant_id": "baseline",
+    "overrides": {},
+    "metrics": {
+      "sample_count": 580,
+      "id_sample_count": 280,
+      "negative_sample_count": 184,
+      "wrong_part_sample_count": 116,
+      "crop_accuracy": 0.4429,
+      "negative_false_accept_rate": 0.3533,
+      "abstention_rate": 0.6,
+      "part_non_unknown_precision": 0.7381,
+      "part_recall": 0.3321,
+      "part_abstention_rate": 0.55,
+      "unsupported_part_emissions": 0,
+      "wrong_part_rejection_rate": 0.0086,
+      "mean_latency_ms": 5750.2419,
+      "p95_latency_ms": 10077.1621,
+      "variant_wall_time_ms": 3762671.2574
+    }
+  },
+  "recommended": {},
+  "best_rejected": {
+    "variant_id": "53d6fcc7f34b",
+    "overrides": {
+      "inference.router_min_confidence": 0.75,
+      "inference.router_min_margin": 0.15
+    },
+    "metrics": {
+      "sample_count": 580,
+      "id_sample_count": 280,
+      "negative_sample_count": 184,
+      "wrong_part_sample_count": 116,
+      "crop_accuracy": 0.4429,
+      "negative_false_accept_rate": 0.3261,
+      "abstention_rate": 0.6362,
+      "part_non_unknown_precision": 0.8384,
+      "part_recall": 0.2964,
+      "part_abstention_rate": 0.6464,
+      "unsupported_part_emissions": 0,
+      "wrong_part_rejection_rate": 0.1552,
+      "mean_latency_ms": 5750.2419,
+      "p95_latency_ms": 10077.1621,
+      "variant_wall_time_ms": 1.7786
+    },
+    "eligible": false,
+    "eligibility_reasons": [
+      "negative_false_accept_rate_above_target",
+      "part_recall_drop"
+    ]
+  },
+  "selection_summary": {
+    "eligible_variant_count": 0,
+    "rejected_variant_count": 8,
+    "has_eligible_recommendation": false,
+    "recommended_variant_id": null,
+    "best_rejected_variant_id": "53d6fcc7f34b"
+  },
+  "failure_analysis": {
+    "false_accept_count": 101,
+    "false_accept_counts_by_group": {
+      "off_crop": 49,
+      "non_plant": 3,
+      "ambiguous": 8,
+      "wrong_part": 41
+    },
+    "false_accept_top_predicted_crops": [
+      {
+        "value": "grape",
+        "count": 41
+      },
+      {
+        "value": "strawberry",
+        "count": 38
+      },
+      {
+        "value": "tomato",
+        "count": 14
+      },
+      {
+        "value": "potato",
+        "count": 5
+      },
+      {
+        "value": "apricot",
+        "count": 3
+      }
+    ],
+    "false_accept_top_predicted_parts": [
+      {
+        "value": "leaf",
+        "count": 85
+      },
+      {
+        "value": "fruit",
+        "count": 14
+      },
+      {
+        "value": "unknown",
+        "count": 2
+      }
+    ],
+    "false_accept_confidence_distribution": {
+      "count": 101,
+      "min": 0.7515,
+      "median": 0.9696,
+      "mean": 0.9362,
+      "p95": 1.0,
+      "max": 1.0211
+    },
+    "false_accept_margin_distribution": {
+      "count": 1,
+      "min": 0.1947,
+      "median": 0.1947,
+      "mean": 0.1947,
+      "p95": 0.1947,
+      "max": 0.1947
+    },
+    "false_accept_crop_confidence_margin_distribution": {
+      "count": 1,
+      "min": 0.2415,
+      "median": 0.2415,
+      "mean": 0.2415,
+      "p95": 0.2415,
+      "max": 0.2415
+    },
+    "false_accept_input_guard_plant_score_distribution": {
+      "count": 101,
+      "min": 0.9871,
+      "median": 1.0,
+      "mean": 0.9997,
+      "p95": 1.0,
+      "max": 1.0
+    },
+    "false_accept_input_guard_non_plant_score_distribution": {
+      "count": 101,
+      "min": 0.7982,
+      "median": 0.987,
+      "mean": 0.9665,
+      "p95": 0.9993,
+      "max": 0.9999
+    },
+    "hardest_false_accept_examples": [
+      {
+        "image_path": "data/router_eval/wrong_part/grape/unsupported_unknown/takviye_20260514_internet_20260509_plantdoc_train_grape_leaf_black_rot_ba_8ff645_8ff645f78c4f.jpg",
+        "group": "wrong_part",
+        "predicted_crop": "grape",
+        "predicted_part": "leaf",
+        "crop_confidence": 1.0211473171060415,
+        "routing_margin": null,
+        "crop_confidence_margin": null,
+        "rejection_reason": "",
+        "runtime_gate_reasons": []
+      },
+      {
+        "image_path": "data/router_eval/ambiguous/tomato_leaf_ood_final_tomato_failure_cases/internet_20260510_wikimedia_tomato_plant_leaves_02_jpg_bb2251ad8fff.jpg",
+        "group": "ambiguous",
+        "predicted_crop": "potato",
+        "predicted_part": "leaf",
+        "crop_confidence": 1.0134172122406222,
+        "routing_margin": null,
+        "crop_confidence_margin": null,
+        "rejection_reason": "",
+        "runtime_gate_reasons": []
+      },
+      {
+        "image_path": "data/router_eval/wrong_part/grape/unsupported_unknown/takviye_20260514_internet_20260509_plantdoc_train_grape_leaf_black_rot_bl_a0cadd_a0caddb60b37.jpg",
+        "group": "wrong_part",
+        "predicted_crop": "grape",
+        "predicted_part": "leaf",
+        "crop_confidence": 0.9999988794339325,
+        "routing_margin": null,
+        "crop_confidence_margin": null,
+        "rejection_reason": "",
+        "runtime_gate_reasons": []
+      },
+      {
+        "image_path": "data/router_eval/negatives/off_crop/apricot_fruit_ood_final_off_crop_secondary/takviye_20260514_off_crop_or_root_disease_phosphorous_deficiency_a0a4753e6634_a0a4753e6634.jpg",
+        "group": "off_crop",
+        "predicted_crop": "grape",
+        "predicted_part": "leaf",
+        "crop_confidence": 0.9999977588677559,
+        "routing_margin": null,
+        "crop_confidence_margin": null,
+        "rejection_reason": "",
+        "runtime_gate_reasons": []
+      },
+      {
+        "image_path": "data/router_eval/wrong_part/grape/root_or_unknown/off_crop_or_root_disease_filoksera_ba\u011f_240a9ef0aed1.jpg",
+        "group": "wrong_part",
+        "predicted_crop": "grape",
+        "predicted_part": "leaf",
+        "crop_confidence": 0.9999976158142208,
+        "routing_margin": null,
+        "crop_confidence_margin": null,
+        "rejection_reason": "",
+        "runtime_gate_reasons": []
+      }
+    ],
+    "false_accept_failure_causes": [
+      {
+        "cause": "router_margin_too_small",
+        "count": 60
+      },
+      {
+        "cause": "part_open_set_threshold_too_low",
+        "count": 40
+      },
+      {
+        "cause": "input_guard_not_separating_negatives",
+        "count": 2
+      },
+      {
+        "cause": "part_open_set_too_aggressive",
+        "count": 1
+      }
+    ],
+    "false_reject_count": 245,
+    "false_reject_failure_causes": [
+      {
+        "cause": "router_thresholds_too_aggressive",
+        "count": 46
+      }
+    ]
+  },
+  "variants": [
+    {
+      "variant_id": "53d6fcc7f34b",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7786
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "7315f4eda3cf",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.1
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7264
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "d6d3ea32ffec",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 3.049
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "b03101063b47",
+      "overrides": {
+        "inference.router_min_confidence": 0.65,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3533,
+        "abstention_rate": 0.6,
+        "part_non_unknown_precision": 0.8037,
+        "part_recall": 0.3071,
+        "part_abstention_rate": 0.6179,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1034,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7579
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "e66560cae83d",
+      "overrides": {
+        "inference.router_min_confidence": 0.65,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3533,
+        "abstention_rate": 0.5983,
+        "part_non_unknown_precision": 0.8037,
+        "part_recall": 0.3071,
+        "part_abstention_rate": 0.6179,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0948,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 2.4285
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "baseline",
+      "overrides": {},
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3533,
+        "abstention_rate": 0.6,
+        "part_non_unknown_precision": 0.7381,
+        "part_recall": 0.3321,
+        "part_abstention_rate": 0.55,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0086,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 3762671.2574
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    },
+    {
+      "variant_id": "72b7ea157cad",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3967,
+        "abstention_rate": 0.5724,
+        "part_non_unknown_precision": 0.7965,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5964,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0948,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7244
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    },
+    {
+      "variant_id": "7b25ffc706d1",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.1
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3967,
+        "abstention_rate": 0.569,
+        "part_non_unknown_precision": 0.7895,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5929,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0862,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.9548
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    },
+    {
+      "variant_id": "b40fbd327be9",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.4076,
+        "abstention_rate": 0.5586,
+        "part_non_unknown_precision": 0.7759,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5857,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0776,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7761
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    }
+  ],
+  "eligible_variants": [],
+  "rejected_variants": [
+    {
+      "variant_id": "53d6fcc7f34b",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7786
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "7315f4eda3cf",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.1
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7264
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "d6d3ea32ffec",
+      "overrides": {
+        "inference.router_min_confidence": 0.75,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3261,
+        "abstention_rate": 0.6362,
+        "part_non_unknown_precision": 0.8384,
+        "part_recall": 0.2964,
+        "part_abstention_rate": 0.6464,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1552,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 3.049
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "b03101063b47",
+      "overrides": {
+        "inference.router_min_confidence": 0.65,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3533,
+        "abstention_rate": 0.6,
+        "part_non_unknown_precision": 0.8037,
+        "part_recall": 0.3071,
+        "part_abstention_rate": 0.6179,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.1034,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7579
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "e66560cae83d",
+      "overrides": {
+        "inference.router_min_confidence": 0.65,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3533,
+        "abstention_rate": 0.5983,
+        "part_non_unknown_precision": 0.8037,
+        "part_recall": 0.3071,
+        "part_abstention_rate": 0.6179,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0948,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 2.4285
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target",
+        "part_recall_drop"
+      ]
+    },
+    {
+      "variant_id": "72b7ea157cad",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.15
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3967,
+        "abstention_rate": 0.5724,
+        "part_non_unknown_precision": 0.7965,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5964,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0948,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7244
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    },
+    {
+      "variant_id": "7b25ffc706d1",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.1
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.3967,
+        "abstention_rate": 0.569,
+        "part_non_unknown_precision": 0.7895,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5929,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0862,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.9548
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    },
+    {
+      "variant_id": "b40fbd327be9",
+      "overrides": {
+        "inference.router_min_confidence": 0.55,
+        "inference.router_min_margin": 0.0
+      },
+      "metrics": {
+        "sample_count": 580,
+        "id_sample_count": 280,
+        "negative_sample_count": 184,
+        "wrong_part_sample_count": 116,
+        "crop_accuracy": 0.4429,
+        "negative_false_accept_rate": 0.4076,
+        "abstention_rate": 0.5586,
+        "part_non_unknown_precision": 0.7759,
+        "part_recall": 0.3214,
+        "part_abstention_rate": 0.5857,
+        "unsupported_part_emissions": 0,
+        "wrong_part_rejection_rate": 0.0776,
+        "mean_latency_ms": 5750.2419,
+        "p95_latency_ms": 10077.1621,
+        "variant_wall_time_ms": 1.7761
+      },
+      "eligible": false,
+      "eligibility_reasons": [
+        "negative_false_accept_rate_above_target"
+      ]
+    }
+  ],
+  "runtime_summary": {
+    "mean_variant_wall_time_ms": 2.0245,
+    "max_variant_wall_time_ms": 3.049
+  }
+}

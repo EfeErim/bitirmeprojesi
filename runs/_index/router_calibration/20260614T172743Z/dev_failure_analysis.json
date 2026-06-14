@@ -1,0 +1,167 @@
+{
+  "false_accept_count": 101,
+  "false_accept_counts_by_group": {
+    "off_crop": 49,
+    "non_plant": 3,
+    "ambiguous": 8,
+    "wrong_part": 41
+  },
+  "false_accept_top_predicted_crops": [
+    {
+      "value": "grape",
+      "count": 41
+    },
+    {
+      "value": "strawberry",
+      "count": 38
+    },
+    {
+      "value": "tomato",
+      "count": 14
+    },
+    {
+      "value": "potato",
+      "count": 5
+    },
+    {
+      "value": "apricot",
+      "count": 3
+    }
+  ],
+  "false_accept_top_predicted_parts": [
+    {
+      "value": "leaf",
+      "count": 85
+    },
+    {
+      "value": "fruit",
+      "count": 14
+    },
+    {
+      "value": "unknown",
+      "count": 2
+    }
+  ],
+  "false_accept_confidence_distribution": {
+    "count": 101,
+    "min": 0.7515,
+    "median": 0.9696,
+    "mean": 0.9362,
+    "p95": 1.0,
+    "max": 1.0211
+  },
+  "false_accept_margin_distribution": {
+    "count": 1,
+    "min": 0.1947,
+    "median": 0.1947,
+    "mean": 0.1947,
+    "p95": 0.1947,
+    "max": 0.1947
+  },
+  "false_accept_crop_confidence_margin_distribution": {
+    "count": 1,
+    "min": 0.2415,
+    "median": 0.2415,
+    "mean": 0.2415,
+    "p95": 0.2415,
+    "max": 0.2415
+  },
+  "false_accept_input_guard_plant_score_distribution": {
+    "count": 101,
+    "min": 0.9871,
+    "median": 1.0,
+    "mean": 0.9997,
+    "p95": 1.0,
+    "max": 1.0
+  },
+  "false_accept_input_guard_non_plant_score_distribution": {
+    "count": 101,
+    "min": 0.7982,
+    "median": 0.987,
+    "mean": 0.9665,
+    "p95": 0.9993,
+    "max": 0.9999
+  },
+  "hardest_false_accept_examples": [
+    {
+      "image_path": "data/router_eval/wrong_part/grape/unsupported_unknown/takviye_20260514_internet_20260509_plantdoc_train_grape_leaf_black_rot_ba_8ff645_8ff645f78c4f.jpg",
+      "group": "wrong_part",
+      "predicted_crop": "grape",
+      "predicted_part": "leaf",
+      "crop_confidence": 1.0211473171060415,
+      "routing_margin": null,
+      "crop_confidence_margin": null,
+      "rejection_reason": "",
+      "runtime_gate_reasons": []
+    },
+    {
+      "image_path": "data/router_eval/ambiguous/tomato_leaf_ood_final_tomato_failure_cases/internet_20260510_wikimedia_tomato_plant_leaves_02_jpg_bb2251ad8fff.jpg",
+      "group": "ambiguous",
+      "predicted_crop": "potato",
+      "predicted_part": "leaf",
+      "crop_confidence": 1.0134172122406222,
+      "routing_margin": null,
+      "crop_confidence_margin": null,
+      "rejection_reason": "",
+      "runtime_gate_reasons": []
+    },
+    {
+      "image_path": "data/router_eval/wrong_part/grape/unsupported_unknown/takviye_20260514_internet_20260509_plantdoc_train_grape_leaf_black_rot_bl_a0cadd_a0caddb60b37.jpg",
+      "group": "wrong_part",
+      "predicted_crop": "grape",
+      "predicted_part": "leaf",
+      "crop_confidence": 0.9999988794339325,
+      "routing_margin": null,
+      "crop_confidence_margin": null,
+      "rejection_reason": "",
+      "runtime_gate_reasons": []
+    },
+    {
+      "image_path": "data/router_eval/negatives/off_crop/apricot_fruit_ood_final_off_crop_secondary/takviye_20260514_off_crop_or_root_disease_phosphorous_deficiency_a0a4753e6634_a0a4753e6634.jpg",
+      "group": "off_crop",
+      "predicted_crop": "grape",
+      "predicted_part": "leaf",
+      "crop_confidence": 0.9999977588677559,
+      "routing_margin": null,
+      "crop_confidence_margin": null,
+      "rejection_reason": "",
+      "runtime_gate_reasons": []
+    },
+    {
+      "image_path": "data/router_eval/wrong_part/grape/root_or_unknown/off_crop_or_root_disease_filoksera_ba\u011f_240a9ef0aed1.jpg",
+      "group": "wrong_part",
+      "predicted_crop": "grape",
+      "predicted_part": "leaf",
+      "crop_confidence": 0.9999976158142208,
+      "routing_margin": null,
+      "crop_confidence_margin": null,
+      "rejection_reason": "",
+      "runtime_gate_reasons": []
+    }
+  ],
+  "false_accept_failure_causes": [
+    {
+      "cause": "router_margin_too_small",
+      "count": 60
+    },
+    {
+      "cause": "part_open_set_threshold_too_low",
+      "count": 40
+    },
+    {
+      "cause": "input_guard_not_separating_negatives",
+      "count": 2
+    },
+    {
+      "cause": "part_open_set_too_aggressive",
+      "count": 1
+    }
+  ],
+  "false_reject_count": 245,
+  "false_reject_failure_causes": [
+    {
+      "cause": "router_thresholds_too_aggressive",
+      "count": 46
+    }
+  ]
+}
