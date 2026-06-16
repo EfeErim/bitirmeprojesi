@@ -913,6 +913,15 @@ data/router_eval/
 
 The notebook reports recommended dotted-path config overrides. Review those results before editing `config/base.json` or environment-specific config files.
 
+If local calibration fails because `facebook/sam3` is gated, treat that as an environment/access blocker rather than a router-code failure. Run Notebook 5 in Colab with a Hugging Face token that has SAM3 access, keep `PUBLISH_RESULTS_TO_GIT = True`, then pull the published results locally and restore the latest calibration artifact:
+
+```powershell
+.\scripts\python.cmd scripts\restore_router_calibration_artifact.py
+.\scripts\python.cmd scripts\validate_router_calibration_stability.py
+```
+
+Notebook 5 publishes durable results under `runs/_index/router_calibration/<timestamp>/`. The restore command copies the latest published `router_calibration.json` back to `.runtime_tmp/router_calibration.json`, which is the local stability guard input.
+
 ## Deployment Handoff
 
 Router inference looks for adapters here by default:

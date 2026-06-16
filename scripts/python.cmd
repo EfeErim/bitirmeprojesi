@@ -24,7 +24,7 @@ if not defined PYTHON_EXE (
 
 if defined PYTHON_EXE (
   "%PYTHON_EXE%" %*
-  exit /b %ERRORLEVEL%
+  exit /b !ERRORLEVEL!
 )
 
 >&2 echo [AADS] No usable Python interpreter was found.

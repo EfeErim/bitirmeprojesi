@@ -44,8 +44,17 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `docs/roi_ablation_memory.md` is the durable handoff note for the ROI/bbox/router/adapter retraining discussion, including completed experiments, decisions, and the next-step plan.
 - `AGENTS.md` now codifies default Codex context discipline: targeted reads, capped noisy command output, and avoidance of high-token data/generated/notebook/report surfaces unless explicitly needed.
 - Added `scripts/summarize_large_report.py` as the default bounded JSON/CSV report summarizer so Codex can inspect metrics, statuses, and representative rows without loading large artifacts into context.
+- Added `scripts/restore_router_calibration_artifact.py` so Colab-published Notebook 5 router calibration results can be restored from `runs/_index/router_calibration/<timestamp>/router_calibration.json` to `.runtime_tmp/router_calibration.json` before running the local stability guard.
 - Tightened the root README and docs index so canonical surfaces and generated/local-only paths are easier to scan during handoff.
 - Added a repo-wide code organization map plus `scripts/audit_code_organization.py` so notebook, script, workflow, runtime, service, and shared-code boundaries are explicit and machine-checkable.
+- Latest local validation restored the Notebook 5 router calibration artifact from `runs/_index/router_calibration/20260614T172743Z/`, and `scripts/validate_router_calibration_stability.py` passed on 580 eval images with 0 errors.
+- The refreshed tomato-leaf review-gate validation still keeps `tomato__leaf` report-only: v2 calibration has no global policy, `tomato__leaf` remains target-specific but holdout capture is still `0.6471` below the `0.70` promotion gate.
+- Removed 10 exact-overlap OOD copies from generated runtime datasets (`grape__fruit`, `grape__leaf`, `tomato__fruit`, and `tomato__leaf`). `scripts/monitor_dataset_integrity.py` now reports `failures=0`, `warnings=8`, and `duplicate_count=0` for all 8 datasets.
+- Added `scripts/export_notebook16_target_audit.py` plus full `tomato__leaf` missed-wrong audit outputs under `docs/ablation_results/dual_view_inference/tomato_leaf_missed_wrong_audit.*`; the current audit has 121 wrong predictions, 84 missed-wrong rows, and 84/84 local files available for data/label review. The same command also writes 27 confusion-pair review packets, `README.md`, and a static review index under `.runtime_tmp/tomato_leaf_missed_wrong_packets/`.
+- Added `scripts/apply_notebook16_target_audit_decisions.py` as the opt-in follow-up for reviewed audit CSVs. Its default is dry-run; it only moves rows marked `remove_from_test` or `relabel:<class>` when `--apply` is passed, and it quarantines removals instead of deleting files.
+- Added `--packet-dir` and `--require-reviewed` to `scripts/apply_notebook16_target_audit_decisions.py`; it can overlay decisions entered in per-confusion packet CSVs and returns nonzero when any `review_decision` is still empty, so the audit queue can be used as an explicit gate before applying changes.
+- Fixed `scripts/python.cmd` so it propagates Python's real exit code from inside its parenthesized launcher block.
+- Added unit coverage for the router-calibration restore helper, the Notebook 16 target-audit export/apply tools, and `scripts/python.cmd` exit-code propagation. `scripts/audit_code_organization.py`, `scripts/validate_notebook_imports.py`, targeted Ruff, and 17 targeted unit tests pass. The latest dataset integrity rerun remains `status=warn` with `failures=0` and `duplicate_count=0` for all 8 prepared runtime datasets.
 
 ## Important Decisions
 
@@ -60,9 +69,12 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 
 - No dedicated build step is defined; validation scripts are the main maintenance surface.
 - Router calibration and OOD evidence can drift if evaluation data changes.
+- Local router calibration can be blocked by gated SAM3 access; in that case, run Notebook 5 in Colab with Hugging Face access, publish the result, restore it locally with `scripts/restore_router_calibration_artifact.py`, and then run `scripts/validate_router_calibration_stability.py`.
 - Notebook-exported artifacts should not be confused with canonical source code.
 - The current evidence gate catches only about 35.6% of wrong Notebook 16 full-image decisions; global aggressive ROI-quality rules would raise capture but create too many false positives, so any threshold work should be target-specific.
 - Evidence-gate calibration is advisory only; v2 default constraints still reject the global policy surface, and selected target/group policies must not be promoted into runtime behavior without a separate validation decision.
+- `tomato__leaf` review-gate promotion is still blocked by insufficient v2 holdout capture (`0.6471 < 0.70`); the exact split-leakage blocker has been cleared from the generated runtime dataset.
+- The next `tomato__leaf` action is data/label audit on the full missed-wrong CSV or grouped packet sheets, especially high-count confusions such as early/late blight and bacterial spot/speck versus septoria, before rerunning Notebook 16.
 
 ## Next Recommended Steps
 
@@ -82,9 +94,13 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 - `./scripts/python.cmd scripts/benchmark_surfaces.py --output .runtime_tmp/benchmarks.json`
 - `./scripts/python.cmd scripts/audit_code_organization.py`
 - `./scripts/python.cmd scripts/summarize_large_report.py docs/ablation_results/dual_view_inference/multi_target_report.json`
+- `./scripts/python.cmd scripts/restore_router_calibration_artifact.py`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py`
 - `./scripts/python.cmd scripts/calibrate_evidence_gate.py --schema-version v2`
 - `./scripts/python.cmd scripts/analyze_notebook16_failures.py`
 - `./scripts/python.cmd scripts/recommend_evidence_gate_policies.py`
+- `./scripts/python.cmd scripts/export_notebook16_target_audit.py --target-id tomato__leaf`
+- `./scripts/python.cmd scripts/apply_notebook16_target_audit_decisions.py`
+- `./scripts/python.cmd -m pytest tests/unit/pipeline/test_notebook16_failure_analysis.py tests/unit/scripts/test_export_notebook16_target_audit.py tests/unit/scripts/test_apply_notebook16_target_audit_decisions.py tests/unit/scripts/test_restore_router_calibration_artifact.py -q`
 - `ruff check src scripts tests`
 - `mypy --follow-imports skip src/shared src/data src/training/continual_sd_lora.py src/router src/workflows src/pipeline/router_adapter_runtime.py src/pipeline/inference_payloads.py src/adapter src/core/config_manager.py scripts/benchmark_surfaces.py`

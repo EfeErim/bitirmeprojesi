@@ -109,7 +109,7 @@ Skips are useful evidence only when they identify the missing prerequisite.
 
 - `adapter_count=0`: collect/export adapters before validating adapter quality.
 - `sample_count=0` or no eval images: collect evaluation samples before claiming router or notebook behavior.
-- `calibration_results_missing`: run `scripts/calibrate_router_surface.py` before treating router thresholds as stable.
+- `calibration_results_missing`: run `scripts/calibrate_router_surface.py` before treating router thresholds as stable. If local execution is blocked by gated SAM3 access, run Notebook 5 in Colab, pull the published `runs/_index/router_calibration/<timestamp>/` result, then run `scripts/restore_router_calibration_artifact.py`.
 - Missing OOD/OE pools: classify readiness as blocked or provisional according to the report and current readiness policy.
 
 ---
@@ -124,7 +124,7 @@ Skips are useful evidence only when they identify the missing prerequisite.
 | Fine-grained OOD stress | real `ood/` slices, `ood_type_breakdown`, and readiness reports | Active as evaluation pressure | Add or review near-OOD, background/style, and subtle-symptom slices before adopting heavier OOD architectures. |
 | Outlier Exposure | prepared dataset `oe/` split | Optional | Grow OE pools through reviewed, licensed candidates only. |
 | Selective prediction and abstention | router `unknown_crop`, `router_uncertain` | Active | Track risk-coverage and false accepts, not just accuracy. |
-| Router calibration | router calibration and stability scripts | Active but artifact-dependent | Rebuild `.runtime_tmp/router_calibration.json` when missing or stale. |
+| Router calibration | router calibration and stability scripts | Active but artifact-dependent | Rebuild `.runtime_tmp/router_calibration.json` when missing or stale; use Notebook 5 in Colab plus `scripts/restore_router_calibration_artifact.py` when SAM3 is gated locally. |
 | Segmentation-assisted routing | `src/router/router_pipeline.py` | Active | Validate crop/part routing with current router eval data. |
 | Adapter contract safety | adapter smoke and metadata validators | Active | Treat missing exported adapters as a prerequisite gap, not a pass. |
 | Dataset leakage control | `scripts/monitor_dataset_integrity.py` | Active | Exact split overlap is a hard blocker. |
@@ -158,9 +158,18 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-15T07:14:22Z`
+Generated: `2026-06-16T08:24:24Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
+
+##### Semantic Flip: Synthetic OOD Generation for Robust Refusal in Embodied Question Answering and Spatial Localization
+
+- Query: `mahalanobis ood`
+- Published: `2026-06-15T16:07:24Z`
+- Authors: Dongbin Na, Chanwoo Kim, Giyun Choi, Dooyoung Hong
+- Link: http://arxiv.org/abs/2606.16898v1
+- Repo action hint: Validate segmentation-assisted routing on current crop/part eval data before changing router prompts.
+- Review note: Detecting unanswerable user queries remains essential for the reliable deployment of real-world embodied agents. However, modern vision-language models (VLMs) often generate overly confident answers even when the available visual memory cannot support the query. Such overconfidence poses various task-dependent risks. The agent may provide misleading information to the user in Embodied Question Answering and select an arbitrary coordinate and physically guide the user there in spatial reasoning for navigation. Despite these high stakes, only a few prior studies directly address when and how an embodied VLM should respond with "I do not know." This work proposes Semantic Flip, a simple yet effective framework that synthesizes auxiliary out-of-distribution (OOD) samples for embodied refusal without requiring external OOD annotations. The key idea is to independently transform the query and video memory to construct auxiliary OOD pairs that lack sufficient visual grounding. These synthesized pairs enable training a lightweight rejection module on top of a frozen pretrained VLM. The module attaches to any existing VLM-based pipeline without retraining the underlying model. Across two complementary benchmarks, Semantic Flip consistently outperforms strong prompting baselines. This work also introduces SpaceReject, a new refusal benchmark for spatial localization with deliberately unanswerable queries over long video memory, where Semantic Flip achieves an $F_1$ score of 0.9559. The source codes and datasets are publicly available at https://github.com/ndb796/SemanticFlip.
 
 ##### Self-Supervised Learning of Plant Image Representations
 

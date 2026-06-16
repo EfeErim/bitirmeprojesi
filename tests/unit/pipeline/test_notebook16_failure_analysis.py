@@ -1,6 +1,8 @@
 from src.pipeline.notebook16_failure_analysis import (
     build_notebook16_failure_analysis,
+    build_target_missed_wrong_audit,
     render_notebook16_failure_markdown,
+    write_target_missed_wrong_audit_outputs,
 )
 
 
@@ -138,3 +140,46 @@ def test_render_markdown_includes_focus_and_all_target_sections():
     assert "Review-gate focus decision:" in markdown
     assert "`tomato__leaf` stays report-only; it is not a runtime promotion." in markdown
     assert "`0.95` confidence-threshold simulation: review capture `1.0000`" in markdown
+
+
+def test_target_missed_wrong_audit_exports_all_rows_and_local_status(tmp_path):
+    local_image = tmp_path / "data" / "prepared_runtime_datasets" / "tomato__leaf" / "test" / "healthy" / "a.jpg"
+    local_image.parent.mkdir(parents=True)
+    local_image.write_bytes(b"not-an-image")
+    rows = [
+        _row(
+            "/content/bitirmeprojesi/data/prepared_runtime_datasets/tomato__leaf/test/healthy/a.jpg",
+            diagnosis="blight",
+            full_confidence=0.99,
+        ),
+        _row("missing.jpg", diagnosis="rust", full_confidence=0.95),
+        _row("captured.jpg", diagnosis="rust", requires_review=True),
+        _row("correct.jpg"),
+        _row("other-target.jpg", target_id="strawberry__fruit", diagnosis="ripe"),
+    ]
+
+    payload = build_target_missed_wrong_audit(rows, repo_root=tmp_path)
+
+    assert payload["wrong_count"] == 3
+    assert payload["missed_wrong_count"] == 2
+    assert payload["local_available_count"] == 1
+    assert [row["diagnosis"] for row in payload["rows"]] == ["blight", "rust"]
+    assert payload["rows"][0]["local_exists"] is True
+    assert payload["confusion_pairs"] == [
+        {"key": "healthy -> blight", "count": 1},
+        {"key": "healthy -> rust", "count": 1},
+    ]
+
+    json_output = tmp_path / "audit.json"
+    csv_output = tmp_path / "audit.csv"
+    markdown_output = tmp_path / "audit.md"
+    write_target_missed_wrong_audit_outputs(
+        payload,
+        json_output=json_output,
+        csv_output=csv_output,
+        markdown_output=markdown_output,
+    )
+
+    assert "v1_notebook16_target_missed_wrong_audit" in json_output.read_text(encoding="utf-8")
+    assert "confusion_pair" in csv_output.read_text(encoding="utf-8-sig")
+    assert "Missed-Wrong Audit" in markdown_output.read_text(encoding="utf-8")

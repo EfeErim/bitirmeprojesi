@@ -12,9 +12,34 @@ DEFAULT_SOURCE_REPORT = Path("docs/ablation_results/dual_view_inference/multi_ta
 DEFAULT_CALIBRATION_INPUT = Path("docs/ablation_results/dual_view_inference/evidence_gate_calibration.json")
 DEFAULT_JSON_OUTPUT = Path("docs/ablation_results/dual_view_inference/notebook16_failure_analysis.json")
 DEFAULT_MARKDOWN_OUTPUT = Path("docs/ablation_results/dual_view_inference/notebook16_failure_analysis.md")
+DEFAULT_TARGET_AUDIT_JSON_OUTPUT = Path("docs/ablation_results/dual_view_inference/tomato_leaf_missed_wrong_audit.json")
+DEFAULT_TARGET_AUDIT_CSV_OUTPUT = Path("docs/ablation_results/dual_view_inference/tomato_leaf_missed_wrong_audit.csv")
+DEFAULT_TARGET_AUDIT_MARKDOWN_OUTPUT = Path("docs/ablation_results/dual_view_inference/tomato_leaf_missed_wrong_audit.md")
 DEFAULT_FOCUS_TARGET = "tomato__leaf"
 DEFAULT_DATA_AUDIT_TARGET = "strawberry__fruit"
 DEFAULT_CONFIDENCE_THRESHOLD_SWEEP = (0.95, 0.98, 0.99)
+TARGET_AUDIT_SCHEMA_VERSION = "v1_notebook16_target_missed_wrong_audit"
+TARGET_AUDIT_FIELD_ORDER = (
+    "rank",
+    "target_id",
+    "expected_label",
+    "diagnosis",
+    "confusion_pair",
+    "full_confidence",
+    "requires_review",
+    "roi_evidence_status",
+    "roi_quality_status",
+    "router_confidence",
+    "target_detection_source",
+    "grounding_dino_status",
+    "bbox_area_ratio",
+    "local_exists",
+    "local_path",
+    "image_path",
+    "suggested_action",
+    "review_decision",
+    "review_notes",
+)
 
 
 def load_notebook16_report(path: str | Path) -> list[dict[str, Any]]:
@@ -168,6 +193,122 @@ def write_analysis_outputs(payload: dict[str, Any], *, json_output: str | Path, 
     markdown_path.write_text(render_notebook16_failure_markdown(payload), encoding="utf-8")
 
 
+def build_target_missed_wrong_audit(
+    rows: Iterable[dict[str, Any]],
+    *,
+    target_id: str = DEFAULT_FOCUS_TARGET,
+    source_report: str | Path = DEFAULT_SOURCE_REPORT,
+    repo_root: str | Path = ".",
+) -> dict[str, Any]:
+    """Build a full missed-wrong audit table for one Notebook 16 target."""
+    repo_root_path = Path(repo_root)
+    normalized_rows = [_normalize_row(row) for row in rows]
+    target_wrong = [
+        row
+        for row in normalized_rows
+        if row["target_id"] == target_id and row["is_comparable"] and not row["is_correct"]
+    ]
+    missed_wrong = [row for row in target_wrong if not row["requires_review"]]
+    missed_wrong = sorted(
+        missed_wrong,
+        key=lambda row: (
+            -float(row["full_confidence"]),
+            str(row["expected_label"] or ""),
+            str(row["diagnosis"] or ""),
+            str(row["image_path"] or ""),
+        ),
+    )
+    audit_rows = [
+        _target_audit_row(index=index, row=row, repo_root=repo_root_path)
+        for index, row in enumerate(missed_wrong, start=1)
+    ]
+    return {
+        "schema_version": TARGET_AUDIT_SCHEMA_VERSION,
+        "source_report": Path(source_report).as_posix(),
+        "target_id": target_id,
+        "wrong_count": len(target_wrong),
+        "missed_wrong_count": len(missed_wrong),
+        "local_available_count": sum(1 for row in audit_rows if row["local_exists"]),
+        "confusion_pairs": _top_counter(row["confusion_pair"] for row in audit_rows),
+        "roi_evidence_status_counts": _top_counter(row["roi_evidence_status"] for row in audit_rows),
+        "roi_quality_status_counts": _top_counter(row["roi_quality_status"] for row in audit_rows),
+        "rows": audit_rows,
+    }
+
+
+def render_target_missed_wrong_audit_markdown(payload: dict[str, Any]) -> str:
+    """Render a compact handoff report for a target missed-wrong audit."""
+    target_id = str(payload.get("target_id") or DEFAULT_FOCUS_TARGET)
+    lines = [
+        f"# `{target_id}` Missed-Wrong Audit",
+        "",
+        f"Source report: `{payload.get('source_report')}`",
+        "",
+        "## Summary",
+        "",
+        f"- wrong predictions: `{payload.get('wrong_count', 0)}`",
+        f"- missed wrong predictions: `{payload.get('missed_wrong_count', 0)}`",
+        f"- local files available: `{payload.get('local_available_count', 0)}`",
+        "",
+        "## Top Missed Confusions",
+        "",
+        "| Confusion pair | Count |",
+        "| --- | ---: |",
+    ]
+    for item in payload.get("confusion_pairs", []):
+        lines.append(f"| `{item.get('key')}` | `{item.get('count')}` |")
+    lines.extend(
+        [
+            "",
+            "## Review Guidance",
+            "",
+            "- Audit these rows as data/label quality first; do not promote a runtime policy from this table alone.",
+            "- Prioritize high-count confusion pairs before one-off mistakes.",
+            "- Keep full-image adapter prediction as final until a refreshed Notebook 16 artifact passes promotion gates.",
+            "",
+            "## First Rows",
+            "",
+            "| Rank | Expected | Predicted | Confidence | Local path |",
+            "| ---: | --- | --- | ---: | --- |",
+        ]
+    )
+    for row in payload.get("rows", [])[:20]:
+        lines.append(
+            "| `{rank}` | `{expected}` | `{diagnosis}` | `{confidence:.4f}` | `{path}` |".format(
+                rank=row.get("rank"),
+                expected=row.get("expected_label"),
+                diagnosis=row.get("diagnosis"),
+                confidence=float(row.get("full_confidence") or 0.0),
+                path=row.get("local_path"),
+            )
+        )
+    return "\n".join(lines) + "\n"
+
+
+def write_target_missed_wrong_audit_outputs(
+    payload: dict[str, Any],
+    *,
+    json_output: str | Path,
+    csv_output: str | Path,
+    markdown_output: str | Path,
+) -> None:
+    """Write JSON, CSV, and Markdown outputs for a target missed-wrong audit."""
+    from src.shared.csv_utils import write_csv_rows_with_order
+
+    json_path = Path(json_output)
+    markdown_path = Path(markdown_output)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    markdown_path.parent.mkdir(parents=True, exist_ok=True)
+    json_path.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_csv_rows_with_order(
+        Path(csv_output),
+        payload.get("rows", []),
+        preferred_headers=TARGET_AUDIT_FIELD_ORDER,
+        encoding="utf-8-sig",
+    )
+    markdown_path.write_text(render_target_missed_wrong_audit_markdown(payload), encoding="utf-8")
+
+
 def _focus_decision_lines(target: dict[str, Any]) -> list[str]:
     threshold_095 = _threshold_sweep_entry(target, 0.95)
     if not threshold_095:
@@ -262,8 +403,38 @@ def _normalize_row(row: dict[str, Any]) -> dict[str, Any]:
         "requires_review": _is_true(row.get("requires_review")),
         "review_reasons": _normalize_reasons(row.get("review_reasons")),
         "full_confidence": _to_float(row.get("full_confidence", row.get("confidence")), default=0.0),
+        "router_confidence": _to_float(row.get("router_confidence"), default=0.0),
+        "bbox_area_ratio": _to_float(row.get("bbox_area_ratio"), default=0.0),
         "roi_evidence_status": _normalize_label(row.get("roi_evidence_status")) or "missing",
         "roi_quality_status": _normalize_label(row.get("roi_quality_status")) or "missing",
+        "target_detection_source": str(row.get("target_detection_source") or ""),
+        "grounding_dino_status": str(row.get("grounding_dino_status") or ""),
+    }
+
+
+def _target_audit_row(index: int, row: dict[str, Any], repo_root: Path) -> dict[str, Any]:
+    image_path = str(row.get("image_path") or "")
+    local_path = image_path.replace("/content/bitirmeprojesi/", "")
+    return {
+        "rank": index,
+        "target_id": row["target_id"],
+        "expected_label": row["expected_label"],
+        "diagnosis": row["diagnosis"],
+        "confusion_pair": _confusion_key(row),
+        "full_confidence": float(row["full_confidence"]),
+        "requires_review": bool(row["requires_review"]),
+        "roi_evidence_status": row["roi_evidence_status"],
+        "roi_quality_status": row["roi_quality_status"],
+        "router_confidence": float(row["router_confidence"]),
+        "target_detection_source": row["target_detection_source"],
+        "grounding_dino_status": row["grounding_dino_status"],
+        "bbox_area_ratio": float(row["bbox_area_ratio"]),
+        "local_exists": bool(local_path and (repo_root / local_path).is_file()),
+        "local_path": local_path,
+        "image_path": image_path,
+        "suggested_action": "review_label_or_class_boundary",
+        "review_decision": "",
+        "review_notes": "",
     }
 
 

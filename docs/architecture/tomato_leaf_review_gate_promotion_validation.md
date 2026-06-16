@@ -21,6 +21,9 @@ Current pilot evidence:
 - threshold simulation false-positive review: `0.1163`
 - v2 holdout capture: `0.6471`
 - v2 holdout false-positive review: `0.1364`
+- full missed-wrong audit: `docs/ablation_results/dual_view_inference/tomato_leaf_missed_wrong_audit.csv`
+- audit rows: `84` missed-wrong predictions, with `84/84` local files available
+- grouped review packets: `.runtime_tmp/tomato_leaf_missed_wrong_packets/` currently has `27` confusion-pair packets plus `index.html`
 
 ## Promotion Gates
 
@@ -46,6 +49,8 @@ Run this sequence after a fresh Notebook 16 multi-target artifact is available:
 .\scripts\python.cmd scripts\calibrate_evidence_gate.py --schema-version v2
 .\scripts\python.cmd scripts\analyze_notebook16_failures.py
 .\scripts\python.cmd scripts\recommend_evidence_gate_policies.py
+.\scripts\python.cmd scripts\export_notebook16_target_audit.py --target-id tomato__leaf
+.\scripts\python.cmd scripts\apply_notebook16_target_audit_decisions.py --packet-dir .runtime_tmp\tomato_leaf_missed_wrong_packets
 .\scripts\python.cmd scripts\monitor_dataset_integrity.py
 ```
 
@@ -54,7 +59,9 @@ Review the generated artifacts in this order:
 1. `evidence_gate_calibration.json`: confirm target policy status and holdout metrics.
 2. `notebook16_failure_analysis.md`: confirm `0.95` threshold simulation metrics and missed-wrong drilldown.
 3. `evidence_gate_policy_recommendations.md`: confirm `tomato__leaf` remains report-only unless all gates pass.
-4. Dataset integrity output: confirm no exact image-hash overlap for `tomato__leaf`.
+4. `tomato_leaf_missed_wrong_audit.csv` or `.runtime_tmp/tomato_leaf_missed_wrong_packets/index.html`: review the full missed-wrong queue before changing data or thresholds.
+5. `apply_notebook16_target_audit_decisions.py`: dry-run reviewed CSV decisions before using `--apply`; pass `--packet-dir .runtime_tmp\tomato_leaf_missed_wrong_packets` if decisions were entered in packet CSVs. Removals are quarantined, not deleted.
+6. Dataset integrity output: confirm no exact image-hash overlap for `tomato__leaf`.
 
 ## Runtime Promotion Boundary
 
@@ -69,3 +76,5 @@ This document does not implement runtime behavior. The first runtime implementat
 ## Current Status
 
 The current `tomato__leaf` pilot is not runtime-ready because the v2 holdout capture is `0.6471`, below the `0.70` promotion gate. The correct next state is report-only validation, not runtime promotion.
+
+The immediate data action is to audit the full missed-wrong CSV or grouped packet sheets. Prioritize the high-count confusions before rerunning Notebook 16, especially `domates_early_blight_yaprak -> domates_late_blight_yaprak`, `domates_late_blight_yaprak -> domates_early_blight_yaprak`, and `domates_bacterial_spot_and_speck_yaprak -> domates_septoria_leaf_spot_yaprak`.
