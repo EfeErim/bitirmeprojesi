@@ -23,6 +23,11 @@ This repo is intentionally narrow. The fastest handoff path is:
 - [user_guide/ood_readiness_guide.md](user_guide/ood_readiness_guide.md): OOD and readiness policy, `metric_gate.json` vs `production_readiness.json`
 - [architecture/overview.md](architecture/overview.md): training and inference flow, config flow, artifact contracts, file responsibility map
 - [architecture/code_organization_map.md](architecture/code_organization_map.md): repo-wide source boundaries for `src/`, scripts, notebook helpers, tests, configs, and docs
+- [project_completion_plan.md](project_completion_plan.md): June 2026 scope freeze, milestones, deliverables, and definition of done
+- [demo_checklist.md](demo_checklist.md): Notebook 8 demo image matrix, expected behavior, result logging, and pass criteria
+- [handoff_guide.md](handoff_guide.md): company/evaluator handoff path, supported target labels, runtime notes, and known limitations
+- [final_validation_checklist.md](final_validation_checklist.md): final freeze validation commands, required checks, optional checks, and status template
+- [presentation_outline.md](presentation_outline.md): Turkish narration with English technical terms, slide plan, visuals, and rehearsal checklist
 - [architecture/tomato_leaf_review_gate_promotion_validation.md](architecture/tomato_leaf_review_gate_promotion_validation.md): `tomato__leaf` report-only review-gate pilot and runtime promotion gates
 - [SOTA_AUTOMATION_GUIDE.md](SOTA_AUTOMATION_GUIDE.md): continuous automation strategy grounded in literature; recommended cascade by tier and ROI
 - [roi_ablation_memory.md](roi_ablation_memory.md): current ROI/bbox/router/adapter ablation state, decisions, and next-step plan

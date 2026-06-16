@@ -14,6 +14,10 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 
 ## Recent Meaningful Changes
 
+- Added `docs/project_completion_plan.md` as the June 2026 completion contract: final scope is a safe-delivery demo-product handoff, not a web/mobile app; priority is stable Colab Notebook 8 single-image router-to-adapter inference, unknown/abstain behavior, eight tomato/strawberry/grape/apricot fruit/leaf target surfaces, Turkish presentation with English technical terms, a dedicated handoff guide, and repo hygiene by 2026-06-30. The plan now includes literature-grounded rationale, a required 40-60 image demo checklist shape, explicit final failure definitions, and concrete task lists for every milestone.
+- Added final-delivery execution checklists: `docs/demo_checklist.md`, `docs/handoff_guide.md`, `docs/final_validation_checklist.md`, and `docs/presentation_outline.md`.
+- Completed the M1 demo inference contract in docs: `docs/demo_checklist.md` now declares the exact Notebook 8 run path, `ADAPTER_ROOT = ROOT / "runs"` for the current generated adapter inventory, 48 candidate demo rows with expected behavior, fallback evidence path `.runtime_tmp/final_demo_fallbacks/`, and target support candidate labels; `docs/handoff_guide.md` reuses the same photo guidance and demo procedure.
+- M1 local verification passed: `docs/demo_checklist.md` contains 48 actual candidate rows, all eight target surfaces have `runs/**/<crop>/<part>/continual_sd_lora_adapter` inventory, `scripts/validate_notebook_imports.py` passed 19/19, `scripts/validate_config_schema.py` passed 2/2, and `scripts/audit_code_organization.py` reported `status=pass` with 0 errors.
 - Latest commit added Codex instructions, a config example, and output-capping helpers, and refreshed `AGENTS.md`.
 - Recent notebook calibration work tuned Notebook 5 router calibration defaults to `12/12`, exposed adaptive hyperparameters, and published failure-analysis artifacts.
 - The SOTA literature updater filters query-specific candidates more narrowly, restricts BioCLIP candidates to plant-domain context, deduplicates titles, and preserves the previous managed scan when every configured query fails.
@@ -58,6 +62,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 
 ## Important Decisions
 
+- The June 2026 finish is demo-product oriented: Notebook 8/canonical inference is the live-demo path, Notebook 16 remains report-only evidence/review support unless promotion gates pass, and web/mobile app delivery is out of scope.
 - Use `requirements.txt` and `requirements-dev.txt` as the dependency source of truth.
 - Treat `runs/`, `models/adapters/`, `outputs/`, and `.runtime_tmp/` as generated or local-only surfaces.
 - Treat large datasets, notebooks, generated reports, and broad command output as high-token surfaces; use targeted extraction or summaries before loading them into Codex context.
@@ -79,6 +84,7 @@ Keep the narrow plant-disease repo stable while supporting grouped dataset prepa
 ## Next Recommended Steps
 
 - Before editing, read this file first.
+- For final-delivery work, follow `docs/project_completion_plan.md`: first create and run the curated live-demo checklist, then fix only demo/handoff blockers before presentation polish.
 - Make the smallest change that addresses the request.
 - If durable state changes, update this file at the end of the task.
 - When calibration, runtime, or benchmark surfaces change, run the narrowest relevant validation first and capture benchmarks if the workflow contract changed.
