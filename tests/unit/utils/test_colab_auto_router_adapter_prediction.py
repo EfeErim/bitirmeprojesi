@@ -156,6 +156,38 @@ def test_auto_prediction_skips_adapter_when_part_is_unknown():
     assert FakeWorkflow.calls == []
 
 
+def test_auto_prediction_skips_adapter_for_unsupported_final_demo_crop():
+    FakeWorkflow.calls.clear()
+
+    result = run_auto_router_adapter_prediction(
+        "leaf.jpg",
+        router_result=_router_result(status="ok", crop="potato", part="leaf"),
+        workflow_factory=FakeWorkflow,
+    )
+
+    assert result["status"] == "unknown_crop"
+    assert result["crop"] == "potato"
+    assert "outside the final demo supported crop set" in result["message"]
+    assert result["router_handoff"]["adapter_ran"] is False
+    assert FakeWorkflow.calls == []
+
+
+def test_auto_prediction_skips_adapter_for_unsupported_final_demo_part():
+    FakeWorkflow.calls.clear()
+
+    result = run_auto_router_adapter_prediction(
+        "leaf.jpg",
+        router_result=_router_result(status="ok", crop="tomato", part="bud"),
+        workflow_factory=FakeWorkflow,
+    )
+
+    assert result["status"] == "router_uncertain"
+    assert result["part"] == "bud"
+    assert "outside the final demo supported part set" in result["message"]
+    assert result["router_handoff"]["adapter_ran"] is False
+    assert FakeWorkflow.calls == []
+
+
 def test_auto_prediction_reuses_default_workflow_and_ready_router(monkeypatch):
     CacheableFakeWorkflow.instances.clear()
     clear_auto_prediction_workflow_cache()

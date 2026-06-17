@@ -14,6 +14,8 @@ WorkflowFactory = Callable[..., Any]
 WorkflowCacheKey = Tuple[str, str, str]
 
 _ADAPTER_ALLOWED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
+_FINAL_DEMO_SUPPORTED_CROPS = frozenset({"tomato", "strawberry", "grape", "apricot"})
+_FINAL_DEMO_SUPPORTED_PARTS = frozenset({"leaf", "fruit"})
 _WORKFLOW_SESSION_CACHE: Dict[WorkflowCacheKey, Any] = {}
 
 
@@ -49,6 +51,18 @@ def _resolve_router_handoff(router_result: Dict[str, Any]) -> Dict[str, Any]:
         "message": message,
         "router": router_payload,
     }
+
+
+def _final_demo_handoff_rejection(crop: Optional[str], part: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    if not crop or crop == "unknown":
+        return "unknown_crop", "Router could not resolve a supported crop."
+    if crop not in _FINAL_DEMO_SUPPORTED_CROPS:
+        return "unknown_crop", f"Router crop '{crop}' is outside the final demo supported crop set."
+    if not part or part == "unknown":
+        return "router_uncertain", "Router could not resolve a supported plant part."
+    if part not in _FINAL_DEMO_SUPPORTED_PARTS:
+        return "router_uncertain", f"Router part '{part}' is outside the final demo supported part set."
+    return None, None
 
 
 def clear_auto_prediction_workflow_cache() -> None:
@@ -124,16 +138,19 @@ def run_auto_router_adapter_prediction(
     status = str(handoff["status"] or "").strip().lower()
     crop = handoff["crop"]
     part = handoff["part"]
+    rejection_status, rejection_message = _final_demo_handoff_rejection(crop, part)
     adapter_allowed = (
-        status in _ADAPTER_ALLOWED_ROUTER_STATUSES
+        rejection_status is None
+        and status in _ADAPTER_ALLOWED_ROUTER_STATUSES
         and bool(crop)
-        and crop != "unknown"
         and bool(part)
-        and part != "unknown"
     )
 
     if not adapter_allowed:
-        if not crop or crop == "unknown":
+        if rejection_status is not None:
+            result_status = rejection_status
+            default_message = rejection_message or "Router result is outside the final demo supported surface."
+        elif not crop or crop == "unknown":
             result_status = "unknown_crop"
             default_message = "Router could not resolve a supported crop."
         elif not part or part == "unknown":

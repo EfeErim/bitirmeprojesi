@@ -275,6 +275,13 @@ def build_image_set(
                                 "image_id": image_id,
                                 "source": f"staged_external:{output_path.as_posix()}",
                                 "expected_target": plan.expected_target,
+                                "expected_crop": plan.expected_target.split("__", 1)[0]
+                                if "__" in plan.expected_target
+                                else "",
+                                "expected_part": plan.expected_target.split("__", 1)[1]
+                                if "__" in plan.expected_target
+                                else "",
+                                "expected_class": "",
                                 "expected_behavior": plan.expected_behavior,
                                 "notes": plan.notes,
                                 "origin_url": str(observation.get("uri") or ""),
@@ -303,6 +310,9 @@ def build_image_set(
         "image_id",
         "source",
         "expected_target",
+        "expected_crop",
+        "expected_part",
+        "expected_class",
         "expected_behavior",
         "notes",
         "origin_url",

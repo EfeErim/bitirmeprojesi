@@ -46,6 +46,9 @@ class ChecklistRow:
     expected_target: str
     expected_behavior: str
     notes: str
+    expected_crop: str = ""
+    expected_part: str = ""
+    expected_class: str = ""
 
 
 def _split_markdown_row(line: str) -> list[str]:
@@ -74,6 +77,7 @@ def parse_checklist_rows(checklist_path: Path) -> list[ChecklistRow]:
         cells = _split_markdown_row(line)
         if len(cells) < 12:
             raise ValueError(f"Checklist row has {len(cells)} cells, expected 12: {line}")
+        expected_crop, expected_part = _target_parts(cells[2])
         rows.append(
             ChecklistRow(
                 image_id=cells[0],
@@ -81,6 +85,9 @@ def parse_checklist_rows(checklist_path: Path) -> list[ChecklistRow]:
                 expected_target=cells[2],
                 expected_behavior=cells[3],
                 notes=cells[11],
+                expected_crop=expected_crop or "",
+                expected_part=expected_part or "",
+                expected_class=_expected_class_from_source(cells[1]),
             )
         )
     return rows
@@ -98,13 +105,26 @@ def parse_manifest_rows(manifest_path: Path) -> list[ChecklistRow]:
             image_id = str(record.get("image_id") or "").strip()
             if not image_id:
                 continue
+            expected_target = str(record.get("expected_target") or "").strip()
+            inferred_crop, inferred_part = _target_parts(expected_target)
+            source = str(record.get("source") or "").strip()
+            original_source = str(record.get("original_source") or "").strip()
+            expected_class = (
+                str(record.get("expected_class") or "").strip()
+                or str(record.get("disease_class") or "").strip()
+                or _expected_class_from_source(source)
+                or _expected_class_from_reference(original_source)
+            )
             rows.append(
                 ChecklistRow(
                     image_id=image_id,
-                    source=str(record.get("source") or "").strip(),
-                    expected_target=str(record.get("expected_target") or "").strip(),
+                    source=source,
+                    expected_target=expected_target,
                     expected_behavior=str(record.get("expected_behavior") or "").strip(),
                     notes=str(record.get("notes") or "").strip(),
+                    expected_crop=str(record.get("expected_crop") or inferred_crop or "").strip(),
+                    expected_part=str(record.get("expected_part") or inferred_part or "").strip(),
+                    expected_class=expected_class,
                 )
             )
     return rows
@@ -175,7 +195,40 @@ def _norm(value: Any) -> str:
 def _expected_class_from_source(source: str) -> str:
     if not source.startswith("local_test_pool:"):
         return ""
-    return Path(source.partition(":")[2]).name
+    source_path = Path(source.partition(":")[2])
+    if source_path.suffix.lower() in IMAGE_SUFFIXES:
+        return source_path.parent.name
+    return source_path.name
+
+
+def _expected_class_from_reference(source: str) -> str:
+    if not source:
+        return ""
+    if source.startswith("local_test_pool:"):
+        return _expected_class_from_source(source)
+    try:
+        path = Path(source)
+    except TypeError:
+        return ""
+    return path.parent.name if path.parent != path else ""
+
+
+def _class_matches(expected_class: str, diagnosis: Any) -> bool:
+    expected_key = _norm(expected_class)
+    diagnosis_key = _norm(diagnosis)
+    if not expected_key or not diagnosis_key:
+        return False
+    return expected_key in diagnosis_key or diagnosis_key in expected_key
+
+
+def _opposite_part_label(expected_part: str, diagnosis: Any) -> bool:
+    expected = str(expected_part or "").strip().lower()
+    diagnosis_key = _norm(diagnosis)
+    if expected == "fruit":
+        return "leaf" in diagnosis_key or "yaprak" in diagnosis_key
+    if expected == "leaf":
+        return "fruit" in diagnosis_key or "meyve" in diagnosis_key
+    return False
 
 
 def classify_failure(result: dict[str, Any], *, asset_status: str) -> str:
@@ -217,10 +270,10 @@ def evaluate_pass(row: ChecklistRow, result: dict[str, Any], *, asset_status: st
     if status != "success":
         return "fail"
 
-    expected_class = _expected_class_from_source(row.source)
+    expected_class = row.expected_class or _expected_class_from_source(row.source)
     if not expected_class:
         return "pass"
-    return "pass" if _norm(expected_class) in _norm(diagnosis) or _norm(diagnosis) in _norm(expected_class) else "fail"
+    return "pass" if _class_matches(expected_class, diagnosis) else "fail"
 
 
 def _confidence_or_ood(result: dict[str, Any]) -> str:
@@ -326,6 +379,9 @@ def _run_row(
         "source": row.source,
         "resolved_image": "" if image_path is None else str(image_path),
         "expected_target": row.expected_target,
+        "expected_crop": row.expected_crop,
+        "expected_part": row.expected_part,
+        "expected_class": row.expected_class,
         "expected_behavior": row.expected_behavior,
         "actual_status": result.get("status"),
         "predicted_crop": result.get("crop"),
@@ -366,6 +422,123 @@ def summarize_results(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "failure_buckets": dict(sorted(buckets.items())),
         "per_target": dict(sorted(targets.items())),
     }
+
+
+def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
+    items = list(rows)
+    crop_counts = {"correct": 0, "incorrect": 0, "not_applicable": 0}
+    part_counts = {"correct": 0, "incorrect": 0, "not_applicable": 0}
+    class_counts = {"correct": 0, "incorrect": 0, "not_applicable": 0}
+    adapter_unavailable = {"wrong_router": 0, "missing_adapter": 0, "unknown": 0}
+    per_target: dict[str, dict[str, int]] = {}
+    opposite_part_rows: list[str] = []
+
+    for row in items:
+        target = str(row.get("expected_target") or "")
+        target_summary = per_target.setdefault(
+            target,
+            {
+                "total": 0,
+                "answered": 0,
+                "abstained_or_reviewed": 0,
+                "pass": 0,
+                "fail": 0,
+                "exact_class_correct": 0,
+                "opposite_part_disease_labels": 0,
+            },
+        )
+        target_summary["total"] += 1
+        pass_fail = str(row.get("pass_fail") or "fail")
+        if pass_fail in {"pass", "fail"}:
+            target_summary[pass_fail] += 1
+        status = str(row.get("actual_status") or "")
+        if status == "success":
+            target_summary["answered"] += 1
+        if status in ABSTAIN_STATUSES:
+            target_summary["abstained_or_reviewed"] += 1
+
+        expected_crop = str(row.get("expected_crop") or "").strip().lower()
+        expected_part = str(row.get("expected_part") or "").strip().lower()
+        predicted_crop = str(row.get("predicted_crop") or "").strip().lower()
+        predicted_part = str(row.get("predicted_part") or "").strip().lower()
+        expected_class = str(row.get("expected_class") or "").strip()
+        predicted_disease = row.get("predicted_disease")
+
+        if expected_crop:
+            crop_counts["correct" if predicted_crop == expected_crop else "incorrect"] += 1
+        else:
+            crop_counts["not_applicable"] += 1
+        if expected_part:
+            part_counts["correct" if predicted_part == expected_part else "incorrect"] += 1
+        else:
+            part_counts["not_applicable"] += 1
+        if expected_class and status == "success":
+            class_correct = _class_matches(expected_class, predicted_disease)
+            class_counts["correct" if class_correct else "incorrect"] += 1
+            if class_correct:
+                target_summary["exact_class_correct"] += 1
+        else:
+            class_counts["not_applicable"] += 1
+
+        if _opposite_part_label(expected_part, predicted_disease):
+            opposite_part_rows.append(str(row.get("image_id") or ""))
+            target_summary["opposite_part_disease_labels"] += 1
+
+        if status == "adapter_unavailable":
+            if expected_crop and expected_part:
+                if predicted_crop != expected_crop or predicted_part != expected_part:
+                    adapter_unavailable["wrong_router"] += 1
+                else:
+                    adapter_unavailable["missing_adapter"] += 1
+            else:
+                adapter_unavailable["unknown"] += 1
+
+    return {
+        "schema_version": "v1_m2_demo_analysis_summary",
+        "total": len(items),
+        "router_crop_correctness": crop_counts,
+        "router_part_correctness": part_counts,
+        "normalized_disease_class_correctness": class_counts,
+        "adapter_unavailable": adapter_unavailable,
+        "opposite_part_disease_labels": {
+            "count": len(opposite_part_rows),
+            "image_ids": opposite_part_rows[:100],
+            "truncated": len(opposite_part_rows) > 100,
+        },
+        "per_target": dict(sorted(per_target.items())),
+    }
+
+
+def write_analysis_markdown(analysis: dict[str, Any], output_path: Path) -> None:
+    lines = [
+        "# M2 Demo Analysis Summary",
+        "",
+        f"- total: {analysis['total']}",
+        f"- router_crop_correctness: `{json.dumps(analysis['router_crop_correctness'], sort_keys=True)}`",
+        f"- router_part_correctness: `{json.dumps(analysis['router_part_correctness'], sort_keys=True)}`",
+        f"- normalized_disease_class_correctness: `{json.dumps(analysis['normalized_disease_class_correctness'], sort_keys=True)}`",
+        f"- adapter_unavailable: `{json.dumps(analysis['adapter_unavailable'], sort_keys=True)}`",
+        f"- opposite_part_disease_labels: {analysis['opposite_part_disease_labels']['count']}",
+        "",
+        "## Per Target",
+        "",
+        "| target | total | answered | abstained_or_reviewed | pass | fail | exact_class_correct | opposite_part_labels |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|",
+    ]
+    for target, values in analysis["per_target"].items():
+        lines.append(
+            "| {target} | {total} | {answered} | {abstained} | {passed} | {failed} | {exact} | {opposite} |".format(
+                target=target,
+                total=values["total"],
+                answered=values["answered"],
+                abstained=values["abstained_or_reviewed"],
+                passed=values["pass"],
+                failed=values["fail"],
+                exact=values["exact_class_correct"],
+                opposite=values["opposite_part_disease_labels"],
+            )
+        )
+    output_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_markdown_report(report: dict[str, Any], output_path: Path) -> None:
@@ -425,6 +598,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--output", type=Path, default=Path(".runtime_tmp/m2_demo_checklist_run.json"))
     parser.add_argument("--markdown-output", type=Path, default=Path(".runtime_tmp/m2_demo_checklist_run.md"))
+    parser.add_argument("--analysis-output", type=Path)
+    parser.add_argument("--analysis-markdown-output", type=Path)
     parser.add_argument("--adapter-root", type=Path, default=Path("runs"))
     parser.add_argument("--config-env", default="colab")
     parser.add_argument("--device", default="cuda")
@@ -485,10 +660,18 @@ def main() -> int:
         "summary": summarize_results(output_rows),
         "rows": output_rows,
     }
+    analysis = build_analysis_summary(output_rows)
+    report["analysis_summary"] = analysis
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     args.markdown_output.parent.mkdir(parents=True, exist_ok=True)
     write_markdown_report(report, args.markdown_output)
+    analysis_output = args.analysis_output or (args.output.parent / "analysis_summary.json")
+    analysis_markdown_output = args.analysis_markdown_output or (args.output.parent / "analysis_summary.md")
+    analysis_output.parent.mkdir(parents=True, exist_ok=True)
+    analysis_output.write_text(json.dumps(analysis, indent=2, ensure_ascii=False), encoding="utf-8")
+    analysis_markdown_output.parent.mkdir(parents=True, exist_ok=True)
+    write_analysis_markdown(analysis, analysis_markdown_output)
     print(json.dumps(report["summary"], indent=2, ensure_ascii=False))
     return 1 if report["summary"]["failed"] else 0
 

@@ -1,8 +1,84 @@
 {
-  "schema_version": "v1_m2_full_image_set_saved",
-  "output_root": "docs\\demo_assets\\m2_full_image_set",
-  "saved_image_count": 512,
-  "missing_count": 2,
-  "manifest": "docs\\demo_assets\\m2_full_image_set\\manifests\\m2_full_image_set_manifest.csv",
-  "missing_manifest": "docs\\demo_assets\\m2_full_image_set\\manifests\\m2_full_image_set_missing.csv"
+  "schema_version": "v1_m2_user_like_curated_image_set",
+  "generated_at": "2026-06-17T09:45:36.804276+00:00",
+  "row_count": 512,
+  "target_counts": {
+    "apricot__fruit": 54,
+    "apricot__leaf": 37,
+    "grape__fruit": 55,
+    "grape__leaf": 77,
+    "grape__unknown_part": 1,
+    "non_plant": 6,
+    "strawberry__fruit": 47,
+    "strawberry__leaf": 45,
+    "tomato__fruit": 75,
+    "tomato__leaf": 108,
+    "tomato__unknown_part": 1,
+    "unknown_crop": 6
+  },
+  "duplicate_hash_count": 0,
+  "qc_status_counts": {
+    "keep": 512
+  },
+  "user_like_bucket_counts": {
+    "borderline": 51,
+    "clear": 359,
+    "difficult": 102
+  },
+  "min_per_disease_class_required": 10,
+  "per_disease_class_counts": {
+    "apricot__fruit": {
+      "kayısıda_çiçek_monilyası_meyve_40": 10,
+      "kayısıda_şarka_virüsü_meyve_230": 10,
+      "kayısıda_şeftali_karalekesi_meyve_232": 10,
+      "kayısıda_yaprak_delen_çil_hastalığı_meyve_128": 10
+    },
+    "apricot__leaf": {
+      "kayısı_şarka_virüsü_yaprak_206": 10,
+      "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 10
+    },
+    "grape__fruit": {
+      "üzüm_antraknoz_meyve": 10,
+      "üzüm_botrytis_cinerea_meyve": 10,
+      "üzüm_külleme_meyve": 10,
+      "üzüm_mildiyö_meyve": 10
+    },
+    "grape__leaf": {
+      "üzüm_antraknoz_yaprak": 10,
+      "üzüm_kav_esca_yaprak": 10,
+      "üzüm_külleme_yaprak": 10,
+      "üzüm_leafroll_virüs_yaprak": 10,
+      "üzüm_mildiyö_yaprak": 10,
+      "üzüm_yelpaze_virüsü_yaprak": 10
+    },
+    "strawberry__fruit": {
+      "strawberry_anthracnose_fruit": 10,
+      "strawberry_gray_mold_fruit": 10,
+      "strawberry_powdery_mildew_fruit": 10
+    },
+    "strawberry__leaf": {
+      "strawberry_leaf_scorch_leaf": 10,
+      "strawberry_leaf_spot_leaf": 10,
+      "strawberry_powdery_mildew_leaf": 10
+    },
+    "tomato__fruit": {
+      "domates_antraknoz_meyve": 10,
+      "domates_bacterial_spot_and_speck_meyve": 10,
+      "domates_blossom_end_rot_meyve": 10,
+      "domates_gray_mold_meyve": 10,
+      "domates_late_blight_meyve": 10,
+      "domates_spotted_wilt_meyve": 10
+    },
+    "tomato__leaf": {
+      "domates_bacterial_spot_and_speck_yaprak": 10,
+      "domates_early_blight_yaprak": 10,
+      "domates_late_blight_yaprak": 10,
+      "domates_leaf_mold_yaprak": 10,
+      "domates_mosaic_virüs_yaprak": 10,
+      "domates_powdery_mildew_yaprak": 10,
+      "domates_septoria_leaf_spot_yaprak": 10,
+      "domates_spotted_wilt_yaprak": 10,
+      "domates_yellow_leaf_curl_yaprak": 10
+    }
+  }
 }

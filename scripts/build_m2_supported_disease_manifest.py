@@ -73,6 +73,9 @@ def build_rows(dataset_root: Path, *, start_id: int, images_per_class: int) -> l
                         "image_id": image_id,
                         "source": f"local_test_pool:{image_path.as_posix()}",
                         "expected_target": target_root.name,
+                        "expected_crop": target_root.name.split("__", 1)[0],
+                        "expected_part": target_root.name.split("__", 1)[1] if "__" in target_root.name else "",
+                        "expected_class": class_dir.name,
                         "expected_behavior": (
                             f"known supported disease class: {class_dir.name}; disease answer or review expected"
                         ),
@@ -85,7 +88,17 @@ def build_rows(dataset_root: Path, *, start_id: int, images_per_class: int) -> l
 
 
 def write_manifest(rows: list[dict[str, str]], manifest_path: Path) -> None:
-    fieldnames = ["image_id", "source", "expected_target", "expected_behavior", "notes", "disease_class"]
+    fieldnames = [
+        "image_id",
+        "source",
+        "expected_target",
+        "expected_crop",
+        "expected_part",
+        "expected_class",
+        "expected_behavior",
+        "notes",
+        "disease_class",
+    ]
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     with manifest_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)

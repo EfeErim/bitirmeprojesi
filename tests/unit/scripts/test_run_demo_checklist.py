@@ -3,6 +3,7 @@ from pathlib import Path
 
 from scripts.build_m2_supported_disease_manifest import build_rows, is_healthy_class
 from scripts.run_demo_checklist import (
+    build_analysis_summary,
     build_parser,
     classify_failure,
     parse_checklist_rows,
@@ -71,8 +72,11 @@ def test_parse_manifest_rows_reads_extra_csv(tmp_path: Path):
     manifest.write_text(
         "\n".join(
             [
-                "image_id,source,expected_target,expected_behavior,notes,origin_url",
-                "demo_049,staged_external:.runtime_tmp/x.jpg,tomato__leaf,\"answer or review, no crash\",internet,http://example.test",
+                "image_id,source,expected_target,expected_crop,expected_part,expected_class,expected_behavior,notes,origin_url",
+                (
+                    "demo_049,staged_external:.runtime_tmp/x.jpg,tomato__leaf,tomato,leaf,"
+                    "domates_late_blight_yaprak,\"answer or review, no crash\",internet,http://example.test"
+                ),
             ]
         ),
         encoding="utf-8",
@@ -83,7 +87,33 @@ def test_parse_manifest_rows_reads_extra_csv(tmp_path: Path):
     assert len(rows) == 1
     assert rows[0].image_id == "demo_049"
     assert rows[0].expected_target == "tomato__leaf"
+    assert rows[0].expected_crop == "tomato"
+    assert rows[0].expected_part == "leaf"
+    assert rows[0].expected_class == "domates_late_blight_yaprak"
     assert rows[0].notes == "internet"
+
+
+def test_parse_manifest_rows_infers_expected_fields_from_existing_manifest_shape(tmp_path: Path):
+    manifest = tmp_path / "extra.csv"
+    manifest.write_text(
+        "\n".join(
+            [
+                "image_id,source,expected_target,expected_behavior,notes,original_source",
+                (
+                    "demo_049,staged_external:.runtime_tmp/x.jpg,tomato__fruit,"
+                    "\"answer or review, no crash\",internet,"
+                    "local_test_pool:data/prepared_runtime_datasets/tomato__fruit/test/domates_late_blight_meyve/x.jpg"
+                ),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    rows = parse_manifest_rows(manifest)
+
+    assert rows[0].expected_crop == "tomato"
+    assert rows[0].expected_part == "fruit"
+    assert rows[0].expected_class == "domates_late_blight_meyve"
 
 
 def test_parser_supports_manifest_only_runs():
@@ -111,6 +141,9 @@ def test_supported_disease_manifest_excludes_healthy_classes(tmp_path: Path):
     assert len(rows) == 10
     assert rows[0]["image_id"] == "demo_145"
     assert rows[0]["expected_target"] == "tomato__leaf"
+    assert rows[0]["expected_crop"] == "tomato"
+    assert rows[0]["expected_part"] == "leaf"
+    assert rows[0]["expected_class"] == "domates_late_blight_yaprak"
     assert rows[0]["disease_class"] == "domates_late_blight_yaprak"
     assert rows[0]["source"].endswith("image.png")
     assert rows[-1]["source"].endswith("image_09.png")
@@ -156,3 +189,59 @@ def test_summarize_results_counts_buckets_and_targets():
         "failure_buckets": {"dependency_access": 1},
         "per_target": {"tomato__leaf": {"total": 2, "pass": 1, "fail": 1}},
     }
+
+
+def test_build_analysis_summary_separates_router_and_adapter_failures():
+    analysis = build_analysis_summary(
+        [
+            {
+                "image_id": "demo_001",
+                "actual_status": "success",
+                "pass_fail": "pass",
+                "expected_target": "tomato__fruit",
+                "expected_crop": "tomato",
+                "expected_part": "fruit",
+                "expected_class": "domates_late_blight_meyve",
+                "predicted_crop": "tomato",
+                "predicted_part": "fruit",
+                "predicted_disease": "domates_late_blight_meyve",
+                "failure_bucket": "",
+            },
+            {
+                "image_id": "demo_002",
+                "actual_status": "success",
+                "pass_fail": "fail",
+                "expected_target": "tomato__fruit",
+                "expected_crop": "tomato",
+                "expected_part": "fruit",
+                "expected_class": "domates_late_blight_meyve",
+                "predicted_crop": "tomato",
+                "predicted_part": "fruit",
+                "predicted_disease": "domates_late_blight_yaprak",
+                "failure_bucket": "",
+            },
+            {
+                "image_id": "demo_003",
+                "actual_status": "adapter_unavailable",
+                "pass_fail": "fail",
+                "expected_target": "tomato__fruit",
+                "expected_crop": "tomato",
+                "expected_part": "fruit",
+                "expected_class": "",
+                "predicted_crop": "potato",
+                "predicted_part": "leaf",
+                "predicted_disease": None,
+                "failure_bucket": "adapter_loading",
+            },
+        ]
+    )
+
+    assert analysis["router_crop_correctness"] == {"correct": 2, "incorrect": 1, "not_applicable": 0}
+    assert analysis["router_part_correctness"] == {"correct": 2, "incorrect": 1, "not_applicable": 0}
+    assert analysis["normalized_disease_class_correctness"] == {
+        "correct": 1,
+        "incorrect": 1,
+        "not_applicable": 1,
+    }
+    assert analysis["adapter_unavailable"] == {"wrong_router": 1, "missing_adapter": 0, "unknown": 0}
+    assert analysis["opposite_part_disease_labels"]["image_ids"] == ["demo_002"]

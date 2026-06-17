@@ -22,6 +22,8 @@ M2_DEMO_OUTPUT = str(globals().get("M2_DEMO_OUTPUT", ".runtime_tmp/m2_demo_check
 M2_DEMO_MARKDOWN_OUTPUT = str(
     globals().get("M2_DEMO_MARKDOWN_OUTPUT", ".runtime_tmp/m2_demo_checklist_run.md")
 )
+M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analysis_summary.json"))
+M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
 M2_AUTO_PUSH_RESULTS = bool(globals().get("M2_AUTO_PUSH_RESULTS", True))
@@ -45,6 +47,8 @@ else:
     manifest_path = (repo_root / M2_DEMO_MANIFEST).resolve()
     output_path = (repo_root / M2_DEMO_OUTPUT).resolve()
     markdown_output_path = (repo_root / M2_DEMO_MARKDOWN_OUTPUT).resolve()
+    analysis_output_path = (repo_root / M2_ANALYSIS_OUTPUT).resolve()
+    analysis_markdown_output_path = (repo_root / M2_ANALYSIS_MARKDOWN_OUTPUT).resolve()
     adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
 
     command = [
@@ -63,6 +67,10 @@ else:
         str(output_path),
         "--markdown-output",
         str(markdown_output_path),
+        "--analysis-output",
+        str(analysis_output_path),
+        "--analysis-markdown-output",
+        str(analysis_markdown_output_path),
     ]
     if M2_DEMO_LIMIT is not None:
         command.extend(["--limit", str(int(M2_DEMO_LIMIT))])
@@ -73,6 +81,8 @@ else:
     print(f"[M2] manifest={manifest_path}")
     print(f"[M2] output={output_path}")
     print(f"[M2] markdown_output={markdown_output_path}")
+    print(f"[M2] analysis_output={analysis_output_path}")
+    print(f"[M2] analysis_markdown_output={analysis_markdown_output_path}")
     print("[M2] Starting full manifest run. This can take a while on 512 images.")
 
     completed = subprocess.run(command, cwd=repo_root, check=False)
@@ -96,7 +106,7 @@ else:
     if report_ready:
         repo_results_dir.mkdir(parents=True, exist_ok=True)
         copied_paths = []
-        for source_path in (output_path, markdown_output_path):
+        for source_path in (output_path, markdown_output_path, analysis_output_path, analysis_markdown_output_path):
             if source_path.is_file():
                 destination = repo_results_dir / source_path.name
                 shutil.copy2(source_path, destination)
@@ -109,7 +119,10 @@ else:
             "manifest": str(manifest_path.relative_to(repo_root)),
             "output": str(output_path.relative_to(repo_root)),
             "markdown_output": str(markdown_output_path.relative_to(repo_root)),
+            "analysis_output": str(analysis_output_path.relative_to(repo_root)),
+            "analysis_markdown_output": str(analysis_markdown_output_path.relative_to(repo_root)),
             "summary": m2_demo_result.get("summary", {}) if isinstance(m2_demo_result, dict) else {},
+            "analysis_summary": m2_demo_result.get("analysis_summary", {}) if isinstance(m2_demo_result, dict) else {},
         }
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         copied_paths.append(summary_path.relative_to(repo_root).as_posix())
