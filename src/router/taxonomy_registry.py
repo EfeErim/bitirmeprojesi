@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 from src.router.label_normalization import normalize_part_label
 from src.shared.hash_utils import sha256_file
@@ -46,6 +48,7 @@ DEFAULT_CROP_METADATA: dict[str, dict[str, Any]] = {
 }
 
 HEALTHY_TOKENS = ("healthy", "sa\u011fl\u0131kl\u0131", "saglikli")
+GBIF_SPECIES_MATCH_URL = "https://api.gbif.org/v1/species/match"
 
 
 @dataclass(frozen=True)
@@ -196,6 +199,68 @@ def load_crop_diseases(taxonomy_path: Path | None) -> dict[str, list[str]]:
     }
 
 
+def load_external_taxonomy_cache(path: Path | None) -> dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    payload = read_json(path, default={}, expect_type=dict)
+    crops = payload.get("crops", {})
+    return dict(crops) if isinstance(crops, dict) else {}
+
+
+def _gbif_match_crop(crop: str, *, timeout_sec: float = 10.0) -> dict[str, Any]:
+    query = urlencode({"name": crop, "rank": "SPECIES", "kingdom": "Plantae"})
+    with urlopen(f"{GBIF_SPECIES_MATCH_URL}?{query}", timeout=timeout_sec) as response:  # noqa: S310
+        payload = read_json_from_bytes(response.read())
+    if not isinstance(payload, dict) or not payload.get("usageKey"):
+        return {}
+    canonical_name = str(payload.get("canonicalName") or payload.get("scientificName") or "").strip()
+    return {
+        "scientific_name": canonical_name or None,
+        "genus": str(payload.get("genus") or "").strip() or None,
+        "family": str(payload.get("family") or "").strip() or None,
+        "source": "gbif_species_match",
+        "usage_key": payload.get("usageKey"),
+        "confidence": payload.get("confidence"),
+        "match_type": payload.get("matchType"),
+        "status": payload.get("status"),
+    }
+
+
+def read_json_from_bytes(payload: bytes) -> Any:
+    import json
+
+    return json.loads(payload.decode("utf-8"))
+
+
+def build_external_taxonomy_cache(
+    crops: Iterable[str],
+    *,
+    existing_cache: dict[str, Any] | None = None,
+    refresh_gbif: bool = False,
+) -> dict[str, Any]:
+    cache = dict(existing_cache or {})
+    for crop in sorted({normalize_crop_name(crop) for crop in crops if normalize_crop_name(crop)}):
+        if crop in cache and not refresh_gbif:
+            continue
+        try:
+            match = _gbif_match_crop(crop)
+        except Exception as exc:
+            cache[crop] = {**dict(cache.get(crop, {})), "source": "gbif_species_match", "error": str(exc)}
+            continue
+        if match:
+            cache[crop] = {**dict(cache.get(crop, {})), **match, "fetched_at": now_utc_timestamp()}
+    return cache
+
+
+def write_external_taxonomy_cache(path: Path, crops: dict[str, Any]) -> Path:
+    payload = {
+        "schema_version": "external_taxonomy_cache.v1",
+        "updated_at": now_utc_timestamp(),
+        "crops": dict(sorted(crops.items())),
+    }
+    return write_json(path, payload, ensure_ascii=False, sort_keys=False)
+
+
 def _coerce_string_list(value: Any) -> list[str]:
     if isinstance(value, str):
         return [value.strip()] if value.strip() else []
@@ -236,6 +301,8 @@ def build_taxonomy_registry(
     adapter_root: Path | None = Path("runs"),
     taxonomy_path: Path | None = Path("config/plant_taxonomy.json"),
     overrides_path: Path | None = None,
+    external_cache_path: Path | None = Path("runs/_index/router_prototypes/external_taxonomy_cache.json"),
+    refresh_gbif: bool = False,
     created_at: str | None = None,
 ) -> dict[str, Any]:
     dataset_targets = discover_dataset_targets(dataset_root)
@@ -243,6 +310,15 @@ def build_taxonomy_registry(
     targets = merge_targets(dataset_targets, adapter_targets)
     overrides = load_registry_overrides(overrides_path)
     crop_diseases = load_crop_diseases(taxonomy_path)
+    external_cache = load_external_taxonomy_cache(external_cache_path)
+    if refresh_gbif:
+        external_cache = build_external_taxonomy_cache(
+            (target.crop for target in targets),
+            existing_cache=external_cache,
+            refresh_gbif=True,
+        )
+        if external_cache_path is not None:
+            write_external_taxonomy_cache(external_cache_path, external_cache)
 
     entries: list[TaxonomyRegistryEntry] = []
     for target in targets:
@@ -250,7 +326,8 @@ def build_taxonomy_registry(
         target_override = (
             dict(overrides.get("targets", {}).get(target.target_id, {})) if isinstance(overrides.get("targets"), dict) else {}
         )
-        metadata = {**DEFAULT_CROP_METADATA.get(target.crop, {}), **crop_override, **target_override}
+        external_metadata = dict(external_cache.get(target.crop, {})) if isinstance(external_cache, dict) else {}
+        metadata = {**DEFAULT_CROP_METADATA.get(target.crop, {}), **external_metadata, **crop_override, **target_override}
         class_labels, disease_labels, split_counts = summarize_dataset_classes(
             Path(target.dataset_path) if target.dataset_path else None
         )
@@ -274,6 +351,9 @@ def build_taxonomy_registry(
                 "dataset_path": target.dataset_path,
                 "taxonomy_path": str(taxonomy_path) if taxonomy_path else None,
                 "overrides_path": str(overrides_path) if overrides_path else None,
+                "external_cache_path": str(external_cache_path) if external_cache_path else None,
+                "external_taxonomy_source": external_metadata.get("source"),
+                "external_usage_key": external_metadata.get("usage_key"),
             },
             unresolved=not bool(metadata.get("scientific_name")),
         )
@@ -287,6 +367,8 @@ def build_taxonomy_registry(
             "adapter_root": str(adapter_root) if adapter_root else None,
             "taxonomy_path": str(taxonomy_path) if taxonomy_path else None,
             "overrides_path": str(overrides_path) if overrides_path else None,
+            "external_cache_path": str(external_cache_path) if external_cache_path else None,
+            "refresh_gbif": bool(refresh_gbif),
         },
         "summary": {
             "target_count": len(entries),

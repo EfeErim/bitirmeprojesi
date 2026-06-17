@@ -3,10 +3,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
 
 from scripts.colab_router_adapter_inference import ensure_router_ready
+from src.router.prototype_reconciler import reconcile_router_handoff
 from src.workflows.inference import InferenceWorkflow
 
 StatusPrinter = Callable[[str], None]
@@ -29,6 +31,26 @@ def _normalize_optional_text(value: Any) -> Optional[str]:
     if not text or text == "none":
         return None
     return text
+
+
+def _coerce_bool(value: Any, *, default: bool = False) -> bool:
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    return default
+
+
+def _coerce_float(value: Any, *, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 def _router_payload(router_result: Dict[str, Any]) -> Dict[str, Any]:
@@ -124,6 +146,11 @@ def run_auto_router_adapter_prediction(
     return_ood: bool = True,
     status_printer: Optional[StatusPrinter] = None,
     workflow_factory: WorkflowFactory = InferenceWorkflow,
+    enable_prototype_reconciler: Optional[bool] = None,
+    prototype_bank_path: Optional[str | Path] = None,
+    taxonomy_registry_path: Optional[str | Path] = None,
+    prototype_min_similarity: Optional[float] = None,
+    prototype_min_margin: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Run adapter prediction from an already-computed Notebook 1 router result.
 
@@ -138,6 +165,65 @@ def run_auto_router_adapter_prediction(
     status = str(handoff["status"] or "").strip().lower()
     crop = handoff["crop"]
     part = handoff["part"]
+    reconciliation_payload: Dict[str, Any] = {
+        "enabled": False,
+        "vlm_crop": crop,
+        "vlm_part": part,
+        "reconciled_crop": crop,
+        "reconciled_part": part,
+        "reconcile_decision": "disabled",
+    }
+    reconciler_enabled = _coerce_bool(
+        enable_prototype_reconciler
+        if enable_prototype_reconciler is not None
+        else os.getenv("AADS_ENABLE_PROTOTYPE_RECONCILER"),
+        default=False,
+    )
+    resolved_prototype_path = prototype_bank_path or os.getenv("AADS_ROUTER_PROTOTYPE_BANK")
+    resolved_registry_path = taxonomy_registry_path or os.getenv("AADS_TAXONOMY_REGISTRY")
+    if reconciler_enabled:
+        if not resolved_prototype_path or not resolved_registry_path:
+            reconciliation_payload.update(
+                {
+                    "enabled": True,
+                    "reconcile_decision": "unavailable",
+                    "reason": "prototype_bank_or_taxonomy_registry_missing",
+                }
+            )
+        else:
+            try:
+                decision = reconcile_router_handoff(
+                    image_path=image_path,
+                    router_crop=crop,
+                    router_part=part,
+                    router_status=status,
+                    prototype_payload=resolved_prototype_path,
+                    registry_payload=resolved_registry_path,
+                    min_similarity=_coerce_float(
+                        prototype_min_similarity or os.getenv("AADS_PROTOTYPE_MIN_SIMILARITY"),
+                        default=0.20,
+                    ),
+                    min_margin=_coerce_float(
+                        prototype_min_margin or os.getenv("AADS_PROTOTYPE_MIN_MARGIN"),
+                        default=0.03,
+                    ),
+                )
+                reconciliation_payload = {"enabled": True, **decision.to_payload()}
+                if decision.decision in {"accept_router", "use_prototype"}:
+                    crop = decision.crop
+                    part = decision.part
+                    if status not in _ADAPTER_ALLOWED_ROUTER_STATUSES:
+                        status = "ok"
+                else:
+                    status = "router_uncertain"
+            except Exception as exc:
+                reconciliation_payload.update(
+                    {
+                        "enabled": True,
+                        "reconcile_decision": "error",
+                        "reason": str(exc),
+                    }
+                )
     rejection_status, rejection_message = _final_demo_handoff_rejection(crop, part)
     adapter_allowed = (
         rejection_status is None
@@ -174,6 +260,7 @@ def run_auto_router_adapter_prediction(
                 "adapter_ran": False,
                 "source_status": status,
                 "reason": message,
+                "prototype_reconciliation": reconciliation_payload,
             },
         }
 
@@ -202,6 +289,7 @@ def run_auto_router_adapter_prediction(
         "source_status": status,
         "crop": crop,
         "part": part,
+        "prototype_reconciliation": reconciliation_payload,
     }
     return combined
 

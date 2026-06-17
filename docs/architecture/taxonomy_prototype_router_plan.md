@@ -150,12 +150,18 @@ These fields make M2 result analysis actionable without changing the demo UX.
 
 ### Implemented Prototype Surface
 
-The first report-only slice is implemented without changing Notebook 8 runtime decisions:
+The first report-only and config-gated runtime slice is implemented:
 
-- `src/router/taxonomy_registry.py` builds `taxonomy_registry.v1` from `data/prepared_runtime_datasets/*`, optional adapter discovery under `runs/`, `config/plant_taxonomy.json`, and optional override JSON.
-- `src/router/prototype_bank.py` builds `router_prototype_bank.v1` from prepared runtime dataset images and excludes `ood`/`oe` unless explicitly requested.
+- `src/router/taxonomy_registry.py` builds `taxonomy_registry.v1` from `data/prepared_runtime_datasets/*`, optional adapter discovery under `runs/`, `config/plant_taxonomy.json`, optional override JSON, and an optional GBIF species-match cache. The default path is offline/cache-first; `--refresh-gbif` updates `external_taxonomy_cache.v1`.
+- `src/router/prototype_bank.py` builds `router_prototype_bank.v1` from prepared runtime dataset images and excludes `ood`/`oe` unless explicitly requested. It supports the deterministic `image_stats_v1` backend and the optional `bioclip_open_clip` backend for BioCLIP/OpenCLIP embeddings.
+- `src/router/prototype_reconciler.py` loads the registry and prototype bank, computes nearest/second target evidence, reports taxonomy relation, and returns `accept_router`, `use_prototype`, or `abstain`.
 - `scripts/build_taxonomy_registry.py` writes a standalone registry artifact.
 - `scripts/build_router_prototype_bank.py` writes the planned artifact folder shape:
+- `scripts/calibrate_router_prototype_reconciler.py` sweeps prototype similarity and margin thresholds on a held-out manifest and writes `router_prototype_calibration.v1`.
+- `scripts/colab_auto_router_adapter_prediction.py` can use the reconciler when `enable_prototype_reconciler=True` or `AADS_ENABLE_PROTOTYPE_RECONCILER=1`.
+- `scripts/run_demo_checklist.py` exposes `--enable-prototype-reconciler`, `--prototype-bank`, `--taxonomy-registry`, `--prototype-calibration-report`, `--prototype-min-similarity`, and `--prototype-min-margin`. When a calibration report contains `selected_policy`, the runner can fill missing threshold arguments from that policy. It records `vlm_*`, `prototype_*`, `reconciled_*`, `taxonomy_relation`, `prototype_similarity`, `prototype_margin`, and `reconcile_decision`.
+- Notebook 8 exposes the same prototype toggles for single-image and M2 runs. For M2, `M2_ENABLE_PROTOTYPE_RECONCILER=True` plus `M2_AUTO_BUILD_PROTOTYPES=True` builds missing prototype artifacts before the manifest run; `M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER=True` then sweeps thresholds and only keeps the reconciler enabled when a selected policy exists, unless `M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY=False`.
+- Notebook 8 M2 publishing copies the run report, analysis summary, calibration report, taxonomy registry, prototype bank, and prototype summary into `docs/demo_results/m2/<timestamp>/` so the pushed demo result contains the evidence needed to reproduce the reconciliation decision surface.
 
 ```text
 runs/_index/router_prototypes/<timestamp>/
@@ -164,14 +170,27 @@ runs/_index/router_prototypes/<timestamp>/
   summary.md
 ```
 
-The initial local backend is `image_stats_v1`, a deterministic lightweight image-statistics feature backend for artifact plumbing, smoke tests, and calibration scaffolding. It is intentionally not a runtime promotion backend. BioCLIP/DINOv2 embedding backends can replace or supplement this artifact schema in a later phase without changing the registry contract.
+The initial local backend is `image_stats_v1`, a deterministic lightweight image-statistics feature backend for artifact plumbing, smoke tests, and calibration scaffolding. Colab/GPU runs can build BioCLIP prototypes with `--embedding-backend bioclip_open_clip --embedding-model-id imageomics/bioclip-2.5-vith14 --embedding-device cuda`. Any backend is config-gated and should be promoted only after a held-out calibration report passes the documented risk/coverage constraints. DINOv2 can still be added later without changing the registry/reconciler contract.
+
+Notebook 8 M2 prototype run shape:
+
+```python
+M2_ENABLE_PROTOTYPE_RECONCILER = True
+M2_AUTO_BUILD_PROTOTYPES = True
+M2_PROTOTYPE_EMBEDDING_BACKEND = "bioclip_open_clip"
+M2_PROTOTYPE_EMBEDDING_MODEL_ID = "imageomics/bioclip-2.5-vith14"
+M2_PROTOTYPE_EMBEDDING_DEVICE = DEVICE
+M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER = True
+M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY = True
+M2_PROTOTYPE_MIN_SIMILARITY = None  # filled from selected calibration policy
+M2_PROTOTYPE_MIN_MARGIN = None      # filled from selected calibration policy
+```
 
 ### Phase 1: Registry
 
-- Add taxonomy registry schema under `src/router/`.
-- Add a script to build/cache the registry from adapter discovery.
-- Add unit tests for canonical names, synonyms, and unresolved-name behavior.
-- Document the registry artifact contract.
+- Status: implemented.
+- Registry discovers dataset/adapter targets, reads local crop disease taxonomy, applies explicit overrides, can use cached GBIF species metadata, and can refresh that cache on demand with `--refresh-gbif`.
+- Unit coverage includes canonical metadata, unresolved crops, external cache resolution, and non-target directory filtering.
 
 ### Phase 2: Prototype Builder
 
@@ -182,23 +201,19 @@ The initial local backend is `image_stats_v1`, a deterministic lightweight image
 
 ### Phase 3: Reconciler
 
-- Add a pure helper that reconciles router evidence, prototype evidence, taxonomy distance, and supported inventory.
-- Keep runtime behavior behind a config flag until calibration passes.
-- Unit-test agreement, close-neighbor correction, weak-margin abstain, wrong-part abstain, and unsupported-crop fallback.
+- Status: implemented as a pure helper plus config-gated Notebook 8 integration.
+- Unit coverage includes router/prototype agreement, unknown-router correction, wrong-part abstain, same-family taxonomy relation, and Notebook 8 helper handoff.
 
 ### Phase 4: Calibration
 
-- Extend or add a calibration script for prototype-router thresholds.
-- Produce a machine-readable report plus a short Markdown summary.
-- Include target-level risk/coverage and unknown rejection metrics.
-- Require holdout validation before enabling the reconciler by default.
+- Status: calibration CLI implemented for prototype similarity/margin threshold sweeps, and Notebook 8 M2 can auto-run it before the manifest pass.
+- Runtime promotion rule: if `M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY=True` and calibration does not produce `selected_policy`, Notebook 8 disables the prototype reconciler for that run instead of applying uncalibrated thresholds.
+- Remaining evidence work: run the calibration on the full held-out M2/router-eval surface in Colab/GPU with production constraints and compare the selected policy against the previous M2 baseline.
 
 ### Phase 5: Notebook 8 and M2 Rerun
 
-- Wire the reconciler into the Notebook 8 auto helper path.
-- Add the reporting fields to `scripts/run_demo_checklist.py` analysis output.
-- Run a bounded M2 smoke first, then the full 512-image M2 manifest.
-- Compare against `docs/demo_results/m2/20260617T141041Z/`.
+- Status: Notebook 8 helper path, Notebook 8 parameter cell, M2 auto-build, M2 auto-calibration, M2 runner fields, and M2 result provenance publishing are wired behind explicit flags.
+- Remaining validation: run a bounded M2 smoke with generated artifacts, then the full 512-image M2 manifest in Colab/GPU and compare against `docs/demo_results/m2/20260617T141041Z/`.
 
 ## Acceptance Gates
 
@@ -206,7 +221,7 @@ The initial local backend is `image_stats_v1`, a deterministic lightweight image
 - Prototype bank builds without manual per-target threshold edits.
 - Reconciler unit tests cover agreement, correction, abstain, and unsupported cases.
 - Calibration report selects thresholds from held-out data and records rejected policies.
-- Notebook 8 still runs the same canonical manifest.
+- Notebook 8 still runs the same canonical manifest and records reconciliation fields when enabled.
 - Full M2 rerun improves router failure count materially without increasing unsupported or wrong-part adapter loads.
 - Adapter availability remains 0 failures for supported reconciled targets.
 

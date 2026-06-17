@@ -1,10 +1,14 @@
 from pathlib import Path
 
+from PIL import Image
+
 import scripts.colab_auto_router_adapter_prediction as auto_prediction
 from scripts.colab_auto_router_adapter_prediction import (
     clear_auto_prediction_workflow_cache,
     run_auto_router_adapter_prediction,
 )
+from src.router.prototype_bank import build_prototype_bank, write_prototype_bank
+from src.router.taxonomy_registry import build_taxonomy_registry, write_taxonomy_registry
 
 
 class FakeWorkflow:
@@ -76,6 +80,11 @@ def _router_result(status="ok", crop="tomato", part="leaf"):
             },
         },
     }
+
+
+def _write_image(path: Path, color: tuple[int, int, int]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.new("RGB", (16, 16), color=color).save(path)
 
 
 def test_auto_prediction_uses_trusted_router_handoff_for_adapter():
@@ -154,6 +163,41 @@ def test_auto_prediction_skips_adapter_when_part_is_unknown():
     assert result["message"] == "Router could not resolve a supported plant part."
     assert result["router_handoff"]["adapter_ran"] is False
     assert FakeWorkflow.calls == []
+
+
+def test_auto_prediction_can_use_prototype_reconciler_for_unknown_crop(tmp_path: Path):
+    FakeWorkflow.calls.clear()
+    dataset_root = tmp_path / "datasets"
+    tomato_image = dataset_root / "tomato__fruit" / "train" / "healthy" / "a.png"
+    grape_image = dataset_root / "grape__fruit" / "train" / "healthy" / "b.png"
+    _write_image(tomato_image, (190, 30, 30))
+    _write_image(grape_image, (40, 20, 120))
+    prototype_path = write_prototype_bank(
+        build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z"),
+        tmp_path / "prototype_bank.json",
+    )
+    registry_path = write_taxonomy_registry(
+        build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z"),
+        tmp_path / "taxonomy_registry.json",
+    )
+
+    result = run_auto_router_adapter_prediction(
+        tomato_image,
+        router_result=_router_result(status="unknown_crop", crop="unknown", part="fruit"),
+        workflow_factory=FakeWorkflow,
+        enable_prototype_reconciler=True,
+        prototype_bank_path=prototype_path,
+        taxonomy_registry_path=registry_path,
+        prototype_min_similarity=0.1,
+        prototype_min_margin=0.01,
+    )
+
+    assert result["status"] == "success"
+    assert result["crop"] == "tomato"
+    assert result["part"] == "fruit"
+    assert result["router_handoff"]["prototype_reconciliation"]["reconcile_decision"] == "use_prototype"
+    assert FakeWorkflow.calls[-1]["crop_hint"] == "tomato"
+    assert FakeWorkflow.calls[-1]["part_hint"] == "fruit"
 
 
 def test_auto_prediction_skips_adapter_for_unsupported_final_demo_crop():

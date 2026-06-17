@@ -55,6 +55,80 @@ def test_build_taxonomy_registry_marks_unknown_crop_unresolved(tmp_path: Path):
     assert payload["targets"][0]["unresolved"] is True
 
 
+def test_build_taxonomy_registry_uses_external_cache_for_unknown_crop(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    _write_text(dataset_root / "dragonfruit__fruit" / "train" / "healthy" / "a.txt")
+    cache_path = tmp_path / "external_taxonomy_cache.json"
+    cache_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "external_taxonomy_cache.v1",
+                "crops": {
+                    "dragonfruit": {
+                        "scientific_name": "Selenicereus undatus",
+                        "genus": "Selenicereus",
+                        "family": "Cactaceae",
+                        "source": "gbif_species_match",
+                        "usage_key": 123,
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_taxonomy_registry(
+        dataset_root=dataset_root,
+        adapter_root=None,
+        taxonomy_path=None,
+        external_cache_path=cache_path,
+        created_at="20260617T000000Z",
+    )
+
+    entry = payload["targets"][0]
+    assert entry["scientific_name"] == "Selenicereus undatus"
+    assert entry["family"] == "Cactaceae"
+    assert entry["source_metadata"]["external_taxonomy_source"] == "gbif_species_match"
+    assert entry["unresolved"] is False
+
+
+def test_external_cache_overrides_default_but_explicit_override_wins(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    _write_text(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.txt")
+    cache_path = tmp_path / "external_taxonomy_cache.json"
+    cache_path.write_text(
+        json.dumps(
+            {
+                "crops": {
+                    "tomato": {
+                        "scientific_name": "GBIF tomato",
+                        "genus": "GbifGenus",
+                        "family": "GbifFamily",
+                        "source": "gbif_species_match",
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    overrides_path = tmp_path / "overrides.json"
+    overrides_path.write_text(json.dumps({"crops": {"tomato": {"family": "OverrideFamily"}}}), encoding="utf-8")
+
+    payload = build_taxonomy_registry(
+        dataset_root=dataset_root,
+        adapter_root=None,
+        taxonomy_path=None,
+        external_cache_path=cache_path,
+        overrides_path=overrides_path,
+        created_at="20260617T000000Z",
+    )
+
+    entry = payload["targets"][0]
+    assert entry["scientific_name"] == "GBIF tomato"
+    assert entry["genus"] == "GbifGenus"
+    assert entry["family"] == "OverrideFamily"
+
+
 def test_discover_dataset_targets_ignores_non_target_dirs(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     _write_text(dataset_root / "tomato__fruit" / "test" / "healthy" / "a.txt")

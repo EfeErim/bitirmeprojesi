@@ -22,6 +22,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adapter-root", type=Path, default=Path("runs"))
     parser.add_argument("--taxonomy-path", type=Path, default=Path("config/plant_taxonomy.json"))
     parser.add_argument("--overrides-path", type=Path, default=None)
+    parser.add_argument("--external-cache-path", type=Path, default=Path("runs/_index/router_prototypes/external_taxonomy_cache.json"))
+    parser.add_argument("--refresh-gbif", action="store_true")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--no-adapter-discovery", action="store_true")
     return parser
@@ -34,6 +36,8 @@ def main(argv: list[str] | None = None) -> int:
         adapter_root=None if args.no_adapter_discovery else args.adapter_root,
         taxonomy_path=args.taxonomy_path,
         overrides_path=args.overrides_path,
+        external_cache_path=args.external_cache_path,
+        refresh_gbif=bool(args.refresh_gbif),
     )
     output = write_taxonomy_registry(payload, args.output)
     print(

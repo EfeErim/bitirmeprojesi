@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from collections import defaultdict
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -13,6 +14,8 @@ from src.shared.json_utils import ensure_parent, write_json
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 DEFAULT_BACKEND = "image_stats_v1"
+BIOCLIP_OPEN_CLIP_BACKEND = "bioclip_open_clip"
+DEFAULT_BIOCLIP_MODEL_ID = "imageomics/bioclip-2.5-vith14"
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,57 @@ def image_stats_vector(image_path: Path) -> tuple[float, ...]:
             channel_features.extend(bins)
         aspect_ratio = float(width) / float(height) if height else 0.0
     return tuple(round(value, 8) for value in (*means, *stddev, aspect_ratio, *channel_features))
+
+
+@lru_cache(maxsize=2)
+def _load_open_clip_encoder(model_id: str, device: str) -> tuple[Any, Any, Any]:
+    try:
+        import open_clip
+        import torch
+    except ImportError as exc:  # pragma: no cover - depends on optional Colab/runtime packages
+        raise RuntimeError("open_clip and torch are required for bioclip_open_clip prototypes") from exc
+
+    hub_model_id = str(model_id)
+    if "/" in hub_model_id and not hub_model_id.startswith("hf-hub:"):
+        hub_model_id = f"hf-hub:{hub_model_id}"
+    model, _, preprocess_val = open_clip.create_model_and_transforms(hub_model_id)
+    model = model.to(device)
+    model.eval()
+    return torch, model, preprocess_val
+
+
+def open_clip_image_vector(
+    image_path: Path,
+    *,
+    model_id: str = DEFAULT_BIOCLIP_MODEL_ID,
+    device: str = "cpu",
+) -> tuple[float, ...]:
+    torch, model, preprocess_val = _load_open_clip_encoder(model_id, device)
+    try:
+        from PIL import Image
+    except ImportError as exc:  # pragma: no cover - Pillow is a runtime dependency
+        raise RuntimeError("Pillow is required to build bioclip_open_clip router prototypes") from exc
+
+    with Image.open(image_path) as image:
+        image_tensor = preprocess_val(image.convert("RGB")).unsqueeze(0).to(device)
+    with torch.inference_mode():
+        embedding = model.encode_image(image_tensor)
+        embedding = torch.nn.functional.normalize(embedding, dim=-1).to(dtype=torch.float32)
+    return tuple(round(float(value), 8) for value in embedding.detach().cpu().numpy()[0].tolist())
+
+
+def image_vector(
+    image_path: Path,
+    *,
+    embedding_backend: str = DEFAULT_BACKEND,
+    embedding_model_id: str = DEFAULT_BIOCLIP_MODEL_ID,
+    device: str = "cpu",
+) -> tuple[float, ...]:
+    if embedding_backend == DEFAULT_BACKEND:
+        return image_stats_vector(image_path)
+    if embedding_backend == BIOCLIP_OPEN_CLIP_BACKEND:
+        return open_clip_image_vector(image_path, model_id=embedding_model_id, device=device)
+    raise ValueError(f"Unsupported prototype backend {embedding_backend!r}")
 
 
 def centroid(vectors: Iterable[tuple[float, ...]]) -> tuple[float, ...]:
@@ -158,13 +212,18 @@ def build_prototype_bank(
     *,
     dataset_root: Path = Path("data/prepared_runtime_datasets"),
     embedding_backend: str = DEFAULT_BACKEND,
+    embedding_model_id: str = DEFAULT_BIOCLIP_MODEL_ID,
+    device: str = "cpu",
     splits: Iterable[str] = SUPPORTED_SPLITS,
     include_ood: bool = False,
     max_images_per_class: int | None = None,
     created_at: str | None = None,
 ) -> dict[str, Any]:
-    if embedding_backend != DEFAULT_BACKEND:
-        raise ValueError(f"Unsupported prototype backend {embedding_backend!r}; only {DEFAULT_BACKEND!r} is available locally")
+    if embedding_backend not in {DEFAULT_BACKEND, BIOCLIP_OPEN_CLIP_BACKEND}:
+        raise ValueError(
+            f"Unsupported prototype backend {embedding_backend!r}; "
+            f"supported backends are {DEFAULT_BACKEND!r} and {BIOCLIP_OPEN_CLIP_BACKEND!r}"
+        )
 
     records: list[ImageFeatureRecord] = []
     skipped: list[dict[str, str]] = []
@@ -175,7 +234,12 @@ def build_prototype_bank(
         max_images_per_class=max_images_per_class,
     ):
         try:
-            vector = image_stats_vector(image_path)
+            vector = image_vector(
+                image_path,
+                embedding_backend=embedding_backend,
+                embedding_model_id=embedding_model_id,
+                device=device,
+            )
             digest = artifact_sha256(image_path)
         except Exception as exc:
             skipped.append({"path": str(image_path), "reason": str(exc)})
@@ -201,6 +265,8 @@ def build_prototype_bank(
             "splits": list(splits),
             "include_ood": include_ood,
             "max_images_per_class": max_images_per_class,
+            "embedding_model_id": embedding_model_id if embedding_backend == BIOCLIP_OPEN_CLIP_BACKEND else None,
+            "embedding_device": device if embedding_backend == BIOCLIP_OPEN_CLIP_BACKEND else None,
         },
         "summary": {
             "target_count": len(summaries["target_prototypes"]),

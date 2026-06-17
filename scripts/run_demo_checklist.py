@@ -292,6 +292,35 @@ def _confidence_or_ood(result: dict[str, Any]) -> str:
     return "; ".join(parts)
 
 
+def resolve_prototype_thresholds_from_calibration(
+    calibration_report_path: Path | None,
+    *,
+    min_similarity: float | None,
+    min_margin: float | None,
+) -> tuple[float | None, float | None, dict[str, Any]]:
+    if calibration_report_path is None:
+        return min_similarity, min_margin, {"enabled": False}
+    payload = json.loads(calibration_report_path.read_text(encoding="utf-8"))
+    selected = payload.get("selected_policy") if isinstance(payload, dict) else None
+    report: dict[str, Any] = {
+        "enabled": True,
+        "path": str(calibration_report_path),
+        "policy_selected": isinstance(selected, dict),
+    }
+    if isinstance(selected, dict):
+        if min_similarity is None:
+            min_similarity = float(selected.get("min_similarity"))
+        if min_margin is None:
+            min_margin = float(selected.get("min_margin"))
+        report["selected_policy"] = {
+            "min_similarity": selected.get("min_similarity"),
+            "min_margin": selected.get("min_margin"),
+            "precision": selected.get("precision"),
+            "coverage": selected.get("coverage"),
+        }
+    return min_similarity, min_margin, report
+
+
 def _run_row(
     row: ChecklistRow,
     *,
@@ -300,6 +329,11 @@ def _run_row(
     device: str,
     adapter_root: Path,
     mode: str,
+    enable_prototype_reconciler: bool = False,
+    prototype_bank_path: Path | None = None,
+    taxonomy_registry_path: Path | None = None,
+    prototype_min_similarity: float | None = None,
+    prototype_min_margin: float | None = None,
 ) -> dict[str, Any]:
     image_path, asset_status = resolve_image_path(row.source, repo_root)
     if asset_status != "ok" or image_path is None:
@@ -359,6 +393,11 @@ def _run_row(
                     device=device,
                     adapter_root=adapter_root,
                     return_ood=True,
+                    enable_prototype_reconciler=enable_prototype_reconciler,
+                    prototype_bank_path=prototype_bank_path,
+                    taxonomy_registry_path=taxonomy_registry_path,
+                    prototype_min_similarity=prototype_min_similarity,
+                    prototype_min_margin=prototype_min_margin,
                 )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
             result = {
@@ -374,6 +413,12 @@ def _run_row(
     if mode == "asset-audit" and asset_status == "ok":
         pass_fail = "pass"
     failure_bucket = "" if pass_fail == "pass" else classify_failure(result, asset_status=asset_status)
+    router_handoff = result.get("router_handoff") if isinstance(result.get("router_handoff"), dict) else {}
+    reconciliation = (
+        router_handoff.get("prototype_reconciliation")
+        if isinstance(router_handoff.get("prototype_reconciliation"), dict)
+        else {}
+    )
     return {
         "image_id": row.image_id,
         "source": row.source,
@@ -386,6 +431,16 @@ def _run_row(
         "actual_status": result.get("status"),
         "predicted_crop": result.get("crop"),
         "predicted_part": result.get("part"),
+        "vlm_crop": reconciliation.get("vlm_crop"),
+        "vlm_part": reconciliation.get("vlm_part"),
+        "prototype_crop": reconciliation.get("prototype_crop"),
+        "prototype_part": reconciliation.get("prototype_part"),
+        "reconciled_crop": reconciliation.get("reconciled_crop"),
+        "reconciled_part": reconciliation.get("reconciled_part"),
+        "taxonomy_relation": reconciliation.get("taxonomy_relation"),
+        "prototype_similarity": reconciliation.get("prototype_similarity"),
+        "prototype_margin": reconciliation.get("prototype_margin"),
+        "reconcile_decision": reconciliation.get("reconcile_decision"),
         "predicted_disease": result.get("diagnosis"),
         "confidence_or_ood": _confidence_or_ood(result),
         "pass_fail": pass_fail,
@@ -430,6 +485,7 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     part_counts = {"correct": 0, "incorrect": 0, "not_applicable": 0}
     class_counts = {"correct": 0, "incorrect": 0, "not_applicable": 0}
     adapter_unavailable = {"wrong_router": 0, "missing_adapter": 0, "unknown": 0}
+    reconciliation_counts: dict[str, int] = {}
     per_target: dict[str, dict[str, int]] = {}
     opposite_part_rows: list[str] = []
 
@@ -452,6 +508,9 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         if pass_fail in {"pass", "fail"}:
             target_summary[pass_fail] += 1
         status = str(row.get("actual_status") or "")
+        reconcile_decision = str(row.get("reconcile_decision") or "")
+        if reconcile_decision:
+            reconciliation_counts[reconcile_decision] = reconciliation_counts.get(reconcile_decision, 0) + 1
         if status == "success":
             target_summary["answered"] += 1
         if status in ABSTAIN_STATUSES:
@@ -500,6 +559,7 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "router_part_correctness": part_counts,
         "normalized_disease_class_correctness": class_counts,
         "adapter_unavailable": adapter_unavailable,
+        "prototype_reconciliation": dict(sorted(reconciliation_counts.items())),
         "opposite_part_disease_labels": {
             "count": len(opposite_part_rows),
             "image_ids": opposite_part_rows[:100],
@@ -518,6 +578,7 @@ def write_analysis_markdown(analysis: dict[str, Any], output_path: Path) -> None
         f"- router_part_correctness: `{json.dumps(analysis['router_part_correctness'], sort_keys=True)}`",
         f"- normalized_disease_class_correctness: `{json.dumps(analysis['normalized_disease_class_correctness'], sort_keys=True)}`",
         f"- adapter_unavailable: `{json.dumps(analysis['adapter_unavailable'], sort_keys=True)}`",
+        f"- prototype_reconciliation: `{json.dumps(analysis.get('prototype_reconciliation', {}), sort_keys=True)}`",
         f"- opposite_part_disease_labels: {analysis['opposite_part_disease_labels']['count']}",
         "",
         "## Per Target",
@@ -603,6 +664,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adapter-root", type=Path, default=Path("runs"))
     parser.add_argument("--config-env", default="colab")
     parser.add_argument("--device", default="cuda")
+    parser.add_argument("--enable-prototype-reconciler", action="store_true")
+    parser.add_argument("--prototype-bank", type=Path)
+    parser.add_argument("--taxonomy-registry", type=Path)
+    parser.add_argument("--prototype-calibration-report", type=Path)
+    parser.add_argument("--prototype-min-similarity", type=float)
+    parser.add_argument("--prototype-min-margin", type=float)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only-local", action="store_true")
     parser.add_argument(
@@ -634,6 +701,11 @@ def main() -> int:
     if args.limit is not None:
         rows = rows[: max(0, int(args.limit))]
     mode = "adapter-smoke" if args.trust_expected_target else str(args.mode)
+    prototype_min_similarity, prototype_min_margin, calibration_report = resolve_prototype_thresholds_from_calibration(
+        args.prototype_calibration_report,
+        min_similarity=args.prototype_min_similarity,
+        min_margin=args.prototype_min_margin,
+    )
 
     output_rows: list[dict[str, Any]] = []
     for row in rows:
@@ -644,6 +716,11 @@ def main() -> int:
             device=str(args.device),
             adapter_root=args.adapter_root,
             mode=mode,
+            enable_prototype_reconciler=bool(args.enable_prototype_reconciler),
+            prototype_bank_path=args.prototype_bank,
+            taxonomy_registry_path=args.taxonomy_registry,
+            prototype_min_similarity=prototype_min_similarity,
+            prototype_min_margin=prototype_min_margin,
         )
         output_rows.append(result)
         if args.stop_on_dependency_blocker and result.get("failure_bucket") == "dependency_access":
@@ -656,6 +733,14 @@ def main() -> int:
         "device": str(args.device),
         "adapter_root": str(args.adapter_root),
         "mode": mode,
+        "prototype_reconciler": {
+            "enabled": bool(args.enable_prototype_reconciler),
+            "prototype_bank": str(args.prototype_bank) if args.prototype_bank else "",
+            "taxonomy_registry": str(args.taxonomy_registry) if args.taxonomy_registry else "",
+            "prototype_calibration_report": calibration_report,
+            "prototype_min_similarity": prototype_min_similarity,
+            "prototype_min_margin": prototype_min_margin,
+        },
         "trust_expected_target": mode == "adapter-smoke",
         "summary": summarize_results(output_rows),
         "rows": output_rows,

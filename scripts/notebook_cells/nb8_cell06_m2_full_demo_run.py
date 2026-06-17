@@ -34,6 +34,31 @@ M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", Tr
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
 DEVICE = str(globals().get("DEVICE", "cuda"))
 CONFIG_ENV = str(globals().get("CONFIG_ENV", "colab"))
+M2_ENABLE_PROTOTYPE_RECONCILER = bool(globals().get("M2_ENABLE_PROTOTYPE_RECONCILER", False))
+M2_AUTO_BUILD_PROTOTYPES = bool(globals().get("M2_AUTO_BUILD_PROTOTYPES", True))
+M2_PROTOTYPE_RUN_ID = str(globals().get("M2_PROTOTYPE_RUN_ID", "") or "")
+M2_PROTOTYPE_EMBEDDING_BACKEND = str(globals().get("M2_PROTOTYPE_EMBEDDING_BACKEND", "bioclip_open_clip"))
+M2_PROTOTYPE_EMBEDDING_MODEL_ID = str(
+    globals().get("M2_PROTOTYPE_EMBEDDING_MODEL_ID", "imageomics/bioclip-2.5-vith14")
+)
+M2_PROTOTYPE_EMBEDDING_DEVICE = str(globals().get("M2_PROTOTYPE_EMBEDDING_DEVICE", DEVICE if "DEVICE" in globals() else "cuda"))
+M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", None)
+M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
+M2_TAXONOMY_REGISTRY = str(globals().get("M2_TAXONOMY_REGISTRY", "") or "")
+M2_PROTOTYPE_MIN_SIMILARITY = globals().get("M2_PROTOTYPE_MIN_SIMILARITY", None)
+M2_PROTOTYPE_MIN_MARGIN = globals().get("M2_PROTOTYPE_MIN_MARGIN", None)
+M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER = bool(globals().get("M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER", True))
+M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY = bool(globals().get("M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY", True))
+M2_PROTOTYPE_CALIBRATION_OUTPUT = str(
+    globals().get("M2_PROTOTYPE_CALIBRATION_OUTPUT", ".runtime_tmp/router_prototype_calibration.json")
+)
+M2_PROTOTYPE_CALIBRATION_LIMIT = globals().get("M2_PROTOTYPE_CALIBRATION_LIMIT", None)
+M2_PROTOTYPE_CALIBRATION_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_PRECISION", 0.90))
+M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE", 0.60))
+M2_PROTOTYPE_SIMILARITY_GRID = str(
+    globals().get("M2_PROTOTYPE_SIMILARITY_GRID", "0.20,0.30,0.40,0.50,0.60,0.70")
+)
+M2_PROTOTYPE_MARGIN_GRID = str(globals().get("M2_PROTOTYPE_MARGIN_GRID", "0.00,0.02,0.04,0.06,0.08,0.10"))
 
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
@@ -49,7 +74,76 @@ else:
     markdown_output_path = (repo_root / M2_DEMO_MARKDOWN_OUTPUT).resolve()
     analysis_output_path = (repo_root / M2_ANALYSIS_OUTPUT).resolve()
     analysis_markdown_output_path = (repo_root / M2_ANALYSIS_MARKDOWN_OUTPUT).resolve()
+    prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
     adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
+    if M2_ENABLE_PROTOTYPE_RECONCILER and M2_AUTO_BUILD_PROTOTYPES and (
+        not M2_PROTOTYPE_BANK or not M2_TAXONOMY_REGISTRY
+    ):
+        prototype_run_id = M2_PROTOTYPE_RUN_ID or f"m2_{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
+        prototype_command = [
+            sys.executable,
+            str(repo_root / "scripts" / "build_router_prototype_bank.py"),
+            "--run-id",
+            prototype_run_id,
+            "--embedding-backend",
+            M2_PROTOTYPE_EMBEDDING_BACKEND,
+            "--embedding-model-id",
+            M2_PROTOTYPE_EMBEDDING_MODEL_ID,
+            "--embedding-device",
+            M2_PROTOTYPE_EMBEDDING_DEVICE,
+        ]
+        if M2_PROTOTYPE_MAX_IMAGES_PER_CLASS is not None:
+            prototype_command.extend(["--max-images-per-class", str(int(M2_PROTOTYPE_MAX_IMAGES_PER_CLASS))])
+        print("[M2] Building router prototype artifacts before manifest run.")
+        prototype_completed = subprocess.run(prototype_command, cwd=repo_root, check=False)
+        print(f"[M2] prototype_builder_exit_code={prototype_completed.returncode}")
+        prototype_dir = repo_root / "runs" / "_index" / "router_prototypes" / prototype_run_id
+        if not M2_PROTOTYPE_BANK:
+            M2_PROTOTYPE_BANK = str((prototype_dir / "prototype_bank.json").relative_to(repo_root))
+        if not M2_TAXONOMY_REGISTRY:
+            M2_TAXONOMY_REGISTRY = str((prototype_dir / "taxonomy_registry.json").relative_to(repo_root))
+
+    prototype_calibration_selected = False
+    if M2_ENABLE_PROTOTYPE_RECONCILER and M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER and M2_PROTOTYPE_BANK:
+        calibration_command = [
+            sys.executable,
+            str(repo_root / "scripts" / "calibrate_router_prototype_reconciler.py"),
+            "--manifest",
+            str(manifest_path),
+            "--prototype-bank",
+            str((repo_root / M2_PROTOTYPE_BANK).resolve()),
+            "--output",
+            str(prototype_calibration_output_path),
+            "--min-precision",
+            str(M2_PROTOTYPE_CALIBRATION_MIN_PRECISION),
+            "--min-coverage",
+            str(M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE),
+            "--similarity-grid",
+            M2_PROTOTYPE_SIMILARITY_GRID,
+            "--margin-grid",
+            M2_PROTOTYPE_MARGIN_GRID,
+        ]
+        if M2_PROTOTYPE_CALIBRATION_LIMIT is not None:
+            calibration_command.extend(["--limit", str(int(M2_PROTOTYPE_CALIBRATION_LIMIT))])
+        print("[M2] Calibrating prototype reconciler thresholds.")
+        calibration_completed = subprocess.run(calibration_command, cwd=repo_root, check=False)
+        print(f"[M2] prototype_calibration_exit_code={calibration_completed.returncode}")
+        if prototype_calibration_output_path.is_file():
+            calibration_payload = json.loads(prototype_calibration_output_path.read_text(encoding="utf-8"))
+            selected_policy = calibration_payload.get("selected_policy")
+            prototype_calibration_selected = isinstance(selected_policy, dict)
+            if prototype_calibration_selected:
+                if M2_PROTOTYPE_MIN_SIMILARITY is None:
+                    M2_PROTOTYPE_MIN_SIMILARITY = selected_policy.get("min_similarity")
+                if M2_PROTOTYPE_MIN_MARGIN is None:
+                    M2_PROTOTYPE_MIN_MARGIN = selected_policy.get("min_margin")
+                print("[M2] Prototype calibration selected policy:")
+                print(json.dumps(selected_policy, indent=2, ensure_ascii=False))
+            else:
+                print("[M2] Prototype calibration did not select a runtime policy.")
+        if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY and not prototype_calibration_selected:
+            M2_ENABLE_PROTOTYPE_RECONCILER = False
+            print("[M2] Prototype reconciler disabled because no calibrated policy was selected.")
 
     command = [
         sys.executable,
@@ -76,6 +170,18 @@ else:
         command.extend(["--limit", str(int(M2_DEMO_LIMIT))])
     if M2_STOP_ON_DEPENDENCY_BLOCKER:
         command.append("--stop-on-dependency-blocker")
+    if M2_ENABLE_PROTOTYPE_RECONCILER:
+        command.append("--enable-prototype-reconciler")
+        if M2_PROTOTYPE_BANK:
+            command.extend(["--prototype-bank", str((repo_root / M2_PROTOTYPE_BANK).resolve())])
+        if M2_TAXONOMY_REGISTRY:
+            command.extend(["--taxonomy-registry", str((repo_root / M2_TAXONOMY_REGISTRY).resolve())])
+        if M2_PROTOTYPE_MIN_SIMILARITY is not None:
+            command.extend(["--prototype-min-similarity", str(float(M2_PROTOTYPE_MIN_SIMILARITY))])
+        if M2_PROTOTYPE_MIN_MARGIN is not None:
+            command.extend(["--prototype-min-margin", str(float(M2_PROTOTYPE_MIN_MARGIN))])
+        if prototype_calibration_output_path.is_file():
+            command.extend(["--prototype-calibration-report", str(prototype_calibration_output_path)])
 
     print(f"[M2] repo_root={repo_root}")
     print(f"[M2] manifest={manifest_path}")
@@ -83,6 +189,11 @@ else:
     print(f"[M2] markdown_output={markdown_output_path}")
     print(f"[M2] analysis_output={analysis_output_path}")
     print(f"[M2] analysis_markdown_output={analysis_markdown_output_path}")
+    print(f"[M2] prototype_reconciler={M2_ENABLE_PROTOTYPE_RECONCILER}")
+    if M2_ENABLE_PROTOTYPE_RECONCILER:
+        print(f"[M2] prototype_bank={M2_PROTOTYPE_BANK or 'missing'}")
+        print(f"[M2] taxonomy_registry={M2_TAXONOMY_REGISTRY or 'missing'}")
+        print(f"[M2] prototype_calibration={prototype_calibration_output_path}")
     print("[M2] Starting full manifest run. This can take a while on 512 images.")
 
     completed = subprocess.run(command, cwd=repo_root, check=False)
@@ -106,7 +217,27 @@ else:
     if report_ready:
         repo_results_dir.mkdir(parents=True, exist_ok=True)
         copied_paths = []
-        for source_path in (output_path, markdown_output_path, analysis_output_path, analysis_markdown_output_path):
+        provenance_paths = []
+        if prototype_calibration_output_path.is_file():
+            provenance_paths.append(prototype_calibration_output_path)
+        if M2_PROTOTYPE_BANK:
+            prototype_bank_path = (repo_root / M2_PROTOTYPE_BANK).resolve()
+            if prototype_bank_path.is_file():
+                provenance_paths.append(prototype_bank_path)
+                prototype_summary_path = prototype_bank_path.parent / "summary.md"
+                if prototype_summary_path.is_file():
+                    provenance_paths.append(prototype_summary_path)
+        if M2_TAXONOMY_REGISTRY:
+            taxonomy_registry_path = (repo_root / M2_TAXONOMY_REGISTRY).resolve()
+            if taxonomy_registry_path.is_file():
+                provenance_paths.append(taxonomy_registry_path)
+        for source_path in (
+            output_path,
+            markdown_output_path,
+            analysis_output_path,
+            analysis_markdown_output_path,
+            *provenance_paths,
+        ):
             if source_path.is_file():
                 destination = repo_results_dir / source_path.name
                 shutil.copy2(source_path, destination)
@@ -121,6 +252,21 @@ else:
             "markdown_output": str(markdown_output_path.relative_to(repo_root)),
             "analysis_output": str(analysis_output_path.relative_to(repo_root)),
             "analysis_markdown_output": str(analysis_markdown_output_path.relative_to(repo_root)),
+            "prototype_reconciler": {
+                "enabled": bool(M2_ENABLE_PROTOTYPE_RECONCILER),
+                "auto_build_prototypes": bool(M2_AUTO_BUILD_PROTOTYPES),
+                "auto_calibrate": bool(M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER),
+                "require_calibrated_policy": bool(M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY),
+                "prototype_bank": M2_PROTOTYPE_BANK,
+                "taxonomy_registry": M2_TAXONOMY_REGISTRY,
+                "prototype_calibration_output": str(prototype_calibration_output_path.relative_to(repo_root))
+                if prototype_calibration_output_path.is_file()
+                else "",
+                "prototype_min_similarity": M2_PROTOTYPE_MIN_SIMILARITY,
+                "prototype_min_margin": M2_PROTOTYPE_MIN_MARGIN,
+                "calibration_selected_policy": bool(prototype_calibration_selected),
+            },
+            "copied_artifacts": copied_paths,
             "summary": m2_demo_result.get("summary", {}) if isinstance(m2_demo_result, dict) else {},
             "analysis_summary": m2_demo_result.get("analysis_summary", {}) if isinstance(m2_demo_result, dict) else {},
         }

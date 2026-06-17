@@ -32,9 +32,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--adapter-root", type=Path, default=Path("runs"))
     parser.add_argument("--taxonomy-path", type=Path, default=Path("config/plant_taxonomy.json"))
     parser.add_argument("--overrides-path", type=Path, default=None)
+    parser.add_argument("--external-cache-path", type=Path, default=Path("runs/_index/router_prototypes/external_taxonomy_cache.json"))
+    parser.add_argument("--refresh-gbif", action="store_true")
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--run-id", default=None)
     parser.add_argument("--embedding-backend", default=DEFAULT_BACKEND)
+    parser.add_argument("--embedding-model-id", default="imageomics/bioclip-2.5-vith14")
+    parser.add_argument("--embedding-device", default="cpu")
     parser.add_argument("--split", action="append", dest="splits", default=None)
     parser.add_argument("--max-images-per-class", type=int, default=None)
     parser.add_argument("--include-ood", action="store_true")
@@ -52,11 +56,15 @@ def main(argv: list[str] | None = None) -> int:
         adapter_root=None if args.no_adapter_discovery else args.adapter_root,
         taxonomy_path=args.taxonomy_path,
         overrides_path=args.overrides_path,
+        external_cache_path=args.external_cache_path,
+        refresh_gbif=bool(args.refresh_gbif),
         created_at=created_at,
     )
     prototype_payload = build_prototype_bank(
         dataset_root=args.dataset_root,
         embedding_backend=args.embedding_backend,
+        embedding_model_id=args.embedding_model_id,
+        device=args.embedding_device,
         splits=tuple(args.splits) if args.splits else ("train", "val", "test", "continual"),
         include_ood=args.include_ood,
         max_images_per_class=args.max_images_per_class,
