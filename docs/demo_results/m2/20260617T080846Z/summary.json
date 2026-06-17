@@ -1,0 +1,81 @@
+{
+  "created_at": "20260617T080846Z",
+  "runner_exit_code": 1,
+  "manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "output": ".runtime_tmp/m2_demo_checklist_run.json",
+  "markdown_output": ".runtime_tmp/m2_demo_checklist_run.md",
+  "summary": {
+    "total": 512,
+    "passed": 261,
+    "failed": 251,
+    "answered": 246,
+    "abstained_or_reviewed": 266,
+    "asset_ready": 0,
+    "failure_buckets": {
+      "adapter_loading": 26,
+      "router": 223
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 54,
+        "pass": 0,
+        "fail": 54
+      },
+      "apricot__leaf": {
+        "total": 37,
+        "pass": 8,
+        "fail": 29
+      },
+      "grape__fruit": {
+        "total": 55,
+        "pass": 31,
+        "fail": 24
+      },
+      "grape__leaf": {
+        "total": 77,
+        "pass": 68,
+        "fail": 9
+      },
+      "grape__unknown_part": {
+        "total": 1,
+        "pass": 0,
+        "fail": 1
+      },
+      "non_plant": {
+        "total": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "strawberry__fruit": {
+        "total": 47,
+        "pass": 22,
+        "fail": 25
+      },
+      "strawberry__leaf": {
+        "total": 45,
+        "pass": 43,
+        "fail": 2
+      },
+      "tomato__fruit": {
+        "total": 75,
+        "pass": 12,
+        "fail": 63
+      },
+      "tomato__leaf": {
+        "total": 108,
+        "pass": 65,
+        "fail": 43
+      },
+      "tomato__unknown_part": {
+        "total": 1,
+        "pass": 0,
+        "fail": 1
+      },
+      "unknown_crop": {
+        "total": 6,
+        "pass": 6,
+        "fail": 0
+      }
+    }
+  }
+}
