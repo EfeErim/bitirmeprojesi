@@ -1,0 +1,4975 @@
+{
+  "schema_version": "router_prototype_calibration.v1",
+  "generated_at": "2026-06-17T20:04:24.711207+00:00",
+  "manifest": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "prototype_bank": "/content/bitirmeprojesi/runs/_index/router_prototypes/m2_20260617T195031Z/prototype_bank.json",
+  "constraints": {
+    "min_precision": 0.9,
+    "min_coverage": 0.6
+  },
+  "summary": {
+    "rows": 500,
+    "ok_rows": 500,
+    "selected_for_runtime": true
+  },
+  "selected_policy": {
+    "min_similarity": 0.2,
+    "min_margin": 0.04,
+    "eligible": 500,
+    "accepted": 318,
+    "correct": 316,
+    "wrong": 2,
+    "coverage": 0.636,
+    "precision": 0.993711,
+    "accuracy": 0.632,
+    "eligible_for_promotion": true
+  },
+  "best_candidate": {
+    "min_similarity": 0.2,
+    "min_margin": 0.04,
+    "eligible": 500,
+    "accepted": 318,
+    "correct": 316,
+    "wrong": 2,
+    "coverage": 0.636,
+    "precision": 0.993711,
+    "accuracy": 0.632,
+    "eligible_for_promotion": true
+  },
+  "candidates": [
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 318,
+      "correct": 316,
+      "wrong": 2,
+      "coverage": 0.636,
+      "precision": 0.993711,
+      "accuracy": 0.632,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 318,
+      "correct": 316,
+      "wrong": 2,
+      "coverage": 0.636,
+      "precision": 0.993711,
+      "accuracy": 0.632,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 318,
+      "correct": 316,
+      "wrong": 2,
+      "coverage": 0.636,
+      "precision": 0.993711,
+      "accuracy": 0.632,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 318,
+      "correct": 316,
+      "wrong": 2,
+      "coverage": 0.636,
+      "precision": 0.993711,
+      "accuracy": 0.632,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 336,
+      "correct": 333,
+      "wrong": 3,
+      "coverage": 0.672,
+      "precision": 0.991071,
+      "accuracy": 0.666,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 421,
+      "correct": 416,
+      "wrong": 5,
+      "coverage": 0.842,
+      "precision": 0.988124,
+      "accuracy": 0.832,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 421,
+      "correct": 416,
+      "wrong": 5,
+      "coverage": 0.842,
+      "precision": 0.988124,
+      "accuracy": 0.832,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 421,
+      "correct": 416,
+      "wrong": 5,
+      "coverage": 0.842,
+      "precision": 0.988124,
+      "accuracy": 0.832,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 421,
+      "correct": 416,
+      "wrong": 5,
+      "coverage": 0.842,
+      "precision": 0.988124,
+      "accuracy": 0.832,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 357,
+      "correct": 350,
+      "wrong": 7,
+      "coverage": 0.714,
+      "precision": 0.980392,
+      "accuracy": 0.7,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 500,
+      "correct": 479,
+      "wrong": 21,
+      "coverage": 1.0,
+      "precision": 0.958,
+      "accuracy": 0.958,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 500,
+      "correct": 479,
+      "wrong": 21,
+      "coverage": 1.0,
+      "precision": 0.958,
+      "accuracy": 0.958,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 500,
+      "correct": 479,
+      "wrong": 21,
+      "coverage": 1.0,
+      "precision": 0.958,
+      "accuracy": 0.958,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 500,
+      "correct": 479,
+      "wrong": 21,
+      "coverage": 1.0,
+      "precision": 0.958,
+      "accuracy": 0.958,
+      "eligible_for_promotion": true
+    },
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 15,
+      "correct": 15,
+      "wrong": 0,
+      "coverage": 0.03,
+      "precision": 1.0,
+      "accuracy": 0.03,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 15,
+      "correct": 15,
+      "wrong": 0,
+      "coverage": 0.03,
+      "precision": 1.0,
+      "accuracy": 0.03,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 15,
+      "correct": 15,
+      "wrong": 0,
+      "coverage": 0.03,
+      "precision": 1.0,
+      "accuracy": 0.03,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 15,
+      "correct": 15,
+      "wrong": 0,
+      "coverage": 0.03,
+      "precision": 1.0,
+      "accuracy": 0.03,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 15,
+      "correct": 15,
+      "wrong": 0,
+      "coverage": 0.03,
+      "precision": 1.0,
+      "accuracy": 0.03,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.0,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.02,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.7,
+      "min_margin": 0.1,
+      "eligible": 500,
+      "accepted": 2,
+      "correct": 2,
+      "wrong": 0,
+      "coverage": 0.004,
+      "precision": 1.0,
+      "accuracy": 0.004,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.04,
+      "eligible": 500,
+      "accepted": 292,
+      "correct": 291,
+      "wrong": 1,
+      "coverage": 0.584,
+      "precision": 0.996575,
+      "accuracy": 0.582,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 207,
+      "correct": 206,
+      "wrong": 1,
+      "coverage": 0.414,
+      "precision": 0.995169,
+      "accuracy": 0.412,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 207,
+      "correct": 206,
+      "wrong": 1,
+      "coverage": 0.414,
+      "precision": 0.995169,
+      "accuracy": 0.412,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 207,
+      "correct": 206,
+      "wrong": 1,
+      "coverage": 0.414,
+      "precision": 0.995169,
+      "accuracy": 0.412,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 207,
+      "correct": 206,
+      "wrong": 1,
+      "coverage": 0.414,
+      "precision": 0.995169,
+      "accuracy": 0.412,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.06,
+      "eligible": 500,
+      "accepted": 205,
+      "correct": 204,
+      "wrong": 1,
+      "coverage": 0.41,
+      "precision": 0.995122,
+      "accuracy": 0.408,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.2,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 83,
+      "correct": 82,
+      "wrong": 1,
+      "coverage": 0.166,
+      "precision": 0.987952,
+      "accuracy": 0.164,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.3,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 83,
+      "correct": 82,
+      "wrong": 1,
+      "coverage": 0.166,
+      "precision": 0.987952,
+      "accuracy": 0.164,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.4,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 83,
+      "correct": 82,
+      "wrong": 1,
+      "coverage": 0.166,
+      "precision": 0.987952,
+      "accuracy": 0.164,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.5,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 83,
+      "correct": 82,
+      "wrong": 1,
+      "coverage": 0.166,
+      "precision": 0.987952,
+      "accuracy": 0.164,
+      "eligible_for_promotion": false
+    },
+    {
+      "min_similarity": 0.6,
+      "min_margin": 0.08,
+      "eligible": 500,
+      "accepted": 83,
+      "correct": 82,
+      "wrong": 1,
+      "coverage": 0.166,
+      "precision": 0.987952,
+      "accuracy": 0.164,
+      "eligible_for_promotion": false
+    }
+  ],
+  "rows": [
+    {
+      "image_id": "demo_001",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64307179,
+      "margin": 0.0345146,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_001_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_002",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6464353,
+      "margin": 0.08292096,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_002_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_003",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60849577,
+      "margin": 0.04314385,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_003_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_004",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60755535,
+      "margin": 0.06225658,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_004_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_005",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62969461,
+      "margin": 0.06405556,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_005_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_006",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60203735,
+      "margin": 0.00522848,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_006_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_007",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61210729,
+      "margin": 0.03686852,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_007_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_008",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6203969,
+      "margin": 0.05863107,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_008_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_009",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.59306702,
+      "margin": 0.04126633,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_009_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_010",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.66219508,
+      "margin": 0.08251293,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_010_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_011",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65767349,
+      "margin": 0.06269979,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_011_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_012",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.5849793,
+      "margin": 0.04166876,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_012_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_013",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64666466,
+      "margin": 0.07860151,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_013_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_014",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64792459,
+      "margin": 0.09281564,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_014_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_015",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.69413025,
+      "margin": 0.14061356,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_015_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_016",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.70889603,
+      "margin": 0.13568055,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_016_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_017",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.58610012,
+      "margin": 0.02425232,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_017_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_018",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62301129,
+      "margin": 0.01864432,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_018_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_019",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62150846,
+      "margin": 0.02368197,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_019_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_020",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62977385,
+      "margin": 0.02032102,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_020_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_021",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64656087,
+      "margin": 0.06230237,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_021_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_022",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61965446,
+      "margin": 0.04834501,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_022_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_023",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66266281,
+      "margin": 0.06369417,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_023_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_024",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.67256821,
+      "margin": 0.07931352,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_024_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_025",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.54980425,
+      "margin": 0.01459892,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_025_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_026",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62186632,
+      "margin": 0.0576124,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_026_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_027",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.56375332,
+      "margin": 0.01451843,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_027_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_028",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62505466,
+      "margin": 0.06548283,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_028_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_029",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.55205597,
+      "margin": 0.01543311,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_029_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_030",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61658545,
+      "margin": 0.05986842,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_030_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_031",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.63837195,
+      "margin": 0.09031403,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_031_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_032",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.60385027,
+      "margin": 0.05008478,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_032_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_033",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61684079,
+      "margin": 0.05080765,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_033_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_034",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6662639,
+      "margin": 0.09820204,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_034_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_035",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.61338972,
+      "margin": 0.05387989,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_035_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_036",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65060245,
+      "margin": 0.07566507,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_036_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_037",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.585937,
+      "margin": 0.03277543,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_037_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_038",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.69078233,
+      "margin": 0.12809231,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_038_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_039",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62220987,
+      "margin": 0.05933418,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_039_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_040",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61875512,
+      "margin": 0.04653987,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_040_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_043",
+      "expected_target": "tomato__unknown_part",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62273346,
+      "margin": 0.03261119,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_043_tomato_unknown_part.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_044",
+      "expected_target": "grape__unknown_part",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61008546,
+      "margin": 0.01283194,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_044_grape_unknown_part.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_049",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59506339,
+      "margin": 0.04699191,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_049_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_050",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61089996,
+      "margin": 0.03708119,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_050_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_051",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62617891,
+      "margin": 0.06907399,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_051_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_052",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.57321002,
+      "margin": 0.01859598,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_052_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_053",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59006651,
+      "margin": 0.05131535,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_053_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_054",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62389936,
+      "margin": 0.04115866,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_054_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_055",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62933003,
+      "margin": 0.02263952,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_055_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_056",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59191659,
+      "margin": 0.02986826,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_056_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_057",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60731262,
+      "margin": 0.02412638,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_057_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_058",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.57798769,
+      "margin": 0.01849134,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_058_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_059",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59205035,
+      "margin": 0.04000988,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_059_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_060",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6357994,
+      "margin": 0.09589309,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_060_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_061",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63487823,
+      "margin": 0.09247595,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_061_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_062",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6188448,
+      "margin": 0.08182822,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_062_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_063",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57340488,
+      "margin": 0.04490478,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_063_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_064",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64478421,
+      "margin": 0.04294646,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_064_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_065",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.54271013,
+      "margin": 0.00058452,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_065_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_066",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58588233,
+      "margin": 0.04561561,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_066_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_067",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.5602136,
+      "margin": 0.00879367,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_067_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_068",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58279668,
+      "margin": 0.04862243,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_068_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_069",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.60548704,
+      "margin": 0.04097617,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_069_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_070",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.66953165,
+      "margin": 0.06967633,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_070_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_071",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65240205,
+      "margin": 0.04603986,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_071_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_072",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.61646478,
+      "margin": 0.0278461,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_072_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_073",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.63774994,
+      "margin": 0.043166,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_073_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_074",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.66142974,
+      "margin": 0.07879721,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_074_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_075",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62307068,
+      "margin": 0.0435899,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_075_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_076",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.61736842,
+      "margin": 0.06300514,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_076_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_077",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.58784377,
+      "margin": 0.02665671,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_077_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_078",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.57855096,
+      "margin": 0.03380187,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_078_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_079",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.69130087,
+      "margin": 0.1337861,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_079_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_080",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.70421102,
+      "margin": 0.14802722,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_080_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_081",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.68118468,
+      "margin": 0.10899284,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_081_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_082",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.67795272,
+      "margin": 0.12915673,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_082_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_083",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66877339,
+      "margin": 0.09266428,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_083_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_084",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64934009,
+      "margin": 0.06249433,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_084_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_085",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64154758,
+      "margin": 0.07867706,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_085_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_086",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65227873,
+      "margin": 0.06407136,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_086_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_087",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.62380066,
+      "margin": 0.04272837,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_087_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_088",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65053896,
+      "margin": 0.08171007,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_088_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_089",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62874438,
+      "margin": 0.05034791,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_089_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_090",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61856844,
+      "margin": 0.01872591,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_090_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_091",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61552533,
+      "margin": 0.03481065,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_091_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_092",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62588905,
+      "margin": 0.06742591,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_092_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_093",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.59632383,
+      "margin": 0.03485677,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_093_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_094",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61950083,
+      "margin": 0.03839443,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_094_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_095",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.65187707,
+      "margin": 0.0607157,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_095_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_096",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.59246545,
+      "margin": 0.03131511,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_096_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_097",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64610248,
+      "margin": 0.02714156,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_097_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_098",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61676321,
+      "margin": 0.03515888,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_098_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_099",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66028352,
+      "margin": 0.06217831,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_099_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_100",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64643852,
+      "margin": 0.06027946,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_100_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_101",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65875918,
+      "margin": 0.06464466,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_101_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_102",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66774367,
+      "margin": 0.04943236,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_102_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_103",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66629599,
+      "margin": 0.07598506,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_103_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_104",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61947706,
+      "margin": 0.05677009,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_104_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_105",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65683943,
+      "margin": 0.06928885,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_105_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_106",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66186207,
+      "margin": 0.07355054,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_106_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_107",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.67548843,
+      "margin": 0.06441377,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_107_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_108",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64933878,
+      "margin": 0.06392747,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_108_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_109",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.57550678,
+      "margin": 0.04978401,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_109_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_110",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60124665,
+      "margin": 0.04016557,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_110_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_111",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59509475,
+      "margin": 0.03207507,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_111_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_112",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.61450476,
+      "margin": 0.02711884,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_112_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_113",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.56472259,
+      "margin": 0.02981623,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_113_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_114",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.53658501,
+      "margin": 0.00578289,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_114_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_115",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62029465,
+      "margin": 0.05828211,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_115_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_116",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60953824,
+      "margin": 0.05584135,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_116_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_117",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59775447,
+      "margin": 0.00462436,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_117_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_118",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62108406,
+      "margin": 0.06629689,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_118_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_119",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.56626054,
+      "margin": 0.02368775,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_119_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_120",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64447741,
+      "margin": 0.08491447,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_120_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_121",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.65287136,
+      "margin": 0.10139661,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_121_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_122",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.56765436,
+      "margin": 0.03578788,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_122_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_123",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62938117,
+      "margin": 0.06992408,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_123_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_124",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61363464,
+      "margin": 0.06555886,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_124_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_125",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.60968202,
+      "margin": 0.07492273,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_125_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_126",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.67388174,
+      "margin": 0.13125928,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_126_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_127",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64012141,
+      "margin": 0.09153048,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_127_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_128",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64069538,
+      "margin": 0.09007177,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_128_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_129",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61617572,
+      "margin": 0.02655771,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_129_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_130",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.5743337,
+      "margin": 0.04298212,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_130_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_131",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.58734627,
+      "margin": 0.01990114,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_131_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_132",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.6699041,
+      "margin": 0.08129384,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_132_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_133",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.58496082,
+      "margin": 0.04612338,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_133_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_134",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.56365755,
+      "margin": 0.03405677,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_134_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_135",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62549717,
+      "margin": 0.09087643,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_135_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_136",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.65623389,
+      "margin": 0.12064847,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_136_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_145",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59477062,
+      "margin": 0.0220835,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_145_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_146",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.57976517,
+      "margin": 0.00720606,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_146_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_147",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.5561842,
+      "margin": 0.01933821,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_147_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_148",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62415685,
+      "margin": 0.0747839,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_148_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_149",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.57476769,
+      "margin": 0.02719972,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_149_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_150",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59104999,
+      "margin": 0.03248652,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_150_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_151",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.58046535,
+      "margin": 0.04389765,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_151_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_152",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59997393,
+      "margin": 0.03800841,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_152_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_153",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.58373656,
+      "margin": 0.03446651,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_153_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_154",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59277461,
+      "margin": 0.03573423,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_154_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_155",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.58555515,
+      "margin": 0.01791659,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_155_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_156",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60984031,
+      "margin": 0.0590385,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_156_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_157",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.5742869,
+      "margin": 0.0151803,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_157_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_158",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60884838,
+      "margin": 0.04783265,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_158_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_159",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62317024,
+      "margin": 0.05502717,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_159_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_160",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.56950131,
+      "margin": 0.02022538,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_160_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_161",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.57819578,
+      "margin": 0.02352909,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_161_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_162",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.58612541,
+      "margin": 0.04538831,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_162_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_163",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.5932364,
+      "margin": 0.01197557,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_163_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_164",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.56589362,
+      "margin": 0.01219715,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_164_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_165",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64631067,
+      "margin": 0.09104072,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_165_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_166",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.64914497,
+      "margin": 0.08185877,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_166_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_167",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62075292,
+      "margin": 0.05779379,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_167_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_168",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62769297,
+      "margin": 0.05857653,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_168_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_169",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.61301906,
+      "margin": 0.02286606,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_169_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_170",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60450401,
+      "margin": 0.04055798,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_170_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_171",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.58926525,
+      "margin": 0.02961555,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_171_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_172",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.65462699,
+      "margin": 0.09117357,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_172_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_173",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60569433,
+      "margin": 0.05859204,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_173_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_174",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.55984412,
+      "margin": 0.00567004,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_174_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_175",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.61712195,
+      "margin": 0.07317744,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_175_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_176",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.57402014,
+      "margin": 0.00896294,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_176_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_177",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60623011,
+      "margin": 0.04646474,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_177_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_178",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.60648039,
+      "margin": 0.02590939,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_178_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_179",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59591965,
+      "margin": 0.0231049,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_179_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_180",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.64840403,
+      "margin": 0.0891658,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_180_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_181",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59013277,
+      "margin": 0.02398415,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_181_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_182",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.62068715,
+      "margin": 0.03498598,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_182_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_183",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.55522905,
+      "margin": 0.01250529,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_183_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_184",
+      "expected_target": "apricot__fruit",
+      "predicted_target": "apricot__fruit",
+      "similarity": 0.59853753,
+      "margin": 0.0371155,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_184_apricot_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_185",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61266175,
+      "margin": 0.0826617,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_185_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_186",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.60877854,
+      "margin": 0.07953333,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_186_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_187",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.63228078,
+      "margin": 0.08967528,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_187_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_188",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61670012,
+      "margin": 0.07928827,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_188_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_189",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.63117697,
+      "margin": 0.07741721,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_189_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_190",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62047556,
+      "margin": 0.07074774,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_190_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_191",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.59866577,
+      "margin": 0.07540252,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_191_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_192",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62521861,
+      "margin": 0.08888285,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_192_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_193",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64702347,
+      "margin": 0.09810707,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_193_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_194",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.64621018,
+      "margin": 0.0847332,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_194_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_195",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62697606,
+      "margin": 0.09699991,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_195_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_196",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61616462,
+      "margin": 0.07922055,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_196_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_197",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.61578882,
+      "margin": 0.07067393,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_197_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_198",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62482203,
+      "margin": 0.0895558,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_198_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_199",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62726239,
+      "margin": 0.10202801,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_199_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_200",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.60914551,
+      "margin": 0.07953255,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_200_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_201",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62224254,
+      "margin": 0.09144594,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_201_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_202",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.60332001,
+      "margin": 0.07275336,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_202_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_203",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.6505659,
+      "margin": 0.10195919,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_203_apricot_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_204",
+      "expected_target": "apricot__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.62454493,
+      "margin": 0.07790494,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_204_apricot_leaf.jpeg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_205",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62109791,
+      "margin": 0.04097828,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_205_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_206",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.60782507,
+      "margin": 0.03194517,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_206_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_207",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.57337617,
+      "margin": 0.0357666,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_207_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_208",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63910805,
+      "margin": 0.07476355,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_208_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_209",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.60435978,
+      "margin": 0.04520431,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_209_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_210",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63262456,
+      "margin": 0.04063193,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_210_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_211",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64061735,
+      "margin": 0.03087527,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_211_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_212",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.5979724,
+      "margin": 0.02037665,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_212_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_213",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64214007,
+      "margin": 0.06323043,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_213_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_214",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63650595,
+      "margin": 0.06204458,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_214_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_215",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.54360419,
+      "margin": 0.01006375,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_215_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_216",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64173995,
+      "margin": 0.04130108,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_216_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_217",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64001961,
+      "margin": 0.04846569,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_217_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_218",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.6634501,
+      "margin": 0.05990184,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_218_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_219",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62123152,
+      "margin": 0.05893415,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_219_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_220",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63357531,
+      "margin": 0.04234167,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_220_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_221",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.60093928,
+      "margin": 0.03432178,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_221_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_222",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62760844,
+      "margin": 0.0011581,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_222_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_223",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.59857773,
+      "margin": 0.0190686,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_223_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_224",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.54852289,
+      "margin": 0.01780691,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_224_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_225",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.56840841,
+      "margin": 0.00452782,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_225_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_226",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64079789,
+      "margin": 0.0469025,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_226_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_227",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61148823,
+      "margin": 0.0206361,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_227_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_228",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.5777201,
+      "margin": 0.02985916,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_228_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_229",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.5999947,
+      "margin": 0.01357864,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_229_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_230",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.58120557,
+      "margin": 0.02554786,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_230_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_231",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.65810271,
+      "margin": 0.06279784,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_231_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_232",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64247845,
+      "margin": 0.03850201,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_232_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_233",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.54877144,
+      "margin": 0.00938483,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_233_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_234",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.61818111,
+      "margin": 0.05055109,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_234_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_235",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.57098305,
+      "margin": 0.0338027,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_235_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_236",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.64485684,
+      "margin": 0.02115629,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_236_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_237",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.62752037,
+      "margin": 0.00383543,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_237_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_238",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63980435,
+      "margin": 0.06295593,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_238_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_239",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.65520917,
+      "margin": 0.04610146,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_239_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_240",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.6419366,
+      "margin": 0.06018402,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_240_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_241",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.60728298,
+      "margin": 0.04663231,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_241_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_242",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.65265641,
+      "margin": 0.05529207,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_242_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_243",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64066652,
+      "margin": 0.02364869,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_243_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_244",
+      "expected_target": "grape__fruit",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.65304519,
+      "margin": 0.05067505,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_244_grape_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_245",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65717143,
+      "margin": 0.06784974,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_245_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_246",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64983508,
+      "margin": 0.04038323,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_246_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_247",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64038414,
+      "margin": 0.04494214,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_247_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_248",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65066806,
+      "margin": 0.07094346,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_248_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_249",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.6002787,
+      "margin": 0.04323534,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_249_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_250",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61989763,
+      "margin": 0.05630497,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_250_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_251",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.63948517,
+      "margin": 0.06886953,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_251_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_252",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.650624,
+      "margin": 0.07041502,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_252_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_253",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61380242,
+      "margin": 0.05403798,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_253_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_254",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.58757548,
+      "margin": 0.04454441,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_254_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_255",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61738855,
+      "margin": 0.04710345,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_255_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_256",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.53678452,
+      "margin": 0.00449787,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_256_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_257",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65739059,
+      "margin": 0.05896686,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_257_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_258",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61515405,
+      "margin": 0.04953897,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_258_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_259",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.63634537,
+      "margin": 0.05694104,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_259_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_260",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.67992287,
+      "margin": 0.08475192,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_260_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_261",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.6144367,
+      "margin": 0.01763002,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_261_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_262",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65467971,
+      "margin": 0.06249485,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_262_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_263",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.60059608,
+      "margin": 0.01599738,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_263_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_264",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.67618106,
+      "margin": 0.06530978,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_264_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_265",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__fruit",
+      "similarity": 0.63479101,
+      "margin": 0.01245727,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_265_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_266",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66652573,
+      "margin": 0.07044248,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_266_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_267",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.58628138,
+      "margin": 0.03348077,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_267_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_268",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66374695,
+      "margin": 0.08288447,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_268_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_269",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.56596855,
+      "margin": 0.0292923,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_269_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_270",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61314086,
+      "margin": 0.04118228,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_270_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_271",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65957669,
+      "margin": 0.07659646,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_271_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_272",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.55654321,
+      "margin": 0.03048332,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_272_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_273",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64153483,
+      "margin": 0.06215699,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_273_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_274",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61008119,
+      "margin": 0.04331561,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_274_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_275",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.62360068,
+      "margin": 0.05240406,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_275_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_276",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.63090832,
+      "margin": 0.05750981,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_276_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_277",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.63509111,
+      "margin": 0.06679587,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_277_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_278",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64162438,
+      "margin": 0.05373979,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_278_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_279",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65520738,
+      "margin": 0.05499555,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_279_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_280",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66800062,
+      "margin": 0.0545975,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_280_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_281",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61961134,
+      "margin": 0.04903718,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_281_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_282",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65614441,
+      "margin": 0.06251241,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_282_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_283",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.63949354,
+      "margin": 0.05240253,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_283_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_284",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.61419654,
+      "margin": 0.03077062,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_284_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_285",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.53091389,
+      "margin": 0.00319812,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_285_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_286",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.58938418,
+      "margin": 0.03526893,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_286_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_287",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.62775199,
+      "margin": 0.04559921,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_287_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_288",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65483983,
+      "margin": 0.07312477,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_288_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_289",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.62937984,
+      "margin": 0.06170513,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_289_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_290",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65016907,
+      "margin": 0.06679743,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_290_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_291",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65308583,
+      "margin": 0.07125302,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_291_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_292",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.64783169,
+      "margin": 0.07118565,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_292_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_293",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66174625,
+      "margin": 0.07690851,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_293_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_294",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.5896017,
+      "margin": 0.02610029,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_294_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_295",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.57946053,
+      "margin": 0.03268845,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_295_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_296",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.67161296,
+      "margin": 0.07926534,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_296_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_297",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66299943,
+      "margin": 0.07775806,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_297_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_298",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.6632112,
+      "margin": 0.09534561,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_298_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_299",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66840027,
+      "margin": 0.06425601,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_299_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_300",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66118435,
+      "margin": 0.07019538,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_300_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_301",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.653306,
+      "margin": 0.06058989,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_301_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_302",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.65483533,
+      "margin": 0.06996183,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_302_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_303",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.68147386,
+      "margin": 0.06859031,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_303_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_304",
+      "expected_target": "grape__leaf",
+      "predicted_target": "grape__leaf",
+      "similarity": 0.66614859,
+      "margin": 0.07443781,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_304_grape_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_305",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.52896895,
+      "margin": 0.01535291,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_305_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_306",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62763263,
+      "margin": 0.03594401,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_306_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_307",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.57859419,
+      "margin": 0.03136956,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_307_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_308",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.54614282,
+      "margin": 0.01348061,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_308_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_309",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.66636772,
+      "margin": 0.07878829,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_309_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_310",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62731594,
+      "margin": 0.07607772,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_310_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_311",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.58307612,
+      "margin": 0.04642534,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_311_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_312",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65073212,
+      "margin": 0.06223422,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_312_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_313",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.6572086,
+      "margin": 0.05366585,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_313_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_314",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.63504091,
+      "margin": 0.04681852,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_314_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_315",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.67715167,
+      "margin": 0.08401584,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_315_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_316",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62481481,
+      "margin": 0.04316854,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_316_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_317",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.64990355,
+      "margin": 0.07007768,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_317_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_318",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.68835287,
+      "margin": 0.11511073,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_318_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_319",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.66545521,
+      "margin": 0.08963374,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_319_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_320",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62638877,
+      "margin": 0.07952683,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_320_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_321",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.54078784,
+      "margin": 0.02134707,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_321_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_322",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65598521,
+      "margin": 0.08718182,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_322_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_323",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65510361,
+      "margin": 0.08112296,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_323_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_324",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.68577009,
+      "margin": 0.09702944,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_324_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_325",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.6141362,
+      "margin": 0.06212857,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_325_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_326",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.62462136,
+      "margin": 0.08804217,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_326_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_327",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65790586,
+      "margin": 0.07584783,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_327_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_328",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.64067156,
+      "margin": 0.08765989,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_328_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_329",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.68001966,
+      "margin": 0.11546887,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_329_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_330",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.63779633,
+      "margin": 0.06545836,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_330_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_331",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65242254,
+      "margin": 0.08141507,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_331_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_332",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.65787485,
+      "margin": 0.08625106,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_332_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_333",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.58252578,
+      "margin": 0.05009856,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_333_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_334",
+      "expected_target": "strawberry__fruit",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.55578289,
+      "margin": 0.03833365,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_334_strawberry_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_335",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65312762,
+      "margin": 0.08922863,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_335_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_336",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66439034,
+      "margin": 0.08624614,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_336_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_337",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66628532,
+      "margin": 0.08887044,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_337_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_338",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.61233788,
+      "margin": 0.05700047,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_338_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_339",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64918668,
+      "margin": 0.08401504,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_339_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_340",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.61585788,
+      "margin": 0.01170882,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_340_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_341",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.58909188,
+      "margin": 0.00099142,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_341_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_342",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.59956786,
+      "margin": 0.0220159,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_342_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_343",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.59157725,
+      "margin": 0.02333414,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_343_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_344",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.60138213,
+      "margin": 0.02159141,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_344_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_345",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.59968499,
+      "margin": 0.02502733,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_345_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_346",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.59483355,
+      "margin": 0.00678925,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_346_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_347",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.60242319,
+      "margin": 0.01344409,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_347_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_348",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.60156516,
+      "margin": 0.01561151,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_348_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_349",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__fruit",
+      "similarity": 0.61313152,
+      "margin": 0.00268425,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_349_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_350",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.59723448,
+      "margin": 0.04978667,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_350_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_351",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65742227,
+      "margin": 0.08636478,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_351_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_352",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66502641,
+      "margin": 0.09602128,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_352_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_353",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64522345,
+      "margin": 0.06080633,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_353_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_354",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.60843295,
+      "margin": 0.05701632,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_354_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_355",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66391823,
+      "margin": 0.08511761,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_355_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_356",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.62554978,
+      "margin": 0.02609791,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_356_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_357",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65371372,
+      "margin": 0.06150407,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_357_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_358",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.67264682,
+      "margin": 0.0915849,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_358_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_359",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65084885,
+      "margin": 0.09015428,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_359_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_360",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.64705047,
+      "margin": 0.07218975,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_360_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_361",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.61736424,
+      "margin": 0.0617042,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_361_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_362",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.66918658,
+      "margin": 0.08698271,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_362_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_363",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.65013221,
+      "margin": 0.06622295,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_363_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_364",
+      "expected_target": "strawberry__leaf",
+      "predicted_target": "strawberry__leaf",
+      "similarity": 0.6115733,
+      "margin": 0.04479717,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_364_strawberry_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_365",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61477545,
+      "margin": 0.03525122,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_365_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_366",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.56787281,
+      "margin": 0.03549307,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_366_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_367",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61266449,
+      "margin": 0.06170247,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_367_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_368",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6343354,
+      "margin": 0.07946536,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_368_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_369",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.68031036,
+      "margin": 0.09997743,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_369_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_370",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6166699,
+      "margin": 0.03640607,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_370_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_371",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.63591319,
+      "margin": 0.07120845,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_371_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_372",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.63125295,
+      "margin": 0.06430261,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_372_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_373",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.5836777,
+      "margin": 0.01336732,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_373_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_374",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62558425,
+      "margin": 0.0584437,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_374_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_375",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6155348,
+      "margin": 0.01771913,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_375_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_376",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60724906,
+      "margin": 0.03439196,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_376_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_377",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64529815,
+      "margin": 0.07643347,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_377_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_378",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.66385382,
+      "margin": 0.08483623,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_378_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_379",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61577899,
+      "margin": 0.04040152,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_379_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_380",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62647364,
+      "margin": 0.03896892,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_380_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_381",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59394,
+      "margin": 0.02802425,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_381_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_382",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62768951,
+      "margin": 0.05717368,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_382_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_383",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62516392,
+      "margin": 0.04442349,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_383_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_384",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60474158,
+      "margin": 0.05371913,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_384_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_385",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60155064,
+      "margin": 0.02042268,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_385_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_386",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60275617,
+      "margin": 0.02204847,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_386_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_387",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.58871121,
+      "margin": 0.02565408,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_387_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_388",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59765589,
+      "margin": 0.01921091,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_388_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_389",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60508637,
+      "margin": 0.06018954,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_389_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_390",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64290191,
+      "margin": 0.04768812,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_390_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_391",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64876648,
+      "margin": 0.06631638,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_391_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_392",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62931876,
+      "margin": 0.01820903,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_392_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_393",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6428336,
+      "margin": 0.0632202,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_393_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_394",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60255572,
+      "margin": 0.03464726,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_394_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_395",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59339689,
+      "margin": 0.02645896,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_395_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_396",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62305877,
+      "margin": 0.05723922,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_396_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_397",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6402036,
+      "margin": 0.02908241,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_397_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_398",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.54008193,
+      "margin": 0.01257058,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_398_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_399",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.56111716,
+      "margin": 0.0196524,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_399_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_400",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60193185,
+      "margin": 0.03927152,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_400_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_401",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.66822142,
+      "margin": 0.06160635,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_401_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_402",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.65150811,
+      "margin": 0.04697881,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_402_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_403",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.65625287,
+      "margin": 0.07275878,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_403_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_404",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60329132,
+      "margin": 0.03948093,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_404_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_405",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62664928,
+      "margin": 0.06086173,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_405_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_406",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64024436,
+      "margin": 0.07048121,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_406_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_407",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6696547,
+      "margin": 0.06864542,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_407_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_408",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.58099872,
+      "margin": 0.03263387,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_408_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_409",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61509152,
+      "margin": 0.02929559,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_409_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_410",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60406408,
+      "margin": 0.06400386,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_410_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_411",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.63584401,
+      "margin": 0.04330121,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_411_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_412",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60773518,
+      "margin": 0.00704731,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_412_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_413",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64454355,
+      "margin": 0.09892373,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_413_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_414",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.61888847,
+      "margin": 0.07270728,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_414_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_415",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.6255849,
+      "margin": 0.08166937,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_415_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_416",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.64403462,
+      "margin": 0.08788206,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_416_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_417",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.65894874,
+      "margin": 0.09544872,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_417_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_418",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60213793,
+      "margin": 0.04380536,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_418_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_419",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.66317164,
+      "margin": 0.09950034,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_419_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_420",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.65060269,
+      "margin": 0.09923798,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_420_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_421",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62139281,
+      "margin": 0.07349226,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_421_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_422",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.63176358,
+      "margin": 0.03216194,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_422_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_423",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62815564,
+      "margin": 0.02043364,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_423_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_424",
+      "expected_target": "tomato__fruit",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.62582135,
+      "margin": 0.01652516,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_424_tomato_fruit.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_425",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.54913353,
+      "margin": 0.01927696,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_425_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_426",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58302227,
+      "margin": 0.04680441,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_426_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_427",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59254352,
+      "margin": 0.05017393,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_427_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_428",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63832578,
+      "margin": 0.07081332,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_428_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_429",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.56879388,
+      "margin": 0.02099274,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_429_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_430",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61674396,
+      "margin": 0.04419813,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_430_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_431",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6043892,
+      "margin": 0.0622268,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_431_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_432",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.5424942,
+      "margin": 0.00536006,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_432_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_433",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57884725,
+      "margin": 0.03181117,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_433_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_434",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6450844,
+      "margin": 0.06577119,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_434_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_435",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.56871701,
+      "margin": 0.03746553,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_435_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_436",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.56726795,
+      "margin": 0.02619917,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_436_tomato_leaf.png",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_437",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.65071823,
+      "margin": 0.07234093,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_437_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_438",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.618465,
+      "margin": 0.05575325,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_438_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_439",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.614217,
+      "margin": 0.01666228,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_439_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_440",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62299023,
+      "margin": 0.01962053,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_440_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_441",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59552225,
+      "margin": 0.0385784,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_441_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_442",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63866538,
+      "margin": 0.02671801,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_442_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_443",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64024234,
+      "margin": 0.09099855,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_443_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_444",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64311717,
+      "margin": 0.08829665,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_444_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_445",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64275803,
+      "margin": 0.08460404,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_445_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_446",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61479936,
+      "margin": 0.07604866,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_446_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_447",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61913614,
+      "margin": 0.07472591,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_447_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_448",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62757001,
+      "margin": 0.07450698,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_448_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_449",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64067235,
+      "margin": 0.06718715,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_449_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_450",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64416132,
+      "margin": 0.09315297,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_450_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_451",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.5833947,
+      "margin": 0.03176024,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_451_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_452",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64546225,
+      "margin": 0.08314072,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_452_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_453",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.66866943,
+      "margin": 0.07311984,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_453_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_454",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64720862,
+      "margin": 0.06671163,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_454_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_455",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60995603,
+      "margin": 0.06326958,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_455_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_456",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6505694,
+      "margin": 0.094333,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_456_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_457",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58342569,
+      "margin": 0.06253181,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_457_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_458",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60927155,
+      "margin": 0.03332924,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_458_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_459",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.55452606,
+      "margin": 0.02202732,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_459_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_460",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.54588788,
+      "margin": 0.01540301,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_460_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_461",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "apricot__leaf",
+      "similarity": 0.52493888,
+      "margin": 0.00483516,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_461_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_462",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57422047,
+      "margin": 0.03884123,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_462_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_463",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60198374,
+      "margin": 0.04554666,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_463_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_464",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59640795,
+      "margin": 0.05079244,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_464_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_465",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59884862,
+      "margin": 0.03073887,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_465_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_466",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58734426,
+      "margin": 0.04790674,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_466_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_467",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.66016145,
+      "margin": 0.0920967,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_467_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_468",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.6437485,
+      "margin": 0.09391637,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_468_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_469",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.66498596,
+      "margin": 0.10326698,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_469_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_470",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61557534,
+      "margin": 0.07046388,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_470_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_471",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60782117,
+      "margin": 0.07774487,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_471_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_472",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63628885,
+      "margin": 0.08371419,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_472_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_473",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.64982254,
+      "margin": 0.09558895,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_473_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_474",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.65139046,
+      "margin": 0.08045881,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_474_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_475",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59502518,
+      "margin": 0.04081811,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_475_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_476",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61472256,
+      "margin": 0.06064455,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_476_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_477",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58694884,
+      "margin": 0.00828872,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_477_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_478",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60619735,
+      "margin": 0.01871904,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_478_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_479",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57181741,
+      "margin": 0.00200781,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_479_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_480",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58973919,
+      "margin": 0.00922989,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_480_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_481",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.59261133,
+      "margin": 0.01327924,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_481_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_482",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.60524018,
+      "margin": 0.00225959,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_482_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_483",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58894455,
+      "margin": 0.01802634,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_483_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_484",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.57135378,
+      "margin": 0.00405283,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_484_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_485",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59158397,
+      "margin": 0.03590222,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_485_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_486",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.5629505,
+      "margin": 0.00188024,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_486_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_487",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63053281,
+      "margin": 0.06155034,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_487_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_488",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63442598,
+      "margin": 0.06699724,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_488_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_489",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60159201,
+      "margin": 0.04881395,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_489_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_490",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.63074111,
+      "margin": 0.06818345,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_490_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_491",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.66034454,
+      "margin": 0.0685116,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_491_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_492",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62148942,
+      "margin": 0.05003309,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_492_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_493",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60950528,
+      "margin": 0.06250469,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_493_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_494",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.60287217,
+      "margin": 0.06159414,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_494_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_495",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.61215583,
+      "margin": 0.05670586,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_495_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_496",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62346611,
+      "margin": 0.0638402,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_496_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_497",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57094071,
+      "margin": 0.04782872,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_497_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_498",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.58774786,
+      "margin": 0.01489315,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_498_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_499",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58499582,
+      "margin": 0.01376593,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_499_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_500",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58585309,
+      "margin": 0.03295546,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_500_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_501",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58835792,
+      "margin": 0.01407431,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_501_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_502",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.57343463,
+      "margin": 0.01226372,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_502_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_503",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59434894,
+      "margin": 0.00527344,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_503_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_504",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.55316156,
+      "margin": 0.02257054,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_504_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_505",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.62576608,
+      "margin": 0.04617577,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_505_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_506",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.56538934,
+      "margin": 0.00019065,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_506_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_507",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.53842428,
+      "margin": 0.01666092,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_507_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_508",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.53775027,
+      "margin": 0.01747669,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_508_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_509",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__fruit",
+      "similarity": 0.55264573,
+      "margin": 0.01283758,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_509_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_510",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59887798,
+      "margin": 0.04264018,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_510_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_511",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.56980265,
+      "margin": 0.00921476,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_511_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_512",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.54294422,
+      "margin": 0.01630661,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_512_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_513",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.59742804,
+      "margin": 0.01825555,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_513_tomato_leaf.jpg",
+      "status": "ok"
+    },
+    {
+      "image_id": "demo_514",
+      "expected_target": "tomato__leaf",
+      "predicted_target": "tomato__leaf",
+      "similarity": 0.58939623,
+      "margin": 0.02603158,
+      "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_514_tomato_leaf.jpg",
+      "status": "ok"
+    }
+  ]
+}
