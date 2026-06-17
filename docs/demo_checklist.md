@@ -1,19 +1,22 @@
 # Demo Checklist
 
-Last updated: 2026-06-16
+Last updated: 2026-06-17
 
 Use this file for M1 and M2 execution. The goal is to prove that Colab Notebook 8 can handle expected user-like plant photos without code edits during the demo.
 
 ## Demo Surface
 
 - Primary surface: `colab_notebooks/8_auto_router_adapter_prediction.ipynb`
-- Exact run path:
+- Exact M2 run path:
   1. Open Notebook 8 in Colab.
-  2. Run bootstrap/setup cells.
-  3. Set `ANALYSIS_IMAGE_PATH` to the current checklist image.
-  4. Keep `RETURN_OOD = True`.
-  5. Set `ADAPTER_ROOT = ROOT / "runs"` for the current local inventory, because `models/adapters/` is empty in this workspace while generated Colab exports exist under `runs/`.
-  6. Run the Notebook 1 router analysis cell, then the Notebook 8 adapter prediction cell.
+  2. Select a GPU runtime and make sure Hugging Face/SAM3 access is available.
+  3. Leave `M2_RUN_FULL_DEMO = True` and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
+  4. Leave `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available in Colab secrets.
+  5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 512-image manifest.
+  6. Read `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md` for the local runtime copy.
+  7. The notebook also copies the result into `docs/demo_results/m2/<timestamp>/`, commits/pushes that folder, and disconnects the Colab runtime after the report is written and the push succeeds.
+- Optional single-image path:
+  set `RUN_SINGLE_IMAGE_DEMO = True`, set `IMAGE_PATH` or upload one image, keep `RETURN_OOD = True`, then run the router/adapter cells.
 - Optional CLI smoke path for local debugging only:
   `.\scripts\python.cmd -m src.app.cli inference <image> --config-env colab --adapter-root runs --device cuda`
 - Fallback evidence: captured notebook outputs or screenshots stored under `.runtime_tmp/final_demo_fallbacks/`, then referenced from the final presentation or handoff guide.
@@ -36,20 +39,30 @@ The final target set is eight crop/part surfaces:
 
 ## Image Set Requirements
 
-Target size: 40-60 images unless runtime or asset access blocks it.
+Target size: at least 500 rows unless runtime or asset access blocks it, because every supported disease class must have at least 10 trial images.
 
 Minimum composition:
 
 | Bucket | Target count | Purpose |
 |---|---:|---|
-| Supported known disease, clear photo | 16-24 | Prove expected happy path. |
-| Supported known disease, difficult/user-like photo | 8-12 | Prove robustness to phone/internet variation. |
-| Supported crop/part but unknown or unsafe disease | 4-8 | Prove unknown/OOD/review behavior. |
-| Unsupported crop or unsupported part | 4-6 | Prove router/runtime abstention. |
-| Non-plant or irrelevant image | 2-4 | Prove input safety or documented limitation. |
-| Missing/blocked dependency fallback | 1-2 | Prove presentation continuity when external access fails. |
+| Supported known disease, clear photo | 48-72 | Prove expected happy path. |
+| Supported known disease, difficult/user-like photo | 24-36 | Prove robustness to phone/internet variation. |
+| Supported crop/part but unknown or unsafe disease | 12-24 | Prove unknown/OOD/review behavior. |
+| Unsupported crop or unsupported part | 12-18 | Prove router/runtime abstention. |
+| Non-plant or irrelevant image | 6-12 | Prove input safety or documented limitation. |
+| Missing/blocked dependency fallback | 3-6 | Prove presentation continuity when external access fails. |
 
 Image sources should include internet images, phone-captured images, and random/user-like photos. Do not use only clean training-style images.
+
+The expanded internet image set is disease-focused and stored outside git under `.runtime_tmp/final_demo_images/internet_expansion/`. It is indexed by `.runtime_tmp/m2_internet_image_set_manifest.csv`, with disease/condition query metadata such as anthracnose, blight, botrytis, mildew, leaf scorch, plum pox, and shot-hole/Wilsonomyces. Use it with:
+
+`.\scripts\python.cmd scripts\run_demo_checklist.py --extra-manifest .runtime_tmp\m2_internet_image_set_manifest.csv --extra-manifest .runtime_tmp\m2_supported_disease_coverage_manifest.csv --device cuda --adapter-root runs`
+
+The supported-disease coverage manifest is generated from `data/prepared_runtime_datasets/*/{test,val,continual,train}`, excludes healthy classes, and guarantees that every supported disease class appears at least 10 times for every adapter.
+
+The self-contained saved image package is under `docs/demo_assets/m2_full_image_set/`. It contains 512 copied images plus a runnable manifest:
+
+`.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs`
 
 ## User Photo Guidance To Show
 
@@ -162,3 +175,45 @@ Fill `actual_*`, `pass_fail`, and `failure_bucket` during M2. The `source` colum
 - Re-run failed cases after each fix.
 - Capture fallback outputs/screenshots for the final presentation.
 - Freeze the final demo set before presentation rehearsal.
+
+## M2 Run Log
+
+- 2026-06-16 local start command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --device cpu --adapter-root runs --limit 1 --stop-on-dependency-blocker`
+- Output report:
+  `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md`
+- Result: stopped after `demo_001` because the router could not load gated `facebook/sam3` assets from Hugging Face. The failure bucket is `dependency_access`, not an adapter or checklist-data failure.
+- Adapter-only smoke command with trusted expected targets was also blocked for the same reason because Notebook 8's helper initializes the router before adapter prediction:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --device cpu --adapter-root runs --only-local --limit 3 --trust-expected-target --output .runtime_tmp\m2_demo_checklist_trusted_smoke.json --markdown-output .runtime_tmp\m2_demo_checklist_trusted_smoke.md`
+- Next action: rerun the full command in a Colab/runtime session with authenticated SAM3 access, then fill the checklist actual columns from the generated report.
+- 2026-06-16 asset audit command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --mode asset-audit --output .runtime_tmp\m2_demo_asset_audit.json --markdown-output .runtime_tmp\m2_demo_asset_audit.md`
+- Asset audit result: 31/48 rows are file-ready. `demo_001` through `demo_031` now resolve locally, including Unicode Turkish class folders such as grape and apricot. Remaining 17 rows are expected staged assets or fallback captures that do not exist yet: `demo_032` through `demo_048`.
+- Adapter-only smoke command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --mode adapter-smoke --device cpu --adapter-root runs --only-local --limit 1 --output .runtime_tmp\m2_demo_adapter_smoke_sample.json --markdown-output .runtime_tmp\m2_demo_adapter_smoke_sample.md`
+- Adapter-only smoke result: blocked in this CPU runtime by `Requested device 'cuda' but CUDA is not available.` Treat this as a local runtime limitation, not a final Colab/GPU demo result.
+
+## M2 Items To Hand Off
+
+- Provide or stage the 15 external/phone images for `demo_032` through `demo_046` under `.runtime_tmp/final_demo_images/`.
+- After authenticated SAM3/Hugging Face access is available, rerun the official command without `--limit`:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --device cuda --adapter-root runs`
+- Capture the two Notebook 8 fallback outputs/screenshots for `demo_047` and `demo_048` under `.runtime_tmp/final_demo_fallbacks/`.
+- Fill the actual result columns only from the official Notebook 8/helper report, not from `asset-audit` or `adapter-smoke`.
+- 2026-06-16 internet expansion command:
+  `.\scripts\python.cmd scripts\build_m2_internet_image_set.py`
+- Internet expansion result: 96/96 new disease-focused internet images downloaded as `demo_049` through `demo_144`, with source metadata and disease/condition query text in `.runtime_tmp/m2_internet_image_set_manifest.csv`.
+- The original placeholder staged images `demo_032` through `demo_046` were also populated from the disease-focused internet set under `.runtime_tmp/final_demo_images/`.
+- Expanded asset audit command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --mode asset-audit --extra-manifest .runtime_tmp\m2_internet_image_set_manifest.csv --output .runtime_tmp\m2_demo_asset_audit_expanded.json --markdown-output .runtime_tmp\m2_demo_asset_audit_expanded.md`
+- Expanded asset audit result: 144 total rows, 142 file-ready rows, and 2 expected missing fallback captures: `demo_047` and `demo_048`.
+- 2026-06-17 supported-disease coverage command:
+  `.\scripts\python.cmd scripts\build_m2_supported_disease_manifest.py`
+- Supported-disease coverage result: 37 non-healthy supported disease classes across the eight adapters are indexed in `.runtime_tmp/m2_supported_disease_coverage_manifest.csv`, with 10 image rows per class.
+- Full coverage asset audit command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --mode asset-audit --extra-manifest .runtime_tmp\m2_internet_image_set_manifest.csv --extra-manifest .runtime_tmp\m2_supported_disease_coverage_manifest.csv --output .runtime_tmp\m2_demo_asset_audit_full_coverage.json --markdown-output .runtime_tmp\m2_demo_asset_audit_full_coverage.md`
+- Full coverage asset audit result after the 10-per-class expansion: 514 total rows, 512 file-ready rows, and 2 expected missing fallback captures: `demo_047` and `demo_048`.
+- 2026-06-17 saved image package: 512 asset-ready images were copied to `docs/demo_assets/m2_full_image_set/images/`. The runnable saved manifest is `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`.
+- Saved package asset audit command:
+  `.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --mode asset-audit --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --output .runtime_tmp\m2_saved_image_set_asset_audit.json --markdown-output .runtime_tmp\m2_saved_image_set_asset_audit.md`
+- Saved package asset audit result: 512/512 rows are file-ready.

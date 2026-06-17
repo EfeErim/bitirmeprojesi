@@ -1,0 +1,3 @@
+image_id,expected_target,source,reason
+demo_047,tomato__leaf,fallback_capture:.runtime_tmp/final_demo_fallbacks/success_case_notebook8.png,asset_missing
+demo_048,unknown_crop,fallback_capture:.runtime_tmp/final_demo_fallbacks/unknown_case_notebook8.png,asset_missing

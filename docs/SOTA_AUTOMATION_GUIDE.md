@@ -158,18 +158,9 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-16T08:24:24Z`
+Generated: `2026-06-17T06:13:40Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
-
-##### Semantic Flip: Synthetic OOD Generation for Robust Refusal in Embodied Question Answering and Spatial Localization
-
-- Query: `mahalanobis ood`
-- Published: `2026-06-15T16:07:24Z`
-- Authors: Dongbin Na, Chanwoo Kim, Giyun Choi, Dooyoung Hong
-- Link: http://arxiv.org/abs/2606.16898v1
-- Repo action hint: Validate segmentation-assisted routing on current crop/part eval data before changing router prompts.
-- Review note: Detecting unanswerable user queries remains essential for the reliable deployment of real-world embodied agents. However, modern vision-language models (VLMs) often generate overly confident answers even when the available visual memory cannot support the query. Such overconfidence poses various task-dependent risks. The agent may provide misleading information to the user in Embodied Question Answering and select an arbitrary coordinate and physically guide the user there in spatial reasoning for navigation. Despite these high stakes, only a few prior studies directly address when and how an embodied VLM should respond with "I do not know." This work proposes Semantic Flip, a simple yet effective framework that synthesizes auxiliary out-of-distribution (OOD) samples for embodied refusal without requiring external OOD annotations. The key idea is to independently transform the query and video memory to construct auxiliary OOD pairs that lack sufficient visual grounding. These synthesized pairs enable training a lightweight rejection module on top of a frozen pretrained VLM. The module attaches to any existing VLM-based pipeline without retraining the underlying model. Across two complementary benchmarks, Semantic Flip consistently outperforms strong prompting baselines. This work also introduces SpaceReject, a new refusal benchmark for spatial localization with deliberately unanswerable queries over long video memory, where Semantic Flip achieves an $F_1$ score of 0.9559. The source codes and datasets are publicly available at https://github.com/ndb796/SemanticFlip.
 
 ##### Self-Supervised Learning of Plant Image Representations
 

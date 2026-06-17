@@ -215,7 +215,7 @@ Exit criteria:
 
 Concrete tasks:
 
-- [ ] Run Notebook 8 on every row in `docs/demo_checklist.md`.
+- [ ] Run Notebook 8 on every row in `docs/demo_checklist.md`. Local start on 2026-06-16 reached `demo_001` and stopped on `dependency_access` because `facebook/sam3` gated Hugging Face access was unavailable. The image requirement was expanded to at least 500 rows; 96 disease-focused internet images were downloaded into `.runtime_tmp/final_demo_images/internet_expansion/`, and a generated supported-disease manifest guarantees 10 images for each of the 37 non-healthy supported disease classes across the eight adapters. Full coverage asset audit is 512/514 file-ready; only fallback screenshots `demo_047` and `demo_048` remain missing.
 - [ ] Fill actual status, crop, part, disease, confidence/OOD, pass/fail, and failure bucket.
 - [ ] Summarize answered, abstained/reviewed, failed, and per-target pass counts.
 - [ ] Fix only failures that block the final demo or handoff.

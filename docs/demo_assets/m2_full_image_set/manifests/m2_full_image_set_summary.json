@@ -1,0 +1,8 @@
+{
+  "schema_version": "v1_m2_full_image_set_saved",
+  "output_root": "docs\\demo_assets\\m2_full_image_set",
+  "saved_image_count": 512,
+  "missing_count": 2,
+  "manifest": "docs\\demo_assets\\m2_full_image_set\\manifests\\m2_full_image_set_manifest.csv",
+  "missing_manifest": "docs\\demo_assets\\m2_full_image_set\\manifests\\m2_full_image_set_missing.csv"
+}
