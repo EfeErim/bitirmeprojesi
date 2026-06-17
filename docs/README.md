@@ -25,6 +25,7 @@ This repo is intentionally narrow. The fastest handoff path is:
 - [architecture/code_organization_map.md](architecture/code_organization_map.md): repo-wide source boundaries for `src/`, scripts, notebook helpers, tests, configs, and docs
 - [project_completion_plan.md](project_completion_plan.md): June 2026 scope freeze, milestones, deliverables, and definition of done
 - [eight_surface_completion_plan.md](eight_surface_completion_plan.md): follow-up plan to fix all eight final crop/part surfaces after the 512-image M2 run
+- [architecture/taxonomy_prototype_router_plan.md](architecture/taxonomy_prototype_router_plan.md): automatic taxonomy + prototype router plan so new plant additions do not require manual decision-surface tuning
 - [demo_checklist.md](demo_checklist.md): Notebook 8 demo image matrix, expected behavior, result logging, and pass criteria
 - [handoff_guide.md](handoff_guide.md): company/evaluator handoff path, supported target labels, runtime notes, and known limitations
 - [final_validation_checklist.md](final_validation_checklist.md): final freeze validation commands, required checks, optional checks, and status template
