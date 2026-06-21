@@ -1,0 +1,258 @@
+{
+  "created_at": "20260621T182207Z",
+  "runner_exit_code": 1,
+  "manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "output": ".runtime_tmp/m2_demo_checklist_run.json",
+  "markdown_output": ".runtime_tmp/m2_demo_checklist_run.md",
+  "analysis_output": ".runtime_tmp/analysis_summary.json",
+  "analysis_markdown_output": ".runtime_tmp/analysis_summary.md",
+  "prototype_reconciler": {
+    "enabled": true,
+    "reuse_existing_prototypes": true,
+    "auto_build_prototypes": true,
+    "prototype_max_images_per_class": 50,
+    "auto_calibrate": true,
+    "require_calibrated_policy": true,
+    "prototype_bank": "docs/demo_results/m2/20260617T210048Z/prototype_bank.json",
+    "taxonomy_registry": "docs/demo_results/m2/20260617T210048Z/taxonomy_registry.json",
+    "prototype_calibration_output": ".runtime_tmp/router_prototype_calibration.json",
+    "prototype_min_similarity": 0.2,
+    "prototype_min_margin": 0.04,
+    "calibration_selected_policy": true
+  },
+  "copied_artifacts": [
+    "docs/demo_results/m2/20260621T182207Z/m2_demo_checklist_run.json",
+    "docs/demo_results/m2/20260621T182207Z/m2_demo_checklist_run.md",
+    "docs/demo_results/m2/20260621T182207Z/analysis_summary.json",
+    "docs/demo_results/m2/20260621T182207Z/analysis_summary.md",
+    "docs/demo_results/m2/20260621T182207Z/router_prototype_calibration.json",
+    "docs/demo_results/m2/20260621T182207Z/prototype_bank.json",
+    "docs/demo_results/m2/20260621T182207Z/summary.md",
+    "docs/demo_results/m2/20260621T182207Z/taxonomy_registry.json"
+  ],
+  "summary": {
+    "total": 512,
+    "passed": 280,
+    "failed": 232,
+    "answered": 301,
+    "abstained_or_reviewed": 211,
+    "asset_ready": 0,
+    "failure_buckets": {
+      "router": 199
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 54,
+        "pass": 16,
+        "fail": 38
+      },
+      "apricot__leaf": {
+        "total": 37,
+        "pass": 32,
+        "fail": 5
+      },
+      "grape__fruit": {
+        "total": 55,
+        "pass": 16,
+        "fail": 39
+      },
+      "grape__leaf": {
+        "total": 77,
+        "pass": 58,
+        "fail": 19
+      },
+      "grape__unknown_part": {
+        "total": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "non_plant": {
+        "total": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "strawberry__fruit": {
+        "total": 47,
+        "pass": 21,
+        "fail": 26
+      },
+      "strawberry__leaf": {
+        "total": 45,
+        "pass": 33,
+        "fail": 12
+      },
+      "tomato__fruit": {
+        "total": 75,
+        "pass": 37,
+        "fail": 38
+      },
+      "tomato__leaf": {
+        "total": 108,
+        "pass": 55,
+        "fail": 53
+      },
+      "tomato__unknown_part": {
+        "total": 1,
+        "pass": 1,
+        "fail": 0
+      },
+      "unknown_crop": {
+        "total": 6,
+        "pass": 4,
+        "fail": 2
+      }
+    }
+  },
+  "analysis_summary": {
+    "schema_version": "v1_m2_demo_analysis_summary",
+    "total": 512,
+    "router_crop_correctness": {
+      "correct": 387,
+      "incorrect": 125,
+      "not_applicable": 0
+    },
+    "router_part_correctness": {
+      "correct": 358,
+      "incorrect": 154,
+      "not_applicable": 0
+    },
+    "normalized_disease_class_correctness": {
+      "correct": 268,
+      "incorrect": 33,
+      "not_applicable": 211
+    },
+    "adapter_unavailable": {
+      "wrong_router": 0,
+      "missing_adapter": 0,
+      "unknown": 0
+    },
+    "prototype_reconciliation": {
+      "abstain": 211,
+      "accept_router": 150,
+      "use_prototype": 151
+    },
+    "opposite_part_disease_labels": {
+      "count": 7,
+      "image_ids": [
+        "demo_159",
+        "demo_162",
+        "demo_165",
+        "demo_166",
+        "demo_167",
+        "demo_168",
+        "demo_173"
+      ],
+      "truncated": false
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 54,
+        "answered": 23,
+        "abstained_or_reviewed": 31,
+        "pass": 16,
+        "fail": 38,
+        "exact_class_correct": 16,
+        "opposite_part_disease_labels": 7
+      },
+      "apricot__leaf": {
+        "total": 37,
+        "answered": 33,
+        "abstained_or_reviewed": 4,
+        "pass": 32,
+        "fail": 5,
+        "exact_class_correct": 32,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__fruit": {
+        "total": 55,
+        "answered": 16,
+        "abstained_or_reviewed": 39,
+        "pass": 16,
+        "fail": 39,
+        "exact_class_correct": 16,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__leaf": {
+        "total": 77,
+        "answered": 64,
+        "abstained_or_reviewed": 13,
+        "pass": 58,
+        "fail": 19,
+        "exact_class_correct": 58,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__unknown_part": {
+        "total": 1,
+        "answered": 0,
+        "abstained_or_reviewed": 1,
+        "pass": 1,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "non_plant": {
+        "total": 6,
+        "answered": 0,
+        "abstained_or_reviewed": 6,
+        "pass": 6,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__fruit": {
+        "total": 47,
+        "answered": 27,
+        "abstained_or_reviewed": 20,
+        "pass": 21,
+        "fail": 26,
+        "exact_class_correct": 21,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__leaf": {
+        "total": 45,
+        "answered": 34,
+        "abstained_or_reviewed": 11,
+        "pass": 33,
+        "fail": 12,
+        "exact_class_correct": 33,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__fruit": {
+        "total": 75,
+        "answered": 41,
+        "abstained_or_reviewed": 34,
+        "pass": 37,
+        "fail": 38,
+        "exact_class_correct": 37,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__leaf": {
+        "total": 108,
+        "answered": 61,
+        "abstained_or_reviewed": 47,
+        "pass": 55,
+        "fail": 53,
+        "exact_class_correct": 55,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__unknown_part": {
+        "total": 1,
+        "answered": 0,
+        "abstained_or_reviewed": 1,
+        "pass": 1,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "unknown_crop": {
+        "total": 6,
+        "answered": 2,
+        "abstained_or_reviewed": 4,
+        "pass": 4,
+        "fail": 2,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      }
+    }
+  }
+}
