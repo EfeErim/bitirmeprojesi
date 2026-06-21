@@ -118,6 +118,7 @@ def evaluate_thresholds(
     return {
         "min_similarity": min_similarity,
         "min_margin": min_margin,
+        "promotion_mode": "prototype_override",
         "eligible": total,
         "accepted": len(accepted),
         "correct": len(correct),
@@ -202,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
         "constraints": {
             "min_precision": args.min_precision,
             "min_coverage": args.min_coverage,
+            "promotion_mode": "prototype_override",
         },
         "summary": {
             "rows": len(rows),

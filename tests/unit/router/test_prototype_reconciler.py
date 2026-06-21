@@ -65,7 +65,9 @@ def test_reconciler_corrects_unknown_router_from_strong_prototype(tmp_path: Path
 def test_reconciler_abstains_on_part_conflict(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     image_path = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
+    fruit_path = dataset_root / "tomato__fruit" / "train" / "healthy" / "b.png"
     _write_image(image_path, (20, 90, 40))
+    _write_image(fruit_path, (190, 30, 30))
     prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
     registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
 
@@ -82,6 +84,58 @@ def test_reconciler_abstains_on_part_conflict(tmp_path: Path):
 
     assert decision.decision == "abstain"
     assert decision.reason == "part_conflict"
+
+
+def test_reconciler_overrides_untrusted_unsupported_router_crop(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_image = dataset_root / "tomato__fruit" / "train" / "healthy" / "a.png"
+    grape_image = dataset_root / "grape__fruit" / "train" / "healthy" / "b.png"
+    _write_image(tomato_image, (190, 30, 30))
+    _write_image(grape_image, (40, 20, 120))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_image,
+        router_crop="eggplant",
+        router_part="unknown",
+        router_status="router_uncertain",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.01,
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.crop == "tomato"
+    assert decision.part == "fruit"
+    assert decision.taxonomy_relation == "distant_or_unknown"
+    assert decision.reason == "prototype_overrode_untrusted_router_handoff"
+
+
+def test_reconciler_overrides_untrusted_part_conflict(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
+    tomato_fruit = dataset_root / "tomato__fruit" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(tomato_fruit, (190, 30, 30))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_leaf,
+        router_crop="tomato",
+        router_part="fruit",
+        router_status="router_uncertain",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.01,
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.crop == "tomato"
+    assert decision.part == "leaf"
 
 
 def test_taxonomy_relation_detects_same_family(tmp_path: Path):

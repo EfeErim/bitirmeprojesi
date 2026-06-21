@@ -14,6 +14,7 @@ from src.shared.json_utils import read_json, write_json
 DEFAULT_MIN_SIMILARITY = 0.20
 DEFAULT_MIN_MARGIN = 0.03
 DEFAULT_ALLOW_TAXONOMY_CORRECTION = True
+TRUSTED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
 
 
 @dataclass(frozen=True)
@@ -225,7 +226,9 @@ def reconcile_router_handoff(
     prototype_crop = match.crop
     prototype_part = match.part
     router_target = make_target_id(vlm_crop, vlm_part) if vlm_crop and vlm_part else None
-    if router_target == match.target_id and status in {"ok", "trusted_hint_skipped", "skipped"}:
+    router_is_trusted = status in TRUSTED_ROUTER_STATUSES
+    router_target_is_supported = bool(router_target and router_target in supported)
+    if router_target == match.target_id and router_is_trusted:
         return ReconcileDecision(
             decision="accept_router",
             crop=vlm_crop,
@@ -239,7 +242,7 @@ def reconcile_router_handoff(
             min_margin=min_margin,
         )
 
-    if vlm_part and prototype_part and vlm_part != prototype_part:
+    if vlm_part and prototype_part and vlm_part != prototype_part and router_is_trusted and router_target_is_supported:
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,
@@ -253,12 +256,18 @@ def reconcile_router_handoff(
             min_margin=min_margin,
         )
 
-    if allow_taxonomy_correction and relation in {"same_crop", "same_genus", "same_family", "router_unknown"}:
+    taxonomy_promotable = relation in {"same_crop", "same_genus", "same_family", "router_unknown"}
+    prototype_override_promotable = not router_is_trusted or not router_target_is_supported
+    if allow_taxonomy_correction and (taxonomy_promotable or prototype_override_promotable):
         return ReconcileDecision(
             decision="use_prototype",
             crop=prototype_crop,
             part=prototype_part,
-            reason="prototype_corrected_router_handoff",
+            reason=(
+                "prototype_corrected_router_handoff"
+                if taxonomy_promotable
+                else "prototype_overrode_untrusted_router_handoff"
+            ),
             taxonomy_relation=relation,
             prototype_match=match,
             vlm_crop=vlm_crop,
