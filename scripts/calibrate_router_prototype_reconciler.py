@@ -24,6 +24,7 @@ from src.shared.json_utils import read_json, write_json  # noqa: E402
 class ScoredRow:
     image_id: str
     expected_target: str
+    expected_behavior: str
     predicted_target: str | None
     similarity: float
     margin: float
@@ -31,8 +32,21 @@ class ScoredRow:
     status: str
 
 
-def _target_is_adapter_eligible(target: str) -> bool:
-    return "__" in target and not target.startswith(("unknown_crop", "non_plant"))
+def _target_is_supported_positive(target: str) -> bool:
+    return "__" in target and not target.startswith(("unknown_crop", "non_plant")) and not target.endswith(
+        "__unknown_part"
+    )
+
+
+def _target_is_negative(target: str, expected_behavior: str = "") -> bool:
+    normalized = str(target or "").strip().lower()
+    behavior = str(expected_behavior or "").strip().lower()
+    return (
+        normalized in {"unknown_crop", "non_plant"}
+        or normalized.endswith("__unknown_part")
+        or "unsupported" in behavior
+        or "abstain" in behavior
+    )
 
 
 def _parse_float_grid(value: str, default: tuple[float, ...]) -> tuple[float, ...]:
@@ -49,7 +63,7 @@ def score_manifest(
     limit: int | None = None,
 ) -> list[ScoredRow]:
     prototype_payload = read_json(prototype_bank_path, default={}, expect_type=dict)
-    rows = [row for row in parse_manifest_rows(manifest_path) if _target_is_adapter_eligible(row.expected_target)]
+    rows = parse_manifest_rows(manifest_path)
     if limit is not None:
         rows = rows[: max(0, int(limit))]
 
@@ -61,6 +75,7 @@ def score_manifest(
                 ScoredRow(
                     image_id=row.image_id,
                     expected_target=row.expected_target,
+                    expected_behavior=row.expected_behavior,
                     predicted_target=None,
                     similarity=0.0,
                     margin=0.0,
@@ -75,6 +90,7 @@ def score_manifest(
                 ScoredRow(
                     image_id=row.image_id,
                     expected_target=row.expected_target,
+                    expected_behavior=row.expected_behavior,
                     predicted_target=match.target_id,
                     similarity=match.similarity,
                     margin=match.margin,
@@ -87,6 +103,7 @@ def score_manifest(
                 ScoredRow(
                     image_id=row.image_id,
                     expected_target=row.expected_target,
+                    expected_behavior=row.expected_behavior,
                     predicted_target=None,
                     similarity=0.0,
                     margin=0.0,
@@ -102,22 +119,37 @@ def evaluate_thresholds(
     *,
     min_similarity: float,
     min_margin: float,
+    min_negative_gap: float = 0.0,
 ) -> dict[str, Any]:
     eligible = [row for row in rows if row.status == "ok"]
+    supported = [row for row in eligible if _target_is_supported_positive(row.expected_target)]
+    negatives = [row for row in eligible if _target_is_negative(row.expected_target, row.expected_behavior)]
     accepted = [
         row
         for row in eligible
-        if row.predicted_target and row.similarity >= min_similarity and row.margin >= min_margin
+        if row.predicted_target
+        and row.similarity >= min_similarity
+        and row.margin >= min_margin
+        and row.margin >= min_negative_gap
     ]
-    correct = [row for row in accepted if row.predicted_target == row.expected_target]
-    wrong = [row for row in accepted if row.predicted_target != row.expected_target]
+    supported_accepted = [row for row in accepted if _target_is_supported_positive(row.expected_target)]
+    correct = [row for row in supported_accepted if row.predicted_target == row.expected_target]
+    wrong = [row for row in supported_accepted if row.predicted_target != row.expected_target]
+    negative_false_accepts = [row for row in accepted if _target_is_negative(row.expected_target, row.expected_behavior)]
+    non_plant_false_accepts = [
+        row for row in negative_false_accepts if str(row.expected_target or "").strip().lower() == "non_plant"
+    ]
     total = len(eligible)
     coverage = len(accepted) / total if total else 0.0
     precision = len(correct) / len(accepted) if accepted else 0.0
     accuracy = len(correct) / total if total else 0.0
+    supported_coverage = len(supported_accepted) / len(supported) if supported else 0.0
+    supported_precision = len(correct) / len(supported_accepted) if supported_accepted else 0.0
+    negative_false_accept_rate = len(negative_false_accepts) / len(negatives) if negatives else 0.0
     return {
         "min_similarity": min_similarity,
         "min_margin": min_margin,
+        "min_negative_gap": min_negative_gap,
         "promotion_mode": "prototype_override",
         "eligible": total,
         "accepted": len(accepted),
@@ -126,6 +158,16 @@ def evaluate_thresholds(
         "coverage": round(coverage, 6),
         "precision": round(precision, 6),
         "accuracy": round(accuracy, 6),
+        "supported_rows": len(supported),
+        "supported_accepted": len(supported_accepted),
+        "supported_correct": len(correct),
+        "supported_wrong": len(wrong),
+        "supported_coverage": round(supported_coverage, 6),
+        "supported_precision": round(supported_precision, 6),
+        "negative_rows": len(negatives),
+        "negative_false_accept_count": len(negative_false_accepts),
+        "negative_false_accept_rate": round(negative_false_accept_rate, 6),
+        "non_plant_false_accept_count": len(non_plant_false_accepts),
     }
 
 
@@ -134,33 +176,70 @@ def calibrate(
     *,
     similarity_grid: tuple[float, ...],
     margin_grid: tuple[float, ...],
+    negative_gap_grid: tuple[float, ...] = (0.0,),
     min_precision: float,
     min_coverage: float,
+    require_zero_non_plant_false_accepts: bool = True,
+    include_target_policies: bool = True,
 ) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for min_similarity in similarity_grid:
         for min_margin in margin_grid:
-            result = evaluate_thresholds(rows, min_similarity=min_similarity, min_margin=min_margin)
-            result["eligible_for_promotion"] = (
-                result["precision"] >= min_precision and result["coverage"] >= min_coverage
-            )
-            candidates.append(result)
+            for min_negative_gap in negative_gap_grid:
+                result = evaluate_thresholds(
+                    rows,
+                    min_similarity=min_similarity,
+                    min_margin=min_margin,
+                    min_negative_gap=min_negative_gap,
+                )
+                result["eligible_for_promotion"] = (
+                    result["supported_precision"] >= min_precision
+                    and result["supported_coverage"] >= min_coverage
+                    and (
+                        not require_zero_non_plant_false_accepts
+                        or result["non_plant_false_accept_count"] == 0
+                    )
+                )
+                candidates.append(result)
 
     candidates.sort(
         key=lambda item: (
             bool(item["eligible_for_promotion"]),
-            float(item["precision"]),
-            float(item["coverage"]),
+            float(item["supported_coverage"]),
+            -float(item["negative_false_accept_count"]),
+            float(item["supported_precision"]),
             float(item["accuracy"]),
             -float(item["min_similarity"]),
             -float(item["min_margin"]),
+            -float(item["min_negative_gap"]),
         ),
         reverse=True,
     )
     selected = candidates[0] if candidates else None
+    target_policies: dict[str, dict[str, Any]] = {}
+    if include_target_policies:
+        negative_rows = [row for row in rows if _target_is_negative(row.expected_target, row.expected_behavior)]
+        for target in sorted({row.expected_target for row in rows if _target_is_supported_positive(row.expected_target)}):
+            target_rows = [row for row in rows if row.expected_target == target]
+            target_result = calibrate(
+                [*target_rows, *negative_rows],
+                similarity_grid=similarity_grid,
+                margin_grid=margin_grid,
+                negative_gap_grid=negative_gap_grid,
+                min_precision=min_precision,
+                min_coverage=min_coverage,
+                require_zero_non_plant_false_accepts=require_zero_non_plant_false_accepts,
+                include_target_policies=False,
+            )
+            target_policies[target] = {
+                "status": "target_specific" if target_result["selected_policy"] else "no_eligible_policy",
+                "selected_policy": target_result["selected_policy"],
+                "best_candidate": target_result["best_candidate"],
+            }
     return {
         "selected_policy": selected if selected and selected.get("eligible_for_promotion") else None,
         "best_candidate": selected,
+        "target_policies": target_policies,
         "candidates": candidates,
     }
 
@@ -174,8 +253,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--similarity-grid", default="0.20,0.30,0.40,0.50,0.60,0.70")
     parser.add_argument("--margin-grid", default="0.00,0.02,0.04,0.06,0.08,0.10")
-    parser.add_argument("--min-precision", type=float, default=0.90)
-    parser.add_argument("--min-coverage", type=float, default=0.60)
+    parser.add_argument("--negative-gap-grid", default="0.00,0.02,0.04,0.06,0.08,0.10")
+    parser.add_argument("--min-precision", type=float, default=0.985)
+    parser.add_argument("--min-coverage", type=float, default=0.80)
+    parser.add_argument("--allow-non-plant-false-accepts", action="store_true")
     parser.add_argument("--fail-on-no-policy", action="store_true")
     return parser
 
@@ -192,8 +273,10 @@ def main(argv: list[str] | None = None) -> int:
         rows,
         similarity_grid=_parse_float_grid(args.similarity_grid, (0.20, 0.30, 0.40, 0.50, 0.60, 0.70)),
         margin_grid=_parse_float_grid(args.margin_grid, (0.00, 0.02, 0.04, 0.06, 0.08, 0.10)),
+        negative_gap_grid=_parse_float_grid(args.negative_gap_grid, (0.00, 0.02, 0.04, 0.06, 0.08, 0.10)),
         min_precision=args.min_precision,
         min_coverage=args.min_coverage,
+        require_zero_non_plant_false_accepts=not args.allow_non_plant_false_accepts,
     )
     payload = {
         "schema_version": "router_prototype_calibration.v1",
@@ -203,6 +286,7 @@ def main(argv: list[str] | None = None) -> int:
         "constraints": {
             "min_precision": args.min_precision,
             "min_coverage": args.min_coverage,
+            "require_zero_non_plant_false_accepts": not args.allow_non_plant_false_accepts,
             "promotion_mode": "prototype_override",
         },
         "summary": {

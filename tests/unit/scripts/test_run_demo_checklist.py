@@ -132,31 +132,37 @@ def test_resolve_prototype_thresholds_from_calibration_uses_selected_policy(tmp_
                 "selected_policy": {
                     "min_similarity": 0.4,
                     "min_margin": 0.08,
+                    "min_negative_gap": 0.02,
                     "precision": 0.95,
                     "coverage": 0.7,
-                }
+                },
+                "target_policies": {"tomato__leaf": {"status": "target_specific"}},
             }
         ),
         encoding="utf-8",
     )
 
-    min_similarity, min_margin, report = resolve_prototype_thresholds_from_calibration(
-        report_path,
-        min_similarity=None,
-        min_margin=None,
+    min_similarity, min_margin, min_negative_gap, report, target_policies = (
+        resolve_prototype_thresholds_from_calibration(
+            report_path,
+            min_similarity=None,
+            min_margin=None,
+        )
     )
 
     assert min_similarity == 0.4
     assert min_margin == 0.08
+    assert min_negative_gap == 0.02
     assert report["policy_selected"] is True
     assert report["selected_policy"]["precision"] == 0.95
+    assert target_policies["tomato__leaf"]["status"] == "target_specific"
 
 
 def test_resolve_prototype_thresholds_preserves_explicit_values(tmp_path: Path):
     report_path = tmp_path / "calibration.json"
     report_path.write_text(json.dumps({"selected_policy": {"min_similarity": 0.4, "min_margin": 0.08}}), encoding="utf-8")
 
-    min_similarity, min_margin, _report = resolve_prototype_thresholds_from_calibration(
+    min_similarity, min_margin, min_negative_gap, _report, target_policies = resolve_prototype_thresholds_from_calibration(
         report_path,
         min_similarity=0.6,
         min_margin=0.1,
@@ -164,6 +170,8 @@ def test_resolve_prototype_thresholds_preserves_explicit_values(tmp_path: Path):
 
     assert min_similarity == 0.6
     assert min_margin == 0.1
+    assert min_negative_gap is None
+    assert target_policies == {}
 
 
 def test_supported_disease_manifest_excludes_healthy_classes(tmp_path: Path):

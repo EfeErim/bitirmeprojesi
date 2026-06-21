@@ -13,6 +13,7 @@ from src.shared.json_utils import read_json, write_json
 
 DEFAULT_MIN_SIMILARITY = 0.20
 DEFAULT_MIN_MARGIN = 0.03
+DEFAULT_MIN_NEGATIVE_GAP = 0.0
 DEFAULT_ALLOW_TAXONOMY_CORRECTION = True
 TRUSTED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
 
@@ -41,6 +42,7 @@ class ReconcileDecision:
     vlm_part: str | None
     min_similarity: float
     min_margin: float
+    min_negative_gap: float
 
     def to_payload(self) -> dict[str, Any]:
         payload = asdict(self)
@@ -51,6 +53,7 @@ class ReconcileDecision:
         payload["prototype_target"] = match.get("target_id") if isinstance(match, dict) else None
         payload["prototype_similarity"] = match.get("similarity") if isinstance(match, dict) else None
         payload["prototype_margin"] = match.get("margin") if isinstance(match, dict) else None
+        payload["prototype_min_negative_gap"] = self.min_negative_gap
         payload["reconciled_crop"] = self.crop
         payload["reconciled_part"] = self.part
         payload["reconcile_decision"] = self.decision
@@ -170,6 +173,29 @@ def nearest_target(
     )
 
 
+def _coerce_policy_float(policy: dict[str, Any] | None, key: str, fallback: float) -> float:
+    if not isinstance(policy, dict) or policy.get(key) is None:
+        return fallback
+    try:
+        return float(policy[key])
+    except (TypeError, ValueError):
+        return fallback
+
+
+def _selected_target_policy(
+    *,
+    target_id: str | None,
+    target_policies: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not target_id or not isinstance(target_policies, dict):
+        return None
+    entry = target_policies.get(target_id)
+    if not isinstance(entry, dict):
+        return None
+    selected = entry.get("selected_policy")
+    return selected if isinstance(selected, dict) else None
+
+
 def reconcile_router_handoff(
     *,
     image_path: str | Path,
@@ -181,6 +207,8 @@ def reconcile_router_handoff(
     supported_targets: set[str] | None = None,
     min_similarity: float = DEFAULT_MIN_SIMILARITY,
     min_margin: float = DEFAULT_MIN_MARGIN,
+    min_negative_gap: float = DEFAULT_MIN_NEGATIVE_GAP,
+    target_policies: dict[str, Any] | None = None,
     allow_taxonomy_correction: bool = DEFAULT_ALLOW_TAXONOMY_CORRECTION,
 ) -> ReconcileDecision:
     vlm_crop = normalize_crop_name(router_crop) if router_crop else None
@@ -194,6 +222,10 @@ def reconcile_router_handoff(
     target_taxonomy = load_target_taxonomy(registry_payload)
     relation = taxonomy_relation(vlm_crop, match.target_id, target_taxonomy)
     supported = set(supported_targets or set((target_taxonomy or {}).keys()))
+    target_policy = _selected_target_policy(target_id=match.target_id, target_policies=target_policies)
+    effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
+    effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
+    effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)
 
     if not match.target_id or match.target_id not in supported:
         return ReconcileDecision(
@@ -205,11 +237,12 @@ def reconcile_router_handoff(
             prototype_match=match,
             vlm_crop=vlm_crop,
             vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
         )
 
-    if match.similarity < min_similarity or match.margin < min_margin:
+    if match.similarity < effective_min_similarity or match.margin < effective_min_margin:
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,
@@ -219,8 +252,24 @@ def reconcile_router_handoff(
             prototype_match=match,
             vlm_crop=vlm_crop,
             vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
+        )
+
+    if match.margin < effective_min_negative_gap:
+        return ReconcileDecision(
+            decision="abstain",
+            crop=vlm_crop,
+            part=vlm_part,
+            reason="negative_prototype_too_close",
+            taxonomy_relation=relation,
+            prototype_match=match,
+            vlm_crop=vlm_crop,
+            vlm_part=vlm_part,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
         )
 
     prototype_crop = match.crop
@@ -238,8 +287,9 @@ def reconcile_router_handoff(
             prototype_match=match,
             vlm_crop=vlm_crop,
             vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
         )
 
     if vlm_part and prototype_part and vlm_part != prototype_part and router_is_trusted and router_target_is_supported:
@@ -252,8 +302,9 @@ def reconcile_router_handoff(
             prototype_match=match,
             vlm_crop=vlm_crop,
             vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
         )
 
     taxonomy_promotable = relation in {"same_crop", "same_genus", "same_family", "router_unknown"}
@@ -272,8 +323,9 @@ def reconcile_router_handoff(
             prototype_match=match,
             vlm_crop=vlm_crop,
             vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
         )
 
     return ReconcileDecision(
@@ -285,8 +337,9 @@ def reconcile_router_handoff(
         prototype_match=match,
         vlm_crop=vlm_crop,
         vlm_part=vlm_part,
-        min_similarity=min_similarity,
-        min_margin=min_margin,
+        min_similarity=effective_min_similarity,
+        min_margin=effective_min_margin,
+        min_negative_gap=effective_min_negative_gap,
     )
 
 

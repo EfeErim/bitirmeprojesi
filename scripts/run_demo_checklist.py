@@ -297,28 +297,40 @@ def resolve_prototype_thresholds_from_calibration(
     *,
     min_similarity: float | None,
     min_margin: float | None,
-) -> tuple[float | None, float | None, dict[str, Any]]:
+) -> tuple[float | None, float | None, float | None, dict[str, Any], dict[str, Any]]:
     if calibration_report_path is None:
-        return min_similarity, min_margin, {"enabled": False}
+        return min_similarity, min_margin, None, {"enabled": False}, {}
     payload = json.loads(calibration_report_path.read_text(encoding="utf-8"))
     selected = payload.get("selected_policy") if isinstance(payload, dict) else None
+    target_policies = payload.get("target_policies") if isinstance(payload, dict) else {}
+    if not isinstance(target_policies, dict):
+        target_policies = {}
+    min_negative_gap = None
     report: dict[str, Any] = {
         "enabled": True,
         "path": str(calibration_report_path),
         "policy_selected": isinstance(selected, dict),
+        "target_policy_count": len(target_policies),
     }
     if isinstance(selected, dict):
         if min_similarity is None:
             min_similarity = float(selected.get("min_similarity"))
         if min_margin is None:
             min_margin = float(selected.get("min_margin"))
+        if selected.get("min_negative_gap") is not None:
+            min_negative_gap = float(selected.get("min_negative_gap"))
         report["selected_policy"] = {
             "min_similarity": selected.get("min_similarity"),
             "min_margin": selected.get("min_margin"),
+            "min_negative_gap": selected.get("min_negative_gap"),
             "precision": selected.get("precision"),
             "coverage": selected.get("coverage"),
+            "supported_precision": selected.get("supported_precision"),
+            "supported_coverage": selected.get("supported_coverage"),
+            "negative_false_accept_count": selected.get("negative_false_accept_count"),
+            "non_plant_false_accept_count": selected.get("non_plant_false_accept_count"),
         }
-    return min_similarity, min_margin, report
+    return min_similarity, min_margin, min_negative_gap, report, target_policies
 
 
 def _run_row(
@@ -334,6 +346,8 @@ def _run_row(
     taxonomy_registry_path: Path | None = None,
     prototype_min_similarity: float | None = None,
     prototype_min_margin: float | None = None,
+    prototype_min_negative_gap: float | None = None,
+    prototype_target_policies: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     image_path, asset_status = resolve_image_path(row.source, repo_root)
     if asset_status != "ok" or image_path is None:
@@ -398,6 +412,8 @@ def _run_row(
                     taxonomy_registry_path=taxonomy_registry_path,
                     prototype_min_similarity=prototype_min_similarity,
                     prototype_min_margin=prototype_min_margin,
+                    prototype_min_negative_gap=prototype_min_negative_gap,
+                    prototype_target_policies=prototype_target_policies,
                 )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
             result = {
@@ -435,11 +451,15 @@ def _run_row(
         "vlm_part": reconciliation.get("vlm_part"),
         "prototype_crop": reconciliation.get("prototype_crop"),
         "prototype_part": reconciliation.get("prototype_part"),
+        "prototype_target": reconciliation.get("prototype_target"),
         "reconciled_crop": reconciliation.get("reconciled_crop"),
         "reconciled_part": reconciliation.get("reconciled_part"),
         "taxonomy_relation": reconciliation.get("taxonomy_relation"),
         "prototype_similarity": reconciliation.get("prototype_similarity"),
         "prototype_margin": reconciliation.get("prototype_margin"),
+        "prototype_min_similarity": reconciliation.get("min_similarity"),
+        "prototype_min_margin": reconciliation.get("min_margin"),
+        "prototype_min_negative_gap": reconciliation.get("prototype_min_negative_gap"),
         "reconcile_decision": reconciliation.get("reconcile_decision"),
         "predicted_disease": result.get("diagnosis"),
         "confidence_or_ood": _confidence_or_ood(result),
@@ -488,6 +508,11 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     reconciliation_counts: dict[str, int] = {}
     per_target: dict[str, dict[str, int]] = {}
     opposite_part_rows: list[str] = []
+    answered_wrong_by_target: dict[str, int] = {}
+    answered_wrong_by_expected_class: dict[str, int] = {}
+    prototype_correct_but_abstained: list[str] = []
+    negative_false_accepts: list[str] = []
+    policy_thresholds_by_target: dict[str, dict[str, Any]] = {}
 
     for row in items:
         target = str(row.get("expected_target") or "")
@@ -536,6 +561,9 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
             class_counts["correct" if class_correct else "incorrect"] += 1
             if class_correct:
                 target_summary["exact_class_correct"] += 1
+            else:
+                answered_wrong_by_target[target] = answered_wrong_by_target.get(target, 0) + 1
+                answered_wrong_by_expected_class[expected_class] = answered_wrong_by_expected_class.get(expected_class, 0) + 1
         else:
             class_counts["not_applicable"] += 1
 
@@ -552,6 +580,27 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
             else:
                 adapter_unavailable["unknown"] += 1
 
+        prototype_target = str(row.get("prototype_crop") or "")
+        prototype_part = str(row.get("prototype_part") or "")
+        if prototype_target and prototype_part:
+            prototype_target = f"{prototype_target}__{prototype_part}"
+        else:
+            prototype_target = str(row.get("prototype_target") or "")
+        if target and prototype_target == target and reconcile_decision == "abstain":
+            prototype_correct_but_abstained.append(str(row.get("image_id") or ""))
+        if target in {"unknown_crop", "non_plant"} or target.endswith("__unknown_part"):
+            if status == "success" or reconcile_decision in {"accept_router", "use_prototype"}:
+                negative_false_accepts.append(str(row.get("image_id") or ""))
+        if target and row.get("prototype_similarity") is not None:
+            policy_thresholds_by_target.setdefault(
+                target,
+                {
+                    "min_similarity": row.get("prototype_min_similarity"),
+                    "min_margin": row.get("prototype_min_margin"),
+                    "min_negative_gap": row.get("prototype_min_negative_gap"),
+                },
+            )
+
     return {
         "schema_version": "v1_m2_demo_analysis_summary",
         "total": len(items),
@@ -560,6 +609,19 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "normalized_disease_class_correctness": class_counts,
         "adapter_unavailable": adapter_unavailable,
         "prototype_reconciliation": dict(sorted(reconciliation_counts.items())),
+        "answered_wrong_by_target": dict(sorted(answered_wrong_by_target.items())),
+        "answered_wrong_by_expected_class": dict(sorted(answered_wrong_by_expected_class.items())),
+        "prototype_correct_but_abstained": {
+            "count": len(prototype_correct_but_abstained),
+            "image_ids": prototype_correct_but_abstained[:100],
+            "truncated": len(prototype_correct_but_abstained) > 100,
+        },
+        "negative_false_accepts": {
+            "count": len(negative_false_accepts),
+            "image_ids": negative_false_accepts[:100],
+            "truncated": len(negative_false_accepts) > 100,
+        },
+        "policy_thresholds_by_target": dict(sorted(policy_thresholds_by_target.items())),
         "opposite_part_disease_labels": {
             "count": len(opposite_part_rows),
             "image_ids": opposite_part_rows[:100],
@@ -579,6 +641,9 @@ def write_analysis_markdown(analysis: dict[str, Any], output_path: Path) -> None
         f"- normalized_disease_class_correctness: `{json.dumps(analysis['normalized_disease_class_correctness'], sort_keys=True)}`",
         f"- adapter_unavailable: `{json.dumps(analysis['adapter_unavailable'], sort_keys=True)}`",
         f"- prototype_reconciliation: `{json.dumps(analysis.get('prototype_reconciliation', {}), sort_keys=True)}`",
+        f"- answered_wrong_by_target: `{json.dumps(analysis.get('answered_wrong_by_target', {}), sort_keys=True)}`",
+        f"- prototype_correct_but_abstained: {analysis.get('prototype_correct_but_abstained', {}).get('count', 0)}",
+        f"- negative_false_accepts: {analysis.get('negative_false_accepts', {}).get('count', 0)}",
         f"- opposite_part_disease_labels: {analysis['opposite_part_disease_labels']['count']}",
         "",
         "## Per Target",
@@ -701,7 +766,13 @@ def main() -> int:
     if args.limit is not None:
         rows = rows[: max(0, int(args.limit))]
     mode = "adapter-smoke" if args.trust_expected_target else str(args.mode)
-    prototype_min_similarity, prototype_min_margin, calibration_report = resolve_prototype_thresholds_from_calibration(
+    (
+        prototype_min_similarity,
+        prototype_min_margin,
+        prototype_min_negative_gap,
+        calibration_report,
+        prototype_target_policies,
+    ) = resolve_prototype_thresholds_from_calibration(
         args.prototype_calibration_report,
         min_similarity=args.prototype_min_similarity,
         min_margin=args.prototype_min_margin,
@@ -721,6 +792,8 @@ def main() -> int:
             taxonomy_registry_path=args.taxonomy_registry,
             prototype_min_similarity=prototype_min_similarity,
             prototype_min_margin=prototype_min_margin,
+            prototype_min_negative_gap=prototype_min_negative_gap,
+            prototype_target_policies=prototype_target_policies,
         )
         output_rows.append(result)
         if args.stop_on_dependency_blocker and result.get("failure_bucket") == "dependency_access":
@@ -740,6 +813,8 @@ def main() -> int:
             "prototype_calibration_report": calibration_report,
             "prototype_min_similarity": prototype_min_similarity,
             "prototype_min_margin": prototype_min_margin,
+            "prototype_min_negative_gap": prototype_min_negative_gap,
+            "prototype_target_policy_count": len(prototype_target_policies),
         },
         "trust_expected_target": mode == "adapter-smoke",
         "summary": summarize_results(output_rows),

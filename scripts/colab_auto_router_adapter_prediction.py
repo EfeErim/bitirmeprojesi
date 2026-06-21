@@ -151,6 +151,8 @@ def run_auto_router_adapter_prediction(
     taxonomy_registry_path: Optional[str | Path] = None,
     prototype_min_similarity: Optional[float] = None,
     prototype_min_margin: Optional[float] = None,
+    prototype_min_negative_gap: Optional[float] = None,
+    prototype_target_policies: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Run adapter prediction from an already-computed Notebook 1 router result.
 
@@ -207,6 +209,11 @@ def run_auto_router_adapter_prediction(
                         prototype_min_margin or os.getenv("AADS_PROTOTYPE_MIN_MARGIN"),
                         default=0.03,
                     ),
+                    min_negative_gap=_coerce_float(
+                        prototype_min_negative_gap or os.getenv("AADS_PROTOTYPE_MIN_NEGATIVE_GAP"),
+                        default=0.0,
+                    ),
+                    target_policies=prototype_target_policies,
                 )
                 reconciliation_payload = {"enabled": True, **decision.to_payload()}
                 if decision.decision in {"accept_router", "use_prototype"}:

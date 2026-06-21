@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.calibrate_router_prototype_reconciler import calibrate, score_manifest
+from scripts.calibrate_router_prototype_reconciler import ScoredRow, calibrate, score_manifest
 from src.router.prototype_bank import build_prototype_bank, write_prototype_bank
 
 
@@ -27,6 +27,7 @@ def test_score_manifest_and_calibrate_selects_policy(tmp_path: Path):
                 "image_id,source,expected_target,expected_behavior,notes",
                 "demo_001,local_test_pool:data/prepared_runtime_datasets/tomato__fruit/train/healthy/a.png,tomato__fruit,answer,",
                 "demo_002,local_test_pool:data/prepared_runtime_datasets/grape__fruit/train/healthy/b.png,grape__fruit,answer,",
+                "demo_003,local_test_pool:data/prepared_runtime_datasets/tomato__fruit/train/healthy/a.png,non_plant,abstain,",
             ]
         )
         + "\n",
@@ -42,6 +43,45 @@ def test_score_manifest_and_calibrate_selects_policy(tmp_path: Path):
         min_coverage=1.0,
     )
 
-    assert len(rows) == 2
-    assert result["selected_policy"]["precision"] == 1.0
-    assert result["selected_policy"]["coverage"] == 1.0
+    assert len(rows) == 3
+    assert result["selected_policy"] is None
+    assert result["best_candidate"]["supported_precision"] == 1.0
+    assert result["best_candidate"]["supported_coverage"] == 1.0
+    assert result["best_candidate"]["non_plant_false_accept_count"] == 1
+    assert result["target_policies"]["grape__fruit"]["status"] == "no_eligible_policy"
+
+
+def test_calibrate_emits_target_policy_for_safe_supported_rows():
+    rows = [
+        ScoredRow(
+            image_id="demo_001",
+            expected_target="tomato__fruit",
+            expected_behavior="answer",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="a.png",
+            status="ok",
+        ),
+        ScoredRow(
+            image_id="demo_002",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            predicted_target="grape__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="b.png",
+            status="ok",
+        ),
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=1.0,
+        min_coverage=1.0,
+    )
+
+    assert result["selected_policy"]["supported_precision"] == 1.0
+    assert result["target_policies"]["tomato__fruit"]["status"] == "target_specific"
