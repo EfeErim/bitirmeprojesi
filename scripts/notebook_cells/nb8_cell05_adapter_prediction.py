@@ -22,6 +22,7 @@ ROUTER_PROTOTYPE_BANK = globals().get("ROUTER_PROTOTYPE_BANK", None)
 TAXONOMY_REGISTRY = globals().get("TAXONOMY_REGISTRY", None)
 PROTOTYPE_MIN_SIMILARITY = globals().get("PROTOTYPE_MIN_SIMILARITY", None)
 PROTOTYPE_MIN_MARGIN = globals().get("PROTOTYPE_MIN_MARGIN", None)
+PROTOTYPE_MIN_NEGATIVE_GAP = globals().get("PROTOTYPE_MIN_NEGATIVE_GAP", None)
 
 if ANALYSIS_IMAGE_PATH is None:
     raise ValueError("ANALYSIS_IMAGE_PATH is required before adapter prediction.")
@@ -41,6 +42,7 @@ auto_result = run_auto_router_adapter_prediction(
     taxonomy_registry_path=TAXONOMY_REGISTRY,
     prototype_min_similarity=PROTOTYPE_MIN_SIMILARITY,
     prototype_min_margin=PROTOTYPE_MIN_MARGIN,
+    prototype_min_negative_gap=PROTOTYPE_MIN_NEGATIVE_GAP,
 )
 
 print(

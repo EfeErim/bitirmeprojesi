@@ -48,6 +48,7 @@ M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
 M2_TAXONOMY_REGISTRY = str(globals().get("M2_TAXONOMY_REGISTRY", "") or "")
 M2_PROTOTYPE_MIN_SIMILARITY = globals().get("M2_PROTOTYPE_MIN_SIMILARITY", None)
 M2_PROTOTYPE_MIN_MARGIN = globals().get("M2_PROTOTYPE_MIN_MARGIN", None)
+M2_PROTOTYPE_MIN_NEGATIVE_GAP = globals().get("M2_PROTOTYPE_MIN_NEGATIVE_GAP", None)
 M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER = bool(
     globals().get(
         "M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER",
@@ -59,12 +60,16 @@ M2_PROTOTYPE_CALIBRATION_OUTPUT = str(
     globals().get("M2_PROTOTYPE_CALIBRATION_OUTPUT", ".runtime_tmp/router_prototype_calibration.json")
 )
 M2_PROTOTYPE_CALIBRATION_LIMIT = globals().get("M2_PROTOTYPE_CALIBRATION_LIMIT", None)
-M2_PROTOTYPE_CALIBRATION_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_PRECISION", 0.90))
-M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE", 0.60))
+M2_PROTOTYPE_CALIBRATION_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_PRECISION", 0.985))
+M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE = float(globals().get("M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE", 0.80))
 M2_PROTOTYPE_SIMILARITY_GRID = str(
     globals().get("M2_PROTOTYPE_SIMILARITY_GRID", "0.20,0.30,0.40,0.50,0.60,0.70")
 )
 M2_PROTOTYPE_MARGIN_GRID = str(globals().get("M2_PROTOTYPE_MARGIN_GRID", "0.00,0.02,0.04,0.06,0.08,0.10"))
+M2_PROTOTYPE_NEGATIVE_GAP_GRID = str(
+    globals().get("M2_PROTOTYPE_NEGATIVE_GAP_GRID", "0.00,0.02,0.04,0.06,0.08,0.10")
+)
+M2_ALLOW_NON_PLANT_FALSE_ACCEPTS = bool(globals().get("M2_ALLOW_NON_PLANT_FALSE_ACCEPTS", False))
 
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
@@ -144,7 +149,11 @@ else:
             M2_PROTOTYPE_SIMILARITY_GRID,
             "--margin-grid",
             M2_PROTOTYPE_MARGIN_GRID,
+            "--negative-gap-grid",
+            M2_PROTOTYPE_NEGATIVE_GAP_GRID,
         ]
+        if M2_ALLOW_NON_PLANT_FALSE_ACCEPTS:
+            calibration_command.append("--allow-non-plant-false-accepts")
         if M2_PROTOTYPE_CALIBRATION_LIMIT is not None:
             calibration_command.extend(["--limit", str(int(M2_PROTOTYPE_CALIBRATION_LIMIT))])
         print("[M2] Calibrating prototype reconciler thresholds.")
@@ -159,6 +168,8 @@ else:
                     M2_PROTOTYPE_MIN_SIMILARITY = selected_policy.get("min_similarity")
                 if M2_PROTOTYPE_MIN_MARGIN is None:
                     M2_PROTOTYPE_MIN_MARGIN = selected_policy.get("min_margin")
+                if M2_PROTOTYPE_MIN_NEGATIVE_GAP is None:
+                    M2_PROTOTYPE_MIN_NEGATIVE_GAP = selected_policy.get("min_negative_gap")
                 print("[M2] Prototype calibration selected policy:")
                 print(json.dumps(selected_policy, indent=2, ensure_ascii=False))
             else:
@@ -202,6 +213,8 @@ else:
             command.extend(["--prototype-min-similarity", str(float(M2_PROTOTYPE_MIN_SIMILARITY))])
         if M2_PROTOTYPE_MIN_MARGIN is not None:
             command.extend(["--prototype-min-margin", str(float(M2_PROTOTYPE_MIN_MARGIN))])
+        if M2_PROTOTYPE_MIN_NEGATIVE_GAP is not None:
+            command.extend(["--prototype-min-negative-gap", str(float(M2_PROTOTYPE_MIN_NEGATIVE_GAP))])
         if prototype_calibration_output_path.is_file():
             command.extend(["--prototype-calibration-report", str(prototype_calibration_output_path)])
 
@@ -288,6 +301,7 @@ else:
                 else "",
                 "prototype_min_similarity": M2_PROTOTYPE_MIN_SIMILARITY,
                 "prototype_min_margin": M2_PROTOTYPE_MIN_MARGIN,
+                "prototype_min_negative_gap": M2_PROTOTYPE_MIN_NEGATIVE_GAP,
                 "calibration_selected_policy": bool(prototype_calibration_selected),
             },
             "copied_artifacts": copied_paths,

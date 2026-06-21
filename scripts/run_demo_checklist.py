@@ -297,15 +297,15 @@ def resolve_prototype_thresholds_from_calibration(
     *,
     min_similarity: float | None,
     min_margin: float | None,
+    min_negative_gap: float | None = None,
 ) -> tuple[float | None, float | None, float | None, dict[str, Any], dict[str, Any]]:
     if calibration_report_path is None:
-        return min_similarity, min_margin, None, {"enabled": False}, {}
+        return min_similarity, min_margin, min_negative_gap, {"enabled": False}, {}
     payload = json.loads(calibration_report_path.read_text(encoding="utf-8"))
     selected = payload.get("selected_policy") if isinstance(payload, dict) else None
     target_policies = payload.get("target_policies") if isinstance(payload, dict) else {}
     if not isinstance(target_policies, dict):
         target_policies = {}
-    min_negative_gap = None
     report: dict[str, Any] = {
         "enabled": True,
         "path": str(calibration_report_path),
@@ -317,7 +317,7 @@ def resolve_prototype_thresholds_from_calibration(
             min_similarity = float(selected.get("min_similarity"))
         if min_margin is None:
             min_margin = float(selected.get("min_margin"))
-        if selected.get("min_negative_gap") is not None:
+        if min_negative_gap is None and selected.get("min_negative_gap") is not None:
             min_negative_gap = float(selected.get("min_negative_gap"))
         report["selected_policy"] = {
             "min_similarity": selected.get("min_similarity"),
@@ -735,6 +735,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prototype-calibration-report", type=Path)
     parser.add_argument("--prototype-min-similarity", type=float)
     parser.add_argument("--prototype-min-margin", type=float)
+    parser.add_argument("--prototype-min-negative-gap", type=float)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only-local", action="store_true")
     parser.add_argument(
@@ -776,6 +777,7 @@ def main() -> int:
         args.prototype_calibration_report,
         min_similarity=args.prototype_min_similarity,
         min_margin=args.prototype_min_margin,
+        min_negative_gap=args.prototype_min_negative_gap,
     )
 
     output_rows: list[dict[str, Any]] = []

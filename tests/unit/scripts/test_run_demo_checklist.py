@@ -166,11 +166,27 @@ def test_resolve_prototype_thresholds_preserves_explicit_values(tmp_path: Path):
         report_path,
         min_similarity=0.6,
         min_margin=0.1,
+        min_negative_gap=0.03,
     )
 
     assert min_similarity == 0.6
     assert min_margin == 0.1
-    assert min_negative_gap is None
+    assert min_negative_gap == 0.03
+    assert target_policies == {}
+
+
+def test_resolve_prototype_thresholds_preserves_explicit_negative_gap_without_report():
+    min_similarity, min_margin, min_negative_gap, report, target_policies = resolve_prototype_thresholds_from_calibration(
+        None,
+        min_similarity=0.6,
+        min_margin=0.1,
+        min_negative_gap=0.04,
+    )
+
+    assert min_similarity == 0.6
+    assert min_margin == 0.1
+    assert min_negative_gap == 0.04
+    assert report == {"enabled": False}
     assert target_policies == {}
 
 
