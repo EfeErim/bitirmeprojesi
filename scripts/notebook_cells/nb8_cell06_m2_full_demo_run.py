@@ -42,7 +42,8 @@ M2_PROTOTYPE_EMBEDDING_MODEL_ID = str(
     globals().get("M2_PROTOTYPE_EMBEDDING_MODEL_ID", "imageomics/bioclip-2.5-vith14")
 )
 M2_PROTOTYPE_EMBEDDING_DEVICE = str(globals().get("M2_PROTOTYPE_EMBEDDING_DEVICE", DEVICE if "DEVICE" in globals() else "cuda"))
-M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", None)
+M2_REUSE_EXISTING_PROTOTYPES = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPES", True))
+M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", 50)
 M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
 M2_TAXONOMY_REGISTRY = str(globals().get("M2_TAXONOMY_REGISTRY", "") or "")
 M2_PROTOTYPE_MIN_SIMILARITY = globals().get("M2_PROTOTYPE_MIN_SIMILARITY", None)
@@ -81,6 +82,22 @@ else:
     analysis_markdown_output_path = (repo_root / M2_ANALYSIS_MARKDOWN_OUTPUT).resolve()
     prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
     adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
+    if (
+        M2_ENABLE_PROTOTYPE_RECONCILER
+        and M2_REUSE_EXISTING_PROTOTYPES
+        and (not M2_PROTOTYPE_BANK or not M2_TAXONOMY_REGISTRY)
+    ):
+        for candidate_dir in sorted((repo_root / M2_REPO_RESULTS_ROOT).glob("*"), reverse=True):
+            prototype_bank_candidate = candidate_dir / "prototype_bank.json"
+            taxonomy_registry_candidate = candidate_dir / "taxonomy_registry.json"
+            if prototype_bank_candidate.is_file() and taxonomy_registry_candidate.is_file():
+                if not M2_PROTOTYPE_BANK:
+                    M2_PROTOTYPE_BANK = str(prototype_bank_candidate.relative_to(repo_root))
+                if not M2_TAXONOMY_REGISTRY:
+                    M2_TAXONOMY_REGISTRY = str(taxonomy_registry_candidate.relative_to(repo_root))
+                print(f"[M2] Reusing existing prototype artifacts from {candidate_dir.relative_to(repo_root)}.")
+                break
+
     if M2_ENABLE_PROTOTYPE_RECONCILER and M2_AUTO_BUILD_PROTOTYPES and (
         not M2_PROTOTYPE_BANK or not M2_TAXONOMY_REGISTRY
     ):
@@ -259,7 +276,9 @@ else:
             "analysis_markdown_output": str(analysis_markdown_output_path.relative_to(repo_root)),
             "prototype_reconciler": {
                 "enabled": bool(M2_ENABLE_PROTOTYPE_RECONCILER),
+                "reuse_existing_prototypes": bool(M2_REUSE_EXISTING_PROTOTYPES),
                 "auto_build_prototypes": bool(M2_AUTO_BUILD_PROTOTYPES),
+                "prototype_max_images_per_class": M2_PROTOTYPE_MAX_IMAGES_PER_CLASS,
                 "auto_calibrate": bool(M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER),
                 "require_calibrated_policy": bool(M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY),
                 "prototype_bank": M2_PROTOTYPE_BANK,
