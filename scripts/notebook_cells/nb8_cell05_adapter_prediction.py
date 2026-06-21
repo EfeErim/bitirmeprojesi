@@ -12,7 +12,12 @@ DEVICE = str(globals().get("DEVICE", "cuda"))
 ADAPTER_ROOT = globals().get("ADAPTER_ROOT", None)
 RETURN_OOD = bool(globals().get("RETURN_OOD", True))
 PRINT_JSON_RESULT = bool(globals().get("PRINT_JSON_RESULT", False))
-ENABLE_PROTOTYPE_RECONCILER = bool(globals().get("ENABLE_PROTOTYPE_RECONCILER", False))
+ENABLE_PROTOTYPE_RECONCILER = bool(
+    globals().get(
+        "ENABLE_PROTOTYPE_RECONCILER",
+        globals().get("M2_ENABLE_PROTOTYPE_RECONCILER", True),
+    )
+)
 ROUTER_PROTOTYPE_BANK = globals().get("ROUTER_PROTOTYPE_BANK", None)
 TAXONOMY_REGISTRY = globals().get("TAXONOMY_REGISTRY", None)
 PROTOTYPE_MIN_SIMILARITY = globals().get("PROTOTYPE_MIN_SIMILARITY", None)
