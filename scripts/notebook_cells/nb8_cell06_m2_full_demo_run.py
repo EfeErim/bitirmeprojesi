@@ -25,6 +25,7 @@ M2_DEMO_MARKDOWN_OUTPUT = str(
 M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analysis_summary.json"))
 M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
+M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 1))
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
 M2_AUTO_PUSH_RESULTS = bool(globals().get("M2_AUTO_PUSH_RESULTS", True))
 M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin"))
@@ -198,6 +199,8 @@ else:
         str(analysis_output_path),
         "--analysis-markdown-output",
         str(analysis_markdown_output_path),
+        "--batch-size",
+        str(max(1, int(M2_BATCH_SIZE))),
     ]
     if M2_DEMO_LIMIT is not None:
         command.extend(["--limit", str(int(M2_DEMO_LIMIT))])
@@ -283,6 +286,7 @@ else:
             "created_at": stamp,
             "runner_exit_code": int(completed.returncode),
             "manifest": str(manifest_path.relative_to(repo_root)),
+            "batch_size": int(max(1, M2_BATCH_SIZE)),
             "output": str(output_path.relative_to(repo_root)),
             "markdown_output": str(markdown_output_path.relative_to(repo_root)),
             "analysis_output": str(analysis_output_path.relative_to(repo_root)),

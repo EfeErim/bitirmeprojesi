@@ -3,6 +3,8 @@ from pathlib import Path
 
 from scripts.build_m2_supported_disease_manifest import build_rows, is_healthy_class
 from scripts.run_demo_checklist import (
+    ChecklistRow,
+    _run_official_batch_rows,
     build_analysis_summary,
     build_parser,
     classify_failure,
@@ -122,6 +124,77 @@ def test_parser_supports_manifest_only_runs():
 
     assert args.no_checklist is True
     assert [str(path) for path in args.extra_manifest] == ["manifest.csv"]
+
+
+def test_parser_supports_official_batch_size():
+    args = build_parser().parse_args(["--no-checklist", "--extra-manifest", "manifest.csv", "--batch-size", "4"])
+
+    assert args.batch_size == 4
+
+
+def test_official_batch_rows_reuses_batch_router_results(tmp_path: Path, monkeypatch):
+    image_a = tmp_path / "a.jpg"
+    image_b = tmp_path / "b.jpg"
+    image_a.write_bytes(b"a")
+    image_b.write_bytes(b"b")
+    rows = [
+        ChecklistRow(
+            image_id="demo_001",
+            source="staged_external:a.jpg",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            notes="",
+            expected_crop="tomato",
+            expected_part="leaf",
+            expected_class="healthy",
+        ),
+        ChecklistRow(
+            image_id="demo_002",
+            source="staged_external:b.jpg",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            notes="",
+            expected_crop="grape",
+            expected_part="fruit",
+            expected_class="healthy",
+        ),
+    ]
+    batch_calls = []
+    adapter_calls = []
+
+    def fake_batch(image_paths, **_kwargs):
+        batch_calls.append([Path(path).name for path in image_paths])
+        return [
+            {"status": "ok", "crop": "tomato", "part": "leaf", "router": {}},
+            {"status": "ok", "crop": "grape", "part": "fruit", "router": {}},
+        ]
+
+    def fake_adapter(image_path, *, router_result, **_kwargs):
+        adapter_calls.append((Path(image_path).name, router_result["crop"], router_result["part"]))
+        return {
+            "status": "success",
+            "crop": router_result["crop"],
+            "part": router_result["part"],
+            "diagnosis": "healthy",
+            "confidence": 0.9,
+            "router_handoff": {"prototype_reconciliation": {}},
+        }
+
+    monkeypatch.setattr("scripts.run_demo_checklist.run_router_inference_batch", fake_batch)
+    monkeypatch.setattr("scripts.run_demo_checklist.run_auto_router_adapter_prediction", fake_adapter)
+
+    output_rows = _run_official_batch_rows(
+        rows,
+        repo_root=tmp_path,
+        config_env="colab",
+        device="cuda",
+        adapter_root=tmp_path / "runs",
+        batch_size=2,
+    )
+
+    assert batch_calls == [["a.jpg", "b.jpg"]]
+    assert adapter_calls == [("a.jpg", "tomato", "leaf"), ("b.jpg", "grape", "fruit")]
+    assert [row["pass_fail"] for row in output_rows] == ["pass", "pass"]
 
 
 def test_resolve_prototype_thresholds_from_calibration_uses_selected_policy(tmp_path: Path):

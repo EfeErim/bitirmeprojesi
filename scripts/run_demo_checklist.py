@@ -19,6 +19,7 @@ if str(REPO_ROOT) not in sys.path:
 
 from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction  # noqa: E402
 from scripts.colab_router_adapter_inference import run_inference as run_router_inference  # noqa: E402
+from scripts.colab_router_adapter_inference import run_inference_batch as run_router_inference_batch  # noqa: E402
 from src.workflows.inference import InferenceWorkflow  # noqa: E402
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
@@ -348,6 +349,7 @@ def _run_row(
     prototype_min_margin: float | None = None,
     prototype_min_negative_gap: float | None = None,
     prototype_target_policies: dict[str, Any] | None = None,
+    router_result_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     image_path, asset_status = resolve_image_path(row.source, repo_root)
     if asset_status != "ok" or image_path is None:
@@ -395,7 +397,7 @@ def _run_row(
                         trust_crop_hint=True,
                     )
             else:
-                router_result = run_router_inference(
+                router_result = router_result_override or run_router_inference(
                     image_path,
                     config_env=config_env,
                     device=device,
@@ -468,6 +470,133 @@ def _run_row(
         "notes": row.notes,
         "message": result.get("message", ""),
     }
+
+
+def _row_from_batch_router(
+    row: ChecklistRow,
+    *,
+    repo_root: Path,
+    config_env: str,
+    device: str,
+    adapter_root: Path,
+    enable_prototype_reconciler: bool = False,
+    prototype_bank_path: Path | None = None,
+    taxonomy_registry_path: Path | None = None,
+    prototype_min_similarity: float | None = None,
+    prototype_min_margin: float | None = None,
+    prototype_min_negative_gap: float | None = None,
+    prototype_target_policies: dict[str, Any] | None = None,
+    router_result: dict[str, Any],
+) -> dict[str, Any]:
+    return _run_row(
+        row,
+        repo_root=repo_root,
+        config_env=config_env,
+        device=device,
+        adapter_root=adapter_root,
+        mode="official",
+        enable_prototype_reconciler=enable_prototype_reconciler,
+        prototype_bank_path=prototype_bank_path,
+        taxonomy_registry_path=taxonomy_registry_path,
+        prototype_min_similarity=prototype_min_similarity,
+        prototype_min_margin=prototype_min_margin,
+        prototype_min_negative_gap=prototype_min_negative_gap,
+        prototype_target_policies=prototype_target_policies,
+        router_result_override=router_result,
+    )
+
+
+def _run_official_batch_rows(
+    rows: list[ChecklistRow],
+    *,
+    repo_root: Path,
+    config_env: str,
+    device: str,
+    adapter_root: Path,
+    batch_size: int,
+    enable_prototype_reconciler: bool = False,
+    prototype_bank_path: Path | None = None,
+    taxonomy_registry_path: Path | None = None,
+    prototype_min_similarity: float | None = None,
+    prototype_min_margin: float | None = None,
+    prototype_min_negative_gap: float | None = None,
+    prototype_target_policies: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    output_rows: list[dict[str, Any]] = []
+    resolved: list[tuple[ChecklistRow, Path | None, str]] = [
+        (row, *resolve_image_path(row.source, repo_root)) for row in rows
+    ]
+    chunk_size = max(1, int(batch_size))
+    for start in range(0, len(resolved), chunk_size):
+        chunk = resolved[start : start + chunk_size]
+        if any(asset_status != "ok" or image_path is None for _, image_path, asset_status in chunk):
+            for row, _, _ in chunk:
+                output_rows.append(
+                    _run_row(
+                        row,
+                        repo_root=repo_root,
+                        config_env=config_env,
+                        device=device,
+                        adapter_root=adapter_root,
+                        mode="official",
+                        enable_prototype_reconciler=enable_prototype_reconciler,
+                        prototype_bank_path=prototype_bank_path,
+                        taxonomy_registry_path=taxonomy_registry_path,
+                        prototype_min_similarity=prototype_min_similarity,
+                        prototype_min_margin=prototype_min_margin,
+                        prototype_min_negative_gap=prototype_min_negative_gap,
+                        prototype_target_policies=prototype_target_policies,
+                    )
+                )
+            continue
+        image_paths = [image_path for _, image_path, _ in chunk if image_path is not None]
+        try:
+            router_results = run_router_inference_batch(
+                image_paths,
+                config_env=config_env,
+                device=device,
+            )
+            if len(router_results) != len(chunk):
+                raise RuntimeError(f"Batch router returned {len(router_results)} results for {len(chunk)} rows.")
+        except Exception:
+            for row, _, _ in chunk:
+                output_rows.append(
+                    _run_row(
+                        row,
+                        repo_root=repo_root,
+                        config_env=config_env,
+                        device=device,
+                        adapter_root=adapter_root,
+                        mode="official",
+                        enable_prototype_reconciler=enable_prototype_reconciler,
+                        prototype_bank_path=prototype_bank_path,
+                        taxonomy_registry_path=taxonomy_registry_path,
+                        prototype_min_similarity=prototype_min_similarity,
+                        prototype_min_margin=prototype_min_margin,
+                        prototype_min_negative_gap=prototype_min_negative_gap,
+                        prototype_target_policies=prototype_target_policies,
+                    )
+                )
+            continue
+        for (row, _, _), router_result in zip(chunk, router_results):
+            output_rows.append(
+                _row_from_batch_router(
+                    row,
+                    repo_root=repo_root,
+                    config_env=config_env,
+                    device=device,
+                    adapter_root=adapter_root,
+                    enable_prototype_reconciler=enable_prototype_reconciler,
+                    prototype_bank_path=prototype_bank_path,
+                    taxonomy_registry_path=taxonomy_registry_path,
+                    prototype_min_similarity=prototype_min_similarity,
+                    prototype_min_margin=prototype_min_margin,
+                    prototype_min_negative_gap=prototype_min_negative_gap,
+                    prototype_target_policies=prototype_target_policies,
+                    router_result=router_result,
+                )
+            )
+    return output_rows
 
 
 def summarize_results(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
@@ -736,6 +865,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prototype-min-similarity", type=float)
     parser.add_argument("--prototype-min-margin", type=float)
     parser.add_argument("--prototype-min-negative-gap", type=float)
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=1,
+        help="Official mode router batch size. Adapter prediction remains per-row for safety.",
+    )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only-local", action="store_true")
     parser.add_argument(
@@ -780,15 +915,15 @@ def main() -> int:
         min_negative_gap=args.prototype_min_negative_gap,
     )
 
-    output_rows: list[dict[str, Any]] = []
-    for row in rows:
-        result = _run_row(
-            row,
+    batch_size = max(1, int(args.batch_size or 1))
+    if mode == "official" and batch_size > 1:
+        output_rows = _run_official_batch_rows(
+            rows,
             repo_root=repo_root,
             config_env=str(args.config_env),
             device=str(args.device),
             adapter_root=args.adapter_root,
-            mode=mode,
+            batch_size=batch_size,
             enable_prototype_reconciler=bool(args.enable_prototype_reconciler),
             prototype_bank_path=args.prototype_bank,
             taxonomy_registry_path=args.taxonomy_registry,
@@ -797,9 +932,38 @@ def main() -> int:
             prototype_min_negative_gap=prototype_min_negative_gap,
             prototype_target_policies=prototype_target_policies,
         )
-        output_rows.append(result)
-        if args.stop_on_dependency_blocker and result.get("failure_bucket") == "dependency_access":
-            break
+        if args.stop_on_dependency_blocker:
+            dependency_index = next(
+                (
+                    index
+                    for index, row in enumerate(output_rows)
+                    if row.get("failure_bucket") == "dependency_access"
+                ),
+                None,
+            )
+            if dependency_index is not None:
+                output_rows = output_rows[: dependency_index + 1]
+    else:
+        output_rows: list[dict[str, Any]] = []
+        for row in rows:
+            result = _run_row(
+                row,
+                repo_root=repo_root,
+                config_env=str(args.config_env),
+                device=str(args.device),
+                adapter_root=args.adapter_root,
+                mode=mode,
+                enable_prototype_reconciler=bool(args.enable_prototype_reconciler),
+                prototype_bank_path=args.prototype_bank,
+                taxonomy_registry_path=args.taxonomy_registry,
+                prototype_min_similarity=prototype_min_similarity,
+                prototype_min_margin=prototype_min_margin,
+                prototype_min_negative_gap=prototype_min_negative_gap,
+                prototype_target_policies=prototype_target_policies,
+            )
+            output_rows.append(result)
+            if args.stop_on_dependency_blocker and result.get("failure_bucket") == "dependency_access":
+                break
 
     report = {
         "schema_version": "v1_m2_demo_checklist_run",
@@ -808,6 +972,7 @@ def main() -> int:
         "device": str(args.device),
         "adapter_root": str(args.adapter_root),
         "mode": mode,
+        "batch_size": batch_size,
         "prototype_reconciler": {
             "enabled": bool(args.enable_prototype_reconciler),
             "prototype_bank": str(args.prototype_bank) if args.prototype_bank else "",

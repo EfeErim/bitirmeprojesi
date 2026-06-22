@@ -549,6 +549,30 @@ class RouterPipeline:
         )
         return analyze_batch_results(self, batch, request)
 
+    def analyze_images_result(
+        self,
+        images: List[Any],
+        *,
+        options: Optional[RouterRequestOptions] = None,
+        confidence_threshold: Optional[float] = None,
+        max_detections: Optional[int] = None,
+    ) -> List[RouterAnalysisResult]:
+        """Analyze many image objects and return typed router results."""
+        request = self._resolve_request_options(
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+            options=options,
+        )
+        if self.enabled and self.models_loaded and self.actual_pipeline == "sam3":
+            analyses = sam3_runtime.analyze_sam3_images(
+                self,
+                images,
+                confidence_threshold=request.confidence_threshold,
+                max_detections=request.max_detections,
+            )
+            return [self._normalize_router_analysis(analysis, request=request) for analysis in analyses]
+        return [self.analyze_image_result(image, options=request) for image in images]
+
     def _resolve_analyzer_for_active_pipeline(self) -> Optional[RouterAnalyzer]:
         """Resolve analysis function for active pipeline."""
         analyzers: Dict[str, RouterAnalyzer] = {

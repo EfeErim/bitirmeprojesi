@@ -307,6 +307,28 @@ def _build_batch_contexts(
     return contexts
 
 
+def _build_image_contexts(
+    runtime: Any,
+    images: List[Any],
+    *,
+    confidence_threshold: float,
+    max_detections: Optional[int],
+) -> List[Sam3RequestContext]:
+    contexts: List[Sam3RequestContext] = []
+    for image in images:
+        pil_image, image_size = coerce_image_input(image)
+        contexts.append(
+            build_request_context(
+                runtime,
+                pil_image=pil_image,
+                image_size=image_size,
+                confidence_threshold=confidence_threshold,
+                max_detections=max_detections,
+            )
+        )
+    return contexts
+
+
 def _chunk_supports_batched_sam3(contexts: List[Sam3RequestContext]) -> bool:
     prompts = {context.sam3_prompts for context in contexts}
     thresholds = {context.sam3_threshold for context in contexts}
@@ -640,12 +662,40 @@ def analyze_sam3_batch(
     max_detections: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Analyze a tensor batch with chunked SAM3 inference and batched CLIP ROI scoring."""
-    contexts = _build_batch_contexts(
+    return analyze_sam3_contexts(
         runtime,
-        batch,
-        confidence_threshold=confidence_threshold,
-        max_detections=max_detections,
+        _build_batch_contexts(
+            runtime,
+            batch,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        ),
     )
+
+
+def analyze_sam3_images(
+    runtime: Any,
+    images: List[Any],
+    confidence_threshold: float = 0.8,
+    max_detections: Optional[int] = None,
+) -> List[Dict[str, Any]]:
+    """Analyze image objects with chunked SAM3 inference and batched CLIP ROI scoring."""
+    return analyze_sam3_contexts(
+        runtime,
+        _build_image_contexts(
+            runtime,
+            images,
+            confidence_threshold=confidence_threshold,
+            max_detections=max_detections,
+        ),
+    )
+
+
+def analyze_sam3_contexts(
+    runtime: Any,
+    contexts: List[Sam3RequestContext],
+) -> List[Dict[str, Any]]:
+    """Analyze prebuilt SAM3 contexts with chunked SAM3 and batched CLIP ROI scoring."""
     if not contexts:
         return []
 

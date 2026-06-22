@@ -92,7 +92,7 @@ def _prepare_router_image(
 def _coerce_float(value: Any, default: float = 0.0) -> float:
     try:
         return float(value)
-    except Exception as exc:
+    except Exception:
         import logging
         logging.debug(f'Coercing {value!r} to float failed; using default {default}')
         return float(default)
@@ -346,6 +346,74 @@ def run_inference(
         f"part={payload['part'] or 'unknown'} router_confidence={float(payload['router_confidence']):.3f}",
     )
     return payload
+
+
+def run_inference_batch(
+    image_paths: list[str | Path],
+    *,
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    status_printer: Optional[StatusPrinter] = None,
+    reuse_router: bool = True,
+    include_diagnostics: bool = False,
+    top_candidates: int = 3,
+    runtime_profile: Optional[str] = None,
+    max_image_side: Optional[int] = None,
+    include_adapter_target: bool = True,
+) -> list[Dict[str, Any]]:
+    """Run router-only crop/part identification for many images with one router batch."""
+    if not image_paths:
+        return []
+    if include_diagnostics:
+        return [
+            run_inference(
+                image_path,
+                config_env=config_env,
+                device=device,
+                status_printer=status_printer,
+                reuse_router=reuse_router,
+                include_diagnostics=True,
+                top_candidates=top_candidates,
+                runtime_profile=runtime_profile,
+                max_image_side=max_image_side,
+                include_adapter_target=include_adapter_target,
+            )
+            for image_path in image_paths
+        ]
+
+    _emit_status(status_printer, f"[INFER] batch_size={len(image_paths)} device={device}")
+    images = [
+        _prepare_router_image(
+            image_path,
+            max_image_side=max_image_side,
+            status_printer=status_printer,
+        )
+        for image_path in image_paths
+    ]
+    router = ensure_router_ready(
+        config_env=config_env,
+        device=device,
+        status_printer=status_printer,
+        reuse_cached=reuse_router,
+        runtime_profile=runtime_profile,
+    )
+    analyses = router.analyze_images_result(images)
+    payloads: list[Dict[str, Any]] = []
+    router_config = router.config if isinstance(getattr(router, "config", None), dict) else get_config(environment=config_env)
+    for image_path, analysis in zip(image_paths, analyses):
+        payload = _build_router_payload(analysis)
+        payload["runtime_profile"] = str(getattr(router, "active_profile", runtime_profile or "") or "")
+        if include_adapter_target:
+            payload["adapter_target"] = _resolve_adapter_target(payload.get("crop"), payload.get("part"), config=router_config)
+        payloads.append(payload)
+        _emit_status(
+            status_printer,
+            f"[ROUTER] image={Path(image_path).name} crop={payload['crop'] or 'unknown'} "
+            f"part={payload['part'] or 'unknown'} confidence={float(payload['router_confidence']):.3f}",
+        )
+    if len(payloads) != len(image_paths):
+        raise RuntimeError(f"Router batch returned {len(payloads)} results for {len(image_paths)} images.")
+    return payloads
 
 
 def main() -> int:
