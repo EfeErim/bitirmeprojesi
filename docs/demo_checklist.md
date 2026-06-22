@@ -10,7 +10,7 @@ Use this file for M1 and M2 execution. The goal is to prove that Colab Notebook 
 - Exact M2 run path:
   1. Open Notebook 8 in Colab.
   2. Select a GPU runtime and make sure Hugging Face/SAM3 access is available.
-  3. Leave `M2_RUN_FULL_DEMO = True` and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
+  3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 4`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
   4. Leave `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available in Colab secrets.
   5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 512-image manifest.
   6. Read `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md` for the local runtime copy.
@@ -63,6 +63,8 @@ The supported-disease coverage manifest is generated from `data/prepared_runtime
 The self-contained saved image package is under `docs/demo_assets/m2_full_image_set/`. It contains 512 copied images plus a runnable manifest:
 
 `.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs`
+
+The latest Colab M2 runs wrote reports with `M2_BATCH_SIZE = 4`, including the full 512-image `20260622T102452Z` result. Keep batch size 4 for the next official Notebook 8 rerun and keep any smoke limit removed (`M2_DEMO_LIMIT = None`) for the full package.
 
 ## User Photo Guidance To Show
 

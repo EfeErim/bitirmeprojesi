@@ -55,10 +55,10 @@ Support labels:
 1. Open Notebook 8 in Colab.
 2. Confirm repo access and dependency setup.
 3. Set `ADAPTER_ROOT = ROOT / "runs"` unless final bundles have been copied into `models/adapters/`.
-4. Set `ANALYSIS_IMAGE_PATH` for the current checklist image and keep `RETURN_OOD = True`.
-5. Run the Notebook 1 router analysis cell, then the Notebook 8 adapter prediction cell.
-6. Run the chosen demo images from `docs/demo_checklist.md`.
-7. Record output status, predicted crop/part, disease, confidence/OOD evidence, and pass/fail result.
+4. Keep `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, and `M2_BATCH_SIZE = 4`; the latest Colab M2 runs wrote reports with batch size 4, including the full 512-image result.
+5. Keep `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available.
+6. Run all cells. The single-image path stays skipped by default and the final M2 cell runs the saved 512-image manifest.
+7. Record output status, predicted crop/part, disease, confidence/OOD evidence, and pass/fail result from `docs/demo_results/m2/<timestamp>/summary.json` and `analysis_summary.json`.
 8. Use fallback screenshots/outputs if external access or GPU runtime fails.
 
 ## User Photo Guidance
