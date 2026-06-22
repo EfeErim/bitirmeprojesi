@@ -85,3 +85,78 @@ def test_calibrate_emits_target_policy_for_safe_supported_rows():
 
     assert result["selected_policy"]["supported_precision"] == 1.0
     assert result["target_policies"]["tomato__fruit"]["status"] == "target_specific"
+
+
+def test_calibrate_blocks_unknown_crop_false_accept_by_default():
+    rows = [
+        ScoredRow(
+            image_id="demo_001",
+            expected_target="tomato__fruit",
+            expected_behavior="answer",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="a.png",
+            status="ok",
+        ),
+        ScoredRow(
+            image_id="demo_002",
+            expected_target="unknown_crop",
+            expected_behavior="abstain",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="b.png",
+            status="ok",
+        ),
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=1.0,
+        min_coverage=1.0,
+    )
+
+    assert result["selected_policy"] is None
+    assert result["best_candidate"]["supported_precision"] == 1.0
+    assert result["best_candidate"]["negative_false_accept_count"] == 1
+    assert result["best_candidate"]["non_plant_false_accept_count"] == 0
+
+
+def test_calibrate_can_allow_negative_false_accepts_explicitly():
+    rows = [
+        ScoredRow(
+            image_id="demo_001",
+            expected_target="tomato__fruit",
+            expected_behavior="answer",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="a.png",
+            status="ok",
+        ),
+        ScoredRow(
+            image_id="demo_002",
+            expected_target="unknown_crop",
+            expected_behavior="abstain",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="b.png",
+            status="ok",
+        ),
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=1.0,
+        min_coverage=1.0,
+        max_negative_false_accepts=1,
+        max_negative_false_accept_rate=1.0,
+    )
+
+    assert result["selected_policy"]["negative_false_accept_count"] == 1

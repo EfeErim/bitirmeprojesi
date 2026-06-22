@@ -180,6 +180,8 @@ def calibrate(
     min_precision: float,
     min_coverage: float,
     require_zero_non_plant_false_accepts: bool = True,
+    max_negative_false_accepts: int | None = 0,
+    max_negative_false_accept_rate: float | None = 0.05,
     include_target_policies: bool = True,
 ) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
@@ -198,6 +200,14 @@ def calibrate(
                     and (
                         not require_zero_non_plant_false_accepts
                         or result["non_plant_false_accept_count"] == 0
+                    )
+                    and (
+                        max_negative_false_accepts is None
+                        or result["negative_false_accept_count"] <= max_negative_false_accepts
+                    )
+                    and (
+                        max_negative_false_accept_rate is None
+                        or result["negative_false_accept_rate"] <= max_negative_false_accept_rate
                     )
                 )
                 candidates.append(result)
@@ -229,6 +239,8 @@ def calibrate(
                 min_precision=min_precision,
                 min_coverage=min_coverage,
                 require_zero_non_plant_false_accepts=require_zero_non_plant_false_accepts,
+                max_negative_false_accepts=max_negative_false_accepts,
+                max_negative_false_accept_rate=max_negative_false_accept_rate,
                 include_target_policies=False,
             )
             target_policies[target] = {
@@ -257,6 +269,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--min-precision", type=float, default=0.985)
     parser.add_argument("--min-coverage", type=float, default=0.80)
     parser.add_argument("--allow-non-plant-false-accepts", action="store_true")
+    parser.add_argument("--max-negative-false-accepts", type=int, default=0)
+    parser.add_argument("--max-negative-false-accept-rate", type=float, default=0.05)
     parser.add_argument("--fail-on-no-policy", action="store_true")
     return parser
 
@@ -277,6 +291,8 @@ def main(argv: list[str] | None = None) -> int:
         min_precision=args.min_precision,
         min_coverage=args.min_coverage,
         require_zero_non_plant_false_accepts=not args.allow_non_plant_false_accepts,
+        max_negative_false_accepts=args.max_negative_false_accepts,
+        max_negative_false_accept_rate=args.max_negative_false_accept_rate,
     )
     payload = {
         "schema_version": "router_prototype_calibration.v1",
@@ -287,6 +303,8 @@ def main(argv: list[str] | None = None) -> int:
             "min_precision": args.min_precision,
             "min_coverage": args.min_coverage,
             "require_zero_non_plant_false_accepts": not args.allow_non_plant_false_accepts,
+            "max_negative_false_accepts": args.max_negative_false_accepts,
+            "max_negative_false_accept_rate": args.max_negative_false_accept_rate,
             "promotion_mode": "prototype_override",
         },
         "summary": {
