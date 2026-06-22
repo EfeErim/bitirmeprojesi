@@ -66,6 +66,7 @@ from src.training.services.trainer_runtime import (
     has_pending_gradients,
     initialize_trainer_engine,
     predict_with_ood_result,
+    predict_with_ood_results,
     refresh_optimizer_after_model_change,
 )
 from src.training.types import TrainBatchStats, TrainingCheckpointPayload
@@ -1119,6 +1120,9 @@ class ContinualSDLoRATrainer:
 
     def predict_with_ood(self, images: torch.Tensor) -> Dict[str, Any]:
         return predict_with_ood_result(self, images)
+
+    def predict_with_ood_batch(self, images: torch.Tensor) -> list[Dict[str, Any]]:
+        return predict_with_ood_results(self, images)
 
     def _metadata_payload(self) -> Dict[str, Any]:
         return build_trainer_metadata_payload(self)

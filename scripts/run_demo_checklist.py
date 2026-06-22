@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
 
+import torch
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -20,9 +22,14 @@ if str(REPO_ROOT) not in sys.path:
 from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction  # noqa: E402
 from scripts.colab_router_adapter_inference import run_inference as run_router_inference  # noqa: E402
 from scripts.colab_router_adapter_inference import run_inference_batch as run_router_inference_batch  # noqa: E402
+from src.data.transforms import preprocess_image  # noqa: E402
+from src.pipeline.inference_payloads import build_router_skipped_analysis, build_success_result  # noqa: E402
 from src.workflows.inference import InferenceWorkflow  # noqa: E402
 
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+FINAL_DEMO_SUPPORTED_CROPS = frozenset({"tomato", "strawberry", "grape", "apricot"})
+FINAL_DEMO_SUPPORTED_PARTS = frozenset({"leaf", "fruit"})
+ADAPTER_ALLOWED_ROUTER_STATUSES = frozenset({"ok", "trusted_hint_skipped", "skipped"})
 ABSTAIN_STATUSES = {
     "unknown_crop",
     "router_uncertain",
@@ -427,6 +434,17 @@ def _run_row(
                 "message": str(exc),
             }
 
+    return _format_output_row(row, image_path=image_path, result=result, asset_status=asset_status, mode=mode)
+
+
+def _format_output_row(
+    row: ChecklistRow,
+    *,
+    image_path: Path | None,
+    result: dict[str, Any],
+    asset_status: str,
+    mode: str,
+) -> dict[str, Any]:
     pass_fail = evaluate_pass(row, result, asset_status=asset_status)
     if mode == "asset-audit" and asset_status == "ok":
         pass_fail = "pass"
@@ -472,6 +490,120 @@ def _run_row(
     }
 
 
+def _adapter_batch_eligible(router_result: dict[str, Any]) -> tuple[str, str] | None:
+    status = str(router_result.get("status") or "").strip().lower()
+    crop = str(router_result.get("crop") or "").strip().lower()
+    part = str(router_result.get("part") or "").strip().lower()
+    if status not in ADAPTER_ALLOWED_ROUTER_STATUSES:
+        return None
+    if crop not in FINAL_DEMO_SUPPORTED_CROPS or part not in FINAL_DEMO_SUPPORTED_PARTS:
+        return None
+    return crop, part
+
+
+def _run_adapter_batched_rows(
+    chunk: list[tuple[ChecklistRow, Path | None, str]],
+    router_results: list[dict[str, Any]],
+    *,
+    repo_root: Path,
+    config_env: str,
+    device: str,
+    adapter_root: Path,
+    adapter_batch_size: int,
+    enable_prototype_reconciler: bool = False,
+    workflow: Any | None = None,
+) -> list[dict[str, Any]] | None:
+    if enable_prototype_reconciler or adapter_batch_size <= 1:
+        return None
+    if workflow is None:
+        workflow = InferenceWorkflow(
+            environment=config_env,
+            device=device,
+            adapter_root=adapter_root,
+        )
+    if workflow.runtime.input_guard_enabled:
+        return None
+
+    output_rows: list[dict[str, Any] | None] = [None] * len(chunk)
+    grouped: dict[tuple[str, str], list[tuple[int, ChecklistRow, Path, dict[str, Any]]]] = {}
+    for index, ((row, image_path, asset_status), router_result) in enumerate(zip(chunk, router_results)):
+        if image_path is None or asset_status != "ok":
+            return None
+        target = _adapter_batch_eligible(router_result)
+        if target is None:
+            output_rows[index] = _row_from_batch_router(
+                row,
+                repo_root=repo_root,
+                config_env=config_env,
+                device=device,
+                adapter_root=adapter_root,
+                enable_prototype_reconciler=enable_prototype_reconciler,
+                router_result=router_result,
+            )
+            continue
+        grouped.setdefault(target, []).append((index, row, image_path, router_result))
+
+    for (crop, part), items in grouped.items():
+        try:
+            adapter = workflow.runtime.load_adapter(crop, part_name=part)
+            for start in range(0, len(items), max(1, int(adapter_batch_size))):
+                batch_items = items[start : start + max(1, int(adapter_batch_size))]
+                image_tensors = [
+                    preprocess_image(
+                        workflow.runtime._coerce_image(image_path),
+                        target_size=workflow.runtime.target_size,
+                    )
+                    for _, _, image_path, _ in batch_items
+                ]
+                adapter_results = adapter.predict_batch_with_ood(torch.stack(image_tensors, dim=0))
+                if len(adapter_results) != len(batch_items):
+                    raise RuntimeError(
+                        f"Batch adapter returned {len(adapter_results)} results for {len(batch_items)} rows."
+                    )
+                for (index, row, image_path, router_result), adapter_result in zip(batch_items, adapter_results):
+                    router_analysis = build_router_skipped_analysis(
+                        crop_name=crop,
+                        part_name=part,
+                        router_confidence=1.0,
+                        status="trusted_hint_skipped",
+                        message="Router skipped because trust_crop_hint=True.",
+                    )
+                    payload = build_success_result(
+                        crop_name=crop,
+                        part_name=part,
+                        router_confidence=1.0,
+                        result=adapter_result,
+                        include_ood=True,
+                        router_analysis=router_analysis,
+                    ).to_dict(include_ood=True)
+                    payload["router_source"] = router_result.get("router", {})
+                    payload["router_handoff"] = {
+                        "adapter_ran": True,
+                        "source_status": str(router_result.get("status") or ""),
+                        "crop": crop,
+                        "part": part,
+                        "prototype_reconciliation": {
+                            "enabled": False,
+                            "vlm_crop": crop,
+                            "vlm_part": part,
+                            "reconciled_crop": crop,
+                            "reconciled_part": part,
+                            "reconcile_decision": "disabled",
+                        },
+                    }
+                    output_rows[index] = _format_output_row(
+                        row,
+                        image_path=image_path,
+                        result=payload,
+                        asset_status="ok",
+                        mode="official",
+                    )
+        except Exception:
+            return None
+
+    return [row for row in output_rows if row is not None]
+
+
 def _row_from_batch_router(
     row: ChecklistRow,
     *,
@@ -514,6 +646,7 @@ def _run_official_batch_rows(
     device: str,
     adapter_root: Path,
     batch_size: int,
+    adapter_batch_size: int = 1,
     enable_prototype_reconciler: bool = False,
     prototype_bank_path: Path | None = None,
     taxonomy_registry_path: Path | None = None,
@@ -527,6 +660,11 @@ def _run_official_batch_rows(
         (row, *resolve_image_path(row.source, repo_root)) for row in rows
     ]
     chunk_size = max(1, int(batch_size))
+    adapter_batch_workflow = (
+        InferenceWorkflow(environment=config_env, device=device, adapter_root=adapter_root)
+        if adapter_batch_size > 1 and not enable_prototype_reconciler
+        else None
+    )
     for start in range(0, len(resolved), chunk_size):
         chunk = resolved[start : start + chunk_size]
         if any(asset_status != "ok" or image_path is None for _, image_path, asset_status in chunk):
@@ -577,6 +715,20 @@ def _run_official_batch_rows(
                         prototype_target_policies=prototype_target_policies,
                     )
                 )
+            continue
+        batched_adapter_rows = _run_adapter_batched_rows(
+            chunk,
+            router_results,
+            repo_root=repo_root,
+            config_env=config_env,
+            device=device,
+            adapter_root=adapter_root,
+            adapter_batch_size=adapter_batch_size,
+            enable_prototype_reconciler=enable_prototype_reconciler,
+            workflow=adapter_batch_workflow,
+        )
+        if batched_adapter_rows is not None:
+            output_rows.extend(batched_adapter_rows)
             continue
         for (row, _, _), router_result in zip(chunk, router_results):
             output_rows.append(
@@ -869,7 +1021,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--batch-size",
         type=int,
         default=1,
-        help="Official mode router batch size. Adapter prediction remains per-row for safety.",
+        help="Official mode router batch size.",
+    )
+    parser.add_argument(
+        "--adapter-batch-size",
+        type=int,
+        default=1,
+        help="Official mode adapter batch size after router handoff. Falls back to per-row if unsafe.",
     )
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only-local", action="store_true")
@@ -916,6 +1074,7 @@ def main() -> int:
     )
 
     batch_size = max(1, int(args.batch_size or 1))
+    adapter_batch_size = max(1, int(args.adapter_batch_size or 1))
     if mode == "official" and batch_size > 1:
         output_rows = _run_official_batch_rows(
             rows,
@@ -924,6 +1083,7 @@ def main() -> int:
             device=str(args.device),
             adapter_root=args.adapter_root,
             batch_size=batch_size,
+            adapter_batch_size=adapter_batch_size,
             enable_prototype_reconciler=bool(args.enable_prototype_reconciler),
             prototype_bank_path=args.prototype_bank,
             taxonomy_registry_path=args.taxonomy_registry,
@@ -973,6 +1133,7 @@ def main() -> int:
         "adapter_root": str(args.adapter_root),
         "mode": mode,
         "batch_size": batch_size,
+        "adapter_batch_size": adapter_batch_size,
         "prototype_reconciler": {
             "enabled": bool(args.enable_prototype_reconciler),
             "prototype_bank": str(args.prototype_bank) if args.prototype_bank else "",

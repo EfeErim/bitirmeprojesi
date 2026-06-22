@@ -284,6 +284,15 @@ class IndependentCropAdapter:
             image = image.unsqueeze(0)
         return trainer.predict_with_ood(image.to(self.device))
 
+    def predict_batch_with_ood(self, images: torch.Tensor) -> list[Dict[str, Any]]:
+        """Return diagnosis + v6 OOD payloads for a tensor batch."""
+        trainer = self._require_trainer()
+        if images.ndim == 3:
+            images = images.unsqueeze(0)
+        if hasattr(trainer, "predict_with_ood_batch"):
+            return trainer.predict_with_ood_batch(images.to(self.device))
+        return [trainer.predict_with_ood(image.unsqueeze(0).to(self.device)) for image in images]
+
     def detect_ood_dynamic(self, image: torch.Tensor) -> Dict[str, Any]:
         """Compatibility helper returning OOD analysis fields only."""
         result = self.predict_with_ood(image)

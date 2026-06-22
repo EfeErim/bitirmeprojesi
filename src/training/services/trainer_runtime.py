@@ -236,9 +236,37 @@ def execute_train_batch(trainer: Any, batch: Dict[str, torch.Tensor]):
     )
 
 
-def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any]:
+def _tensor_item(values: Any, index: int, default: float = 0.0) -> float:
+    if torch.is_tensor(values) and values.numel() > index:
+        return float(values[index].item())
+    return float(default)
+
+
+def _bool_tensor_item(values: Any, index: int, default: bool = False) -> bool:
+    if torch.is_tensor(values) and values.numel() > index:
+        return bool(values[index].item())
+    return bool(default)
+
+
+def _int_tensor_item(values: Any, index: int, default: int = 0) -> int:
+    if torch.is_tensor(values) and values.numel() > index:
+        return int(values[index].item())
+    return int(default)
+
+
+def _score_dict_for_index(values: Any, index: int) -> Dict[str, float]:
+    return {
+        name: _tensor_item(tensor, index)
+        for name, tensor in dict(values or {}).items()
+        if torch.is_tensor(tensor) and tensor.numel() > index
+    }
+
+
+def predict_with_ood_results(trainer: Any, images: torch.Tensor) -> list[Dict[str, Any]]:
     if trainer.adapter_model is None or trainer.classifier is None or trainer.fusion is None:
         raise RuntimeError("Cannot predict before adapter, classifier, and fusion are initialized.")
+    if images.ndim == 3:
+        images = images.unsqueeze(0)
     trainer._ensure_ood_calibrated(operation="predict_with_ood()")
     trainer.set_eval_mode()
     with torch.inference_mode():
@@ -251,82 +279,81 @@ def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any
 
     if trainer._class_index_cache_stale():
         trainer._refresh_class_index_cache()
-    predicted_idx = int(indices[0].item()) if indices.numel() else 0
 
     primary_score_method = str(
         ood.get("primary_score_method", getattr(trainer.ood_detector, "primary_score_method", "ensemble")) or "ensemble"
     )
-    candidate_scores = {
-        name: float(values[0].item())
-        for name, values in dict(ood.get("candidate_scores", {})).items()
-        if torch.is_tensor(values) and values.numel() > 0
-    }
-    candidate_thresholds = {
-        name: float(values[0].item())
-        for name, values in dict(ood.get("candidate_thresholds", {})).items()
-        if torch.is_tensor(values) and values.numel() > 0
-    }
-    primary_score_tensor = ood.get("primary_score")
-    if not torch.is_tensor(primary_score_tensor):
-        if primary_score_method in candidate_scores:
+    results: list[Dict[str, Any]] = []
+    for index in range(int(indices.numel())):
+        predicted_idx = int(indices[index].item())
+        candidate_scores = _score_dict_for_index(ood.get("candidate_scores"), index)
+        candidate_thresholds = _score_dict_for_index(ood.get("candidate_thresholds"), index)
+        primary_score_tensor = ood.get("primary_score")
+        if torch.is_tensor(primary_score_tensor):
+            primary_score = _tensor_item(primary_score_tensor, index)
+        elif primary_score_method in candidate_scores:
             primary_score = float(candidate_scores[primary_score_method])
         else:
             primary_score = float(candidate_scores.get("ensemble", 0.0))
-    else:
-        primary_score = float(primary_score_tensor[0].item())
-    decision_threshold_tensor = ood.get("decision_threshold")
-    if not torch.is_tensor(decision_threshold_tensor):
-        if primary_score_method in candidate_thresholds:
+        decision_threshold_tensor = ood.get("decision_threshold")
+        if torch.is_tensor(decision_threshold_tensor):
+            decision_threshold = _tensor_item(decision_threshold_tensor, index)
+        elif primary_score_method in candidate_thresholds:
             decision_threshold = float(candidate_thresholds[primary_score_method])
         else:
             decision_threshold = float(candidate_thresholds.get("ensemble", 0.0))
-    else:
-        decision_threshold = float(decision_threshold_tensor[0].item())
-    ood_analysis: Dict[str, Any] = {
-        "score_method": primary_score_method,
-        "primary_score": primary_score,
-        "decision_threshold": decision_threshold,
-        "is_ood": bool(ood["is_ood"][0].item()),
-        "candidate_scores": candidate_scores,
-        "candidate_thresholds": candidate_thresholds,
-        "calibration_version": int(ood["calibration_version"][0].item()),
-    }
-    if torch.is_tensor(ood.get("mahalanobis_z")) and ood["mahalanobis_z"].numel() > 0:
-        ood_analysis["mahalanobis_z"] = float(ood["mahalanobis_z"][0].item())
-    if torch.is_tensor(ood.get("energy_z")) and ood["energy_z"].numel() > 0:
-        ood_analysis["energy_z"] = float(ood["energy_z"][0].item())
-    if torch.is_tensor(ood.get("knn_distance")) and ood["knn_distance"].numel() > 0:
-        ood_analysis["knn_distance"] = float(ood["knn_distance"][0].item())
+        ood_analysis: Dict[str, Any] = {
+            "score_method": primary_score_method,
+            "primary_score": primary_score,
+            "decision_threshold": decision_threshold,
+            "is_ood": _bool_tensor_item(ood.get("is_ood"), index),
+            "candidate_scores": candidate_scores,
+            "candidate_thresholds": candidate_thresholds,
+            "calibration_version": _int_tensor_item(ood.get("calibration_version"), index),
+        }
+        for optional_key in ("mahalanobis_z", "energy_z", "knn_distance"):
+            if torch.is_tensor(ood.get(optional_key)) and ood[optional_key].numel() > index:
+                ood_analysis[optional_key] = _tensor_item(ood[optional_key], index)
 
-    if trainer.ood_detector.radial_beta is not None:
-        ood_analysis["radial_beta"] = float(trainer.ood_detector.radial_beta)
+        if trainer.ood_detector.radial_beta is not None:
+            ood_analysis["radial_beta"] = float(trainer.ood_detector.radial_beta)
 
-    if trainer.ood_detector.sure_enabled and "sure_semantic_score" in ood:
-        ood_analysis["sure_semantic_score"] = float(ood["sure_semantic_score"][0].item())
-        ood_analysis["sure_confidence_score"] = float(ood["sure_confidence_score"][0].item())
-        ood_analysis["sure_semantic_ood"] = bool(ood["sure_semantic_ood"][0].item())
-        ood_analysis["sure_confidence_reject"] = bool(ood["sure_confidence_reject"][0].item())
+        if trainer.ood_detector.sure_enabled and "sure_semantic_score" in ood:
+            ood_analysis["sure_semantic_score"] = _tensor_item(ood.get("sure_semantic_score"), index)
+            ood_analysis["sure_confidence_score"] = _tensor_item(ood.get("sure_confidence_score"), index)
+            ood_analysis["sure_semantic_ood"] = _bool_tensor_item(ood.get("sure_semantic_ood"), index)
+            ood_analysis["sure_confidence_reject"] = _bool_tensor_item(ood.get("sure_confidence_reject"), index)
 
-    if trainer.ood_detector.conformal_enabled:
-        with torch.inference_mode():
-            conformal_set = trainer.ood_detector.build_conformal_set(
-                score_features[0],
-                logits[0],
-                trainer._idx_to_class,
-            )
-        ood_analysis["conformal_set"] = conformal_set
-        ood_analysis["conformal_set_size"] = len(conformal_set)
-        ood_analysis["conformal_coverage"] = 1.0 - trainer.ood_detector.conformal_alpha
+        if trainer.ood_detector.conformal_enabled:
+            with torch.inference_mode():
+                conformal_set = trainer.ood_detector.build_conformal_set(
+                    score_features[index],
+                    logits[index],
+                    trainer._idx_to_class,
+                )
+            ood_analysis["conformal_set"] = conformal_set
+            ood_analysis["conformal_set_size"] = len(conformal_set)
+            ood_analysis["conformal_coverage"] = 1.0 - trainer.ood_detector.conformal_alpha
 
-    return {
-        "status": "success",
-        "disease": {
-            "class_index": predicted_idx,
-            "name": trainer._idx_to_class.get(predicted_idx, str(predicted_idx)),
-            "confidence": float(confidence[0].item()) if confidence.numel() else 0.0,
-        },
-        "ood_analysis": ood_analysis,
-    }
+        results.append(
+            {
+                "status": "success",
+                "disease": {
+                    "class_index": predicted_idx,
+                    "name": trainer._idx_to_class.get(predicted_idx, str(predicted_idx)),
+                    "confidence": _tensor_item(confidence, index),
+                },
+                "ood_analysis": ood_analysis,
+            }
+        )
+    return results
+
+
+def predict_with_ood_result(trainer: Any, images: torch.Tensor) -> Dict[str, Any]:
+    results = predict_with_ood_results(trainer, images)
+    if not results:
+        raise RuntimeError("Cannot predict an empty image batch.")
+    return results[0]
 
 
 

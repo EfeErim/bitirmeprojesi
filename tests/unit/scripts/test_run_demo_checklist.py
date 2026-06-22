@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+from PIL import Image
+
 from scripts.build_m2_supported_disease_manifest import build_rows, is_healthy_class
 from scripts.run_demo_checklist import (
     ChecklistRow,
@@ -127,9 +129,12 @@ def test_parser_supports_manifest_only_runs():
 
 
 def test_parser_supports_official_batch_size():
-    args = build_parser().parse_args(["--no-checklist", "--extra-manifest", "manifest.csv", "--batch-size", "4"])
+    args = build_parser().parse_args(
+        ["--no-checklist", "--extra-manifest", "manifest.csv", "--batch-size", "4", "--adapter-batch-size", "8"]
+    )
 
     assert args.batch_size == 4
+    assert args.adapter_batch_size == 8
 
 
 def test_official_batch_rows_reuses_batch_router_results(tmp_path: Path, monkeypatch):
@@ -194,6 +199,92 @@ def test_official_batch_rows_reuses_batch_router_results(tmp_path: Path, monkeyp
 
     assert batch_calls == [["a.jpg", "b.jpg"]]
     assert adapter_calls == [("a.jpg", "tomato", "leaf"), ("b.jpg", "grape", "fruit")]
+    assert [row["pass_fail"] for row in output_rows] == ["pass", "pass"]
+
+
+def test_official_batch_rows_can_batch_adapter_predictions(tmp_path: Path, monkeypatch):
+    image_a = tmp_path / "a.jpg"
+    image_b = tmp_path / "b.jpg"
+    Image.new("RGB", (16, 16), color="green").save(image_a)
+    Image.new("RGB", (16, 16), color="green").save(image_b)
+    rows = [
+        ChecklistRow(
+            image_id="demo_001",
+            source="staged_external:a.jpg",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            notes="",
+            expected_crop="tomato",
+            expected_part="leaf",
+            expected_class="healthy",
+        ),
+        ChecklistRow(
+            image_id="demo_002",
+            source="staged_external:b.jpg",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            notes="",
+            expected_crop="tomato",
+            expected_part="leaf",
+            expected_class="healthy",
+        ),
+    ]
+    router_calls = []
+    adapter_batch_sizes = []
+
+    def fake_batch(image_paths, **_kwargs):
+        router_calls.append([Path(path).name for path in image_paths])
+        return [
+            {"status": "ok", "crop": "tomato", "part": "leaf", "router": {}},
+            {"status": "ok", "crop": "tomato", "part": "leaf", "router": {}},
+        ]
+
+    class FakeAdapter:
+        def predict_batch_with_ood(self, images):
+            adapter_batch_sizes.append(int(images.shape[0]))
+            return [
+                {
+                    "status": "success",
+                    "disease": {"class_index": 0, "name": "healthy", "confidence": 0.9},
+                    "ood_analysis": {"score_method": "ensemble", "primary_score": 0.1, "decision_threshold": 0.5},
+                }
+                for _ in range(int(images.shape[0]))
+            ]
+
+    class FakeRuntime:
+        input_guard_enabled = False
+        target_size = 8
+
+        def load_adapter(self, crop, *, part_name=None):
+            assert (crop, part_name) == ("tomato", "leaf")
+            return FakeAdapter()
+
+        def _coerce_image(self, image):
+            return Image.open(image).convert("RGB")
+
+    class FakeWorkflow:
+        def __init__(self, **_kwargs):
+            self.runtime = FakeRuntime()
+
+    def unexpected_single_adapter(*_args, **_kwargs):
+        raise AssertionError("single-row adapter path should not run")
+
+    monkeypatch.setattr("scripts.run_demo_checklist.run_router_inference_batch", fake_batch)
+    monkeypatch.setattr("scripts.run_demo_checklist.run_auto_router_adapter_prediction", unexpected_single_adapter)
+    monkeypatch.setattr("scripts.run_demo_checklist.InferenceWorkflow", FakeWorkflow)
+
+    output_rows = _run_official_batch_rows(
+        rows,
+        repo_root=tmp_path,
+        config_env="colab",
+        device="cuda",
+        adapter_root=tmp_path / "runs",
+        batch_size=2,
+        adapter_batch_size=8,
+    )
+
+    assert router_calls == [["a.jpg", "b.jpg"]]
+    assert adapter_batch_sizes == [2]
     assert [row["pass_fail"] for row in output_rows] == ["pass", "pass"]
 
 
