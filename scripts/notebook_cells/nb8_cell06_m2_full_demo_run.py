@@ -78,6 +78,11 @@ M2_PROTOTYPE_NEGATIVE_GAP_GRID = str(
     globals().get("M2_PROTOTYPE_NEGATIVE_GAP_GRID", "0.00,0.02,0.04,0.06,0.08,0.10")
 )
 M2_ALLOW_NON_PLANT_FALSE_ACCEPTS = bool(globals().get("M2_ALLOW_NON_PLANT_FALSE_ACCEPTS", False))
+M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE = str(
+    globals().get("M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE", "none")
+).strip().lower()
+if M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE not in {"all", "none"}:
+    M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE = "none"
 
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
@@ -139,6 +144,7 @@ else:
             M2_TAXONOMY_REGISTRY = str((prototype_dir / "taxonomy_registry.json").relative_to(repo_root))
 
     prototype_calibration_selected = False
+    prototype_target_policy_selected = False
     if M2_ENABLE_PROTOTYPE_RECONCILER and M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER and M2_PROTOTYPE_BANK:
         calibration_command = [
             sys.executable,
@@ -163,6 +169,8 @@ else:
             M2_PROTOTYPE_MARGIN_GRID,
             "--negative-gap-grid",
             M2_PROTOTYPE_NEGATIVE_GAP_GRID,
+            "--target-policy-negative-mode",
+            M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
         ]
         if M2_ALLOW_NON_PLANT_FALSE_ACCEPTS:
             calibration_command.append("--allow-non-plant-false-accepts")
@@ -174,7 +182,16 @@ else:
         if prototype_calibration_output_path.is_file():
             calibration_payload = json.loads(prototype_calibration_output_path.read_text(encoding="utf-8"))
             selected_policy = calibration_payload.get("selected_policy")
+            target_policies = calibration_payload.get("target_policies")
             prototype_calibration_selected = isinstance(selected_policy, dict)
+            prototype_target_policy_selected = (
+                any(
+                    isinstance(entry, dict) and isinstance(entry.get("selected_policy"), dict)
+                    for entry in target_policies.values()
+                )
+                if isinstance(target_policies, dict)
+                else False
+            )
             if prototype_calibration_selected:
                 if M2_PROTOTYPE_MIN_SIMILARITY is None:
                     M2_PROTOTYPE_MIN_SIMILARITY = selected_policy.get("min_similarity")
@@ -186,7 +203,11 @@ else:
                 print(json.dumps(selected_policy, indent=2, ensure_ascii=False))
             else:
                 print("[M2] Prototype calibration did not select a runtime policy.")
-        if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY and not prototype_calibration_selected:
+            if prototype_target_policy_selected:
+                print("[M2] Prototype calibration selected at least one target-specific policy.")
+        if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY and not (
+            prototype_calibration_selected or prototype_target_policy_selected
+        ):
             M2_ENABLE_PROTOTYPE_RECONCILER = False
             print("[M2] Prototype reconciler disabled because no calibrated policy was selected.")
 
@@ -321,6 +342,8 @@ else:
                 "prototype_min_margin": M2_PROTOTYPE_MIN_MARGIN,
                 "prototype_min_negative_gap": M2_PROTOTYPE_MIN_NEGATIVE_GAP,
                 "calibration_selected_policy": bool(prototype_calibration_selected),
+                "calibration_selected_target_policy": bool(prototype_target_policy_selected),
+                "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
             },
             "copied_artifacts": copied_paths,
             "summary": m2_demo_result.get("summary", {}) if isinstance(m2_demo_result, dict) else {},

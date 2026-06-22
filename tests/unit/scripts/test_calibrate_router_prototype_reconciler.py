@@ -125,6 +125,44 @@ def test_calibrate_blocks_unknown_crop_false_accept_by_default():
     assert result["best_candidate"]["non_plant_false_accept_count"] == 0
 
 
+def test_calibrate_can_select_target_policies_without_global_negatives():
+    rows = [
+        ScoredRow(
+            image_id="demo_001",
+            expected_target="tomato__fruit",
+            expected_behavior="answer",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="a.png",
+            status="ok",
+        ),
+        ScoredRow(
+            image_id="demo_002",
+            expected_target="unknown_crop",
+            expected_behavior="abstain",
+            predicted_target="tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="b.png",
+            status="ok",
+        ),
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=1.0,
+        min_coverage=1.0,
+        target_policy_negative_mode="none",
+    )
+
+    assert result["selected_policy"] is None
+    assert result["target_policies"]["tomato__fruit"]["status"] == "target_specific"
+    assert result["target_policies"]["tomato__fruit"]["negative_mode"] == "none"
+
+
 def test_calibrate_can_allow_negative_false_accepts_explicitly():
     rows = [
         ScoredRow(

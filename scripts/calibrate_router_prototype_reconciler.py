@@ -183,6 +183,7 @@ def calibrate(
     max_negative_false_accepts: int | None = 0,
     max_negative_false_accept_rate: float | None = 0.05,
     include_target_policies: bool = True,
+    target_policy_negative_mode: str = "all",
 ) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for min_similarity in similarity_grid:
@@ -231,8 +232,9 @@ def calibrate(
         negative_rows = [row for row in rows if _target_is_negative(row.expected_target, row.expected_behavior)]
         for target in sorted({row.expected_target for row in rows if _target_is_supported_positive(row.expected_target)}):
             target_rows = [row for row in rows if row.expected_target == target]
+            target_calibration_rows = target_rows if target_policy_negative_mode == "none" else [*target_rows, *negative_rows]
             target_result = calibrate(
-                [*target_rows, *negative_rows],
+                target_calibration_rows,
                 similarity_grid=similarity_grid,
                 margin_grid=margin_grid,
                 negative_gap_grid=negative_gap_grid,
@@ -242,11 +244,13 @@ def calibrate(
                 max_negative_false_accepts=max_negative_false_accepts,
                 max_negative_false_accept_rate=max_negative_false_accept_rate,
                 include_target_policies=False,
+                target_policy_negative_mode=target_policy_negative_mode,
             )
             target_policies[target] = {
                 "status": "target_specific" if target_result["selected_policy"] else "no_eligible_policy",
                 "selected_policy": target_result["selected_policy"],
                 "best_candidate": target_result["best_candidate"],
+                "negative_mode": target_policy_negative_mode,
             }
     return {
         "selected_policy": selected if selected and selected.get("eligible_for_promotion") else None,
@@ -271,6 +275,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--allow-non-plant-false-accepts", action="store_true")
     parser.add_argument("--max-negative-false-accepts", type=int, default=0)
     parser.add_argument("--max-negative-false-accept-rate", type=float, default=0.05)
+    parser.add_argument(
+        "--target-policy-negative-mode",
+        choices=("all", "none"),
+        default="all",
+        help=(
+            "Use all negative rows when selecting each target policy, or select target policies from target rows only. "
+            "The global selected policy always keeps the full negative guard."
+        ),
+    )
     parser.add_argument("--fail-on-no-policy", action="store_true")
     return parser
 
@@ -293,6 +306,7 @@ def main(argv: list[str] | None = None) -> int:
         require_zero_non_plant_false_accepts=not args.allow_non_plant_false_accepts,
         max_negative_false_accepts=args.max_negative_false_accepts,
         max_negative_false_accept_rate=args.max_negative_false_accept_rate,
+        target_policy_negative_mode=args.target_policy_negative_mode,
     )
     payload = {
         "schema_version": "router_prototype_calibration.v1",
@@ -305,6 +319,7 @@ def main(argv: list[str] | None = None) -> int:
             "require_zero_non_plant_false_accepts": not args.allow_non_plant_false_accepts,
             "max_negative_false_accepts": args.max_negative_false_accepts,
             "max_negative_false_accept_rate": args.max_negative_false_accept_rate,
+            "target_policy_negative_mode": args.target_policy_negative_mode,
             "promotion_mode": "prototype_override",
         },
         "summary": {
