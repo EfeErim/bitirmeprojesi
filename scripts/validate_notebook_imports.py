@@ -441,6 +441,7 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260622T161859Z/summary.json'",
         "M2_PROTOTYPE_TARGET_MIN_PRECISION = 0.98",
         "M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = 1",
+        "M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED = 5",
     ):
         _assert_contains(
             sources.full_source,
@@ -456,6 +457,7 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "m2_comparison_passed",
         "--target-min-precision",
         "--target-max-supported-wrong",
+        "--target-class-min-accepted",
     ):
         _assert_contains(
             m2_cell_source,

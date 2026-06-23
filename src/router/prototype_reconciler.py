@@ -217,6 +217,7 @@ def _coerce_policy_float(policy: dict[str, Any] | None, key: str, fallback: floa
 def _selected_target_policy(
     *,
     target_id: str | None,
+    class_label: str | None = None,
     target_policies: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
     if not target_id or not isinstance(target_policies, dict):
@@ -225,9 +226,20 @@ def _selected_target_policy(
     if not isinstance(entry, dict):
         return None
     selected = entry.get("selected_policy")
+    policy_scope = "target"
+    if not isinstance(selected, dict) and class_label:
+        class_policies = entry.get("class_policies")
+        if isinstance(class_policies, dict):
+            class_entry = class_policies.get(class_label)
+            if isinstance(class_entry, dict):
+                selected = class_entry.get("selected_policy")
+                policy_scope = "class"
     if not isinstance(selected, dict):
         return None
     policy = dict(selected)
+    policy["_target_policy_scope"] = policy_scope
+    if policy_scope == "class":
+        policy["_target_policy_class_label"] = class_label
     if entry.get("negative_mode") is not None:
         policy["_target_policy_negative_mode"] = entry.get("negative_mode")
     return policy
@@ -270,7 +282,11 @@ def reconcile_router_handoff(
     router_target = make_target_id(vlm_crop, vlm_part) if vlm_crop and vlm_part else None
     router_is_trusted = status in TRUSTED_ROUTER_STATUSES
     router_target_is_supported = bool(router_target and router_target in supported)
-    target_policy = _selected_target_policy(target_id=match.target_id, target_policies=target_policies)
+    target_policy = _selected_target_policy(
+        target_id=match.target_id,
+        class_label=match.class_label,
+        target_policies=target_policies,
+    )
     effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
     effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
     effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)

@@ -212,6 +212,49 @@ def test_reconciler_requires_selected_policy_when_calibration_has_no_global_poli
     assert decision.reason == "prototype_policy_not_calibrated"
 
 
+def test_reconciler_uses_selected_class_policy_when_target_policy_missing(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "late_blight" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(grape_leaf, (40, 20, 120))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_leaf,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__leaf": {
+                "status": "no_eligible_policy",
+                "selected_policy": None,
+                "class_policies": {
+                    "late_blight": {
+                        "status": "class_specific",
+                        "selected_policy": {
+                            "min_similarity": 0.1,
+                            "min_margin": 0.0,
+                            "min_negative_gap": 0.0,
+                        },
+                    }
+                },
+            },
+        },
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.crop == "tomato"
+    assert decision.part == "leaf"
+    assert decision.to_payload()["prototype_class_label"] == "late_blight"
+
+
 def test_reconciler_accepts_trusted_router_agreement_without_selected_target_policy(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"

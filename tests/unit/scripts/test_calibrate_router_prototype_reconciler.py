@@ -231,6 +231,7 @@ def test_calibrate_rejects_noisy_target_policy_with_target_constraints():
             margin=0.04,
             resolved_image=f"{index}.png",
             status="ok",
+            prototype_class_label="clean_leaf" if index <= 92 else "fruit_confuser",
         )
         for index in range(1, 109)
     ]
@@ -249,6 +250,69 @@ def test_calibrate_rejects_noisy_target_policy_with_target_constraints():
     assert tomato_policy["status"] == "no_eligible_policy"
     assert "supported_precision_below_target" in tomato_policy["failure_reasons"]
     assert "supported_wrong_above_target" in tomato_policy["failure_reasons"]
+    assert tomato_policy["class_policies"]["clean_leaf"]["status"] == "class_specific"
+    assert tomato_policy["class_policies"]["clean_leaf"]["selected_policy"]["supported_correct"] == 92
+
+
+def test_calibrate_class_policy_counts_supported_false_accepts():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="late_blight",
+        )
+        for index in range(1, 8)
+    ]
+    rows.extend(
+        [
+            ScoredRow(
+                image_id="demo_008",
+                expected_target="grape__leaf",
+                expected_behavior="answer",
+                predicted_target="tomato__leaf",
+                similarity=0.7,
+                margin=0.04,
+                resolved_image="8.png",
+                status="ok",
+                prototype_class_label="late_blight",
+            ),
+            ScoredRow(
+                image_id="demo_009",
+                expected_target="tomato__leaf",
+                expected_behavior="answer",
+                predicted_target="tomato__fruit",
+                similarity=0.7,
+                margin=0.04,
+                resolved_image="9.png",
+                status="ok",
+                prototype_class_label="fruit_confuser",
+            ),
+        ]
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    tomato_policy = result["target_policies"]["tomato__leaf"]
+    assert tomato_policy["status"] == "no_eligible_policy"
+    class_policy = tomato_policy["class_policies"]["late_blight"]
+    assert class_policy["status"] == "no_eligible_policy"
+    assert class_policy["best_candidate"]["supported_wrong"] == 1
+    assert "supported_wrong_above_class_target" in class_policy["failure_reasons"]
 
 
 def test_calibrate_can_allow_negative_false_accepts_explicitly():

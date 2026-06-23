@@ -82,6 +82,7 @@ M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE = float(
 )
 M2_PROTOTYPE_TARGET_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_TARGET_MIN_PRECISION", 0.98))
 M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = globals().get("M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG", 1)
+M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED = int(globals().get("M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED", 5))
 M2_PROTOTYPE_SIMILARITY_GRID = str(
     globals().get("M2_PROTOTYPE_SIMILARITY_GRID", "0.20,0.30,0.40,0.50,0.60,0.70")
 )
@@ -115,6 +116,7 @@ def _expected_calibration_constraints():
         "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
         "target_max_supported_wrong": int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG),
         "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
+        "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
         "promotion_mode": "prototype_override",
     }
 
@@ -294,6 +296,8 @@ else:
                 str(M2_PROTOTYPE_TARGET_MIN_PRECISION),
                 "--target-max-supported-wrong",
                 str(int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG)),
+                "--target-class-min-accepted",
+                str(int(M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED)),
                 "--similarity-grid",
                 M2_PROTOTYPE_SIMILARITY_GRID,
                 "--margin-grid",
@@ -318,6 +322,17 @@ else:
             prototype_target_policy_selected = (
                 any(
                     isinstance(entry, dict) and isinstance(entry.get("selected_policy"), dict)
+                    or (
+                        isinstance(entry, dict)
+                        and any(
+                            isinstance(class_entry, dict) and isinstance(class_entry.get("selected_policy"), dict)
+                            for class_entry in (
+                                entry.get("class_policies")
+                                if isinstance(entry.get("class_policies"), dict)
+                                else {}
+                            ).values()
+                        )
+                    )
                     for entry in target_policies.values()
                 )
                 if isinstance(target_policies, dict)
@@ -484,6 +499,7 @@ else:
                 "calibration_selected_target_policy": bool(prototype_target_policy_selected),
                 "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
                 "target_max_supported_wrong": M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG,
+                "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
                 "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
             },
             "copied_artifacts": copied_paths,
