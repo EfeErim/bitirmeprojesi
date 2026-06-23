@@ -28,6 +28,8 @@ class PrototypeMatch:
     second_target_id: str | None = None
     second_similarity: float | None = None
     margin: float = 0.0
+    class_label: str | None = None
+    prototype_level: str = "target"
 
 
 @dataclass(frozen=True)
@@ -51,6 +53,8 @@ class ReconcileDecision:
         payload["prototype_crop"] = match.get("crop") if isinstance(match, dict) else None
         payload["prototype_part"] = match.get("part") if isinstance(match, dict) else None
         payload["prototype_target"] = match.get("target_id") if isinstance(match, dict) else None
+        payload["prototype_class_label"] = match.get("class_label") if isinstance(match, dict) else None
+        payload["prototype_level"] = match.get("prototype_level") if isinstance(match, dict) else None
         payload["prototype_similarity"] = match.get("similarity") if isinstance(match, dict) else None
         payload["prototype_margin"] = match.get("margin") if isinstance(match, dict) else None
         payload["prototype_min_negative_gap"] = self.min_negative_gap
@@ -139,37 +143,65 @@ def nearest_target(
         embedding_model_id=str(source_roots.get("embedding_model_id") or "imageomics/bioclip-2.5-vith14"),
         device=str(source_roots.get("embedding_device") or "cpu"),
     )
-    scored: list[tuple[float, str, dict[str, Any]]] = []
-    for target_id, target in sorted((prototype_payload.get("target_prototypes") or {}).items()):
-        if not isinstance(target, dict):
-            continue
-        centroid = tuple(float(value) for value in target.get("centroid", []) if value is not None)
-        if not centroid:
-            continue
-        distance = euclidean_distance(query_vector, centroid)
-        scored.append((distance, str(target_id), target))
+    scored: list[tuple[float, str, dict[str, Any], str | None, str]] = []
+    class_prototypes = prototype_payload.get("class_prototypes")
+    if isinstance(class_prototypes, dict) and class_prototypes:
+        best_by_target: dict[str, tuple[float, str, dict[str, Any], str]] = {}
+        for class_key, class_payload in sorted(class_prototypes.items()):
+            if not isinstance(class_payload, dict):
+                continue
+            target_id = str(class_payload.get("target_id") or "").strip()
+            if not target_id:
+                continue
+            centroid = tuple(float(value) for value in class_payload.get("centroid", []) if value is not None)
+            if not centroid:
+                continue
+            distance = euclidean_distance(query_vector, centroid)
+            class_label = str(class_payload.get("class_label") or class_key).strip()
+            existing = best_by_target.get(target_id)
+            if existing is None or (distance, class_label) < (existing[0], existing[1]):
+                best_by_target[target_id] = (distance, class_label, class_payload, "class")
+        scored = [
+            (distance, target_id, class_payload, class_label, prototype_level)
+            for target_id, (distance, class_label, class_payload, prototype_level) in best_by_target.items()
+        ]
+
+    if not scored:
+        for target_id, target in sorted((prototype_payload.get("target_prototypes") or {}).items()):
+            if not isinstance(target, dict):
+                continue
+            centroid = tuple(float(value) for value in target.get("centroid", []) if value is not None)
+            if not centroid:
+                continue
+            distance = euclidean_distance(query_vector, centroid)
+            scored.append((distance, str(target_id), target, None, "target"))
 
     if not scored:
         return PrototypeMatch(target_id=None, crop=None, part=None, similarity=0.0, distance=0.0)
 
     scored.sort(key=lambda item: (item[0], item[1]))
-    best_distance, best_target_id, best_target = scored[0]
+    best_distance, best_target_id, best_target, best_class_label, best_level = scored[0]
     best_similarity = _similarity_from_distance(best_distance)
     second_target_id = None
     second_similarity = None
     if len(scored) > 1:
-        second_distance, second_target_id, _ = scored[1]
+        second_distance, second_target_id, _, _, _ = scored[1]
         second_similarity = _similarity_from_distance(second_distance)
     margin = round(best_similarity - float(second_similarity or 0.0), 8)
+    target_metadata = (prototype_payload.get("target_prototypes") or {}).get(best_target_id)
+    if not isinstance(target_metadata, dict):
+        target_metadata = best_target
     return PrototypeMatch(
         target_id=best_target_id,
-        crop=_norm_text(best_target.get("crop")),
-        part=_norm_text(best_target.get("part")),
+        crop=_norm_text(target_metadata.get("crop")),
+        part=_norm_text(target_metadata.get("part")),
         similarity=best_similarity,
         distance=round(best_distance, 8),
         second_target_id=second_target_id,
         second_similarity=second_similarity,
         margin=margin,
+        class_label=best_class_label,
+        prototype_level=best_level,
     )
 
 
@@ -193,7 +225,18 @@ def _selected_target_policy(
     if not isinstance(entry, dict):
         return None
     selected = entry.get("selected_policy")
-    return selected if isinstance(selected, dict) else None
+    if not isinstance(selected, dict):
+        return None
+    policy = dict(selected)
+    if entry.get("negative_mode") is not None:
+        policy["_target_policy_negative_mode"] = entry.get("negative_mode")
+    return policy
+
+
+def _requires_selected_policy(target_policies: dict[str, Any] | None) -> bool:
+    if not isinstance(target_policies, dict):
+        return False
+    return bool(target_policies.get("__requires_selected_policy__"))
 
 
 def reconcile_router_handoff(
@@ -222,10 +265,35 @@ def reconcile_router_handoff(
     target_taxonomy = load_target_taxonomy(registry_payload)
     relation = taxonomy_relation(vlm_crop, match.target_id, target_taxonomy)
     supported = set(supported_targets or set((target_taxonomy or {}).keys()))
+    prototype_crop = match.crop
+    prototype_part = match.part
+    router_target = make_target_id(vlm_crop, vlm_part) if vlm_crop and vlm_part else None
+    router_is_trusted = status in TRUSTED_ROUTER_STATUSES
+    router_target_is_supported = bool(router_target and router_target in supported)
     target_policy = _selected_target_policy(target_id=match.target_id, target_policies=target_policies)
+    if target_policy is None and _requires_selected_policy(target_policies):
+        return ReconcileDecision(
+            decision="abstain",
+            crop=vlm_crop,
+            part=vlm_part,
+            reason="prototype_policy_not_calibrated",
+            taxonomy_relation=relation,
+            prototype_match=match,
+            vlm_crop=vlm_crop,
+            vlm_part=vlm_part,
+            min_similarity=min_similarity,
+            min_margin=min_margin,
+            min_negative_gap=min_negative_gap,
+        )
     effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
     effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
     effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)
+    if (
+        target_policy
+        and target_policy.get("_target_policy_negative_mode") == "none"
+        and (not router_is_trusted or not router_target_is_supported)
+    ):
+        effective_min_margin = max(effective_min_margin, min_margin)
 
     if not match.target_id or match.target_id not in supported:
         return ReconcileDecision(
@@ -272,11 +340,6 @@ def reconcile_router_handoff(
             min_negative_gap=effective_min_negative_gap,
         )
 
-    prototype_crop = match.crop
-    prototype_part = match.part
-    router_target = make_target_id(vlm_crop, vlm_part) if vlm_crop and vlm_part else None
-    router_is_trusted = status in TRUSTED_ROUTER_STATUSES
-    router_target_is_supported = bool(router_target and router_target in supported)
     if router_target == match.target_id and router_is_trusted:
         return ReconcileDecision(
             decision="accept_router",

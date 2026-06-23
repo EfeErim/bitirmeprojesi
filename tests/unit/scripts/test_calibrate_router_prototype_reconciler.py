@@ -44,6 +44,8 @@ def test_score_manifest_and_calibrate_selects_policy(tmp_path: Path):
     )
 
     assert len(rows) == 3
+    assert rows[0].prototype_class_label == "healthy"
+    assert rows[0].prototype_level == "class"
     assert result["selected_policy"] is None
     assert result["best_candidate"]["supported_precision"] == 1.0
     assert result["best_candidate"]["supported_coverage"] == 1.0
@@ -161,6 +163,92 @@ def test_calibrate_can_select_target_policies_without_global_negatives():
     assert result["selected_policy"] is None
     assert result["target_policies"]["tomato__fruit"]["status"] == "target_specific"
     assert result["target_policies"]["tomato__fruit"]["negative_mode"] == "none"
+
+
+def test_calibrate_selects_near_miss_target_policy_with_target_constraints():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            predicted_target="grape__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+        )
+        for index in range(1, 55)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_055",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            predicted_target="grape__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="55.png",
+            status="ok",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=1,
+    )
+
+    assert result["selected_policy"] is None
+    grape_policy = result["target_policies"]["grape__fruit"]
+    assert grape_policy["status"] == "target_specific"
+    assert grape_policy["selected_policy"]["supported_precision"] == 0.981818
+    assert grape_policy["selected_policy"]["supported_wrong"] == 1
+    assert grape_policy["selected_policy"]["supported_wrong_rows"] == [
+        {
+            "image_id": "demo_055",
+            "expected_target": "grape__fruit",
+            "predicted_target": "grape__leaf",
+            "prototype_class_label": None,
+            "prototype_level": "target",
+            "similarity": 0.7,
+            "margin": 0.04,
+        }
+    ]
+
+
+def test_calibrate_rejects_noisy_target_policy_with_target_constraints():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf" if index <= 92 else "tomato__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+        )
+        for index in range(1, 109)
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=1,
+    )
+
+    tomato_policy = result["target_policies"]["tomato__leaf"]
+    assert tomato_policy["status"] == "no_eligible_policy"
+    assert "supported_precision_below_target" in tomato_policy["failure_reasons"]
+    assert "supported_wrong_above_target" in tomato_policy["failure_reasons"]
 
 
 def test_calibrate_can_allow_negative_false_accepts_explicitly():

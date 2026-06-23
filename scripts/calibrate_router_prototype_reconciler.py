@@ -30,6 +30,8 @@ class ScoredRow:
     margin: float
     resolved_image: str
     status: str
+    prototype_class_label: str | None = None
+    prototype_level: str = "target"
 
 
 def _target_is_supported_positive(target: str) -> bool:
@@ -81,6 +83,8 @@ def score_manifest(
                     margin=0.0,
                     resolved_image="" if image_path is None else str(image_path),
                     status=asset_status,
+                    prototype_class_label=None,
+                    prototype_level="unavailable",
                 )
             )
             continue
@@ -96,6 +100,8 @@ def score_manifest(
                     margin=match.margin,
                     resolved_image=str(image_path),
                     status="ok",
+                    prototype_class_label=match.class_label,
+                    prototype_level=match.prototype_level,
                 )
             )
         except Exception as exc:
@@ -109,6 +115,8 @@ def score_manifest(
                     margin=0.0,
                     resolved_image=str(image_path),
                     status=f"error:{exc}",
+                    prototype_class_label=None,
+                    prototype_level="error",
                 )
             )
     return scored
@@ -162,6 +170,20 @@ def evaluate_thresholds(
         "supported_accepted": len(supported_accepted),
         "supported_correct": len(correct),
         "supported_wrong": len(wrong),
+        "supported_wrong_image_ids": [row.image_id for row in wrong[:25]],
+        "supported_wrong_rows": [
+            {
+                "image_id": row.image_id,
+                "expected_target": row.expected_target,
+                "predicted_target": row.predicted_target,
+                "prototype_class_label": row.prototype_class_label,
+                "prototype_level": row.prototype_level,
+                "similarity": row.similarity,
+                "margin": row.margin,
+            }
+            for row in wrong[:25]
+        ],
+        "supported_wrong_truncated": len(wrong) > 25,
         "supported_coverage": round(supported_coverage, 6),
         "supported_precision": round(supported_precision, 6),
         "negative_rows": len(negatives),
@@ -182,8 +204,11 @@ def calibrate(
     require_zero_non_plant_false_accepts: bool = True,
     max_negative_false_accepts: int | None = 0,
     max_negative_false_accept_rate: float | None = 0.05,
+    max_supported_wrong: int | None = None,
     include_target_policies: bool = True,
     target_policy_negative_mode: str = "all",
+    target_min_precision: float | None = None,
+    target_max_supported_wrong: int | None = None,
 ) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     for min_similarity in similarity_grid:
@@ -209,6 +234,10 @@ def calibrate(
                     and (
                         max_negative_false_accept_rate is None
                         or result["negative_false_accept_rate"] <= max_negative_false_accept_rate
+                    )
+                    and (
+                        max_supported_wrong is None
+                        or result["supported_wrong"] <= max_supported_wrong
                     )
                 )
                 candidates.append(result)
@@ -238,19 +267,46 @@ def calibrate(
                 similarity_grid=similarity_grid,
                 margin_grid=margin_grid,
                 negative_gap_grid=negative_gap_grid,
-                min_precision=min_precision,
+                min_precision=min_precision if target_min_precision is None else target_min_precision,
                 min_coverage=min_coverage,
                 require_zero_non_plant_false_accepts=require_zero_non_plant_false_accepts,
                 max_negative_false_accepts=max_negative_false_accepts,
                 max_negative_false_accept_rate=max_negative_false_accept_rate,
+                max_supported_wrong=target_max_supported_wrong,
                 include_target_policies=False,
                 target_policy_negative_mode=target_policy_negative_mode,
             )
+            target_constraints = {
+                "min_precision": min_precision if target_min_precision is None else target_min_precision,
+                "min_coverage": min_coverage,
+                "max_supported_wrong": target_max_supported_wrong,
+            }
+            best_candidate = target_result["best_candidate"] or {}
+            failure_reasons: list[str] = []
+            if not target_result["selected_policy"]:
+                if float(best_candidate.get("supported_precision") or 0.0) < float(target_constraints["min_precision"]):
+                    failure_reasons.append("supported_precision_below_target")
+                if float(best_candidate.get("supported_coverage") or 0.0) < float(target_constraints["min_coverage"]):
+                    failure_reasons.append("supported_coverage_below_target")
+                if (
+                    target_constraints["max_supported_wrong"] is not None
+                    and int(best_candidate.get("supported_wrong") or 0) > int(target_constraints["max_supported_wrong"])
+                ):
+                    failure_reasons.append("supported_wrong_above_target")
+                if (
+                    max_negative_false_accepts is not None
+                    and int(best_candidate.get("negative_false_accept_count") or 0) > int(max_negative_false_accepts)
+                ):
+                    failure_reasons.append("negative_false_accepts_above_target")
+                if require_zero_non_plant_false_accepts and int(best_candidate.get("non_plant_false_accept_count") or 0):
+                    failure_reasons.append("non_plant_false_accepts_present")
             target_policies[target] = {
                 "status": "target_specific" if target_result["selected_policy"] else "no_eligible_policy",
                 "selected_policy": target_result["selected_policy"],
                 "best_candidate": target_result["best_candidate"],
                 "negative_mode": target_policy_negative_mode,
+                "constraints": target_constraints,
+                "failure_reasons": failure_reasons,
             }
     return {
         "selected_policy": selected if selected and selected.get("eligible_for_promotion") else None,
@@ -275,6 +331,21 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--allow-non-plant-false-accepts", action="store_true")
     parser.add_argument("--max-negative-false-accepts", type=int, default=0)
     parser.add_argument("--max-negative-false-accept-rate", type=float, default=0.05)
+    parser.add_argument(
+        "--target-min-precision",
+        type=float,
+        default=0.98,
+        help=(
+            "Precision floor for target-specific policies. The global policy still uses --min-precision; "
+            "the default recovers near-miss targets without promoting noisy targets."
+        ),
+    )
+    parser.add_argument(
+        "--target-max-supported-wrong",
+        type=int,
+        default=1,
+        help="Maximum wrong supported rows allowed for a target-specific policy.",
+    )
     parser.add_argument(
         "--target-policy-negative-mode",
         choices=("all", "none"),
@@ -306,6 +377,8 @@ def main(argv: list[str] | None = None) -> int:
         require_zero_non_plant_false_accepts=not args.allow_non_plant_false_accepts,
         max_negative_false_accepts=args.max_negative_false_accepts,
         max_negative_false_accept_rate=args.max_negative_false_accept_rate,
+        target_min_precision=args.target_min_precision,
+        target_max_supported_wrong=args.target_max_supported_wrong,
         target_policy_negative_mode=args.target_policy_negative_mode,
     )
     payload = {
@@ -319,6 +392,8 @@ def main(argv: list[str] | None = None) -> int:
             "require_zero_non_plant_false_accepts": not args.allow_non_plant_false_accepts,
             "max_negative_false_accepts": args.max_negative_false_accepts,
             "max_negative_false_accept_rate": args.max_negative_false_accept_rate,
+            "target_min_precision": args.target_min_precision,
+            "target_max_supported_wrong": args.target_max_supported_wrong,
             "target_policy_negative_mode": args.target_policy_negative_mode,
             "promotion_mode": "prototype_override",
         },

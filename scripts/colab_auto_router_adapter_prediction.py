@@ -53,6 +53,20 @@ def _coerce_float(value: Any, *, default: float) -> float:
         return default
 
 
+def _norm_label(value: Any) -> str:
+    return "".join(ch for ch in str(value or "").lower() if ch.isalnum())
+
+
+def _diagnosis_crosses_part(part: Optional[str], diagnosis: Any) -> bool:
+    part_key = _normalize_optional_text(part)
+    diagnosis_key = _norm_label(diagnosis)
+    if part_key == "fruit":
+        return "leaf" in diagnosis_key or "yaprak" in diagnosis_key
+    if part_key == "leaf":
+        return "fruit" in diagnosis_key or "meyve" in diagnosis_key
+    return False
+
+
 def _router_payload(router_result: Dict[str, Any]) -> Dict[str, Any]:
     payload = router_result.get("router")
     return dict(payload) if isinstance(payload, dict) else {}
@@ -290,6 +304,20 @@ def run_auto_router_adapter_prediction(
         trust_crop_hint=True,
     )
     combined = dict(payload)
+    if _diagnosis_crosses_part(part, combined.get("diagnosis")):
+        unsafe_diagnosis = combined.get("diagnosis")
+        combined.update(
+            {
+                "status": "router_uncertain",
+                "diagnosis": None,
+                "confidence": 0.0,
+                "message": (
+                    f"Adapter diagnosis '{unsafe_diagnosis}' conflicts with routed part '{part}'; "
+                    "returning review instead of a final answer."
+                ),
+                "unsafe_diagnosis": unsafe_diagnosis,
+            }
+        )
     combined["router_source"] = handoff["router"]
     combined["router_handoff"] = {
         "adapter_ran": True,

@@ -320,6 +320,10 @@ def resolve_prototype_thresholds_from_calibration(
         "policy_selected": isinstance(selected, dict),
         "target_policy_count": len(target_policies),
     }
+    if not isinstance(selected, dict) and target_policies:
+        target_policies = dict(target_policies)
+        target_policies["__requires_selected_policy__"] = True
+        report["requires_selected_target_policy"] = True
     if isinstance(selected, dict):
         if min_similarity is None:
             min_similarity = float(selected.get("min_similarity"))
@@ -472,6 +476,8 @@ def _format_output_row(
         "prototype_crop": reconciliation.get("prototype_crop"),
         "prototype_part": reconciliation.get("prototype_part"),
         "prototype_target": reconciliation.get("prototype_target"),
+        "prototype_class_label": reconciliation.get("prototype_class_label"),
+        "prototype_level": reconciliation.get("prototype_level"),
         "reconciled_crop": reconciliation.get("reconciled_crop"),
         "reconciled_part": reconciliation.get("reconciled_part"),
         "taxonomy_relation": reconciliation.get("taxonomy_relation"),
@@ -792,7 +798,9 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     answered_wrong_by_target: dict[str, int] = {}
     answered_wrong_by_expected_class: dict[str, int] = {}
     prototype_correct_but_abstained: list[str] = []
+    prototype_correct_but_abstained_by_target: dict[str, int] = {}
     negative_false_accepts: list[str] = []
+    negative_false_accepts_by_target: dict[str, int] = {}
     policy_thresholds_by_target: dict[str, dict[str, Any]] = {}
 
     for row in items:
@@ -869,9 +877,13 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
             prototype_target = str(row.get("prototype_target") or "")
         if target and prototype_target == target and reconcile_decision == "abstain":
             prototype_correct_but_abstained.append(str(row.get("image_id") or ""))
+            prototype_correct_but_abstained_by_target[target] = (
+                prototype_correct_but_abstained_by_target.get(target, 0) + 1
+            )
         if target in {"unknown_crop", "non_plant"} or target.endswith("__unknown_part"):
             if status == "success" or reconcile_decision in {"accept_router", "use_prototype"}:
                 negative_false_accepts.append(str(row.get("image_id") or ""))
+                negative_false_accepts_by_target[target] = negative_false_accepts_by_target.get(target, 0) + 1
         if target and row.get("prototype_similarity") is not None:
             policy_thresholds_by_target.setdefault(
                 target,
@@ -896,11 +908,13 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
             "count": len(prototype_correct_but_abstained),
             "image_ids": prototype_correct_but_abstained[:100],
             "truncated": len(prototype_correct_but_abstained) > 100,
+            "by_target": dict(sorted(prototype_correct_but_abstained_by_target.items())),
         },
         "negative_false_accepts": {
             "count": len(negative_false_accepts),
             "image_ids": negative_false_accepts[:100],
             "truncated": len(negative_false_accepts) > 100,
+            "by_target": dict(sorted(negative_false_accepts_by_target.items())),
         },
         "policy_thresholds_by_target": dict(sorted(policy_thresholds_by_target.items())),
         "opposite_part_disease_labels": {
@@ -923,8 +937,16 @@ def write_analysis_markdown(analysis: dict[str, Any], output_path: Path) -> None
         f"- adapter_unavailable: `{json.dumps(analysis['adapter_unavailable'], sort_keys=True)}`",
         f"- prototype_reconciliation: `{json.dumps(analysis.get('prototype_reconciliation', {}), sort_keys=True)}`",
         f"- answered_wrong_by_target: `{json.dumps(analysis.get('answered_wrong_by_target', {}), sort_keys=True)}`",
-        f"- prototype_correct_but_abstained: {analysis.get('prototype_correct_but_abstained', {}).get('count', 0)}",
-        f"- negative_false_accepts: {analysis.get('negative_false_accepts', {}).get('count', 0)}",
+        (
+            "- prototype_correct_but_abstained: "
+            f"{analysis.get('prototype_correct_but_abstained', {}).get('count', 0)} "
+            f"`{json.dumps(analysis.get('prototype_correct_but_abstained', {}).get('by_target', {}), sort_keys=True)}`"
+        ),
+        (
+            "- negative_false_accepts: "
+            f"{analysis.get('negative_false_accepts', {}).get('count', 0)} "
+            f"`{json.dumps(analysis.get('negative_false_accepts', {}).get('by_target', {}), sort_keys=True)}`"
+        ),
         f"- opposite_part_disease_labels: {analysis['opposite_part_disease_labels']['count']}",
         "",
         "## Per Target",

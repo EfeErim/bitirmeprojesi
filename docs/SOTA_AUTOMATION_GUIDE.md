@@ -158,7 +158,7 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-22T07:16:33Z`
+Generated: `2026-06-23T11:42:23Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 

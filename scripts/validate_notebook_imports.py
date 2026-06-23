@@ -375,6 +375,9 @@ def test_auto_router_adapter_notebook_contract() -> None:
 
     sources = _load_notebook_sources("8_auto_router_adapter_prediction.ipynb")
     helper_source = inspect.getsource(run_auto_router_adapter_prediction)
+    m2_cell_source = (ROOT / "scripts" / "notebook_cells" / "nb8_cell06_m2_full_demo_run.py").read_text(
+        encoding="utf-8"
+    )
 
     _assert_code_cells_compile(sources, "Notebook 8")
     _assert_contains(
@@ -434,6 +437,31 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "trust_crop_hint=True",
         "Notebook 8 helper should avoid duplicating Notebook 1 routing by using a trusted router handoff: {snippet}",
     )
+    for snippet in (
+        "M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260622T161859Z/summary.json'",
+        "M2_PROTOTYPE_TARGET_MIN_PRECISION = 0.98",
+        "M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = 1",
+    ):
+        _assert_contains(
+            sources.full_source,
+            snippet,
+            "Notebook 8 M2 full-demo parameters should expose bounded target-policy controls: {snippet}",
+        )
+    for snippet in (
+        "enrich_summary_manifest_sha256",
+        "manifest_sha256",
+        "m2_result_comparison.json",
+        "m2_result_comparison.md",
+        "m2_comparison_written",
+        "m2_comparison_passed",
+        "--target-min-precision",
+        "--target-max-supported-wrong",
+    ):
+        _assert_contains(
+            m2_cell_source,
+            snippet,
+            "Notebook 8 M2 full-demo calibration should pass bounded target-policy controls: {snippet}",
+        )
     assert sources.full_source.count("run_inference(") == 1, (
         "Notebook 8 should inherit the single Notebook 1 router call, not add a second router-only implementation"
     )

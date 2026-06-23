@@ -3,7 +3,7 @@ from pathlib import Path
 from PIL import Image
 
 from src.router.prototype_bank import build_prototype_bank
-from src.router.prototype_reconciler import reconcile_router_handoff, taxonomy_relation
+from src.router.prototype_reconciler import nearest_target, reconcile_router_handoff, taxonomy_relation
 from src.router.taxonomy_registry import build_taxonomy_registry
 
 
@@ -34,6 +34,21 @@ def test_reconciler_accepts_router_when_prototype_agrees(tmp_path: Path):
     assert decision.crop == "tomato"
     assert decision.part == "leaf"
     assert decision.to_payload()["reconciled_crop"] == "tomato"
+
+
+def test_nearest_target_uses_class_prototypes_when_available(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "late_blight" / "a.png"
+    tomato_fruit = dataset_root / "tomato__fruit" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(tomato_fruit, (190, 30, 30))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+
+    match = nearest_target(tomato_leaf, prototype_payload)
+
+    assert match.target_id == "tomato__leaf"
+    assert match.class_label == "late_blight"
+    assert match.prototype_level == "class"
 
 
 def test_reconciler_corrects_unknown_router_from_strong_prototype(tmp_path: Path):
@@ -170,6 +185,66 @@ def test_reconciler_applies_target_policy_before_global_thresholds(tmp_path: Pat
     assert decision.decision == "abstain"
     assert decision.reason == "negative_prototype_too_close"
     assert decision.min_negative_gap == 1.0
+
+
+def test_reconciler_requires_selected_policy_when_calibration_has_no_global_policy(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(grape_leaf, (40, 20, 120))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_leaf,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        target_policies={"__requires_selected_policy__": True},
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "prototype_policy_not_calibrated"
+
+
+def test_reconciler_keeps_margin_floor_for_target_only_policy_on_untrusted_router(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(grape_leaf, (20, 91, 41))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_leaf,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=1.0,
+        target_policies={
+            "tomato__leaf": {
+                "negative_mode": "none",
+                "selected_policy": {
+                    "min_similarity": 0.1,
+                    "min_margin": 0.0,
+                    "min_negative_gap": 0.0,
+                },
+            }
+        },
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "prototype_evidence_weak"
+    assert decision.min_margin == 1.0
 
 
 def test_taxonomy_relation_detects_same_family(tmp_path: Path):

@@ -10,6 +10,11 @@ from pathlib import Path
 
 from scripts.colab_notebook_helpers import maybe_auto_disconnect_colab_runtime
 from scripts.colab_repo_bootstrap import push_repo_paths_to_github
+from scripts.compare_m2_demo_results import (
+    compare_results,
+    comparison_markdown,
+    enrich_summary_manifest_sha256,
+)
 
 M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))
 M2_DEMO_MANIFEST = str(
@@ -32,6 +37,9 @@ M2_AUTO_PUSH_RESULTS = bool(globals().get("M2_AUTO_PUSH_RESULTS", True))
 M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin"))
 M2_AUTO_PUSH_BRANCH = str(globals().get("M2_AUTO_PUSH_BRANCH", "master") or "").strip() or None
 M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_results/m2"))
+M2_COMPARISON_BASELINE = str(
+    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260622T161859Z/summary.json") or ""
+)
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
 DEVICE = str(globals().get("DEVICE", "cuda"))
@@ -70,6 +78,8 @@ M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPTS = int(
 M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE = float(
     globals().get("M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE", 0.05)
 )
+M2_PROTOTYPE_TARGET_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_TARGET_MIN_PRECISION", 0.98))
+M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = globals().get("M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG", 1)
 M2_PROTOTYPE_SIMILARITY_GRID = str(
     globals().get("M2_PROTOTYPE_SIMILARITY_GRID", "0.20,0.30,0.40,0.50,0.60,0.70")
 )
@@ -163,6 +173,10 @@ else:
             str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPTS),
             "--max-negative-false-accept-rate",
             str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE),
+            "--target-min-precision",
+            str(M2_PROTOTYPE_TARGET_MIN_PRECISION),
+            "--target-max-supported-wrong",
+            str(int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG)),
             "--similarity-grid",
             M2_PROTOTYPE_SIMILARITY_GRID,
             "--margin-grid",
@@ -285,6 +299,13 @@ else:
     repo_results_rel = Path(M2_REPO_RESULTS_ROOT) / stamp
     repo_results_dir = repo_root / repo_results_rel
     m2_demo_publish_report = {"enabled": bool(M2_AUTO_PUSH_RESULTS), "pushed": False}
+    m2_comparison_report = {
+        "baseline": M2_COMPARISON_BASELINE,
+        "enabled": bool(M2_COMPARISON_BASELINE),
+        "written": False,
+        "status": "not_run",
+        "checks": {},
+    }
 
     if report_ready:
         repo_results_dir.mkdir(parents=True, exist_ok=True)
@@ -343,14 +364,60 @@ else:
                 "prototype_min_negative_gap": M2_PROTOTYPE_MIN_NEGATIVE_GAP,
                 "calibration_selected_policy": bool(prototype_calibration_selected),
                 "calibration_selected_target_policy": bool(prototype_target_policy_selected),
+                "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
+                "target_max_supported_wrong": M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG,
                 "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
             },
             "copied_artifacts": copied_paths,
             "summary": m2_demo_result.get("summary", {}) if isinstance(m2_demo_result, dict) else {},
             "analysis_summary": m2_demo_result.get("analysis_summary", {}) if isinstance(m2_demo_result, dict) else {},
         }
+        enrich_summary_manifest_sha256(summary_payload, repo_root=repo_root)
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         copied_paths.append(summary_path.relative_to(repo_root).as_posix())
+        summary_payload["copied_artifacts"] = copied_paths
+        comparison_baseline_path = (repo_root / M2_COMPARISON_BASELINE).resolve() if M2_COMPARISON_BASELINE else None
+        if comparison_baseline_path and comparison_baseline_path.is_file():
+            comparison_path = repo_results_dir / "m2_result_comparison.json"
+            comparison_markdown_path = repo_results_dir / "m2_result_comparison.md"
+            baseline_payload = enrich_summary_manifest_sha256(
+                json.loads(comparison_baseline_path.read_text(encoding="utf-8")),
+                repo_root=repo_root,
+            )
+            comparison_payload = compare_results(
+                baseline=baseline_payload,
+                candidate=summary_payload,
+            )
+            comparison_path.write_text(json.dumps(comparison_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+            comparison_markdown_path.write_text(comparison_markdown(comparison_payload), encoding="utf-8")
+            copied_paths.append(comparison_path.relative_to(repo_root).as_posix())
+            copied_paths.append(comparison_markdown_path.relative_to(repo_root).as_posix())
+            summary_payload["comparison"] = {
+                "baseline": str(comparison_baseline_path.relative_to(repo_root)),
+                "output": str(comparison_path.relative_to(repo_root)),
+                "markdown_output": str(comparison_markdown_path.relative_to(repo_root)),
+                "status": comparison_payload.get("status"),
+                "checks": comparison_payload.get("checks", {}),
+            }
+            m2_comparison_report = {
+                "baseline": str(comparison_baseline_path.relative_to(repo_root)),
+                "enabled": True,
+                "written": True,
+                "output": str(comparison_path.relative_to(repo_root)),
+                "markdown_output": str(comparison_markdown_path.relative_to(repo_root)),
+                "status": comparison_payload.get("status"),
+                "checks": comparison_payload.get("checks", {}),
+            }
+            summary_payload["copied_artifacts"] = copied_paths
+        elif comparison_baseline_path:
+            m2_comparison_report = {
+                "baseline": M2_COMPARISON_BASELINE,
+                "enabled": True,
+                "written": False,
+                "status": "baseline_missing",
+                "checks": {},
+            }
+        summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         print("[M2] Repo result copy:")
         print(json.dumps(copied_paths, indent=2, ensure_ascii=False))
 
@@ -393,21 +460,25 @@ else:
             and m2_demo_publish_report.get("staged_files") == []
         )
     )
+    comparison_required = bool(m2_comparison_report.get("enabled"))
+    comparison_written = bool(m2_comparison_report.get("written")) if comparison_required else True
+    comparison_passed = m2_comparison_report.get("status") == "pass" if comparison_required else True
+    completion_checks = {
+        "m2_report_written": bool(report_ready),
+        "git_push": bool(push_done),
+        "m2_comparison_written": bool(comparison_written),
+        "m2_comparison_passed": bool(comparison_passed),
+    }
     m2_completion_report = {
-        "ready": bool(report_ready and push_done),
-        "checks": {
-            "m2_report_written": bool(report_ready),
-            "git_push": bool(push_done),
-        },
+        "ready": bool(report_ready and push_done and comparison_written),
+        "checks": completion_checks,
         "missing": [
             name
-            for name, ok in {
-                "m2_report_written": bool(report_ready),
-                "git_push": bool(push_done),
-            }.items()
-            if not ok
+            for name in ("m2_report_written", "git_push", "m2_comparison_written")
+            if not completion_checks[name]
         ],
-        "soft_missing": [],
+        "soft_missing": [] if completion_checks["m2_comparison_passed"] else ["m2_comparison_passed"],
+        "comparison": m2_comparison_report,
     }
     print(f"[COLAB] M2 completion checks -> {m2_completion_report['checks']}")
     m2_demo_disconnect_report = maybe_auto_disconnect_colab_runtime(

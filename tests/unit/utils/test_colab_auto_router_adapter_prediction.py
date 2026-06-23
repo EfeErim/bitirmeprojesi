@@ -51,6 +51,20 @@ class FakeWorkflow:
         }
 
 
+class OppositePartFakeWorkflow(FakeWorkflow):
+    def predict(self, image, *, crop_hint=None, part_hint=None, return_ood=True, trust_crop_hint=False):
+        payload = super().predict(
+            image,
+            crop_hint=crop_hint,
+            part_hint=part_hint,
+            return_ood=return_ood,
+            trust_crop_hint=trust_crop_hint,
+        )
+        payload["diagnosis"] = "domates_late_blight_yaprak"
+        payload["confidence"] = 0.96
+        return payload
+
+
 class CacheableFakeWorkflow:
     instances = []
 
@@ -116,6 +130,26 @@ def test_auto_prediction_uses_trusted_router_handoff_for_adapter():
             "adapter_root": Path("models/adapters"),
         }
     ]
+
+
+def test_auto_prediction_reviews_opposite_part_adapter_diagnosis():
+    FakeWorkflow.calls.clear()
+
+    result = run_auto_router_adapter_prediction(
+        Path("fruit.jpg"),
+        router_result=_router_result(status="ok", crop="tomato", part="fruit"),
+        config_env="colab",
+        device="cpu",
+        adapter_root=Path("models/adapters"),
+        return_ood=True,
+        workflow_factory=OppositePartFakeWorkflow,
+    )
+
+    assert result["status"] == "router_uncertain"
+    assert result["diagnosis"] is None
+    assert result["unsafe_diagnosis"] == "domates_late_blight_yaprak"
+    assert "conflicts with routed part 'fruit'" in result["message"]
+    assert result["router_handoff"]["adapter_ran"] is True
 
 
 def test_auto_prediction_skips_adapter_when_router_is_uncertain():
