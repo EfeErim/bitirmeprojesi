@@ -562,6 +562,26 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def has_runtime_policy(calibration: dict[str, Any]) -> bool:
+    if isinstance(calibration.get("selected_policy"), dict):
+        return True
+    target_policies = calibration.get("target_policies")
+    if not isinstance(target_policies, dict):
+        return False
+    for entry in target_policies.values():
+        if not isinstance(entry, dict):
+            continue
+        if isinstance(entry.get("selected_policy"), dict):
+            return True
+        class_policies = entry.get("class_policies")
+        if isinstance(class_policies, dict) and any(
+            isinstance(class_entry, dict) and isinstance(class_entry.get("selected_policy"), dict)
+            for class_entry in class_policies.values()
+        ):
+            return True
+    return False
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     rows = score_manifest(
@@ -607,7 +627,7 @@ def main(argv: list[str] | None = None) -> int:
         "summary": {
             "rows": len(rows),
             "ok_rows": sum(1 for row in rows if row.status == "ok"),
-            "selected_for_runtime": calibration["selected_policy"] is not None,
+            "selected_for_runtime": has_runtime_policy(calibration),
         },
         **calibration,
         "rows": [row.__dict__ for row in rows],

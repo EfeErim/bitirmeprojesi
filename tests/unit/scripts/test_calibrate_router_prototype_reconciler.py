@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PIL import Image
 
-from scripts.calibrate_router_prototype_reconciler import ScoredRow, calibrate, score_manifest
+from scripts.calibrate_router_prototype_reconciler import ScoredRow, calibrate, has_runtime_policy, score_manifest
 from src.router.prototype_bank import build_prototype_bank, write_prototype_bank
 
 
@@ -252,6 +252,7 @@ def test_calibrate_rejects_noisy_target_policy_with_target_constraints():
     assert "supported_wrong_above_target" in tomato_policy["failure_reasons"]
     assert tomato_policy["class_policies"]["clean_leaf"]["status"] == "class_specific"
     assert tomato_policy["class_policies"]["clean_leaf"]["selected_policy"]["supported_correct"] == 92
+    assert has_runtime_policy(result)
 
 
 def test_calibrate_class_policy_counts_supported_false_accepts():

@@ -212,6 +212,13 @@ def _copy_reusable_calibration_if_available(repo_root, manifest_path, prototype_
     return None
 
 
+def _discard_stale_calibration(output_path):
+    try:
+        output_path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
     m2_demo_publish_report = {"enabled": False, "pushed": False, "reason": "M2_RUN_FULL_DEMO=False"}
@@ -267,6 +274,11 @@ else:
         print("[M2] Building router prototype artifacts before manifest run.")
         prototype_completed = subprocess.run(prototype_command, cwd=repo_root, check=False)
         print(f"[M2] prototype_builder_exit_code={prototype_completed.returncode}")
+        if prototype_completed.returncode != 0:
+            if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY:
+                M2_ENABLE_PROTOTYPE_RECONCILER = False
+            _discard_stale_calibration(prototype_calibration_output_path)
+            print("[M2] Prototype builder failed; prototype reconciler disabled for this run.")
         prototype_dir = repo_root / "runs" / "_index" / "router_prototypes" / prototype_run_id
         if not M2_PROTOTYPE_BANK:
             M2_PROTOTYPE_BANK = str((prototype_dir / "prototype_bank.json").relative_to(repo_root))
@@ -328,6 +340,11 @@ else:
             print("[M2] Calibrating prototype reconciler thresholds.")
             calibration_completed = subprocess.run(calibration_command, cwd=repo_root, check=False)
             print(f"[M2] prototype_calibration_exit_code={calibration_completed.returncode}")
+            if calibration_completed.returncode != 0:
+                if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY:
+                    M2_ENABLE_PROTOTYPE_RECONCILER = False
+                print("[M2] Prototype calibration failed; ignoring any stale calibration output for this run.")
+                _discard_stale_calibration(prototype_calibration_output_path)
         if prototype_calibration_output_path.is_file():
             calibration_payload = json.loads(prototype_calibration_output_path.read_text(encoding="utf-8"))
             selected_policy = calibration_payload.get("selected_policy")
