@@ -10,11 +10,13 @@ from scripts.run_demo_checklist import (
     build_analysis_summary,
     build_parser,
     classify_failure,
+    format_elapsed_seconds,
     parse_checklist_rows,
     parse_manifest_rows,
     resolve_image_path,
     resolve_prototype_thresholds_from_calibration,
     summarize_results,
+    write_markdown_report,
 )
 
 
@@ -135,6 +137,55 @@ def test_parser_supports_official_batch_size():
 
     assert args.batch_size == 4
     assert args.adapter_batch_size == 8
+
+
+def test_format_elapsed_seconds_uses_human_readable_units():
+    assert format_elapsed_seconds(4.4) == "4s"
+    assert format_elapsed_seconds(65.2) == "1m 5s"
+    assert format_elapsed_seconds(3725.0) == "1h 2m 5s"
+
+
+def test_markdown_report_includes_run_timing(tmp_path: Path):
+    output = tmp_path / "report.md"
+    report = {
+        "started_at": "2026-06-23T10:00:00+00:00",
+        "finished_at": "2026-06-23T10:01:05+00:00",
+        "elapsed_seconds": 65.2,
+        "elapsed_human": "1m 5s",
+        "generated_at": "2026-06-23T10:01:05+00:00",
+        "checklist": "docs/demo_checklist.md",
+        "device": "cuda",
+        "adapter_root": "runs",
+        "mode": "official",
+        "summary": {
+            "total": 1,
+            "passed": 1,
+            "failed": 0,
+            "answered": 1,
+            "abstained_or_reviewed": 0,
+            "asset_ready": 1,
+            "failure_buckets": {},
+        },
+        "rows": [
+            {
+                "image_id": "demo_001",
+                "actual_status": "success",
+                "pass_fail": "pass",
+                "failure_bucket": "",
+                "predicted_crop": "tomato",
+                "predicted_part": "leaf",
+                "predicted_disease": "healthy",
+                "message": "",
+            }
+        ],
+    }
+
+    write_markdown_report(report, output)
+
+    text = output.read_text(encoding="utf-8")
+    assert "- started_at: `2026-06-23T10:00:00+00:00`" in text
+    assert "- finished_at: `2026-06-23T10:01:05+00:00`" in text
+    assert "- elapsed: `1m 5s` (65.200s)" in text
 
 
 def test_official_batch_rows_reuses_batch_router_results(tmp_path: Path, monkeypatch):

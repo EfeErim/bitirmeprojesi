@@ -6,6 +6,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,6 +44,17 @@ M2_COMPARISON_BASELINE = str(
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
+
+
+def format_elapsed_seconds(seconds):
+    total_seconds = max(0, int(round(float(seconds))))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes}m {seconds}s"
+    if minutes:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"
 DEVICE = str(globals().get("DEVICE", "cuda"))
 CONFIG_ENV = str(globals().get("CONFIG_ENV", "colab"))
 M2_ENABLE_PROTOTYPE_RECONCILER = bool(globals().get("M2_ENABLE_PROTOTYPE_RECONCILER", True))
@@ -206,6 +218,8 @@ if not M2_RUN_FULL_DEMO:
     m2_demo_disconnect_report = {"ready": False, "missing": ["m2_full_demo_skipped"]}
     print("[M2] Full demo manifest run skipped because M2_RUN_FULL_DEMO=False.")
 else:
+    m2_run_started_at = datetime.now(timezone.utc)
+    m2_run_start_perf = time.perf_counter()
     cell_script_root = Path(str(globals().get("__notebook_cell_script_root__", ""))).resolve()
     repo_root = cell_script_root.parents[1] if cell_script_root.name == "notebook_cells" else Path.cwd().resolve()
 
@@ -414,8 +428,15 @@ else:
         print(f"[M2] prototype_calibration={prototype_calibration_output_path}")
     print("[M2] Starting full manifest run. This can take a while on 512 images.")
 
+    runner_started_at = datetime.now(timezone.utc)
+    runner_start_perf = time.perf_counter()
     completed = subprocess.run(command, cwd=repo_root, check=False)
+    runner_finished_at = datetime.now(timezone.utc)
+    runner_elapsed_seconds = time.perf_counter() - runner_start_perf
+    m2_run_finished_at = runner_finished_at
+    m2_run_elapsed_seconds = time.perf_counter() - m2_run_start_perf
     print(f"[M2] runner_exit_code={completed.returncode}")
+    print(f"[M2] runner_elapsed={format_elapsed_seconds(runner_elapsed_seconds)}")
 
     m2_demo_result = None
     report_ready = False
@@ -471,6 +492,14 @@ else:
         summary_path = repo_results_dir / "summary.json"
         summary_payload = {
             "created_at": stamp,
+            "started_at": m2_run_started_at.isoformat(),
+            "finished_at": m2_run_finished_at.isoformat(),
+            "elapsed_seconds": m2_run_elapsed_seconds,
+            "elapsed_human": format_elapsed_seconds(m2_run_elapsed_seconds),
+            "runner_started_at": runner_started_at.isoformat(),
+            "runner_finished_at": runner_finished_at.isoformat(),
+            "runner_elapsed_seconds": runner_elapsed_seconds,
+            "runner_elapsed_human": format_elapsed_seconds(runner_elapsed_seconds),
             "runner_exit_code": int(completed.returncode),
             "manifest": str(manifest_path.relative_to(repo_root)),
             "batch_size": int(max(1, M2_BATCH_SIZE)),

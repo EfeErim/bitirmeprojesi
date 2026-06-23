@@ -7,6 +7,7 @@ import argparse
 import csv
 import json
 import sys
+import time
 import unicodedata
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -45,6 +46,17 @@ DEPENDENCY_MARKERS = (
     "cuda",
     "no module named",
 )
+
+
+def format_elapsed_seconds(seconds: float) -> str:
+    total_seconds = max(0, int(round(seconds)))
+    hours, remainder = divmod(total_seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    if hours:
+        return f"{hours}h {minutes}m {seconds}s"
+    if minutes:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"
 
 
 @dataclass(frozen=True)
@@ -976,6 +988,9 @@ def write_markdown_report(report: dict[str, Any], output_path: Path) -> None:
     lines = [
         "# M2 Demo Checklist Run",
         "",
+        f"- started_at: `{report.get('started_at', '')}`",
+        f"- finished_at: `{report.get('finished_at', '')}`",
+        f"- elapsed: `{report.get('elapsed_human', '')}` ({report.get('elapsed_seconds', 0):.3f}s)",
         f"- generated_at: `{report['generated_at']}`",
         f"- checklist: `{report['checklist']}`",
         f"- device: `{report['device']}`",
@@ -1073,6 +1088,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    started_at = datetime.now(timezone.utc)
+    start_perf = time.perf_counter()
     args = build_parser().parse_args()
     repo_root = Path.cwd()
     rows = [] if args.no_checklist else parse_checklist_rows(args.checklist)
@@ -1148,9 +1165,15 @@ def main() -> int:
             if args.stop_on_dependency_blocker and result.get("failure_bucket") == "dependency_access":
                 break
 
+    finished_at = datetime.now(timezone.utc)
+    elapsed_seconds = time.perf_counter() - start_perf
     report = {
         "schema_version": "v1_m2_demo_checklist_run",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": started_at.isoformat(),
+        "finished_at": finished_at.isoformat(),
+        "elapsed_seconds": elapsed_seconds,
+        "elapsed_human": format_elapsed_seconds(elapsed_seconds),
+        "generated_at": finished_at.isoformat(),
         "checklist": str(args.checklist),
         "device": str(args.device),
         "adapter_root": str(args.adapter_root),
