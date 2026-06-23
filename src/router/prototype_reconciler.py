@@ -271,20 +271,6 @@ def reconcile_router_handoff(
     router_is_trusted = status in TRUSTED_ROUTER_STATUSES
     router_target_is_supported = bool(router_target and router_target in supported)
     target_policy = _selected_target_policy(target_id=match.target_id, target_policies=target_policies)
-    if target_policy is None and _requires_selected_policy(target_policies):
-        return ReconcileDecision(
-            decision="abstain",
-            crop=vlm_crop,
-            part=vlm_part,
-            reason="prototype_policy_not_calibrated",
-            taxonomy_relation=relation,
-            prototype_match=match,
-            vlm_crop=vlm_crop,
-            vlm_part=vlm_part,
-            min_similarity=min_similarity,
-            min_margin=min_margin,
-            min_negative_gap=min_negative_gap,
-        )
     effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
     effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
     effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)
@@ -346,6 +332,21 @@ def reconcile_router_handoff(
             crop=vlm_crop,
             part=vlm_part,
             reason="router_and_prototype_agree",
+            taxonomy_relation=relation,
+            prototype_match=match,
+            vlm_crop=vlm_crop,
+            vlm_part=vlm_part,
+            min_similarity=effective_min_similarity,
+            min_margin=effective_min_margin,
+            min_negative_gap=effective_min_negative_gap,
+        )
+
+    if target_policy is None and _requires_selected_policy(target_policies):
+        return ReconcileDecision(
+            decision="abstain",
+            crop=vlm_crop,
+            part=vlm_part,
+            reason="prototype_policy_not_calibrated",
             taxonomy_relation=relation,
             prototype_match=match,
             vlm_crop=vlm_crop,

@@ -487,6 +487,7 @@ def _format_output_row(
         "prototype_min_margin": reconciliation.get("min_margin"),
         "prototype_min_negative_gap": reconciliation.get("prototype_min_negative_gap"),
         "reconcile_decision": reconciliation.get("reconcile_decision"),
+        "reconcile_reason": reconciliation.get("reason"),
         "predicted_disease": result.get("diagnosis"),
         "confidence_or_ood": _confidence_or_ood(result),
         "pass_fail": pass_fail,
