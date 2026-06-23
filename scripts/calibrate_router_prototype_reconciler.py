@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from dataclasses import dataclass
@@ -18,6 +19,14 @@ if str(ROOT) not in sys.path:
 from scripts.run_demo_checklist import parse_manifest_rows, resolve_image_path  # noqa: E402
 from src.router.prototype_reconciler import nearest_target  # noqa: E402
 from src.shared.json_utils import read_json, write_json  # noqa: E402
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 @dataclass(frozen=True)
@@ -385,7 +394,9 @@ def main(argv: list[str] | None = None) -> int:
         "schema_version": "router_prototype_calibration.v1",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "manifest": str(args.manifest),
+        "manifest_sha256": _sha256_file(args.manifest) if args.manifest.is_file() else "",
         "prototype_bank": str(args.prototype_bank),
+        "prototype_bank_sha256": _sha256_file(args.prototype_bank) if args.prototype_bank.is_file() else "",
         "constraints": {
             "min_precision": args.min_precision,
             "min_coverage": args.min_coverage,

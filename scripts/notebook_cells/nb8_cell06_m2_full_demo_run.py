@@ -1,6 +1,7 @@
 # Auto-extracted from colab_notebooks/8_auto_router_adapter_prediction.ipynb cell 6.
 # Keep notebook execute-only cells thin; edit behavior here.
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -53,6 +54,7 @@ M2_PROTOTYPE_EMBEDDING_MODEL_ID = str(
 )
 M2_PROTOTYPE_EMBEDDING_DEVICE = str(globals().get("M2_PROTOTYPE_EMBEDDING_DEVICE", DEVICE if "DEVICE" in globals() else "cuda"))
 M2_REUSE_EXISTING_PROTOTYPES = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPES", True))
+M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))
 M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", 50)
 M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
 M2_TAXONOMY_REGISTRY = str(globals().get("M2_TAXONOMY_REGISTRY", "") or "")
@@ -93,6 +95,108 @@ M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE = str(
 ).strip().lower()
 if M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE not in {"all", "none"}:
     M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE = "none"
+
+
+def _sha256_file(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _expected_calibration_constraints():
+    return {
+        "min_precision": M2_PROTOTYPE_CALIBRATION_MIN_PRECISION,
+        "min_coverage": M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE,
+        "require_zero_non_plant_false_accepts": not M2_ALLOW_NON_PLANT_FALSE_ACCEPTS,
+        "max_negative_false_accepts": M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPTS,
+        "max_negative_false_accept_rate": M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE,
+        "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
+        "target_max_supported_wrong": int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG),
+        "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
+        "promotion_mode": "prototype_override",
+    }
+
+
+def _same_scalar(left, right):
+    if isinstance(left, bool) or isinstance(right, bool):
+        return bool(left) is bool(right)
+    if isinstance(left, (int, float)) or isinstance(right, (int, float)):
+        try:
+            return abs(float(left) - float(right)) < 1e-9
+        except (TypeError, ValueError):
+            return False
+    return str(left) == str(right)
+
+
+def _constraints_match(payload):
+    constraints = payload.get("constraints") if isinstance(payload, dict) else {}
+    if not isinstance(constraints, dict):
+        return False
+    expected = _expected_calibration_constraints()
+    return all(_same_scalar(constraints.get(key), value) for key, value in expected.items())
+
+
+def _summary_manifest_sha(candidate_dir):
+    summary_path = candidate_dir / "summary.json"
+    if not summary_path.is_file():
+        return ""
+    try:
+        summary_payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    return str(summary_payload.get("manifest_sha256") or "")
+
+
+def _path_matches_repo_suffix(saved_path, current_path, repo_root):
+    try:
+        current_rel = current_path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return False
+    normalized_saved = str(saved_path or "").replace("\\", "/")
+    return normalized_saved == current_rel or normalized_saved.endswith(f"/{current_rel}")
+
+
+def _copy_reusable_calibration_if_available(repo_root, manifest_path, prototype_bank_path, output_path):
+    if not M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION:
+        return None
+    if not manifest_path.is_file() or not prototype_bank_path.is_file():
+        return None
+    manifest_sha256 = _sha256_file(manifest_path)
+    prototype_sha256 = _sha256_file(prototype_bank_path)
+    for candidate_dir in sorted((repo_root / M2_REPO_RESULTS_ROOT).glob("*"), reverse=True):
+        calibration_path = candidate_dir / "router_prototype_calibration.json"
+        if not calibration_path.is_file():
+            continue
+        try:
+            payload = json.loads(calibration_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not _constraints_match(payload):
+            continue
+        candidate_manifest_sha = str(payload.get("manifest_sha256") or _summary_manifest_sha(candidate_dir))
+        if candidate_manifest_sha and candidate_manifest_sha != manifest_sha256:
+            continue
+        if not candidate_manifest_sha and not _path_matches_repo_suffix(payload.get("manifest"), manifest_path, repo_root):
+            continue
+        candidate_prototype_sha = str(payload.get("prototype_bank_sha256") or "")
+        co_located_prototype = candidate_dir / "prototype_bank.json"
+        if not candidate_prototype_sha and co_located_prototype.is_file():
+            candidate_prototype_sha = _sha256_file(co_located_prototype)
+        if candidate_prototype_sha and candidate_prototype_sha != prototype_sha256:
+            continue
+        if not candidate_prototype_sha and not _path_matches_repo_suffix(
+            payload.get("prototype_bank"),
+            prototype_bank_path,
+            repo_root,
+        ):
+            continue
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(calibration_path, output_path)
+        return calibration_path
+    return None
+
 
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
@@ -156,43 +260,56 @@ else:
     prototype_calibration_selected = False
     prototype_target_policy_selected = False
     if M2_ENABLE_PROTOTYPE_RECONCILER and M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER and M2_PROTOTYPE_BANK:
-        calibration_command = [
-            sys.executable,
-            str(repo_root / "scripts" / "calibrate_router_prototype_reconciler.py"),
-            "--manifest",
-            str(manifest_path),
-            "--prototype-bank",
-            str((repo_root / M2_PROTOTYPE_BANK).resolve()),
-            "--output",
-            str(prototype_calibration_output_path),
-            "--min-precision",
-            str(M2_PROTOTYPE_CALIBRATION_MIN_PRECISION),
-            "--min-coverage",
-            str(M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE),
-            "--max-negative-false-accepts",
-            str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPTS),
-            "--max-negative-false-accept-rate",
-            str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE),
-            "--target-min-precision",
-            str(M2_PROTOTYPE_TARGET_MIN_PRECISION),
-            "--target-max-supported-wrong",
-            str(int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG)),
-            "--similarity-grid",
-            M2_PROTOTYPE_SIMILARITY_GRID,
-            "--margin-grid",
-            M2_PROTOTYPE_MARGIN_GRID,
-            "--negative-gap-grid",
-            M2_PROTOTYPE_NEGATIVE_GAP_GRID,
-            "--target-policy-negative-mode",
-            M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
-        ]
-        if M2_ALLOW_NON_PLANT_FALSE_ACCEPTS:
-            calibration_command.append("--allow-non-plant-false-accepts")
-        if M2_PROTOTYPE_CALIBRATION_LIMIT is not None:
-            calibration_command.extend(["--limit", str(int(M2_PROTOTYPE_CALIBRATION_LIMIT))])
-        print("[M2] Calibrating prototype reconciler thresholds.")
-        calibration_completed = subprocess.run(calibration_command, cwd=repo_root, check=False)
-        print(f"[M2] prototype_calibration_exit_code={calibration_completed.returncode}")
+        prototype_bank_path = (repo_root / M2_PROTOTYPE_BANK).resolve()
+        reused_calibration_path = _copy_reusable_calibration_if_available(
+            repo_root,
+            manifest_path,
+            prototype_bank_path,
+            prototype_calibration_output_path,
+        )
+        if reused_calibration_path is not None:
+            print(
+                "[M2] Reusing existing prototype calibration from "
+                f"{reused_calibration_path.relative_to(repo_root)}."
+            )
+        else:
+            calibration_command = [
+                sys.executable,
+                str(repo_root / "scripts" / "calibrate_router_prototype_reconciler.py"),
+                "--manifest",
+                str(manifest_path),
+                "--prototype-bank",
+                str(prototype_bank_path),
+                "--output",
+                str(prototype_calibration_output_path),
+                "--min-precision",
+                str(M2_PROTOTYPE_CALIBRATION_MIN_PRECISION),
+                "--min-coverage",
+                str(M2_PROTOTYPE_CALIBRATION_MIN_COVERAGE),
+                "--max-negative-false-accepts",
+                str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPTS),
+                "--max-negative-false-accept-rate",
+                str(M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE),
+                "--target-min-precision",
+                str(M2_PROTOTYPE_TARGET_MIN_PRECISION),
+                "--target-max-supported-wrong",
+                str(int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG)),
+                "--similarity-grid",
+                M2_PROTOTYPE_SIMILARITY_GRID,
+                "--margin-grid",
+                M2_PROTOTYPE_MARGIN_GRID,
+                "--negative-gap-grid",
+                M2_PROTOTYPE_NEGATIVE_GAP_GRID,
+                "--target-policy-negative-mode",
+                M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
+            ]
+            if M2_ALLOW_NON_PLANT_FALSE_ACCEPTS:
+                calibration_command.append("--allow-non-plant-false-accepts")
+            if M2_PROTOTYPE_CALIBRATION_LIMIT is not None:
+                calibration_command.extend(["--limit", str(int(M2_PROTOTYPE_CALIBRATION_LIMIT))])
+            print("[M2] Calibrating prototype reconciler thresholds.")
+            calibration_completed = subprocess.run(calibration_command, cwd=repo_root, check=False)
+            print(f"[M2] prototype_calibration_exit_code={calibration_completed.returncode}")
         if prototype_calibration_output_path.is_file():
             calibration_payload = json.loads(prototype_calibration_output_path.read_text(encoding="utf-8"))
             selected_policy = calibration_payload.get("selected_policy")
@@ -350,6 +467,7 @@ else:
             "prototype_reconciler": {
                 "enabled": bool(M2_ENABLE_PROTOTYPE_RECONCILER),
                 "reuse_existing_prototypes": bool(M2_REUSE_EXISTING_PROTOTYPES),
+                "reuse_existing_prototype_calibration": bool(M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION),
                 "auto_build_prototypes": bool(M2_AUTO_BUILD_PROTOTYPES),
                 "prototype_max_images_per_class": M2_PROTOTYPE_MAX_IMAGES_PER_CLASS,
                 "auto_calibrate": bool(M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER),
