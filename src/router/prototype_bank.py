@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import math
 from collections import defaultdict
 from dataclasses import dataclass
@@ -26,6 +27,18 @@ class ImageFeatureRecord:
     class_label: str
     vector: tuple[float, ...]
     sha256: str
+    source_kind: str = "dataset"
+
+
+@dataclass(frozen=True)
+class HardNegativeFeatureRecord:
+    path: Path
+    negative_for_target_id: str
+    source_expected_target: str
+    class_label: str
+    vector: tuple[float, ...]
+    sha256: str
+    source_kind: str = "curated_hard_negative"
 
 
 def iter_dataset_images(
@@ -208,9 +221,152 @@ def _summarize_records(records: list[ImageFeatureRecord]) -> dict[str, Any]:
     }
 
 
+def _summarize_hard_negatives(records: list[HardNegativeFeatureRecord]) -> dict[str, Any]:
+    by_target: dict[str, list[HardNegativeFeatureRecord]] = defaultdict(list)
+    for record in records:
+        by_target[record.negative_for_target_id].append(record)
+
+    hard_negative_prototypes: dict[str, Any] = {}
+    for target_id, target_records in sorted(by_target.items()):
+        vectors = [record.vector for record in target_records]
+        center = centroid(vectors)
+        source_expected_targets = sorted({record.source_expected_target for record in target_records if record.source_expected_target})
+        hard_negative_prototypes[target_id] = {
+            "negative_for_target_id": target_id,
+            "sample_count": len(target_records),
+            "source_expected_targets": source_expected_targets,
+            "class_labels": sorted({record.class_label for record in target_records if record.class_label}),
+            "centroid": list(center),
+            "dispersion": dispersion(vectors, center),
+        }
+    return {"hard_negative_prototypes": hard_negative_prototypes}
+
+
+def iter_curation_manifest_rows(curation_root: Path) -> Iterable[dict[str, str]]:
+    if not curation_root:
+        return []
+    for filename, role in (
+        ("prototype_positive_manifest.csv", "prototype_positive"),
+        ("prototype_hard_negative_manifest.csv", "prototype_hard_negative"),
+    ):
+        manifest_path = curation_root / filename
+        if not manifest_path.is_file():
+            continue
+        with manifest_path.open("r", encoding="utf-8-sig", newline="") as handle:
+            for row in csv.DictReader(handle):
+                materialized = dict(row)
+                materialized["_curation_role"] = role
+                materialized["_manifest_path"] = str(manifest_path)
+                yield materialized
+
+
+def resolve_curation_image_path(row: dict[str, Any], *, repo_root: Path) -> Path | None:
+    for key in ("resolved_image", "source"):
+        value = str(row.get(key) or "").strip()
+        if not value:
+            continue
+        if value.startswith("staged_external:"):
+            value = value.split(":", 1)[1]
+        normalized = value.replace("\\", "/")
+        marker = "bitirmeprojesi/"
+        if marker in normalized:
+            value = normalized.split(marker, 1)[1]
+        candidate = Path(value)
+        if candidate.is_absolute() and candidate.is_file():
+            return candidate
+        resolved = repo_root / value
+        if resolved.is_file():
+            return resolved
+    return None
+
+
+def _curation_class_label(row: dict[str, Any]) -> str:
+    for key in ("corrected_class", "expected_class", "prototype_class_label"):
+        value = str(row.get(key) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _negative_for_target_id(row: dict[str, Any]) -> str:
+    expected_target = str(row.get("expected_target") or "").strip()
+    prototype_target = str(row.get("prototype_target") or "").strip()
+    if prototype_target and prototype_target != expected_target:
+        return prototype_target
+    return expected_target
+
+
+def load_curation_feature_records(
+    *,
+    curation_root: Path | None,
+    repo_root: Path,
+    embedding_backend: str,
+    embedding_model_id: str,
+    device: str,
+) -> tuple[list[ImageFeatureRecord], list[HardNegativeFeatureRecord], list[dict[str, str]]]:
+    if not curation_root:
+        return [], [], []
+    positive_records: list[ImageFeatureRecord] = []
+    hard_negative_records: list[HardNegativeFeatureRecord] = []
+    skipped: list[dict[str, str]] = []
+    for row in iter_curation_manifest_rows(curation_root):
+        role = str(row.get("_curation_role") or "")
+        image_path = resolve_curation_image_path(row, repo_root=repo_root)
+        if image_path is None:
+            skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": "image_missing"})
+            continue
+        try:
+            vector = image_vector(
+                image_path,
+                embedding_backend=embedding_backend,
+                embedding_model_id=embedding_model_id,
+                device=device,
+            )
+            digest = artifact_sha256(image_path)
+        except Exception as exc:
+            skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "path": str(image_path), "reason": str(exc)})
+            continue
+
+        if role == "prototype_positive":
+            target_id = str(row.get("expected_target") or "").strip()
+            class_label = _curation_class_label(row)
+            if not target_id or "__" not in target_id or not class_label:
+                skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": "missing_target_or_class"})
+                continue
+            positive_records.append(
+                ImageFeatureRecord(
+                    path=image_path,
+                    target_id=target_id,
+                    split="curated",
+                    class_label=class_label,
+                    vector=vector,
+                    sha256=digest,
+                    source_kind="curated_positive",
+                )
+            )
+        elif role == "prototype_hard_negative":
+            negative_for_target_id = _negative_for_target_id(row)
+            if not negative_for_target_id or "__" not in negative_for_target_id:
+                skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": "missing_negative_target"})
+                continue
+            hard_negative_records.append(
+                HardNegativeFeatureRecord(
+                    path=image_path,
+                    negative_for_target_id=negative_for_target_id,
+                    source_expected_target=str(row.get("expected_target") or "").strip(),
+                    class_label=_curation_class_label(row),
+                    vector=vector,
+                    sha256=digest,
+                )
+            )
+    return positive_records, hard_negative_records, skipped
+
+
 def build_prototype_bank(
     *,
     dataset_root: Path = Path("data/prepared_runtime_datasets"),
+    curation_root: Path | None = None,
+    repo_root: Path = Path("."),
     embedding_backend: str = DEFAULT_BACKEND,
     embedding_model_id: str = DEFAULT_BIOCLIP_MODEL_ID,
     device: str = "cpu",
@@ -226,6 +382,7 @@ def build_prototype_bank(
         )
 
     records: list[ImageFeatureRecord] = []
+    hard_negative_records: list[HardNegativeFeatureRecord] = []
     skipped: list[dict[str, str]] = []
     for target_id, split_name, class_label, image_path in iter_dataset_images(
         dataset_root,
@@ -255,13 +412,26 @@ def build_prototype_bank(
             )
         )
 
+    curation_positive_records, curation_hard_negative_records, curation_skipped = load_curation_feature_records(
+        curation_root=curation_root,
+        repo_root=repo_root,
+        embedding_backend=embedding_backend,
+        embedding_model_id=embedding_model_id,
+        device=device,
+    )
+    records.extend(curation_positive_records)
+    hard_negative_records.extend(curation_hard_negative_records)
+    skipped.extend(curation_skipped)
+
     summaries = _summarize_records(records)
+    hard_negative_summaries = _summarize_hard_negatives(hard_negative_records)
     payload = {
         "schema_version": "router_prototype_bank.v1",
         "created_at": created_at or now_utc_timestamp(),
         "embedding_backend": embedding_backend,
         "source_roots": {
             "dataset_root": str(dataset_root),
+            "curation_root": str(curation_root) if curation_root else None,
             "splits": list(splits),
             "include_ood": include_ood,
             "max_images_per_class": max_images_per_class,
@@ -272,13 +442,22 @@ def build_prototype_bank(
             "target_count": len(summaries["target_prototypes"]),
             "class_prototype_count": len(summaries["class_prototypes"]),
             "sample_count": len(records),
+            "dataset_sample_count": len(records) - len(curation_positive_records),
+            "curation_positive_count": len(curation_positive_records),
+            "hard_negative_count": len(hard_negative_records),
+            "hard_negative_target_count": len(hard_negative_summaries["hard_negative_prototypes"]),
             "skipped_count": len(skipped),
             "targets": sorted(summaries["target_prototypes"]),
         },
         **summaries,
+        **hard_negative_summaries,
         "source_hashes": {
-            f"{record.target_id}::{record.split}::{record.class_label}::{record.path.name}": record.sha256
+            f"{record.source_kind}::{record.target_id}::{record.split}::{record.class_label}::{record.path.name}": record.sha256
             for record in records
+        },
+        "hard_negative_source_hashes": {
+            f"{record.negative_for_target_id}::{record.source_expected_target}::{record.class_label}::{record.path.name}": record.sha256
+            for record in hard_negative_records
         },
         "skipped": skipped,
     }
@@ -305,6 +484,8 @@ def write_router_prototype_summary(
         f"- Prototype targets: {prototype_summary.get('target_count', 0)}",
         f"- Class prototypes: {prototype_summary.get('class_prototype_count', 0)}",
         f"- Prototype samples: {prototype_summary.get('sample_count', 0)}",
+        f"- Curated positive samples: {prototype_summary.get('curation_positive_count', 0)}",
+        f"- Hard negative samples: {prototype_summary.get('hard_negative_count', 0)}",
         f"- Skipped images: {prototype_summary.get('skipped_count', 0)}",
         f"- Embedding backend: {prototype_payload.get('embedding_backend')}",
         "",

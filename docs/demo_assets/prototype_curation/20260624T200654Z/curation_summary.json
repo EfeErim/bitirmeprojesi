@@ -1,0 +1,91 @@
+{
+  "adapter_hard_example_count": 23,
+  "created_at": "2026-06-24T21:47:07.041161+00:00",
+  "decisions_csv": "docs\\demo_results\\m2\\20260624T200654Z\\hard_example_audit.csv",
+  "excluded_ambiguous_count": 41,
+  "mode": "dry_run_manifest_write",
+  "output_dir": "docs\\demo_assets\\prototype_curation\\20260624T200654Z",
+  "outputs": {
+    "adapter_hard_example_manifest": "docs\\demo_assets\\prototype_curation\\20260624T200654Z\\adapter_hard_example_manifest.csv",
+    "excluded_ambiguous_rows": "docs\\demo_assets\\prototype_curation\\20260624T200654Z\\excluded_ambiguous_rows.csv",
+    "prototype_hard_negative_manifest": "docs\\demo_assets\\prototype_curation\\20260624T200654Z\\prototype_hard_negative_manifest.csv",
+    "prototype_positive_manifest": "docs\\demo_assets\\prototype_curation\\20260624T200654Z\\prototype_positive_manifest.csv",
+    "relabeled_rows": "docs\\demo_assets\\prototype_curation\\20260624T200654Z\\relabeled_rows.csv"
+  },
+  "packet_decision_count": 150,
+  "packet_dir": ".runtime_tmp\\m2_hard_example_audit\\20260624T200654Z",
+  "pending_review": [],
+  "pending_review_count": 0,
+  "prototype_hard_negative_count": 50,
+  "prototype_positive_count": 23,
+  "relabeled_count": 0,
+  "schema_version": "v1_m2_hard_example_curation",
+  "skipped": [
+    {
+      "image_id": "demo_114",
+      "rank": "132",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_169",
+      "rank": "133",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_009",
+      "rank": "136",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_012",
+      "rank": "137",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_054",
+      "rank": "138",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_365",
+      "rank": "139",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_367",
+      "rank": "140",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_380",
+      "rank": "141",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_382",
+      "rank": "142",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_385",
+      "rank": "143",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_404",
+      "rank": "144",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_408",
+      "rank": "145",
+      "reason": "noop_decision"
+    },
+    {
+      "image_id": "demo_460",
+      "rank": "150",
+      "reason": "noop_decision"
+    }
+  ],
+  "skipped_count": 13
+}

@@ -294,6 +294,44 @@ def test_reconciler_applies_target_policy_before_global_thresholds(tmp_path: Pat
     assert decision.min_negative_gap == 1.0
 
 
+def test_reconciler_uses_curated_hard_negative_gap(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_positive = dataset_root / "tomato__fruit" / "train" / "healthy" / "a.png"
+    grape_positive = dataset_root / "grape__fruit" / "train" / "healthy" / "b.png"
+    query_image = tmp_path / "query.png"
+    hard_negative = tmp_path / "hard_negative.png"
+    _write_image(tomato_positive, (190, 30, 30))
+    _write_image(grape_positive, (40, 20, 120))
+    _write_image(query_image, (190, 30, 30))
+    _write_image(hard_negative, (190, 30, 30))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    prototype_payload["hard_negative_prototypes"] = {
+        "tomato__fruit": {
+            "negative_for_target_id": "tomato__fruit",
+            "sample_count": 1,
+            "centroid": prototype_payload["target_prototypes"]["tomato__fruit"]["centroid"],
+        }
+    }
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="tomato",
+        router_part="fruit",
+        router_status="ok",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        min_negative_gap=0.01,
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "negative_prototype_too_close"
+    assert decision.to_payload()["prototype_hard_negative_target"] == "tomato__fruit"
+    assert decision.to_payload()["prototype_hard_negative_gap"] == 0.0
+
+
 def test_reconciler_requires_selected_policy_when_calibration_has_no_global_policy(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"

@@ -36,6 +36,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--refresh-gbif", action="store_true")
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--run-id", default=None)
+    parser.add_argument(
+        "--curation-root",
+        type=Path,
+        default=None,
+        help="Optional reviewed prototype curation directory with prototype_positive_manifest.csv and prototype_hard_negative_manifest.csv.",
+    )
     parser.add_argument("--embedding-backend", default=DEFAULT_BACKEND)
     parser.add_argument("--embedding-model-id", default="imageomics/bioclip-2.5-vith14")
     parser.add_argument("--embedding-device", default="cpu")
@@ -62,6 +68,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     prototype_payload = build_prototype_bank(
         dataset_root=args.dataset_root,
+        curation_root=args.curation_root,
+        repo_root=ROOT,
         embedding_backend=args.embedding_backend,
         embedding_model_id=args.embedding_model_id,
         device=args.embedding_device,

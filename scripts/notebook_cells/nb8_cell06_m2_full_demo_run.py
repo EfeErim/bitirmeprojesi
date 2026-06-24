@@ -42,7 +42,7 @@ M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin
 M2_AUTO_PUSH_BRANCH = str(globals().get("M2_AUTO_PUSH_BRANCH", "master") or "").strip() or None
 M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_results/m2"))
 M2_COMPARISON_BASELINE = str(
-    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260622T161859Z/summary.json") or ""
+    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260624T200654Z/summary.json") or ""
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
@@ -70,6 +70,7 @@ M2_PROTOTYPE_EMBEDDING_DEVICE = str(globals().get("M2_PROTOTYPE_EMBEDDING_DEVICE
 M2_REUSE_EXISTING_PROTOTYPES = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPES", True))
 M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))
 M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", 50)
+M2_PROTOTYPE_CURATION_ROOT = str(globals().get("M2_PROTOTYPE_CURATION_ROOT", "") or "")
 M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
 M2_TAXONOMY_REGISTRY = str(globals().get("M2_TAXONOMY_REGISTRY", "") or "")
 M2_PROTOTYPE_MIN_SIMILARITY = globals().get("M2_PROTOTYPE_MIN_SIMILARITY", None)
@@ -265,6 +266,7 @@ else:
     if (
         M2_ENABLE_PROTOTYPE_RECONCILER
         and M2_REUSE_EXISTING_PROTOTYPES
+        and not M2_PROTOTYPE_CURATION_ROOT
         and (not M2_PROTOTYPE_BANK or not M2_TAXONOMY_REGISTRY)
     ):
         for candidate_dir in sorted((repo_root / M2_REPO_RESULTS_ROOT).glob("*"), reverse=True):
@@ -296,6 +298,8 @@ else:
         ]
         if M2_PROTOTYPE_MAX_IMAGES_PER_CLASS is not None:
             prototype_command.extend(["--max-images-per-class", str(int(M2_PROTOTYPE_MAX_IMAGES_PER_CLASS))])
+        if M2_PROTOTYPE_CURATION_ROOT:
+            prototype_command.extend(["--curation-root", M2_PROTOTYPE_CURATION_ROOT])
         print("[M2] Building router prototype artifacts before manifest run.")
         prototype_completed = subprocess.run(prototype_command, cwd=repo_root, check=False)
         print(f"[M2] prototype_builder_exit_code={prototype_completed.returncode}")
@@ -578,6 +582,7 @@ else:
                 "reuse_existing_prototype_calibration": bool(M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION),
                 "auto_build_prototypes": bool(M2_AUTO_BUILD_PROTOTYPES),
                 "prototype_max_images_per_class": M2_PROTOTYPE_MAX_IMAGES_PER_CLASS,
+                "prototype_curation_root": M2_PROTOTYPE_CURATION_ROOT,
                 "auto_calibrate": bool(M2_AUTO_CALIBRATE_PROTOTYPE_RECONCILER),
                 "require_calibrated_policy": bool(M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY),
                 "prototype_bank": M2_PROTOTYPE_BANK,

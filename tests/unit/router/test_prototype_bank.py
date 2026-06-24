@@ -10,6 +10,26 @@ def _write_image(path: Path, color: tuple[int, int, int]) -> None:
     Image.new("RGB", (12, 10), color=color).save(path)
 
 
+def _write_curation_csv(path: Path, rows: list[dict[str, str]]) -> None:
+    import csv
+
+    headers = [
+        "image_id",
+        "source",
+        "resolved_image",
+        "expected_target",
+        "expected_class",
+        "corrected_class",
+        "prototype_target",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=headers)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({header: row.get(header, "") for header in headers})
+
+
 def test_build_prototype_bank_from_synthetic_fixture(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     _write_image(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png", (20, 80, 40))
@@ -45,6 +65,55 @@ def test_build_prototype_bank_honors_max_images_per_class(tmp_path: Path):
 
     assert payload["summary"]["sample_count"] == 1
     assert payload["target_prototypes"]["grape__fruit"]["sample_count"] == 1
+
+
+def test_build_prototype_bank_consumes_reviewed_curation_manifests(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    curation_root = tmp_path / "curation"
+    curated_positive = tmp_path / "reviewed" / "positive.png"
+    curated_negative = tmp_path / "reviewed" / "negative.png"
+    _write_image(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png", (20, 80, 40))
+    _write_image(curated_positive, (25, 85, 45))
+    _write_image(curated_negative, (190, 40, 30))
+    _write_curation_csv(
+        curation_root / "prototype_positive_manifest.csv",
+        [
+            {
+                "image_id": "demo_001",
+                "resolved_image": str(curated_positive),
+                "expected_target": "tomato__leaf",
+                "expected_class": "late_blight",
+                "corrected_class": "late_blight",
+            }
+        ],
+    )
+    _write_curation_csv(
+        curation_root / "prototype_hard_negative_manifest.csv",
+        [
+            {
+                "image_id": "demo_002",
+                "resolved_image": str(curated_negative),
+                "expected_target": "tomato__leaf",
+                "expected_class": "healthy",
+                "prototype_target": "tomato__leaf",
+            }
+        ],
+    )
+
+    payload = build_prototype_bank(
+        dataset_root=dataset_root,
+        curation_root=curation_root,
+        repo_root=tmp_path,
+        created_at="20260617T000000Z",
+    )
+
+    assert payload["summary"]["sample_count"] == 2
+    assert payload["summary"]["dataset_sample_count"] == 1
+    assert payload["summary"]["curation_positive_count"] == 1
+    assert payload["summary"]["hard_negative_count"] == 1
+    assert payload["target_prototypes"]["tomato__leaf"]["split_counts"] == {"curated": 1, "train": 1}
+    assert "tomato__leaf::late_blight" in payload["class_prototypes"]
+    assert payload["hard_negative_prototypes"]["tomato__leaf"]["sample_count"] == 1
 
 
 def test_vector_math_helpers_are_deterministic():

@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-DEFAULT_TARGETS = ("apricot__fruit", "grape__fruit", "tomato__leaf")
+DEFAULT_TARGETS = ("tomato__leaf", "tomato__fruit", "apricot__fruit", "strawberry__fruit")
 
 
 def _sha256_file(path: Path) -> str:

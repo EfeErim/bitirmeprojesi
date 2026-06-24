@@ -51,7 +51,12 @@ def test_compare_results_passes_when_candidate_improves_without_safety_regressio
         router=102,
         negative=6,
         opposite=15,
-        targets={"grape__fruit": (24, 31), "apricot__fruit": (35, 19), "tomato__leaf": (61, 47)},
+        targets={
+            "tomato__leaf": (61, 47),
+            "tomato__fruit": (40, 23),
+            "apricot__fruit": (35, 19),
+            "strawberry__fruit": (30, 23),
+        },
     )
     candidate = _summary(
         passed=370,
@@ -59,7 +64,12 @@ def test_compare_results_passes_when_candidate_improves_without_safety_regressio
         router=90,
         negative=5,
         opposite=10,
-        targets={"grape__fruit": (35, 20), "apricot__fruit": (35, 19), "tomato__leaf": (61, 47)},
+        targets={
+            "tomato__leaf": (61, 47),
+            "tomato__fruit": (45, 18),
+            "apricot__fruit": (35, 19),
+            "strawberry__fruit": (30, 23),
+        },
     )
 
     comparison = compare_results(baseline=baseline, candidate=candidate)
@@ -70,8 +80,8 @@ def test_compare_results_passes_when_candidate_improves_without_safety_regressio
     assert comparison["checks"]["manifests_match"] is True
     assert comparison["checks"]["totals_match"] is True
     assert comparison["checks"]["focus_target_totals_match"] is True
-    assert comparison["target_deltas"]["grape__fruit"]["total_delta"] == 0
-    assert comparison["target_deltas"]["grape__fruit"]["pass_delta"] == 11
+    assert comparison["target_deltas"]["tomato__fruit"]["total_delta"] == 0
+    assert comparison["target_deltas"]["tomato__fruit"]["pass_delta"] == 5
 
 
 def test_compare_results_fails_when_negative_false_accepts_increase():

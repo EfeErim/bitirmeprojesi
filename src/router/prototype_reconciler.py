@@ -30,6 +30,9 @@ class PrototypeMatch:
     margin: float = 0.0
     class_label: str | None = None
     prototype_level: str = "target"
+    hard_negative_target_id: str | None = None
+    hard_negative_similarity: float | None = None
+    hard_negative_gap: float | None = None
 
 
 @dataclass(frozen=True)
@@ -57,6 +60,9 @@ class ReconcileDecision:
         payload["prototype_level"] = match.get("prototype_level") if isinstance(match, dict) else None
         payload["prototype_similarity"] = match.get("similarity") if isinstance(match, dict) else None
         payload["prototype_margin"] = match.get("margin") if isinstance(match, dict) else None
+        payload["prototype_hard_negative_target"] = match.get("hard_negative_target_id") if isinstance(match, dict) else None
+        payload["prototype_hard_negative_similarity"] = match.get("hard_negative_similarity") if isinstance(match, dict) else None
+        payload["prototype_hard_negative_gap"] = match.get("hard_negative_gap") if isinstance(match, dict) else None
         payload["prototype_min_negative_gap"] = self.min_negative_gap
         payload["reconciled_crop"] = self.crop
         payload["reconciled_part"] = self.part
@@ -188,6 +194,17 @@ def nearest_target(
         second_distance, second_target_id, _, _, _ = scored[1]
         second_similarity = _similarity_from_distance(second_distance)
     margin = round(best_similarity - float(second_similarity or 0.0), 8)
+    hard_negative_target_id = None
+    hard_negative_similarity = None
+    hard_negative_gap = None
+    hard_negative_payload = (prototype_payload.get("hard_negative_prototypes") or {}).get(best_target_id)
+    if isinstance(hard_negative_payload, dict):
+        hard_negative_centroid = tuple(float(value) for value in hard_negative_payload.get("centroid", []) if value is not None)
+        if hard_negative_centroid:
+            hard_negative_distance = euclidean_distance(query_vector, hard_negative_centroid)
+            hard_negative_target_id = best_target_id
+            hard_negative_similarity = _similarity_from_distance(hard_negative_distance)
+            hard_negative_gap = round(best_similarity - hard_negative_similarity, 8)
     target_metadata = (prototype_payload.get("target_prototypes") or {}).get(best_target_id)
     if not isinstance(target_metadata, dict):
         target_metadata = best_target
@@ -202,6 +219,9 @@ def nearest_target(
         margin=margin,
         class_label=best_class_label,
         prototype_level=best_level,
+        hard_negative_target_id=hard_negative_target_id,
+        hard_negative_similarity=hard_negative_similarity,
+        hard_negative_gap=hard_negative_gap,
     )
 
 
@@ -280,6 +300,12 @@ def _requires_selected_policy(target_policies: dict[str, Any] | None) -> bool:
     return bool(target_policies.get("__requires_selected_policy__"))
 
 
+def _effective_negative_gap(match: PrototypeMatch) -> float:
+    if match.hard_negative_gap is not None:
+        return min(match.margin, match.hard_negative_gap)
+    return match.margin
+
+
 def reconcile_router_handoff(
     *,
     image_path: str | Path,
@@ -346,8 +372,8 @@ def reconcile_router_handoff(
             (target_policy is None or selected_policy_is_too_strict)
             and match.similarity >= rescue_min_similarity
             and match.margin >= rescue_min_margin
-            and match.margin >= rescue_min_negative_gap
-            and match.margin >= effective_min_negative_gap
+            and _effective_negative_gap(match) >= rescue_min_negative_gap
+            and _effective_negative_gap(match) >= effective_min_negative_gap
         ):
             target_policy = exact_rescue_policy
             effective_min_similarity = rescue_min_similarity
@@ -384,7 +410,7 @@ def reconcile_router_handoff(
             min_negative_gap=effective_min_negative_gap,
         )
 
-    if match.margin < effective_min_negative_gap:
+    if _effective_negative_gap(match) < effective_min_negative_gap:
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,
