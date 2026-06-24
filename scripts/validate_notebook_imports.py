@@ -438,6 +438,13 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "Notebook 8 helper should avoid duplicating Notebook 1 routing by using a trusted router handoff: {snippet}",
     )
     for snippet in (
+        "M2_RUN_FULL_DEMO = True",
+        "M2_DEMO_LIMIT = None",
+        "M2_BATCH_SIZE = 12",
+        "M2_ADAPTER_BATCH_SIZE = 32",
+        "M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'",
+        "M2_REFRESH_HANDOFF_CACHE = False",
+        "M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = True",
         "M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260622T161859Z/summary.json'",
         "M2_PROTOTYPE_TARGET_MIN_PRECISION = 0.98",
         "M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = 1",
@@ -446,9 +453,15 @@ def test_auto_router_adapter_notebook_contract() -> None:
         _assert_contains(
             sources.full_source,
             snippet,
-            "Notebook 8 M2 full-demo parameters should expose bounded target-policy controls: {snippet}",
+            "Notebook 8 M2 full-demo parameters should keep the rerun contract: {snippet}",
         )
     for snippet in (
+        'M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))',
+        'M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 12))',
+        'M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 32))',
+        'M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))',
+        'M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", False))',
+        'M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))',
         "enrich_summary_manifest_sha256",
         "manifest_sha256",
         "m2_result_comparison.json",
