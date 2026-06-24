@@ -205,6 +205,39 @@ def test_enrich_summary_manifest_sha256_fills_existing_manifest_hash(tmp_path: P
     assert enriched is summary
     assert len(enriched["manifest_sha256"]) == 64
     assert set(enriched["manifest_sha256"]) != {""}
+    assert enriched["manifest_sha256_source"] == "local_manifest_enriched"
+
+
+def test_compare_results_warns_when_hash_matches_but_totals_differ():
+    baseline = _summary(
+        total=512,
+        passed=357,
+        failed=155,
+        router=102,
+        negative=6,
+        opposite=15,
+        targets={"grape__fruit": (24, 31)},
+        manifest_sha256="a" * 64,
+    )
+    candidate = _summary(
+        total=522,
+        passed=393,
+        failed=129,
+        router=84,
+        negative=1,
+        opposite=8,
+        targets={"grape__fruit": (42, 13)},
+        manifest_sha256="a" * 64,
+    )
+
+    comparison = compare_results(baseline=baseline, candidate=candidate, targets=("grape__fruit",))
+    markdown = comparison_markdown(comparison)
+
+    assert comparison["status"] == "fail"
+    assert comparison["checks"]["manifest_sha256_match"] is True
+    assert comparison["checks"]["totals_match"] is False
+    assert "manifest_hash_matches_but_total_rows_differ" in comparison["warnings"]
+    assert "- `manifest_hash_matches_but_total_rows_differ`" in markdown
 
 
 def test_compare_results_fails_when_focus_target_total_changes():

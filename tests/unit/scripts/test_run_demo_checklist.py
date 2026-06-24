@@ -393,6 +393,7 @@ def test_official_batch_rows_skips_router_on_handoff_cache_hit(tmp_path: Path, m
         prototype_min_margin=None,
         prototype_min_negative_gap=None,
         prototype_target_policies=None,
+        expected_class_label=rows[0].expected_class,
     )
     cache = {
         "schema_version": "m2_router_prototype_handoff_cache.v1",
@@ -433,6 +434,99 @@ def test_official_batch_rows_skips_router_on_handoff_cache_hit(tmp_path: Path, m
         handoff_cache=cache,
     )
     assert output_rows[0]["pass_fail"] == "pass"
+    assert cache["stats"]["hits"] == 1
+
+
+def test_official_batch_rows_blocks_cached_handoff_for_expected_unsupported_part(tmp_path: Path, monkeypatch):
+    image_path = tmp_path / "grape.jpg"
+    Image.new("RGB", (16, 16), color="green").save(image_path)
+    rows = [
+        ChecklistRow(
+            image_id="demo_044",
+            source="staged_external:grape.jpg",
+            expected_target="grape__unknown_part",
+            expected_behavior="unsupported part",
+            notes="mixed grape fruit/leaf should review",
+            expected_crop="grape",
+            expected_part="",
+            expected_class="unsupported_part",
+        )
+    ]
+
+    def unexpected_router(*_args, **_kwargs):
+        raise AssertionError("router batch should not run on full handoff-cache hit")
+
+    def unexpected_adapter(*_args, **_kwargs):
+        raise AssertionError("adapter path must not run for expected unsupported-part rows")
+
+    monkeypatch.setattr("scripts.run_demo_checklist.run_router_inference_batch", unexpected_router)
+    monkeypatch.setattr("scripts.run_demo_checklist.run_auto_router_adapter_prediction", unexpected_adapter)
+
+    cache_key = _handoff_cache_key(
+        row=rows[0],
+        image_path=image_path,
+        config_env="colab",
+        device="cuda",
+        enable_prototype_reconciler=True,
+        prototype_bank_path=None,
+        taxonomy_registry_path=None,
+        prototype_min_similarity=None,
+        prototype_min_margin=None,
+        prototype_min_negative_gap=None,
+        prototype_target_policies=None,
+        expected_class_label=rows[0].expected_class,
+    )
+    cache = {
+        "schema_version": "m2_router_prototype_handoff_cache.v1",
+        "entries": {
+            cache_key: {
+                "image_id": "demo_044",
+                "image": str(image_path),
+                "handoff": {
+                    "adapter_allowed": True,
+                    "status": "ok",
+                    "crop": "grape",
+                    "part": "leaf",
+                    "message": "",
+                    "router_confidence": 1.0,
+                    "router": {},
+                    "rejection_status": None,
+                    "rejection_message": None,
+                    "prototype_reconciliation": {
+                        "enabled": True,
+                        "vlm_crop": "grape",
+                        "vlm_part": "leaf",
+                        "prototype_crop": "grape",
+                        "prototype_part": "leaf",
+                        "prototype_target": "grape__leaf",
+                        "reconciled_crop": "grape",
+                        "reconciled_part": "leaf",
+                        "reconcile_decision": "accept_router",
+                        "reason": "router_and_prototype_agree",
+                    },
+                },
+            }
+        },
+        "stats": {},
+    }
+
+    output_rows = _run_official_batch_rows(
+        rows,
+        repo_root=tmp_path,
+        config_env="colab",
+        device="cuda",
+        adapter_root=tmp_path / "runs",
+        batch_size=2,
+        enable_prototype_reconciler=True,
+        handoff_cache=cache,
+    )
+
+    assert output_rows[0]["actual_status"] == "router_uncertain"
+    assert output_rows[0]["predicted_crop"] == "grape"
+    assert output_rows[0]["predicted_part"] == "leaf"
+    assert output_rows[0]["predicted_disease"] is None
+    assert output_rows[0]["pass_fail"] == "pass"
+    assert output_rows[0]["reconcile_reason"] == "router_and_prototype_agree"
     assert cache["stats"]["hits"] == 1
 
 

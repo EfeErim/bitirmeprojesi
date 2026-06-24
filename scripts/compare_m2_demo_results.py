@@ -34,6 +34,7 @@ def enrich_summary_manifest_sha256(payload: dict[str, Any], *, repo_root: Path) 
         return payload
     if manifest_path.is_file():
         payload["manifest_sha256"] = _sha256_file(manifest_path)
+        payload["manifest_sha256_source"] = "local_manifest_enriched"
     return payload
 
 
@@ -111,10 +112,18 @@ def compare_results(
         - _int_at(baseline, "analysis_summary", "prototype_correct_but_abstained", "count"),
     }
     target_deltas = {target: _target_delta(baseline, candidate, target) for target in targets}
+    totals_match = metrics["total_delta"] == 0
+    manifest_sha256_match = not hashes_comparable or baseline_manifest_sha256 == candidate_manifest_sha256
+    warnings: list[str] = []
+    if hashes_comparable and manifest_sha256_match and not totals_match:
+        warnings.append("manifest_hash_matches_but_total_rows_differ")
+    for side, payload in (("baseline", baseline), ("candidate", candidate)):
+        if str(payload.get("manifest_sha256_source") or "") == "local_manifest_enriched":
+            warnings.append(f"{side}_manifest_sha256_enriched_from_local_manifest")
     checks = {
         "manifests_match": bool(baseline_manifest) and baseline_manifest == candidate_manifest,
-        "manifest_sha256_match": not hashes_comparable or baseline_manifest_sha256 == candidate_manifest_sha256,
-        "totals_match": metrics["total_delta"] == 0,
+        "manifest_sha256_match": manifest_sha256_match,
+        "totals_match": totals_match,
         "focus_target_totals_match": all(delta["total_delta"] == 0 for delta in target_deltas.values()),
         "failed_not_increased": metrics["failed_delta"] <= 0,
         "router_failures_not_increased": metrics["router_failure_delta"] <= 0,
@@ -130,9 +139,12 @@ def compare_results(
         "candidate_manifest": candidate_manifest,
         "baseline_manifest_sha256": baseline_manifest_sha256,
         "candidate_manifest_sha256": candidate_manifest_sha256,
+        "baseline_manifest_sha256_source": str(baseline.get("manifest_sha256_source") or "summary"),
+        "candidate_manifest_sha256_source": str(candidate.get("manifest_sha256_source") or "summary"),
         "metrics": metrics,
         "target_deltas": target_deltas,
         "checks": checks,
+        "warnings": warnings,
         "status": "pass" if all(checks.values()) else "fail",
     }
 
@@ -158,6 +170,8 @@ def comparison_markdown(comparison: dict[str, Any]) -> str:
         f"- Candidate manifest: `{comparison.get('candidate_manifest') or 'unknown'}`",
         f"- Baseline manifest SHA-256: `{comparison.get('baseline_manifest_sha256') or 'unknown'}`",
         f"- Candidate manifest SHA-256: `{comparison.get('candidate_manifest_sha256') or 'unknown'}`",
+        f"- Baseline manifest SHA-256 source: `{comparison.get('baseline_manifest_sha256_source') or 'unknown'}`",
+        f"- Candidate manifest SHA-256 source: `{comparison.get('candidate_manifest_sha256_source') or 'unknown'}`",
         "",
         "## Metric Deltas",
         "",
@@ -202,6 +216,11 @@ def comparison_markdown(comparison: dict[str, Any]) -> str:
     )
     for name, passed in checks.items():
         lines.append(f"| `{name}` | {_format_value(passed)} |")
+    warnings = comparison.get("warnings") or []
+    if warnings:
+        lines.extend(["", "## Warnings", ""])
+        for warning in warnings:
+            lines.append(f"- `{warning}`")
     return "\n".join(lines) + "\n"
 
 

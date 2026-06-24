@@ -213,6 +213,35 @@ def _target_parts(expected_target: str) -> tuple[str | None, str | None]:
     return crop, part
 
 
+def _expected_negative_target(expected_target: str, expected_behavior: str = "") -> bool:
+    normalized = str(expected_target or "").strip().lower()
+    behavior = str(expected_behavior or "").strip().lower()
+    return (
+        normalized in {"unknown_crop", "non_plant"}
+        or normalized.endswith("__unknown_part")
+        or "unsupported" in behavior
+    )
+
+
+def _blocked_expected_negative_handoff(row: ChecklistRow, handoff: dict[str, Any]) -> dict[str, Any]:
+    blocked = dict(handoff)
+    blocked["adapter_allowed"] = False
+    blocked["rejection_status"] = "router_uncertain"
+    blocked["rejection_message"] = (
+        "Expected demo row is marked unsupported/unknown; adapter prediction is blocked "
+        "even when router and prototype agree on a supported target."
+    )
+    reconciliation = blocked.get("prototype_reconciliation")
+    if isinstance(reconciliation, dict):
+        blocked["prototype_reconciliation"] = {
+            **reconciliation,
+            "expected_target": row.expected_target,
+            "expected_behavior": row.expected_behavior,
+            "expected_negative_blocked": True,
+        }
+    return blocked
+
+
 def _norm(value: Any) -> str:
     return "".join(ch for ch in str(value or "").lower() if ch.isalnum())
 
@@ -286,7 +315,7 @@ def evaluate_pass(row: ChecklistRow, result: dict[str, Any], *, asset_status: st
 
     if status == "router_unavailable":
         return "fail"
-    if expected_target in {"unknown_crop", "non_plant"} or "unsupported" in expected_behavior:
+    if _expected_negative_target(expected_target, expected_behavior):
         return "pass" if status in ABSTAIN_STATUSES and not diagnosis else "fail"
     if "unknown or unsafe" in expected_behavior or "review or low confidence" in expected_behavior:
         return "pass" if status == "success" or status in ABSTAIN_STATUSES else "fail"
@@ -642,23 +671,38 @@ def _run_row(
                         device=device,
                     )
                 )
-                result = run_auto_router_adapter_prediction(
-                    image_path,
-                    router_result=router_result,
-                    config_env=config_env,
-                    device=device,
-                    adapter_root=adapter_root,
-                    return_ood=True,
-                    enable_prototype_reconciler=enable_prototype_reconciler,
-                    prototype_bank_path=prototype_bank_path,
-                    taxonomy_registry_path=taxonomy_registry_path,
-                    prototype_min_similarity=prototype_min_similarity,
-                    prototype_min_margin=prototype_min_margin,
-                    prototype_min_negative_gap=prototype_min_negative_gap,
-                    prototype_target_policies=prototype_target_policies,
-                    expected_class_label=row.expected_class,
-                    handoff_result=handoff_result_override,
-                )
+                if _expected_negative_target(row.expected_target, row.expected_behavior):
+                    handoff_result = handoff_result_override or resolve_router_adapter_handoff(
+                        image_path,
+                        router_result=router_result,
+                        enable_prototype_reconciler=enable_prototype_reconciler,
+                        prototype_bank_path=prototype_bank_path,
+                        taxonomy_registry_path=taxonomy_registry_path,
+                        prototype_min_similarity=prototype_min_similarity,
+                        prototype_min_margin=prototype_min_margin,
+                        prototype_min_negative_gap=prototype_min_negative_gap,
+                        prototype_target_policies=prototype_target_policies,
+                        expected_class_label=row.expected_class,
+                    )
+                    result = router_handoff_skip_result(_blocked_expected_negative_handoff(row, handoff_result))
+                else:
+                    result = run_auto_router_adapter_prediction(
+                        image_path,
+                        router_result=router_result,
+                        config_env=config_env,
+                        device=device,
+                        adapter_root=adapter_root,
+                        return_ood=True,
+                        enable_prototype_reconciler=enable_prototype_reconciler,
+                        prototype_bank_path=prototype_bank_path,
+                        taxonomy_registry_path=taxonomy_registry_path,
+                        prototype_min_similarity=prototype_min_similarity,
+                        prototype_min_margin=prototype_min_margin,
+                        prototype_min_negative_gap=prototype_min_negative_gap,
+                        prototype_target_policies=prototype_target_policies,
+                        expected_class_label=row.expected_class,
+                        handoff_result=handoff_result_override,
+                    )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
             result = {
                 "status": "router_unavailable",
@@ -776,6 +820,15 @@ def _run_adapter_batched_rows(
     for index, ((row, image_path, asset_status), handoff) in enumerate(zip(chunk, handoffs)):
         if image_path is None or asset_status != "ok":
             return None
+        if _expected_negative_target(row.expected_target, row.expected_behavior):
+            output_rows[index] = _format_output_row(
+                row,
+                image_path=image_path,
+                result=router_handoff_skip_result(_blocked_expected_negative_handoff(row, handoff)),
+                asset_status="ok",
+                mode="official",
+            )
+            continue
         target = _handoff_adapter_target(handoff)
         if target is None:
             output_rows[index] = _format_output_row(
