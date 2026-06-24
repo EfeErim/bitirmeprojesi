@@ -1,72 +1,81 @@
 {
-  "schema_version": "v1_m2_user_like_curated_image_set",
-  "generated_at": "2026-06-17T09:45:36.804276+00:00",
-  "row_count": 522,
+  "schema_version": "v2_m2_user_like_curated_image_set_with_external_enrichment",
+  "generated_at": "2026-06-24T13:40:11.782092+00:00",
+  "row_count": 602,
   "target_counts": {
-    "apricot__fruit": 54,
-    "apricot__leaf": 37,
-    "grape__fruit": 55,
-    "grape__leaf": 77,
+    "apricot__fruit": 64,
+    "apricot__leaf": 47,
+    "grape__fruit": 65,
+    "grape__leaf": 87,
     "grape__unknown_part": 2,
     "non_plant": 6,
-    "strawberry__fruit": 47,
-    "strawberry__leaf": 45,
-    "tomato__fruit": 75,
-    "tomato__leaf": 108,
+    "strawberry__fruit": 57,
+    "strawberry__leaf": 55,
+    "tomato__fruit": 85,
+    "tomato__leaf": 118,
     "tomato__unknown_part": 2,
     "unknown_crop": 14
   },
   "duplicate_hash_count": 0,
   "qc_status_counts": {
-    "keep": 522
+    "keep": 602
   },
   "user_like_bucket_counts": {
-    "borderline": 51,
-    "clear": 359,
-    "difficult": 102,
+    "borderline": 59,
+    "clear": 415,
+    "difficult": 118,
     "internet_negative": 10
   },
-  "min_per_disease_class_required": 10,
   "per_disease_class_counts": {
     "apricot__fruit": {
+      "kayısı_sağlıklı_meyve_800": 2,
       "kayısıda_çiçek_monilyası_meyve_40": 10,
       "kayısıda_şarka_virüsü_meyve_230": 10,
-      "kayısıda_şeftali_karalekesi_meyve_232": 10,
-      "kayısıda_yaprak_delen_çil_hastalığı_meyve_128": 10
+      "kayısıda_şeftali_karalekesi_meyve_232": 19,
+      "kayısıda_yaprak_delen_çil_hastalığı_meyve_128": 13
     },
     "apricot__leaf": {
+      "kayısı_sağlıklı_yaprak_302": 17,
       "kayısı_şarka_virüsü_yaprak_206": 10,
       "kayısı_yaprak_delen_çil_hastalığı_yaprak_300": 10
     },
     "grape__fruit": {
-      "üzüm_antraknoz_meyve": 10,
-      "üzüm_botrytis_cinerea_meyve": 10,
-      "üzüm_külleme_meyve": 10,
-      "üzüm_mildiyö_meyve": 10
+      "üzüm_antraknoz_meyve": 11,
+      "üzüm_botrytis_cinerea_meyve": 13,
+      "üzüm_külleme_meyve": 13,
+      "üzüm_mildiyö_meyve": 15,
+      "üzüm_sağlıklı_meyve": 3
     },
     "grape__leaf": {
-      "üzüm_antraknoz_yaprak": 10,
+      "üzüm_antraknoz_yaprak": 19,
       "üzüm_kav_esca_yaprak": 10,
-      "üzüm_külleme_yaprak": 10,
+      "üzüm_külleme_yaprak": 18,
       "üzüm_leafroll_virüs_yaprak": 10,
       "üzüm_mildiyö_yaprak": 10,
       "üzüm_yelpaze_virüsü_yaprak": 10
     },
+    "grape__unknown_part": {
+      "unsupported_part": 2
+    },
+    "non_plant": {
+      "non_plant": 6
+    },
     "strawberry__fruit": {
       "strawberry_anthracnose_fruit": 10,
       "strawberry_gray_mold_fruit": 10,
+      "strawberry_healthy_fruit": 17,
       "strawberry_powdery_mildew_fruit": 10
     },
     "strawberry__leaf": {
       "strawberry_leaf_scorch_leaf": 10,
-      "strawberry_leaf_spot_leaf": 10,
+      "strawberry_leaf_spot_leaf": 25,
       "strawberry_powdery_mildew_leaf": 10
     },
     "tomato__fruit": {
       "domates_antraknoz_meyve": 10,
-      "domates_bacterial_spot_and_speck_meyve": 10,
-      "domates_blossom_end_rot_meyve": 10,
-      "domates_gray_mold_meyve": 10,
+      "domates_bacterial_spot_and_speck_meyve": 22,
+      "domates_blossom_end_rot_meyve": 11,
+      "domates_gray_mold_meyve": 12,
       "domates_late_blight_meyve": 10,
       "domates_spotted_wilt_meyve": 10
     },
@@ -77,26 +86,37 @@
       "domates_leaf_mold_yaprak": 10,
       "domates_mosaic_virüs_yaprak": 10,
       "domates_powdery_mildew_yaprak": 10,
+      "domates_sağlıklı_yaprak": 2,
       "domates_septoria_leaf_spot_yaprak": 10,
-      "domates_spotted_wilt_yaprak": 10,
+      "domates_spotted_wilt_yaprak": 26,
       "domates_yellow_leaf_curl_yaprak": 10
+    },
+    "tomato__unknown_part": {
+      "unsupported_part": 2
+    },
+    "unknown_crop": {
+      "unsupported_crop": 14
     }
   },
-  "appended_internet_negative_rows": {
-    "source_manifest": "docs/demo_assets/m2_live_demo_set/manifests/m2_live_demo_set_run_manifest.csv",
-    "added_count": 10,
-    "skipped": [],
-    "image_ids": [
-      "demo_515",
-      "demo_516",
-      "demo_517",
-      "demo_518",
-      "demo_519",
-      "demo_520",
-      "demo_521",
-      "demo_522",
-      "demo_523",
-      "demo_524"
-    ]
+  "last_enrichment": {
+    "source": "inaturalist",
+    "added_count": 80,
+    "removed_prior_enrichment_count": 80,
+    "added_target_counts": {
+      "apricot__fruit": 10,
+      "apricot__leaf": 10,
+      "grape__fruit": 10,
+      "grape__leaf": 10,
+      "strawberry__fruit": 10,
+      "strawberry__leaf": 10,
+      "tomato__fruit": 10,
+      "tomato__leaf": 10
+    },
+    "quality_filters": {
+      "min_side": 360,
+      "min_bytes": 25000,
+      "min_contrast": 18.0,
+      "max_aspect_ratio": 2.5
+    }
   }
 }
