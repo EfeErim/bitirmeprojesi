@@ -12,6 +12,7 @@ from scripts.run_demo_checklist import (
     build_analysis_summary,
     build_parser,
     classify_failure,
+    evaluate_pass,
     format_elapsed_seconds,
     parse_checklist_rows,
     parse_manifest_rows,
@@ -123,6 +124,54 @@ def test_parse_manifest_rows_infers_expected_fields_from_existing_manifest_shape
     assert rows[0].expected_crop == "tomato"
     assert rows[0].expected_part == "fruit"
     assert rows[0].expected_class == "domates_late_blight_meyve"
+
+
+def test_parse_manifest_rows_does_not_infer_expected_class_from_external_url_parent(tmp_path: Path):
+    manifest = tmp_path / "extra.csv"
+    manifest.write_text(
+        "\n".join(
+            [
+                "image_id,source,expected_target,expected_crop,expected_part,expected_class,"
+                "expected_behavior,notes,original_source,disease_class",
+                (
+                    "demo_525,staged_external:docs/demo_assets/m2_full_image_set/images/demo_525_tomato_fruit.jpg,"
+                    "tomato__fruit,tomato,fruit,,"
+                    "external supported crop/part image; disease answer or review expected,"
+                    "external iNaturalist enrichment,https://www.inaturalist.org/observations/366091936,"
+                ),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    rows = parse_manifest_rows(manifest)
+
+    assert rows[0].expected_class == ""
+
+
+def test_evaluate_classless_supported_probe_accepts_review_or_correct_target_answer():
+    row = ChecklistRow(
+        image_id="demo_525",
+        source="staged_external:docs/demo_assets/m2_full_image_set/images/demo_525_tomato_fruit.jpg",
+        expected_target="tomato__fruit",
+        expected_behavior="external supported crop/part image; disease answer or review expected",
+        notes="",
+        expected_crop="tomato",
+        expected_part="fruit",
+        expected_class="",
+    )
+
+    assert evaluate_pass(row, {"status": "router_uncertain", "crop": None, "part": None}, asset_status="ok") == "pass"
+    assert evaluate_pass(
+        row,
+        {"status": "success", "crop": "tomato", "part": "fruit", "diagnosis": "domates_saglikli_meyve"},
+        asset_status="ok",
+    ) == "pass"
+    assert evaluate_pass(
+        row,
+        {"status": "success", "crop": "tomato", "part": "leaf", "diagnosis": "domates_late_blight_yaprak"},
+        asset_status="ok",
+    ) == "fail"
 
 
 def test_parser_supports_manifest_only_runs():
@@ -530,6 +579,107 @@ def test_official_batch_rows_blocks_cached_handoff_for_expected_unsupported_part
     assert cache["stats"]["hits"] == 1
 
 
+def test_official_batch_rows_blocks_classless_probe_handoff_target_mismatch(tmp_path: Path, monkeypatch):
+    image_path = tmp_path / "tomato_leaf.jpg"
+    Image.new("RGB", (16, 16), color="green").save(image_path)
+    rows = [
+        ChecklistRow(
+            image_id="demo_535",
+            source="staged_external:tomato_leaf.jpg",
+            expected_target="tomato__leaf",
+            expected_behavior="external supported crop/part image; disease answer or review expected",
+            notes="external iNaturalist enrichment",
+            expected_crop="tomato",
+            expected_part="leaf",
+            expected_class="",
+        )
+    ]
+
+    def unexpected_router(*_args, **_kwargs):
+        raise AssertionError("router batch should not run on full handoff-cache hit")
+
+    def unexpected_adapter(*_args, **_kwargs):
+        raise AssertionError("adapter path must not run for mismatched classless probe handoff")
+
+    class FakeWorkflow:
+        class Runtime:
+            input_guard_enabled = False
+
+        runtime = Runtime()
+
+    monkeypatch.setattr("scripts.run_demo_checklist.run_router_inference_batch", unexpected_router)
+    monkeypatch.setattr("scripts.run_demo_checklist.run_auto_router_adapter_prediction", unexpected_adapter)
+    monkeypatch.setattr("scripts.run_demo_checklist.InferenceWorkflow", lambda **_kwargs: FakeWorkflow())
+
+    cache_key = _handoff_cache_key(
+        row=rows[0],
+        image_path=image_path,
+        config_env="colab",
+        device="cuda",
+        enable_prototype_reconciler=True,
+        prototype_bank_path=None,
+        taxonomy_registry_path=None,
+        prototype_min_similarity=None,
+        prototype_min_margin=None,
+        prototype_min_negative_gap=None,
+        prototype_target_policies=None,
+        expected_class_label=rows[0].expected_class,
+    )
+    cache = {
+        "schema_version": "m2_router_prototype_handoff_cache.v1",
+        "entries": {
+            cache_key: {
+                "image_id": "demo_535",
+                "image": str(image_path),
+                "handoff": {
+                    "adapter_allowed": True,
+                    "status": "ok",
+                    "crop": "tomato",
+                    "part": "fruit",
+                    "message": "",
+                    "router_confidence": 1.0,
+                    "router": {},
+                    "rejection_status": None,
+                    "rejection_message": None,
+                    "prototype_reconciliation": {
+                        "enabled": True,
+                        "vlm_crop": "tomato",
+                        "vlm_part": "fruit",
+                        "prototype_crop": "tomato",
+                        "prototype_part": "fruit",
+                        "prototype_target": "tomato__fruit",
+                        "reconciled_crop": "tomato",
+                        "reconciled_part": "fruit",
+                        "reconcile_decision": "accept_router",
+                        "reason": "router_and_prototype_agree",
+                    },
+                },
+            }
+        },
+        "stats": {},
+    }
+
+    output_rows = _run_official_batch_rows(
+        rows,
+        repo_root=tmp_path,
+        config_env="colab",
+        device="cuda",
+        adapter_root=tmp_path / "runs",
+        batch_size=2,
+        adapter_batch_size=8,
+        enable_prototype_reconciler=True,
+        handoff_cache=cache,
+    )
+
+    assert output_rows[0]["actual_status"] == "router_uncertain"
+    assert output_rows[0]["predicted_crop"] == "tomato"
+    assert output_rows[0]["predicted_part"] == "fruit"
+    assert output_rows[0]["predicted_disease"] is None
+    assert output_rows[0]["pass_fail"] == "pass"
+    assert output_rows[0]["reconcile_reason"] == "router_and_prototype_agree"
+    assert cache["stats"]["hits"] == 1
+
+
 def test_resolve_prototype_thresholds_from_calibration_uses_selected_policy(tmp_path: Path):
     report_path = tmp_path / "calibration.json"
     report_path.write_text(
@@ -706,15 +856,37 @@ def test_build_analysis_summary_separates_router_and_adapter_failures():
                 "predicted_disease": None,
                 "failure_bucket": "adapter_loading",
             },
+            {
+                "image_id": "demo_004",
+                "actual_status": "router_uncertain",
+                "pass_fail": "pass",
+                "expected_target": "grape__fruit",
+                "expected_crop": "grape",
+                "expected_part": "fruit",
+                "expected_class": "",
+                "expected_behavior": "external supported crop/part image; disease answer or review expected",
+                "predicted_crop": None,
+                "predicted_part": None,
+                "predicted_disease": None,
+                "failure_bucket": "",
+            },
         ]
     )
 
-    assert analysis["router_crop_correctness"] == {"correct": 2, "incorrect": 1, "not_applicable": 0}
-    assert analysis["router_part_correctness"] == {"correct": 2, "incorrect": 1, "not_applicable": 0}
+    assert analysis["router_crop_correctness"] == {"correct": 2, "incorrect": 2, "not_applicable": 0}
+    assert analysis["router_part_correctness"] == {"correct": 2, "incorrect": 2, "not_applicable": 0}
     assert analysis["normalized_disease_class_correctness"] == {
         "correct": 1,
         "incorrect": 1,
-        "not_applicable": 1,
+        "not_applicable": 2,
+    }
+    assert analysis["classless_supported_probes"] == {
+        "total": 1,
+        "answered": 0,
+        "answered_target_correct": 0,
+        "answered_target_incorrect": 0,
+        "reviewed_or_abstained": 1,
+        "failed": 0,
     }
     assert analysis["adapter_unavailable"] == {"wrong_router": 1, "missing_adapter": 0, "unknown": 0}
     assert analysis["opposite_part_disease_labels"]["image_ids"] == ["demo_002"]

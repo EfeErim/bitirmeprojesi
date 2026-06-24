@@ -51,6 +51,10 @@ DEPENDENCY_MARKERS = (
     "cuda",
     "no module named",
 )
+CLASSLESS_SUPPORTED_PROBE_MARKERS = (
+    "disease answer or review expected",
+    "supported crop/part image",
+)
 
 
 def format_elapsed_seconds(seconds: float) -> str:
@@ -242,6 +246,24 @@ def _blocked_expected_negative_handoff(row: ChecklistRow, handoff: dict[str, Any
     return blocked
 
 
+def _blocked_classless_probe_handoff(row: ChecklistRow, handoff: dict[str, Any]) -> dict[str, Any]:
+    blocked = dict(handoff)
+    blocked["adapter_allowed"] = False
+    blocked["rejection_status"] = "router_uncertain"
+    blocked["rejection_message"] = (
+        "Classless supported probe target disagrees with the router/prototype handoff; "
+        "adapter prediction is blocked and the row is treated as review."
+    )
+    reconciliation = blocked.get("prototype_reconciliation")
+    if isinstance(reconciliation, dict):
+        blocked["prototype_reconciliation"] = {
+            **reconciliation,
+            "expected_target": row.expected_target,
+            "classless_supported_probe_blocked": True,
+        }
+    return blocked
+
+
 def _norm(value: Any) -> str:
     return "".join(ch for ch in str(value or "").lower() if ch.isalnum())
 
@@ -260,11 +282,21 @@ def _expected_class_from_reference(source: str) -> str:
         return ""
     if source.startswith("local_test_pool:"):
         return _expected_class_from_source(source)
+    if "://" in source:
+        return ""
     try:
         path = Path(source)
     except TypeError:
         return ""
     return path.parent.name if path.parent != path else ""
+
+
+def _expected_class_for_grading(row: ChecklistRow) -> str:
+    if row.expected_class:
+        return row.expected_class
+    if row.source.startswith("local_test_pool:"):
+        return _expected_class_from_source(row.source)
+    return ""
 
 
 def _class_matches(expected_class: str, diagnosis: Any) -> bool:
@@ -283,6 +315,37 @@ def _opposite_part_label(expected_part: str, diagnosis: Any) -> bool:
     if expected == "leaf":
         return "fruit" in diagnosis_key or "meyve" in diagnosis_key
     return False
+
+
+def _classless_supported_probe(row: ChecklistRow) -> bool:
+    if _expected_class_for_grading(row):
+        return False
+    if not row.expected_crop or not row.expected_part:
+        return False
+    behavior = str(row.expected_behavior or "").strip().lower()
+    return any(marker in behavior for marker in CLASSLESS_SUPPORTED_PROBE_MARKERS)
+
+
+def _target_matches(row: ChecklistRow, result: dict[str, Any]) -> bool:
+    expected_crop = str(row.expected_crop or "").strip().lower()
+    expected_part = str(row.expected_part or "").strip().lower()
+    predicted_crop = str(result.get("crop") or "").strip().lower()
+    predicted_part = str(result.get("part") or "").strip().lower()
+    return bool(expected_crop and expected_part and predicted_crop == expected_crop and predicted_part == expected_part)
+
+
+def _handoff_target_matches(row: ChecklistRow, handoff: dict[str, Any]) -> bool:
+    expected_crop = str(row.expected_crop or "").strip().lower()
+    expected_part = str(row.expected_part or "").strip().lower()
+    handoff_crop = str(handoff.get("crop") or "").strip().lower()
+    handoff_part = str(handoff.get("part") or "").strip().lower()
+    return bool(expected_crop and expected_part and handoff_crop == expected_crop and handoff_part == expected_part)
+
+
+def _classless_probe_handoff_mismatch(row: ChecklistRow, handoff: dict[str, Any]) -> bool:
+    return _classless_supported_probe(row) and bool(handoff.get("adapter_allowed")) and not _handoff_target_matches(
+        row, handoff
+    )
 
 
 def classify_failure(result: dict[str, Any], *, asset_status: str) -> str:
@@ -321,12 +384,16 @@ def evaluate_pass(row: ChecklistRow, result: dict[str, Any], *, asset_status: st
         return "pass" if status == "success" or status in ABSTAIN_STATUSES else "fail"
     if "answer or review, no crash" in expected_behavior:
         return "pass" if status == "success" or status in ABSTAIN_STATUSES else "fail"
+    if _classless_supported_probe(row):
+        if status in ABSTAIN_STATUSES:
+            return "pass"
+        return "pass" if status == "success" and _target_matches(row, result) else "fail"
     if status != "success":
         return "fail"
 
-    expected_class = row.expected_class or _expected_class_from_source(row.source)
+    expected_class = _expected_class_for_grading(row)
     if not expected_class:
-        return "pass"
+        return "pass" if _target_matches(row, result) else "fail"
     return "pass" if _class_matches(expected_class, diagnosis) else "fail"
 
 
@@ -686,6 +753,29 @@ def _run_row(
                     )
                     result = router_handoff_skip_result(_blocked_expected_negative_handoff(row, handoff_result))
                 else:
+                    handoff_result = handoff_result_override
+                    if _classless_supported_probe(row):
+                        handoff_result = handoff_result or resolve_router_adapter_handoff(
+                            image_path,
+                            router_result=router_result,
+                            enable_prototype_reconciler=enable_prototype_reconciler,
+                            prototype_bank_path=prototype_bank_path,
+                            taxonomy_registry_path=taxonomy_registry_path,
+                            prototype_min_similarity=prototype_min_similarity,
+                            prototype_min_margin=prototype_min_margin,
+                            prototype_min_negative_gap=prototype_min_negative_gap,
+                            prototype_target_policies=prototype_target_policies,
+                            expected_class_label=row.expected_class,
+                        )
+                        if _classless_probe_handoff_mismatch(row, handoff_result):
+                            result = router_handoff_skip_result(_blocked_classless_probe_handoff(row, handoff_result))
+                            return _format_output_row(
+                                row,
+                                image_path=image_path,
+                                result=result,
+                                asset_status=asset_status,
+                                mode=mode,
+                            )
                     result = run_auto_router_adapter_prediction(
                         image_path,
                         router_result=router_result,
@@ -701,7 +791,7 @@ def _run_row(
                         prototype_min_negative_gap=prototype_min_negative_gap,
                         prototype_target_policies=prototype_target_policies,
                         expected_class_label=row.expected_class,
-                        handoff_result=handoff_result_override,
+                        handoff_result=handoff_result,
                     )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
             result = {
@@ -825,6 +915,15 @@ def _run_adapter_batched_rows(
                 row,
                 image_path=image_path,
                 result=router_handoff_skip_result(_blocked_expected_negative_handoff(row, handoff)),
+                asset_status="ok",
+                mode="official",
+            )
+            continue
+        if _classless_probe_handoff_mismatch(row, handoff):
+            output_rows[index] = _format_output_row(
+                row,
+                image_path=image_path,
+                result=router_handoff_skip_result(_blocked_classless_probe_handoff(row, handoff)),
                 asset_status="ok",
                 mode="official",
             )
@@ -1133,6 +1232,14 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
     negative_false_accepts: list[str] = []
     negative_false_accepts_by_target: dict[str, int] = {}
     policy_thresholds_by_target: dict[str, dict[str, Any]] = {}
+    classless_supported_probes = {
+        "total": 0,
+        "answered": 0,
+        "answered_target_correct": 0,
+        "answered_target_incorrect": 0,
+        "reviewed_or_abstained": 0,
+        "failed": 0,
+    }
 
     for row in items:
         target = str(row.get("expected_target") or "")
@@ -1167,6 +1274,15 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         predicted_part = str(row.get("predicted_part") or "").strip().lower()
         expected_class = str(row.get("expected_class") or "").strip()
         predicted_disease = row.get("predicted_disease")
+        is_classless_supported_probe = (
+            not expected_class
+            and bool(expected_crop)
+            and bool(expected_part)
+            and any(
+                marker in str(row.get("expected_behavior") or "").strip().lower()
+                for marker in CLASSLESS_SUPPORTED_PROBE_MARKERS
+            )
+        )
 
         if expected_crop:
             crop_counts["correct" if predicted_crop == expected_crop else "incorrect"] += 1
@@ -1186,6 +1302,19 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
                 answered_wrong_by_expected_class[expected_class] = answered_wrong_by_expected_class.get(expected_class, 0) + 1
         else:
             class_counts["not_applicable"] += 1
+
+        if is_classless_supported_probe:
+            classless_supported_probes["total"] += 1
+            if status == "success":
+                classless_supported_probes["answered"] += 1
+                if predicted_crop == expected_crop and predicted_part == expected_part:
+                    classless_supported_probes["answered_target_correct"] += 1
+                else:
+                    classless_supported_probes["answered_target_incorrect"] += 1
+            if status in ABSTAIN_STATUSES:
+                classless_supported_probes["reviewed_or_abstained"] += 1
+            if pass_fail == "fail":
+                classless_supported_probes["failed"] += 1
 
         if _opposite_part_label(expected_part, predicted_disease):
             opposite_part_rows.append(str(row.get("image_id") or ""))
@@ -1231,6 +1360,7 @@ def build_analysis_summary(rows: Iterable[dict[str, Any]]) -> dict[str, Any]:
         "router_crop_correctness": crop_counts,
         "router_part_correctness": part_counts,
         "normalized_disease_class_correctness": class_counts,
+        "classless_supported_probes": classless_supported_probes,
         "adapter_unavailable": adapter_unavailable,
         "prototype_reconciliation": dict(sorted(reconciliation_counts.items())),
         "answered_wrong_by_target": dict(sorted(answered_wrong_by_target.items())),
@@ -1265,6 +1395,7 @@ def write_analysis_markdown(analysis: dict[str, Any], output_path: Path) -> None
         f"- router_crop_correctness: `{json.dumps(analysis['router_crop_correctness'], sort_keys=True)}`",
         f"- router_part_correctness: `{json.dumps(analysis['router_part_correctness'], sort_keys=True)}`",
         f"- normalized_disease_class_correctness: `{json.dumps(analysis['normalized_disease_class_correctness'], sort_keys=True)}`",
+        f"- classless_supported_probes: `{json.dumps(analysis.get('classless_supported_probes', {}), sort_keys=True)}`",
         f"- adapter_unavailable: `{json.dumps(analysis['adapter_unavailable'], sort_keys=True)}`",
         f"- prototype_reconciliation: `{json.dumps(analysis.get('prototype_reconciliation', {}), sort_keys=True)}`",
         f"- answered_wrong_by_target: `{json.dumps(analysis.get('answered_wrong_by_target', {}), sort_keys=True)}`",
