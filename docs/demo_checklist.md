@@ -10,9 +10,9 @@ Use this file for M1 and M2 execution. The goal is to prove that Colab Notebook 
 - Exact M2 run path:
   1. Open Notebook 8 in Colab.
   2. Select a GPU runtime and make sure Hugging Face/SAM3 access is available.
-  3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 4`, `M2_ADAPTER_BATCH_SIZE = 8`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
+  3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 12`, `M2_ADAPTER_BATCH_SIZE = 24`, `M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
   4. Leave `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available in Colab secrets.
-  5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 512-image manifest.
+  5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 522-image manifest.
   6. Read `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md` for the local runtime copy.
   7. The notebook also copies the result into `docs/demo_results/m2/<timestamp>/`, commits/pushes that folder, and disconnects the Colab runtime after the report is written and the push succeeds.
 - Optional single-image path:
@@ -60,11 +60,11 @@ The expanded internet image set is disease-focused and stored outside git under 
 
 The supported-disease coverage manifest is generated from `data/prepared_runtime_datasets/*/{test,val,continual,train}`, excludes healthy classes, and guarantees that every supported disease class appears at least 10 times for every adapter.
 
-The self-contained saved image package is under `docs/demo_assets/m2_full_image_set/`. It contains 512 copied images plus a runnable manifest:
+The self-contained saved image package is under `docs/demo_assets/m2_full_image_set/`. It contains 522 copied images plus a runnable manifest. The original 512-row stress set now includes 10 additional internet unsupported crop/part rows so Notebook 8 tries them with the other M2 images:
 
-`.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs --batch-size 4 --adapter-batch-size 8`
+`.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs --batch-size 12 --adapter-batch-size 24 --handoff-cache .runtime_tmp\m2_router_prototype_handoff_cache.json`
 
-The latest Colab M2 runs wrote reports with `M2_BATCH_SIZE = 4`, including the full 512-image `20260622T102452Z` result. Keep router batch size 4 for the next official Notebook 8 rerun, keep any smoke limit removed (`M2_DEMO_LIMIT = None`), and use `M2_ADAPTER_BATCH_SIZE = 8` so same-target adapter predictions can run in batches. The runner falls back to the older per-row adapter path if adapter batching is unavailable or unsafe.
+The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 24`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE` so repeated same-manifest runs can skip unchanged handoff work; set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
 
 ## User Photo Guidance To Show
 
@@ -215,7 +215,7 @@ Fill `actual_*`, `pass_fail`, and `failure_bucket` during M2. The `source` colum
 - Full coverage asset audit command:
   `.\scripts\python.cmd scripts\run_demo_checklist.py --mode asset-audit --extra-manifest .runtime_tmp\m2_internet_image_set_manifest.csv --extra-manifest .runtime_tmp\m2_supported_disease_coverage_manifest.csv --output .runtime_tmp\m2_demo_asset_audit_full_coverage.json --markdown-output .runtime_tmp\m2_demo_asset_audit_full_coverage.md`
 - Full coverage asset audit result after the 10-per-class expansion: 514 total rows, 512 file-ready rows, and 2 expected missing fallback captures: `demo_047` and `demo_048`.
-- 2026-06-17 saved image package: 512 asset-ready images were copied to `docs/demo_assets/m2_full_image_set/images/`. The runnable saved manifest is `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`.
+- 2026-06-17 saved image package, updated 2026-06-24: 522 asset-ready images are copied to `docs/demo_assets/m2_full_image_set/images/`. The runnable saved manifest is `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`.
 - Saved package asset audit command:
   `.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --mode asset-audit --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --output .runtime_tmp\m2_saved_image_set_asset_audit.json --markdown-output .runtime_tmp\m2_saved_image_set_asset_audit.md`
 - Saved package asset audit result: 512/512 rows are file-ready.

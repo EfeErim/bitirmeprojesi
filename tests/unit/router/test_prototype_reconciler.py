@@ -153,6 +153,80 @@ def test_reconciler_overrides_untrusted_part_conflict(tmp_path: Path):
     assert decision.part == "leaf"
 
 
+def test_reconciler_overrides_calibrated_fruit_part_conflict(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    grape_fruit = dataset_root / "grape__fruit" / "train" / "mildew_fruit" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    _write_image(grape_fruit, (80, 40, 140))
+    _write_image(grape_leaf, (20, 90, 40))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=grape_fruit,
+        router_crop="grape",
+        router_part="leaf",
+        router_status="ok",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "grape__fruit": {
+                "selected_policy": {
+                    "min_similarity": 0.1,
+                    "min_margin": 0.0,
+                    "min_negative_gap": 0.0,
+                }
+            },
+        },
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.crop == "grape"
+    assert decision.part == "fruit"
+    assert decision.reason == "prototype_overrode_calibrated_part_conflict"
+
+
+def test_reconciler_keeps_calibrated_leaf_part_conflict_abstained(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "late_blight" / "a.png"
+    tomato_fruit = dataset_root / "tomato__fruit" / "train" / "healthy" / "b.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(tomato_fruit, (190, 30, 30))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=tomato_leaf,
+        router_crop="tomato",
+        router_part="fruit",
+        router_status="ok",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__leaf": {
+                "class_policies": {
+                    "late_blight": {
+                        "selected_policy": {
+                            "min_similarity": 0.1,
+                            "min_margin": 0.0,
+                            "min_negative_gap": 0.0,
+                        }
+                    }
+                }
+            },
+        },
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "part_conflict"
+
+
 def test_reconciler_applies_target_policy_before_global_thresholds(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"

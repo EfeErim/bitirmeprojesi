@@ -372,7 +372,33 @@ def reconcile_router_handoff(
             min_negative_gap=effective_min_negative_gap,
         )
 
+    calibrated_fruit_part_override = (
+        bool(target_policy)
+        and match.prototype_level == "class"
+        and prototype_part == "fruit"
+        and vlm_part
+        and prototype_part
+        and vlm_part != prototype_part
+        and router_is_trusted
+        and router_target_is_supported
+        and match.margin >= max(DEFAULT_MIN_MARGIN, effective_min_margin)
+    )
+
     if vlm_part and prototype_part and vlm_part != prototype_part and router_is_trusted and router_target_is_supported:
+        if calibrated_fruit_part_override:
+            return ReconcileDecision(
+                decision="use_prototype",
+                crop=prototype_crop,
+                part=prototype_part,
+                reason="prototype_overrode_calibrated_part_conflict",
+                taxonomy_relation=relation,
+                prototype_match=match,
+                vlm_crop=vlm_crop,
+                vlm_part=vlm_part,
+                min_similarity=effective_min_similarity,
+                min_margin=effective_min_margin,
+                min_negative_gap=effective_min_negative_gap,
+            )
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,

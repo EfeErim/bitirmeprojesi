@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import sys
 import time
@@ -20,7 +21,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from scripts.colab_auto_router_adapter_prediction import run_auto_router_adapter_prediction  # noqa: E402
+from scripts.colab_auto_router_adapter_prediction import (  # noqa: E402
+    resolve_router_adapter_handoff,
+    router_handoff_skip_result,
+    run_auto_router_adapter_prediction,
+)
 from scripts.colab_router_adapter_inference import run_inference as run_router_inference  # noqa: E402
 from scripts.colab_router_adapter_inference import run_inference_batch as run_router_inference_batch  # noqa: E402
 from src.data.transforms import preprocess_image  # noqa: E402
@@ -357,6 +362,197 @@ def resolve_prototype_thresholds_from_calibration(
     return min_similarity, min_margin, min_negative_gap, report, target_policies
 
 
+def _stable_json_hash(payload: Any) -> str:
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")).hexdigest()
+
+
+def _path_fingerprint(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+    try:
+        stat = path.stat()
+    except OSError:
+        return {"path": str(path), "exists": False}
+    return {
+        "path": str(path),
+        "exists": True,
+        "size": int(stat.st_size),
+        "mtime_ns": int(stat.st_mtime_ns),
+    }
+
+
+def _handoff_cache_key(
+    *,
+    row: ChecklistRow,
+    image_path: Path,
+    config_env: str,
+    device: str,
+    enable_prototype_reconciler: bool,
+    prototype_bank_path: Path | None,
+    taxonomy_registry_path: Path | None,
+    prototype_min_similarity: float | None,
+    prototype_min_margin: float | None,
+    prototype_min_negative_gap: float | None,
+    prototype_target_policies: dict[str, Any] | None,
+) -> str:
+    material = {
+        "schema": "m2_router_prototype_handoff_cache.v1",
+        "image": _path_fingerprint(image_path),
+        "image_id": row.image_id,
+        "source": row.source,
+        "config_env": config_env,
+        "device": device,
+        "enable_prototype_reconciler": enable_prototype_reconciler,
+        "prototype_bank": _path_fingerprint(prototype_bank_path),
+        "taxonomy_registry": _path_fingerprint(taxonomy_registry_path),
+        "prototype_min_similarity": prototype_min_similarity,
+        "prototype_min_margin": prototype_min_margin,
+        "prototype_min_negative_gap": prototype_min_negative_gap,
+        "prototype_target_policy_hash": _stable_json_hash(prototype_target_policies or {}),
+        "code": {
+            "runner": _path_fingerprint(Path(__file__).resolve()),
+            "auto_handoff": _path_fingerprint(REPO_ROOT / "scripts" / "colab_auto_router_adapter_prediction.py"),
+            "prototype_reconciler": _path_fingerprint(REPO_ROOT / "src" / "router" / "prototype_reconciler.py"),
+        },
+    }
+    return _stable_json_hash(material)
+
+
+def _load_handoff_cache(cache_path: Path | None, *, refresh: bool = False) -> dict[str, Any]:
+    if cache_path is None or refresh or not cache_path.exists():
+        return {
+            "schema_version": "m2_router_prototype_handoff_cache.v1",
+            "entries": {},
+            "stats": {"hits": 0, "misses": 0, "writes": 0},
+        }
+    try:
+        payload = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    entries = payload.get("entries") if isinstance(payload, dict) else None
+    if not isinstance(entries, dict):
+        entries = {}
+    return {
+        "schema_version": "m2_router_prototype_handoff_cache.v1",
+        "entries": entries,
+        "stats": {"hits": 0, "misses": 0, "writes": 0},
+    }
+
+
+def _write_handoff_cache(cache_path: Path | None, cache: dict[str, Any]) -> None:
+    if cache_path is None:
+        return
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(json.dumps(cache, indent=2, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+
+
+def _cached_handoff(
+    *,
+    cache: dict[str, Any] | None,
+    row: ChecklistRow,
+    image_path: Path,
+    router_result: dict[str, Any],
+    config_env: str,
+    device: str,
+    enable_prototype_reconciler: bool,
+    prototype_bank_path: Path | None,
+    taxonomy_registry_path: Path | None,
+    prototype_min_similarity: float | None,
+    prototype_min_margin: float | None,
+    prototype_min_negative_gap: float | None,
+    prototype_target_policies: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if cache is None:
+        return resolve_router_adapter_handoff(
+            image_path,
+            router_result=router_result,
+            enable_prototype_reconciler=enable_prototype_reconciler,
+            prototype_bank_path=prototype_bank_path,
+            taxonomy_registry_path=taxonomy_registry_path,
+            prototype_min_similarity=prototype_min_similarity,
+            prototype_min_margin=prototype_min_margin,
+            prototype_min_negative_gap=prototype_min_negative_gap,
+            prototype_target_policies=prototype_target_policies,
+        )
+    key = _handoff_cache_key(
+        row=row,
+        image_path=image_path,
+        config_env=config_env,
+        device=device,
+        enable_prototype_reconciler=enable_prototype_reconciler,
+        prototype_bank_path=prototype_bank_path,
+        taxonomy_registry_path=taxonomy_registry_path,
+        prototype_min_similarity=prototype_min_similarity,
+        prototype_min_margin=prototype_min_margin,
+        prototype_min_negative_gap=prototype_min_negative_gap,
+        prototype_target_policies=prototype_target_policies,
+    )
+    entries = cache.setdefault("entries", {})
+    stats = cache.setdefault("stats", {"hits": 0, "misses": 0, "writes": 0})
+    entry = entries.get(key)
+    if isinstance(entry, dict) and isinstance(entry.get("handoff"), dict):
+        stats["hits"] = int(stats.get("hits", 0)) + 1
+        return dict(entry["handoff"])
+    stats["misses"] = int(stats.get("misses", 0)) + 1
+    handoff = resolve_router_adapter_handoff(
+        image_path,
+        router_result=router_result,
+        enable_prototype_reconciler=enable_prototype_reconciler,
+        prototype_bank_path=prototype_bank_path,
+        taxonomy_registry_path=taxonomy_registry_path,
+        prototype_min_similarity=prototype_min_similarity,
+        prototype_min_margin=prototype_min_margin,
+        prototype_min_negative_gap=prototype_min_negative_gap,
+        prototype_target_policies=prototype_target_policies,
+    )
+    entries[key] = {
+        "image_id": row.image_id,
+        "image": str(image_path),
+        "handoff": handoff,
+        "written_at": datetime.now(timezone.utc).isoformat(),
+    }
+    stats["writes"] = int(stats.get("writes", 0)) + 1
+    return handoff
+
+
+def _lookup_cached_handoff(
+    *,
+    cache: dict[str, Any] | None,
+    row: ChecklistRow,
+    image_path: Path,
+    config_env: str,
+    device: str,
+    enable_prototype_reconciler: bool,
+    prototype_bank_path: Path | None,
+    taxonomy_registry_path: Path | None,
+    prototype_min_similarity: float | None,
+    prototype_min_margin: float | None,
+    prototype_min_negative_gap: float | None,
+    prototype_target_policies: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if cache is None:
+        return None
+    key = _handoff_cache_key(
+        row=row,
+        image_path=image_path,
+        config_env=config_env,
+        device=device,
+        enable_prototype_reconciler=enable_prototype_reconciler,
+        prototype_bank_path=prototype_bank_path,
+        taxonomy_registry_path=taxonomy_registry_path,
+        prototype_min_similarity=prototype_min_similarity,
+        prototype_min_margin=prototype_min_margin,
+        prototype_min_negative_gap=prototype_min_negative_gap,
+        prototype_target_policies=prototype_target_policies,
+    )
+    entry = cache.setdefault("entries", {}).get(key)
+    if not isinstance(entry, dict) or not isinstance(entry.get("handoff"), dict):
+        return None
+    stats = cache.setdefault("stats", {"hits": 0, "misses": 0, "writes": 0})
+    stats["hits"] = int(stats.get("hits", 0)) + 1
+    return dict(entry["handoff"])
+
+
 def _run_row(
     row: ChecklistRow,
     *,
@@ -373,6 +569,7 @@ def _run_row(
     prototype_min_negative_gap: float | None = None,
     prototype_target_policies: dict[str, Any] | None = None,
     router_result_override: dict[str, Any] | None = None,
+    handoff_result_override: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     image_path, asset_status = resolve_image_path(row.source, repo_root)
     if asset_status != "ok" or image_path is None:
@@ -420,10 +617,14 @@ def _run_row(
                         trust_crop_hint=True,
                     )
             else:
-                router_result = router_result_override or run_router_inference(
-                    image_path,
-                    config_env=config_env,
-                    device=device,
+                router_result = (
+                    router_result_override
+                    if router_result_override is not None
+                    else run_router_inference(
+                        image_path,
+                        config_env=config_env,
+                        device=device,
+                    )
                 )
                 result = run_auto_router_adapter_prediction(
                     image_path,
@@ -439,6 +640,7 @@ def _run_row(
                     prototype_min_margin=prototype_min_margin,
                     prototype_min_negative_gap=prototype_min_negative_gap,
                     prototype_target_policies=prototype_target_policies,
+                    handoff_result=handoff_result_override,
                 )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
             result = {
@@ -520,19 +722,28 @@ def _adapter_batch_eligible(router_result: dict[str, Any]) -> tuple[str, str] | 
     return crop, part
 
 
+def _handoff_adapter_target(handoff: dict[str, Any]) -> tuple[str, str] | None:
+    if not bool(handoff.get("adapter_allowed")):
+        return None
+    crop = str(handoff.get("crop") or "").strip().lower()
+    part = str(handoff.get("part") or "").strip().lower()
+    if crop not in FINAL_DEMO_SUPPORTED_CROPS or part not in FINAL_DEMO_SUPPORTED_PARTS:
+        return None
+    return crop, part
+
+
 def _run_adapter_batched_rows(
     chunk: list[tuple[ChecklistRow, Path | None, str]],
-    router_results: list[dict[str, Any]],
+    handoffs: list[dict[str, Any]],
     *,
     repo_root: Path,
     config_env: str,
     device: str,
     adapter_root: Path,
     adapter_batch_size: int,
-    enable_prototype_reconciler: bool = False,
     workflow: Any | None = None,
 ) -> list[dict[str, Any]] | None:
-    if enable_prototype_reconciler or adapter_batch_size <= 1:
+    if adapter_batch_size <= 1:
         return None
     if workflow is None:
         workflow = InferenceWorkflow(
@@ -545,22 +756,20 @@ def _run_adapter_batched_rows(
 
     output_rows: list[dict[str, Any] | None] = [None] * len(chunk)
     grouped: dict[tuple[str, str], list[tuple[int, ChecklistRow, Path, dict[str, Any]]]] = {}
-    for index, ((row, image_path, asset_status), router_result) in enumerate(zip(chunk, router_results)):
+    for index, ((row, image_path, asset_status), handoff) in enumerate(zip(chunk, handoffs)):
         if image_path is None or asset_status != "ok":
             return None
-        target = _adapter_batch_eligible(router_result)
+        target = _handoff_adapter_target(handoff)
         if target is None:
-            output_rows[index] = _row_from_batch_router(
+            output_rows[index] = _format_output_row(
                 row,
-                repo_root=repo_root,
-                config_env=config_env,
-                device=device,
-                adapter_root=adapter_root,
-                enable_prototype_reconciler=enable_prototype_reconciler,
-                router_result=router_result,
+                image_path=image_path,
+                result=router_handoff_skip_result(handoff),
+                asset_status="ok",
+                mode="official",
             )
             continue
-        grouped.setdefault(target, []).append((index, row, image_path, router_result))
+        grouped.setdefault(target, []).append((index, row, image_path, handoff))
 
     for (crop, part), items in grouped.items():
         try:
@@ -579,7 +788,7 @@ def _run_adapter_batched_rows(
                     raise RuntimeError(
                         f"Batch adapter returned {len(adapter_results)} results for {len(batch_items)} rows."
                     )
-                for (index, row, image_path, router_result), adapter_result in zip(batch_items, adapter_results):
+                for (index, row, image_path, handoff), adapter_result in zip(batch_items, adapter_results):
                     router_analysis = build_router_skipped_analysis(
                         crop_name=crop,
                         part_name=part,
@@ -595,20 +804,13 @@ def _run_adapter_batched_rows(
                         include_ood=True,
                         router_analysis=router_analysis,
                     ).to_dict(include_ood=True)
-                    payload["router_source"] = router_result.get("router", {})
+                    payload["router_source"] = dict(handoff.get("router") or {})
                     payload["router_handoff"] = {
                         "adapter_ran": True,
-                        "source_status": str(router_result.get("status") or ""),
+                        "source_status": str(handoff.get("status") or ""),
                         "crop": crop,
                         "part": part,
-                        "prototype_reconciliation": {
-                            "enabled": False,
-                            "vlm_crop": crop,
-                            "vlm_part": part,
-                            "reconciled_crop": crop,
-                            "reconciled_part": part,
-                            "reconcile_decision": "disabled",
-                        },
+                        "prototype_reconciliation": dict(handoff.get("prototype_reconciliation") or {}),
                     }
                     output_rows[index] = _format_output_row(
                         row,
@@ -638,6 +840,7 @@ def _row_from_batch_router(
     prototype_min_negative_gap: float | None = None,
     prototype_target_policies: dict[str, Any] | None = None,
     router_result: dict[str, Any],
+    handoff_result: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return _run_row(
         row,
@@ -654,6 +857,7 @@ def _row_from_batch_router(
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
         router_result_override=router_result,
+        handoff_result_override=handoff_result,
     )
 
 
@@ -673,6 +877,7 @@ def _run_official_batch_rows(
     prototype_min_margin: float | None = None,
     prototype_min_negative_gap: float | None = None,
     prototype_target_policies: dict[str, Any] | None = None,
+    handoff_cache: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     output_rows: list[dict[str, Any]] = []
     resolved: list[tuple[ChecklistRow, Path | None, str]] = [
@@ -681,7 +886,7 @@ def _run_official_batch_rows(
     chunk_size = max(1, int(batch_size))
     adapter_batch_workflow = (
         InferenceWorkflow(environment=config_env, device=device, adapter_root=adapter_root)
-        if adapter_batch_size > 1 and not enable_prototype_reconciler
+        if adapter_batch_size > 1
         else None
     )
     for start in range(0, len(resolved), chunk_size):
@@ -707,49 +912,89 @@ def _run_official_batch_rows(
                 )
             continue
         image_paths = [image_path for _, image_path, _ in chunk if image_path is not None]
-        try:
-            router_results = run_router_inference_batch(
-                image_paths,
+        handoffs = [
+            _lookup_cached_handoff(
+                cache=handoff_cache,
+                row=row,
+                image_path=image_path,
                 config_env=config_env,
                 device=device,
+                enable_prototype_reconciler=enable_prototype_reconciler,
+                prototype_bank_path=prototype_bank_path,
+                taxonomy_registry_path=taxonomy_registry_path,
+                prototype_min_similarity=prototype_min_similarity,
+                prototype_min_margin=prototype_min_margin,
+                prototype_min_negative_gap=prototype_min_negative_gap,
+                prototype_target_policies=prototype_target_policies,
             )
-            if len(router_results) != len(chunk):
-                raise RuntimeError(f"Batch router returned {len(router_results)} results for {len(chunk)} rows.")
-        except Exception:
-            for row, _, _ in chunk:
-                output_rows.append(
-                    _run_row(
-                        row,
-                        repo_root=repo_root,
-                        config_env=config_env,
-                        device=device,
-                        adapter_root=adapter_root,
-                        mode="official",
-                        enable_prototype_reconciler=enable_prototype_reconciler,
-                        prototype_bank_path=prototype_bank_path,
-                        taxonomy_registry_path=taxonomy_registry_path,
-                        prototype_min_similarity=prototype_min_similarity,
-                        prototype_min_margin=prototype_min_margin,
-                        prototype_min_negative_gap=prototype_min_negative_gap,
-                        prototype_target_policies=prototype_target_policies,
-                    )
+            for row, image_path, _ in chunk
+            if image_path is not None
+        ]
+        router_results: list[dict[str, Any]] = [{} for _ in chunk]
+        if len(handoffs) != len(chunk) or any(handoff is None for handoff in handoffs):
+            try:
+                router_results = run_router_inference_batch(
+                    image_paths,
+                    config_env=config_env,
+                    device=device,
                 )
-            continue
+                if len(router_results) != len(chunk):
+                    raise RuntimeError(f"Batch router returned {len(router_results)} results for {len(chunk)} rows.")
+            except Exception:
+                for row, _, _ in chunk:
+                    output_rows.append(
+                        _run_row(
+                            row,
+                            repo_root=repo_root,
+                            config_env=config_env,
+                            device=device,
+                            adapter_root=adapter_root,
+                            mode="official",
+                            enable_prototype_reconciler=enable_prototype_reconciler,
+                            prototype_bank_path=prototype_bank_path,
+                            taxonomy_registry_path=taxonomy_registry_path,
+                            prototype_min_similarity=prototype_min_similarity,
+                            prototype_min_margin=prototype_min_margin,
+                            prototype_min_negative_gap=prototype_min_negative_gap,
+                            prototype_target_policies=prototype_target_policies,
+                        )
+                    )
+                continue
+            handoffs = [
+                _cached_handoff(
+                    cache=handoff_cache,
+                    row=row,
+                    image_path=image_path,
+                    router_result=router_result,
+                    config_env=config_env,
+                    device=device,
+                    enable_prototype_reconciler=enable_prototype_reconciler,
+                    prototype_bank_path=prototype_bank_path,
+                    taxonomy_registry_path=taxonomy_registry_path,
+                    prototype_min_similarity=prototype_min_similarity,
+                    prototype_min_margin=prototype_min_margin,
+                    prototype_min_negative_gap=prototype_min_negative_gap,
+                    prototype_target_policies=prototype_target_policies,
+                )
+                for (row, image_path, _), router_result in zip(chunk, router_results)
+                if image_path is not None
+            ]
+            if len(handoffs) != len(chunk):
+                raise RuntimeError(f"Resolved {len(handoffs)} router/prototype handoffs for {len(chunk)} rows.")
         batched_adapter_rows = _run_adapter_batched_rows(
             chunk,
-            router_results,
+            [dict(handoff or {}) for handoff in handoffs],
             repo_root=repo_root,
             config_env=config_env,
             device=device,
             adapter_root=adapter_root,
             adapter_batch_size=adapter_batch_size,
-            enable_prototype_reconciler=enable_prototype_reconciler,
             workflow=adapter_batch_workflow,
         )
         if batched_adapter_rows is not None:
             output_rows.extend(batched_adapter_rows)
             continue
-        for (row, _, _), router_result in zip(chunk, router_results):
+        for (row, _, _), router_result, handoff in zip(chunk, router_results, handoffs):
             output_rows.append(
                 _row_from_batch_router(
                     row,
@@ -765,6 +1010,7 @@ def _run_official_batch_rows(
                     prototype_min_negative_gap=prototype_min_negative_gap,
                     prototype_target_policies=prototype_target_policies,
                     router_result=router_result,
+                    handoff_result=dict(handoff or {}),
                 )
             )
     return output_rows
@@ -996,6 +1242,9 @@ def write_markdown_report(report: dict[str, Any], output_path: Path) -> None:
         f"- device: `{report['device']}`",
         f"- adapter_root: `{report['adapter_root']}`",
         f"- mode: `{report['mode']}`",
+        f"- batch_size: `{report.get('batch_size', '')}`",
+        f"- adapter_batch_size: `{report.get('adapter_batch_size', '')}`",
+        f"- handoff_cache: `{json.dumps(report.get('handoff_cache', {}), sort_keys=True)}`",
         "",
         "## Summary",
         "",
@@ -1056,6 +1305,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--prototype-min-margin", type=float)
     parser.add_argument("--prototype-min-negative-gap", type=float)
     parser.add_argument(
+        "--handoff-cache",
+        type=Path,
+        default=Path(".runtime_tmp/m2_router_prototype_handoff_cache.json"),
+        help="JSON cache for per-image router/prototype handoff outputs in official batched mode.",
+    )
+    parser.add_argument(
+        "--refresh-handoff-cache",
+        action="store_true",
+        help="Ignore existing router/prototype handoff cache entries and rewrite the cache.",
+    )
+    parser.add_argument(
         "--batch-size",
         type=int,
         default=1,
@@ -1115,6 +1375,8 @@ def main() -> int:
 
     batch_size = max(1, int(args.batch_size or 1))
     adapter_batch_size = max(1, int(args.adapter_batch_size or 1))
+    handoff_cache_path = args.handoff_cache if mode == "official" and batch_size > 1 else None
+    handoff_cache = _load_handoff_cache(handoff_cache_path, refresh=bool(args.refresh_handoff_cache))
     if mode == "official" and batch_size > 1:
         output_rows = _run_official_batch_rows(
             rows,
@@ -1131,7 +1393,9 @@ def main() -> int:
             prototype_min_margin=prototype_min_margin,
             prototype_min_negative_gap=prototype_min_negative_gap,
             prototype_target_policies=prototype_target_policies,
+            handoff_cache=handoff_cache,
         )
+        _write_handoff_cache(handoff_cache_path, handoff_cache)
         if args.stop_on_dependency_blocker:
             dependency_index = next(
                 (
@@ -1180,6 +1444,12 @@ def main() -> int:
         "mode": mode,
         "batch_size": batch_size,
         "adapter_batch_size": adapter_batch_size,
+        "handoff_cache": {
+            "enabled": handoff_cache_path is not None,
+            "path": str(handoff_cache_path) if handoff_cache_path else "",
+            "refresh": bool(args.refresh_handoff_cache),
+            "stats": dict(handoff_cache.get("stats", {})) if isinstance(handoff_cache, dict) else {},
+        },
         "prototype_reconciler": {
             "enabled": bool(args.enable_prototype_reconciler),
             "prototype_bank": str(args.prototype_bank) if args.prototype_bank else "",

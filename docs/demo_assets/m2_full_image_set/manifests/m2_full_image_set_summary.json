@@ -1,29 +1,30 @@
 {
   "schema_version": "v1_m2_user_like_curated_image_set",
   "generated_at": "2026-06-17T09:45:36.804276+00:00",
-  "row_count": 512,
+  "row_count": 522,
   "target_counts": {
     "apricot__fruit": 54,
     "apricot__leaf": 37,
     "grape__fruit": 55,
     "grape__leaf": 77,
-    "grape__unknown_part": 1,
+    "grape__unknown_part": 2,
     "non_plant": 6,
     "strawberry__fruit": 47,
     "strawberry__leaf": 45,
     "tomato__fruit": 75,
     "tomato__leaf": 108,
-    "tomato__unknown_part": 1,
-    "unknown_crop": 6
+    "tomato__unknown_part": 2,
+    "unknown_crop": 14
   },
   "duplicate_hash_count": 0,
   "qc_status_counts": {
-    "keep": 512
+    "keep": 522
   },
   "user_like_bucket_counts": {
     "borderline": 51,
     "clear": 359,
-    "difficult": 102
+    "difficult": 102,
+    "internet_negative": 10
   },
   "min_per_disease_class_required": 10,
   "per_disease_class_counts": {
@@ -80,5 +81,22 @@
       "domates_spotted_wilt_yaprak": 10,
       "domates_yellow_leaf_curl_yaprak": 10
     }
+  },
+  "appended_internet_negative_rows": {
+    "source_manifest": "docs/demo_assets/m2_live_demo_set/manifests/m2_live_demo_set_run_manifest.csv",
+    "added_count": 10,
+    "skipped": [],
+    "image_ids": [
+      "demo_515",
+      "demo_516",
+      "demo_517",
+      "demo_518",
+      "demo_519",
+      "demo_520",
+      "demo_521",
+      "demo_522",
+      "demo_523",
+      "demo_524"
+    ]
   }
 }

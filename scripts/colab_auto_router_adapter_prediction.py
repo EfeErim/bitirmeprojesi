@@ -150,16 +150,10 @@ def _resolve_workflow(
     return workflow
 
 
-def run_auto_router_adapter_prediction(
+def resolve_router_adapter_handoff(
     image_path: str | Path,
     *,
     router_result: Dict[str, Any],
-    config_env: Optional[str] = "colab",
-    device: str = "cuda",
-    adapter_root: Optional[str | Path] = None,
-    return_ood: bool = True,
-    status_printer: Optional[StatusPrinter] = None,
-    workflow_factory: WorkflowFactory = InferenceWorkflow,
     enable_prototype_reconciler: Optional[bool] = None,
     prototype_bank_path: Optional[str | Path] = None,
     taxonomy_registry_path: Optional[str | Path] = None,
@@ -168,12 +162,6 @@ def run_auto_router_adapter_prediction(
     prototype_min_negative_gap: Optional[float] = None,
     prototype_target_policies: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Run adapter prediction from an already-computed Notebook 1 router result.
-
-    Notebook 8 deliberately gets crop/part routing from Notebook 1's maintained
-    cell scripts, then calls the canonical inference workflow with a trusted
-    handoff so router behavior is not duplicated in this wrapper.
-    """
     if not isinstance(router_result, dict):
         raise TypeError("router_result must be a dictionary produced by Notebook 1 analysis.")
 
@@ -252,38 +240,102 @@ def run_auto_router_adapter_prediction(
         and bool(crop)
         and bool(part)
     )
+    return {
+        "adapter_allowed": adapter_allowed,
+        "status": status,
+        "crop": crop,
+        "part": part,
+        "message": handoff["message"],
+        "router_confidence": float(router_result.get("router_confidence", 0.0) or 0.0),
+        "router": handoff["router"],
+        "rejection_status": rejection_status,
+        "rejection_message": rejection_message,
+        "prototype_reconciliation": reconciliation_payload,
+    }
+
+
+def router_handoff_skip_result(handoff: Dict[str, Any], *, status_printer: Optional[StatusPrinter] = None) -> Dict[str, Any]:
+    status = str(handoff.get("status") or "").strip().lower()
+    crop = _normalize_optional_text(handoff.get("crop"))
+    part = _normalize_optional_text(handoff.get("part"))
+    rejection_status = handoff.get("rejection_status")
+    rejection_message = handoff.get("rejection_message")
+    if rejection_status is not None:
+        result_status = str(rejection_status)
+        default_message = str(rejection_message or "Router result is outside the final demo supported surface.")
+    elif not crop or crop == "unknown":
+        result_status = "unknown_crop"
+        default_message = "Router could not resolve a supported crop."
+    elif not part or part == "unknown":
+        result_status = "router_uncertain"
+        default_message = "Router could not resolve a supported plant part."
+    else:
+        result_status = status or "router_unavailable"
+        default_message = "Router result is not eligible for adapter prediction."
+    message = str(handoff.get("message") or default_message)
+    _emit_status(status_printer, f"[AUTO] Adapter skipped: status={status or 'unknown'} crop={crop or 'unknown'}")
+    return {
+        "status": result_status,
+        "crop": crop,
+        "part": part,
+        "router_confidence": float(handoff.get("router_confidence", 0.0) or 0.0),
+        "diagnosis": None,
+        "confidence": 0.0,
+        "message": message,
+        "router": dict(handoff.get("router") or {}),
+        "router_handoff": {
+            "adapter_ran": False,
+            "source_status": status,
+            "reason": message,
+            "prototype_reconciliation": dict(handoff.get("prototype_reconciliation") or {}),
+        },
+    }
+
+
+def run_auto_router_adapter_prediction(
+    image_path: str | Path,
+    *,
+    router_result: Dict[str, Any],
+    config_env: Optional[str] = "colab",
+    device: str = "cuda",
+    adapter_root: Optional[str | Path] = None,
+    return_ood: bool = True,
+    status_printer: Optional[StatusPrinter] = None,
+    workflow_factory: WorkflowFactory = InferenceWorkflow,
+    enable_prototype_reconciler: Optional[bool] = None,
+    prototype_bank_path: Optional[str | Path] = None,
+    taxonomy_registry_path: Optional[str | Path] = None,
+    prototype_min_similarity: Optional[float] = None,
+    prototype_min_margin: Optional[float] = None,
+    prototype_min_negative_gap: Optional[float] = None,
+    prototype_target_policies: Optional[Dict[str, Any]] = None,
+    handoff_result: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Run adapter prediction from an already-computed Notebook 1 router result.
+
+    Notebook 8 deliberately gets crop/part routing from Notebook 1's maintained
+    cell scripts, then calls the canonical inference workflow with a trusted
+    handoff so router behavior is not duplicated in this wrapper.
+    """
+    handoff_result = handoff_result or resolve_router_adapter_handoff(
+        image_path,
+        router_result=router_result,
+        enable_prototype_reconciler=enable_prototype_reconciler,
+        prototype_bank_path=prototype_bank_path,
+        taxonomy_registry_path=taxonomy_registry_path,
+        prototype_min_similarity=prototype_min_similarity,
+        prototype_min_margin=prototype_min_margin,
+        prototype_min_negative_gap=prototype_min_negative_gap,
+        prototype_target_policies=prototype_target_policies,
+    )
+    status = str(handoff_result.get("status") or "").strip().lower()
+    crop = _normalize_optional_text(handoff_result.get("crop"))
+    part = _normalize_optional_text(handoff_result.get("part"))
+    reconciliation_payload = dict(handoff_result.get("prototype_reconciliation") or {})
+    adapter_allowed = bool(handoff_result.get("adapter_allowed"))
 
     if not adapter_allowed:
-        if rejection_status is not None:
-            result_status = rejection_status
-            default_message = rejection_message or "Router result is outside the final demo supported surface."
-        elif not crop or crop == "unknown":
-            result_status = "unknown_crop"
-            default_message = "Router could not resolve a supported crop."
-        elif not part or part == "unknown":
-            result_status = "router_uncertain"
-            default_message = "Router could not resolve a supported plant part."
-        else:
-            result_status = status or "router_unavailable"
-            default_message = "Router result is not eligible for adapter prediction."
-        message = handoff["message"] or default_message
-        _emit_status(status_printer, f"[AUTO] Adapter skipped: status={status or 'unknown'} crop={crop or 'unknown'}")
-        return {
-            "status": result_status,
-            "crop": crop,
-            "part": part,
-            "router_confidence": float(router_result.get("router_confidence", 0.0) or 0.0),
-            "diagnosis": None,
-            "confidence": 0.0,
-            "message": message,
-            "router": handoff["router"],
-            "router_handoff": {
-                "adapter_ran": False,
-                "source_status": status,
-                "reason": message,
-                "prototype_reconciliation": reconciliation_payload,
-            },
-        }
+        return router_handoff_skip_result(handoff_result, status_printer=status_printer)
 
     _emit_status(
         status_printer,
@@ -318,7 +370,7 @@ def run_auto_router_adapter_prediction(
                 "unsafe_diagnosis": unsafe_diagnosis,
             }
         )
-    combined["router_source"] = handoff["router"]
+    combined["router_source"] = dict(handoff_result.get("router") or {})
     combined["router_handoff"] = {
         "adapter_ran": True,
         "source_status": status,
@@ -329,4 +381,9 @@ def run_auto_router_adapter_prediction(
     return combined
 
 
-__all__ = ["clear_auto_prediction_workflow_cache", "run_auto_router_adapter_prediction"]
+__all__ = [
+    "clear_auto_prediction_workflow_cache",
+    "resolve_router_adapter_handoff",
+    "router_handoff_skip_result",
+    "run_auto_router_adapter_prediction",
+]

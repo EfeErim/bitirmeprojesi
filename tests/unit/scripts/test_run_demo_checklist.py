@@ -6,6 +6,7 @@ from PIL import Image
 from scripts.build_m2_supported_disease_manifest import build_rows, is_healthy_class
 from scripts.run_demo_checklist import (
     ChecklistRow,
+    _handoff_cache_key,
     _run_official_batch_rows,
     build_analysis_summary,
     build_parser,
@@ -337,6 +338,94 @@ def test_official_batch_rows_can_batch_adapter_predictions(tmp_path: Path, monke
     assert router_calls == [["a.jpg", "b.jpg"]]
     assert adapter_batch_sizes == [2]
     assert [row["pass_fail"] for row in output_rows] == ["pass", "pass"]
+
+
+def test_official_batch_rows_skips_router_on_handoff_cache_hit(tmp_path: Path, monkeypatch):
+    image_path = tmp_path / "a.jpg"
+    Image.new("RGB", (16, 16), color="green").save(image_path)
+    rows = [
+        ChecklistRow(
+            image_id="demo_001",
+            source="staged_external:a.jpg",
+            expected_target="tomato__leaf",
+            expected_behavior="answer",
+            notes="",
+            expected_crop="tomato",
+            expected_part="leaf",
+            expected_class="healthy",
+        )
+    ]
+
+    def unexpected_router(*_args, **_kwargs):
+        raise AssertionError("router batch should not run on full handoff-cache hit")
+
+    def fake_adapter(image_path, *, handoff_result, **_kwargs):
+        assert handoff_result["crop"] == "tomato"
+        return {
+            "status": "success",
+            "crop": "tomato",
+            "part": "leaf",
+            "diagnosis": "healthy",
+            "confidence": 0.9,
+            "router_handoff": {"prototype_reconciliation": handoff_result["prototype_reconciliation"]},
+        }
+
+    monkeypatch.setattr("scripts.run_demo_checklist.run_router_inference_batch", unexpected_router)
+    monkeypatch.setattr("scripts.run_demo_checklist.run_auto_router_adapter_prediction", fake_adapter)
+
+    cache_key = _handoff_cache_key(
+        row=rows[0],
+        image_path=image_path,
+        config_env="colab",
+        device="cuda",
+        enable_prototype_reconciler=False,
+        prototype_bank_path=None,
+        taxonomy_registry_path=None,
+        prototype_min_similarity=None,
+        prototype_min_margin=None,
+        prototype_min_negative_gap=None,
+        prototype_target_policies=None,
+    )
+    cache = {
+        "schema_version": "m2_router_prototype_handoff_cache.v1",
+        "entries": {
+            cache_key: {
+                "image_id": "demo_001",
+                "image": str(image_path),
+                "handoff": {
+                    "adapter_allowed": True,
+                    "status": "ok",
+                    "crop": "tomato",
+                    "part": "leaf",
+                    "message": "",
+                    "router_confidence": 1.0,
+                    "router": {},
+                    "rejection_status": None,
+                    "rejection_message": None,
+                    "prototype_reconciliation": {
+                        "enabled": False,
+                        "vlm_crop": "tomato",
+                        "vlm_part": "leaf",
+                        "reconciled_crop": "tomato",
+                        "reconciled_part": "leaf",
+                        "reconcile_decision": "disabled",
+                    },
+                },
+            }
+        },
+        "stats": {},
+    }
+    output_rows = _run_official_batch_rows(
+        rows,
+        repo_root=tmp_path,
+        config_env="colab",
+        device="cuda",
+        adapter_root=tmp_path / "runs",
+        batch_size=2,
+        handoff_cache=cache,
+    )
+    assert output_rows[0]["pass_fail"] == "pass"
+    assert cache["stats"]["hits"] == 1
 
 
 def test_resolve_prototype_thresholds_from_calibration_uses_selected_policy(tmp_path: Path):

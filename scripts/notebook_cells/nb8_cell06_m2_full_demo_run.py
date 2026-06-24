@@ -32,8 +32,10 @@ M2_DEMO_MARKDOWN_OUTPUT = str(
 M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analysis_summary.json"))
 M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
-M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 8))
-M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 16))
+M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 12))
+M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 24))
+M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))
+M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", False))
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
 M2_AUTO_PUSH_RESULTS = bool(globals().get("M2_AUTO_PUSH_RESULTS", True))
 M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin"))
@@ -412,11 +414,15 @@ else:
         str(max(1, int(M2_BATCH_SIZE))),
         "--adapter-batch-size",
         str(max(1, int(M2_ADAPTER_BATCH_SIZE))),
+        "--handoff-cache",
+        str((repo_root / M2_HANDOFF_CACHE).resolve()),
     ]
     if M2_DEMO_LIMIT is not None:
         command.extend(["--limit", str(int(M2_DEMO_LIMIT))])
     if M2_STOP_ON_DEPENDENCY_BLOCKER:
         command.append("--stop-on-dependency-blocker")
+    if M2_REFRESH_HANDOFF_CACHE:
+        command.append("--refresh-handoff-cache")
     if M2_ENABLE_PROTOTYPE_RECONCILER:
         command.append("--enable-prototype-reconciler")
         if M2_PROTOTYPE_BANK:
@@ -438,6 +444,7 @@ else:
     print(f"[M2] markdown_output={markdown_output_path}")
     print(f"[M2] analysis_output={analysis_output_path}")
     print(f"[M2] analysis_markdown_output={analysis_markdown_output_path}")
+    print(f"[M2] handoff_cache={(repo_root / M2_HANDOFF_CACHE).resolve()}")
     print(f"[M2] prototype_reconciler={M2_ENABLE_PROTOTYPE_RECONCILER}")
     if M2_ENABLE_PROTOTYPE_RECONCILER:
         print(f"[M2] prototype_bank={M2_PROTOTYPE_BANK or 'missing'}")
@@ -521,6 +528,10 @@ else:
             "manifest": str(manifest_path.relative_to(repo_root)),
             "batch_size": int(max(1, M2_BATCH_SIZE)),
             "adapter_batch_size": int(max(1, M2_ADAPTER_BATCH_SIZE)),
+            "handoff_cache": {
+                "path": str(M2_HANDOFF_CACHE),
+                "refresh": bool(M2_REFRESH_HANDOFF_CACHE),
+            },
             "output": str(output_path.relative_to(repo_root)),
             "markdown_output": str(markdown_output_path.relative_to(repo_root)),
             "analysis_output": str(analysis_output_path.relative_to(repo_root)),
