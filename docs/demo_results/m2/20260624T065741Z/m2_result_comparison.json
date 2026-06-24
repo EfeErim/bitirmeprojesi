@@ -1,0 +1,47 @@
+{
+  "schema_version": "m2_demo_result_comparison.v1",
+  "baseline_created_at": "20260622T161859Z",
+  "candidate_created_at": "20260624T065741Z",
+  "baseline_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "candidate_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "baseline_manifest_sha256": "724a9413aa148e07981959722a105eb6010a623fa3ae3b5296ec8e7210b732d6",
+  "candidate_manifest_sha256": "724a9413aa148e07981959722a105eb6010a623fa3ae3b5296ec8e7210b732d6",
+  "metrics": {
+    "total_delta": 10,
+    "passed_delta": 43,
+    "failed_delta": -33,
+    "router_failure_delta": -30,
+    "negative_false_accept_delta": -5,
+    "opposite_part_delta": -3,
+    "prototype_correct_but_abstained_delta": -25
+  },
+  "target_deltas": {
+    "apricot__fruit": {
+      "total_delta": 0,
+      "pass_delta": -4,
+      "fail_delta": 4
+    },
+    "grape__fruit": {
+      "total_delta": 0,
+      "pass_delta": 18,
+      "fail_delta": -18
+    },
+    "tomato__leaf": {
+      "total_delta": 0,
+      "pass_delta": 12,
+      "fail_delta": -12
+    }
+  },
+  "checks": {
+    "manifests_match": true,
+    "manifest_sha256_match": true,
+    "totals_match": false,
+    "focus_target_totals_match": true,
+    "failed_not_increased": true,
+    "router_failures_not_increased": true,
+    "negative_false_accepts_not_increased": true,
+    "opposite_part_not_increased": true,
+    "at_least_one_focus_target_improved": true
+  },
+  "status": "fail"
+}
