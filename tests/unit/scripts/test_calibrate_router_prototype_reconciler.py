@@ -255,6 +255,103 @@ def test_calibrate_rejects_noisy_target_policy_with_target_constraints():
     assert has_runtime_policy(result)
 
 
+def test_calibrate_rejects_target_policy_with_cross_part_supported_false_accept():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="apricot__leaf",
+            expected_behavior="answer",
+            predicted_target="apricot__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="shot_hole_leaf",
+        )
+        for index in range(1, 11)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_011",
+            expected_target="apricot__fruit",
+            expected_behavior="answer",
+            predicted_target="apricot__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="11.png",
+            status="ok",
+            prototype_class_label="shot_hole_leaf",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=1.0,
+        target_max_supported_wrong=1,
+        target_max_cross_part_supported_wrong=0,
+    )
+
+    apricot_policy = result["target_policies"]["apricot__leaf"]
+    assert apricot_policy["status"] == "no_eligible_policy"
+    assert "supported_cross_part_wrong_above_target" in apricot_policy["failure_reasons"]
+    validation = apricot_policy["best_candidate"]["full_set_validation"]
+    assert validation["supported_cross_part_wrong"] == 1
+    assert validation["supported_cross_part_wrong_image_ids"] == ["demo_011"]
+
+
+def test_calibrate_rejects_class_policy_with_cross_part_supported_false_accept():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="apricot__leaf",
+            expected_behavior="answer",
+            predicted_target="apricot__fruit" if index == 1 else "apricot__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="fruit_confuser" if index == 1 else "shot_hole_leaf",
+        )
+        for index in range(1, 11)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_011",
+            expected_target="apricot__fruit",
+            expected_behavior="answer",
+            predicted_target="apricot__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="11.png",
+            status="ok",
+            prototype_class_label="shot_hole_leaf",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=1,
+        target_max_cross_part_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    apricot_policy = result["target_policies"]["apricot__leaf"]
+    assert apricot_policy["status"] == "no_eligible_policy"
+    class_policy = apricot_policy["class_policies"]["shot_hole_leaf"]
+    assert class_policy["status"] == "no_eligible_policy"
+    assert class_policy["best_candidate"]["supported_cross_part_wrong"] == 1
+    assert "supported_cross_part_wrong_above_class_target" in class_policy["failure_reasons"]
+
+
 def test_calibrate_class_policy_counts_supported_false_accepts():
     rows = [
         ScoredRow(

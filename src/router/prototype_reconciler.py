@@ -374,6 +374,7 @@ def reconcile_router_handoff(
 
     calibrated_fruit_part_override = (
         bool(target_policy)
+        and bool(target_policy.get("allow_part_conflict_override"))
         and match.prototype_level == "class"
         and prototype_part == "fruit"
         and vlm_part

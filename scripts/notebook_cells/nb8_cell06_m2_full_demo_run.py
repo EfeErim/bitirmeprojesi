@@ -97,6 +97,9 @@ M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE = float(
 M2_PROTOTYPE_TARGET_MIN_PRECISION = float(globals().get("M2_PROTOTYPE_TARGET_MIN_PRECISION", 0.98))
 M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = globals().get("M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG", 1)
 M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED = int(globals().get("M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED", 5))
+M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG = int(
+    globals().get("M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG", 0)
+)
 M2_PROTOTYPE_SIMILARITY_GRID = str(
     globals().get("M2_PROTOTYPE_SIMILARITY_GRID", "0.20,0.30,0.40,0.50,0.60,0.70")
 )
@@ -129,6 +132,7 @@ def _expected_calibration_constraints():
         "max_negative_false_accept_rate": M2_PROTOTYPE_CALIBRATION_MAX_NEGATIVE_FALSE_ACCEPT_RATE,
         "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
         "target_max_supported_wrong": int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG),
+        "target_max_cross_part_supported_wrong": M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG,
         "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
         "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
         "promotion_mode": "prototype_override",
@@ -324,6 +328,8 @@ else:
                 str(M2_PROTOTYPE_TARGET_MIN_PRECISION),
                 "--target-max-supported-wrong",
                 str(int(M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG)),
+                "--target-max-cross-part-supported-wrong",
+                str(M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG),
                 "--target-class-min-accepted",
                 str(int(M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED)),
                 "--similarity-grid",
@@ -556,6 +562,7 @@ else:
                 "calibration_selected_target_policy": bool(prototype_target_policy_selected),
                 "target_min_precision": M2_PROTOTYPE_TARGET_MIN_PRECISION,
                 "target_max_supported_wrong": M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG,
+                "target_max_cross_part_supported_wrong": M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG,
                 "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
                 "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
             },

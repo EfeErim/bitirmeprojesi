@@ -60,6 +60,36 @@ def _target_is_negative(target: str, expected_behavior: str = "") -> bool:
     )
 
 
+def _target_part(target: str | None) -> str:
+    text = str(target or "").strip().lower()
+    if "__" not in text:
+        return ""
+    return text.rsplit("__", 1)[1]
+
+
+def _supported_cross_part_wrong_rows(wrong_rows: list[ScoredRow], target_id: str) -> list[ScoredRow]:
+    target_part = _target_part(target_id)
+    return [
+        row
+        for row in wrong_rows
+        if _target_is_supported_positive(row.expected_target)
+        and target_part
+        and _target_part(row.expected_target) != target_part
+    ]
+
+
+def _row_payload(row: ScoredRow) -> dict[str, Any]:
+    return {
+        "image_id": row.image_id,
+        "expected_target": row.expected_target,
+        "predicted_target": row.predicted_target,
+        "prototype_class_label": row.prototype_class_label,
+        "prototype_level": row.prototype_level,
+        "similarity": row.similarity,
+        "margin": row.margin,
+    }
+
+
 def _parse_float_grid(value: str, default: tuple[float, ...]) -> tuple[float, ...]:
     if not value:
         return default
@@ -202,6 +232,60 @@ def evaluate_thresholds(
     }
 
 
+def evaluate_target_thresholds(
+    rows: list[ScoredRow],
+    *,
+    target_id: str,
+    min_similarity: float,
+    min_margin: float,
+    min_negative_gap: float = 0.0,
+) -> dict[str, Any]:
+    eligible = [row for row in rows if row.status == "ok"]
+    target_rows = [row for row in eligible if row.expected_target == target_id]
+    accepted = [
+        row
+        for row in eligible
+        if row.predicted_target == target_id
+        and row.similarity >= min_similarity
+        and row.margin >= min_margin
+        and row.margin >= min_negative_gap
+    ]
+    supported_accepted = [row for row in accepted if _target_is_supported_positive(row.expected_target)]
+    correct = [row for row in supported_accepted if row.expected_target == target_id]
+    wrong = [row for row in supported_accepted if row.expected_target != target_id]
+    cross_part_wrong = _supported_cross_part_wrong_rows(wrong, target_id)
+    negative_false_accepts = [row for row in accepted if _target_is_negative(row.expected_target, row.expected_behavior)]
+    non_plant_false_accepts = [
+        row for row in negative_false_accepts if str(row.expected_target or "").strip().lower() == "non_plant"
+    ]
+    supported_precision = len(correct) / len(supported_accepted) if supported_accepted else 0.0
+    target_coverage = len(correct) / len(target_rows) if target_rows else 0.0
+    return {
+        "min_similarity": min_similarity,
+        "min_margin": min_margin,
+        "min_negative_gap": min_negative_gap,
+        "promotion_mode": "prototype_override",
+        "target_id": target_id,
+        "eligible": len(eligible),
+        "target_rows": len(target_rows),
+        "accepted": len(accepted),
+        "supported_accepted": len(supported_accepted),
+        "supported_correct": len(correct),
+        "supported_wrong": len(wrong),
+        "supported_precision": round(supported_precision, 6),
+        "target_coverage": round(target_coverage, 6),
+        "supported_cross_part_wrong": len(cross_part_wrong),
+        "supported_cross_part_wrong_image_ids": [row.image_id for row in cross_part_wrong[:25]],
+        "supported_cross_part_wrong_rows": [_row_payload(row) for row in cross_part_wrong[:25]],
+        "supported_cross_part_wrong_truncated": len(cross_part_wrong) > 25,
+        "negative_false_accept_count": len(negative_false_accepts),
+        "non_plant_false_accept_count": len(non_plant_false_accepts),
+        "supported_wrong_image_ids": [row.image_id for row in wrong[:25]],
+        "supported_wrong_rows": [_row_payload(row) for row in wrong[:25]],
+        "supported_wrong_truncated": len(wrong) > 25,
+    }
+
+
 def evaluate_class_thresholds(
     rows: list[ScoredRow],
     *,
@@ -231,6 +315,7 @@ def evaluate_class_thresholds(
     supported_accepted = [row for row in accepted if _target_is_supported_positive(row.expected_target)]
     correct = [row for row in supported_accepted if row.expected_target == target_id]
     wrong = [row for row in supported_accepted if row.expected_target != target_id]
+    cross_part_wrong = _supported_cross_part_wrong_rows(wrong, target_id)
     negative_false_accepts = [row for row in accepted if _target_is_negative(row.expected_target, row.expected_behavior)]
     non_plant_false_accepts = [
         row for row in negative_false_accepts if str(row.expected_target or "").strip().lower() == "non_plant"
@@ -252,21 +337,14 @@ def evaluate_class_thresholds(
         "supported_wrong": len(wrong),
         "supported_precision": round(supported_precision, 6),
         "target_coverage": round(target_coverage, 6),
+        "supported_cross_part_wrong": len(cross_part_wrong),
+        "supported_cross_part_wrong_image_ids": [row.image_id for row in cross_part_wrong[:25]],
+        "supported_cross_part_wrong_rows": [_row_payload(row) for row in cross_part_wrong[:25]],
+        "supported_cross_part_wrong_truncated": len(cross_part_wrong) > 25,
         "negative_false_accept_count": len(negative_false_accepts),
         "non_plant_false_accept_count": len(non_plant_false_accepts),
         "supported_wrong_image_ids": [row.image_id for row in wrong[:25]],
-        "supported_wrong_rows": [
-            {
-                "image_id": row.image_id,
-                "expected_target": row.expected_target,
-                "predicted_target": row.predicted_target,
-                "prototype_class_label": row.prototype_class_label,
-                "prototype_level": row.prototype_level,
-                "similarity": row.similarity,
-                "margin": row.margin,
-            }
-            for row in wrong[:25]
-        ],
+        "supported_wrong_rows": [_row_payload(row) for row in wrong[:25]],
         "supported_wrong_truncated": len(wrong) > 25,
     }
 
@@ -280,6 +358,7 @@ def calibrate_class_policies(
     negative_gap_grid: tuple[float, ...],
     min_precision: float,
     max_supported_wrong: int | None,
+    max_cross_part_supported_wrong: int | None,
     min_accepted: int,
     require_zero_non_plant_false_accepts: bool,
     max_negative_false_accepts: int | None,
@@ -313,6 +392,10 @@ def calibrate_class_policies(
                         and (
                             max_supported_wrong is None
                             or result["supported_wrong"] <= max_supported_wrong
+                        )
+                        and (
+                            max_cross_part_supported_wrong is None
+                            or result["supported_cross_part_wrong"] <= max_cross_part_supported_wrong
                         )
                         and (
                             not require_zero_non_plant_false_accepts
@@ -351,6 +434,12 @@ def calibrate_class_policies(
             ):
                 failure_reasons.append("supported_wrong_above_class_target")
             if (
+                max_cross_part_supported_wrong is not None
+                and int(best_candidate.get("supported_cross_part_wrong") or 0)
+                > int(max_cross_part_supported_wrong)
+            ):
+                failure_reasons.append("supported_cross_part_wrong_above_class_target")
+            if (
                 max_negative_false_accepts is not None
                 and int(best_candidate.get("negative_false_accept_count") or 0) > int(max_negative_false_accepts)
             ):
@@ -382,6 +471,7 @@ def calibrate(
     target_policy_negative_mode: str = "all",
     target_min_precision: float | None = None,
     target_max_supported_wrong: int | None = None,
+    target_max_cross_part_supported_wrong: int | None = 0,
     include_class_policies: bool = True,
     target_class_min_accepted: int = 5,
 ) -> dict[str, Any]:
@@ -457,10 +547,30 @@ def calibrate(
                 "min_precision": min_precision if target_min_precision is None else target_min_precision,
                 "min_coverage": min_coverage,
                 "max_supported_wrong": target_max_supported_wrong,
+                "max_cross_part_supported_wrong": target_max_cross_part_supported_wrong,
             }
+            target_selected = target_result["selected_policy"]
+            target_validation = None
+            if target_selected:
+                target_validation = evaluate_target_thresholds(
+                    rows,
+                    target_id=target,
+                    min_similarity=float(target_selected["min_similarity"]),
+                    min_margin=float(target_selected["min_margin"]),
+                    min_negative_gap=float(target_selected.get("min_negative_gap") or 0.0),
+                )
+                target_selected = {**target_selected, "full_set_validation": target_validation}
+                if (
+                    target_max_cross_part_supported_wrong is not None
+                    and int(target_validation.get("supported_cross_part_wrong") or 0)
+                    > int(target_max_cross_part_supported_wrong)
+                ):
+                    target_selected = None
             best_candidate = target_result["best_candidate"] or {}
             failure_reasons: list[str] = []
-            if not target_result["selected_policy"]:
+            if target_validation:
+                best_candidate = {**best_candidate, "full_set_validation": target_validation}
+            if not target_selected:
                 if float(best_candidate.get("supported_precision") or 0.0) < float(target_constraints["min_precision"]):
                     failure_reasons.append("supported_precision_below_target")
                 if float(best_candidate.get("supported_coverage") or 0.0) < float(target_constraints["min_coverage"]):
@@ -470,6 +580,14 @@ def calibrate(
                     and int(best_candidate.get("supported_wrong") or 0) > int(target_constraints["max_supported_wrong"])
                 ):
                     failure_reasons.append("supported_wrong_above_target")
+                cross_part_wrong = (
+                    int(target_validation.get("supported_cross_part_wrong") or 0) if target_validation else 0
+                )
+                if (
+                    target_constraints["max_cross_part_supported_wrong"] is not None
+                    and cross_part_wrong > int(target_constraints["max_cross_part_supported_wrong"])
+                ):
+                    failure_reasons.append("supported_cross_part_wrong_above_target")
                 if (
                     max_negative_false_accepts is not None
                     and int(best_candidate.get("negative_false_accept_count") or 0) > int(max_negative_false_accepts)
@@ -478,9 +596,9 @@ def calibrate(
                 if require_zero_non_plant_false_accepts and int(best_candidate.get("non_plant_false_accept_count") or 0):
                     failure_reasons.append("non_plant_false_accepts_present")
             target_policies[target] = {
-                "status": "target_specific" if target_result["selected_policy"] else "no_eligible_policy",
-                "selected_policy": target_result["selected_policy"],
-                "best_candidate": target_result["best_candidate"],
+                "status": "target_specific" if target_selected else "no_eligible_policy",
+                "selected_policy": target_selected,
+                "best_candidate": best_candidate or target_result["best_candidate"],
                 "class_policies": (
                     calibrate_class_policies(
                         rows,
@@ -490,12 +608,13 @@ def calibrate(
                         negative_gap_grid=negative_gap_grid,
                         min_precision=min_precision if target_min_precision is None else target_min_precision,
                         max_supported_wrong=target_max_supported_wrong,
+                        max_cross_part_supported_wrong=target_max_cross_part_supported_wrong,
                         min_accepted=target_class_min_accepted,
                         require_zero_non_plant_false_accepts=require_zero_non_plant_false_accepts,
                         max_negative_false_accepts=max_negative_false_accepts,
                         include_negative_rows=True,
                     )
-                    if include_class_policies and not target_result["selected_policy"]
+                    if include_class_policies and not target_selected
                     else {}
                 ),
                 "negative_mode": target_policy_negative_mode,
@@ -539,6 +658,15 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=1,
         help="Maximum wrong supported rows allowed for a target-specific policy.",
+    )
+    parser.add_argument(
+        "--target-max-cross-part-supported-wrong",
+        type=int,
+        default=0,
+        help=(
+            "Maximum supported rows from the opposite fruit/leaf part that a target or class policy may accept "
+            "when checked against the full calibration set."
+        ),
     )
     parser.add_argument(
         "--target-policy-negative-mode",
@@ -602,6 +730,7 @@ def main(argv: list[str] | None = None) -> int:
         max_negative_false_accept_rate=args.max_negative_false_accept_rate,
         target_min_precision=args.target_min_precision,
         target_max_supported_wrong=args.target_max_supported_wrong,
+        target_max_cross_part_supported_wrong=args.target_max_cross_part_supported_wrong,
         target_policy_negative_mode=args.target_policy_negative_mode,
         target_class_min_accepted=args.target_class_min_accepted,
     )
@@ -620,6 +749,7 @@ def main(argv: list[str] | None = None) -> int:
             "max_negative_false_accept_rate": args.max_negative_false_accept_rate,
             "target_min_precision": args.target_min_precision,
             "target_max_supported_wrong": args.target_max_supported_wrong,
+            "target_max_cross_part_supported_wrong": args.target_max_cross_part_supported_wrong,
             "target_policy_negative_mode": args.target_policy_negative_mode,
             "target_class_min_accepted": args.target_class_min_accepted,
             "promotion_mode": "prototype_override",
