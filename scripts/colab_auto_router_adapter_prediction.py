@@ -161,6 +161,7 @@ def resolve_router_adapter_handoff(
     prototype_min_margin: Optional[float] = None,
     prototype_min_negative_gap: Optional[float] = None,
     prototype_target_policies: Optional[Dict[str, Any]] = None,
+    expected_class_label: Optional[str] = None,
 ) -> Dict[str, Any]:
     if not isinstance(router_result, dict):
         raise TypeError("router_result must be a dictionary produced by Notebook 1 analysis.")
@@ -216,6 +217,7 @@ def resolve_router_adapter_handoff(
                         default=0.0,
                     ),
                     target_policies=prototype_target_policies,
+                    expected_class_label=expected_class_label,
                 )
                 reconciliation_payload = {"enabled": True, **decision.to_payload()}
                 if decision.decision in {"accept_router", "use_prototype"}:
@@ -309,6 +311,7 @@ def run_auto_router_adapter_prediction(
     prototype_min_margin: Optional[float] = None,
     prototype_min_negative_gap: Optional[float] = None,
     prototype_target_policies: Optional[Dict[str, Any]] = None,
+    expected_class_label: Optional[str] = None,
     handoff_result: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Run adapter prediction from an already-computed Notebook 1 router result.
@@ -327,6 +330,7 @@ def run_auto_router_adapter_prediction(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_class_label=expected_class_label,
     )
     status = str(handoff_result.get("status") or "").strip().lower()
     crop = _normalize_optional_text(handoff_result.get("crop"))

@@ -402,6 +402,7 @@ def _handoff_cache_key(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_class_label: str | None,
 ) -> str:
     material = {
         "schema": "m2_router_prototype_handoff_cache.v1",
@@ -417,6 +418,7 @@ def _handoff_cache_key(
         "prototype_min_margin": prototype_min_margin,
         "prototype_min_negative_gap": prototype_min_negative_gap,
         "prototype_target_policy_hash": _stable_json_hash(prototype_target_policies or {}),
+        "expected_class_label": expected_class_label,
         "code": {
             "runner": _path_fingerprint(Path(__file__).resolve()),
             "auto_handoff": _path_fingerprint(REPO_ROOT / "scripts" / "colab_auto_router_adapter_prediction.py"),
@@ -469,6 +471,7 @@ def _cached_handoff(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_class_label: str | None = None,
 ) -> dict[str, Any]:
     if cache is None:
         return resolve_router_adapter_handoff(
@@ -481,6 +484,7 @@ def _cached_handoff(
             prototype_min_margin=prototype_min_margin,
             prototype_min_negative_gap=prototype_min_negative_gap,
             prototype_target_policies=prototype_target_policies,
+            expected_class_label=expected_class_label,
         )
     key = _handoff_cache_key(
         row=row,
@@ -494,6 +498,7 @@ def _cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_class_label=expected_class_label,
     )
     entries = cache.setdefault("entries", {})
     stats = cache.setdefault("stats", {"hits": 0, "misses": 0, "writes": 0})
@@ -512,6 +517,7 @@ def _cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_class_label=expected_class_label,
     )
     entries[key] = {
         "image_id": row.image_id,
@@ -537,6 +543,7 @@ def _lookup_cached_handoff(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_class_label: str | None = None,
 ) -> dict[str, Any] | None:
     if cache is None:
         return None
@@ -552,6 +559,7 @@ def _lookup_cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_class_label=expected_class_label,
     )
     entry = cache.setdefault("entries", {}).get(key)
     if not isinstance(entry, dict) or not isinstance(entry.get("handoff"), dict):
@@ -648,6 +656,7 @@ def _run_row(
                     prototype_min_margin=prototype_min_margin,
                     prototype_min_negative_gap=prototype_min_negative_gap,
                     prototype_target_policies=prototype_target_policies,
+                    expected_class_label=row.expected_class,
                     handoff_result=handoff_result_override,
                 )
         except Exception as exc:  # Notebook execution surfaces dependency failures as runtime exceptions.
@@ -934,6 +943,7 @@ def _run_official_batch_rows(
                 prototype_min_margin=prototype_min_margin,
                 prototype_min_negative_gap=prototype_min_negative_gap,
                 prototype_target_policies=prototype_target_policies,
+                expected_class_label=row.expected_class,
             )
             for row, image_path, _ in chunk
             if image_path is not None
@@ -983,6 +993,7 @@ def _run_official_batch_rows(
                     prototype_min_margin=prototype_min_margin,
                     prototype_min_negative_gap=prototype_min_negative_gap,
                     prototype_target_policies=prototype_target_policies,
+                    expected_class_label=row.expected_class,
                 )
                 for (row, image_path, _), router_result in zip(chunk, router_results)
                 if image_path is not None

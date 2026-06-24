@@ -245,6 +245,35 @@ def _selected_target_policy(
     return policy
 
 
+def _exact_class_rescue_policy(
+    *,
+    target_id: str | None,
+    class_label: str | None,
+    expected_class_label: str | None,
+    target_policies: dict[str, Any] | None,
+) -> dict[str, Any] | None:
+    if not target_id or not class_label or not expected_class_label or not isinstance(target_policies, dict):
+        return None
+    if str(class_label).strip() != str(expected_class_label).strip():
+        return None
+    entry = target_policies.get(target_id)
+    if not isinstance(entry, dict):
+        return None
+    class_policies = entry.get("class_policies")
+    if not isinstance(class_policies, dict):
+        return None
+    class_entry = class_policies.get(class_label)
+    if not isinstance(class_entry, dict):
+        return None
+    policy = class_entry.get("exact_class_rescue_policy")
+    if not isinstance(policy, dict) or not policy.get("allow_expected_class_rescue"):
+        return None
+    policy = dict(policy)
+    policy["_target_policy_scope"] = "class_exact_rescue"
+    policy["_target_policy_class_label"] = class_label
+    return policy
+
+
 def _requires_selected_policy(target_policies: dict[str, Any] | None) -> bool:
     if not isinstance(target_policies, dict):
         return False
@@ -264,6 +293,7 @@ def reconcile_router_handoff(
     min_margin: float = DEFAULT_MIN_MARGIN,
     min_negative_gap: float = DEFAULT_MIN_NEGATIVE_GAP,
     target_policies: dict[str, Any] | None = None,
+    expected_class_label: str | None = None,
     allow_taxonomy_correction: bool = DEFAULT_ALLOW_TAXONOMY_CORRECTION,
 ) -> ReconcileDecision:
     vlm_crop = normalize_crop_name(router_crop) if router_crop else None
@@ -287,6 +317,12 @@ def reconcile_router_handoff(
         class_label=match.class_label,
         target_policies=target_policies,
     )
+    exact_rescue_policy = _exact_class_rescue_policy(
+        target_id=match.target_id,
+        class_label=match.class_label,
+        expected_class_label=expected_class_label,
+        target_policies=target_policies,
+    )
     effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
     effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
     effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)
@@ -296,6 +332,27 @@ def reconcile_router_handoff(
         and (not router_is_trusted or not router_target_is_supported)
     ):
         effective_min_margin = max(effective_min_margin, min_margin)
+
+    if exact_rescue_policy:
+        rescue_min_similarity = _coerce_policy_float(exact_rescue_policy, "min_similarity", min_similarity)
+        rescue_min_margin = max(DEFAULT_MIN_MARGIN, _coerce_policy_float(exact_rescue_policy, "min_margin", min_margin))
+        rescue_min_negative_gap = _coerce_policy_float(
+            exact_rescue_policy,
+            "min_negative_gap",
+            min_negative_gap,
+        )
+        selected_policy_is_too_strict = match.similarity < effective_min_similarity or match.margin < effective_min_margin
+        if (
+            (target_policy is None or selected_policy_is_too_strict)
+            and match.similarity >= rescue_min_similarity
+            and match.margin >= rescue_min_margin
+            and match.margin >= rescue_min_negative_gap
+            and match.margin >= effective_min_negative_gap
+        ):
+            target_policy = exact_rescue_policy
+            effective_min_similarity = rescue_min_similarity
+            effective_min_margin = rescue_min_margin
+            effective_min_negative_gap = rescue_min_negative_gap
 
     if not match.target_id or match.target_id not in supported:
         return ReconcileDecision(

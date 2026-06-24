@@ -510,6 +510,123 @@ def test_calibrate_class_policy_counts_supported_false_accepts():
     assert "supported_wrong_above_class_target" in class_policy["failure_reasons"]
 
 
+def test_calibrate_emits_exact_class_rescue_policy_below_class_min():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="tomato__leaf",
+            expected_class="late_blight",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="late_blight",
+        )
+        for index in range(1, 4)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_004",
+            expected_target="tomato__leaf",
+            expected_class="leaf_mold",
+            expected_behavior="answer",
+            predicted_target="grape__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="4.png",
+            status="ok",
+            prototype_class_label="leaf_mold",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    class_policy = result["target_policies"]["tomato__leaf"]["class_policies"]["late_blight"]
+    assert class_policy["status"] == "no_eligible_policy"
+    rescue = class_policy["exact_class_rescue_policy"]
+    assert rescue["allow_expected_class_rescue"] is True
+    assert rescue["exact_class_supported_correct"] == 3
+    assert rescue["exact_class_supported_wrong"] == 0
+
+
+def test_calibrate_blocks_exact_class_rescue_policy_with_class_false_accept():
+    rows = [
+        ScoredRow(
+            image_id="demo_001",
+            expected_target="tomato__leaf",
+            expected_class="late_blight",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="1.png",
+            status="ok",
+            prototype_class_label="late_blight",
+        ),
+        ScoredRow(
+            image_id="demo_002",
+            expected_target="tomato__leaf",
+            expected_class="leaf_mold",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="2.png",
+            status="ok",
+            prototype_class_label="late_blight",
+        ),
+        ScoredRow(
+            image_id="demo_003",
+            expected_target="tomato__leaf",
+            expected_class="late_blight",
+            expected_behavior="answer",
+            predicted_target="tomato__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="3.png",
+            status="ok",
+            prototype_class_label="late_blight",
+        ),
+        ScoredRow(
+            image_id="demo_004",
+            expected_target="tomato__leaf",
+            expected_class="leaf_mold",
+            expected_behavior="answer",
+            predicted_target="grape__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="4.png",
+            status="ok",
+            prototype_class_label="leaf_mold",
+        ),
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    class_policy = result["target_policies"]["tomato__leaf"]["class_policies"]["late_blight"]
+    assert class_policy["exact_class_rescue_policy"] is None
+
+
 def test_calibrate_can_allow_negative_false_accepts_explicitly():
     rows = [
         ScoredRow(

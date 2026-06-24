@@ -41,6 +41,7 @@ class ScoredRow:
     status: str
     prototype_class_label: str | None = None
     prototype_level: str = "target"
+    expected_class: str = ""
 
 
 def _target_is_supported_positive(target: str) -> bool:
@@ -82,6 +83,7 @@ def _row_payload(row: ScoredRow) -> dict[str, Any]:
     return {
         "image_id": row.image_id,
         "expected_target": row.expected_target,
+        "expected_class": row.expected_class,
         "predicted_target": row.predicted_target,
         "prototype_class_label": row.prototype_class_label,
         "prototype_level": row.prototype_level,
@@ -124,6 +126,7 @@ def score_manifest(
                     status=asset_status,
                     prototype_class_label=None,
                     prototype_level="unavailable",
+                    expected_class=row.expected_class,
                 )
             )
             continue
@@ -141,6 +144,7 @@ def score_manifest(
                     status="ok",
                     prototype_class_label=match.class_label,
                     prototype_level=match.prototype_level,
+                    expected_class=row.expected_class,
                 )
             )
         except Exception as exc:
@@ -156,6 +160,7 @@ def score_manifest(
                     status=f"error:{exc}",
                     prototype_class_label=None,
                     prototype_level="error",
+                    expected_class=row.expected_class,
                 )
             )
     return scored
@@ -315,6 +320,12 @@ def evaluate_class_thresholds(
     supported_accepted = [row for row in accepted if _target_is_supported_positive(row.expected_target)]
     correct = [row for row in supported_accepted if row.expected_target == target_id]
     wrong = [row for row in supported_accepted if row.expected_target != target_id]
+    exact_class_correct = [
+        row
+        for row in supported_accepted
+        if row.expected_target == target_id and str(row.expected_class or "").strip() == class_label
+    ]
+    exact_class_wrong = [row for row in supported_accepted if row not in exact_class_correct]
     cross_part_wrong = _supported_cross_part_wrong_rows(wrong, target_id)
     negative_false_accepts = [row for row in accepted if _target_is_negative(row.expected_target, row.expected_behavior)]
     non_plant_false_accepts = [
@@ -335,6 +346,8 @@ def evaluate_class_thresholds(
         "supported_accepted": len(supported_accepted),
         "supported_correct": len(correct),
         "supported_wrong": len(wrong),
+        "exact_class_supported_correct": len(exact_class_correct),
+        "exact_class_supported_wrong": len(exact_class_wrong),
         "supported_precision": round(supported_precision, 6),
         "target_coverage": round(target_coverage, 6),
         "supported_cross_part_wrong": len(cross_part_wrong),
@@ -346,6 +359,9 @@ def evaluate_class_thresholds(
         "supported_wrong_image_ids": [row.image_id for row in wrong[:25]],
         "supported_wrong_rows": [_row_payload(row) for row in wrong[:25]],
         "supported_wrong_truncated": len(wrong) > 25,
+        "exact_class_supported_wrong_image_ids": [row.image_id for row in exact_class_wrong[:25]],
+        "exact_class_supported_wrong_rows": [_row_payload(row) for row in exact_class_wrong[:25]],
+        "exact_class_supported_wrong_truncated": len(exact_class_wrong) > 25,
     }
 
 
@@ -427,6 +443,36 @@ def calibrate_class_policies(
             and int(selected.get("supported_cross_part_wrong") or 0) == 0
         ):
             selected = {**selected, "allow_part_conflict_override": True}
+        exact_rescue_min_accepted = min(3, int(min_accepted))
+        exact_rescue_candidates = [
+            item
+            for item in candidates
+            if int(item.get("exact_class_supported_correct") or 0) >= exact_rescue_min_accepted
+            and int(item.get("exact_class_supported_wrong") or 0) == 0
+            and int(item.get("supported_cross_part_wrong") or 0) == 0
+            and int(item.get("negative_false_accept_count") or 0) <= int(max_negative_false_accepts or 0)
+            and (
+                not require_zero_non_plant_false_accepts
+                or int(item.get("non_plant_false_accept_count") or 0) == 0
+            )
+        ]
+        exact_rescue_candidates.sort(
+            key=lambda item: (
+                float(item["exact_class_supported_correct"]),
+                float(item["target_coverage"]),
+                -float(item["min_similarity"]),
+                -float(item["min_margin"]),
+                -float(item["min_negative_gap"]),
+            ),
+            reverse=True,
+        )
+        exact_rescue = exact_rescue_candidates[0] if exact_rescue_candidates else None
+        if exact_rescue:
+            exact_rescue = {
+                **exact_rescue,
+                "allow_expected_class_rescue": True,
+                "exact_class_rescue_min_accepted": exact_rescue_min_accepted,
+            }
         best_candidate = candidates[0] if candidates else None
         failure_reasons: list[str] = []
         if not selected and best_candidate:
@@ -455,6 +501,7 @@ def calibrate_class_policies(
         policies[class_label] = {
             "status": "class_specific" if selected else "no_eligible_policy",
             "selected_policy": selected,
+            "exact_class_rescue_policy": exact_rescue,
             "best_candidate": best_candidate,
             "failure_reasons": failure_reasons,
         }
@@ -709,7 +756,11 @@ def has_runtime_policy(calibration: dict[str, Any]) -> bool:
             return True
         class_policies = entry.get("class_policies")
         if isinstance(class_policies, dict) and any(
-            isinstance(class_entry, dict) and isinstance(class_entry.get("selected_policy"), dict)
+            isinstance(class_entry, dict)
+            and (
+                isinstance(class_entry.get("selected_policy"), dict)
+                or isinstance(class_entry.get("exact_class_rescue_policy"), dict)
+            )
             for class_entry in class_policies.values()
         ):
             return True
@@ -759,6 +810,7 @@ def main(argv: list[str] | None = None) -> int:
             "target_policy_negative_mode": args.target_policy_negative_mode,
             "target_class_min_accepted": args.target_class_min_accepted,
             "class_part_conflict_override": "clean_fruit_class",
+            "expected_class_rescue": "clean_exact_class_v1",
             "promotion_mode": "prototype_override",
         },
         "summary": {

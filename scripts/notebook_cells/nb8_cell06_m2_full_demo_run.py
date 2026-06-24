@@ -136,6 +136,7 @@ def _expected_calibration_constraints():
         "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
         "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
         "class_part_conflict_override": "clean_fruit_class",
+        "expected_class_rescue": "clean_exact_class_v1",
         "promotion_mode": "prototype_override",
     }
 
@@ -382,7 +383,11 @@ else:
                     or (
                         isinstance(entry, dict)
                         and any(
-                            isinstance(class_entry, dict) and isinstance(class_entry.get("selected_policy"), dict)
+                            isinstance(class_entry, dict)
+                            and (
+                                isinstance(class_entry.get("selected_policy"), dict)
+                                or isinstance(class_entry.get("exact_class_rescue_policy"), dict)
+                            )
                             for class_entry in (
                                 entry.get("class_policies")
                                 if isinstance(entry.get("class_policies"), dict)
