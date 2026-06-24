@@ -352,6 +352,103 @@ def test_calibrate_rejects_class_policy_with_cross_part_supported_false_accept()
     assert "supported_cross_part_wrong_above_class_target" in class_policy["failure_reasons"]
 
 
+def test_calibrate_allows_clean_fruit_class_policy_part_conflict_override():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            predicted_target="grape__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="mildew_fruit",
+        )
+        for index in range(1, 8)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_008",
+            expected_target="grape__fruit",
+            expected_behavior="answer",
+            predicted_target="grape__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="8.png",
+            status="ok",
+            prototype_class_label="leaf_confuser",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=0,
+        target_max_cross_part_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    grape_policy = result["target_policies"]["grape__fruit"]
+    assert grape_policy["status"] == "no_eligible_policy"
+    class_policy = grape_policy["class_policies"]["mildew_fruit"]
+    assert class_policy["status"] == "class_specific"
+    assert class_policy["selected_policy"]["supported_cross_part_wrong"] == 0
+    assert class_policy["selected_policy"]["allow_part_conflict_override"] is True
+
+
+def test_calibrate_does_not_allow_leaf_class_policy_part_conflict_override():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="grape__leaf",
+            expected_behavior="answer",
+            predicted_target="grape__leaf",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="mildew_leaf",
+        )
+        for index in range(1, 8)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_008",
+            expected_target="grape__leaf",
+            expected_behavior="answer",
+            predicted_target="grape__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="8.png",
+            status="ok",
+            prototype_class_label="fruit_confuser",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=1.0,
+        target_min_precision=0.98,
+        target_max_supported_wrong=0,
+        target_max_cross_part_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    grape_policy = result["target_policies"]["grape__leaf"]
+    assert grape_policy["status"] == "no_eligible_policy"
+    class_policy = grape_policy["class_policies"]["mildew_leaf"]
+    assert class_policy["status"] == "class_specific"
+    assert "allow_part_conflict_override" not in class_policy["selected_policy"]
+
+
 def test_calibrate_class_policy_counts_supported_false_accepts():
     rows = [
         ScoredRow(

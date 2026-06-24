@@ -421,6 +421,12 @@ def calibrate_class_policies(
             reverse=True,
         )
         selected = candidates[0] if candidates and candidates[0].get("eligible_for_promotion") else None
+        if (
+            selected
+            and _target_part(target_id) == "fruit"
+            and int(selected.get("supported_cross_part_wrong") or 0) == 0
+        ):
+            selected = {**selected, "allow_part_conflict_override": True}
         best_candidate = candidates[0] if candidates else None
         failure_reasons: list[str] = []
         if not selected and best_candidate:
@@ -752,6 +758,7 @@ def main(argv: list[str] | None = None) -> int:
             "target_max_cross_part_supported_wrong": args.target_max_cross_part_supported_wrong,
             "target_policy_negative_mode": args.target_policy_negative_mode,
             "target_class_min_accepted": args.target_class_min_accepted,
+            "class_part_conflict_override": "clean_fruit_class",
             "promotion_mode": "prototype_override",
         },
         "summary": {

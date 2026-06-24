@@ -135,6 +135,7 @@ def _expected_calibration_constraints():
         "target_max_cross_part_supported_wrong": M2_PROTOTYPE_TARGET_MAX_CROSS_PART_SUPPORTED_WRONG,
         "target_policy_negative_mode": M2_PROTOTYPE_TARGET_POLICY_NEGATIVE_MODE,
         "target_class_min_accepted": M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED,
+        "class_part_conflict_override": "clean_fruit_class",
         "promotion_mode": "prototype_override",
     }
 
