@@ -33,7 +33,7 @@ M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analy
 M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
 M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 12))
-M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 24))
+M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 32))
 M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))
 M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", False))
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
@@ -158,6 +158,22 @@ def _constraints_match(payload):
     return all(_same_scalar(constraints.get(key), value) for key, value in expected.items())
 
 
+def _restore_latest_handoff_cache(repo_root, cache_path):
+    if M2_REFRESH_HANDOFF_CACHE or cache_path.is_file():
+        return None
+    results_root = repo_root / M2_REPO_RESULTS_ROOT
+    if not results_root.is_dir():
+        return None
+    for candidate_dir in sorted((path for path in results_root.iterdir() if path.is_dir()), reverse=True):
+        candidate_cache = candidate_dir / cache_path.name
+        if not candidate_cache.is_file():
+            continue
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(candidate_cache, cache_path)
+        return candidate_cache
+    return None
+
+
 def _summary_manifest_sha(candidate_dir):
     summary_path = candidate_dir / "summary.json"
     if not summary_path.is_file():
@@ -242,6 +258,7 @@ else:
     analysis_output_path = (repo_root / M2_ANALYSIS_OUTPUT).resolve()
     analysis_markdown_output_path = (repo_root / M2_ANALYSIS_MARKDOWN_OUTPUT).resolve()
     prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
+    handoff_cache_path = (repo_root / M2_HANDOFF_CACHE).resolve()
     adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
     if (
         M2_ENABLE_PROTOTYPE_RECONCILER
@@ -396,6 +413,10 @@ else:
             M2_ENABLE_PROTOTYPE_RECONCILER = False
             print("[M2] Prototype reconciler disabled because no calibrated policy was selected.")
 
+    restored_handoff_cache = _restore_latest_handoff_cache(repo_root, handoff_cache_path)
+    if restored_handoff_cache:
+        print(f"[M2] Restored handoff cache from {restored_handoff_cache.relative_to(repo_root)}")
+
     command = [
         sys.executable,
         str(repo_root / "scripts" / "run_demo_checklist.py"),
@@ -421,7 +442,7 @@ else:
         "--adapter-batch-size",
         str(max(1, int(M2_ADAPTER_BATCH_SIZE))),
         "--handoff-cache",
-        str((repo_root / M2_HANDOFF_CACHE).resolve()),
+        str(handoff_cache_path),
     ]
     if M2_DEMO_LIMIT is not None:
         command.extend(["--limit", str(int(M2_DEMO_LIMIT))])
@@ -450,13 +471,13 @@ else:
     print(f"[M2] markdown_output={markdown_output_path}")
     print(f"[M2] analysis_output={analysis_output_path}")
     print(f"[M2] analysis_markdown_output={analysis_markdown_output_path}")
-    print(f"[M2] handoff_cache={(repo_root / M2_HANDOFF_CACHE).resolve()}")
+    print(f"[M2] handoff_cache={handoff_cache_path}")
     print(f"[M2] prototype_reconciler={M2_ENABLE_PROTOTYPE_RECONCILER}")
     if M2_ENABLE_PROTOTYPE_RECONCILER:
         print(f"[M2] prototype_bank={M2_PROTOTYPE_BANK or 'missing'}")
         print(f"[M2] taxonomy_registry={M2_TAXONOMY_REGISTRY or 'missing'}")
         print(f"[M2] prototype_calibration={prototype_calibration_output_path}")
-    print("[M2] Starting full manifest run. This can take a while on 512 images.")
+    print("[M2] Starting full manifest run. This can take a while on 522 images.")
 
     runner_started_at = datetime.now(timezone.utc)
     runner_start_perf = time.perf_counter()
@@ -507,6 +528,8 @@ else:
             taxonomy_registry_path = (repo_root / M2_TAXONOMY_REGISTRY).resolve()
             if taxonomy_registry_path.is_file():
                 provenance_paths.append(taxonomy_registry_path)
+        if handoff_cache_path.is_file():
+            provenance_paths.append(handoff_cache_path)
         for source_path in (
             output_path,
             markdown_output_path,
@@ -537,6 +560,7 @@ else:
             "handoff_cache": {
                 "path": str(M2_HANDOFF_CACHE),
                 "refresh": bool(M2_REFRESH_HANDOFF_CACHE),
+                "restored_from": str(restored_handoff_cache.relative_to(repo_root)) if restored_handoff_cache else "",
             },
             "output": str(output_path.relative_to(repo_root)),
             "markdown_output": str(markdown_output_path.relative_to(repo_root)),

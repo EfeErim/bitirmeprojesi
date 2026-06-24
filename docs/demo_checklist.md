@@ -10,7 +10,7 @@ Use this file for M1 and M2 execution. The goal is to prove that Colab Notebook 
 - Exact M2 run path:
   1. Open Notebook 8 in Colab.
   2. Select a GPU runtime and make sure Hugging Face/SAM3 access is available.
-  3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 12`, `M2_ADAPTER_BATCH_SIZE = 24`, `M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
+  3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 12`, `M2_ADAPTER_BATCH_SIZE = 32`, `M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
   4. Leave `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available in Colab secrets.
   5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 522-image manifest.
   6. Read `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md` for the local runtime copy.
@@ -62,9 +62,9 @@ The supported-disease coverage manifest is generated from `data/prepared_runtime
 
 The self-contained saved image package is under `docs/demo_assets/m2_full_image_set/`. It contains 522 copied images plus a runnable manifest. The original 512-row stress set now includes 10 additional internet unsupported crop/part rows so Notebook 8 tries them with the other M2 images:
 
-`.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs --batch-size 12 --adapter-batch-size 24 --handoff-cache .runtime_tmp\m2_router_prototype_handoff_cache.json`
+`.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs --batch-size 12 --adapter-batch-size 32 --handoff-cache .runtime_tmp\m2_router_prototype_handoff_cache.json`
 
-The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 24`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE` so repeated same-manifest runs can skip unchanged handoff work; set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
+The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 32`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE`, publishes that cache with each result folder, and restores the latest published cache when local `.runtime_tmp` is empty so repeated same-manifest runs can skip unchanged handoff work. Set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
 
 ## User Photo Guidance To Show
 
@@ -218,4 +218,4 @@ Fill `actual_*`, `pass_fail`, and `failure_bucket` during M2. The `source` colum
 - 2026-06-17 saved image package, updated 2026-06-24: 522 asset-ready images are copied to `docs/demo_assets/m2_full_image_set/images/`. The runnable saved manifest is `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`.
 - Saved package asset audit command:
   `.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --mode asset-audit --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --output .runtime_tmp\m2_saved_image_set_asset_audit.json --markdown-output .runtime_tmp\m2_saved_image_set_asset_audit.md`
-- Saved package asset audit result: 512/512 rows are file-ready.
+- Saved package asset audit result: 522/522 rows are file-ready.

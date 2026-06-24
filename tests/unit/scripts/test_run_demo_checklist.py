@@ -7,6 +7,7 @@ from scripts.build_m2_supported_disease_manifest import build_rows, is_healthy_c
 from scripts.run_demo_checklist import (
     ChecklistRow,
     _handoff_cache_key,
+    _path_fingerprint,
     _run_official_batch_rows,
     build_analysis_summary,
     build_parser,
@@ -138,6 +139,13 @@ def test_parser_supports_official_batch_size():
 
     assert args.batch_size == 4
     assert args.adapter_batch_size == 8
+
+
+def test_path_fingerprint_uses_repo_relative_paths_for_repo_files():
+    fingerprint = _path_fingerprint(Path("scripts/run_demo_checklist.py"))
+
+    assert fingerprint["exists"] is True
+    assert fingerprint["path"] == "scripts/run_demo_checklist.py"
 
 
 def test_format_elapsed_seconds_uses_human_readable_units():

@@ -369,16 +369,24 @@ def _stable_json_hash(payload: Any) -> str:
 def _path_fingerprint(path: Path | None) -> dict[str, Any]:
     if path is None:
         return {}
+    resolved_path = path.resolve()
     try:
-        stat = path.stat()
+        stat = resolved_path.stat()
     except OSError:
-        return {"path": str(path), "exists": False}
+        return {"path": _fingerprint_path_value(resolved_path), "exists": False}
     return {
-        "path": str(path),
+        "path": _fingerprint_path_value(resolved_path),
         "exists": True,
         "size": int(stat.st_size),
         "mtime_ns": int(stat.st_mtime_ns),
     }
+
+
+def _fingerprint_path_value(path: Path) -> str:
+    try:
+        return path.relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return str(path)
 
 
 def _handoff_cache_key(
