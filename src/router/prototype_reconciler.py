@@ -418,10 +418,21 @@ def reconcile_router_handoff(
             min_negative_gap=effective_min_negative_gap,
         )
 
+    exact_expected_class_agrees = bool(
+        router_target == match.target_id
+        and router_is_trusted
+        and router_target_is_supported
+        and expected_class_label
+        and match.class_label
+        and str(expected_class_label).strip() == str(match.class_label).strip()
+    )
     negative_gap_ignores_hard_negative = bool(
-        target_policy
-        and target_policy.get("_target_policy_scope") == "class_exact_rescue"
-        and target_policy.get("ignore_hard_negative_gap")
+        (
+            target_policy
+            and target_policy.get("_target_policy_scope") == "class_exact_rescue"
+            and target_policy.get("ignore_hard_negative_gap")
+        )
+        or exact_expected_class_agrees
     )
     if (
         _effective_negative_gap(match, include_hard_negative=not negative_gap_ignores_hard_negative)

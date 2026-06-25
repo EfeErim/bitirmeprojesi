@@ -332,6 +332,46 @@ def test_reconciler_uses_curated_hard_negative_gap(tmp_path: Path):
     assert decision.to_payload()["prototype_hard_negative_gap"] == 0.0
 
 
+def test_reconciler_accepts_exact_expected_class_router_agreement_with_hard_negative_gap(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "septoria" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    query_image = tmp_path / "query.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(grape_leaf, (40, 20, 120))
+    _write_image(query_image, (20, 90, 40))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    prototype_payload["hard_negative_prototypes"] = {
+        "tomato__leaf": {
+            "negative_for_target_id": "tomato__leaf",
+            "sample_count": 1,
+            "centroid": prototype_payload["class_prototypes"]["tomato__leaf::septoria"]["centroid"],
+        }
+    }
+    registry_payload = build_taxonomy_registry(
+        dataset_root=dataset_root,
+        adapter_root=None,
+        created_at="20260617T000000Z",
+    )
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="tomato",
+        router_part="leaf",
+        router_status="ok",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        min_negative_gap=0.01,
+        expected_class_label="septoria",
+    )
+
+    assert decision.decision == "accept_router"
+    assert decision.reason == "router_and_prototype_agree"
+    assert decision.to_payload()["prototype_hard_negative_gap"] == 0.0
+
+
 def test_reconciler_requires_selected_policy_when_calibration_has_no_global_policy(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
