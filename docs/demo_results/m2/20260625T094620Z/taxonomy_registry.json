@@ -1,0 +1,452 @@
+{
+  "schema_version": "taxonomy_registry.v1",
+  "created_at": "20260625T090050Z",
+  "source_roots": {
+    "dataset_root": "data/prepared_runtime_datasets",
+    "adapter_root": "runs",
+    "taxonomy_path": "config/plant_taxonomy.json",
+    "overrides_path": null,
+    "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+    "refresh_gbif": false
+  },
+  "summary": {
+    "target_count": 8,
+    "unresolved_count": 0,
+    "targets": [
+      "apricot__fruit",
+      "apricot__leaf",
+      "grape__fruit",
+      "grape__leaf",
+      "strawberry__fruit",
+      "strawberry__leaf",
+      "tomato__fruit",
+      "tomato__leaf"
+    ]
+  },
+  "targets": [
+    {
+      "target_id": "apricot__fruit",
+      "crop_canonical_name": "apricot",
+      "part": "fruit",
+      "scientific_name": "Prunus armeniaca",
+      "common_names": [
+        "apricot"
+      ],
+      "synonyms": [],
+      "genus": "Prunus",
+      "family": "Rosaceae",
+      "class_labels": [
+        "kayısı_sağlıklı_meyve_800",
+        "kayısıda_çiçek_monilyası_meyve_40",
+        "kayısıda_şarka_virüsü_meyve_230",
+        "kayısıda_şeftali_karalekesi_meyve_232",
+        "kayısıda_yaprak_delen_çil_hastalığı_meyve_128"
+      ],
+      "supported_disease_labels": [
+        "kayısı_sağlıklı_meyve_800",
+        "kayısıda_çiçek_monilyası_meyve_40",
+        "kayısıda_şarka_virüsü_meyve_230",
+        "kayısıda_şeftali_karalekesi_meyve_232",
+        "kayısıda_yaprak_delen_çil_hastalığı_meyve_128"
+      ],
+      "split_counts": {
+        "val": 280,
+        "test": 280,
+        "continual": 871
+      },
+      "adapter_paths": [
+        "runs/apricot/fruit/apricot_fruit_2026-05-24_14-32-10/checkpoint_state/artifacts/adapter_export/apricot/fruit/continual_sd_lora_adapter",
+        "runs/apricot/fruit/apricot_fruit_2026-05-24_14-32-10/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/apricot/fruit/apricot_fruit_2026-05-24_14-32-10/telemetry/artifacts/adapter_export/apricot/fruit/continual_sd_lora_adapter",
+        "runs/apricot/fruit/apricot_fruit_2026-05-26_09-59-51/checkpoint_state/artifacts/adapter_export/apricot/fruit/continual_sd_lora_adapter",
+        "runs/apricot/fruit/apricot_fruit_2026-05-26_09-59-51/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/apricot/fruit/apricot_fruit_2026-05-26_09-59-51/telemetry/artifacts/adapter_export/apricot/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-26_10-09-10/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/fruit/strawberry_fruit_2026-05-14_11-27-26/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-13_17-47-58/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-26_10-04-06/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/outputs/colab_notebook_training/apricot/fruit/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/apricot__fruit",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "apricot__leaf",
+      "crop_canonical_name": "apricot",
+      "part": "leaf",
+      "scientific_name": "Prunus armeniaca",
+      "common_names": [
+        "apricot"
+      ],
+      "synonyms": [],
+      "genus": "Prunus",
+      "family": "Rosaceae",
+      "class_labels": [
+        "kayısı_sağlıklı_yaprak_302",
+        "kayısı_şarka_virüsü_yaprak_206",
+        "kayısı_yaprak_delen_çil_hastalığı_yaprak_300"
+      ],
+      "supported_disease_labels": [
+        "kayısı_sağlıklı_yaprak_302",
+        "kayısı_şarka_virüsü_yaprak_206",
+        "kayısı_yaprak_delen_çil_hastalığı_yaprak_300"
+      ],
+      "split_counts": {
+        "val": 150,
+        "test": 150,
+        "continual": 508
+      },
+      "adapter_paths": [
+        "runs/apricot/fruit/apricot_fruit_2026-05-24_14-32-10/outputs/colab_notebook_training/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-24_14-27-10/checkpoint_state/artifacts/adapter_export/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-24_14-27-10/outputs/colab_notebook_training/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-24_14-27-10/telemetry/artifacts/adapter_export/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-25_16-51-40/checkpoint_state/artifacts/adapter_export/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-25_16-51-40/outputs/colab_notebook_training/apricot/leaf/continual_sd_lora_adapter",
+        "runs/apricot/leaf/apricot_leaf_2026-05-25_16-51-40/telemetry/artifacts/adapter_export/apricot/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-13_17-47-58/outputs/colab_notebook_training/apricot/leaf/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/apricot__leaf",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "grape__fruit",
+      "crop_canonical_name": "grape",
+      "part": "fruit",
+      "scientific_name": "Vitis vinifera",
+      "common_names": [
+        "grape",
+        "grapevine"
+      ],
+      "synonyms": [],
+      "genus": "Vitis",
+      "family": "Vitaceae",
+      "class_labels": [
+        "üzüm_antraknoz_meyve",
+        "üzüm_botrytis_cinerea_meyve",
+        "üzüm_külleme_meyve",
+        "üzüm_mildiyö_meyve",
+        "üzüm_sağlıklı_meyve"
+      ],
+      "supported_disease_labels": [
+        "üzüm_antraknoz_meyve",
+        "üzüm_botrytis_cinerea_meyve",
+        "üzüm_külleme_meyve",
+        "üzüm_mildiyö_meyve",
+        "üzüm_sağlıklı_meyve"
+      ],
+      "split_counts": {
+        "val": 174,
+        "test": 174,
+        "continual": 767
+      },
+      "adapter_paths": [
+        "runs/grape/fruit/grape_fruit_2026-05-09_19-12-43/checkpoint_state/artifacts/adapter_export/grape/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-09_19-12-43/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-09_19-12-43/telemetry/artifacts/adapter_export/grape/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/checkpoint_state/artifacts/adapter_export/grape/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter",
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/telemetry/artifacts/adapter_export/grape/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/outputs/colab_notebook_training/grape/fruit/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/grape__fruit",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "grape__leaf",
+      "crop_canonical_name": "grape",
+      "part": "leaf",
+      "scientific_name": "Vitis vinifera",
+      "common_names": [
+        "grape",
+        "grapevine"
+      ],
+      "synonyms": [],
+      "genus": "Vitis",
+      "family": "Vitaceae",
+      "class_labels": [
+        "üzüm_antraknoz_yaprak",
+        "üzüm_kav_esca_yaprak",
+        "üzüm_külleme_yaprak",
+        "üzüm_leafroll_virüs_yaprak",
+        "üzüm_mildiyö_yaprak",
+        "üzüm_sağlıklı_yaprak",
+        "üzüm_yelpaze_virüsü_yaprak"
+      ],
+      "supported_disease_labels": [
+        "üzüm_antraknoz_yaprak",
+        "üzüm_kav_esca_yaprak",
+        "üzüm_külleme_yaprak",
+        "üzüm_leafroll_virüs_yaprak",
+        "üzüm_mildiyö_yaprak",
+        "üzüm_sağlıklı_yaprak",
+        "üzüm_yelpaze_virüsü_yaprak"
+      ],
+      "split_counts": {
+        "val": 324,
+        "test": 324,
+        "continual": 1207
+      },
+      "adapter_paths": [
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/checkpoint_state/artifacts/adapter_export/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/telemetry/artifacts/adapter_export/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-26_10-09-10/checkpoint_state/artifacts/adapter_export/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-26_10-09-10/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-26_10-09-10/telemetry/artifacts/adapter_export/grape/leaf/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/outputs/colab_notebook_training/grape/leaf/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/grape__leaf",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "strawberry__fruit",
+      "crop_canonical_name": "strawberry",
+      "part": "fruit",
+      "scientific_name": "Fragaria x ananassa",
+      "common_names": [
+        "strawberry"
+      ],
+      "synonyms": [
+        "garden strawberry"
+      ],
+      "genus": "Fragaria",
+      "family": "Rosaceae",
+      "class_labels": [
+        "strawberry_anthracnose_fruit",
+        "strawberry_gray_mold_fruit",
+        "strawberry_healthy_fruit",
+        "strawberry_powdery_mildew_fruit"
+      ],
+      "supported_disease_labels": [
+        "strawberry_anthracnose_fruit",
+        "strawberry_gray_mold_fruit",
+        "strawberry_powdery_mildew_fruit"
+      ],
+      "split_counts": {
+        "val": 204,
+        "test": 204,
+        "continual": 721
+      },
+      "adapter_paths": [
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/outputs/colab_notebook_training/strawberry/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/fruit/strawberry_fruit_2026-05-14_11-27-26/checkpoint_state/artifacts/adapter_export/strawberry/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/fruit/strawberry_fruit_2026-05-14_11-27-26/outputs/colab_notebook_training/strawberry/fruit/continual_sd_lora_adapter",
+        "runs/strawberry/fruit/strawberry_fruit_2026-05-14_11-27-26/telemetry/artifacts/adapter_export/strawberry/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/strawberry/fruit/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/strawberry__fruit",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "strawberry__leaf",
+      "crop_canonical_name": "strawberry",
+      "part": "leaf",
+      "scientific_name": "Fragaria x ananassa",
+      "common_names": [
+        "strawberry"
+      ],
+      "synonyms": [
+        "garden strawberry"
+      ],
+      "genus": "Fragaria",
+      "family": "Rosaceae",
+      "class_labels": [
+        "healthy",
+        "strawberry_leaf_scorch_leaf",
+        "strawberry_leaf_spot_leaf",
+        "strawberry_powdery_mildew_leaf"
+      ],
+      "supported_disease_labels": [
+        "strawberry_leaf_scorch_leaf",
+        "strawberry_leaf_spot_leaf",
+        "strawberry_powdery_mildew_leaf"
+      ],
+      "split_counts": {
+        "val": 491,
+        "test": 491,
+        "continual": 1606
+      },
+      "adapter_paths": [
+        "runs/grape/fruit/grape_fruit_2026-05-26_10-15-43/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-14_11-30-59/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/grape/leaf/grape_leaf_2026-05-26_10-09-10/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/fruit/strawberry_fruit_2026-05-14_11-27-26/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-13_17-47-58/checkpoint_state/artifacts/adapter_export/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-13_17-47-58/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-13_17-47-58/telemetry/artifacts/adapter_export/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-26_10-04-06/checkpoint_state/artifacts/adapter_export/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-26_10-04-06/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/strawberry/leaf/strawberry_leaf_2026-05-26_10-04-06/telemetry/artifacts/adapter_export/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/outputs/colab_notebook_training/strawberry/leaf/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/strawberry__leaf",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "tomato__fruit",
+      "crop_canonical_name": "tomato",
+      "part": "fruit",
+      "scientific_name": "Solanum lycopersicum",
+      "common_names": [
+        "tomato"
+      ],
+      "synonyms": [
+        "Lycopersicon esculentum"
+      ],
+      "genus": "Solanum",
+      "family": "Solanaceae",
+      "class_labels": [
+        "domates_antraknoz_meyve",
+        "domates_bacterial_spot_and_speck_meyve",
+        "domates_blossom_end_rot_meyve",
+        "domates_gray_mold_meyve",
+        "domates_late_blight_meyve",
+        "domates_sağlıklı_meyve",
+        "domates_spotted_wilt_meyve"
+      ],
+      "supported_disease_labels": [
+        "domates_antraknoz_meyve",
+        "domates_bacterial_spot_and_speck_meyve",
+        "domates_blossom_end_rot_meyve",
+        "domates_gray_mold_meyve",
+        "domates_late_blight_meyve",
+        "domates_sağlıklı_meyve",
+        "domates_spotted_wilt_meyve"
+      ],
+      "split_counts": {
+        "val": 119,
+        "test": 119,
+        "continual": 2245
+      },
+      "adapter_paths": [
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/checkpoint_state/artifacts/adapter_export/tomato/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/tomato/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/telemetry/artifacts/adapter_export/tomato/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/checkpoint_state/artifacts/adapter_export/tomato/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/tomato/fruit/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/telemetry/artifacts/adapter_export/tomato/fruit/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/tomato__fruit",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    },
+    {
+      "target_id": "tomato__leaf",
+      "crop_canonical_name": "tomato",
+      "part": "leaf",
+      "scientific_name": "Solanum lycopersicum",
+      "common_names": [
+        "tomato"
+      ],
+      "synonyms": [
+        "Lycopersicon esculentum"
+      ],
+      "genus": "Solanum",
+      "family": "Solanaceae",
+      "class_labels": [
+        "domates_bacterial_spot_and_speck_yaprak",
+        "domates_early_blight_yaprak",
+        "domates_late_blight_yaprak",
+        "domates_leaf_mold_yaprak",
+        "domates_mosaic_virüs_yaprak",
+        "domates_powdery_mildew_yaprak",
+        "domates_sağlıklı_yaprak",
+        "domates_septoria_leaf_spot_yaprak",
+        "domates_spotted_wilt_yaprak",
+        "domates_yellow_leaf_curl_yaprak"
+      ],
+      "supported_disease_labels": [
+        "domates_bacterial_spot_and_speck_yaprak",
+        "domates_early_blight_yaprak",
+        "domates_late_blight_yaprak",
+        "domates_leaf_mold_yaprak",
+        "domates_mosaic_virüs_yaprak",
+        "domates_powdery_mildew_yaprak",
+        "domates_septoria_leaf_spot_yaprak",
+        "domates_spotted_wilt_yaprak",
+        "domates_yellow_leaf_curl_yaprak"
+      ],
+      "split_counts": {
+        "val": 1222,
+        "test": 1204,
+        "continual": 5176
+      },
+      "adapter_paths": [
+        "runs/tomato/fruit/tomato_fruit_2026-05-14_12-00-16/outputs/colab_notebook_training/tomato/leaf/continual_sd_lora_adapter",
+        "runs/tomato/fruit/tomato_fruit_2026-05-26_10-34-27/outputs/colab_notebook_training/tomato/leaf/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/checkpoint_state/artifacts/adapter_export/tomato/leaf/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/outputs/colab_notebook_training/tomato/leaf/continual_sd_lora_adapter",
+        "runs/tomato/leaf/tomato_leaf_2026-05-26_10-20-44/telemetry/artifacts/adapter_export/tomato/leaf/continual_sd_lora_adapter"
+      ],
+      "source_metadata": {
+        "dataset_path": "data/prepared_runtime_datasets/tomato__leaf",
+        "taxonomy_path": "config/plant_taxonomy.json",
+        "overrides_path": null,
+        "external_cache_path": "runs/_index/router_prototypes/external_taxonomy_cache.json",
+        "external_taxonomy_source": null,
+        "external_usage_key": null
+      },
+      "unresolved": false
+    }
+  ]
+}
