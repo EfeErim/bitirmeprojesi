@@ -293,7 +293,7 @@ def _negative_for_target_id(row: dict[str, Any]) -> str:
     prototype_target = str(row.get("prototype_target") or "").strip()
     if prototype_target and prototype_target != expected_target:
         return prototype_target
-    return expected_target
+    return ""
 
 
 def load_curation_feature_records(
@@ -347,7 +347,8 @@ def load_curation_feature_records(
         elif role == "prototype_hard_negative":
             negative_for_target_id = _negative_for_target_id(row)
             if not negative_for_target_id or "__" not in negative_for_target_id:
-                skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": "missing_negative_target"})
+                reason = "same_target_hard_negative_not_used" if row.get("prototype_target") else "missing_negative_target"
+                skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": reason})
                 continue
             hard_negative_records.append(
                 HardNegativeFeatureRecord(

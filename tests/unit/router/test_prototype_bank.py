@@ -71,10 +71,12 @@ def test_build_prototype_bank_consumes_reviewed_curation_manifests(tmp_path: Pat
     dataset_root = tmp_path / "datasets"
     curation_root = tmp_path / "curation"
     curated_positive = tmp_path / "reviewed" / "positive.png"
-    curated_negative = tmp_path / "reviewed" / "negative.png"
+    curated_cross_target_negative = tmp_path / "reviewed" / "cross_target_negative.png"
+    curated_same_target_negative = tmp_path / "reviewed" / "same_target_negative.png"
     _write_image(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png", (20, 80, 40))
     _write_image(curated_positive, (25, 85, 45))
-    _write_image(curated_negative, (190, 40, 30))
+    _write_image(curated_cross_target_negative, (190, 40, 30))
+    _write_image(curated_same_target_negative, (30, 90, 50))
     _write_curation_csv(
         curation_root / "prototype_positive_manifest.csv",
         [
@@ -92,7 +94,14 @@ def test_build_prototype_bank_consumes_reviewed_curation_manifests(tmp_path: Pat
         [
             {
                 "image_id": "demo_002",
-                "resolved_image": str(curated_negative),
+                "resolved_image": str(curated_cross_target_negative),
+                "expected_target": "tomato__leaf",
+                "expected_class": "healthy",
+                "prototype_target": "tomato__fruit",
+            },
+            {
+                "image_id": "demo_003",
+                "resolved_image": str(curated_same_target_negative),
                 "expected_target": "tomato__leaf",
                 "expected_class": "healthy",
                 "prototype_target": "tomato__leaf",
@@ -111,9 +120,14 @@ def test_build_prototype_bank_consumes_reviewed_curation_manifests(tmp_path: Pat
     assert payload["summary"]["dataset_sample_count"] == 1
     assert payload["summary"]["curation_positive_count"] == 1
     assert payload["summary"]["hard_negative_count"] == 1
+    assert payload["summary"]["skipped_count"] == 1
     assert payload["target_prototypes"]["tomato__leaf"]["split_counts"] == {"curated": 1, "train": 1}
     assert "tomato__leaf::late_blight" in payload["class_prototypes"]
-    assert payload["hard_negative_prototypes"]["tomato__leaf"]["sample_count"] == 1
+    assert payload["hard_negative_prototypes"]["tomato__fruit"]["sample_count"] == 1
+    assert "tomato__leaf" not in payload["hard_negative_prototypes"]
+    assert payload["skipped"] == [
+        {"image_id": "demo_003", "role": "prototype_hard_negative", "reason": "same_target_hard_negative_not_used"}
+    ]
 
 
 def test_vector_math_helpers_are_deterministic():
