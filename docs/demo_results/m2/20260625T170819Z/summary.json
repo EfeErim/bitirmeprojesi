@@ -1,0 +1,527 @@
+{
+  "created_at": "20260625T170819Z",
+  "started_at": "2026-06-25T16:22:32.890579+00:00",
+  "finished_at": "2026-06-25T17:08:19.190634+00:00",
+  "elapsed_seconds": 2746.300064008,
+  "elapsed_human": "45m 46s",
+  "runner_started_at": "2026-06-25T16:28:06.703971+00:00",
+  "runner_finished_at": "2026-06-25T17:08:19.190634+00:00",
+  "runner_elapsed_seconds": 2412.48666754,
+  "runner_elapsed_human": "40m 12s",
+  "runner_exit_code": 1,
+  "manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "batch_size": 12,
+  "adapter_batch_size": 32,
+  "handoff_cache": {
+    "path": ".runtime_tmp/m2_router_prototype_handoff_cache.json",
+    "refresh": false,
+    "restored_from": "docs/demo_results/m2/20260625T094620Z/m2_router_prototype_handoff_cache.json"
+  },
+  "output": ".runtime_tmp/m2_demo_checklist_run.json",
+  "markdown_output": ".runtime_tmp/m2_demo_checklist_run.md",
+  "analysis_output": ".runtime_tmp/analysis_summary.json",
+  "analysis_markdown_output": ".runtime_tmp/analysis_summary.md",
+  "prototype_reconciler": {
+    "enabled": true,
+    "reuse_existing_prototypes": true,
+    "reuse_existing_prototype_calibration": true,
+    "auto_build_prototypes": true,
+    "prototype_max_images_per_class": 50,
+    "prototype_curation_root": "docs/demo_assets/prototype_curation/20260624T200654Z",
+    "auto_calibrate": true,
+    "require_calibrated_policy": true,
+    "prototype_bank": "runs/_index/router_prototypes/m2_20260625T162232Z/prototype_bank.json",
+    "taxonomy_registry": "runs/_index/router_prototypes/m2_20260625T162232Z/taxonomy_registry.json",
+    "prototype_calibration_output": ".runtime_tmp/router_prototype_calibration.json",
+    "prototype_min_similarity": null,
+    "prototype_min_margin": null,
+    "prototype_min_negative_gap": null,
+    "calibration_selected_policy": false,
+    "calibration_selected_target_policy": true,
+    "target_min_precision": 0.98,
+    "target_max_supported_wrong": 1,
+    "target_max_cross_part_supported_wrong": 0,
+    "target_class_min_accepted": 5,
+    "target_policy_negative_mode": "none"
+  },
+  "copied_artifacts": [
+    "docs/demo_results/m2/20260625T170819Z/m2_demo_checklist_run.json",
+    "docs/demo_results/m2/20260625T170819Z/m2_demo_checklist_run.md",
+    "docs/demo_results/m2/20260625T170819Z/analysis_summary.json",
+    "docs/demo_results/m2/20260625T170819Z/analysis_summary.md",
+    "docs/demo_results/m2/20260625T170819Z/router_prototype_calibration.json",
+    "docs/demo_results/m2/20260625T170819Z/prototype_bank.json",
+    "docs/demo_results/m2/20260625T170819Z/summary.md",
+    "docs/demo_results/m2/20260625T170819Z/taxonomy_registry.json",
+    "docs/demo_results/m2/20260625T170819Z/m2_router_prototype_handoff_cache.json",
+    "docs/demo_results/m2/20260625T170819Z/summary.json",
+    "docs/demo_results/m2/20260625T170819Z/m2_result_comparison.json",
+    "docs/demo_results/m2/20260625T170819Z/m2_result_comparison.md"
+  ],
+  "summary": {
+    "total": 602,
+    "passed": 459,
+    "failed": 143,
+    "answered": 397,
+    "abstained_or_reviewed": 205,
+    "asset_ready": 0,
+    "failure_buckets": {
+      "router": 109
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 64,
+        "pass": 41,
+        "fail": 23
+      },
+      "apricot__leaf": {
+        "total": 47,
+        "pass": 40,
+        "fail": 7
+      },
+      "grape__fruit": {
+        "total": 65,
+        "pass": 52,
+        "fail": 13
+      },
+      "grape__leaf": {
+        "total": 87,
+        "pass": 76,
+        "fail": 11
+      },
+      "grape__unknown_part": {
+        "total": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "non_plant": {
+        "total": 6,
+        "pass": 6,
+        "fail": 0
+      },
+      "strawberry__fruit": {
+        "total": 57,
+        "pass": 32,
+        "fail": 25
+      },
+      "strawberry__leaf": {
+        "total": 55,
+        "pass": 53,
+        "fail": 2
+      },
+      "tomato__fruit": {
+        "total": 85,
+        "pass": 63,
+        "fail": 22
+      },
+      "tomato__leaf": {
+        "total": 118,
+        "pass": 78,
+        "fail": 40
+      },
+      "tomato__unknown_part": {
+        "total": 2,
+        "pass": 2,
+        "fail": 0
+      },
+      "unknown_crop": {
+        "total": 14,
+        "pass": 14,
+        "fail": 0
+      }
+    }
+  },
+  "analysis_summary": {
+    "schema_version": "v1_m2_demo_analysis_summary",
+    "total": 602,
+    "router_crop_correctness": {
+      "correct": 481,
+      "incorrect": 121,
+      "not_applicable": 0
+    },
+    "router_part_correctness": {
+      "correct": 451,
+      "incorrect": 151,
+      "not_applicable": 0
+    },
+    "normalized_disease_class_correctness": {
+      "correct": 355,
+      "incorrect": 34,
+      "not_applicable": 213
+    },
+    "classless_supported_probes": {
+      "total": 80,
+      "answered": 8,
+      "answered_target_correct": 8,
+      "answered_target_incorrect": 0,
+      "reviewed_or_abstained": 72,
+      "failed": 0
+    },
+    "adapter_unavailable": {
+      "wrong_router": 0,
+      "missing_adapter": 0,
+      "unknown": 0
+    },
+    "prototype_reconciliation": {
+      "abstain": 202,
+      "accept_router": 187,
+      "use_prototype": 213
+    },
+    "answered_wrong_by_target": {
+      "apricot__fruit": 7,
+      "apricot__leaf": 1,
+      "grape__fruit": 5,
+      "grape__leaf": 9,
+      "strawberry__fruit": 8,
+      "strawberry__leaf": 1,
+      "tomato__fruit": 3
+    },
+    "answered_wrong_by_expected_class": {
+      "domates_blossom_end_rot_meyve": 1,
+      "domates_late_blight_meyve": 1,
+      "domates_spotted_wilt_meyve": 1,
+      "kayısı_şarka_virüsü_yaprak_206": 1,
+      "kayısıda_çiçek_monilyası_meyve_40": 1,
+      "kayısıda_şarka_virüsü_meyve_230": 1,
+      "kayısıda_şeftali_karalekesi_meyve_232": 2,
+      "kayısıda_yaprak_delen_çil_hastalığı_meyve_128": 3,
+      "strawberry_gray_mold_fruit": 1,
+      "strawberry_healthy_fruit": 3,
+      "strawberry_leaf_spot_leaf": 1,
+      "strawberry_powdery_mildew_fruit": 4,
+      "üzüm_botrytis_cinerea_meyve": 2,
+      "üzüm_külleme_meyve": 1,
+      "üzüm_külleme_yaprak": 2,
+      "üzüm_leafroll_virüs_yaprak": 1,
+      "üzüm_mildiyö_meyve": 2,
+      "üzüm_mildiyö_yaprak": 4,
+      "üzüm_yelpaze_virüsü_yaprak": 2
+    },
+    "prototype_correct_but_abstained": {
+      "count": 135,
+      "image_ids": [
+        "demo_005",
+        "demo_007",
+        "demo_008",
+        "demo_011",
+        "demo_029",
+        "demo_030",
+        "demo_033",
+        "demo_040",
+        "demo_056",
+        "demo_057",
+        "demo_059",
+        "demo_063",
+        "demo_064",
+        "demo_065",
+        "demo_066",
+        "demo_067",
+        "demo_068",
+        "demo_070",
+        "demo_075",
+        "demo_076",
+        "demo_077",
+        "demo_078",
+        "demo_097",
+        "demo_117",
+        "demo_118",
+        "demo_124",
+        "demo_128",
+        "demo_129",
+        "demo_130",
+        "demo_133",
+        "demo_145",
+        "demo_146",
+        "demo_147",
+        "demo_149",
+        "demo_150",
+        "demo_157",
+        "demo_166",
+        "demo_168",
+        "demo_172",
+        "demo_173",
+        "demo_174",
+        "demo_180",
+        "demo_186",
+        "demo_193",
+        "demo_215",
+        "demo_222",
+        "demo_227",
+        "demo_233",
+        "demo_236",
+        "demo_237",
+        "demo_243",
+        "demo_285",
+        "demo_305",
+        "demo_307",
+        "demo_308",
+        "demo_310",
+        "demo_311",
+        "demo_316",
+        "demo_323",
+        "demo_324",
+        "demo_327",
+        "demo_331",
+        "demo_372",
+        "demo_373",
+        "demo_377",
+        "demo_383",
+        "demo_384",
+        "demo_388",
+        "demo_389",
+        "demo_396",
+        "demo_405",
+        "demo_412",
+        "demo_416",
+        "demo_425",
+        "demo_426",
+        "demo_427",
+        "demo_428",
+        "demo_429",
+        "demo_430",
+        "demo_431",
+        "demo_432",
+        "demo_433",
+        "demo_435",
+        "demo_436",
+        "demo_437",
+        "demo_438",
+        "demo_440",
+        "demo_441",
+        "demo_461",
+        "demo_462",
+        "demo_467",
+        "demo_471",
+        "demo_475",
+        "demo_476",
+        "demo_525",
+        "demo_526",
+        "demo_527",
+        "demo_528",
+        "demo_529",
+        "demo_530"
+      ],
+      "truncated": true,
+      "by_target": {
+        "apricot__fruit": 22,
+        "apricot__leaf": 9,
+        "grape__fruit": 9,
+        "grape__leaf": 5,
+        "strawberry__fruit": 24,
+        "strawberry__leaf": 8,
+        "tomato__fruit": 22,
+        "tomato__leaf": 36
+      }
+    },
+    "negative_false_accepts": {
+      "count": 0,
+      "image_ids": [],
+      "truncated": false,
+      "by_target": {}
+    },
+    "policy_thresholds_by_target": {
+      "apricot__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.02
+      },
+      "apricot__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.0
+      },
+      "grape__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.0
+      },
+      "grape__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.04
+      },
+      "grape__unknown_part": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.02
+      },
+      "non_plant": {
+        "min_similarity": 0.6,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.0
+      },
+      "strawberry__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.02
+      },
+      "strawberry__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.02
+      },
+      "tomato__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.02
+      },
+      "tomato__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.06
+      },
+      "tomato__unknown_part": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.0
+      },
+      "unknown_crop": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.06
+      }
+    },
+    "opposite_part_disease_labels": {
+      "count": 7,
+      "image_ids": [
+        "demo_159",
+        "demo_163",
+        "demo_167",
+        "demo_169",
+        "demo_178",
+        "demo_182",
+        "demo_183"
+      ],
+      "truncated": false
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 64,
+        "answered": 38,
+        "abstained_or_reviewed": 26,
+        "pass": 41,
+        "fail": 23,
+        "exact_class_correct": 31,
+        "opposite_part_disease_labels": 7
+      },
+      "apricot__leaf": {
+        "total": 47,
+        "answered": 32,
+        "abstained_or_reviewed": 15,
+        "pass": 40,
+        "fail": 7,
+        "exact_class_correct": 30,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__fruit": {
+        "total": 65,
+        "answered": 50,
+        "abstained_or_reviewed": 15,
+        "pass": 52,
+        "fail": 13,
+        "exact_class_correct": 42,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__leaf": {
+        "total": 87,
+        "answered": 78,
+        "abstained_or_reviewed": 9,
+        "pass": 76,
+        "fail": 11,
+        "exact_class_correct": 66,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__unknown_part": {
+        "total": 2,
+        "answered": 0,
+        "abstained_or_reviewed": 2,
+        "pass": 2,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "non_plant": {
+        "total": 6,
+        "answered": 0,
+        "abstained_or_reviewed": 6,
+        "pass": 6,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__fruit": {
+        "total": 57,
+        "answered": 30,
+        "abstained_or_reviewed": 27,
+        "pass": 32,
+        "fail": 25,
+        "exact_class_correct": 22,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__leaf": {
+        "total": 55,
+        "answered": 44,
+        "abstained_or_reviewed": 11,
+        "pass": 53,
+        "fail": 2,
+        "exact_class_correct": 43,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__fruit": {
+        "total": 85,
+        "answered": 56,
+        "abstained_or_reviewed": 29,
+        "pass": 63,
+        "fail": 22,
+        "exact_class_correct": 53,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__leaf": {
+        "total": 118,
+        "answered": 69,
+        "abstained_or_reviewed": 49,
+        "pass": 78,
+        "fail": 40,
+        "exact_class_correct": 68,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__unknown_part": {
+        "total": 2,
+        "answered": 0,
+        "abstained_or_reviewed": 2,
+        "pass": 2,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "unknown_crop": {
+        "total": 14,
+        "answered": 0,
+        "abstained_or_reviewed": 14,
+        "pass": 14,
+        "fail": 0,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      }
+    }
+  },
+  "manifest_sha256": "a143763fa927e5b6a30c5733eb57951dacbb0f5a73c45c55eb9032ef7ed0e4b5",
+  "manifest_sha256_source": "local_manifest_enriched",
+  "comparison": {
+    "baseline": "docs/demo_results/m2/20260624T200654Z/summary.json",
+    "output": "docs/demo_results/m2/20260625T170819Z/m2_result_comparison.json",
+    "markdown_output": "docs/demo_results/m2/20260625T170819Z/m2_result_comparison.md",
+    "status": "fail",
+    "checks": {
+      "manifests_match": true,
+      "manifest_sha256_match": true,
+      "totals_match": true,
+      "focus_target_totals_match": true,
+      "failed_not_increased": false,
+      "router_failures_not_increased": false,
+      "negative_false_accepts_not_increased": true,
+      "opposite_part_not_increased": true,
+      "at_least_one_focus_target_improved": true
+    }
+  }
+}
