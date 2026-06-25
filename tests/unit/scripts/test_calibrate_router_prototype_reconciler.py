@@ -556,6 +556,7 @@ def test_calibrate_emits_exact_class_rescue_policy_below_class_min():
     assert class_policy["status"] == "no_eligible_policy"
     rescue = class_policy["exact_class_rescue_policy"]
     assert rescue["allow_expected_class_rescue"] is True
+    assert rescue["ignore_hard_negative_gap"] is True
     assert rescue["exact_class_supported_correct"] == 3
     assert rescue["exact_class_supported_wrong"] == 0
 

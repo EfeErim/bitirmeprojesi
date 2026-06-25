@@ -300,8 +300,8 @@ def _requires_selected_policy(target_policies: dict[str, Any] | None) -> bool:
     return bool(target_policies.get("__requires_selected_policy__"))
 
 
-def _effective_negative_gap(match: PrototypeMatch) -> float:
-    if match.hard_negative_gap is not None:
+def _effective_negative_gap(match: PrototypeMatch, *, include_hard_negative: bool = True) -> float:
+    if include_hard_negative and match.hard_negative_gap is not None:
         return min(match.margin, match.hard_negative_gap)
     return match.margin
 
@@ -367,13 +367,21 @@ def reconcile_router_handoff(
             "min_negative_gap",
             min_negative_gap,
         )
-        selected_policy_is_too_strict = match.similarity < effective_min_similarity or match.margin < effective_min_margin
+        rescue_ignores_hard_negative = bool(exact_rescue_policy.get("ignore_hard_negative_gap"))
+        selected_policy_is_too_strict = (
+            match.similarity < effective_min_similarity
+            or match.margin < effective_min_margin
+            or _effective_negative_gap(match) < effective_min_negative_gap
+        )
+        rescue_negative_gap = _effective_negative_gap(
+            match,
+            include_hard_negative=not rescue_ignores_hard_negative,
+        )
         if (
             (target_policy is None or selected_policy_is_too_strict)
             and match.similarity >= rescue_min_similarity
             and match.margin >= rescue_min_margin
-            and _effective_negative_gap(match) >= rescue_min_negative_gap
-            and _effective_negative_gap(match) >= effective_min_negative_gap
+            and rescue_negative_gap >= rescue_min_negative_gap
         ):
             target_policy = exact_rescue_policy
             effective_min_similarity = rescue_min_similarity
@@ -410,7 +418,15 @@ def reconcile_router_handoff(
             min_negative_gap=effective_min_negative_gap,
         )
 
-    if _effective_negative_gap(match) < effective_min_negative_gap:
+    negative_gap_ignores_hard_negative = bool(
+        target_policy
+        and target_policy.get("_target_policy_scope") == "class_exact_rescue"
+        and target_policy.get("ignore_hard_negative_gap")
+    )
+    if (
+        _effective_negative_gap(match, include_hard_negative=not negative_gap_ignores_hard_negative)
+        < effective_min_negative_gap
+    ):
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,

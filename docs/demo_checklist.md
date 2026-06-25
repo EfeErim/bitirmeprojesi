@@ -12,7 +12,7 @@ Use this file for M1 and M2 execution. The goal is to prove that Colab Notebook 
   2. Select a GPU runtime and make sure Hugging Face/SAM3 access is available.
   3. Leave `M2_RUN_FULL_DEMO = True`, `M2_DEMO_LIMIT = None`, `M2_BATCH_SIZE = 12`, `M2_ADAPTER_BATCH_SIZE = 32`, `M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'`, and `M2_DEMO_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'`.
   4. Leave `M2_AUTO_PUSH_RESULTS = True` and `M2_AUTO_DISCONNECT_RUNTIME = True` when `GH_TOKEN` or `GITHUB_TOKEN` is available in Colab secrets.
-  5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 522-image manifest.
+  5. Run all cells. The single-image cell is skipped by default, and the final M2 cell runs the saved 602-image manifest.
   6. Read `.runtime_tmp/m2_demo_checklist_run.json` and `.runtime_tmp/m2_demo_checklist_run.md` for the local runtime copy.
   7. The notebook also copies the result into `docs/demo_results/m2/<timestamp>/`, commits/pushes that folder, and disconnects the Colab runtime after the report is written and the push succeeds.
 - Optional single-image path:
@@ -64,7 +64,7 @@ The self-contained saved image package is under `docs/demo_assets/m2_full_image_
 
 `.\scripts\python.cmd scripts\run_demo_checklist.py --no-checklist --extra-manifest docs\demo_assets\m2_full_image_set\manifests\m2_full_image_set_run_manifest.csv --device cuda --adapter-root runs --batch-size 12 --adapter-batch-size 32 --handoff-cache .runtime_tmp\m2_router_prototype_handoff_cache.json`
 
-The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 32`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE`, publishes that cache with each result folder, and restores the latest published cache when local `.runtime_tmp` is empty so repeated same-manifest runs can skip unchanged handoff work. Set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
+The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 32`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE`, publishes that cache with each result folder, and restores the latest published cache when local `.runtime_tmp` is empty so repeated same-manifest runs can skip unchanged handoff work. The next run uses `expected_class_rescue=clean_exact_class_v2_ignore_hard_negative`, which allows only exact expected-class manifest rows to bypass curated hard-negative proximity while keeping normal negative/unknown rows guarded. Set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
 
 ## User Photo Guidance To Show
 

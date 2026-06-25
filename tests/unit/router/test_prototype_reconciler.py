@@ -447,6 +447,60 @@ def test_reconciler_uses_expected_class_rescue_policy_when_target_policy_missing
     assert decision.to_payload()["prototype_class_label"] == "late_blight"
 
 
+def test_expected_class_rescue_can_ignore_curated_hard_negative_gap(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    tomato_leaf = dataset_root / "tomato__leaf" / "train" / "late_blight" / "a.png"
+    grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
+    query_image = tmp_path / "query.png"
+    _write_image(tomato_leaf, (20, 90, 40))
+    _write_image(grape_leaf, (40, 20, 120))
+    _write_image(query_image, (20, 90, 40))
+    prototype_payload = build_prototype_bank(dataset_root=dataset_root, created_at="20260617T000000Z")
+    prototype_payload["hard_negative_prototypes"] = {
+        "tomato__leaf": {
+            "negative_for_target_id": "tomato__leaf",
+            "sample_count": 1,
+            "centroid": prototype_payload["class_prototypes"]["tomato__leaf::late_blight"]["centroid"],
+        }
+    }
+    registry_payload = build_taxonomy_registry(dataset_root=dataset_root, adapter_root=None, created_at="20260617T000000Z")
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload=prototype_payload,
+        registry_payload=registry_payload,
+        min_similarity=0.1,
+        min_margin=0.0,
+        min_negative_gap=0.01,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__leaf": {
+                "class_policies": {
+                    "late_blight": {
+                        "exact_class_rescue_policy": {
+                            "min_similarity": 0.1,
+                            "min_margin": 0.0,
+                            "min_negative_gap": 0.01,
+                            "allow_expected_class_rescue": True,
+                            "ignore_hard_negative_gap": True,
+                        }
+                    }
+                },
+            },
+        },
+        expected_class_label="late_blight",
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.reason == "prototype_corrected_router_handoff"
+    payload = decision.to_payload()
+    assert payload["prototype_hard_negative_gap"] == 0.0
+    assert payload["prototype_class_label"] == "late_blight"
+
+
 def test_reconciler_ignores_expected_class_rescue_without_matching_expected_class(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "late_blight" / "a.png"

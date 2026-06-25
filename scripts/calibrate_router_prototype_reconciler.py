@@ -471,6 +471,7 @@ def calibrate_class_policies(
             exact_rescue = {
                 **exact_rescue,
                 "allow_expected_class_rescue": True,
+                "ignore_hard_negative_gap": True,
                 "exact_class_rescue_min_accepted": exact_rescue_min_accepted,
             }
         best_candidate = candidates[0] if candidates else None
@@ -810,7 +811,7 @@ def main(argv: list[str] | None = None) -> int:
             "target_policy_negative_mode": args.target_policy_negative_mode,
             "target_class_min_accepted": args.target_class_min_accepted,
             "class_part_conflict_override": "clean_fruit_class",
-            "expected_class_rescue": "clean_exact_class_v1",
+            "expected_class_rescue": "clean_exact_class_v2_ignore_hard_negative",
             "promotion_mode": "prototype_override",
         },
         "summary": {
