@@ -42,7 +42,7 @@ M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin
 M2_AUTO_PUSH_BRANCH = str(globals().get("M2_AUTO_PUSH_BRANCH", "master") or "").strip() or None
 M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_results/m2"))
 M2_COMPARISON_BASELINE = str(
-    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260624T200654Z/summary.json") or ""
+    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260625T224351Z/summary.json") or ""
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))

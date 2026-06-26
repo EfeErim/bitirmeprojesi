@@ -1,10 +1,11 @@
 import csv
 import json
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 from PIL import Image
 
-from scripts.export_m2_hard_example_audit import build_hard_example_rows, main
+from scripts.export_m2_hard_example_audit import build_hard_example_rows, load_m2_rows, main
 
 
 def test_build_hard_example_rows_prioritizes_answered_wrong_and_filters_targets():
@@ -64,9 +65,83 @@ def test_build_hard_example_rows_excludes_unsupported_by_default():
     assert build_hard_example_rows(rows, targets=("grape__unknown_part",), include_unsupported=True)
 
 
+def test_build_hard_example_rows_router_only_filters_adapter_wrong_and_reasons():
+    rows = [
+        {
+            "image_id": "demo_001",
+            "expected_target": "tomato__leaf",
+            "expected_crop": "tomato",
+            "expected_part": "leaf",
+            "actual_status": "success",
+            "predicted_disease": "blight",
+            "pass_fail": "fail",
+            "reconcile_reason": "prototype_evidence_weak",
+        },
+        {
+            "image_id": "demo_002",
+            "expected_target": "tomato__leaf",
+            "expected_crop": "tomato",
+            "expected_part": "leaf",
+            "actual_status": "router_uncertain",
+            "pass_fail": "fail",
+            "failure_bucket": "router",
+            "reconcile_reason": "prototype_evidence_weak",
+        },
+        {
+            "image_id": "demo_003",
+            "expected_target": "tomato__leaf",
+            "expected_crop": "tomato",
+            "expected_part": "leaf",
+            "actual_status": "router_uncertain",
+            "pass_fail": "fail",
+            "failure_bucket": "router",
+            "reconcile_reason": "unsupported_expected_target",
+        },
+        {
+            "image_id": "demo_004",
+            "expected_target": "tomato__leaf",
+            "expected_crop": "tomato",
+            "expected_part": "leaf",
+            "actual_status": "success",
+            "pass_fail": "pass",
+            "failure_bucket": "",
+            "reconcile_reason": "prototype_evidence_weak",
+        },
+    ]
+
+    audit_rows = build_hard_example_rows(
+        rows,
+        targets=("tomato__leaf",),
+        reconcile_reasons=("prototype_evidence_weak",),
+        exclude_answered_wrong=True,
+        failed_only=True,
+    )
+
+    assert [row["image_id"] for row in audit_rows] == ["demo_002"]
+    assert "router_failure" in audit_rows[0]["priority_reasons"]
+
+
+def test_load_m2_rows_falls_back_to_git_object_when_sparse(tmp_path: Path):
+    missing = tmp_path / "docs" / "demo_results" / "m2" / "run" / "m2_demo_checklist_run.json"
+    completed = Mock(stdout=json.dumps({"rows": [{"image_id": "demo_001"}]}))
+
+    with patch("scripts.export_m2_hard_example_audit.subprocess.run", return_value=completed) as run:
+        rows = load_m2_rows(missing)
+
+    assert rows == [{"image_id": "demo_001"}]
+    run.assert_called_once()
+
+
 def test_cli_exports_csv_packets_and_index(tmp_path: Path):
     repo_root = tmp_path
-    image = repo_root / "docs" / "demo_assets" / "m2_full_image_set" / "images" / "demo_001.jpg"
+    image = (
+        repo_root
+        / "docs"
+        / "demo_assets"
+        / "m2_full_image_set"
+        / "images"
+        / "demo_001.jpg"
+    )
     image.parent.mkdir(parents=True)
     Image.new("RGB", (32, 32), "green").save(image)
     run = tmp_path / "m2_demo_checklist_run.json"
@@ -77,7 +152,10 @@ def test_cli_exports_csv_packets_and_index(tmp_path: Path):
                     {
                         "image_id": "demo_001",
                         "source": "staged_external:docs/demo_assets/m2_full_image_set/images/demo_001.jpg",
-                        "resolved_image": "/content/bitirmeprojesi/docs/demo_assets/m2_full_image_set/images/demo_001.jpg",
+                        "resolved_image": (
+                            "/content/bitirmeprojesi/"
+                            "docs/demo_assets/m2_full_image_set/images/demo_001.jpg"
+                        ),
                         "expected_target": "tomato__leaf",
                         "expected_crop": "tomato",
                         "expected_part": "leaf",
