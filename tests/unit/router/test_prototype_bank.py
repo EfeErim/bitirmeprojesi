@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pytest
 from PIL import Image
 
 from src.router.prototype_bank import build_prototype_bank, centroid, euclidean_distance
@@ -128,6 +129,68 @@ def test_build_prototype_bank_consumes_reviewed_curation_manifests(tmp_path: Pat
     assert payload["skipped"] == [
         {"image_id": "demo_003", "role": "prototype_hard_negative", "reason": "same_target_hard_negative_not_used"}
     ]
+
+
+def test_build_prototype_bank_fails_when_curation_manifest_is_missing(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    curation_root = tmp_path / "curation"
+    _write_image(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png", (20, 80, 40))
+    _write_curation_csv(
+        curation_root / "prototype_positive_manifest.csv",
+        [
+            {
+                "image_id": "demo_001",
+                "resolved_image": str(tmp_path / "missing.png"),
+                "expected_target": "tomato__leaf",
+                "expected_class": "late_blight",
+            }
+        ],
+    )
+
+    with pytest.raises(FileNotFoundError, match="required prototype curation manifest"):
+        build_prototype_bank(
+            dataset_root=dataset_root,
+            curation_root=curation_root,
+            repo_root=tmp_path,
+            created_at="20260617T000000Z",
+        )
+
+
+def test_build_prototype_bank_fails_when_curation_rows_load_zero_records(tmp_path: Path):
+    dataset_root = tmp_path / "datasets"
+    curation_root = tmp_path / "curation"
+    _write_image(dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png", (20, 80, 40))
+    _write_curation_csv(
+        curation_root / "prototype_positive_manifest.csv",
+        [
+            {
+                "image_id": "demo_001",
+                "resolved_image": str(tmp_path / "missing_positive.png"),
+                "expected_target": "tomato__leaf",
+                "expected_class": "late_blight",
+            }
+        ],
+    )
+    _write_curation_csv(
+        curation_root / "prototype_hard_negative_manifest.csv",
+        [
+            {
+                "image_id": "demo_002",
+                "resolved_image": str(tmp_path / "missing_negative.png"),
+                "expected_target": "tomato__leaf",
+                "expected_class": "healthy",
+                "prototype_target": "tomato__fruit",
+            }
+        ],
+    )
+
+    with pytest.raises(ValueError, match="loaded zero usable prototype curation rows"):
+        build_prototype_bank(
+            dataset_root=dataset_root,
+            curation_root=curation_root,
+            repo_root=tmp_path,
+            created_at="20260617T000000Z",
+        )
 
 
 def test_vector_math_helpers_are_deterministic():

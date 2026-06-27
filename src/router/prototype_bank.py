@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import csv
 import math
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -260,6 +260,13 @@ def iter_curation_manifest_rows(curation_root: Path) -> Iterable[dict[str, str]]
                 yield materialized
 
 
+def _required_curation_manifest_paths(curation_root: Path) -> tuple[Path, Path]:
+    return (
+        curation_root / "prototype_positive_manifest.csv",
+        curation_root / "prototype_hard_negative_manifest.csv",
+    )
+
+
 def resolve_curation_image_path(row: dict[str, Any], *, repo_root: Path) -> Path | None:
     for key in ("resolved_image", "source"):
         value = str(row.get(key) or "").strip()
@@ -306,10 +313,23 @@ def load_curation_feature_records(
 ) -> tuple[list[ImageFeatureRecord], list[HardNegativeFeatureRecord], list[dict[str, str]]]:
     if not curation_root:
         return [], [], []
+    missing_manifests = [
+        str(path) for path in _required_curation_manifest_paths(curation_root) if not path.is_file()
+    ]
+    if missing_manifests:
+        raise FileNotFoundError(
+            "Curation root was provided but required prototype curation manifest(s) are missing: "
+            + ", ".join(missing_manifests)
+        )
+
+    manifest_rows = list(iter_curation_manifest_rows(curation_root))
+    if not manifest_rows:
+        raise ValueError(f"Curation root {curation_root} contains no prototype curation rows")
+
     positive_records: list[ImageFeatureRecord] = []
     hard_negative_records: list[HardNegativeFeatureRecord] = []
     skipped: list[dict[str, str]] = []
-    for row in iter_curation_manifest_rows(curation_root):
+    for row in manifest_rows:
         role = str(row.get("_curation_role") or "")
         image_path = resolve_curation_image_path(row, repo_root=repo_root)
         if image_path is None:
@@ -324,14 +344,27 @@ def load_curation_feature_records(
             )
             digest = artifact_sha256(image_path)
         except Exception as exc:
-            skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "path": str(image_path), "reason": str(exc)})
+            skipped.append(
+                {
+                    "image_id": str(row.get("image_id") or ""),
+                    "role": role,
+                    "path": str(image_path),
+                    "reason": str(exc),
+                }
+            )
             continue
 
         if role == "prototype_positive":
             target_id = str(row.get("expected_target") or "").strip()
             class_label = _curation_class_label(row)
             if not target_id or "__" not in target_id or not class_label:
-                skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": "missing_target_or_class"})
+                skipped.append(
+                    {
+                        "image_id": str(row.get("image_id") or ""),
+                        "role": role,
+                        "reason": "missing_target_or_class",
+                    }
+                )
                 continue
             positive_records.append(
                 ImageFeatureRecord(
@@ -347,7 +380,11 @@ def load_curation_feature_records(
         elif role == "prototype_hard_negative":
             negative_for_target_id = _negative_for_target_id(row)
             if not negative_for_target_id or "__" not in negative_for_target_id:
-                reason = "same_target_hard_negative_not_used" if row.get("prototype_target") else "missing_negative_target"
+                reason = (
+                    "same_target_hard_negative_not_used"
+                    if row.get("prototype_target")
+                    else "missing_negative_target"
+                )
                 skipped.append({"image_id": str(row.get("image_id") or ""), "role": role, "reason": reason})
                 continue
             hard_negative_records.append(
@@ -360,6 +397,13 @@ def load_curation_feature_records(
                     sha256=digest,
                 )
             )
+    if not positive_records and not hard_negative_records:
+        skipped_reasons = Counter(str(row.get("reason") or "unknown") for row in skipped)
+        reason_summary = ", ".join(f"{reason}={count}" for reason, count in sorted(skipped_reasons.items()))
+        raise ValueError(
+            f"Curation root {curation_root} loaded zero usable prototype curation rows "
+            f"from {len(manifest_rows)} manifest row(s); skipped reasons: {reason_summary or 'none'}"
+        )
     return positive_records, hard_negative_records, skipped
 
 
