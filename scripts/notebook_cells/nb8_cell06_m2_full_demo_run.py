@@ -25,6 +25,20 @@ M2_DEMO_MANIFEST = str(
         "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
     )
 )
+M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", False))
+M2_PROBLEM_ONLY_MANIFEST = str(
+    globals().get(
+        "M2_PROBLEM_ONLY_MANIFEST",
+        "docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv",
+    )
+)
+M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(
+    globals().get(
+        "M2_PROBLEM_ONLY_CALIBRATION_MANIFEST",
+        "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+    )
+)
+M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(globals().get("M2_PROBLEM_ONLY_COMPARISON_BASELINE", "") or "")
 M2_DEMO_OUTPUT = str(globals().get("M2_DEMO_OUTPUT", ".runtime_tmp/m2_demo_checklist_run.json"))
 M2_DEMO_MARKDOWN_OUTPUT = str(
     globals().get("M2_DEMO_MARKDOWN_OUTPUT", ".runtime_tmp/m2_demo_checklist_run.md")
@@ -42,7 +56,7 @@ M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin
 M2_AUTO_PUSH_BRANCH = str(globals().get("M2_AUTO_PUSH_BRANCH", "master") or "").strip() or None
 M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_results/m2"))
 M2_COMPARISON_BASELINE = str(
-    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260625T224351Z/summary.json") or ""
+    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260628T113313Z/summary.json") or ""
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
@@ -304,11 +318,28 @@ else:
     cell_script_root = Path(str(globals().get("__notebook_cell_script_root__", ""))).resolve()
     repo_root = cell_script_root.parents[1] if cell_script_root.name == "notebook_cells" else Path.cwd().resolve()
 
-    manifest_path = (repo_root / M2_DEMO_MANIFEST).resolve()
-    output_path = (repo_root / M2_DEMO_OUTPUT).resolve()
-    markdown_output_path = (repo_root / M2_DEMO_MARKDOWN_OUTPUT).resolve()
-    analysis_output_path = (repo_root / M2_ANALYSIS_OUTPUT).resolve()
-    analysis_markdown_output_path = (repo_root / M2_ANALYSIS_MARKDOWN_OUTPUT).resolve()
+    active_manifest = M2_PROBLEM_ONLY_MANIFEST if M2_RUN_PROBLEM_ONLY_DEMO else M2_DEMO_MANIFEST
+    active_comparison_baseline = (
+        M2_PROBLEM_ONLY_COMPARISON_BASELINE if M2_RUN_PROBLEM_ONLY_DEMO else M2_COMPARISON_BASELINE
+    )
+    active_calibration_manifest = (
+        M2_PROBLEM_ONLY_CALIBRATION_MANIFEST if M2_RUN_PROBLEM_ONLY_DEMO else active_manifest
+    )
+    active_output = ".runtime_tmp/m2_problem_only_demo_checklist_run.json" if M2_RUN_PROBLEM_ONLY_DEMO else M2_DEMO_OUTPUT
+    active_markdown_output = (
+        ".runtime_tmp/m2_problem_only_demo_checklist_run.md" if M2_RUN_PROBLEM_ONLY_DEMO else M2_DEMO_MARKDOWN_OUTPUT
+    )
+    active_analysis_output = ".runtime_tmp/m2_problem_only_analysis_summary.json" if M2_RUN_PROBLEM_ONLY_DEMO else M2_ANALYSIS_OUTPUT
+    active_analysis_markdown_output = (
+        ".runtime_tmp/m2_problem_only_analysis_summary.md" if M2_RUN_PROBLEM_ONLY_DEMO else M2_ANALYSIS_MARKDOWN_OUTPUT
+    )
+
+    manifest_path = (repo_root / active_manifest).resolve()
+    calibration_manifest_path = (repo_root / active_calibration_manifest).resolve()
+    output_path = (repo_root / active_output).resolve()
+    markdown_output_path = (repo_root / active_markdown_output).resolve()
+    analysis_output_path = (repo_root / active_analysis_output).resolve()
+    analysis_markdown_output_path = (repo_root / active_analysis_markdown_output).resolve()
     prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
     handoff_cache_path = (repo_root / M2_HANDOFF_CACHE).resolve()
     adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
@@ -378,7 +409,7 @@ else:
         prototype_bank_path = (repo_root / M2_PROTOTYPE_BANK).resolve()
         reused_calibration_path = _copy_reusable_calibration_if_available(
             repo_root,
-            manifest_path,
+            calibration_manifest_path,
             prototype_bank_path,
             prototype_calibration_output_path,
         )
@@ -392,7 +423,7 @@ else:
                 sys.executable,
                 str(repo_root / "scripts" / "calibrate_router_prototype_reconciler.py"),
                 "--manifest",
-                str(manifest_path),
+                str(calibration_manifest_path),
                 "--prototype-bank",
                 str(prototype_bank_path),
                 "--output",
@@ -535,6 +566,8 @@ else:
 
     print(f"[M2] repo_root={repo_root}")
     print(f"[M2] manifest={manifest_path}")
+    if calibration_manifest_path != manifest_path:
+        print(f"[M2] calibration_manifest={calibration_manifest_path}")
     print(f"[M2] output={output_path}")
     print(f"[M2] markdown_output={markdown_output_path}")
     print(f"[M2] analysis_output={analysis_output_path}")
@@ -572,8 +605,8 @@ else:
     repo_results_dir = repo_root / repo_results_rel
     m2_demo_publish_report = {"enabled": bool(M2_AUTO_PUSH_RESULTS), "pushed": False}
     m2_comparison_report = {
-        "baseline": M2_COMPARISON_BASELINE,
-        "enabled": bool(M2_COMPARISON_BASELINE),
+        "baseline": active_comparison_baseline,
+        "enabled": bool(active_comparison_baseline),
         "written": False,
         "status": "not_run",
         "checks": {},
@@ -623,6 +656,8 @@ else:
             "runner_elapsed_human": format_elapsed_seconds(runner_elapsed_seconds),
             "runner_exit_code": int(completed.returncode),
             "manifest": str(manifest_path.relative_to(repo_root)),
+            "problem_only": bool(M2_RUN_PROBLEM_ONLY_DEMO),
+            "prototype_calibration_manifest": str(calibration_manifest_path.relative_to(repo_root)),
             "batch_size": int(max(1, M2_BATCH_SIZE)),
             "adapter_batch_size": int(max(1, M2_ADAPTER_BATCH_SIZE)),
             "handoff_cache": {
@@ -667,7 +702,9 @@ else:
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         copied_paths.append(summary_path.relative_to(repo_root).as_posix())
         summary_payload["copied_artifacts"] = copied_paths
-        comparison_baseline_path = (repo_root / M2_COMPARISON_BASELINE).resolve() if M2_COMPARISON_BASELINE else None
+        comparison_baseline_path = (
+            (repo_root / active_comparison_baseline).resolve() if active_comparison_baseline else None
+        )
         if comparison_baseline_path and comparison_baseline_path.is_file():
             comparison_path = repo_results_dir / "m2_result_comparison.json"
             comparison_markdown_path = repo_results_dir / "m2_result_comparison.md"

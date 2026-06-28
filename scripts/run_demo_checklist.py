@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 import time
 import unicodedata
@@ -124,7 +125,7 @@ def parse_checklist_rows(checklist_path: Path) -> list[ChecklistRow]:
 
 def parse_manifest_rows(manifest_path: Path) -> list[ChecklistRow]:
     rows: list[ChecklistRow] = []
-    with manifest_path.open("r", encoding="utf-8", newline="") as handle:
+    with manifest_path.open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         required = {"image_id", "source", "expected_target", "expected_behavior", "notes"}
         missing = sorted(required - set(reader.fieldnames or []))
@@ -309,11 +310,18 @@ def _class_matches(expected_class: str, diagnosis: Any) -> bool:
 
 def _opposite_part_label(expected_part: str, diagnosis: Any) -> bool:
     expected = str(expected_part or "").strip().lower()
-    diagnosis_key = _norm(diagnosis)
+    diagnosis_key = unicodedata.normalize("NFKD", str(diagnosis or "").lower()).encode("ascii", "ignore").decode()
+    diagnosis_tokens = [token for token in re.split(r"[^a-z0-9]+", diagnosis_key) if token]
+    while diagnosis_tokens and diagnosis_tokens[-1].isdigit():
+        diagnosis_tokens.pop()
+    predicted_part = next(
+        (token for token in reversed(diagnosis_tokens) if token in {"leaf", "yaprak", "fruit", "meyve"}),
+        "",
+    )
     if expected == "fruit":
-        return "leaf" in diagnosis_key or "yaprak" in diagnosis_key
+        return predicted_part in {"leaf", "yaprak"}
     if expected == "leaf":
-        return "fruit" in diagnosis_key or "meyve" in diagnosis_key
+        return predicted_part in {"fruit", "meyve"}
     return False
 
 

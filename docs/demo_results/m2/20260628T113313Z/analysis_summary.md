@@ -10,13 +10,13 @@
 - answered_wrong_by_target: `{"apricot__fruit": 8, "apricot__leaf": 1, "grape__fruit": 7, "grape__leaf": 9, "strawberry__fruit": 7, "strawberry__leaf": 1, "tomato__fruit": 3, "tomato__leaf": 4}`
 - prototype_correct_but_abstained: 114 `{"apricot__fruit": 20, "apricot__leaf": 9, "grape__fruit": 6, "grape__leaf": 5, "strawberry__fruit": 23, "strawberry__leaf": 6, "tomato__fruit": 22, "tomato__leaf": 23}`
 - negative_false_accepts: 0 `{}`
-- opposite_part_disease_labels: 8
+- opposite_part_disease_labels: 0
 
 ## Per Target
 
 | target | total | answered | abstained_or_reviewed | pass | fail | exact_class_correct | opposite_part_labels |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| apricot__fruit | 64 | 40 | 24 | 42 | 22 | 32 | 8 |
+| apricot__fruit | 64 | 40 | 24 | 42 | 22 | 32 | 0 |
 | apricot__leaf | 47 | 32 | 15 | 40 | 7 | 30 | 0 |
 | grape__fruit | 65 | 53 | 12 | 54 | 11 | 44 | 0 |
 | grape__leaf | 87 | 78 | 9 | 76 | 11 | 66 | 0 |

@@ -1,6 +1,6 @@
 # M2 Demo Result Comparison
 
-- Status: `fail`
+- Status: `pass`
 - Baseline: `20260625T224351Z`
 - Candidate: `20260628T113313Z`
 - Baseline manifest: `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`
@@ -19,7 +19,7 @@
 | `failed_delta` | -4 |
 | `router_failure_delta` | -6 |
 | `negative_false_accept_delta` | 0 |
-| `opposite_part_delta` | 1 |
+| `opposite_part_delta` | -7 |
 | `prototype_correct_but_abstained_delta` | -7 |
 
 ## Focus Target Deltas
@@ -42,7 +42,7 @@
 | `failed_not_increased` | pass |
 | `router_failures_not_increased` | pass |
 | `negative_false_accepts_not_increased` | pass |
-| `opposite_part_not_increased` | fail |
+| `opposite_part_not_increased` | pass |
 | `at_least_one_focus_target_improved` | pass |
 
 ## Warnings

@@ -858,6 +858,19 @@ def test_build_analysis_summary_separates_router_and_adapter_failures():
             },
             {
                 "image_id": "demo_004",
+                "actual_status": "success",
+                "pass_fail": "pass",
+                "expected_target": "apricot__fruit",
+                "expected_crop": "apricot",
+                "expected_part": "fruit",
+                "expected_class": "kayısıda_yaprak_delen_cil_hastalığı_meyve_128",
+                "predicted_crop": "apricot",
+                "predicted_part": "fruit",
+                "predicted_disease": "kayısıda_yaprak_delen_cil_hastalığı_meyve_128",
+                "failure_bucket": "",
+            },
+            {
+                "image_id": "demo_005",
                 "actual_status": "router_uncertain",
                 "pass_fail": "pass",
                 "expected_target": "grape__fruit",
@@ -873,10 +886,10 @@ def test_build_analysis_summary_separates_router_and_adapter_failures():
         ]
     )
 
-    assert analysis["router_crop_correctness"] == {"correct": 2, "incorrect": 2, "not_applicable": 0}
-    assert analysis["router_part_correctness"] == {"correct": 2, "incorrect": 2, "not_applicable": 0}
+    assert analysis["router_crop_correctness"] == {"correct": 3, "incorrect": 2, "not_applicable": 0}
+    assert analysis["router_part_correctness"] == {"correct": 3, "incorrect": 2, "not_applicable": 0}
     assert analysis["normalized_disease_class_correctness"] == {
-        "correct": 1,
+        "correct": 2,
         "incorrect": 1,
         "not_applicable": 2,
     }

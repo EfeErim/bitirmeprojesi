@@ -384,17 +384,8 @@
       }
     },
     "opposite_part_disease_labels": {
-      "count": 8,
-      "image_ids": [
-        "demo_149",
-        "demo_159",
-        "demo_163",
-        "demo_167",
-        "demo_169",
-        "demo_178",
-        "demo_182",
-        "demo_183"
-      ],
+      "count": 0,
+      "image_ids": [],
       "truncated": false
     },
     "per_target": {
@@ -405,7 +396,7 @@
         "pass": 42,
         "fail": 22,
         "exact_class_correct": 32,
-        "opposite_part_disease_labels": 8
+        "opposite_part_disease_labels": 0
       },
       "apricot__leaf": {
         "total": 47,

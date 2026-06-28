@@ -1,0 +1,25 @@
+{
+  "adapter_hard_example_count": 0,
+  "created_at": "2026-06-28T11:41:51.997915+00:00",
+  "decisions_csv": "docs\\demo_results\\m2\\20260628T113313Z\\hard_example_audit.csv",
+  "excluded_ambiguous_count": 15,
+  "mode": "dry_run_manifest_write",
+  "output_dir": "docs\\demo_assets\\prototype_curation\\20260628T113313Z",
+  "outputs": {
+    "adapter_hard_example_manifest": "docs\\demo_assets\\prototype_curation\\20260628T113313Z\\adapter_hard_example_manifest.csv",
+    "excluded_ambiguous_rows": "docs\\demo_assets\\prototype_curation\\20260628T113313Z\\excluded_ambiguous_rows.csv",
+    "prototype_hard_negative_manifest": "docs\\demo_assets\\prototype_curation\\20260628T113313Z\\prototype_hard_negative_manifest.csv",
+    "prototype_positive_manifest": "docs\\demo_assets\\prototype_curation\\20260628T113313Z\\prototype_positive_manifest.csv",
+    "relabeled_rows": "docs\\demo_assets\\prototype_curation\\20260628T113313Z\\relabeled_rows.csv"
+  },
+  "packet_decision_count": 0,
+  "packet_dir": "",
+  "pending_review": [],
+  "pending_review_count": 0,
+  "prototype_hard_negative_count": 8,
+  "prototype_positive_count": 66,
+  "relabeled_count": 0,
+  "schema_version": "v1_m2_hard_example_curation",
+  "skipped": [],
+  "skipped_count": 0
+}

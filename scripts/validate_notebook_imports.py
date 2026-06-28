@@ -439,14 +439,18 @@ def test_auto_router_adapter_notebook_contract() -> None:
     )
     for snippet in (
         "M2_RUN_FULL_DEMO = True",
+        "M2_RUN_PROBLEM_ONLY_DEMO = False",
         "M2_DEMO_LIMIT = None",
         "M2_BATCH_SIZE = 12",
         "M2_ADAPTER_BATCH_SIZE = 32",
         "M2_HANDOFF_CACHE = '.runtime_tmp/m2_router_prototype_handoff_cache.json'",
         "M2_REFRESH_HANDOFF_CACHE = True",
         "M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = True",
-        "M2_PROTOTYPE_CURATION_ROOT = 'docs/demo_assets/prototype_curation/20260625T224351Z'",
-        "M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260625T224351Z/summary.json'",
+        "M2_PROBLEM_ONLY_MANIFEST = 'docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv'",
+        "M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = 'docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv'",
+        "M2_PROBLEM_ONLY_COMPARISON_BASELINE = ''",
+        "M2_PROTOTYPE_CURATION_ROOT = 'docs/demo_assets/prototype_curation/20260628T113313Z'",
+        "M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260628T113313Z/summary.json'",
         "M2_PROTOTYPE_TARGET_MIN_PRECISION = 0.98",
         "M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = 1",
         "M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED = 5",
@@ -458,6 +462,10 @@ def test_auto_router_adapter_notebook_contract() -> None:
         )
     for snippet in (
         'M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))',
+        'M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", False))',
+        'M2_PROBLEM_ONLY_MANIFEST = str(',
+        'M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(',
+        'M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(globals().get("M2_PROBLEM_ONLY_COMPARISON_BASELINE", "") or "")',
         'M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 12))',
         'M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 32))',
         'M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))',
