@@ -14,6 +14,7 @@ from src.shared.json_utils import read_json, write_json
 DEFAULT_MIN_SIMILARITY = 0.20
 DEFAULT_MIN_MARGIN = 0.03
 DEFAULT_MIN_NEGATIVE_GAP = 0.0
+CALIBRATED_UNTRUSTED_MARGIN_FLOOR = 0.02
 DEFAULT_ALLOW_TAXONOMY_CORRECTION = True
 TRUSTED_ROUTER_STATUSES = {"ok", "trusted_hint_skipped", "skipped"}
 
@@ -357,7 +358,7 @@ def reconcile_router_handoff(
         and target_policy.get("_target_policy_negative_mode") == "none"
         and (not router_is_trusted or not router_target_is_supported)
     ):
-        effective_min_margin = max(effective_min_margin, min_margin)
+        effective_min_margin = max(effective_min_margin, CALIBRATED_UNTRUSTED_MARGIN_FLOOR)
 
     if exact_rescue_policy:
         rescue_min_similarity = _coerce_policy_float(exact_rescue_policy, "min_similarity", min_similarity)

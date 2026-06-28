@@ -2,8 +2,9 @@ from pathlib import Path
 
 from PIL import Image
 
+import src.router.prototype_reconciler as prototype_reconciler
 from src.router.prototype_bank import build_prototype_bank
-from src.router.prototype_reconciler import nearest_target, reconcile_router_handoff, taxonomy_relation
+from src.router.prototype_reconciler import PrototypeMatch, nearest_target, reconcile_router_handoff, taxonomy_relation
 from src.router.taxonomy_registry import build_taxonomy_registry
 
 
@@ -612,7 +613,7 @@ def test_reconciler_accepts_trusted_router_agreement_without_selected_target_pol
     assert decision.reason == "router_and_prototype_agree"
 
 
-def test_reconciler_keeps_margin_floor_for_target_only_policy_on_untrusted_router(tmp_path: Path):
+def test_reconciler_uses_calibrated_margin_floor_for_target_only_policy_on_untrusted_router(tmp_path: Path):
     dataset_root = tmp_path / "datasets"
     tomato_leaf = dataset_root / "tomato__leaf" / "train" / "healthy" / "a.png"
     grape_leaf = dataset_root / "grape__leaf" / "train" / "healthy" / "b.png"
@@ -644,7 +645,116 @@ def test_reconciler_keeps_margin_floor_for_target_only_policy_on_untrusted_route
 
     assert decision.decision == "abstain"
     assert decision.reason == "prototype_evidence_weak"
-    assert decision.min_margin == 1.0
+    assert decision.min_margin == 0.02
+
+
+def test_reconciler_uses_calibrated_untrusted_margin_floor_for_selected_policy(
+    monkeypatch,
+    tmp_path: Path,
+):
+    query_image = tmp_path / "query.png"
+    _write_image(query_image, (190, 30, 30))
+
+    def fake_nearest_target(_image_path, _prototype_payload):
+        return PrototypeMatch(
+            target_id="tomato__fruit",
+            crop="tomato",
+            part="fruit",
+            similarity=0.62,
+            distance=0.61,
+            margin=0.021,
+            class_label="late_blight_fruit",
+            prototype_level="class",
+        )
+
+    monkeypatch.setattr(prototype_reconciler, "nearest_target", fake_nearest_target)
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="eggplant",
+        router_part="unknown",
+        router_status="unknown_crop",
+        prototype_payload={},
+        registry_payload={
+            "targets": [
+                {"target_id": "tomato__fruit", "crop_canonical_name": "tomato"},
+                {"target_id": "apricot__fruit", "crop_canonical_name": "apricot"},
+            ]
+        },
+        min_similarity=0.2,
+        min_margin=0.03,
+        target_policies={
+            "tomato__fruit": {
+                "negative_mode": "none",
+                "class_policies": {
+                    "late_blight_fruit": {
+                        "selected_policy": {
+                            "min_similarity": 0.2,
+                            "min_margin": 0.0,
+                            "min_negative_gap": 0.0,
+                        }
+                    }
+                },
+            }
+        },
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.reason == "prototype_overrode_untrusted_router_handoff"
+    assert decision.min_margin == 0.02
+
+
+def test_reconciler_blocks_below_calibrated_untrusted_margin_floor(monkeypatch, tmp_path: Path):
+    query_image = tmp_path / "query.png"
+    _write_image(query_image, (190, 30, 30))
+
+    def fake_nearest_target(_image_path, _prototype_payload):
+        return PrototypeMatch(
+            target_id="apricot__fruit",
+            crop="apricot",
+            part="fruit",
+            similarity=0.62,
+            distance=0.61,
+            margin=0.016,
+            class_label="shot_hole_fruit",
+            prototype_level="class",
+        )
+
+    monkeypatch.setattr(prototype_reconciler, "nearest_target", fake_nearest_target)
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="eggplant",
+        router_part="unknown",
+        router_status="unknown_crop",
+        prototype_payload={},
+        registry_payload={
+            "targets": [
+                {"target_id": "tomato__fruit", "crop_canonical_name": "tomato"},
+                {"target_id": "apricot__fruit", "crop_canonical_name": "apricot"},
+            ]
+        },
+        min_similarity=0.2,
+        min_margin=0.03,
+        target_policies={
+            "apricot__fruit": {
+                "negative_mode": "none",
+                "class_policies": {
+                    "shot_hole_fruit": {
+                        "selected_policy": {
+                            "min_similarity": 0.2,
+                            "min_margin": 0.0,
+                            "min_negative_gap": 0.0,
+                        }
+                    }
+                },
+            }
+        },
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "prototype_evidence_weak"
+    assert decision.min_margin == 0.02
 
 
 def test_taxonomy_relation_detects_same_family(tmp_path: Path):
