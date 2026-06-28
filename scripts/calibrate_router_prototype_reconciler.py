@@ -620,6 +620,12 @@ def calibrate(
                     > int(target_max_cross_part_supported_wrong)
                 ):
                     target_selected = None
+                elif (
+                    target_selected
+                    and _target_part(target) == "fruit"
+                    and int(target_validation.get("supported_cross_part_wrong") or 0) == 0
+                ):
+                    target_selected = {**target_selected, "allow_part_conflict_override": True}
             best_candidate = target_result["best_candidate"] or {}
             failure_reasons: list[str] = []
             if target_validation:

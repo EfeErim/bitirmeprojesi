@@ -401,6 +401,88 @@ def test_calibrate_allows_clean_fruit_class_policy_part_conflict_override():
     assert class_policy["selected_policy"]["allow_part_conflict_override"] is True
 
 
+def test_calibrate_allows_clean_fruit_target_policy_part_conflict_override():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="strawberry__fruit",
+            expected_behavior="answer",
+            predicted_target="strawberry__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="healthy_fruit",
+        )
+        for index in range(1, 11)
+    ]
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        negative_gap_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=0.8,
+        target_min_precision=0.98,
+        target_max_supported_wrong=1,
+        target_max_cross_part_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    selected = result["target_policies"]["strawberry__fruit"]["selected_policy"]
+    assert selected["allow_part_conflict_override"] is True
+    assert selected["full_set_validation"]["supported_cross_part_wrong"] == 0
+
+
+def test_calibrate_blocks_fruit_target_policy_part_conflict_override_when_full_set_has_cross_part_wrong():
+    rows = [
+        ScoredRow(
+            image_id=f"demo_{index:03d}",
+            expected_target="strawberry__fruit",
+            expected_behavior="answer",
+            predicted_target="strawberry__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image=f"{index}.png",
+            status="ok",
+            prototype_class_label="healthy_fruit",
+        )
+        for index in range(1, 11)
+    ]
+    rows.append(
+        ScoredRow(
+            image_id="demo_011",
+            expected_target="strawberry__leaf",
+            expected_behavior="answer",
+            predicted_target="strawberry__fruit",
+            similarity=0.7,
+            margin=0.04,
+            resolved_image="11.png",
+            status="ok",
+            prototype_class_label="healthy_fruit",
+        )
+    )
+
+    result = calibrate(
+        rows,
+        similarity_grid=(0.1,),
+        margin_grid=(0.0,),
+        negative_gap_grid=(0.0,),
+        min_precision=0.985,
+        min_coverage=0.8,
+        target_min_precision=0.98,
+        target_max_supported_wrong=1,
+        target_max_cross_part_supported_wrong=0,
+        target_class_min_accepted=5,
+    )
+
+    policy = result["target_policies"]["strawberry__fruit"]
+    assert policy["status"] == "no_eligible_policy"
+    assert policy["selected_policy"] is None
+    assert "supported_cross_part_wrong_above_target" in policy["failure_reasons"]
+
+
 def test_calibrate_does_not_allow_leaf_class_policy_part_conflict_override():
     rows = [
         ScoredRow(
