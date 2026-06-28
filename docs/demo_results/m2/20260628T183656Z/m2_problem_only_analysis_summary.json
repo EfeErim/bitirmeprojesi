@@ -1,0 +1,224 @@
+{
+  "schema_version": "v1_m2_demo_analysis_summary",
+  "total": 89,
+  "router_crop_correctness": {
+    "correct": 54,
+    "incorrect": 35,
+    "not_applicable": 0
+  },
+  "router_part_correctness": {
+    "correct": 52,
+    "incorrect": 37,
+    "not_applicable": 0
+  },
+  "normalized_disease_class_correctness": {
+    "correct": 32,
+    "incorrect": 6,
+    "not_applicable": 51
+  },
+  "classless_supported_probes": {
+    "total": 0,
+    "answered": 0,
+    "answered_target_correct": 0,
+    "answered_target_incorrect": 0,
+    "reviewed_or_abstained": 0,
+    "failed": 0
+  },
+  "adapter_unavailable": {
+    "wrong_router": 0,
+    "missing_adapter": 0,
+    "unknown": 0
+  },
+  "prototype_reconciliation": {
+    "abstain": 51,
+    "accept_router": 1,
+    "use_prototype": 37
+  },
+  "answered_wrong_by_target": {
+    "apricot__fruit": 1,
+    "strawberry__fruit": 5
+  },
+  "answered_wrong_by_expected_class": {
+    "kayısıda_şarka_virüsü_meyve_230": 1,
+    "strawberry_gray_mold_fruit": 1,
+    "strawberry_healthy_fruit": 4
+  },
+  "prototype_correct_but_abstained": {
+    "count": 36,
+    "image_ids": [
+      "demo_145",
+      "demo_146",
+      "demo_174",
+      "demo_030",
+      "demo_285",
+      "demo_308",
+      "demo_311",
+      "demo_057",
+      "demo_007",
+      "demo_064",
+      "demo_065",
+      "demo_429",
+      "demo_430",
+      "demo_432",
+      "demo_440",
+      "demo_461",
+      "demo_236",
+      "demo_237",
+      "demo_243",
+      "demo_129",
+      "demo_067",
+      "demo_425",
+      "demo_166",
+      "demo_168",
+      "demo_173",
+      "demo_372",
+      "demo_377",
+      "demo_384",
+      "demo_389",
+      "demo_063",
+      "demo_438",
+      "demo_441",
+      "demo_467",
+      "demo_193",
+      "demo_033",
+      "demo_068"
+    ],
+    "truncated": false,
+    "by_target": {
+      "apricot__fruit": 6,
+      "apricot__leaf": 2,
+      "grape__fruit": 3,
+      "grape__leaf": 1,
+      "strawberry__fruit": 2,
+      "tomato__fruit": 5,
+      "tomato__leaf": 17
+    }
+  },
+  "negative_false_accepts": {
+    "count": 0,
+    "image_ids": [],
+    "truncated": false,
+    "by_target": {}
+  },
+  "policy_thresholds_by_target": {
+    "apricot__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.03,
+      "min_negative_gap": 0.0
+    },
+    "apricot__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.0
+    },
+    "grape__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.02
+    },
+    "grape__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.0
+    },
+    "strawberry__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.02
+    },
+    "strawberry__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.02
+    },
+    "tomato__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.02
+    },
+    "tomato__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.03,
+      "min_negative_gap": 0.0
+    }
+  },
+  "opposite_part_disease_labels": {
+    "count": 0,
+    "image_ids": [],
+    "truncated": false
+  },
+  "per_target": {
+    "apricot__fruit": {
+      "total": 14,
+      "answered": 6,
+      "abstained_or_reviewed": 8,
+      "pass": 5,
+      "fail": 9,
+      "exact_class_correct": 5,
+      "opposite_part_disease_labels": 0
+    },
+    "apricot__leaf": {
+      "total": 6,
+      "answered": 4,
+      "abstained_or_reviewed": 2,
+      "pass": 4,
+      "fail": 2,
+      "exact_class_correct": 4,
+      "opposite_part_disease_labels": 0
+    },
+    "grape__fruit": {
+      "total": 4,
+      "answered": 1,
+      "abstained_or_reviewed": 3,
+      "pass": 1,
+      "fail": 3,
+      "exact_class_correct": 1,
+      "opposite_part_disease_labels": 0
+    },
+    "grape__leaf": {
+      "total": 2,
+      "answered": 0,
+      "abstained_or_reviewed": 2,
+      "pass": 0,
+      "fail": 2,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    },
+    "strawberry__fruit": {
+      "total": 16,
+      "answered": 14,
+      "abstained_or_reviewed": 2,
+      "pass": 9,
+      "fail": 7,
+      "exact_class_correct": 9,
+      "opposite_part_disease_labels": 0
+    },
+    "strawberry__leaf": {
+      "total": 1,
+      "answered": 0,
+      "abstained_or_reviewed": 1,
+      "pass": 0,
+      "fail": 1,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    },
+    "tomato__fruit": {
+      "total": 19,
+      "answered": 8,
+      "abstained_or_reviewed": 11,
+      "pass": 8,
+      "fail": 11,
+      "exact_class_correct": 8,
+      "opposite_part_disease_labels": 0
+    },
+    "tomato__leaf": {
+      "total": 27,
+      "answered": 5,
+      "abstained_or_reviewed": 22,
+      "pass": 5,
+      "fail": 22,
+      "exact_class_correct": 5,
+      "opposite_part_disease_labels": 0
+    }
+  }
+}
