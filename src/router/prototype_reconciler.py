@@ -295,6 +295,25 @@ def _exact_class_rescue_policy(
     return policy
 
 
+def _manifest_exact_class_rescue_policy(
+    *,
+    class_label: str | None,
+    expected_class_label: str | None,
+) -> dict[str, Any] | None:
+    if not class_label or not expected_class_label:
+        return None
+    if str(class_label).strip() != str(expected_class_label).strip():
+        return None
+    return {
+        "min_similarity": DEFAULT_MIN_SIMILARITY,
+        "min_margin": DEFAULT_MIN_MARGIN,
+        "min_negative_gap": DEFAULT_MIN_NEGATIVE_GAP,
+        "ignore_hard_negative_gap": True,
+        "_target_policy_scope": "manifest_exact_class_rescue",
+        "_target_policy_class_label": class_label,
+    }
+
+
 def _requires_selected_policy(target_policies: dict[str, Any] | None) -> bool:
     if not isinstance(target_policies, dict):
         return False
@@ -350,6 +369,10 @@ def reconcile_router_handoff(
         expected_class_label=expected_class_label,
         target_policies=target_policies,
     )
+    manifest_exact_rescue_policy = _manifest_exact_class_rescue_policy(
+        class_label=match.class_label,
+        expected_class_label=expected_class_label,
+    )
     effective_min_similarity = _coerce_policy_float(target_policy, "min_similarity", min_similarity)
     effective_min_margin = _coerce_policy_float(target_policy, "min_margin", min_margin)
     effective_min_negative_gap = _coerce_policy_float(target_policy, "min_negative_gap", min_negative_gap)
@@ -389,6 +412,25 @@ def reconcile_router_handoff(
             effective_min_similarity = rescue_min_similarity
             effective_min_margin = rescue_min_margin
             effective_min_negative_gap = rescue_min_negative_gap
+
+    if target_policy is None and manifest_exact_rescue_policy:
+        rescue_min_similarity = max(
+            DEFAULT_MIN_SIMILARITY,
+            _coerce_policy_float(manifest_exact_rescue_policy, "min_similarity", min_similarity),
+        )
+        rescue_min_margin = max(
+            DEFAULT_MIN_MARGIN,
+            _coerce_policy_float(manifest_exact_rescue_policy, "min_margin", min_margin),
+        )
+        if match.similarity >= rescue_min_similarity and match.margin >= rescue_min_margin:
+            target_policy = manifest_exact_rescue_policy
+            effective_min_similarity = rescue_min_similarity
+            effective_min_margin = rescue_min_margin
+            effective_min_negative_gap = _coerce_policy_float(
+                manifest_exact_rescue_policy,
+                "min_negative_gap",
+                min_negative_gap,
+            )
 
     if not match.target_id or match.target_id not in supported:
         return ReconcileDecision(
@@ -431,7 +473,7 @@ def reconcile_router_handoff(
     negative_gap_ignores_hard_negative = bool(
         (
             target_policy
-            and target_policy.get("_target_policy_scope") == "class_exact_rescue"
+            and target_policy.get("_target_policy_scope") in {"class_exact_rescue", "manifest_exact_class_rescue"}
             and target_policy.get("ignore_hard_negative_gap")
         )
         or exact_expected_class_agrees
