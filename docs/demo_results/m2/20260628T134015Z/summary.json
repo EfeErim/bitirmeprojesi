@@ -1,0 +1,351 @@
+{
+  "created_at": "20260628T134015Z",
+  "started_at": "2026-06-28T13:28:46.723900+00:00",
+  "finished_at": "2026-06-28T13:40:15.868586+00:00",
+  "elapsed_seconds": 689.1446914359999,
+  "elapsed_human": "11m 29s",
+  "runner_started_at": "2026-06-28T13:34:14.631782+00:00",
+  "runner_finished_at": "2026-06-28T13:40:15.868586+00:00",
+  "runner_elapsed_seconds": 361.23680548900006,
+  "runner_elapsed_human": "6m 1s",
+  "runner_exit_code": 1,
+  "manifest": "docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv",
+  "problem_only": true,
+  "prototype_calibration_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "batch_size": 12,
+  "adapter_batch_size": 32,
+  "handoff_cache": {
+    "path": ".runtime_tmp/m2_router_prototype_handoff_cache.json",
+    "refresh": true,
+    "restored_from": ""
+  },
+  "output": ".runtime_tmp/m2_problem_only_demo_checklist_run.json",
+  "markdown_output": ".runtime_tmp/m2_problem_only_demo_checklist_run.md",
+  "analysis_output": ".runtime_tmp/m2_problem_only_analysis_summary.json",
+  "analysis_markdown_output": ".runtime_tmp/m2_problem_only_analysis_summary.md",
+  "prototype_reconciler": {
+    "enabled": true,
+    "reuse_existing_prototypes": true,
+    "reuse_existing_prototype_calibration": true,
+    "auto_build_prototypes": true,
+    "prototype_max_images_per_class": 50,
+    "prototype_curation_root": "docs/demo_assets/prototype_curation/20260628T113313Z",
+    "auto_calibrate": true,
+    "require_calibrated_policy": true,
+    "prototype_bank": "runs/_index/router_prototypes/m2_20260628T132846Z/prototype_bank.json",
+    "taxonomy_registry": "runs/_index/router_prototypes/m2_20260628T132846Z/taxonomy_registry.json",
+    "prototype_calibration_output": ".runtime_tmp/router_prototype_calibration.json",
+    "prototype_min_similarity": null,
+    "prototype_min_margin": null,
+    "prototype_min_negative_gap": null,
+    "calibration_selected_policy": false,
+    "calibration_selected_target_policy": true,
+    "target_min_precision": 0.98,
+    "target_max_supported_wrong": 1,
+    "target_max_cross_part_supported_wrong": 0,
+    "target_class_min_accepted": 5,
+    "target_policy_negative_mode": "none"
+  },
+  "copied_artifacts": [
+    "docs/demo_results/m2/20260628T134015Z/m2_problem_only_demo_checklist_run.json",
+    "docs/demo_results/m2/20260628T134015Z/m2_problem_only_demo_checklist_run.md",
+    "docs/demo_results/m2/20260628T134015Z/m2_problem_only_analysis_summary.json",
+    "docs/demo_results/m2/20260628T134015Z/m2_problem_only_analysis_summary.md",
+    "docs/demo_results/m2/20260628T134015Z/router_prototype_calibration.json",
+    "docs/demo_results/m2/20260628T134015Z/prototype_bank.json",
+    "docs/demo_results/m2/20260628T134015Z/summary.md",
+    "docs/demo_results/m2/20260628T134015Z/taxonomy_registry.json",
+    "docs/demo_results/m2/20260628T134015Z/m2_router_prototype_handoff_cache.json",
+    "docs/demo_results/m2/20260628T134015Z/summary.json"
+  ],
+  "summary": {
+    "total": 89,
+    "passed": 19,
+    "failed": 70,
+    "answered": 24,
+    "abstained_or_reviewed": 65,
+    "asset_ready": 0,
+    "failure_buckets": {
+      "router": 65
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 14,
+        "pass": 0,
+        "fail": 14
+      },
+      "apricot__leaf": {
+        "total": 6,
+        "pass": 1,
+        "fail": 5
+      },
+      "grape__fruit": {
+        "total": 4,
+        "pass": 0,
+        "fail": 4
+      },
+      "grape__leaf": {
+        "total": 2,
+        "pass": 0,
+        "fail": 2
+      },
+      "strawberry__fruit": {
+        "total": 16,
+        "pass": 9,
+        "fail": 7
+      },
+      "strawberry__leaf": {
+        "total": 1,
+        "pass": 0,
+        "fail": 1
+      },
+      "tomato__fruit": {
+        "total": 19,
+        "pass": 8,
+        "fail": 11
+      },
+      "tomato__leaf": {
+        "total": 27,
+        "pass": 1,
+        "fail": 26
+      }
+    }
+  },
+  "analysis_summary": {
+    "schema_version": "v1_m2_demo_analysis_summary",
+    "total": 89,
+    "router_crop_correctness": {
+      "correct": 42,
+      "incorrect": 47,
+      "not_applicable": 0
+    },
+    "router_part_correctness": {
+      "correct": 42,
+      "incorrect": 47,
+      "not_applicable": 0
+    },
+    "normalized_disease_class_correctness": {
+      "correct": 19,
+      "incorrect": 5,
+      "not_applicable": 65
+    },
+    "classless_supported_probes": {
+      "total": 0,
+      "answered": 0,
+      "answered_target_correct": 0,
+      "answered_target_incorrect": 0,
+      "reviewed_or_abstained": 0,
+      "failed": 0
+    },
+    "adapter_unavailable": {
+      "wrong_router": 0,
+      "missing_adapter": 0,
+      "unknown": 0
+    },
+    "prototype_reconciliation": {
+      "abstain": 65,
+      "use_prototype": 24
+    },
+    "answered_wrong_by_target": {
+      "strawberry__fruit": 5
+    },
+    "answered_wrong_by_expected_class": {
+      "strawberry_gray_mold_fruit": 1,
+      "strawberry_healthy_fruit": 4
+    },
+    "prototype_correct_but_abstained": {
+      "count": 50,
+      "image_ids": [
+        "demo_145",
+        "demo_146",
+        "demo_174",
+        "demo_030",
+        "demo_285",
+        "demo_308",
+        "demo_311",
+        "demo_057",
+        "demo_007",
+        "demo_064",
+        "demo_065",
+        "demo_429",
+        "demo_430",
+        "demo_432",
+        "demo_440",
+        "demo_461",
+        "demo_147",
+        "demo_436",
+        "demo_097",
+        "demo_236",
+        "demo_237",
+        "demo_243",
+        "demo_129",
+        "demo_067",
+        "demo_425",
+        "demo_117",
+        "demo_118",
+        "demo_150",
+        "demo_166",
+        "demo_168",
+        "demo_172",
+        "demo_173",
+        "demo_180",
+        "demo_372",
+        "demo_377",
+        "demo_384",
+        "demo_389",
+        "demo_063",
+        "demo_431",
+        "demo_433",
+        "demo_435",
+        "demo_438",
+        "demo_441",
+        "demo_467",
+        "demo_124",
+        "demo_128",
+        "demo_186",
+        "demo_193",
+        "demo_033",
+        "demo_068"
+      ],
+      "truncated": false,
+      "by_target": {
+        "apricot__fruit": 12,
+        "apricot__leaf": 5,
+        "grape__fruit": 4,
+        "grape__leaf": 1,
+        "strawberry__fruit": 2,
+        "tomato__fruit": 5,
+        "tomato__leaf": 21
+      }
+    },
+    "negative_false_accepts": {
+      "count": 0,
+      "image_ids": [],
+      "truncated": false,
+      "by_target": {}
+    },
+    "policy_thresholds_by_target": {
+      "apricot__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.0
+      },
+      "apricot__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.02,
+        "min_negative_gap": 0.0
+      },
+      "grape__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.02
+      },
+      "grape__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.02,
+        "min_negative_gap": 0.0
+      },
+      "strawberry__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.02,
+        "min_negative_gap": 0.02
+      },
+      "strawberry__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.0,
+        "min_negative_gap": 0.02
+      },
+      "tomato__fruit": {
+        "min_similarity": 0.2,
+        "min_margin": 0.02,
+        "min_negative_gap": 0.02
+      },
+      "tomato__leaf": {
+        "min_similarity": 0.2,
+        "min_margin": 0.03,
+        "min_negative_gap": 0.0
+      }
+    },
+    "opposite_part_disease_labels": {
+      "count": 0,
+      "image_ids": [],
+      "truncated": false
+    },
+    "per_target": {
+      "apricot__fruit": {
+        "total": 14,
+        "answered": 0,
+        "abstained_or_reviewed": 14,
+        "pass": 0,
+        "fail": 14,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "apricot__leaf": {
+        "total": 6,
+        "answered": 1,
+        "abstained_or_reviewed": 5,
+        "pass": 1,
+        "fail": 5,
+        "exact_class_correct": 1,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__fruit": {
+        "total": 4,
+        "answered": 0,
+        "abstained_or_reviewed": 4,
+        "pass": 0,
+        "fail": 4,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "grape__leaf": {
+        "total": 2,
+        "answered": 0,
+        "abstained_or_reviewed": 2,
+        "pass": 0,
+        "fail": 2,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__fruit": {
+        "total": 16,
+        "answered": 14,
+        "abstained_or_reviewed": 2,
+        "pass": 9,
+        "fail": 7,
+        "exact_class_correct": 9,
+        "opposite_part_disease_labels": 0
+      },
+      "strawberry__leaf": {
+        "total": 1,
+        "answered": 0,
+        "abstained_or_reviewed": 1,
+        "pass": 0,
+        "fail": 1,
+        "exact_class_correct": 0,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__fruit": {
+        "total": 19,
+        "answered": 8,
+        "abstained_or_reviewed": 11,
+        "pass": 8,
+        "fail": 11,
+        "exact_class_correct": 8,
+        "opposite_part_disease_labels": 0
+      },
+      "tomato__leaf": {
+        "total": 27,
+        "answered": 1,
+        "abstained_or_reviewed": 26,
+        "pass": 1,
+        "fail": 26,
+        "exact_class_correct": 1,
+        "opposite_part_disease_labels": 0
+      }
+    }
+  },
+  "manifest_sha256": "2dbeac5022f073cb7f09a81a634d846f5be5698eeb165840c25031bbee41cbde",
+  "manifest_sha256_source": "local_manifest_enriched"
+}
