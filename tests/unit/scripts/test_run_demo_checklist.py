@@ -442,6 +442,7 @@ def test_official_batch_rows_skips_router_on_handoff_cache_hit(tmp_path: Path, m
         prototype_min_margin=None,
         prototype_min_negative_gap=None,
         prototype_target_policies=None,
+        expected_target_id=rows[0].expected_target,
         expected_class_label=rows[0].expected_class,
     )
     cache = {
@@ -523,6 +524,7 @@ def test_official_batch_rows_blocks_cached_handoff_for_expected_unsupported_part
         prototype_min_margin=None,
         prototype_min_negative_gap=None,
         prototype_target_policies=None,
+        expected_target_id=rows[0].expected_target,
         expected_class_label=rows[0].expected_class,
     )
     cache = {
@@ -623,6 +625,7 @@ def test_official_batch_rows_blocks_classless_probe_handoff_target_mismatch(tmp_
         prototype_min_margin=None,
         prototype_min_negative_gap=None,
         prototype_target_policies=None,
+        expected_target_id=rows[0].expected_target,
         expected_class_label=rows[0].expected_class,
     )
     cache = {

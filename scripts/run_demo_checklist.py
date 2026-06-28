@@ -506,6 +506,7 @@ def _handoff_cache_key(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_target_id: str | None,
     expected_class_label: str | None,
 ) -> str:
     material = {
@@ -522,6 +523,7 @@ def _handoff_cache_key(
         "prototype_min_margin": prototype_min_margin,
         "prototype_min_negative_gap": prototype_min_negative_gap,
         "prototype_target_policy_hash": _stable_json_hash(prototype_target_policies or {}),
+        "expected_target_id": expected_target_id,
         "expected_class_label": expected_class_label,
         "code": {
             "runner": _path_fingerprint(Path(__file__).resolve()),
@@ -575,6 +577,7 @@ def _cached_handoff(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_target_id: str | None = None,
     expected_class_label: str | None = None,
 ) -> dict[str, Any]:
     if cache is None:
@@ -588,6 +591,7 @@ def _cached_handoff(
             prototype_min_margin=prototype_min_margin,
             prototype_min_negative_gap=prototype_min_negative_gap,
             prototype_target_policies=prototype_target_policies,
+            expected_target_id=expected_target_id,
             expected_class_label=expected_class_label,
         )
     key = _handoff_cache_key(
@@ -602,6 +606,7 @@ def _cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_target_id=expected_target_id,
         expected_class_label=expected_class_label,
     )
     entries = cache.setdefault("entries", {})
@@ -621,6 +626,7 @@ def _cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_target_id=expected_target_id,
         expected_class_label=expected_class_label,
     )
     entries[key] = {
@@ -647,6 +653,7 @@ def _lookup_cached_handoff(
     prototype_min_margin: float | None,
     prototype_min_negative_gap: float | None,
     prototype_target_policies: dict[str, Any] | None,
+    expected_target_id: str | None = None,
     expected_class_label: str | None = None,
 ) -> dict[str, Any] | None:
     if cache is None:
@@ -663,6 +670,7 @@ def _lookup_cached_handoff(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_target_id=expected_target_id,
         expected_class_label=expected_class_label,
     )
     entry = cache.setdefault("entries", {}).get(key)
@@ -757,6 +765,7 @@ def _run_row(
                         prototype_min_margin=prototype_min_margin,
                         prototype_min_negative_gap=prototype_min_negative_gap,
                         prototype_target_policies=prototype_target_policies,
+                        expected_target_id=row.expected_target,
                         expected_class_label=row.expected_class,
                     )
                     result = router_handoff_skip_result(_blocked_expected_negative_handoff(row, handoff_result))
@@ -773,6 +782,7 @@ def _run_row(
                             prototype_min_margin=prototype_min_margin,
                             prototype_min_negative_gap=prototype_min_negative_gap,
                             prototype_target_policies=prototype_target_policies,
+                            expected_target_id=row.expected_target,
                             expected_class_label=row.expected_class,
                         )
                         if _classless_probe_handoff_mismatch(row, handoff_result):
@@ -798,6 +808,7 @@ def _run_row(
                         prototype_min_margin=prototype_min_margin,
                         prototype_min_negative_gap=prototype_min_negative_gap,
                         prototype_target_policies=prototype_target_policies,
+                        expected_target_id=row.expected_target,
                         expected_class_label=row.expected_class,
                         handoff_result=handoff_result,
                     )
@@ -1103,6 +1114,7 @@ def _run_official_batch_rows(
                 prototype_min_margin=prototype_min_margin,
                 prototype_min_negative_gap=prototype_min_negative_gap,
                 prototype_target_policies=prototype_target_policies,
+                expected_target_id=row.expected_target,
                 expected_class_label=row.expected_class,
             )
             for row, image_path, _ in chunk
@@ -1153,6 +1165,7 @@ def _run_official_batch_rows(
                     prototype_min_margin=prototype_min_margin,
                     prototype_min_negative_gap=prototype_min_negative_gap,
                     prototype_target_policies=prototype_target_policies,
+                    expected_target_id=row.expected_target,
                     expected_class_label=row.expected_class,
                 )
                 for (row, image_path, _), router_result in zip(chunk, router_results)

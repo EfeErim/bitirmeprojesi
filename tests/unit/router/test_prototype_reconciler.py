@@ -638,7 +638,7 @@ def test_reconciler_uses_manifest_exact_class_rescue_when_calibration_policy_mis
 
     assert decision.decision == "use_prototype"
     assert decision.reason == "prototype_overrode_untrusted_router_handoff"
-    assert decision.min_margin == 0.03
+    assert decision.min_margin == 0.02
     assert decision.min_negative_gap == 0.0
 
 
@@ -653,7 +653,7 @@ def test_reconciler_keeps_manifest_exact_class_rescue_abstained_below_margin_flo
             part="leaf",
             similarity=0.64,
             distance=0.56,
-            margin=0.028,
+            margin=0.018,
             class_label="bacterial_spot_leaf",
             prototype_level="class",
         )
@@ -681,6 +681,150 @@ def test_reconciler_keeps_manifest_exact_class_rescue_abstained_below_margin_flo
 
     assert decision.decision == "abstain"
     assert decision.reason == "prototype_evidence_weak"
+
+
+def test_reconciler_manifest_exact_class_rescue_can_relax_selected_policy(monkeypatch, tmp_path: Path):
+    query_image = tmp_path / "query.png"
+    _write_image(query_image, (20, 90, 40))
+
+    def fake_nearest_target(_image_path, _prototype_payload):
+        return PrototypeMatch(
+            target_id="tomato__leaf",
+            crop="tomato",
+            part="leaf",
+            similarity=0.61,
+            distance=0.64,
+            margin=0.024,
+            class_label="late_blight",
+            prototype_level="class",
+        )
+
+    monkeypatch.setattr(prototype_reconciler, "nearest_target", fake_nearest_target)
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload={},
+        registry_payload={"targets": [{"target_id": "tomato__leaf", "crop_canonical_name": "tomato"}]},
+        min_similarity=0.2,
+        min_margin=0.03,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__leaf": {
+                "selected_policy": {
+                    "min_similarity": 0.2,
+                    "min_margin": 0.03,
+                    "min_negative_gap": 0.0,
+                }
+            },
+        },
+        expected_target_id="tomato__leaf",
+        expected_class_label="late_blight",
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.reason == "prototype_corrected_router_handoff"
+    assert decision.min_margin == 0.02
+
+
+def test_reconciler_manifest_expected_target_rescue_can_relax_negative_gap(monkeypatch, tmp_path: Path):
+    query_image = tmp_path / "query.png"
+    _write_image(query_image, (20, 90, 40))
+
+    def fake_nearest_target(_image_path, _prototype_payload):
+        return PrototypeMatch(
+            target_id="tomato__leaf",
+            crop="tomato",
+            part="leaf",
+            similarity=0.63,
+            distance=0.58,
+            margin=0.031,
+            class_label="septoria_leaf_spot",
+            prototype_level="class",
+        )
+
+    monkeypatch.setattr(prototype_reconciler, "nearest_target", fake_nearest_target)
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload={},
+        registry_payload={"targets": [{"target_id": "tomato__leaf", "crop_canonical_name": "tomato"}]},
+        min_similarity=0.2,
+        min_margin=0.02,
+        min_negative_gap=0.06,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__leaf": {
+                "selected_policy": {
+                    "min_similarity": 0.2,
+                    "min_margin": 0.0,
+                    "min_negative_gap": 0.06,
+                }
+            },
+        },
+        expected_target_id="tomato__leaf",
+        expected_class_label="early_blight",
+    )
+
+    assert decision.decision == "use_prototype"
+    assert decision.reason == "prototype_corrected_router_handoff"
+    assert decision.min_negative_gap == 0.0
+
+
+def test_reconciler_manifest_expected_target_rescue_requires_target_match(monkeypatch, tmp_path: Path):
+    query_image = tmp_path / "query.png"
+    _write_image(query_image, (20, 90, 40))
+
+    def fake_nearest_target(_image_path, _prototype_payload):
+        return PrototypeMatch(
+            target_id="tomato__fruit",
+            crop="tomato",
+            part="fruit",
+            similarity=0.63,
+            distance=0.58,
+            margin=0.031,
+            class_label="late_blight_fruit",
+            prototype_level="class",
+        )
+
+    monkeypatch.setattr(prototype_reconciler, "nearest_target", fake_nearest_target)
+
+    decision = reconcile_router_handoff(
+        image_path=query_image,
+        router_crop="unknown",
+        router_part="leaf",
+        router_status="unknown_crop",
+        prototype_payload={},
+        registry_payload={
+            "targets": [
+                {"target_id": "tomato__leaf", "crop_canonical_name": "tomato"},
+                {"target_id": "tomato__fruit", "crop_canonical_name": "tomato"},
+            ]
+        },
+        min_similarity=0.2,
+        min_margin=0.02,
+        min_negative_gap=0.06,
+        target_policies={
+            "__requires_selected_policy__": True,
+            "tomato__fruit": {
+                "selected_policy": {
+                    "min_similarity": 0.2,
+                    "min_margin": 0.0,
+                    "min_negative_gap": 0.06,
+                }
+            },
+        },
+        expected_target_id="tomato__leaf",
+        expected_class_label="early_blight",
+    )
+
+    assert decision.decision == "abstain"
+    assert decision.reason == "negative_prototype_too_close"
 
 
 def test_expected_class_rescue_can_ignore_curated_hard_negative_gap(tmp_path: Path):

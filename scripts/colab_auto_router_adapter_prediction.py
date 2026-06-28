@@ -161,6 +161,7 @@ def resolve_router_adapter_handoff(
     prototype_min_margin: Optional[float] = None,
     prototype_min_negative_gap: Optional[float] = None,
     prototype_target_policies: Optional[Dict[str, Any]] = None,
+    expected_target_id: Optional[str] = None,
     expected_class_label: Optional[str] = None,
 ) -> Dict[str, Any]:
     if not isinstance(router_result, dict):
@@ -217,6 +218,7 @@ def resolve_router_adapter_handoff(
                         default=0.0,
                     ),
                     target_policies=prototype_target_policies,
+                    expected_target_id=expected_target_id,
                     expected_class_label=expected_class_label,
                 )
                 reconciliation_payload = {"enabled": True, **decision.to_payload()}
@@ -311,6 +313,7 @@ def run_auto_router_adapter_prediction(
     prototype_min_margin: Optional[float] = None,
     prototype_min_negative_gap: Optional[float] = None,
     prototype_target_policies: Optional[Dict[str, Any]] = None,
+    expected_target_id: Optional[str] = None,
     expected_class_label: Optional[str] = None,
     handoff_result: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
@@ -330,6 +333,7 @@ def run_auto_router_adapter_prediction(
         prototype_min_margin=prototype_min_margin,
         prototype_min_negative_gap=prototype_min_negative_gap,
         prototype_target_policies=prototype_target_policies,
+        expected_target_id=expected_target_id,
         expected_class_label=expected_class_label,
     )
     status = str(handoff_result.get("status") or "").strip().lower()
