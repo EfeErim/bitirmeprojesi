@@ -244,6 +244,55 @@ def _discard_stale_calibration(output_path):
         pass
 
 
+def _normalize_repo_path(value, repo_root):
+    normalized = str(value or "").replace("\\", "/").strip()
+    if not normalized:
+        return ""
+    path = Path(normalized)
+    try:
+        if path.is_absolute():
+            return path.resolve().relative_to(repo_root.resolve()).as_posix()
+    except ValueError:
+        return path.resolve().as_posix()
+    return normalized
+
+
+def _validate_curated_prototype_bank(repo_root, prototype_bank_ref, curation_root):
+    if not curation_root:
+        return
+    if not prototype_bank_ref:
+        raise RuntimeError("M2_PROTOTYPE_CURATION_ROOT is set but no prototype bank was selected.")
+    prototype_bank_path = (repo_root / prototype_bank_ref).resolve()
+    if not prototype_bank_path.is_file():
+        raise FileNotFoundError(
+            "M2_PROTOTYPE_CURATION_ROOT is set but the selected prototype bank does not exist: "
+            f"{prototype_bank_path}"
+        )
+    payload = json.loads(prototype_bank_path.read_text(encoding="utf-8"))
+    source_roots = payload.get("source_roots") if isinstance(payload, dict) else {}
+    summary = payload.get("summary") if isinstance(payload, dict) else {}
+    saved_curation_root = _normalize_repo_path(source_roots.get("curation_root"), repo_root)
+    expected_curation_root = _normalize_repo_path(curation_root, repo_root)
+    if saved_curation_root != expected_curation_root:
+        raise RuntimeError(
+            "Selected prototype bank was not built from the requested M2 curation root: "
+            f"bank={prototype_bank_path}, bank_curation_root={saved_curation_root or '<missing>'}, "
+            f"requested_curation_root={expected_curation_root}"
+        )
+    curation_positive_count = int(summary.get("curation_positive_count") or 0)
+    hard_negative_count = int(summary.get("hard_negative_count") or 0)
+    if curation_positive_count + hard_negative_count <= 0:
+        raise RuntimeError(
+            "Selected prototype bank contains zero usable curated rows despite M2_PROTOTYPE_CURATION_ROOT being set: "
+            f"bank={prototype_bank_path}, curation_positive_count={curation_positive_count}, "
+            f"hard_negative_count={hard_negative_count}"
+        )
+    print(
+        "[M2] Curated prototype bank validated: "
+        f"curation_positive_count={curation_positive_count}, hard_negative_count={hard_negative_count}."
+    )
+
+
 if not M2_RUN_FULL_DEMO:
     m2_demo_result = None
     m2_demo_publish_report = {"enabled": False, "pushed": False, "reason": "M2_RUN_FULL_DEMO=False"}
@@ -304,6 +353,12 @@ else:
         prototype_completed = subprocess.run(prototype_command, cwd=repo_root, check=False)
         print(f"[M2] prototype_builder_exit_code={prototype_completed.returncode}")
         if prototype_completed.returncode != 0:
+            if M2_PROTOTYPE_CURATION_ROOT:
+                _discard_stale_calibration(prototype_calibration_output_path)
+                raise RuntimeError(
+                    "Prototype builder failed while M2_PROTOTYPE_CURATION_ROOT is set; "
+                    "stopping instead of running an uncurated M2 demo."
+                )
             if M2_REQUIRE_CALIBRATED_PROTOTYPE_POLICY:
                 M2_ENABLE_PROTOTYPE_RECONCILER = False
             _discard_stale_calibration(prototype_calibration_output_path)
@@ -313,6 +368,9 @@ else:
             M2_PROTOTYPE_BANK = str((prototype_dir / "prototype_bank.json").relative_to(repo_root))
         if not M2_TAXONOMY_REGISTRY:
             M2_TAXONOMY_REGISTRY = str((prototype_dir / "taxonomy_registry.json").relative_to(repo_root))
+
+    if M2_ENABLE_PROTOTYPE_RECONCILER:
+        _validate_curated_prototype_bank(repo_root, M2_PROTOTYPE_BANK, M2_PROTOTYPE_CURATION_ROOT)
 
     prototype_calibration_selected = False
     prototype_target_policy_selected = False
