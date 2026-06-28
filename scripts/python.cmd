@@ -8,6 +8,12 @@ if exist "%REPO_ROOT%\.venv\Scripts\python.exe" set "PYTHON_EXE=%REPO_ROOT%\.ven
 
 if not defined PYTHON_EXE if defined VIRTUAL_ENV if exist "%VIRTUAL_ENV%\Scripts\python.exe" set "PYTHON_EXE=%VIRTUAL_ENV%\Scripts\python.exe"
 
+if not defined PYTHON_EXE (
+  for /f "delims=" %%I in ('py -3.11 -c "import sys; print(sys.executable)" 2^>nul') do (
+    if not defined PYTHON_EXE if exist "%%~fI" set "PYTHON_EXE=%%~fI"
+  )
+)
+
 if not defined PYTHON_EXE if defined LocalAppData (
   for /f "delims=" %%I in ('dir /b /ad /o-n "%LocalAppData%\Programs\Python\Python*" 2^>nul') do (
     if not defined PYTHON_EXE if exist "%LocalAppData%\Programs\Python\%%I\python.exe" set "PYTHON_EXE=%LocalAppData%\Programs\Python\%%I\python.exe"

@@ -158,18 +158,9 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-24T06:01:28Z`
+Generated: `2026-06-28T08:51:33Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
-
-##### Zero-Shot Test-Time Canonicalization using Out-of-Distribution Scoring
-
-- Query: `mahalanobis ood`
-- Published: `2026-06-23T06:00:33Z`
-- Authors: Dominik Lindner, Johann Schmidt, Tom Siegl, Martin Becker, Sebastian Stober
-- Link: http://arxiv.org/abs/2606.24178v1
-- Repo action hint: Review for a concrete change to ML method, evaluation policy, data curation, or guard behavior before promotion.
-- Review note: Pretrained vision models often misclassify inputs that are rotated, scaled, or sheared, even though these affine transformations leave the object class unchanged. Robustness is usually restored either by building equivariance into the architecture or by retraining with augmentation, both of which require changing or retraining the model. Test-time canonicalization instead leaves the classifier untouched. It undoes the transformation of each input, mapping it to a canonical form near the training distribution before classification. Existing canonicalizers, however, rely on a narrow set of logit-based energy scores and bespoke search procedures, leaving the design space of scoring functions and optimizers unexplored. We reframe canonicalization as out-of-distribution (OOD) detection, which lets any OOD score serve as the energy minimized over transformations. Across benchmarks ranging from handwritten characters and sketches to natural images and 3D point clouds, we systematically evaluate around twenty OOD scores and nine search algorithms, finding that distance-based scores paired with random search and local refinement perform best overall. Because canonicalizing an already-aligned input can hurt accuracy, we add a gated mechanism that transforms an input only when its OOD score indicates this is needed, preserving most in-distribution accuracy while retaining the robustness gains on transformed inputs. Code is available at github.com/johschm/its.
 
 ##### Self-Supervised Learning of Plant Image Representations
 

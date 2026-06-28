@@ -374,9 +374,10 @@ def reconcile_router_handoff(
             or match.margin < effective_min_margin
             or _effective_negative_gap(match) < effective_min_negative_gap
         )
-        rescue_negative_gap = _effective_negative_gap(
-            match,
-            include_hard_negative=not rescue_ignores_hard_negative,
+        rescue_negative_gap = (
+            float("inf")
+            if rescue_ignores_hard_negative
+            else _effective_negative_gap(match, include_hard_negative=True)
         )
         if (
             (target_policy is None or selected_policy_is_too_strict)
@@ -435,10 +436,12 @@ def reconcile_router_handoff(
         )
         or exact_expected_class_agrees
     )
-    if (
-        _effective_negative_gap(match, include_hard_negative=not negative_gap_ignores_hard_negative)
-        < effective_min_negative_gap
-    ):
+    effective_negative_gap = (
+        float("inf")
+        if negative_gap_ignores_hard_negative
+        else _effective_negative_gap(match, include_hard_negative=True)
+    )
+    if effective_negative_gap < effective_min_negative_gap:
         return ReconcileDecision(
             decision="abstain",
             crop=vlm_crop,
@@ -493,7 +496,7 @@ def reconcile_router_handoff(
         and vlm_part != prototype_part
         and router_is_trusted
         and router_target_is_supported
-        and match.margin >= max(DEFAULT_MIN_MARGIN, effective_min_margin)
+        and match.margin >= max(CALIBRATED_UNTRUSTED_MARGIN_FLOOR, effective_min_margin)
     )
 
     if vlm_part and prototype_part and vlm_part != prototype_part and router_is_trusted and router_target_is_supported:
