@@ -438,6 +438,8 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "Notebook 8 helper should avoid duplicating Notebook 1 routing by using a trusted router handoff: {snippet}",
     )
     for snippet in (
+        "M2_AUTO_APPLY_RUN_STATE = True",
+        "M2_RUN_STATE_CONFIG = 'docs/notebook8_m2_run_state.json'",
         "M2_RUN_FULL_DEMO = True",
         "M2_RUN_PROBLEM_ONLY_DEMO = True",
         "M2_DEMO_LIMIT = None",
@@ -461,8 +463,12 @@ def test_auto_router_adapter_notebook_contract() -> None:
             "Notebook 8 M2 full-demo parameters should keep the rerun contract: {snippet}",
         )
     for snippet in (
+        'M2_AUTO_APPLY_RUN_STATE = bool(globals().get("M2_AUTO_APPLY_RUN_STATE", True))',
+        'M2_RUN_STATE_CONFIG = str(globals().get("M2_RUN_STATE_CONFIG", "docs/notebook8_m2_run_state.json"))',
         'M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))',
         'M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", True))',
+        "def _load_m2_run_state_config(path):",
+        "Applied run-state config",
         'M2_PROBLEM_ONLY_MANIFEST = str(',
         'M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(',
         'M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(globals().get("M2_PROBLEM_ONLY_COMPARISON_BASELINE", "") or "")',

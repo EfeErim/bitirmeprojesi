@@ -2,6 +2,8 @@
 
 This file exists so run-mode settings do not live only in chat. After every pushed Notebook 8 M2 result, update this note and `PROJECT_STATE.md` if the next run mode changes.
 
+Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8 applies that JSON automatically when `M2_AUTO_APPLY_RUN_STATE = True`, so stale visible parameter values are overridden by the current run-state config.
+
 ## Current Next Run
 
 - Mode: problem-only diagnostic

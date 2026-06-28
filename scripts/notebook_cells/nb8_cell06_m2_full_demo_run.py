@@ -18,6 +18,8 @@ from scripts.compare_m2_demo_results import (
     enrich_summary_manifest_sha256,
 )
 
+M2_AUTO_APPLY_RUN_STATE = bool(globals().get("M2_AUTO_APPLY_RUN_STATE", True))
+M2_RUN_STATE_CONFIG = str(globals().get("M2_RUN_STATE_CONFIG", "docs/notebook8_m2_run_state.json"))
 M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))
 M2_DEMO_MANIFEST = str(
     globals().get(
@@ -60,6 +62,75 @@ M2_COMPARISON_BASELINE = str(
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
+
+
+def _coerce_bool(value, fallback):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return fallback
+    text = str(value).strip().lower()
+    if text in {"1", "true", "yes", "y", "on"}:
+        return True
+    if text in {"0", "false", "no", "n", "off"}:
+        return False
+    return fallback
+
+
+def _load_m2_run_state_config(path):
+    config_path = Path(path)
+    if not config_path.is_absolute():
+        config_path = Path.cwd() / config_path
+    if not config_path.is_file():
+        return {}
+    try:
+        payload = json.loads(config_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"[M2] Failed to read run-state config {config_path}: {exc}")
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+if M2_AUTO_APPLY_RUN_STATE:
+    _m2_run_state = _load_m2_run_state_config(M2_RUN_STATE_CONFIG)
+    if _m2_run_state:
+        _mode = str(_m2_run_state.get("mode") or "").strip().lower()
+        if _mode in {"problem_only", "problem-only", "problem"}:
+            M2_RUN_PROBLEM_ONLY_DEMO = True
+        elif _mode in {"full", "full_manifest", "full-manifest"}:
+            M2_RUN_PROBLEM_ONLY_DEMO = False
+        M2_RUN_PROBLEM_ONLY_DEMO = _coerce_bool(
+            _m2_run_state.get("m2_run_problem_only_demo"),
+            M2_RUN_PROBLEM_ONLY_DEMO,
+        )
+        M2_REFRESH_HANDOFF_CACHE = _coerce_bool(
+            _m2_run_state.get("m2_refresh_handoff_cache"),
+            M2_REFRESH_HANDOFF_CACHE,
+        )
+        M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = _coerce_bool(
+            _m2_run_state.get("m2_reuse_existing_prototype_calibration"),
+            M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION,
+        )
+        M2_BATCH_SIZE = int(_m2_run_state.get("m2_batch_size") or M2_BATCH_SIZE)
+        M2_ADAPTER_BATCH_SIZE = int(_m2_run_state.get("m2_adapter_batch_size") or M2_ADAPTER_BATCH_SIZE)
+        M2_PROBLEM_ONLY_MANIFEST = str(
+            _m2_run_state.get("m2_problem_only_manifest") or M2_PROBLEM_ONLY_MANIFEST
+        )
+        M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(
+            _m2_run_state.get("m2_problem_only_calibration_manifest")
+            or M2_PROBLEM_ONLY_CALIBRATION_MANIFEST
+        )
+        M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(
+            _m2_run_state.get("m2_problem_only_comparison_baseline")
+            or M2_PROBLEM_ONLY_COMPARISON_BASELINE
+        )
+        M2_COMPARISON_BASELINE = str(_m2_run_state.get("m2_comparison_baseline") or M2_COMPARISON_BASELINE)
+        print(
+            "[M2] Applied run-state config: "
+            f"mode={'problem_only' if M2_RUN_PROBLEM_ONLY_DEMO else 'full'}, "
+            f"refresh_handoff_cache={M2_REFRESH_HANDOFF_CACHE}, "
+            f"batch={M2_BATCH_SIZE}/{M2_ADAPTER_BATCH_SIZE}"
+        )
 
 
 def format_elapsed_seconds(seconds):

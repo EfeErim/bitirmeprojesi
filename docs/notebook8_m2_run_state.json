@@ -1,0 +1,12 @@
+{
+  "mode": "problem_only",
+  "m2_run_problem_only_demo": true,
+  "m2_refresh_handoff_cache": true,
+  "m2_reuse_existing_prototype_calibration": true,
+  "m2_batch_size": 12,
+  "m2_adapter_batch_size": 32,
+  "m2_problem_only_manifest": "docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv",
+  "m2_problem_only_calibration_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "m2_problem_only_comparison_baseline": "",
+  "m2_comparison_baseline": "docs/demo_results/m2/20260628T113313Z/summary.json"
+}

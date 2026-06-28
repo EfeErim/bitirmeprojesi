@@ -70,7 +70,7 @@ For the final balanced experiment surface, use `docs/demo_assets/m2_full_image_s
 
 The current speed-focused Notebook 8 defaults are `M2_BATCH_SIZE = 12` and `M2_ADAPTER_BATCH_SIZE = 32`. The runner persists router/prototype handoff outputs in `M2_HANDOFF_CACHE`, publishes that cache with each result folder, and restores the latest published cache when local `.runtime_tmp` is empty so repeated same-manifest runs can skip unchanged handoff work. The next run uses `expected_class_rescue=clean_exact_class_v2_ignore_hard_negative`, which allows only exact expected-class manifest rows to bypass curated hard-negative proximity while keeping normal negative/unknown rows guarded. Set `M2_REFRESH_HANDOFF_CACHE = True` only when intentionally forcing a full router/prototype refresh. Do not raise router batch size to 16 until a fresh full-manifest run confirms memory stability.
 
-For the current recommended next-run switches and the automatic post-run adjustment rule, use `docs/notebook8_m2_run_state.md`. After every pushed M2 result, update that note and `PROJECT_STATE.md` if the next run should switch between problem-only/full mode or fresh/cache-reuse mode.
+For the current recommended next-run switches and the automatic post-run adjustment rule, use `docs/notebook8_m2_run_state.json` plus `docs/notebook8_m2_run_state.md`. Notebook 8 applies the JSON automatically when `M2_AUTO_APPLY_RUN_STATE = True`, so update that JSON, the note, and `PROJECT_STATE.md` if the next run should switch between problem-only/full mode or fresh/cache-reuse mode.
 
 ## User Photo Guidance To Show
 
