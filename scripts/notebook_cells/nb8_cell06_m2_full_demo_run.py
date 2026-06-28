@@ -754,21 +754,29 @@ else:
     comparison_required = bool(m2_comparison_report.get("enabled"))
     comparison_written = bool(m2_comparison_report.get("written")) if comparison_required else True
     comparison_passed = m2_comparison_report.get("status") == "pass" if comparison_required else True
+    runner_succeeded = bool(report_ready and int(completed.returncode) == 0)
     completion_checks = {
         "m2_report_written": bool(report_ready),
+        "m2_runner_succeeded": bool(runner_succeeded),
         "git_push": bool(push_done),
         "m2_comparison_written": bool(comparison_written),
         "m2_comparison_passed": bool(comparison_passed),
     }
     m2_completion_report = {
-        "ready": bool(report_ready and push_done and comparison_written),
+        "ready": bool(report_ready and runner_succeeded and push_done and comparison_written and comparison_passed),
         "checks": completion_checks,
         "missing": [
             name
-            for name in ("m2_report_written", "git_push", "m2_comparison_written")
+            for name in (
+                "m2_report_written",
+                "m2_runner_succeeded",
+                "git_push",
+                "m2_comparison_written",
+                "m2_comparison_passed",
+            )
             if not completion_checks[name]
         ],
-        "soft_missing": [] if completion_checks["m2_comparison_passed"] else ["m2_comparison_passed"],
+        "soft_missing": [],
         "comparison": m2_comparison_report,
     }
     print(f"[COLAB] M2 completion checks -> {m2_completion_report['checks']}")
