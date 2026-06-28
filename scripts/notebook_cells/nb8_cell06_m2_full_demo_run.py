@@ -25,7 +25,7 @@ M2_DEMO_MANIFEST = str(
         "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
     )
 )
-M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", False))
+M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", True))
 M2_PROBLEM_ONLY_MANIFEST = str(
     globals().get(
         "M2_PROBLEM_ONLY_MANIFEST",

@@ -1,0 +1,41 @@
+{
+  "schema_version": "v1_m2_balanced_demo_manifest",
+  "generated_at": "2026-06-28T17:29:11.933126+00:00",
+  "source_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
+  "output_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_balanced_80_run_manifest.csv",
+  "target_count": 80,
+  "row_count": 664,
+  "supported_row_count": 640,
+  "non_supported_row_count": 24,
+  "target_counts": {
+    "apricot__fruit": 80,
+    "apricot__leaf": 80,
+    "grape__fruit": 80,
+    "grape__leaf": 80,
+    "grape__unknown_part": 2,
+    "non_plant": 6,
+    "strawberry__fruit": 80,
+    "strawberry__leaf": 80,
+    "tomato__fruit": 80,
+    "tomato__leaf": 80,
+    "tomato__unknown_part": 2,
+    "unknown_crop": 14
+  },
+  "added_count": 112,
+  "added_target_counts": {
+    "apricot__fruit": 16,
+    "apricot__leaf": 33,
+    "grape__fruit": 15,
+    "strawberry__fruit": 23,
+    "strawberry__leaf": 25
+  },
+  "removed_prior_balanced_count": 112,
+  "package_qc_row_count": 714,
+  "package_duplicate_hash_count": 0,
+  "quality_filters": {
+    "min_side": 360,
+    "min_bytes": 25000,
+    "min_contrast": 18.0,
+    "max_aspect_ratio": 2.5
+  }
+}
