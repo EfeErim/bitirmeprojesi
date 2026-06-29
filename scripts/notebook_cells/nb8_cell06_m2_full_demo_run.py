@@ -27,7 +27,7 @@ M2_DEMO_MANIFEST = str(
         "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
     )
 )
-M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", True))
+M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", False))
 M2_PROBLEM_ONLY_MANIFEST = str(
     globals().get(
         "M2_PROBLEM_ONLY_MANIFEST",
@@ -48,8 +48,8 @@ M2_DEMO_MARKDOWN_OUTPUT = str(
 M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analysis_summary.json"))
 M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
-M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 12))
-M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 32))
+M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 10))
+M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 24))
 M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))
 M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", True))
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
