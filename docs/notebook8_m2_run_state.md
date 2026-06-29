@@ -2,7 +2,7 @@
 
 This file exists so run-mode settings do not live only in chat. After every pushed Notebook 8 M2 result, update this note and `PROJECT_STATE.md` if the next run mode changes.
 
-Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8 applies that JSON automatically when `M2_AUTO_APPLY_RUN_STATE = True`, so stale visible parameter values are overridden by the current run-state config.
+Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8 applies that JSON automatically when `M2_AUTO_APPLY_RUN_STATE = True`, but explicit visible-cell M2 settings are treated as operator overrides. The JSON only fills run-state fields that the visible cell did not define, so manual Colab edits such as `M2_RUN_PROBLEM_ONLY_DEMO`, `M2_REFRESH_HANDOFF_CACHE`, `M2_BATCH_SIZE`, `M2_ADAPTER_BATCH_SIZE`, manifests, and comparison baselines are preserved in the run artifacts.
 
 ## Current Next Run
 
@@ -41,6 +41,7 @@ After every new `docs/demo_results/m2/<timestamp>/` folder is pushed:
    - Expect automatic recalibration when hashes or constraints differ.
 6. Keep batch sizes stable:
    - Keep `M2_BATCH_SIZE = 10` and `M2_ADAPTER_BATCH_SIZE = 24`.
+   - If a Colab operator changes visible-cell M2 settings for memory safety or diagnostics, those explicit values override the JSON for that run.
    - Do not raise router batch size to 16 until a fresh run over all images in the active full manifest proves memory stability and quality.
 7. Update this file's "Current Next Run" section and the relevant `PROJECT_STATE.md` next-step bullet whenever the recommended next run mode changes.
 

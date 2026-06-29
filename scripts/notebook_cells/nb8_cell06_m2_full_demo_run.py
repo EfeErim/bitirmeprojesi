@@ -18,6 +18,7 @@ from scripts.compare_m2_demo_results import (
     enrich_summary_manifest_sha256,
 )
 
+_M2_INITIAL_GLOBAL_NAMES = set(globals())
 M2_AUTO_APPLY_RUN_STATE = bool(globals().get("M2_AUTO_APPLY_RUN_STATE", True))
 M2_RUN_STATE_CONFIG = str(globals().get("M2_RUN_STATE_CONFIG", "docs/notebook8_m2_run_state.json"))
 M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))
@@ -52,6 +53,7 @@ M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 10))
 M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 24))
 M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))
 M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", True))
+M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))
 M2_STOP_ON_DEPENDENCY_BLOCKER = bool(globals().get("M2_STOP_ON_DEPENDENCY_BLOCKER", True))
 M2_AUTO_PUSH_RESULTS = bool(globals().get("M2_AUTO_PUSH_RESULTS", True))
 M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin"))
@@ -91,45 +93,76 @@ def _load_m2_run_state_config(path):
     return payload if isinstance(payload, dict) else {}
 
 
+_M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES = {
+    name
+    for name in (
+        "M2_RUN_PROBLEM_ONLY_DEMO",
+        "M2_REFRESH_HANDOFF_CACHE",
+        "M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION",
+        "M2_BATCH_SIZE",
+        "M2_ADAPTER_BATCH_SIZE",
+        "M2_PROBLEM_ONLY_MANIFEST",
+        "M2_PROBLEM_ONLY_CALIBRATION_MANIFEST",
+        "M2_PROBLEM_ONLY_COMPARISON_BASELINE",
+        "M2_COMPARISON_BASELINE",
+    )
+    if name in _M2_INITIAL_GLOBAL_NAMES
+}
+
+
+def _has_m2_run_state_operator_override(name):
+    return name in _M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES
+
+
 if M2_AUTO_APPLY_RUN_STATE:
     _m2_run_state = _load_m2_run_state_config(M2_RUN_STATE_CONFIG)
     if _m2_run_state:
-        _mode = str(_m2_run_state.get("mode") or "").strip().lower()
-        if _mode in {"problem_only", "problem-only", "problem"}:
-            M2_RUN_PROBLEM_ONLY_DEMO = True
-        elif _mode in {"full", "full_manifest", "full-manifest"}:
-            M2_RUN_PROBLEM_ONLY_DEMO = False
-        M2_RUN_PROBLEM_ONLY_DEMO = _coerce_bool(
-            _m2_run_state.get("m2_run_problem_only_demo"),
-            M2_RUN_PROBLEM_ONLY_DEMO,
-        )
-        M2_REFRESH_HANDOFF_CACHE = _coerce_bool(
-            _m2_run_state.get("m2_refresh_handoff_cache"),
-            M2_REFRESH_HANDOFF_CACHE,
-        )
-        M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = _coerce_bool(
-            _m2_run_state.get("m2_reuse_existing_prototype_calibration"),
-            M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION,
-        )
-        M2_BATCH_SIZE = int(_m2_run_state.get("m2_batch_size") or M2_BATCH_SIZE)
-        M2_ADAPTER_BATCH_SIZE = int(_m2_run_state.get("m2_adapter_batch_size") or M2_ADAPTER_BATCH_SIZE)
-        M2_PROBLEM_ONLY_MANIFEST = str(
-            _m2_run_state.get("m2_problem_only_manifest") or M2_PROBLEM_ONLY_MANIFEST
-        )
-        M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(
-            _m2_run_state.get("m2_problem_only_calibration_manifest")
-            or M2_PROBLEM_ONLY_CALIBRATION_MANIFEST
-        )
-        M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(
-            _m2_run_state.get("m2_problem_only_comparison_baseline")
-            or M2_PROBLEM_ONLY_COMPARISON_BASELINE
-        )
-        M2_COMPARISON_BASELINE = str(_m2_run_state.get("m2_comparison_baseline") or M2_COMPARISON_BASELINE)
+        if not _has_m2_run_state_operator_override("M2_RUN_PROBLEM_ONLY_DEMO"):
+            _mode = str(_m2_run_state.get("mode") or "").strip().lower()
+            if _mode in {"problem_only", "problem-only", "problem"}:
+                M2_RUN_PROBLEM_ONLY_DEMO = True
+            elif _mode in {"full", "full_manifest", "full-manifest"}:
+                M2_RUN_PROBLEM_ONLY_DEMO = False
+            M2_RUN_PROBLEM_ONLY_DEMO = _coerce_bool(
+                _m2_run_state.get("m2_run_problem_only_demo"),
+                M2_RUN_PROBLEM_ONLY_DEMO,
+            )
+        if not _has_m2_run_state_operator_override("M2_REFRESH_HANDOFF_CACHE"):
+            M2_REFRESH_HANDOFF_CACHE = _coerce_bool(
+                _m2_run_state.get("m2_refresh_handoff_cache"),
+                M2_REFRESH_HANDOFF_CACHE,
+            )
+        if not _has_m2_run_state_operator_override("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION"):
+            M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = _coerce_bool(
+                _m2_run_state.get("m2_reuse_existing_prototype_calibration"),
+                M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION,
+            )
+        if not _has_m2_run_state_operator_override("M2_BATCH_SIZE"):
+            M2_BATCH_SIZE = int(_m2_run_state.get("m2_batch_size") or M2_BATCH_SIZE)
+        if not _has_m2_run_state_operator_override("M2_ADAPTER_BATCH_SIZE"):
+            M2_ADAPTER_BATCH_SIZE = int(_m2_run_state.get("m2_adapter_batch_size") or M2_ADAPTER_BATCH_SIZE)
+        if not _has_m2_run_state_operator_override("M2_PROBLEM_ONLY_MANIFEST"):
+            M2_PROBLEM_ONLY_MANIFEST = str(
+                _m2_run_state.get("m2_problem_only_manifest") or M2_PROBLEM_ONLY_MANIFEST
+            )
+        if not _has_m2_run_state_operator_override("M2_PROBLEM_ONLY_CALIBRATION_MANIFEST"):
+            M2_PROBLEM_ONLY_CALIBRATION_MANIFEST = str(
+                _m2_run_state.get("m2_problem_only_calibration_manifest")
+                or M2_PROBLEM_ONLY_CALIBRATION_MANIFEST
+            )
+        if not _has_m2_run_state_operator_override("M2_PROBLEM_ONLY_COMPARISON_BASELINE"):
+            M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(
+                _m2_run_state.get("m2_problem_only_comparison_baseline")
+                or M2_PROBLEM_ONLY_COMPARISON_BASELINE
+            )
+        if not _has_m2_run_state_operator_override("M2_COMPARISON_BASELINE"):
+            M2_COMPARISON_BASELINE = str(_m2_run_state.get("m2_comparison_baseline") or M2_COMPARISON_BASELINE)
         print(
             "[M2] Applied run-state config: "
             f"mode={'problem_only' if M2_RUN_PROBLEM_ONLY_DEMO else 'full'}, "
             f"refresh_handoff_cache={M2_REFRESH_HANDOFF_CACHE}, "
-            f"batch={M2_BATCH_SIZE}/{M2_ADAPTER_BATCH_SIZE}"
+            f"batch={M2_BATCH_SIZE}/{M2_ADAPTER_BATCH_SIZE}, "
+            f"operator_overrides={sorted(_M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES)}"
         )
 
 
@@ -153,7 +186,6 @@ M2_PROTOTYPE_EMBEDDING_MODEL_ID = str(
 )
 M2_PROTOTYPE_EMBEDDING_DEVICE = str(globals().get("M2_PROTOTYPE_EMBEDDING_DEVICE", DEVICE if "DEVICE" in globals() else "cuda"))
 M2_REUSE_EXISTING_PROTOTYPES = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPES", True))
-M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))
 M2_PROTOTYPE_MAX_IMAGES_PER_CLASS = globals().get("M2_PROTOTYPE_MAX_IMAGES_PER_CLASS", 50)
 M2_PROTOTYPE_CURATION_ROOT = str(globals().get("M2_PROTOTYPE_CURATION_ROOT", "") or "")
 M2_PROTOTYPE_BANK = str(globals().get("M2_PROTOTYPE_BANK", "") or "")
