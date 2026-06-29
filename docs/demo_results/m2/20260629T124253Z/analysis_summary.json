@@ -1,0 +1,316 @@
+{
+  "schema_version": "v1_m2_demo_analysis_summary",
+  "total": 602,
+  "router_crop_correctness": {
+    "correct": 539,
+    "incorrect": 63,
+    "not_applicable": 0
+  },
+  "router_part_correctness": {
+    "correct": 522,
+    "incorrect": 80,
+    "not_applicable": 0
+  },
+  "normalized_disease_class_correctness": {
+    "correct": 416,
+    "incorrect": 51,
+    "not_applicable": 135
+  },
+  "classless_supported_probes": {
+    "total": 80,
+    "answered": 20,
+    "answered_target_correct": 20,
+    "answered_target_incorrect": 0,
+    "reviewed_or_abstained": 60,
+    "failed": 0
+  },
+  "adapter_unavailable": {
+    "wrong_router": 0,
+    "missing_adapter": 0,
+    "unknown": 0
+  },
+  "prototype_reconciliation": {
+    "abstain": 111,
+    "accept_router": 200,
+    "use_prototype": 291
+  },
+  "answered_wrong_by_target": {
+    "apricot__fruit": 9,
+    "apricot__leaf": 1,
+    "grape__fruit": 8,
+    "grape__leaf": 9,
+    "strawberry__fruit": 12,
+    "strawberry__leaf": 1,
+    "tomato__fruit": 4,
+    "tomato__leaf": 7
+  },
+  "answered_wrong_by_expected_class": {
+    "domates_bacterial_spot_and_speck_yaprak": 4,
+    "domates_blossom_end_rot_meyve": 1,
+    "domates_early_blight_yaprak": 2,
+    "domates_gray_mold_meyve": 1,
+    "domates_late_blight_meyve": 1,
+    "domates_leaf_mold_yaprak": 1,
+    "domates_spotted_wilt_meyve": 1,
+    "kayısı_şarka_virüsü_yaprak_206": 1,
+    "kayısıda_çiçek_monilyası_meyve_40": 1,
+    "kayısıda_şarka_virüsü_meyve_230": 3,
+    "kayısıda_şeftali_karalekesi_meyve_232": 2,
+    "kayısıda_yaprak_delen_çil_hastalığı_meyve_128": 3,
+    "strawberry_gray_mold_fruit": 2,
+    "strawberry_healthy_fruit": 6,
+    "strawberry_leaf_spot_leaf": 1,
+    "strawberry_powdery_mildew_fruit": 4,
+    "üzüm_botrytis_cinerea_meyve": 3,
+    "üzüm_külleme_meyve": 3,
+    "üzüm_külleme_yaprak": 2,
+    "üzüm_leafroll_virüs_yaprak": 1,
+    "üzüm_mildiyö_meyve": 2,
+    "üzüm_mildiyö_yaprak": 4,
+    "üzüm_yelpaze_virüsü_yaprak": 2
+  },
+  "prototype_correct_but_abstained": {
+    "count": 45,
+    "image_ids": [
+      "demo_007",
+      "demo_057",
+      "demo_064",
+      "demo_065",
+      "demo_129",
+      "demo_145",
+      "demo_236",
+      "demo_237",
+      "demo_243",
+      "demo_285",
+      "demo_308",
+      "demo_311",
+      "demo_384",
+      "demo_432",
+      "demo_440",
+      "demo_461",
+      "demo_525",
+      "demo_526",
+      "demo_528",
+      "demo_529",
+      "demo_530",
+      "demo_531",
+      "demo_532",
+      "demo_534",
+      "demo_545",
+      "demo_546",
+      "demo_547",
+      "demo_551",
+      "demo_552",
+      "demo_554",
+      "demo_555",
+      "demo_557",
+      "demo_558",
+      "demo_559",
+      "demo_563",
+      "demo_564",
+      "demo_566",
+      "demo_577",
+      "demo_582",
+      "demo_587",
+      "demo_590",
+      "demo_593",
+      "demo_594",
+      "demo_602",
+      "demo_603"
+    ],
+    "truncated": false,
+    "by_target": {
+      "apricot__fruit": 5,
+      "apricot__leaf": 2,
+      "grape__fruit": 4,
+      "grape__leaf": 3,
+      "strawberry__fruit": 8,
+      "strawberry__leaf": 6,
+      "tomato__fruit": 10,
+      "tomato__leaf": 7
+    }
+  },
+  "negative_false_accepts": {
+    "count": 0,
+    "image_ids": [],
+    "truncated": false,
+    "by_target": {}
+  },
+  "policy_thresholds_by_target": {
+    "apricot__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.02
+    },
+    "apricot__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.0
+    },
+    "grape__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.0
+    },
+    "grape__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.04
+    },
+    "grape__unknown_part": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.02
+    },
+    "non_plant": {
+      "min_similarity": 0.6,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.0
+    },
+    "strawberry__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.02
+    },
+    "strawberry__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.0,
+      "min_negative_gap": 0.02
+    },
+    "tomato__fruit": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.02
+    },
+    "tomato__leaf": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.06
+    },
+    "tomato__unknown_part": {
+      "min_similarity": 0.2,
+      "min_margin": 0.03,
+      "min_negative_gap": 0.0
+    },
+    "unknown_crop": {
+      "min_similarity": 0.2,
+      "min_margin": 0.02,
+      "min_negative_gap": 0.06
+    }
+  },
+  "opposite_part_disease_labels": {
+    "count": 0,
+    "image_ids": [],
+    "truncated": false
+  },
+  "per_target": {
+    "apricot__fruit": {
+      "total": 64,
+      "answered": 55,
+      "abstained_or_reviewed": 9,
+      "pass": 52,
+      "fail": 12,
+      "exact_class_correct": 42,
+      "opposite_part_disease_labels": 0
+    },
+    "apricot__leaf": {
+      "total": 47,
+      "answered": 39,
+      "abstained_or_reviewed": 8,
+      "pass": 46,
+      "fail": 1,
+      "exact_class_correct": 36,
+      "opposite_part_disease_labels": 0
+    },
+    "grape__fruit": {
+      "total": 65,
+      "answered": 55,
+      "abstained_or_reviewed": 10,
+      "pass": 54,
+      "fail": 11,
+      "exact_class_correct": 44,
+      "opposite_part_disease_labels": 0
+    },
+    "grape__leaf": {
+      "total": 87,
+      "answered": 80,
+      "abstained_or_reviewed": 7,
+      "pass": 76,
+      "fail": 11,
+      "exact_class_correct": 66,
+      "opposite_part_disease_labels": 0
+    },
+    "grape__unknown_part": {
+      "total": 2,
+      "answered": 0,
+      "abstained_or_reviewed": 2,
+      "pass": 2,
+      "fail": 0,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    },
+    "non_plant": {
+      "total": 6,
+      "answered": 0,
+      "abstained_or_reviewed": 6,
+      "pass": 6,
+      "fail": 0,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    },
+    "strawberry__fruit": {
+      "total": 57,
+      "answered": 46,
+      "abstained_or_reviewed": 11,
+      "pass": 43,
+      "fail": 14,
+      "exact_class_correct": 33,
+      "opposite_part_disease_labels": 0
+    },
+    "strawberry__leaf": {
+      "total": 55,
+      "answered": 46,
+      "abstained_or_reviewed": 9,
+      "pass": 53,
+      "fail": 2,
+      "exact_class_correct": 43,
+      "opposite_part_disease_labels": 0
+    },
+    "tomato__fruit": {
+      "total": 85,
+      "answered": 68,
+      "abstained_or_reviewed": 17,
+      "pass": 73,
+      "fail": 12,
+      "exact_class_correct": 63,
+      "opposite_part_disease_labels": 0
+    },
+    "tomato__leaf": {
+      "total": 118,
+      "answered": 98,
+      "abstained_or_reviewed": 20,
+      "pass": 99,
+      "fail": 19,
+      "exact_class_correct": 89,
+      "opposite_part_disease_labels": 0
+    },
+    "tomato__unknown_part": {
+      "total": 2,
+      "answered": 0,
+      "abstained_or_reviewed": 2,
+      "pass": 2,
+      "fail": 0,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    },
+    "unknown_crop": {
+      "total": 14,
+      "answered": 0,
+      "abstained_or_reviewed": 14,
+      "pass": 14,
+      "fail": 0,
+      "exact_class_correct": 0,
+      "opposite_part_disease_labels": 0
+    }
+  }
+}
