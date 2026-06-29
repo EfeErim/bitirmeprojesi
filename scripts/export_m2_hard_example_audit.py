@@ -20,6 +20,7 @@ from src.shared.csv_utils import write_csv_rows_with_order  # noqa: E402
 
 DEFAULT_TARGETS = ("tomato__leaf", "tomato__fruit", "apricot__fruit", "strawberry__fruit")
 ROUTER_ONLY_TARGETS = ("tomato__leaf", "tomato__fruit", "apricot__fruit", "strawberry__fruit", "grape__fruit")
+ANSWERED_WRONG_TARGETS: tuple[str, ...] = ()
 ROUTER_ONLY_RECONCILE_REASONS = (
     "prototype_evidence_weak",
     "prototype_policy_not_calibrated",
@@ -109,6 +110,7 @@ def build_hard_example_rows(
     limit: int | None = None,
     reconcile_reasons: tuple[str, ...] | None = None,
     exclude_answered_wrong: bool = False,
+    answered_wrong_only: bool = False,
     failed_only: bool = False,
 ) -> list[dict[str, Any]]:
     candidates = []
@@ -118,6 +120,8 @@ def build_hard_example_rows(
         if not include_unsupported and not _is_supported_row(row):
             continue
         if target_set and str(row.get("expected_target") or "") not in target_set:
+            continue
+        if answered_wrong_only and not _is_answered_wrong(row, require_expected_class=True):
             continue
         if exclude_answered_wrong and _is_answered_wrong(row):
             continue
@@ -129,6 +133,25 @@ def build_hard_example_rows(
         if score <= 0:
             continue
         candidates.append((_sort_key(row, score), row, score, reasons))
+
+    if answered_wrong_only:
+        target_counts = Counter(str(row.get("expected_target") or "") for _, row, _, _ in candidates)
+        pair_counts = Counter(_class_pair_key(row) for _, row, _, _ in candidates)
+        rescored = []
+        for _, row, score, reasons in candidates:
+            target = str(row.get("expected_target") or "")
+            pair = _class_pair_key(row)
+            if target_counts[target] > 1:
+                score += target_counts[target] * 10
+                reasons.append("repeated_target")
+            if pair_counts[pair] > 1:
+                score += pair_counts[pair] * 25
+                reasons.append("repeated_class_pair")
+            if _crop_part_correct(row):
+                score += 75
+                reasons.append("crop_part_correct_disease_wrong")
+            rescored.append((_sort_key(row, score), row, score, list(dict.fromkeys(reasons))))
+        candidates = rescored
 
     candidates.sort(key=lambda item: item[0])
     if limit is not None:
@@ -215,16 +238,22 @@ def write_contact_sheet(rows: list[dict[str, Any]], output: str | Path, *, repo_
     return len(thumbs)
 
 
-def write_packets(rows: list[dict[str, Any]], output_dir: Path, *, repo_root: Path) -> dict[str, Any]:
+def write_packets(
+    rows: list[dict[str, Any]],
+    output_dir: Path,
+    *,
+    repo_root: Path,
+    group_by_class_pair: bool = False,
+) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
-        grouped[str(row.get("expected_target") or "unknown")].append(row)
+        grouped[_packet_group_key(row, group_by_class_pair=group_by_class_pair)].append(row)
 
     packets = []
     sorted_groups = sorted(grouped.items(), key=lambda item: (-len(item[1]), item[0]))
-    for index, (target, target_rows) in enumerate(sorted_groups, start=1):
-        packet_dir = output_dir / f"{index:02d}_{_slug(target)}"
+    for index, (group_key, target_rows) in enumerate(sorted_groups, start=1):
+        packet_dir = output_dir / f"{index:02d}_{_slug(group_key)}"
         packet_dir.mkdir(parents=True, exist_ok=True)
         csv_path = packet_dir / "review_rows.csv"
         sheet_path = packet_dir / "contact_sheet.jpg"
@@ -238,12 +267,12 @@ def write_packets(rows: list[dict[str, Any]], output_dir: Path, *, repo_root: Pa
             target_rows,
             sheet_path,
             repo_root=repo_root,
-            title=f"{target} ({len(target_rows)} rows)",
+            title=f"{group_key} ({len(target_rows)} rows)",
         )
         (packet_dir / "README.md").write_text(
             "\n".join(
                 [
-                    f"# `{target}` M2 Hard Examples",
+                    f"# `{group_key}` M2 Hard Examples",
                     "",
                     f"- rows: `{len(target_rows)}`",
                     f"- contact sheet items: `{contact_sheet_count}`",
@@ -257,7 +286,8 @@ def write_packets(rows: list[dict[str, Any]], output_dir: Path, *, repo_root: Pa
         )
         packets.append(
             {
-                "target": target,
+                "target": str(target_rows[0].get("expected_target") or "unknown") if target_rows else "unknown",
+                "group_key": group_key,
                 "rows": len(target_rows),
                 "packet_dir": str(packet_dir),
                 "csv": str(csv_path),
@@ -293,12 +323,13 @@ def write_review_index(rows: list[dict[str, Any]], packet_summary: dict[str, Any
             "\n".join(
                 [
                     '<section class="packet">',
-                    f"<h2>{escape(str(packet.get('target') or 'unknown'))}</h2>",
+                    f"<h2>{escape(str(packet.get('group_key') or packet.get('target') or 'unknown'))}</h2>",
                     f"<p><strong>Rows:</strong> {int(packet.get('rows') or 0)}</p>",
                     f'<p><a href="{escape(csv_ref)}">review_rows.csv</a></p>',
                     (
                         f'<img src="{escape(image_ref)}" '
-                        f'alt="{escape(str(packet.get("target") or "packet"))} contact sheet">'
+                        f'alt="{escape(str(packet.get("group_key") or packet.get("target") or "packet"))} '
+                        'contact sheet">'
                     ),
                     "</section>",
                 ]
@@ -430,11 +461,48 @@ def _is_supported_row(row: dict[str, Any]) -> bool:
     )
 
 
-def _is_answered_wrong(row: dict[str, Any]) -> bool:
+def _is_answered_wrong(row: dict[str, Any], *, require_expected_class: bool = False) -> bool:
     pass_fail = str(row.get("pass_fail") or "").lower()
     actual_status = str(row.get("actual_status") or "").lower()
     predicted_disease = str(row.get("predicted_disease") or "").strip()
-    return pass_fail == "fail" and actual_status == "success" and bool(predicted_disease)
+    failure_bucket = str(row.get("failure_bucket") or "").strip()
+    expected_class = str(row.get("expected_class") or "").strip()
+    if require_expected_class and not expected_class:
+        return False
+    return (
+        pass_fail == "fail"
+        and actual_status == "success"
+        and bool(predicted_disease)
+        and not failure_bucket
+    )
+
+
+def _class_pair_key(row: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(row.get("expected_target") or ""),
+        str(row.get("expected_class") or ""),
+        str(row.get("predicted_disease") or ""),
+    )
+
+
+def _crop_part_correct(row: dict[str, Any]) -> bool:
+    expected_crop = str(row.get("expected_crop") or "").strip()
+    expected_part = str(row.get("expected_part") or "").strip()
+    return bool(
+        expected_crop
+        and expected_part
+        and expected_crop == str(row.get("predicted_crop") or "").strip()
+        and expected_part == str(row.get("predicted_part") or "").strip()
+    )
+
+
+def _packet_group_key(row: dict[str, Any], *, group_by_class_pair: bool = False) -> str:
+    target = str(row.get("expected_target") or "unknown")
+    if not group_by_class_pair:
+        return target
+    expected_class = str(row.get("expected_class") or "unknown_expected")
+    predicted = str(row.get("predicted_disease") or row.get("actual_status") or "unknown_predicted")
+    return f"{target}__{expected_class}__predicted_{predicted}"
 
 
 def _text(value: Any) -> str:
@@ -486,6 +554,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Export only the latest router/prototype failure slice and skip answered-wrong adapter/class rows.",
     )
     parser.add_argument(
+        "--answered-wrong-only",
+        action="store_true",
+        help="Export only supported answered-wrong disease/class rows with non-empty expected_class.",
+    )
+    parser.add_argument(
         "--reconcile-reasons",
         default="",
         help="Optional comma-separated reconcile_reason filter. Implied by --router-only.",
@@ -511,11 +584,13 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     run_id = args.run_id or (args.input.parent.name if args.input else newest_m2_run_id())
     input_path = args.input or Path("docs/demo_results/m2") / run_id / "m2_demo_checklist_run.json"
-    csv_output = args.csv_output or Path("docs/demo_results/m2") / run_id / "hard_example_audit.csv"
-    packet_dir = args.packet_output_dir or Path(".runtime_tmp/m2_hard_example_audit") / run_id
+    default_csv_name = "answered_wrong_audit.csv" if args.answered_wrong_only else "hard_example_audit.csv"
+    default_packet_root = "m2_answered_wrong_audit" if args.answered_wrong_only else "m2_hard_example_audit"
+    csv_output = args.csv_output or Path("docs/demo_results/m2") / run_id / default_csv_name
+    packet_dir = args.packet_output_dir or Path(".runtime_tmp") / default_packet_root / run_id
     review_index = args.review_index_output or packet_dir / "index.html"
     if args.targets is None:
-        targets = () if args.router_only else DEFAULT_TARGETS
+        targets = ANSWERED_WRONG_TARGETS if args.answered_wrong_only else (() if args.router_only else DEFAULT_TARGETS)
     else:
         targets = tuple(target.strip() for target in str(args.targets).split(",") if target.strip())
     reconcile_reasons = tuple(reason.strip() for reason in str(args.reconcile_reasons).split(",") if reason.strip())
@@ -531,10 +606,16 @@ def main(argv: list[str] | None = None) -> int:
         limit=limit,
         reconcile_reasons=reconcile_reasons,
         exclude_answered_wrong=args.exclude_answered_wrong or args.router_only,
+        answered_wrong_only=args.answered_wrong_only,
         failed_only=args.failed_only or args.router_only,
     )
     write_csv_rows_with_order(csv_output, audit_rows, preferred_headers=CSV_COLUMNS, encoding="utf-8-sig")
-    packet_summary = write_packets(audit_rows, packet_dir, repo_root=args.repo_root)
+    packet_summary = write_packets(
+        audit_rows,
+        packet_dir,
+        repo_root=args.repo_root,
+        group_by_class_pair=args.answered_wrong_only,
+    )
     index_output = write_review_index(audit_rows, packet_summary, review_index)
 
     print(
@@ -545,6 +626,7 @@ def main(argv: list[str] | None = None) -> int:
                 "input": str(input_path),
                 "row_count": len(audit_rows),
                 "router_only": bool(args.router_only),
+                "answered_wrong_only": bool(args.answered_wrong_only),
                 "reconcile_reasons": list(reconcile_reasons),
                 "csv_output": str(csv_output),
                 "packet_output_dir": str(packet_dir),

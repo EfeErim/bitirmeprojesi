@@ -73,7 +73,12 @@ def load_decision_rows(*, decisions_csv: Path, packet_dir: Path | None = None) -
     return rows, merged_count
 
 
-def apply_hard_example_decisions(*, decisions_csv: Path, output_dir: Path, packet_dir: Path | None = None) -> dict[str, Any]:
+def apply_hard_example_decisions(
+    *,
+    decisions_csv: Path,
+    output_dir: Path,
+    packet_dir: Path | None = None,
+) -> dict[str, Any]:
     rows, packet_decision_count = load_decision_rows(decisions_csv=decisions_csv, packet_dir=packet_dir)
     buckets: dict[str, list[dict[str, str]]] = {
         "prototype_positive": [],
@@ -120,13 +125,45 @@ def apply_hard_example_decisions(*, decisions_csv: Path, output_dir: Path, packe
         "prototype_hard_negative_manifest": output_dir / "prototype_hard_negative_manifest.csv",
         "adapter_hard_example_manifest": output_dir / "adapter_hard_example_manifest.csv",
         "excluded_ambiguous_rows": output_dir / "excluded_ambiguous_rows.csv",
+        "relabel_manifest": output_dir / "relabel_manifest.csv",
         "relabeled_rows": output_dir / "relabeled_rows.csv",
     }
-    write_csv_rows_with_order(outputs["prototype_positive_manifest"], buckets["prototype_positive"], preferred_headers=MANIFEST_COLUMNS, encoding="utf-8-sig")
-    write_csv_rows_with_order(outputs["prototype_hard_negative_manifest"], buckets["prototype_hard_negative"], preferred_headers=MANIFEST_COLUMNS, encoding="utf-8-sig")
-    write_csv_rows_with_order(outputs["adapter_hard_example_manifest"], buckets["adapter_hard_example"], preferred_headers=MANIFEST_COLUMNS, encoding="utf-8-sig")
-    write_csv_rows_with_order(outputs["excluded_ambiguous_rows"], buckets["excluded_ambiguous"], preferred_headers=MANIFEST_COLUMNS, encoding="utf-8-sig")
-    write_csv_rows_with_order(outputs["relabeled_rows"], buckets["relabeled"], preferred_headers=MANIFEST_COLUMNS, encoding="utf-8-sig")
+    write_csv_rows_with_order(
+        outputs["prototype_positive_manifest"],
+        buckets["prototype_positive"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
+    write_csv_rows_with_order(
+        outputs["prototype_hard_negative_manifest"],
+        buckets["prototype_hard_negative"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
+    write_csv_rows_with_order(
+        outputs["adapter_hard_example_manifest"],
+        buckets["adapter_hard_example"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
+    write_csv_rows_with_order(
+        outputs["excluded_ambiguous_rows"],
+        buckets["excluded_ambiguous"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
+    write_csv_rows_with_order(
+        outputs["relabel_manifest"],
+        buckets["relabeled"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
+    write_csv_rows_with_order(
+        outputs["relabeled_rows"],
+        buckets["relabeled"],
+        preferred_headers=MANIFEST_COLUMNS,
+        encoding="utf-8-sig",
+    )
 
     summary = {
         "schema_version": "v1_m2_hard_example_curation",
@@ -196,14 +233,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--decisions-csv", type=Path, required=True)
     parser.add_argument("--packet-dir", type=Path, help="Optional packet directory containing */review_rows.csv files.")
     parser.add_argument("--output-dir", type=Path, help="Curation manifest output directory.")
-    parser.add_argument("--require-reviewed", action="store_true", help="Return 2 when any selected row has empty review_decision.")
+    parser.add_argument(
+        "--require-reviewed",
+        action="store_true",
+        help="Return 2 when any selected row has empty review_decision.",
+    )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     output_dir = args.output_dir or _default_output_dir(args.decisions_csv)
-    summary = apply_hard_example_decisions(decisions_csv=args.decisions_csv, packet_dir=args.packet_dir, output_dir=output_dir)
+    summary = apply_hard_example_decisions(
+        decisions_csv=args.decisions_csv,
+        packet_dir=args.packet_dir,
+        output_dir=output_dir,
+    )
     print(
         json.dumps(
             {

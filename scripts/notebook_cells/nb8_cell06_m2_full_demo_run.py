@@ -49,8 +49,8 @@ M2_DEMO_MARKDOWN_OUTPUT = str(
 M2_ANALYSIS_OUTPUT = str(globals().get("M2_ANALYSIS_OUTPUT", ".runtime_tmp/analysis_summary.json"))
 M2_ANALYSIS_MARKDOWN_OUTPUT = str(globals().get("M2_ANALYSIS_MARKDOWN_OUTPUT", ".runtime_tmp/analysis_summary.md"))
 M2_DEMO_LIMIT = globals().get("M2_DEMO_LIMIT", None)
-M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 10))
-M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 24))
+M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 6))
+M2_ADAPTER_BATCH_SIZE = int(globals().get("M2_ADAPTER_BATCH_SIZE", 12))
 M2_HANDOFF_CACHE = str(globals().get("M2_HANDOFF_CACHE", ".runtime_tmp/m2_router_prototype_handoff_cache.json"))
 M2_REFRESH_HANDOFF_CACHE = bool(globals().get("M2_REFRESH_HANDOFF_CACHE", True))
 M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))
@@ -60,7 +60,7 @@ M2_AUTO_PUSH_REMOTE_NAME = str(globals().get("M2_AUTO_PUSH_REMOTE_NAME", "origin
 M2_AUTO_PUSH_BRANCH = str(globals().get("M2_AUTO_PUSH_BRANCH", "master") or "").strip() or None
 M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_results/m2"))
 M2_COMPARISON_BASELINE = str(
-    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260628T113313Z/summary.json") or ""
+    globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260629T124253Z/summary.json") or ""
 )
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))

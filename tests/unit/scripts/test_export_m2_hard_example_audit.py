@@ -121,6 +121,62 @@ def test_build_hard_example_rows_router_only_filters_adapter_wrong_and_reasons()
     assert "router_failure" in audit_rows[0]["priority_reasons"]
 
 
+def test_build_hard_example_rows_answered_wrong_only_filters_and_ranks_class_pairs():
+    rows = [
+        {
+            "image_id": "demo_001",
+            "expected_target": "grape__leaf",
+            "expected_crop": "grape",
+            "expected_part": "leaf",
+            "expected_class": "mildew",
+            "actual_status": "success",
+            "predicted_crop": "grape",
+            "predicted_part": "leaf",
+            "predicted_disease": "anthracnose",
+            "pass_fail": "fail",
+        },
+        {
+            "image_id": "demo_002",
+            "expected_target": "grape__leaf",
+            "expected_crop": "grape",
+            "expected_part": "leaf",
+            "expected_class": "mildew",
+            "actual_status": "success",
+            "predicted_crop": "grape",
+            "predicted_part": "leaf",
+            "predicted_disease": "anthracnose",
+            "pass_fail": "fail",
+        },
+        {
+            "image_id": "demo_003",
+            "expected_target": "grape__leaf",
+            "expected_crop": "grape",
+            "expected_part": "leaf",
+            "expected_class": "",
+            "actual_status": "success",
+            "predicted_disease": "anthracnose",
+            "pass_fail": "fail",
+        },
+        {
+            "image_id": "demo_004",
+            "expected_target": "grape__leaf",
+            "expected_crop": "grape",
+            "expected_part": "leaf",
+            "expected_class": "mildew",
+            "actual_status": "success",
+            "predicted_disease": "anthracnose",
+            "pass_fail": "fail",
+            "failure_bucket": "router",
+        },
+    ]
+
+    audit_rows = build_hard_example_rows(rows, targets=(), answered_wrong_only=True)
+
+    assert [row["image_id"] for row in audit_rows] == ["demo_001", "demo_002"]
+    assert "repeated_class_pair" in audit_rows[0]["priority_reasons"]
+    assert "crop_part_correct_disease_wrong" in audit_rows[0]["priority_reasons"]
+
+
 def test_load_m2_rows_falls_back_to_git_object_when_sparse(tmp_path: Path):
     missing = tmp_path / "docs" / "demo_results" / "m2" / "run" / "m2_demo_checklist_run.json"
     completed = Mock(stdout=json.dumps({"rows": [{"image_id": "demo_001"}]}))
@@ -203,3 +259,50 @@ def test_cli_exports_csv_packets_and_index(tmp_path: Path):
     assert (packet_dir / "01_tomato__leaf" / "review_rows.csv").is_file()
     assert (packet_dir / "01_tomato__leaf" / "contact_sheet.jpg").is_file()
     assert "tomato__leaf" in index.read_text(encoding="utf-8")
+
+
+def test_cli_answered_wrong_mode_uses_answered_wrong_defaults(tmp_path: Path):
+    run = tmp_path / "m2_demo_checklist_run.json"
+    run.write_text(
+        json.dumps(
+            {
+                "rows": [
+                    {
+                        "image_id": "demo_001",
+                        "expected_target": "grape__leaf",
+                        "expected_crop": "grape",
+                        "expected_part": "leaf",
+                        "expected_class": "mildew",
+                        "actual_status": "success",
+                        "predicted_crop": "grape",
+                        "predicted_part": "leaf",
+                        "predicted_disease": "anthracnose",
+                        "pass_fail": "fail",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    csv_output = tmp_path / "answered_wrong_audit.csv"
+    packet_dir = tmp_path / "packets"
+
+    status = main(
+        [
+            "--input",
+            str(run),
+            "--run-id",
+            "test_run",
+            "--answered-wrong-only",
+            "--csv-output",
+            str(csv_output),
+            "--packet-output-dir",
+            str(packet_dir),
+        ]
+    )
+
+    assert status == 0
+    with csv_output.open("r", encoding="utf-8-sig", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert rows[0]["image_id"] == "demo_001"
+    assert (packet_dir / "01_grape__leaf__mildew__predicted_anthracnose" / "review_rows.csv").is_file()

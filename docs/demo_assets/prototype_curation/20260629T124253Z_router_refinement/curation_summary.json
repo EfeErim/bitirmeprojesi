@@ -1,0 +1,23 @@
+{
+  "adapter_hard_example_count": 0,
+  "created_at": "2026-06-29T14:22:21.120385+00:00",
+  "excluded_ambiguous_count": 25,
+  "mode": "merged_manifest_write",
+  "output_dir": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement",
+  "outputs": {
+    "adapter_hard_example_manifest": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement\\adapter_hard_example_manifest.csv",
+    "excluded_ambiguous_rows": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement\\excluded_ambiguous_rows.csv",
+    "prototype_hard_negative_manifest": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement\\prototype_hard_negative_manifest.csv",
+    "prototype_positive_manifest": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement\\prototype_positive_manifest.csv",
+    "relabel_manifest": "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_refinement\\relabel_manifest.csv"
+  },
+  "pending_review_count": 0,
+  "prototype_hard_negative_count": 20,
+  "prototype_positive_count": 74,
+  "relabeled_count": 1,
+  "schema_version": "v1_m2_merged_router_curation",
+  "source_curation_roots": [
+    "docs\\demo_assets\\prototype_curation\\20260628T113313Z",
+    "docs\\demo_assets\\prototype_curation\\20260629T124253Z_router_only"
+  ]
+}
