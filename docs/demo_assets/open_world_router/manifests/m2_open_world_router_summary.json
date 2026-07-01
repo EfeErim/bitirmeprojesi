@@ -1,0 +1,33 @@
+{
+  "schema_version": "open_world_router_manifest.v1",
+  "generated_at": "2026-07-01T09:41:07.272299+00:00",
+  "manifest": "docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv",
+  "image_dir": "docs/demo_assets/open_world_router/images",
+  "row_count": 306,
+  "min_rows": 300,
+  "target_row_count": 510,
+  "slice_counts": {
+    "low_quality_ambiguous": 30,
+    "non_plant_distractor": 50,
+    "plant_like_non_target": 60,
+    "same_crop_wrong_part": 51,
+    "unsupported_crop": 115
+  },
+  "target_counts": {
+    "apricot__unknown_part": 3,
+    "grape__unknown_part": 8,
+    "non_plant": 50,
+    "strawberry__unknown_part": 20,
+    "tomato__unknown_part": 20,
+    "unknown_crop": 205
+  },
+  "duplicate_hash_count": 0,
+  "disjoint_root_count": 3,
+  "disjoint_hash_count": 1020,
+  "quality_filters": {
+    "min_side": 320,
+    "min_bytes": 20000,
+    "min_contrast": 14.0,
+    "max_aspect_ratio": 3.0
+  }
+}

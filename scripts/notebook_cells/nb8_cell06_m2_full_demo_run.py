@@ -62,6 +62,32 @@ M2_REPO_RESULTS_ROOT = str(globals().get("M2_REPO_RESULTS_ROOT", "docs/demo_resu
 M2_COMPARISON_BASELINE = str(
     globals().get("M2_COMPARISON_BASELINE", "docs/demo_results/m2/20260629T124253Z/summary.json") or ""
 )
+M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = bool(globals().get("M2_RUN_OPEN_WORLD_ROUTER_VALIDATION", False))
+M2_OPEN_WORLD_SUPPORTED_MANIFEST = str(
+    globals().get(
+        "M2_OPEN_WORLD_SUPPORTED_MANIFEST",
+        "docs/demo_assets/m2_full_image_set/manifests/m2_balanced_80_run_manifest.csv",
+    )
+)
+M2_OPEN_WORLD_MANIFEST = str(
+    globals().get(
+        "M2_OPEN_WORLD_MANIFEST",
+        "docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv",
+    )
+)
+M2_OPEN_WORLD_OUTPUT_ROOT = str(
+    globals().get("M2_OPEN_WORLD_OUTPUT_ROOT", "docs/demo_results/router_open_world")
+)
+M2_OPEN_WORLD_HANDOFF_CACHE = str(
+    globals().get("M2_OPEN_WORLD_HANDOFF_CACHE", ".runtime_tmp/router_open_world_handoff_cache.json")
+)
+M2_OPEN_WORLD_BASELINE_SUMMARY = str(globals().get("M2_OPEN_WORLD_BASELINE_SUMMARY", M2_COMPARISON_BASELINE) or "")
+M2_OPEN_WORLD_MIN_ROWS = int(globals().get("M2_OPEN_WORLD_MIN_ROWS", 300))
+M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE = float(
+    globals().get("M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE", 0.80)
+)
+M2_OPEN_WORLD_REQUIRE_LATENCY_BASELINE = bool(globals().get("M2_OPEN_WORLD_REQUIRE_LATENCY_BASELINE", True))
+M2_OPEN_WORLD_FAIL_ON_NOT_READY = bool(globals().get("M2_OPEN_WORLD_FAIL_ON_NOT_READY", True))
 M2_AUTO_DISCONNECT_RUNTIME = bool(globals().get("M2_AUTO_DISCONNECT_RUNTIME", True))
 M2_AUTO_DISCONNECT_GRACE_SECONDS = float(globals().get("M2_AUTO_DISCONNECT_GRACE_SECONDS", 20))
 
@@ -105,6 +131,8 @@ _M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES = {
         "M2_PROBLEM_ONLY_CALIBRATION_MANIFEST",
         "M2_PROBLEM_ONLY_COMPARISON_BASELINE",
         "M2_COMPARISON_BASELINE",
+        "M2_RUN_OPEN_WORLD_ROUTER_VALIDATION",
+        "M2_OPEN_WORLD_BASELINE_SUMMARY",
     )
     if name in _M2_INITIAL_GLOBAL_NAMES
 }
@@ -157,11 +185,21 @@ if M2_AUTO_APPLY_RUN_STATE:
             )
         if not _has_m2_run_state_operator_override("M2_COMPARISON_BASELINE"):
             M2_COMPARISON_BASELINE = str(_m2_run_state.get("m2_comparison_baseline") or M2_COMPARISON_BASELINE)
+        if not _has_m2_run_state_operator_override("M2_RUN_OPEN_WORLD_ROUTER_VALIDATION"):
+            M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = _coerce_bool(
+                _m2_run_state.get("m2_run_open_world_router_validation"),
+                M2_RUN_OPEN_WORLD_ROUTER_VALIDATION,
+            )
+        if not _has_m2_run_state_operator_override("M2_OPEN_WORLD_BASELINE_SUMMARY"):
+            M2_OPEN_WORLD_BASELINE_SUMMARY = str(
+                _m2_run_state.get("m2_open_world_baseline_summary") or M2_OPEN_WORLD_BASELINE_SUMMARY
+            )
         print(
             "[M2] Applied run-state config: "
             f"mode={'problem_only' if M2_RUN_PROBLEM_ONLY_DEMO else 'full'}, "
             f"refresh_handoff_cache={M2_REFRESH_HANDOFF_CACHE}, "
             f"batch={M2_BATCH_SIZE}/{M2_ADAPTER_BATCH_SIZE}, "
+            f"open_world_gate={M2_RUN_OPEN_WORLD_ROUTER_VALIDATION}, "
             f"operator_overrides={sorted(_M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES)}"
         )
 
@@ -714,6 +752,13 @@ else:
         "status": "not_run",
         "checks": {},
     }
+    open_world_validation_report = {
+        "enabled": bool(M2_RUN_OPEN_WORLD_ROUTER_VALIDATION),
+        "run": False,
+        "status": "not_run",
+        "ready": False,
+        "checks": {},
+    }
 
     if report_ready:
         repo_results_dir.mkdir(parents=True, exist_ok=True)
@@ -848,15 +893,108 @@ else:
                 "status": "baseline_missing",
                 "checks": {},
             }
+
+        if M2_RUN_OPEN_WORLD_ROUTER_VALIDATION and int(completed.returncode) == 0:
+            open_world_output_root = (repo_root / M2_OPEN_WORLD_OUTPUT_ROOT).resolve()
+            open_world_run_dir = open_world_output_root / stamp
+            open_world_command = [
+                sys.executable,
+                str(repo_root / "scripts" / "run_router_open_world_validation.py"),
+                "--run-id",
+                stamp,
+                "--output-root",
+                str(open_world_output_root),
+                "--supported-manifest",
+                str((repo_root / M2_OPEN_WORLD_SUPPORTED_MANIFEST).resolve()),
+                "--open-world-manifest",
+                str((repo_root / M2_OPEN_WORLD_MANIFEST).resolve()),
+                "--device",
+                str(DEVICE),
+                "--config-env",
+                str(CONFIG_ENV),
+                "--adapter-root",
+                str(adapter_root_path),
+                "--batch-size",
+                str(max(1, int(M2_BATCH_SIZE))),
+                "--adapter-batch-size",
+                str(max(1, int(M2_ADAPTER_BATCH_SIZE))),
+                "--handoff-cache",
+                str((repo_root / M2_OPEN_WORLD_HANDOFF_CACHE).resolve()),
+                "--min-open-world-rows",
+                str(max(1, int(M2_OPEN_WORLD_MIN_ROWS))),
+                "--min-supported-route-coverage",
+                str(float(M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE)),
+            ]
+            if M2_ENABLE_PROTOTYPE_RECONCILER:
+                open_world_command.append("--enable-prototype-reconciler")
+            if M2_PROTOTYPE_BANK:
+                open_world_command.extend(["--prototype-bank", str((repo_root / M2_PROTOTYPE_BANK).resolve())])
+            if M2_TAXONOMY_REGISTRY:
+                open_world_command.extend(["--taxonomy-registry", str((repo_root / M2_TAXONOMY_REGISTRY).resolve())])
+            if prototype_calibration_output_path.is_file():
+                open_world_command.extend(["--prototype-calibration-report", str(prototype_calibration_output_path)])
+            if M2_PROTOTYPE_MIN_SIMILARITY is not None:
+                open_world_command.extend(["--prototype-min-similarity", str(float(M2_PROTOTYPE_MIN_SIMILARITY))])
+            if M2_PROTOTYPE_MIN_MARGIN is not None:
+                open_world_command.extend(["--prototype-min-margin", str(float(M2_PROTOTYPE_MIN_MARGIN))])
+            if M2_PROTOTYPE_MIN_NEGATIVE_GAP is not None:
+                open_world_command.extend(["--prototype-min-negative-gap", str(float(M2_PROTOTYPE_MIN_NEGATIVE_GAP))])
+            if M2_OPEN_WORLD_BASELINE_SUMMARY:
+                open_world_command.extend(
+                    ["--baseline-summary", str((repo_root / M2_OPEN_WORLD_BASELINE_SUMMARY).resolve())]
+                )
+            if M2_REFRESH_HANDOFF_CACHE:
+                open_world_command.append("--refresh-handoff-cache")
+            if M2_STOP_ON_DEPENDENCY_BLOCKER:
+                open_world_command.append("--stop-on-dependency-blocker")
+            if M2_OPEN_WORLD_REQUIRE_LATENCY_BASELINE:
+                open_world_command.append("--require-latency-baseline")
+            if M2_OPEN_WORLD_FAIL_ON_NOT_READY:
+                open_world_command.append("--fail-on-not-ready")
+            print(f"[M2] Starting open-world router validation gate: {open_world_run_dir.relative_to(repo_root)}")
+            open_world_completed = subprocess.run(open_world_command, cwd=repo_root, check=False)
+            open_world_readiness_path = open_world_run_dir / "router_open_world_readiness.json"
+            open_world_validation_report = {
+                "enabled": True,
+                "run": True,
+                "exit_code": int(open_world_completed.returncode),
+                "run_dir": open_world_run_dir.relative_to(repo_root).as_posix(),
+                "readiness": open_world_readiness_path.relative_to(repo_root).as_posix(),
+                "status": "missing_readiness",
+                "ready": False,
+                "checks": {},
+            }
+            if open_world_readiness_path.is_file():
+                open_world_readiness = json.loads(open_world_readiness_path.read_text(encoding="utf-8"))
+                open_world_validation_report["status"] = str(open_world_readiness.get("status") or "unknown")
+                open_world_validation_report["ready"] = (
+                    open_world_completed.returncode == 0 and open_world_readiness.get("status") == "pass"
+                )
+                open_world_validation_report["checks"] = open_world_readiness.get("checks", {})
+            copied_paths.append(open_world_run_dir.relative_to(repo_root).as_posix())
+            summary_payload["open_world_router_validation"] = open_world_validation_report
+            summary_payload["copied_artifacts"] = copied_paths
+        elif M2_RUN_OPEN_WORLD_ROUTER_VALIDATION:
+            open_world_validation_report = {
+                "enabled": True,
+                "run": False,
+                "status": "skipped_m2_runner_failed",
+                "ready": False,
+                "checks": {"m2_runner_succeeded": False},
+            }
+            summary_payload["open_world_router_validation"] = open_world_validation_report
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         print("[M2] Repo result copy:")
         print(json.dumps(copied_paths, indent=2, ensure_ascii=False))
 
         if M2_AUTO_PUSH_RESULTS:
             try:
+                push_paths = [repo_results_rel.as_posix()]
+                if open_world_validation_report.get("run_dir"):
+                    push_paths.append(str(open_world_validation_report["run_dir"]))
                 m2_demo_publish_report = push_repo_paths_to_github(
                     repo_root=repo_root,
-                    relative_paths=[repo_results_rel.as_posix()],
+                    relative_paths=push_paths,
                     remote_name=M2_AUTO_PUSH_REMOTE_NAME,
                     branch=M2_AUTO_PUSH_BRANCH,
                     commit_message=f"Add M2 demo results {stamp}",
@@ -866,15 +1004,18 @@ else:
                 m2_demo_publish_report = {
                     "enabled": True,
                     "pushed": False,
-                    "paths": [repo_results_rel.as_posix()],
+                    "paths": push_paths,
                     "error": f"{exc.__class__.__name__}: {exc}",
                 }
                 print(f"[GIT] M2 result auto-push failed: {m2_demo_publish_report['error']}")
         else:
+            push_paths = [repo_results_rel.as_posix()]
+            if open_world_validation_report.get("run_dir"):
+                push_paths.append(str(open_world_validation_report["run_dir"]))
             m2_demo_publish_report = {
                 "enabled": False,
                 "pushed": False,
-                "paths": [repo_results_rel.as_posix()],
+                "paths": push_paths,
             }
     else:
         m2_demo_publish_report = {
@@ -894,6 +1035,8 @@ else:
     comparison_required = bool(m2_comparison_report.get("enabled"))
     comparison_written = bool(m2_comparison_report.get("written")) if comparison_required else True
     comparison_passed = m2_comparison_report.get("status") == "pass" if comparison_required else True
+    open_world_required = bool(open_world_validation_report.get("enabled"))
+    open_world_passed = bool(open_world_validation_report.get("ready")) if open_world_required else True
     runner_succeeded = bool(report_ready and int(completed.returncode) == 0)
     completion_checks = {
         "m2_report_written": bool(report_ready),
@@ -901,9 +1044,17 @@ else:
         "git_push": bool(push_done),
         "m2_comparison_written": bool(comparison_written),
         "m2_comparison_passed": bool(comparison_passed),
+        "open_world_router_validation_passed": bool(open_world_passed),
     }
     m2_completion_report = {
-        "ready": bool(report_ready and runner_succeeded and push_done and comparison_written and comparison_passed),
+        "ready": bool(
+            report_ready
+            and runner_succeeded
+            and push_done
+            and comparison_written
+            and comparison_passed
+            and open_world_passed
+        ),
         "checks": completion_checks,
         "missing": [
             name
@@ -913,11 +1064,13 @@ else:
                 "git_push",
                 "m2_comparison_written",
                 "m2_comparison_passed",
+                "open_world_router_validation_passed",
             )
             if not completion_checks[name]
         ],
         "soft_missing": [],
         "comparison": m2_comparison_report,
+        "open_world_router_validation": open_world_validation_report,
     }
     print(f"[COLAB] M2 completion checks -> {m2_completion_report['checks']}")
     m2_demo_disconnect_report = maybe_auto_disconnect_colab_runtime(

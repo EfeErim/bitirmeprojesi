@@ -158,7 +158,7 @@ The updater owns only the block below. Do not put accepted decisions inside it; 
 <!-- BEGIN SOTA AUTOMATION CANDIDATES -->
 #### Latest Automated Candidate Scan
 
-Generated: `2026-06-29T06:40:53Z`
+Generated: `2026-07-01T08:17:45Z`
 
 These are machine-collected literature candidates for human review. They are not accepted repo guidance until a maintainer promotes them into the relevant Literature Anchors table above.
 
@@ -167,7 +167,7 @@ These are machine-collected literature candidates for human review. They are not
 - Query: `bioclip`
 - Published: `2026-04-30T07:41:49Z`
 - Authors: Ilyass Moummad, Kawtar Zaher, Hervé Goëau, Jean-Christophe Lombardo, Pierre Bonnet, Alexis Joly
-- Link: http://arxiv.org/abs/2604.27538v1
+- Link: http://arxiv.org/abs/2604.27538v2
 - Repo action hint: Review plant-domain representation and augmentation policy; avoid transformations that erase subtle leaf/symptom cues unless a local ablation proves they help.
 - Review note: Automated plant recognition plays a crucial role in biodiversity monitoring and conservation, yet current approaches rely heavily on supervised learning, which is limited by the availability of expert-labeled data. Self-supervised learning (SSL) offers a scalable alternative, but existing methods and training protocols are largely designed for coarse-grained visual tasks and may not transfer well to fine-grained domains such as plant species recognition. In this work, we investigate SSL for plant image representation learning. We show that commonly used augmentations in SSL pipelines - such as Gaussian blur, grayscale conversion, and solarization - are detrimental in the context of plant images, as they remove subtle discriminative cues essential for fine-grained recognition. We instead identify alternative transformations, including affine and posterization, that are better suited to this domain. We further demonstrate that training SimDINOv2 on the iNaturalist 2021 Plantae subset yields significantly stronger representations than training on ImageNet-1K, highlighting the importance of domain-specific data for SSL. Our findings are consistent across both ViT-Base and ViT-Large architectures. Moreover, our models achieve competitive performance and sometimes outperform strong supervised baselines Pl@ntCLEF and BioCLIP on downstream plant recognition tasks in few-shot settings. Overall, our results highlight the critical importance of domain-adapted augmentation strategies and dataset selection in self-supervised learning, and provide practical guidelines for building scalable models for biodiversity monitoring.
 

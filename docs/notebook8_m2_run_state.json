@@ -8,5 +8,7 @@
   "m2_problem_only_manifest": "docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv",
   "m2_problem_only_calibration_manifest": "docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv",
   "m2_problem_only_comparison_baseline": "",
-  "m2_comparison_baseline": "docs/demo_results/m2/20260629T124253Z/summary.json"
+  "m2_comparison_baseline": "docs/demo_results/m2/20260629T124253Z/summary.json",
+  "m2_run_open_world_router_validation": true,
+  "m2_open_world_baseline_summary": "docs/demo_results/m2/20260629T124253Z/summary.json"
 }

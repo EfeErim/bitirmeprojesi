@@ -445,6 +445,8 @@ The repo validates the maintained surface through:
 
 - `scripts/validate_notebook_imports.py`
 - `scripts/validate_config_schema.py`
+- `scripts/validate_router_open_world_preflight.py`
+- `scripts/validate_router_open_world_result.py`
 - `scripts/evaluate_dataset_layout.py`
 - `scripts/evaluate_router_part_surface.py`
 - `scripts/benchmark_surfaces.py`

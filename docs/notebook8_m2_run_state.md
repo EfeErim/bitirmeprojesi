@@ -13,11 +13,14 @@ Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8
 - `M2_BATCH_SIZE = 6`
 - `M2_ADAPTER_BATCH_SIZE = 12`
 - Baseline for full-run acceptance: `docs/demo_results/m2/20260629T124253Z/summary.json`
+- Open-world router production gate: `M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = True`
+- Open-world baseline summary: `docs/demo_results/m2/20260629T124253Z/summary.json`
 - Prototype curation root: `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`
 - Active full manifest: `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`
+- Open-world manifest: `docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv`
 - Problem-only manifest retained for diagnostics: `docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv`
 
-Reason: the `20260629T124253Z` full run improved router/prototype quality but left `51` answered-wrong disease/class rows and `31` router/prototype failures. The next gate is a full rerun after the reviewed router-only residue was merged into `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`. Keep handoff refresh enabled and use the lower `6/12` batch sizes for this first post-curation run.
+Reason: the `20260629T124253Z` full run improved router/prototype quality but left `51` answered-wrong disease/class rows and `31` router/prototype failures. The next gate is a full rerun after the reviewed router-only residue was merged into `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`, followed by the open-world router readiness gate over the balanced supported manifest and the `306`-row fresh negative manifest. Keep handoff refresh enabled and use the lower `6/12` batch sizes for this first post-curation/open-world run.
 
 ## Automatic Post-Run Adjustment Rule
 
@@ -60,3 +63,4 @@ After every new `docs/demo_results/m2/<timestamp>/` folder is pushed:
 ## Current Caution
 
 Problem-only runs are speed diagnostics, not final evidence. Final acceptance still requires a Notebook 8 run over all images in the active full manifest and comparison against the configured baseline.
+The open-world router plan is also not final evidence until the same Colab/GPU run writes a passing `docs/demo_results/router_open_world/<timestamp>/router_open_world_readiness.json` and that folder passes `scripts/validate_router_open_world_result.py`.
