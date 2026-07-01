@@ -894,6 +894,36 @@ else:
                 "checks": {},
             }
 
+        summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+
+        m2_demo_checkpoint_publish_report = {
+            "enabled": bool(M2_AUTO_PUSH_RESULTS),
+            "pushed": False,
+            "path": repo_results_rel.as_posix(),
+            "phase": "before_open_world_router_validation",
+        }
+        if M2_AUTO_PUSH_RESULTS:
+            try:
+                print("[GIT] M2 checkpoint auto-push before open-world router validation...")
+                m2_demo_checkpoint_publish_report = push_repo_paths_to_github(
+                    repo_root=repo_root,
+                    relative_paths=[repo_results_rel.as_posix()],
+                    remote_name=M2_AUTO_PUSH_REMOTE_NAME,
+                    branch=M2_AUTO_PUSH_BRANCH,
+                    commit_message=f"Add M2 demo checkpoint {stamp}",
+                    print_fn=print,
+                )
+                m2_demo_checkpoint_publish_report["phase"] = "before_open_world_router_validation"
+            except Exception as exc:
+                m2_demo_checkpoint_publish_report = {
+                    "enabled": True,
+                    "pushed": False,
+                    "path": repo_results_rel.as_posix(),
+                    "phase": "before_open_world_router_validation",
+                    "error": f"{exc.__class__.__name__}: {exc}",
+                }
+                print(f"[GIT] M2 checkpoint auto-push failed: {m2_demo_checkpoint_publish_report['error']}")
+
         if M2_RUN_OPEN_WORLD_ROUTER_VALIDATION and int(completed.returncode) == 0:
             open_world_output_root = (repo_root / M2_OPEN_WORLD_OUTPUT_ROOT).resolve()
             open_world_run_dir = open_world_output_root / stamp
@@ -983,6 +1013,7 @@ else:
                 "checks": {"m2_runner_succeeded": False},
             }
             summary_payload["open_world_router_validation"] = open_world_validation_report
+        summary_payload["checkpoint_publish"] = m2_demo_checkpoint_publish_report
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         print("[M2] Repo result copy:")
         print(json.dumps(copied_paths, indent=2, ensure_ascii=False))
