@@ -10,8 +10,8 @@ Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8
 - `M2_RUN_PROBLEM_ONLY_DEMO = False`
 - `M2_REFRESH_HANDOFF_CACHE = True`
 - `M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = True`
-- `M2_BATCH_SIZE = 6`
-- `M2_ADAPTER_BATCH_SIZE = 12`
+- `M2_BATCH_SIZE = 4`
+- `M2_ADAPTER_BATCH_SIZE = 8`
 - Baseline for full-run acceptance: `docs/demo_results/m2/20260629T124253Z/summary.json`
 - Open-world router production gate: `M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = True`
 - Open-world baseline summary: `docs/demo_results/m2/20260629T124253Z/summary.json`
@@ -20,7 +20,7 @@ Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8
 - Open-world manifest: `docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv`
 - Problem-only manifest retained for diagnostics: `docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv`
 
-Reason: the `20260629T124253Z` full run improved router/prototype quality but left `51` answered-wrong disease/class rows and `31` router/prototype failures. The next gate is a full rerun after the reviewed router-only residue was merged into `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`, followed by the open-world router readiness gate over the balanced supported manifest and the `306`-row fresh negative manifest. Keep handoff refresh enabled and use the lower `6/12` batch sizes for this first post-curation/open-world run.
+Reason: the `20260629T124253Z` full run improved router/prototype quality but left `51` answered-wrong disease/class rows and `31` router/prototype failures. The next gate is a full rerun after the reviewed router-only residue was merged into `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`, followed by the open-world router readiness gate over the balanced supported manifest and the `306`-row fresh negative manifest. Keep handoff refresh enabled and use the lower `4/8` batch sizes for this first post-curation/open-world run.
 
 ## Automatic Post-Run Adjustment Rule
 
@@ -44,7 +44,7 @@ After every new `docs/demo_results/m2/<timestamp>/` folder is pushed:
    - Keep `M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = True` for same manifest, prototype bank, and constraints.
    - Expect automatic recalibration when hashes or constraints differ.
 6. Keep batch sizes stable:
-   - Keep `M2_BATCH_SIZE = 6` and `M2_ADAPTER_BATCH_SIZE = 12`.
+   - Keep `M2_BATCH_SIZE = 4` and `M2_ADAPTER_BATCH_SIZE = 8`.
    - If a Colab operator changes visible-cell M2 settings for memory safety or diagnostics, those explicit values override the JSON for that run.
    - Do not raise router batch size to 16 until a fresh run over all images in the active full manifest proves memory stability and quality.
 7. Update this file's "Current Next Run" section and the relevant `PROJECT_STATE.md` next-step bullet whenever the recommended next run mode changes.

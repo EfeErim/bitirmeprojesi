@@ -26,7 +26,7 @@ Implemented locally:
 - `docs/demo_assets/prototype_curation/20260629T124253Z/adapter_hard_example_manifest.csv` with `28` adapter hard examples
 - `docs/demo_assets/prototype_curation/20260629T124253Z/excluded_ambiguous_rows.csv` with `14` ambiguous or low-signal rows
 - `docs/demo_assets/prototype_curation/20260629T124253Z/relabel_manifest.csv` with `9` likely label corrections
-- Notebook 8 next-run baseline and batch settings synchronized to `20260629T124253Z`, `M2_BATCH_SIZE = 6`, and `M2_ADAPTER_BATCH_SIZE = 12`
+- Notebook 8 next-run baseline and batch settings synchronized to `20260629T124253Z`, `M2_BATCH_SIZE = 4`, and `M2_ADAPTER_BATCH_SIZE = 8`
 
 Still external:
 
@@ -63,7 +63,7 @@ Deliverables:
 5. Follow-up full M2 result
    - Same 602-row manifest.
    - Baseline: `docs/demo_results/m2/20260629T124253Z/summary.json`.
-   - Run with `M2_BATCH_SIZE = 6` and `M2_ADAPTER_BATCH_SIZE = 12`.
+   - Run with `M2_BATCH_SIZE = 4` and `M2_ADAPTER_BATCH_SIZE = 8`.
 
 Expected outcomes:
 
@@ -227,8 +227,8 @@ Run Notebook 8 on the same active manifest:
 ```python
 M2_RUN_FULL_DEMO = True
 M2_RUN_PROBLEM_ONLY_DEMO = False
-M2_BATCH_SIZE = 6
-M2_ADAPTER_BATCH_SIZE = 12
+M2_BATCH_SIZE = 4
+M2_ADAPTER_BATCH_SIZE = 8
 M2_REFRESH_HANDOFF_CACHE = True
 M2_COMPARISON_BASELINE = 'docs/demo_results/m2/20260629T124253Z/summary.json'
 ```
