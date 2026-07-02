@@ -65,6 +65,23 @@ def _load_json_from_worktree_or_head(path: Path) -> tuple[dict[str, Any] | None,
     return payload, "git_head"
 
 
+def _path_exists_in_worktree_or_head(path: Path) -> tuple[bool, str]:
+    if path.is_file():
+        return True, "worktree"
+    repo_relative = _repo_relative(path)
+    if not repo_relative:
+        return False, "missing"
+    completed = subprocess.run(
+        ["git", "cat-file", "-e", f"HEAD:{repo_relative}"],
+        cwd=REPO_ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    return completed.returncode == 0, "git_head" if completed.returncode == 0 else "missing"
+
+
 def _read_csv_count(path: Path) -> int:
     with path.open("r", encoding="utf-8-sig", newline="") as handle:
         return sum(1 for _row in csv.DictReader(handle))
@@ -102,7 +119,20 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     except Exception as exc:
         _add_check(checks, "run_state_json_valid", False, f"{exc.__class__.__name__}: {exc}")
 
-    _add_check(checks, "run_state_mode_full", run_state.get("mode") == "full", str(run_state.get("mode") or ""))
+    mode = str(run_state.get("mode") or "")
+    _add_check(checks, "run_state_mode_open_world_only", mode == "open_world_only", mode)
+    _add_check(
+        checks,
+        "run_state_full_demo_disabled",
+        run_state.get("m2_run_full_demo") is False,
+        str(run_state.get("m2_run_full_demo")),
+    )
+    _add_check(
+        checks,
+        "run_state_open_world_only_enabled",
+        run_state.get("m2_open_world_only") is True,
+        str(run_state.get("m2_open_world_only")),
+    )
     _add_check(
         checks,
         "run_state_problem_only_disabled",
@@ -121,6 +151,24 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         _notebook_source_contains(notebook_path, "M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = True"),
         str(notebook_path),
     )
+    _add_check(
+        checks,
+        "visible_notebook_open_world_only_enabled",
+        _notebook_source_contains(notebook_path, "M2_OPEN_WORLD_ONLY = True"),
+        str(notebook_path),
+    )
+
+    artifact_dir_value = str(run_state.get("m2_open_world_prototype_artifact_dir") or "")
+    artifact_dir = (REPO_ROOT / artifact_dir_value).resolve() if artifact_dir_value else None
+    for filename in ("prototype_bank.json", "taxonomy_registry.json", "router_prototype_calibration.json"):
+        artifact_path = artifact_dir / filename if artifact_dir else Path(filename)
+        exists, source = _path_exists_in_worktree_or_head(artifact_path) if artifact_dir else (False, "missing")
+        _add_check(
+            checks,
+            f"open_world_prototype_artifact_{filename.removesuffix('.json')}_available",
+            exists,
+            f"{artifact_dir_value}/{filename}; source={source}" if artifact_dir_value else "missing",
+        )
 
     baseline_value = str(run_state.get("m2_open_world_baseline_summary") or run_state.get("m2_comparison_baseline") or "")
     baseline_path = (REPO_ROOT / baseline_value).resolve() if baseline_value else None

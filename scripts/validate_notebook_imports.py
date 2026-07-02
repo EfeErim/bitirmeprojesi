@@ -440,7 +440,8 @@ def test_auto_router_adapter_notebook_contract() -> None:
     for snippet in (
         "M2_AUTO_APPLY_RUN_STATE = True",
         "M2_RUN_STATE_CONFIG = 'docs/notebook8_m2_run_state.json'",
-        "M2_RUN_FULL_DEMO = True",
+        "M2_RUN_FULL_DEMO = False",
+        "M2_OPEN_WORLD_ONLY = True",
         "M2_RUN_PROBLEM_ONLY_DEMO = False",
         "M2_DEMO_LIMIT = None",
         "M2_BATCH_SIZE = 4",
@@ -458,6 +459,7 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "M2_OPEN_WORLD_MANIFEST = 'docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv'",
         "M2_OPEN_WORLD_OUTPUT_ROOT = 'docs/demo_results/router_open_world'",
         "M2_OPEN_WORLD_BASELINE_SUMMARY = M2_COMPARISON_BASELINE",
+        "M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR = 'docs/demo_results/m2/20260630T192242Z'",
         "M2_PROTOTYPE_TARGET_MIN_PRECISION = 0.98",
         "M2_PROTOTYPE_TARGET_MAX_SUPPORTED_WRONG = 1",
         "M2_PROTOTYPE_TARGET_CLASS_MIN_ACCEPTED = 5",
@@ -471,6 +473,7 @@ def test_auto_router_adapter_notebook_contract() -> None:
         'M2_AUTO_APPLY_RUN_STATE = bool(globals().get("M2_AUTO_APPLY_RUN_STATE", True))',
         'M2_RUN_STATE_CONFIG = str(globals().get("M2_RUN_STATE_CONFIG", "docs/notebook8_m2_run_state.json"))',
         'M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))',
+        'M2_OPEN_WORLD_ONLY = bool(globals().get("M2_OPEN_WORLD_ONLY", False))',
         'M2_RUN_PROBLEM_ONLY_DEMO = bool(globals().get("M2_RUN_PROBLEM_ONLY_DEMO", False))',
         "_M2_INITIAL_GLOBAL_NAMES = set(globals())",
         "def _load_m2_run_state_config(path):",
@@ -480,6 +483,8 @@ def test_auto_router_adapter_notebook_contract() -> None:
         'M2_PROBLEM_ONLY_COMPARISON_BASELINE = str(globals().get("M2_PROBLEM_ONLY_COMPARISON_BASELINE", "") or "")',
         "_M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES = {",
         '"M2_RUN_PROBLEM_ONLY_DEMO"',
+        '"M2_RUN_FULL_DEMO"',
+        '"M2_OPEN_WORLD_ONLY"',
         '"M2_REFRESH_HANDOFF_CACHE"',
         '"M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION"',
         'M2_BATCH_SIZE = int(globals().get("M2_BATCH_SIZE", 4))',
@@ -489,7 +494,10 @@ def test_auto_router_adapter_notebook_contract() -> None:
         'M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = bool(globals().get("M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION", True))',
         'M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = bool(globals().get("M2_RUN_OPEN_WORLD_ROUTER_VALIDATION", False))',
         'M2_OPEN_WORLD_BASELINE_SUMMARY = str(globals().get("M2_OPEN_WORLD_BASELINE_SUMMARY", M2_COMPARISON_BASELINE) or "")',
+        'M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR = str(',
         'M2_PROTOTYPE_CURATION_ROOT = str(globals().get("M2_PROTOTYPE_CURATION_ROOT", "") or "")',
+        "def _run_open_world_router_validation(",
+        "if M2_OPEN_WORLD_ONLY:",
         "def _validate_curated_prototype_bank(",
         "Selected prototype bank contains zero usable curated rows",
         "Prototype builder failed while M2_PROTOTYPE_CURATION_ROOT is set",
@@ -508,6 +516,7 @@ def test_auto_router_adapter_notebook_contract() -> None:
         "M2_OPEN_WORLD_MANIFEST",
         "--min-open-world-rows",
         "--require-latency-baseline",
+        "if M2_RUN_OPEN_WORLD_ROUTER_VALIDATION:",
         "and open_world_passed",
         "--target-min-precision",
         "--target-max-supported-wrong",
@@ -518,6 +527,16 @@ def test_auto_router_adapter_notebook_contract() -> None:
             snippet,
             "Notebook 8 M2 full-demo calibration should pass bounded target-policy controls: {snippet}",
         )
+    _assert_not_contains(
+        m2_cell_source,
+        "M2_RUN_OPEN_WORLD_ROUTER_VALIDATION and int(completed.returncode) == 0",
+        "Open-world validation should run independently of the 602-row M2 runner exit code: {snippet}",
+    )
+    _assert_not_contains(
+        m2_cell_source,
+        "skipped_m2_runner_failed",
+        "Open-world validation should not be skipped just because the separate M2 checklist failed: {snippet}",
+    )
     assert sources.full_source.count("run_inference(") == 1, (
         "Notebook 8 should inherit the single Notebook 1 router call, not add a second router-only implementation"
     )

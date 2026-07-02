@@ -6,7 +6,9 @@ Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8
 
 ## Current Next Run
 
-- Mode: full active-manifest run
+- Mode: open-world-only router demo
+- `M2_RUN_FULL_DEMO = False`
+- `M2_OPEN_WORLD_ONLY = True`
 - `M2_RUN_PROBLEM_ONLY_DEMO = False`
 - `M2_REFRESH_HANDOFF_CACHE = True`
 - `M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION = True`
@@ -15,12 +17,15 @@ Machine-readable source of truth: `docs/notebook8_m2_run_state.json`. Notebook 8
 - Baseline for full-run acceptance: `docs/demo_results/m2/20260629T124253Z/summary.json`
 - Open-world router production gate: `M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = True`
 - Open-world baseline summary: `docs/demo_results/m2/20260629T124253Z/summary.json`
+- Open-world prototype artifact dir: `docs/demo_results/m2/20260630T192242Z`
 - Prototype curation root: `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`
 - Active full manifest: `docs/demo_assets/m2_full_image_set/manifests/m2_full_image_set_run_manifest.csv`
 - Open-world manifest: `docs/demo_assets/open_world_router/manifests/m2_open_world_router_manifest.csv`
 - Problem-only manifest retained for diagnostics: `docs/demo_assets/m2_problem_only_manifests/20260628T113313Z_router_failures.csv`
 
-Reason: the `20260629T124253Z` full run improved router/prototype quality but left `51` answered-wrong disease/class rows and `31` router/prototype failures. The next gate is a full rerun after the reviewed router-only residue was merged into `docs/demo_assets/prototype_curation/20260629T124253Z_router_refinement`, followed by the open-world router readiness gate over the balanced supported manifest and the `306`-row fresh negative manifest. Keep handoff refresh enabled and use the lower `4/8` batch sizes for this first post-curation/open-world run.
+Reason: the immediate requested run is only the production open-world router demo. It skips the separate 602-row M2 checklist and directly runs the balanced supported manifest plus the `306`-row fresh negative/open-world manifest through `scripts/run_router_open_world_validation.py`. Keep handoff refresh enabled and use the lower `4/8` batch sizes for this first open-world-only run.
+
+Open-world execution is independent from the 602-row M2 checklist. In open-world-only mode, Notebook 8 should start `scripts/run_router_open_world_validation.py` without first writing a new `docs/demo_results/m2/<timestamp>/` folder. Final readiness and auto-disconnect for this mode require the open-world gate and result push to pass.
 
 ## Automatic Post-Run Adjustment Rule
 

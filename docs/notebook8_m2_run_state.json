@@ -1,5 +1,7 @@
 {
-  "mode": "full",
+  "mode": "open_world_only",
+  "m2_run_full_demo": false,
+  "m2_open_world_only": true,
   "m2_run_problem_only_demo": false,
   "m2_refresh_handoff_cache": true,
   "m2_reuse_existing_prototype_calibration": true,
@@ -10,5 +12,6 @@
   "m2_problem_only_comparison_baseline": "",
   "m2_comparison_baseline": "docs/demo_results/m2/20260629T124253Z/summary.json",
   "m2_run_open_world_router_validation": true,
-  "m2_open_world_baseline_summary": "docs/demo_results/m2/20260629T124253Z/summary.json"
+  "m2_open_world_baseline_summary": "docs/demo_results/m2/20260629T124253Z/summary.json",
+  "m2_open_world_prototype_artifact_dir": "docs/demo_results/m2/20260630T192242Z"
 }

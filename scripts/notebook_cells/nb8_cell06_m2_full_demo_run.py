@@ -22,6 +22,7 @@ _M2_INITIAL_GLOBAL_NAMES = set(globals())
 M2_AUTO_APPLY_RUN_STATE = bool(globals().get("M2_AUTO_APPLY_RUN_STATE", True))
 M2_RUN_STATE_CONFIG = str(globals().get("M2_RUN_STATE_CONFIG", "docs/notebook8_m2_run_state.json"))
 M2_RUN_FULL_DEMO = bool(globals().get("M2_RUN_FULL_DEMO", True))
+M2_OPEN_WORLD_ONLY = bool(globals().get("M2_OPEN_WORLD_ONLY", False))
 M2_DEMO_MANIFEST = str(
     globals().get(
         "M2_DEMO_MANIFEST",
@@ -82,6 +83,9 @@ M2_OPEN_WORLD_HANDOFF_CACHE = str(
     globals().get("M2_OPEN_WORLD_HANDOFF_CACHE", ".runtime_tmp/router_open_world_handoff_cache.json")
 )
 M2_OPEN_WORLD_BASELINE_SUMMARY = str(globals().get("M2_OPEN_WORLD_BASELINE_SUMMARY", M2_COMPARISON_BASELINE) or "")
+M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR = str(
+    globals().get("M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR", "docs/demo_results/m2/20260630T192242Z") or ""
+)
 M2_OPEN_WORLD_MIN_ROWS = int(globals().get("M2_OPEN_WORLD_MIN_ROWS", 300))
 M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE = float(
     globals().get("M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE", 0.80)
@@ -123,6 +127,8 @@ _M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES = {
     name
     for name in (
         "M2_RUN_PROBLEM_ONLY_DEMO",
+        "M2_RUN_FULL_DEMO",
+        "M2_OPEN_WORLD_ONLY",
         "M2_REFRESH_HANDOFF_CACHE",
         "M2_REUSE_EXISTING_PROTOTYPE_CALIBRATION",
         "M2_BATCH_SIZE",
@@ -133,6 +139,7 @@ _M2_RUN_STATE_OPERATOR_OVERRIDE_NAMES = {
         "M2_COMPARISON_BASELINE",
         "M2_RUN_OPEN_WORLD_ROUTER_VALIDATION",
         "M2_OPEN_WORLD_BASELINE_SUMMARY",
+        "M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR",
     )
     if name in _M2_INITIAL_GLOBAL_NAMES
 }
@@ -151,10 +158,19 @@ if M2_AUTO_APPLY_RUN_STATE:
                 M2_RUN_PROBLEM_ONLY_DEMO = True
             elif _mode in {"full", "full_manifest", "full-manifest"}:
                 M2_RUN_PROBLEM_ONLY_DEMO = False
+            elif _mode in {"open_world_only", "open-world-only", "open_world", "open-world"}:
+                M2_RUN_PROBLEM_ONLY_DEMO = False
+                M2_RUN_FULL_DEMO = False
+                M2_OPEN_WORLD_ONLY = True
+                M2_RUN_OPEN_WORLD_ROUTER_VALIDATION = True
             M2_RUN_PROBLEM_ONLY_DEMO = _coerce_bool(
                 _m2_run_state.get("m2_run_problem_only_demo"),
                 M2_RUN_PROBLEM_ONLY_DEMO,
             )
+        if not _has_m2_run_state_operator_override("M2_RUN_FULL_DEMO"):
+            M2_RUN_FULL_DEMO = _coerce_bool(_m2_run_state.get("m2_run_full_demo"), M2_RUN_FULL_DEMO)
+        if not _has_m2_run_state_operator_override("M2_OPEN_WORLD_ONLY"):
+            M2_OPEN_WORLD_ONLY = _coerce_bool(_m2_run_state.get("m2_open_world_only"), M2_OPEN_WORLD_ONLY)
         if not _has_m2_run_state_operator_override("M2_REFRESH_HANDOFF_CACHE"):
             M2_REFRESH_HANDOFF_CACHE = _coerce_bool(
                 _m2_run_state.get("m2_refresh_handoff_cache"),
@@ -194,9 +210,14 @@ if M2_AUTO_APPLY_RUN_STATE:
             M2_OPEN_WORLD_BASELINE_SUMMARY = str(
                 _m2_run_state.get("m2_open_world_baseline_summary") or M2_OPEN_WORLD_BASELINE_SUMMARY
             )
+        if not _has_m2_run_state_operator_override("M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR"):
+            M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR = str(
+                _m2_run_state.get("m2_open_world_prototype_artifact_dir")
+                or M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR
+            )
         print(
             "[M2] Applied run-state config: "
-            f"mode={'problem_only' if M2_RUN_PROBLEM_ONLY_DEMO else 'full'}, "
+            f"mode={'open_world_only' if M2_OPEN_WORLD_ONLY else 'problem_only' if M2_RUN_PROBLEM_ONLY_DEMO else 'full'}, "
             f"refresh_handoff_cache={M2_REFRESH_HANDOFF_CACHE}, "
             f"batch={M2_BATCH_SIZE}/{M2_ADAPTER_BATCH_SIZE}, "
             f"open_world_gate={M2_RUN_OPEN_WORLD_ROUTER_VALIDATION}, "
@@ -448,7 +469,155 @@ def _validate_curated_prototype_bank(repo_root, prototype_bank_ref, curation_roo
     )
 
 
-if not M2_RUN_FULL_DEMO:
+def _run_open_world_router_validation(repo_root, stamp, adapter_root_path, prototype_calibration_output_path=None):
+    open_world_output_root = (repo_root / M2_OPEN_WORLD_OUTPUT_ROOT).resolve()
+    open_world_run_dir = open_world_output_root / stamp
+    open_world_command = [
+        sys.executable,
+        str(repo_root / "scripts" / "run_router_open_world_validation.py"),
+        "--run-id",
+        stamp,
+        "--output-root",
+        str(open_world_output_root),
+        "--supported-manifest",
+        str((repo_root / M2_OPEN_WORLD_SUPPORTED_MANIFEST).resolve()),
+        "--open-world-manifest",
+        str((repo_root / M2_OPEN_WORLD_MANIFEST).resolve()),
+        "--device",
+        str(DEVICE),
+        "--config-env",
+        str(CONFIG_ENV),
+        "--adapter-root",
+        str(adapter_root_path),
+        "--batch-size",
+        str(max(1, int(M2_BATCH_SIZE))),
+        "--adapter-batch-size",
+        str(max(1, int(M2_ADAPTER_BATCH_SIZE))),
+        "--handoff-cache",
+        str((repo_root / M2_OPEN_WORLD_HANDOFF_CACHE).resolve()),
+        "--min-open-world-rows",
+        str(max(1, int(M2_OPEN_WORLD_MIN_ROWS))),
+        "--min-supported-route-coverage",
+        str(float(M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE)),
+    ]
+    if M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR:
+        open_world_command.extend(
+            ["--prototype-artifact-dir", str((repo_root / M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR).resolve())]
+        )
+    if M2_ENABLE_PROTOTYPE_RECONCILER:
+        open_world_command.append("--enable-prototype-reconciler")
+    if M2_PROTOTYPE_BANK:
+        open_world_command.extend(["--prototype-bank", str((repo_root / M2_PROTOTYPE_BANK).resolve())])
+    if M2_TAXONOMY_REGISTRY:
+        open_world_command.extend(["--taxonomy-registry", str((repo_root / M2_TAXONOMY_REGISTRY).resolve())])
+    if (
+        not M2_OPEN_WORLD_PROTOTYPE_ARTIFACT_DIR
+        and prototype_calibration_output_path
+        and prototype_calibration_output_path.is_file()
+    ):
+        open_world_command.extend(["--prototype-calibration-report", str(prototype_calibration_output_path)])
+    if M2_PROTOTYPE_MIN_SIMILARITY is not None:
+        open_world_command.extend(["--prototype-min-similarity", str(float(M2_PROTOTYPE_MIN_SIMILARITY))])
+    if M2_PROTOTYPE_MIN_MARGIN is not None:
+        open_world_command.extend(["--prototype-min-margin", str(float(M2_PROTOTYPE_MIN_MARGIN))])
+    if M2_PROTOTYPE_MIN_NEGATIVE_GAP is not None:
+        open_world_command.extend(["--prototype-min-negative-gap", str(float(M2_PROTOTYPE_MIN_NEGATIVE_GAP))])
+    if M2_OPEN_WORLD_BASELINE_SUMMARY:
+        open_world_command.extend(["--baseline-summary", str((repo_root / M2_OPEN_WORLD_BASELINE_SUMMARY).resolve())])
+    if M2_REFRESH_HANDOFF_CACHE:
+        open_world_command.append("--refresh-handoff-cache")
+    if M2_STOP_ON_DEPENDENCY_BLOCKER:
+        open_world_command.append("--stop-on-dependency-blocker")
+    if M2_OPEN_WORLD_REQUIRE_LATENCY_BASELINE:
+        open_world_command.append("--require-latency-baseline")
+    if M2_OPEN_WORLD_FAIL_ON_NOT_READY:
+        open_world_command.append("--fail-on-not-ready")
+    print(f"[M2] Starting open-world router validation gate: {open_world_run_dir.relative_to(repo_root)}")
+    open_world_completed = subprocess.run(open_world_command, cwd=repo_root, check=False)
+    open_world_readiness_path = open_world_run_dir / "router_open_world_readiness.json"
+    report = {
+        "enabled": True,
+        "run": True,
+        "exit_code": int(open_world_completed.returncode),
+        "run_dir": open_world_run_dir.relative_to(repo_root).as_posix(),
+        "readiness": open_world_readiness_path.relative_to(repo_root).as_posix(),
+        "status": "missing_readiness",
+        "ready": False,
+        "checks": {},
+    }
+    if open_world_readiness_path.is_file():
+        open_world_readiness = json.loads(open_world_readiness_path.read_text(encoding="utf-8"))
+        report["status"] = str(open_world_readiness.get("status") or "unknown")
+        report["ready"] = open_world_completed.returncode == 0 and open_world_readiness.get("status") == "pass"
+        report["checks"] = open_world_readiness.get("checks", {})
+    return report
+
+
+cell_script_root = Path(str(globals().get("__notebook_cell_script_root__", ""))).resolve()
+repo_root = cell_script_root.parents[1] if cell_script_root.name == "notebook_cells" else Path.cwd().resolve()
+adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
+prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
+
+if M2_OPEN_WORLD_ONLY:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    open_world_validation_report = _run_open_world_router_validation(
+        repo_root,
+        stamp,
+        adapter_root_path,
+        prototype_calibration_output_path=prototype_calibration_output_path,
+    )
+    if M2_AUTO_PUSH_RESULTS:
+        try:
+            m2_demo_publish_report = push_repo_paths_to_github(
+                repo_root=repo_root,
+                relative_paths=[str(open_world_validation_report["run_dir"])],
+                remote_name=M2_AUTO_PUSH_REMOTE_NAME,
+                branch=M2_AUTO_PUSH_BRANCH,
+                commit_message=f"Add open-world router demo {stamp}",
+                print_fn=print,
+            )
+        except Exception as exc:
+            m2_demo_publish_report = {
+                "enabled": True,
+                "pushed": False,
+                "paths": [str(open_world_validation_report["run_dir"])],
+                "error": f"{exc.__class__.__name__}: {exc}",
+            }
+            print(f"[GIT] Open-world result auto-push failed: {m2_demo_publish_report['error']}")
+    else:
+        m2_demo_publish_report = {
+            "enabled": False,
+            "pushed": False,
+            "paths": [str(open_world_validation_report["run_dir"])],
+        }
+    push_done = bool(
+        m2_demo_publish_report.get("pushed")
+        or (
+            m2_demo_publish_report.get("enabled")
+            and not m2_demo_publish_report.get("error")
+            and m2_demo_publish_report.get("staged_files") == []
+        )
+    )
+    completion_checks = {
+        "git_push": bool(push_done),
+        "open_world_router_validation_passed": bool(open_world_validation_report.get("ready")),
+    }
+    m2_completion_report = {
+        "ready": bool(push_done and open_world_validation_report.get("ready")),
+        "checks": completion_checks,
+        "missing": [name for name, passed in completion_checks.items() if not passed],
+        "soft_missing": [],
+        "open_world_router_validation": open_world_validation_report,
+    }
+    print(f"[COLAB] Open-world-only completion checks -> {m2_completion_report['checks']}")
+    m2_demo_disconnect_report = maybe_auto_disconnect_colab_runtime(
+        enabled=bool(M2_AUTO_DISCONNECT_RUNTIME),
+        grace_period_sec=M2_AUTO_DISCONNECT_GRACE_SECONDS,
+        completion_report=m2_completion_report,
+        print_fn=print,
+    )
+    m2_demo_result = {"open_world_router_validation": open_world_validation_report}
+elif not M2_RUN_FULL_DEMO:
     m2_demo_result = None
     m2_demo_publish_report = {"enabled": False, "pushed": False, "reason": "M2_RUN_FULL_DEMO=False"}
     m2_demo_disconnect_report = {"ready": False, "missing": ["m2_full_demo_skipped"]}
@@ -456,8 +625,6 @@ if not M2_RUN_FULL_DEMO:
 else:
     m2_run_started_at = datetime.now(timezone.utc)
     m2_run_start_perf = time.perf_counter()
-    cell_script_root = Path(str(globals().get("__notebook_cell_script_root__", ""))).resolve()
-    repo_root = cell_script_root.parents[1] if cell_script_root.name == "notebook_cells" else Path.cwd().resolve()
 
     active_manifest = M2_PROBLEM_ONLY_MANIFEST if M2_RUN_PROBLEM_ONLY_DEMO else M2_DEMO_MANIFEST
     active_comparison_baseline = (
@@ -481,9 +648,7 @@ else:
     markdown_output_path = (repo_root / active_markdown_output).resolve()
     analysis_output_path = (repo_root / active_analysis_output).resolve()
     analysis_markdown_output_path = (repo_root / active_analysis_markdown_output).resolve()
-    prototype_calibration_output_path = (repo_root / M2_PROTOTYPE_CALIBRATION_OUTPUT).resolve()
     handoff_cache_path = (repo_root / M2_HANDOFF_CACHE).resolve()
-    adapter_root_path = Path(str(globals().get("ADAPTER_ROOT") or "runs"))
     if (
         M2_ENABLE_PROTOTYPE_RECONCILER
         and M2_REUSE_EXISTING_PROTOTYPES
@@ -924,95 +1089,16 @@ else:
                 }
                 print(f"[GIT] M2 checkpoint auto-push failed: {m2_demo_checkpoint_publish_report['error']}")
 
-        if M2_RUN_OPEN_WORLD_ROUTER_VALIDATION and int(completed.returncode) == 0:
-            open_world_output_root = (repo_root / M2_OPEN_WORLD_OUTPUT_ROOT).resolve()
-            open_world_run_dir = open_world_output_root / stamp
-            open_world_command = [
-                sys.executable,
-                str(repo_root / "scripts" / "run_router_open_world_validation.py"),
-                "--run-id",
+        if M2_RUN_OPEN_WORLD_ROUTER_VALIDATION:
+            open_world_validation_report = _run_open_world_router_validation(
+                repo_root,
                 stamp,
-                "--output-root",
-                str(open_world_output_root),
-                "--supported-manifest",
-                str((repo_root / M2_OPEN_WORLD_SUPPORTED_MANIFEST).resolve()),
-                "--open-world-manifest",
-                str((repo_root / M2_OPEN_WORLD_MANIFEST).resolve()),
-                "--device",
-                str(DEVICE),
-                "--config-env",
-                str(CONFIG_ENV),
-                "--adapter-root",
-                str(adapter_root_path),
-                "--batch-size",
-                str(max(1, int(M2_BATCH_SIZE))),
-                "--adapter-batch-size",
-                str(max(1, int(M2_ADAPTER_BATCH_SIZE))),
-                "--handoff-cache",
-                str((repo_root / M2_OPEN_WORLD_HANDOFF_CACHE).resolve()),
-                "--min-open-world-rows",
-                str(max(1, int(M2_OPEN_WORLD_MIN_ROWS))),
-                "--min-supported-route-coverage",
-                str(float(M2_OPEN_WORLD_MIN_SUPPORTED_ROUTE_COVERAGE)),
-            ]
-            if M2_ENABLE_PROTOTYPE_RECONCILER:
-                open_world_command.append("--enable-prototype-reconciler")
-            if M2_PROTOTYPE_BANK:
-                open_world_command.extend(["--prototype-bank", str((repo_root / M2_PROTOTYPE_BANK).resolve())])
-            if M2_TAXONOMY_REGISTRY:
-                open_world_command.extend(["--taxonomy-registry", str((repo_root / M2_TAXONOMY_REGISTRY).resolve())])
-            if prototype_calibration_output_path.is_file():
-                open_world_command.extend(["--prototype-calibration-report", str(prototype_calibration_output_path)])
-            if M2_PROTOTYPE_MIN_SIMILARITY is not None:
-                open_world_command.extend(["--prototype-min-similarity", str(float(M2_PROTOTYPE_MIN_SIMILARITY))])
-            if M2_PROTOTYPE_MIN_MARGIN is not None:
-                open_world_command.extend(["--prototype-min-margin", str(float(M2_PROTOTYPE_MIN_MARGIN))])
-            if M2_PROTOTYPE_MIN_NEGATIVE_GAP is not None:
-                open_world_command.extend(["--prototype-min-negative-gap", str(float(M2_PROTOTYPE_MIN_NEGATIVE_GAP))])
-            if M2_OPEN_WORLD_BASELINE_SUMMARY:
-                open_world_command.extend(
-                    ["--baseline-summary", str((repo_root / M2_OPEN_WORLD_BASELINE_SUMMARY).resolve())]
-                )
-            if M2_REFRESH_HANDOFF_CACHE:
-                open_world_command.append("--refresh-handoff-cache")
-            if M2_STOP_ON_DEPENDENCY_BLOCKER:
-                open_world_command.append("--stop-on-dependency-blocker")
-            if M2_OPEN_WORLD_REQUIRE_LATENCY_BASELINE:
-                open_world_command.append("--require-latency-baseline")
-            if M2_OPEN_WORLD_FAIL_ON_NOT_READY:
-                open_world_command.append("--fail-on-not-ready")
-            print(f"[M2] Starting open-world router validation gate: {open_world_run_dir.relative_to(repo_root)}")
-            open_world_completed = subprocess.run(open_world_command, cwd=repo_root, check=False)
-            open_world_readiness_path = open_world_run_dir / "router_open_world_readiness.json"
-            open_world_validation_report = {
-                "enabled": True,
-                "run": True,
-                "exit_code": int(open_world_completed.returncode),
-                "run_dir": open_world_run_dir.relative_to(repo_root).as_posix(),
-                "readiness": open_world_readiness_path.relative_to(repo_root).as_posix(),
-                "status": "missing_readiness",
-                "ready": False,
-                "checks": {},
-            }
-            if open_world_readiness_path.is_file():
-                open_world_readiness = json.loads(open_world_readiness_path.read_text(encoding="utf-8"))
-                open_world_validation_report["status"] = str(open_world_readiness.get("status") or "unknown")
-                open_world_validation_report["ready"] = (
-                    open_world_completed.returncode == 0 and open_world_readiness.get("status") == "pass"
-                )
-                open_world_validation_report["checks"] = open_world_readiness.get("checks", {})
-            copied_paths.append(open_world_run_dir.relative_to(repo_root).as_posix())
+                adapter_root_path,
+                prototype_calibration_output_path=prototype_calibration_output_path,
+            )
+            copied_paths.append(str(open_world_validation_report["run_dir"]))
             summary_payload["open_world_router_validation"] = open_world_validation_report
             summary_payload["copied_artifacts"] = copied_paths
-        elif M2_RUN_OPEN_WORLD_ROUTER_VALIDATION:
-            open_world_validation_report = {
-                "enabled": True,
-                "run": False,
-                "status": "skipped_m2_runner_failed",
-                "ready": False,
-                "checks": {"m2_runner_succeeded": False},
-            }
-            summary_payload["open_world_router_validation"] = open_world_validation_report
         summary_payload["checkpoint_publish"] = m2_demo_checkpoint_publish_report
         summary_path.write_text(json.dumps(summary_payload, indent=2, ensure_ascii=False), encoding="utf-8")
         print("[M2] Repo result copy:")
